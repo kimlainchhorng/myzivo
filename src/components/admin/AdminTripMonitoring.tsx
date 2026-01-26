@@ -33,6 +33,7 @@ import {
   XCircle
 } from "lucide-react";
 import { useTrips, useTripStats, useCancelTrip, Trip, TripStatus } from "@/hooks/useTrips";
+import TripMap from "./TripMap";
 
 const AdminTripMonitoring = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -189,6 +190,9 @@ const AdminTripMonitoring = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Map */}
+      <TripMap />
 
       <Card>
         <CardHeader>
