@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, Provider } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 type AuthContextType = {
@@ -9,6 +9,7 @@ type AuthContextType = {
   isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signInWithProvider: (provider: Provider) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
 
@@ -111,6 +112,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const signInWithProvider = async (provider: Provider) => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth-callback`,
+        },
+      });
+      return { error };
+    } catch (err) {
+      return { error: err as Error };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -119,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, isLoading, isAdmin, signUp, signIn, signInWithProvider, signOut }}>
       {children}
     </AuthContext.Provider>
   );
