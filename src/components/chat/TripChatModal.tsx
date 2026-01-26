@@ -17,6 +17,7 @@ import {
   useSendMessage,
   useMarkMessagesRead,
   useTripChatRealtime,
+  useTypingIndicator,
   TripMessage,
 } from "@/hooks/useTripChat";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,6 +48,7 @@ const TripChatModal = ({
   const { data: messages, isLoading } = useTripMessages(tripId);
   const sendMessage = useSendMessage();
   const markRead = useMarkMessagesRead();
+  const { isOtherTyping, sendTypingStatus } = useTypingIndicator(tripId, userType);
 
   // Subscribe to realtime updates
   const handleNewMessage = useCallback(
@@ -85,6 +87,9 @@ const TripChatModal = ({
   const handleSend = async () => {
     if (!newMessage.trim() || sendMessage.isPending) return;
 
+    // Stop typing indicator when sending
+    sendTypingStatus(false);
+
     try {
       await sendMessage.mutateAsync({
         tripId,
@@ -94,6 +99,18 @@ const TripChatModal = ({
       setNewMessage("");
     } catch (error) {
       toast.error("Failed to send message");
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewMessage(value);
+
+    // Send typing status
+    if (value.trim()) {
+      sendTypingStatus(true);
+    } else {
+      sendTypingStatus(false);
     }
   };
 
@@ -192,6 +209,24 @@ const TripChatModal = ({
                   </div>
                 );
               })}
+              {/* Typing Indicator */}
+              {isOtherTyping && (
+                <div className="flex gap-2 justify-start">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={otherPartyAvatar || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {getInitials(otherPartyName)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="bg-muted px-4 py-2 rounded-2xl rounded-bl-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>
@@ -203,7 +238,7 @@ const TripChatModal = ({
               ref={inputRef}
               placeholder="Type a message..."
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyPress={handleKeyPress}
               disabled={sendMessage.isPending}
               className="flex-1"
