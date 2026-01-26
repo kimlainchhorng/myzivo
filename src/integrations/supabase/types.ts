@@ -1541,6 +1541,7 @@ export type Database = {
         | "pending"
         | "confirmed"
         | "in_progress"
+        | "ready_for_pickup"
         | "completed"
         | "cancelled"
         | "refunded"
@@ -1686,6 +1687,7 @@ export const Constants = {
         "pending",
         "confirmed",
         "in_progress",
+        "ready_for_pickup",
         "completed",
         "cancelled",
         "refunded",
