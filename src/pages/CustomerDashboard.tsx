@@ -21,6 +21,7 @@ import CustomerFoodOrders from "@/components/customer/CustomerFoodOrders";
 import CustomerCarRentals from "@/components/customer/CustomerCarRentals";
 import CustomerFlights from "@/components/customer/CustomerFlights";
 import CustomerHotels from "@/components/customer/CustomerHotels";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const CustomerDashboard = () => {
   const { signOut, user } = useAuth();
@@ -139,6 +140,7 @@ const CustomerDashboard = () => {
           </Tabs>
         </main>
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };

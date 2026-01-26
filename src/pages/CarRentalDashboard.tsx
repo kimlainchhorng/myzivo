@@ -18,6 +18,7 @@ import CarRentalBookings from "@/components/carRental/CarRentalBookings";
 import CarRentalInventory from "@/components/carRental/CarRentalInventory";
 import CarRentalAnalytics from "@/components/carRental/CarRentalAnalytics";
 import CarRentalSettings from "@/components/carRental/CarRentalSettings";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const CarRentalDashboard = () => {
   const { signOut, user } = useAuth();
@@ -131,6 +132,7 @@ const CarRentalDashboard = () => {
           </Tabs>
         </main>
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };

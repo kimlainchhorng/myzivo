@@ -19,6 +19,7 @@ import FlightSearch from "@/components/flight/FlightSearch";
 import FlightBookings from "@/components/flight/FlightBookings";
 import FlightSchedules from "@/components/flight/FlightSchedules";
 import FlightSettings from "@/components/flight/FlightSettings";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const FlightDashboard = () => {
   const { signOut, user } = useAuth();
@@ -132,6 +133,7 @@ const FlightDashboard = () => {
           </Tabs>
         </main>
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };

@@ -18,6 +18,7 @@ import RestaurantOrders from "@/components/restaurant/RestaurantOrders";
 import RestaurantMenu from "@/components/restaurant/RestaurantMenu";
 import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const RestaurantDashboard = () => {
   const { signOut, user } = useAuth();
@@ -131,6 +132,7 @@ const RestaurantDashboard = () => {
           </Tabs>
         </main>
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };

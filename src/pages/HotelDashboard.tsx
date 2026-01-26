@@ -19,6 +19,7 @@ import HotelSearch from "@/components/hotel/HotelSearch";
 import HotelBookings from "@/components/hotel/HotelBookings";
 import HotelRooms from "@/components/hotel/HotelRooms";
 import HotelSettings from "@/components/hotel/HotelSettings";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const HotelDashboard = () => {
   const { signOut, user } = useAuth();
@@ -132,6 +133,7 @@ const HotelDashboard = () => {
           </Tabs>
         </main>
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };
