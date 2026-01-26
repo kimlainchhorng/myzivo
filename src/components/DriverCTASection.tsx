@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Car, DollarSign, Clock, Shield, ChevronRight, Calendar } from "lucide-react";
 
@@ -25,6 +26,8 @@ const benefits = [
 ];
 
 const DriverCTASection = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="driver" className="py-20 lg:py-32 relative overflow-hidden">
       {/* Background gradient */}
@@ -49,7 +52,7 @@ const DriverCTASection = () => {
               </p>
               
               <div className="flex flex-wrap gap-4">
-                <Button variant="rides" size="lg">
+                <Button variant="rides" size="lg" onClick={() => navigate("/drive")}>
                   Start driving
                   <ChevronRight className="w-5 h-5" />
                 </Button>
