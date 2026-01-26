@@ -34,7 +34,7 @@ const Header = () => {
               <Car className="w-4 h-4" />
               <span className="font-medium">Rides</span>
             </button>
-            <button onClick={() => navigate("/restaurant")} className="flex items-center gap-2 text-muted-foreground hover:text-eats transition-colors">
+            <button onClick={() => navigate("/food")} className="flex items-center gap-2 text-muted-foreground hover:text-eats transition-colors">
               <UtensilsCrossed className="w-4 h-4" />
               <span className="font-medium">Eats</span>
             </button>
@@ -103,7 +103,7 @@ const Header = () => {
               <Car className="w-5 h-5 text-rides" />
               <span className="font-medium">Rides</span>
             </button>
-            <button onClick={() => { navigate("/restaurant"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
+            <button onClick={() => { navigate("/food"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
               <UtensilsCrossed className="w-5 h-5 text-eats" />
               <span className="font-medium">Eats</span>
             </button>

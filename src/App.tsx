@@ -34,6 +34,7 @@ import HelpCenter from "./pages/HelpCenter";
 import Promotions from "./pages/Promotions";
 import RestaurantRegistration from "./pages/RestaurantRegistration";
 import CookieConsent from "./components/common/CookieConsent";
+import FoodOrdering from "./pages/FoodOrdering";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/food" element={<FoodOrdering />} />
               <Route path="/ride" element={<RiderApp />} />
               <Route path="/trips" element={<TripHistory />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
