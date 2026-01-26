@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Car, UtensilsCrossed, MapPin, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'rides' | 'eats'>('rides');
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
@@ -79,8 +81,8 @@ const HeroSection = () => {
                       className="w-full bg-input border border-border rounded-lg py-3 pl-11 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-rides/50"
                     />
                   </div>
-                  <Button variant="rides" size="lg" className="w-full">
-                    See prices
+                  <Button variant="rides" size="lg" className="w-full" onClick={() => navigate("/ride")}>
+                    Book a ride
                     <ChevronRight className="w-5 h-5" />
                   </Button>
                 </div>
