@@ -33,6 +33,8 @@ import DriverTripCard from "@/components/driver/DriverTripCard";
 import ActiveTripPanel from "@/components/driver/ActiveTripPanel";
 import { TripStatus } from "@/hooks/useTrips";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 const DriverApp = () => {
   const navigate = useNavigate();
