@@ -43,6 +43,7 @@ import AdminCarRentalManagement from "@/components/admin/AdminCarRentalManagemen
 import AdminFlightManagement from "@/components/admin/AdminFlightManagement";
 import AdminHotelManagement from "@/components/admin/AdminHotelManagement";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const AdminDashboard = () => {
   const { signOut, user } = useAuth();
@@ -149,6 +150,7 @@ const AdminDashboard = () => {
           <span className="font-bold text-lg">Zivo Admin</span>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>

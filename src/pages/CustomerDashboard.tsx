@@ -23,6 +23,7 @@ import CustomerFlights from "@/components/customer/CustomerFlights";
 import CustomerHotels from "@/components/customer/CustomerHotels";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const CustomerDashboard = () => {
   const { signOut, user } = useAuth();
@@ -87,6 +88,7 @@ const CustomerDashboard = () => {
           <span className="font-bold text-lg">My Dashboard</span>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
