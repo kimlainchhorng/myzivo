@@ -33,6 +33,7 @@ import {
   XCircle
 } from "lucide-react";
 import { useTrips, useTripStats, useCancelTrip, Trip, TripStatus } from "@/hooks/useTrips";
+import { useAllTripsRealtime } from "@/hooks/useTripRealtime";
 import TripMap from "./TripMap";
 
 const AdminTripMonitoring = () => {
@@ -44,6 +45,9 @@ const AdminTripMonitoring = () => {
   const { data: trips, isLoading, error } = useTrips();
   const { data: stats, isLoading: statsLoading } = useTripStats();
   const cancelTrip = useCancelTrip();
+
+  // Enable realtime updates for all trips
+  useAllTripsRealtime(true);
 
   const filteredTrips = trips?.filter((trip) => {
     const matchesSearch =
