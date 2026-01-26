@@ -1,16 +1,18 @@
 import { MapPin, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import MessageStatus from "./MessageStatus";
 
 interface LocationMessageProps {
   lat: number;
   lng: number;
   address?: string;
   isMe: boolean;
+  isRead?: boolean;
 }
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNsNHoxZzl2YzFyaHQza29hMGZzYWdqcHoifQ.SR4M8qPT-wXTR6IPq8oYkg";
 
-const LocationMessage = ({ lat, lng, address, isMe }: LocationMessageProps) => {
+const LocationMessage = ({ lat, lng, address, isMe, isRead = false }: LocationMessageProps) => {
   // Generate static map URL
   const staticMapUrl = `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+22c55e(${lng},${lat})/${lng},${lat},15,0/200x120@2x?access_token=${MAPBOX_TOKEN}`;
 
@@ -63,12 +65,15 @@ const LocationMessage = ({ lat, lng, address, isMe }: LocationMessageProps) => {
         >
           📍 My Location
         </span>
-        <ExternalLink
-          className={cn(
-            "w-3.5 h-3.5",
-            isMe ? "text-primary-foreground/70" : "text-muted-foreground"
-          )}
-        />
+        <div className="flex items-center gap-1">
+          {isMe && <MessageStatus isRead={isRead} />}
+          <ExternalLink
+            className={cn(
+              "w-3.5 h-3.5",
+              isMe ? "text-primary-foreground/70" : "text-muted-foreground"
+            )}
+          />
+        </div>
       </div>
     </div>
   );

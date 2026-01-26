@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Loader2, MapPin } from "lucide-react";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import LocationMessage from "./LocationMessage";
+import MessageStatus from "./MessageStatus";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -275,6 +276,7 @@ const TripChatModal = ({
                           lng={locationData.lng}
                           address={locationData.address}
                           isMe={isMe}
+                          isRead={message.is_read}
                         />
                       ) : (
                         <div
@@ -285,9 +287,14 @@ const TripChatModal = ({
                               : "bg-muted rounded-bl-sm"
                           )}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {message.content}
-                          </p>
+                          <div className="flex items-end gap-1">
+                            <p className="text-sm whitespace-pre-wrap break-words">
+                              {message.content}
+                            </p>
+                            {isMe && (
+                              <MessageStatus isRead={message.is_read} />
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
