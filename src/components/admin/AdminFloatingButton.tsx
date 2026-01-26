@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,13 +28,22 @@ const AdminFloatingButton = () => {
   if (!isAdmin) return null;
 
   return (
-    <Button
-      onClick={() => navigate("/admin")}
-      className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform"
-      size="icon"
-    >
-      <Shield className="h-6 w-6" />
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            onClick={() => navigate("/admin")}
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg hover:scale-105 transition-transform"
+            size="icon"
+          >
+            <Shield className="h-6 w-6" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Return to Admin Panel</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
