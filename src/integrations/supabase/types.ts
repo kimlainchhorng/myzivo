@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievement_definitions: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          sort_order: number | null
+          threshold: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          sort_order?: number | null
+          threshold?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          sort_order?: number | null
+          threshold?: number | null
+        }
+        Relationships: []
+      }
       analytics_goals: {
         Row: {
           created_at: string
@@ -481,6 +514,35 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievement_definitions"
             referencedColumns: ["id"]
           },
         ]

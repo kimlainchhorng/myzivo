@@ -32,6 +32,24 @@ interface TripChatModalProps {
   otherPartyAvatar?: string | null;
 }
 
+// Quick reply templates based on user type
+const QUICK_REPLIES = {
+  rider: [
+    "I'll be right out",
+    "I'm running late, 2 min",
+    "I'm at the pickup spot",
+    "Can you wait a moment?",
+    "On my way down now",
+  ],
+  driver: [
+    "I'm here",
+    "I'm 2 minutes away",
+    "I'm stuck in traffic",
+    "Take your time",
+    "I'm the white Toyota",
+  ],
+};
+
 const TripChatModal = ({
   isOpen,
   onClose,
@@ -118,6 +136,20 @@ const TripChatModal = ({
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleQuickReply = async (text: string) => {
+    if (sendMessage.isPending) return;
+
+    try {
+      await sendMessage.mutateAsync({
+        tripId,
+        content: text,
+        senderType: userType,
+      });
+    } catch (error) {
+      toast.error("Failed to send message");
     }
   };
 
@@ -230,6 +262,24 @@ const TripChatModal = ({
             </div>
           )}
         </ScrollArea>
+
+        {/* Quick Replies */}
+        <div className="px-4 py-2 border-t overflow-x-auto">
+          <div className="flex gap-2">
+            {QUICK_REPLIES[userType].map((reply) => (
+              <Button
+                key={reply}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap text-xs h-8 flex-shrink-0"
+                onClick={() => handleQuickReply(reply)}
+                disabled={sendMessage.isPending}
+              >
+                {reply}
+              </Button>
+            ))}
+          </div>
+        </div>
 
         {/* Input Area */}
         <div className="p-4 border-t">
