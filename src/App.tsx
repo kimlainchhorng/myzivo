@@ -32,6 +32,7 @@ import InsurancePolicy from "./pages/legal/InsurancePolicy";
 import AccessibilityStatement from "./pages/legal/AccessibilityStatement";
 import HelpCenter from "./pages/HelpCenter";
 import Promotions from "./pages/Promotions";
+import RestaurantRegistration from "./pages/RestaurantRegistration";
 import CookieConsent from "./components/common/CookieConsent";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/partner-agreement" element={<PartnerAgreement />} />
               <Route path="/help" element={<HelpCenter />} />
               <Route path="/promotions" element={<Promotions />} />
+              <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/insurance" element={<InsurancePolicy />} />
               <Route path="/accessibility" element={<AccessibilityStatement />} />
