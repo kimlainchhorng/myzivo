@@ -486,12 +486,16 @@ export type Database = {
       }
       customer_orders: {
         Row: {
+          assigned_chef: string | null
           created_at: string
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          estimated_prep_minutes: number | null
           id: string
           notes: string | null
+          prep_started_at: string | null
+          priority: string | null
           restaurant_id: string
           status: string
           table_id: string | null
@@ -500,12 +504,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_chef?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
+          prep_started_at?: string | null
+          priority?: string | null
           restaurant_id: string
           status?: string
           table_id?: string | null
@@ -514,12 +522,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_chef?: string | null
           created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          estimated_prep_minutes?: number | null
           id?: string
           notes?: string | null
+          prep_started_at?: string | null
+          priority?: string | null
           restaurant_id?: string
           status?: string
           table_id?: string | null
@@ -528,6 +540,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "customer_orders_assigned_chef_fkey"
+            columns: ["assigned_chef"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "customer_orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -2338,6 +2357,70 @@ export type Database = {
         }
         Relationships: []
       }
+      reorder_rules: {
+        Row: {
+          auto_order: boolean | null
+          created_at: string
+          id: string
+          inventory_item_id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          preferred_supplier_id: string | null
+          reorder_point: number
+          reorder_quantity: number
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_order?: boolean | null
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          preferred_supplier_id?: string | null
+          reorder_point: number
+          reorder_quantity: number
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_order?: boolean | null
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          preferred_supplier_id?: string | null
+          reorder_point?: number
+          reorder_quantity?: number
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reorder_rules_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reorder_rules_preferred_supplier_id_fkey"
+            columns: ["preferred_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reorder_rules_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
           created_at: string
@@ -2748,6 +2831,72 @@ export type Database = {
           },
         ]
       }
+      staff_performance: {
+        Row: {
+          avg_order_time_minutes: number | null
+          created_at: string
+          customer_rating: number | null
+          hours_worked: number | null
+          id: string
+          notes: string | null
+          orders_served: number | null
+          period_end: string
+          period_start: string
+          restaurant_id: string
+          staff_id: string
+          tips_earned: number | null
+          total_sales: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_order_time_minutes?: number | null
+          created_at?: string
+          customer_rating?: number | null
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          orders_served?: number | null
+          period_end: string
+          period_start: string
+          restaurant_id: string
+          staff_id: string
+          tips_earned?: number | null
+          total_sales?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_order_time_minutes?: number | null
+          created_at?: string
+          customer_rating?: number | null
+          hours_worked?: number | null
+          id?: string
+          notes?: string | null
+          orders_served?: number | null
+          period_end?: string
+          period_start?: string
+          restaurant_id?: string
+          staff_id?: string
+          tips_earned?: number | null
+          total_sales?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_performance_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_performance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_schedules: {
         Row: {
           break_minutes: number | null
@@ -2918,6 +3067,99 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tip_allocations: {
+        Row: {
+          amount: number
+          created_at: string
+          distribution_id: string
+          hours_worked: number | null
+          id: string
+          percentage: number | null
+          staff_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          distribution_id: string
+          hours_worked?: number | null
+          id?: string
+          percentage?: number | null
+          staff_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          distribution_id?: string
+          hours_worked?: number | null
+          id?: string
+          percentage?: number | null
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_allocations_distribution_id_fkey"
+            columns: ["distribution_id"]
+            isOneToOne: false
+            referencedRelation: "tip_distributions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tip_allocations_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tip_distributions: {
+        Row: {
+          created_at: string
+          distributed_by: string | null
+          distribution_date: string
+          distribution_method: string
+          id: string
+          notes: string | null
+          restaurant_id: string
+          total_tips: number
+        }
+        Insert: {
+          created_at?: string
+          distributed_by?: string | null
+          distribution_date: string
+          distribution_method?: string
+          id?: string
+          notes?: string | null
+          restaurant_id: string
+          total_tips: number
+        }
+        Update: {
+          created_at?: string
+          distributed_by?: string | null
+          distribution_date?: string
+          distribution_method?: string
+          id?: string
+          notes?: string | null
+          restaurant_id?: string
+          total_tips?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_distributions_distributed_by_fkey"
+            columns: ["distributed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tip_distributions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
