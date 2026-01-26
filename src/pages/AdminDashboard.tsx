@@ -9,7 +9,8 @@ import {
   BarChart3, 
   Shield,
   Menu,
-  LogOut
+  LogOut,
+  FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -19,6 +20,7 @@ import AdminDriverVerification from "@/components/admin/AdminDriverVerification"
 import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
 import AdminPricingControls from "@/components/admin/AdminPricingControls";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
+import AdminDocumentReview from "@/components/admin/AdminDocumentReview";
 
 const AdminDashboard = () => {
   const { signOut, user } = useAuth();
@@ -29,6 +31,7 @@ const AdminDashboard = () => {
     { value: "analytics", label: "Analytics", icon: BarChart3 },
     { value: "users", label: "Users", icon: Users },
     { value: "drivers", label: "Drivers", icon: Car },
+    { value: "documents", label: "Documents", icon: FileCheck },
     { value: "trips", label: "Trips", icon: MapPin },
     { value: "pricing", label: "Pricing", icon: DollarSign },
   ];
@@ -120,6 +123,10 @@ const AdminDashboard = () => {
 
             <TabsContent value="drivers" className="mt-0">
               <AdminDriverVerification />
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-0">
+              <AdminDocumentReview />
             </TabsContent>
 
             <TabsContent value="trips" className="mt-0">
