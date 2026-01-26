@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import FlightOverview from "@/components/flight/FlightOverview";
 import FlightSearch from "@/components/flight/FlightSearch";
@@ -20,10 +21,13 @@ import FlightBookings from "@/components/flight/FlightBookings";
 import FlightSchedules from "@/components/flight/FlightSchedules";
 import FlightSettings from "@/components/flight/FlightSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 const FlightDashboard = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: access, isLoading: accessLoading } = useUserAccess(user?.id);
   const [activeTab, setActiveTab] = useState("overview");
 
   const navItems = [
@@ -73,6 +77,27 @@ const FlightDashboard = () => {
       </div>
     </div>
   );
+
+  // Loading state
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-32 w-full mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Access check - only admins can manage flights for now
+  if (!access?.isFlightManager && !access?.isAdmin) {
+    return (
+      <AccessDenied 
+        title="Flight Manager Access Required"
+        message="You need flight management permissions to access this dashboard."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

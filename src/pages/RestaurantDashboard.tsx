@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import RestaurantOverview from "@/components/restaurant/RestaurantOverview";
 import RestaurantOrders from "@/components/restaurant/RestaurantOrders";
@@ -19,10 +20,13 @@ import RestaurantMenu from "@/components/restaurant/RestaurantMenu";
 import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 const RestaurantDashboard = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: access, isLoading: accessLoading } = useUserAccess(user?.id);
   const [activeTab, setActiveTab] = useState("overview");
 
   const navItems = [
@@ -72,6 +76,27 @@ const RestaurantDashboard = () => {
       </div>
     </div>
   );
+
+  // Loading state
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-32 w-full mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Access check - allow restaurant owners and admins
+  if (!access?.isRestaurantOwner && !access?.isAdmin) {
+    return (
+      <AccessDenied 
+        title="Restaurant Access Required"
+        message="You need to be a registered restaurant owner to access this dashboard."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

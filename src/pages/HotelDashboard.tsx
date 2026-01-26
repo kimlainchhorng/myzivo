@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import HotelOverview from "@/components/hotel/HotelOverview";
 import HotelSearch from "@/components/hotel/HotelSearch";
@@ -20,10 +21,13 @@ import HotelBookings from "@/components/hotel/HotelBookings";
 import HotelRooms from "@/components/hotel/HotelRooms";
 import HotelSettings from "@/components/hotel/HotelSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 const HotelDashboard = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: access, isLoading: accessLoading } = useUserAccess(user?.id);
   const [activeTab, setActiveTab] = useState("overview");
 
   const navItems = [
@@ -73,6 +77,27 @@ const HotelDashboard = () => {
       </div>
     </div>
   );
+
+  // Loading state
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-32 w-full mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Access check - allow hotel owners and admins
+  if (!access?.isHotelOwner && !access?.isAdmin) {
+    return (
+      <AccessDenied 
+        title="Hotel Access Required"
+        message="You need to be a registered hotel owner to access this dashboard."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

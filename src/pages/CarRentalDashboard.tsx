@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import CarRentalOverview from "@/components/carRental/CarRentalOverview";
 import CarRentalBookings from "@/components/carRental/CarRentalBookings";
@@ -19,10 +20,13 @@ import CarRentalInventory from "@/components/carRental/CarRentalInventory";
 import CarRentalAnalytics from "@/components/carRental/CarRentalAnalytics";
 import CarRentalSettings from "@/components/carRental/CarRentalSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import { useUserAccess } from "@/hooks/useUserAccess";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 const CarRentalDashboard = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const { data: access, isLoading: accessLoading } = useUserAccess(user?.id);
   const [activeTab, setActiveTab] = useState("overview");
 
   const navItems = [
@@ -72,6 +76,27 @@ const CarRentalDashboard = () => {
       </div>
     </div>
   );
+
+  // Loading state
+  if (accessLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <Skeleton className="h-12 w-full mb-4" />
+        <Skeleton className="h-32 w-full mb-4" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Access check - allow car rental owners and admins
+  if (!access?.isCarRentalOwner && !access?.isAdmin) {
+    return (
+      <AccessDenied 
+        title="Car Rental Access Required"
+        message="You need to be a registered car rental owner to access this dashboard."
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
