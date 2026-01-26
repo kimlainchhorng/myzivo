@@ -27,8 +27,12 @@ import TermsOfService from "./pages/legal/TermsOfService";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import RefundPolicy from "./pages/legal/RefundPolicy";
 import PartnerAgreement from "./pages/legal/PartnerAgreement";
+import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
+import InsurancePolicy from "./pages/legal/InsurancePolicy";
+import AccessibilityStatement from "./pages/legal/AccessibilityStatement";
 import HelpCenter from "./pages/HelpCenter";
 import Promotions from "./pages/Promotions";
+import CookieConsent from "./components/common/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +66,9 @@ const App = () => (
               <Route path="/partner-agreement" element={<PartnerAgreement />} />
               <Route path="/help" element={<HelpCenter />} />
               <Route path="/promotions" element={<Promotions />} />
+              <Route path="/community-guidelines" element={<CommunityGuidelines />} />
+              <Route path="/insurance" element={<InsurancePolicy />} />
+              <Route path="/accessibility" element={<AccessibilityStatement />} />
               <Route
                 path="/admin"
                 element={
@@ -74,6 +81,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </RealtimeSyncProvider>
+          <CookieConsent />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
