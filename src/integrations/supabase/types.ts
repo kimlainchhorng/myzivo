@@ -47,6 +47,36 @@ export type Database = {
         }
         Relationships: []
       }
+      airlines: {
+        Row: {
+          code: string
+          country: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+        }
+        Insert: {
+          code: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+        }
+        Update: {
+          code?: string
+          country?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       analytics_goals: {
         Row: {
           created_at: string
@@ -142,6 +172,86 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      car_rentals: {
+        Row: {
+          actual_return_date: string | null
+          additional_fees: number | null
+          car_id: string
+          created_at: string | null
+          customer_id: string
+          daily_rate: number
+          deposit_paid: number | null
+          driver_license_number: string | null
+          id: string
+          insurance_fee: number | null
+          notes: string | null
+          pickup_date: string
+          pickup_location: string
+          rating: number | null
+          return_date: string
+          return_location: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          total_amount: number
+          total_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          actual_return_date?: string | null
+          additional_fees?: number | null
+          car_id: string
+          created_at?: string | null
+          customer_id: string
+          daily_rate: number
+          deposit_paid?: number | null
+          driver_license_number?: string | null
+          id?: string
+          insurance_fee?: number | null
+          notes?: string | null
+          pickup_date: string
+          pickup_location: string
+          rating?: number | null
+          return_date: string
+          return_location?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          total_amount: number
+          total_days: number
+          updated_at?: string | null
+        }
+        Update: {
+          actual_return_date?: string | null
+          additional_fees?: number | null
+          car_id?: string
+          created_at?: string | null
+          customer_id?: string
+          daily_rate?: number
+          deposit_paid?: number | null
+          driver_license_number?: string | null
+          id?: string
+          insurance_fee?: number | null
+          notes?: string | null
+          pickup_date?: string
+          pickup_location?: string
+          rating?: number | null
+          return_date?: string
+          return_location?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number
+          total_amount?: number
+          total_days?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_rentals_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_documents: {
         Row: {
@@ -259,6 +369,260 @@ export type Database = {
         }
         Relationships: []
       }
+      flight_bookings: {
+        Row: {
+          booking_reference: string
+          cabin_class: string
+          created_at: string | null
+          customer_id: string
+          flight_id: string
+          id: string
+          passengers: Json
+          payment_status: string | null
+          price_per_passenger: number
+          return_flight_id: string | null
+          seat_selection: Json | null
+          special_requests: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          taxes_fees: number | null
+          total_amount: number
+          total_passengers: number
+          updated_at: string | null
+        }
+        Insert: {
+          booking_reference: string
+          cabin_class?: string
+          created_at?: string | null
+          customer_id: string
+          flight_id: string
+          id?: string
+          passengers: Json
+          payment_status?: string | null
+          price_per_passenger: number
+          return_flight_id?: string | null
+          seat_selection?: Json | null
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          taxes_fees?: number | null
+          total_amount: number
+          total_passengers: number
+          updated_at?: string | null
+        }
+        Update: {
+          booking_reference?: string
+          cabin_class?: string
+          created_at?: string | null
+          customer_id?: string
+          flight_id?: string
+          id?: string
+          passengers?: Json
+          payment_status?: string | null
+          price_per_passenger?: number
+          return_flight_id?: string | null
+          seat_selection?: Json | null
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number
+          taxes_fees?: number | null
+          total_amount?: number
+          total_passengers?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_bookings_flight_id_fkey"
+            columns: ["flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_bookings_return_flight_id_fkey"
+            columns: ["return_flight_id"]
+            isOneToOne: false
+            referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flights: {
+        Row: {
+          aircraft_type: string | null
+          airline_id: string
+          arrival_airport: string
+          arrival_city: string
+          arrival_country: string
+          arrival_time: string
+          business_price: number | null
+          business_seats_available: number | null
+          created_at: string | null
+          departure_airport: string
+          departure_city: string
+          departure_country: string
+          departure_time: string
+          duration_minutes: number
+          economy_price: number
+          economy_seats_available: number | null
+          first_class_price: number | null
+          first_class_seats_available: number | null
+          flight_number: string
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          aircraft_type?: string | null
+          airline_id: string
+          arrival_airport: string
+          arrival_city: string
+          arrival_country: string
+          arrival_time: string
+          business_price?: number | null
+          business_seats_available?: number | null
+          created_at?: string | null
+          departure_airport: string
+          departure_city: string
+          departure_country: string
+          departure_time: string
+          duration_minutes: number
+          economy_price: number
+          economy_seats_available?: number | null
+          first_class_price?: number | null
+          first_class_seats_available?: number | null
+          flight_number: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          aircraft_type?: string | null
+          airline_id?: string
+          arrival_airport?: string
+          arrival_city?: string
+          arrival_country?: string
+          arrival_time?: string
+          business_price?: number | null
+          business_seats_available?: number | null
+          created_at?: string | null
+          departure_airport?: string
+          departure_city?: string
+          departure_country?: string
+          departure_time?: string
+          duration_minutes?: number
+          economy_price?: number
+          economy_seats_available?: number | null
+          first_class_price?: number | null
+          first_class_seats_available?: number | null
+          flight_number?: string
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flights_airline_id_fkey"
+            columns: ["airline_id"]
+            isOneToOne: false
+            referencedRelation: "airlines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_orders: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          delivered_at: string | null
+          delivery_address: string
+          delivery_fee: number | null
+          delivery_lat: number
+          delivery_lng: number
+          driver_id: string | null
+          estimated_delivery_time: number | null
+          estimated_prep_time: number | null
+          id: string
+          items: Json
+          picked_up_at: string | null
+          placed_at: string | null
+          prepared_at: string | null
+          rating: number | null
+          restaurant_id: string
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          tax: number | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          delivered_at?: string | null
+          delivery_address: string
+          delivery_fee?: number | null
+          delivery_lat: number
+          delivery_lng: number
+          driver_id?: string | null
+          estimated_delivery_time?: number | null
+          estimated_prep_time?: number | null
+          id?: string
+          items: Json
+          picked_up_at?: string | null
+          placed_at?: string | null
+          prepared_at?: string | null
+          rating?: number | null
+          restaurant_id: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          tax?: number | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          delivered_at?: string | null
+          delivery_address?: string
+          delivery_fee?: number | null
+          delivery_lat?: number
+          delivery_lng?: number
+          driver_id?: string | null
+          estimated_delivery_time?: number | null
+          estimated_prep_time?: number | null
+          id?: string
+          items?: Json
+          picked_up_at?: string | null
+          placed_at?: string | null
+          prepared_at?: string | null
+          rating?: number | null
+          restaurant_id?: string
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number
+          tax?: number | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goal_completions: {
         Row: {
           all_goals_met: boolean | null
@@ -300,6 +664,298 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      hotel_bookings: {
+        Row: {
+          booking_reference: string
+          check_in_date: string
+          check_out_date: string
+          created_at: string | null
+          customer_id: string
+          guest_email: string
+          guest_name: string
+          guest_phone: string | null
+          guests: number
+          hotel_id: string
+          id: string
+          nights: number
+          payment_status: string | null
+          price_per_night: number
+          rating: number | null
+          room_count: number
+          room_id: string
+          special_requests: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          taxes_fees: number | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          booking_reference: string
+          check_in_date: string
+          check_out_date: string
+          created_at?: string | null
+          customer_id: string
+          guest_email: string
+          guest_name: string
+          guest_phone?: string | null
+          guests?: number
+          hotel_id: string
+          id?: string
+          nights: number
+          payment_status?: string | null
+          price_per_night: number
+          rating?: number | null
+          room_count?: number
+          room_id: string
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number
+          taxes_fees?: number | null
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          booking_reference?: string
+          check_in_date?: string
+          check_out_date?: string
+          created_at?: string | null
+          customer_id?: string
+          guest_email?: string
+          guest_name?: string
+          guest_phone?: string | null
+          guests?: number
+          hotel_id?: string
+          id?: string
+          nights?: number
+          payment_status?: string | null
+          price_per_night?: number
+          rating?: number | null
+          room_count?: number
+          room_id?: string
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number
+          taxes_fees?: number | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_bookings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_rooms: {
+        Row: {
+          amenities: Json | null
+          bed_type: string | null
+          created_at: string | null
+          description: string | null
+          hotel_id: string
+          id: string
+          images: Json | null
+          is_available: boolean | null
+          max_occupancy: number
+          name: string
+          price_per_night: number
+          room_type: string
+          size_sqm: number | null
+          total_rooms: number
+          updated_at: string | null
+        }
+        Insert: {
+          amenities?: Json | null
+          bed_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          hotel_id: string
+          id?: string
+          images?: Json | null
+          is_available?: boolean | null
+          max_occupancy?: number
+          name: string
+          price_per_night: number
+          room_type: string
+          size_sqm?: number | null
+          total_rooms?: number
+          updated_at?: string | null
+        }
+        Update: {
+          amenities?: Json | null
+          bed_type?: string | null
+          created_at?: string | null
+          description?: string | null
+          hotel_id?: string
+          id?: string
+          images?: Json | null
+          is_available?: boolean | null
+          max_occupancy?: number
+          name?: string
+          price_per_night?: number
+          room_type?: string
+          size_sqm?: number | null
+          total_rooms?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_rooms_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotels: {
+        Row: {
+          address: string
+          amenities: Json | null
+          cancellation_policy: string | null
+          check_in_time: string | null
+          check_out_time: string | null
+          city: string
+          commission_rate: number | null
+          country: string
+          created_at: string | null
+          description: string | null
+          email: string
+          id: string
+          images: Json | null
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string
+          rating: number | null
+          star_rating: number | null
+          status: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings: number | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address: string
+          amenities?: Json | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          city: string
+          commission_rate?: number | null
+          country: string
+          created_at?: string | null
+          description?: string | null
+          email: string
+          id?: string
+          images?: Json | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone: string
+          rating?: number | null
+          star_rating?: number | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          amenities?: Json | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          city?: string
+          commission_rate?: number | null
+          country?: string
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          id?: string
+          images?: Json | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string
+          rating?: number | null
+          star_rating?: number | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_bookings?: number | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean | null
+          is_featured: boolean | null
+          name: string
+          preparation_time: number | null
+          price: number
+          restaurant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          name: string
+          preparation_time?: number | null
+          price: number
+          restaurant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          name?: string
+          preparation_time?: number | null
+          price?: number
+          restaurant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pricing: {
         Row: {
@@ -413,6 +1069,171 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rental_cars: {
+        Row: {
+          category: string
+          color: string
+          created_at: string | null
+          daily_rate: number
+          deposit_amount: number | null
+          features: Json | null
+          fuel_type: string
+          id: string
+          images: Json | null
+          is_available: boolean | null
+          lat: number | null
+          license_plate: string
+          lng: number | null
+          location_address: string
+          make: string
+          mileage: number | null
+          model: string
+          monthly_rate: number | null
+          owner_id: string
+          rating: number | null
+          seats: number
+          status: Database["public"]["Enums"]["partner_status"] | null
+          total_rentals: number | null
+          transmission: string
+          updated_at: string | null
+          vin: string | null
+          weekly_rate: number | null
+          year: number
+        }
+        Insert: {
+          category: string
+          color: string
+          created_at?: string | null
+          daily_rate: number
+          deposit_amount?: number | null
+          features?: Json | null
+          fuel_type?: string
+          id?: string
+          images?: Json | null
+          is_available?: boolean | null
+          lat?: number | null
+          license_plate: string
+          lng?: number | null
+          location_address: string
+          make: string
+          mileage?: number | null
+          model: string
+          monthly_rate?: number | null
+          owner_id: string
+          rating?: number | null
+          seats?: number
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_rentals?: number | null
+          transmission?: string
+          updated_at?: string | null
+          vin?: string | null
+          weekly_rate?: number | null
+          year: number
+        }
+        Update: {
+          category?: string
+          color?: string
+          created_at?: string | null
+          daily_rate?: number
+          deposit_amount?: number | null
+          features?: Json | null
+          fuel_type?: string
+          id?: string
+          images?: Json | null
+          is_available?: boolean | null
+          lat?: number | null
+          license_plate?: string
+          lng?: number | null
+          location_address?: string
+          make?: string
+          mileage?: number | null
+          model?: string
+          monthly_rate?: number | null
+          owner_id?: string
+          rating?: number | null
+          seats?: number
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_rentals?: number | null
+          transmission?: string
+          updated_at?: string | null
+          vin?: string | null
+          weekly_rate?: number | null
+          year?: number
+        }
+        Relationships: []
+      }
+      restaurants: {
+        Row: {
+          address: string
+          avg_prep_time: number | null
+          commission_rate: number | null
+          cover_image_url: string | null
+          created_at: string | null
+          cuisine_type: string
+          description: string | null
+          email: string
+          id: string
+          is_open: boolean | null
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          name: string
+          opening_hours: Json | null
+          owner_id: string
+          phone: string
+          rating: number | null
+          status: Database["public"]["Enums"]["partner_status"] | null
+          total_orders: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          avg_prep_time?: number | null
+          commission_rate?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          cuisine_type: string
+          description?: string | null
+          email: string
+          id?: string
+          is_open?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          name: string
+          opening_hours?: Json | null
+          owner_id: string
+          phone: string
+          rating?: number | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_orders?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          avg_prep_time?: number | null
+          commission_rate?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          cuisine_type?: string
+          description?: string | null
+          email?: string
+          id?: string
+          is_open?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          logo_url?: string | null
+          name?: string
+          opening_hours?: Json | null
+          owner_id?: string
+          phone?: string
+          rating?: number | null
+          status?: Database["public"]["Enums"]["partner_status"] | null
+          total_orders?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       saved_locations: {
         Row: {
@@ -685,7 +1506,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+        | "refunded"
       driver_status: "pending" | "verified" | "rejected" | "suspended"
+      partner_status: "pending" | "active" | "suspended" | "inactive"
       trip_status:
         | "requested"
         | "accepted"
@@ -822,7 +1651,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+        "refunded",
+      ],
       driver_status: ["pending", "verified", "rejected", "suspended"],
+      partner_status: ["pending", "active", "suspended", "inactive"],
       trip_status: [
         "requested",
         "accepted",
