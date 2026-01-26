@@ -1,0 +1,154 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+export type UserProfile = {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  status: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const useUserProfile = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ["userProfile", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as UserProfile | null;
+    },
+    enabled: !!user?.id,
+  });
+};
+
+export const useUpdateUserProfile = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (updates: Partial<Pick<UserProfile, "full_name" | "phone" | "avatar_url">>) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Check if profile exists
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existing) {
+        // Update existing profile
+        const { error } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+      } else {
+        // Create new profile
+        const { error } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            ...updates,
+          });
+
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
+      toast.success("Profile updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Failed to update profile: " + error.message);
+    },
+  });
+};
+
+export const useUploadAvatar = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      // Validate file
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File size must be less than 5MB");
+      }
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error("Please upload a JPG, PNG, or WebP image");
+      }
+
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update profile with avatar URL
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrl })
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("profiles")
+          .insert({
+            user_id: user.id,
+            email: user.email,
+            avatar_url: publicUrl,
+          });
+
+        if (error) throw error;
+      }
+
+      return publicUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
+      toast.success("Avatar updated successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+};

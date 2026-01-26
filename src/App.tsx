@@ -38,6 +38,7 @@ import FoodOrdering from "./pages/FoodOrdering";
 import FlightBooking from "./pages/FlightBooking";
 import HotelBooking from "./pages/HotelBooking";
 import CarRentalBooking from "./pages/CarRentalBooking";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/book-flight" element={<FlightBooking />} />
               <Route path="/book-hotel" element={<HotelBooking />} />
               <Route path="/rent-car" element={<CarRentalBooking />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="/trips" element={<TripHistory />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
