@@ -371,6 +371,71 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_feedback: {
+        Row: {
+          ambiance_rating: number | null
+          comment: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string | null
+          food_rating: number | null
+          id: string
+          is_public: boolean | null
+          order_id: string | null
+          rating: number
+          responded_at: string | null
+          response: string | null
+          restaurant_id: string
+          sentiment: string | null
+          service_rating: number | null
+          updated_at: string
+        }
+        Insert: {
+          ambiance_rating?: number | null
+          comment?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          food_rating?: number | null
+          id?: string
+          is_public?: boolean | null
+          order_id?: string | null
+          rating: number
+          responded_at?: string | null
+          response?: string | null
+          restaurant_id: string
+          sentiment?: string | null
+          service_rating?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ambiance_rating?: number | null
+          comment?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          food_rating?: number | null
+          id?: string
+          is_public?: boolean | null
+          order_id?: string | null
+          rating?: number
+          responded_at?: string | null
+          response?: string | null
+          restaurant_id?: string
+          sentiment?: string | null
+          service_rating?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_order_items: {
         Row: {
           created_at: string
@@ -925,6 +990,47 @@ export type Database = {
             columns: ["airline_id"]
             isOneToOne: false
             referencedRelation: "airlines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      floor_plans: {
+        Row: {
+          created_at: string
+          height: number
+          id: string
+          is_active: boolean | null
+          name: string
+          restaurant_id: string
+          updated_at: string
+          width: number
+        }
+        Insert: {
+          created_at?: string
+          height?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          restaurant_id: string
+          updated_at?: string
+          width?: number
+        }
+        Update: {
+          created_at?: string
+          height?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          restaurant_id?: string
+          updated_at?: string
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "floor_plans_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -2304,36 +2410,101 @@ export type Database = {
           },
         ]
       }
+      restaurant_branches: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          parent_restaurant_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          parent_restaurant_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          parent_restaurant_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_branches_parent_restaurant_id_fkey"
+            columns: ["parent_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           capacity: number
           created_at: string
+          floor_plan_id: string | null
+          height: number | null
           id: string
+          position_x: number | null
+          position_y: number | null
           qr_token: string
           restaurant_id: string
+          shape: string | null
           status: string
           table_number: string
           updated_at: string
+          width: number | null
         }
         Insert: {
           capacity?: number
           created_at?: string
+          floor_plan_id?: string | null
+          height?: number | null
           id?: string
+          position_x?: number | null
+          position_y?: number | null
           qr_token?: string
           restaurant_id: string
+          shape?: string | null
           status?: string
           table_number: string
           updated_at?: string
+          width?: number | null
         }
         Update: {
           capacity?: number
           created_at?: string
+          floor_plan_id?: string | null
+          height?: number | null
           id?: string
+          position_x?: number | null
+          position_y?: number | null
           qr_token?: string
           restaurant_id?: string
+          shape?: string | null
           status?: string
           table_number?: string
           updated_at?: string
+          width?: number | null
         }
         Relationships: [
           {
@@ -2452,6 +2623,68 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      scheduled_reports: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          include_inventory: boolean | null
+          include_orders: boolean | null
+          include_revenue: boolean | null
+          include_staff: boolean | null
+          is_active: boolean | null
+          last_sent_at: string | null
+          next_scheduled_at: string | null
+          recipients: string[] | null
+          report_name: string
+          report_type: string
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id?: string
+          include_inventory?: boolean | null
+          include_orders?: boolean | null
+          include_revenue?: boolean | null
+          include_staff?: boolean | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_scheduled_at?: string | null
+          recipients?: string[] | null
+          report_name: string
+          report_type: string
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          include_inventory?: boolean | null
+          include_orders?: boolean | null
+          include_revenue?: boolean | null
+          include_staff?: boolean | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_scheduled_at?: string | null
+          recipients?: string[] | null
+          report_name?: string
+          report_type?: string
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_members: {
         Row: {
