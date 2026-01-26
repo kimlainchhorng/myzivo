@@ -39,6 +39,10 @@ import FlightBooking from "./pages/FlightBooking";
 import HotelBooking from "./pages/HotelBooking";
 import CarRentalBooking from "./pages/CarRentalBooking";
 import Profile from "./pages/Profile";
+import PackageDelivery from "./pages/PackageDelivery";
+import GroundTransport from "./pages/GroundTransport";
+import Events from "./pages/Events";
+import TravelInsurance from "./pages/TravelInsurance";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +85,10 @@ const App = () => (
               <Route path="/community-guidelines" element={<CommunityGuidelines />} />
               <Route path="/insurance" element={<InsurancePolicy />} />
               <Route path="/accessibility" element={<AccessibilityStatement />} />
+              <Route path="/package-delivery" element={<PackageDelivery />} />
+              <Route path="/ground-transport" element={<GroundTransport />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/travel-insurance" element={<TravelInsurance />} />
               <Route
                 path="/admin"
                 element={
