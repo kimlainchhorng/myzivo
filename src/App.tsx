@@ -13,6 +13,7 @@ import RiderApp from "./pages/RiderApp";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import DriverRegistration from "./pages/DriverRegistration";
+import DriverApp from "./pages/DriverApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/drive" element={<DriverRegistration />} />
+            <Route path="/driver" element={<DriverApp />} />
             <Route
               path="/admin"
               element={
