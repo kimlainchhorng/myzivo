@@ -97,29 +97,29 @@ const Footer = () => {
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Section */}
-        <div className="py-12 lg:py-16 border-b border-border">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="font-display text-2xl lg:text-3xl font-bold mb-2">
+        <div className="py-8 sm:py-12 lg:py-16 border-b border-border">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
+            <div className="text-center lg:text-left">
+              <h3 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
                 Stay in the <span className="text-gradient-rides">loop</span>
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Get exclusive deals, travel tips, and updates delivered to your inbox.
               </p>
             </div>
-            <form onSubmit={handleNewsletterSubmit} className="flex gap-3">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-11 bg-input border-border h-12"
+                  className="pl-10 sm:pl-11 bg-input border-border h-11 sm:h-12 text-sm sm:text-base"
                   required
                 />
               </div>
-              <Button type="submit" variant="hero" size="lg" className="gap-2 shrink-0">
+              <Button type="submit" variant="hero" size="lg" className="gap-2 shrink-0 h-11 sm:h-12">
                 Subscribe
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -128,57 +128,57 @@ const Footer = () => {
         </div>
 
         {/* Main Footer Grid */}
-        <div className="py-12 lg:py-16">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
+        <div className="py-8 sm:py-12 lg:py-16">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 lg:gap-6">
             {/* Brand Column */}
-            <div className="col-span-2 md:col-span-3 lg:col-span-2">
-              <Link to="/" className="flex items-center gap-2 mb-6 group">
-                <div className="w-12 h-12 rounded-xl gradient-rides flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <span className="font-display font-bold text-2xl text-primary-foreground">Z</span>
+            <div className="col-span-2 sm:col-span-3 lg:col-span-2 text-center sm:text-left">
+              <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6 group">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl gradient-rides flex items-center justify-center group-hover:scale-105 transition-transform">
+                  <span className="font-display font-bold text-xl sm:text-2xl text-primary-foreground">Z</span>
                 </div>
-                <span className="font-display font-bold text-3xl text-foreground">ZIVO</span>
+                <span className="font-display font-bold text-2xl sm:text-3xl text-foreground">ZIVO</span>
               </Link>
-              <p className="text-muted-foreground mb-6 max-w-sm">
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-sm mx-auto sm:mx-0">
                 The all-in-one super app for rides, food, flights, hotels, and more. Go anywhere.
                 Get anything. Travel everywhere.
               </p>
 
               {/* App Store Buttons */}
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 justify-center sm:justify-start">
                 <a
                   href="#"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                 >
-                  <Apple className="w-6 h-6" />
+                  <Apple className="w-5 h-5 sm:w-6 sm:h-6" />
                   <div className="text-left">
-                    <p className="text-[10px] text-muted-foreground leading-none">Download on the</p>
-                    <p className="text-sm font-semibold leading-tight">App Store</p>
+                    <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">Download on the</p>
+                    <p className="text-xs sm:text-sm font-semibold leading-tight">App Store</p>
                   </div>
                 </a>
                 <a
                   href="#"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
                 >
-                  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3.609 1.814L13.792 12 3.609 22.186a.994.994 0 01-.609-.92V2.734a.99.99 0 01.609-.92zM14.961 13.169l2.652 2.652-9.156 5.211 6.504-7.863zm4.07-2.652l2.4 1.371a.997.997 0 010 1.724l-2.4 1.371L16.84 12l2.192-1.483zM8.457 3.968l9.156 5.211-2.652 2.652-6.504-7.863z" />
                   </svg>
                   <div className="text-left">
-                    <p className="text-[10px] text-muted-foreground leading-none">Get it on</p>
-                    <p className="text-sm font-semibold leading-tight">Google Play</p>
+                    <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">Get it on</p>
+                    <p className="text-xs sm:text-sm font-semibold leading-tight">Google Play</p>
                   </div>
                 </a>
               </div>
 
               {/* Social Links */}
-              <div className="flex gap-3">
+              <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
                 {socialLinks.map((social) => (
                   <a
                     key={social.name}
                     href={social.href}
-                    className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
                     aria-label={social.name}
                   >
-                    <social.icon className="w-5 h-5" />
+                    <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                   </a>
                 ))}
               </div>
