@@ -20,10 +20,10 @@ const footerLinks = {
     { name: "Driver app", href: "#" },
   ],
   support: [
-    { name: "Help center", href: "#" },
-    { name: "Safety", href: "#" },
-    { name: "Terms of service", href: "#" },
-    { name: "Privacy policy", href: "#" },
+    { name: "Help center", href: "/help" },
+    { name: "Safety", href: "/help#safety" },
+    { name: "Terms of service", href: "/terms-of-service" },
+    { name: "Privacy policy", href: "/privacy-policy" },
   ],
 };
 
