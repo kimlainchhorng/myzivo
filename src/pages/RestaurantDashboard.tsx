@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -91,7 +92,22 @@ const RestaurantDashboard = () => {
   }
 
   // Access check - allow restaurant owners and admins
+  // If not authorized, redirect to restaurant registration
   if (!access?.isRestaurantOwner && !access?.isAdmin) {
+    // Check if we're on the restaurant subdomain - show registration instead of access denied
+    const isRestaurantDomain = window.location.hostname.includes('restaurant') || 
+                                window.location.pathname === '/restaurant';
+    
+    if (isRestaurantDomain) {
+      // Dynamically import and render registration page
+      const RestaurantRegistration = React.lazy(() => import("./RestaurantRegistration"));
+      return (
+        <React.Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-eats" /></div>}>
+          <RestaurantRegistration />
+        </React.Suspense>
+      );
+    }
+    
     return (
       <AccessDenied 
         title="Restaurant Access Required"
