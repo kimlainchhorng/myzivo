@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, MapPin } from "lucide-react";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import LocationMessage from "./LocationMessage";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import {
@@ -67,6 +69,7 @@ const TripChatModal = ({
   const sendMessage = useSendMessage();
   const markRead = useMarkMessagesRead();
   const { isOtherTyping, sendTypingStatus } = useTypingIndicator(tripId, userType);
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
 
   // Subscribe to realtime updates
   const handleNewMessage = useCallback(
@@ -153,6 +156,46 @@ const TripChatModal = ({
     }
   };
 
+  const handleShareLocation = async () => {
+    if (sendMessage.isPending || isGettingLocation) return;
+
+    try {
+      const location = await getCurrentLocation();
+      const address = await reverseGeocode(location.lat, location.lng);
+      
+      // Format location as a special message with JSON payload
+      const locationMessage = JSON.stringify({
+        type: "location",
+        lat: location.lat,
+        lng: location.lng,
+        address: address,
+      });
+
+      await sendMessage.mutateAsync({
+        tripId,
+        content: locationMessage,
+        senderType: userType,
+      });
+
+      toast.success("Location shared!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to share location");
+    }
+  };
+
+  // Helper to parse location messages
+  const parseLocationMessage = (content: string): { type: "location"; lat: number; lng: number; address: string } | null => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed.type === "location" && parsed.lat && parsed.lng) {
+        return parsed;
+      }
+    } catch {
+      // Not a JSON message, return null
+    }
+    return null;
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -201,6 +244,7 @@ const TripChatModal = ({
                   new Date(message.created_at).getTime() -
                     new Date(messages[index - 1].created_at).getTime() >
                     300000; // 5 minutes
+                const locationData = parseLocationMessage(message.content);
 
                 return (
                   <div key={message.id}>
@@ -225,18 +269,27 @@ const TripChatModal = ({
                           </AvatarFallback>
                         </Avatar>
                       )}
-                      <div
-                        className={cn(
-                          "max-w-[75%] px-4 py-2 rounded-2xl",
-                          isMe
-                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                            : "bg-muted rounded-bl-sm"
-                        )}
-                      >
-                        <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.content}
-                        </p>
-                      </div>
+                      {locationData ? (
+                        <LocationMessage
+                          lat={locationData.lat}
+                          lng={locationData.lng}
+                          address={locationData.address}
+                          isMe={isMe}
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            "max-w-[75%] px-4 py-2 rounded-2xl",
+                            isMe
+                              ? "bg-primary text-primary-foreground rounded-br-sm"
+                              : "bg-muted rounded-bl-sm"
+                          )}
+                        >
+                          <p className="text-sm whitespace-pre-wrap break-words">
+                            {message.content}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -284,6 +337,20 @@ const TripChatModal = ({
         {/* Input Area */}
         <div className="p-4 border-t">
           <div className="flex gap-2">
+            {/* Share Location Button - primarily for riders */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleShareLocation}
+              disabled={sendMessage.isPending || isGettingLocation}
+              title="Share your location"
+            >
+              {isGettingLocation ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <MapPin className="h-4 w-4" />
+              )}
+            </Button>
             <Input
               ref={inputRef}
               placeholder="Type a message..."
