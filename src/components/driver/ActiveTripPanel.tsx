@@ -16,8 +16,10 @@ import {
   Locate
 } from "lucide-react";
 import { Trip, TripStatus } from "@/hooks/useTrips";
+import { useUnreadMessageCount } from "@/hooks/useTripChat";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import TripChatModal from "@/components/chat/TripChatModal";
 
 interface ActiveTripPanelProps {
   trip: Trip;
@@ -43,6 +45,9 @@ const ActiveTripPanel = ({ trip, driverId, onUpdateStatus, isUpdating }: ActiveT
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const { data: unreadCount = 0 } = useUnreadMessageCount(trip.id, "driver");
 
   const currentStep = statusFlow.find(s => s.status === trip.status);
   const currentIndex = statusFlow.findIndex(s => s.status === trip.status);
@@ -353,9 +358,18 @@ const ActiveTripPanel = ({ trip, driverId, onUpdateStatus, isUpdating }: ActiveT
             <Phone className="w-4 h-4 mr-2" />
             Call
           </Button>
-          <Button variant="outline" className="flex-1">
+          <Button 
+            variant="outline" 
+            className="flex-1 relative"
+            onClick={() => setIsChatOpen(true)}
+          >
             <MessageCircle className="w-4 h-4 mr-2" />
             Message
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </Button>
         </div>
 
@@ -380,6 +394,16 @@ const ActiveTripPanel = ({ trip, driverId, onUpdateStatus, isUpdating }: ActiveT
             </>
           )}
         </Button>
+
+        {/* Chat Modal */}
+        <TripChatModal
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          tripId={trip.id}
+          userType="driver"
+          otherPartyName="Rider"
+          otherPartyAvatar={null}
+        />
       </div>
     </div>
   );

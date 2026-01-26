@@ -27,6 +27,7 @@ export type Trip = {
   driver?: {
     full_name: string;
     email: string;
+    avatar_url: string | null;
   } | null;
   rider?: {
     full_name: string;
@@ -42,7 +43,7 @@ export const useTrips = () => {
         .from("trips")
         .select(`
           *,
-          driver:drivers(full_name, email)
+          driver:drivers(full_name, email, avatar_url)
         `)
         .order("created_at", { ascending: false });
 
