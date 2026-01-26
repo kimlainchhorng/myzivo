@@ -53,7 +53,7 @@ const RiderApp = () => {
         .from("trips")
         .select(`
           *,
-          driver:drivers(full_name, email)
+          driver:drivers(full_name, email, avatar_url)
         `)
         .eq("rider_id", user.id)
         .in("status", ["requested", "accepted", "en_route", "arrived", "in_progress"])

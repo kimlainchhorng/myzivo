@@ -1,0 +1,229 @@
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Send, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import {
+  useTripMessages,
+  useSendMessage,
+  useMarkMessagesRead,
+  useTripChatRealtime,
+  TripMessage,
+} from "@/hooks/useTripChat";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+
+interface TripChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  tripId: string;
+  userType: "rider" | "driver";
+  otherPartyName: string;
+  otherPartyAvatar?: string | null;
+}
+
+const TripChatModal = ({
+  isOpen,
+  onClose,
+  tripId,
+  userType,
+  otherPartyName,
+  otherPartyAvatar,
+}: TripChatModalProps) => {
+  const { user } = useAuth();
+  const [newMessage, setNewMessage] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: messages, isLoading } = useTripMessages(tripId);
+  const sendMessage = useSendMessage();
+  const markRead = useMarkMessagesRead();
+
+  // Subscribe to realtime updates
+  const handleNewMessage = useCallback(
+    (message: TripMessage) => {
+      if (message.sender_id !== user?.id) {
+        // Play notification sound or show toast
+        toast.info(`${otherPartyName}: ${message.content.substring(0, 50)}...`);
+      }
+    },
+    [user?.id, otherPartyName]
+  );
+
+  useTripChatRealtime(tripId, handleNewMessage);
+
+  // Mark messages as read when modal opens
+  useEffect(() => {
+    if (isOpen && tripId) {
+      markRead.mutate({ tripId, senderType: userType });
+    }
+  }, [isOpen, tripId, userType]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // Focus input when modal opens
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen]);
+
+  const handleSend = async () => {
+    if (!newMessage.trim() || sendMessage.isPending) return;
+
+    try {
+      await sendMessage.mutateAsync({
+        tripId,
+        content: newMessage,
+        senderType: userType,
+      });
+      setNewMessage("");
+    } catch (error) {
+      toast.error("Failed to send message");
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md h-[600px] flex flex-col p-0">
+        <DialogHeader className="p-4 border-b">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={otherPartyAvatar || undefined} />
+              <AvatarFallback>{getInitials(otherPartyName)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <DialogTitle>{otherPartyName}</DialogTitle>
+              <p className="text-sm text-muted-foreground capitalize">
+                {userType === "rider" ? "Your Driver" : "Rider"}
+              </p>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !messages || messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <p className="text-muted-foreground mb-2">No messages yet</p>
+              <p className="text-sm text-muted-foreground">
+                Send a message to {otherPartyName}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, index) => {
+                const isMe = message.sender_id === user?.id;
+                const showTimestamp =
+                  index === 0 ||
+                  new Date(message.created_at).getTime() -
+                    new Date(messages[index - 1].created_at).getTime() >
+                    300000; // 5 minutes
+
+                return (
+                  <div key={message.id}>
+                    {showTimestamp && (
+                      <div className="text-center mb-2">
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                          {format(new Date(message.created_at), "MMM d, h:mm a")}
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        "flex gap-2",
+                        isMe ? "justify-end" : "justify-start"
+                      )}
+                    >
+                      {!isMe && (
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          <AvatarImage src={otherPartyAvatar || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(otherPartyName)}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div
+                        className={cn(
+                          "max-w-[75%] px-4 py-2 rounded-2xl",
+                          isMe
+                            ? "bg-primary text-primary-foreground rounded-br-sm"
+                            : "bg-muted rounded-bl-sm"
+                        )}
+                      >
+                        <p className="text-sm whitespace-pre-wrap break-words">
+                          {message.content}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Input Area */}
+        <div className="p-4 border-t">
+          <div className="flex gap-2">
+            <Input
+              ref={inputRef}
+              placeholder="Type a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={sendMessage.isPending}
+              className="flex-1"
+            />
+            <Button
+              size="icon"
+              onClick={handleSend}
+              disabled={!newMessage.trim() || sendMessage.isPending}
+            >
+              {sendMessage.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default TripChatModal;

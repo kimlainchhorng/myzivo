@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car } from "lucide-react";
 import { Trip } from "@/hooks/useTrips";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
+import { useUnreadMessageCount } from "@/hooks/useTripChat";
 import { supabase } from "@/integrations/supabase/client";
+import TripChatModal from "@/components/chat/TripChatModal";
 
 interface TripTrackerProps {
   trip: Trip;
@@ -32,6 +34,9 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [eta, setEta] = useState<number | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const { data: unreadCount = 0 } = useUnreadMessageCount(trip.id, "rider");
 
   const currentStepIndex = statusSteps.findIndex(s => s.status === trip.status);
   const isActive = ["requested", "accepted", "en_route", "arrived", "in_progress"].includes(trip.status || "");
@@ -258,8 +263,18 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                 <Button variant="outline" size="icon">
                   <Phone className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="icon">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="relative"
+                  onClick={() => setIsChatOpen(true)}
+                >
                   <MessageCircle className="w-4 h-4" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
@@ -312,6 +327,18 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
           <X className="w-4 h-4 mr-2" />
           Cancel Trip
         </Button>
+      )}
+
+      {/* Chat Modal */}
+      {trip.driver && (
+        <TripChatModal
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          tripId={trip.id}
+          userType="rider"
+          otherPartyName={trip.driver.full_name}
+          otherPartyAvatar={trip.driver.avatar_url}
+        />
       )}
     </div>
   );
