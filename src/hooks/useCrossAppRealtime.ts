@@ -154,10 +154,12 @@ export const useDriverDeliveryRealtime = (driverId: string | undefined) => {
 /**
  * Real-time sync for all online drivers - used by admin and rider apps
  */
-export const useOnlineDriversRealtime = () => {
+export const useOnlineDriversRealtime = (enabled: boolean = true) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
+
     const channel = supabase
       .channel("online-drivers")
       .on(
@@ -179,16 +181,18 @@ export const useOnlineDriversRealtime = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [enabled, queryClient]);
 };
 
 /**
- * Real-time sync for all trips - used by admin dashboard
+ * Real-time sync for all orders - used by admin dashboard
  */
-export const useAllOrdersRealtime = () => {
+export const useAllOrdersRealtime = (enabled: boolean = true) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
+
     const channel = supabase
       .channel("all-orders")
       .on(
@@ -208,7 +212,7 @@ export const useAllOrdersRealtime = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, [enabled, queryClient]);
 };
 
 /**
@@ -232,9 +236,7 @@ export const useCrossAppSync = (options: {
   // Restaurant order updates
   useRestaurantOrdersRealtime(restaurantId);
 
-  // Admin sees all
-  if (isAdmin) {
-    useAllOrdersRealtime();
-    useOnlineDriversRealtime();
-  }
+  // Admin sees all - hooks called unconditionally with enabled flag
+  useAllOrdersRealtime(!!isAdmin);
+  useOnlineDriversRealtime(!!isAdmin);
 };

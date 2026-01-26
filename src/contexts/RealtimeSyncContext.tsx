@@ -148,12 +148,10 @@ export const RealtimeSyncProvider = ({ children }: RealtimeSyncProviderProps) =>
   // Restaurant owner: receive order updates
   useRestaurantOrdersRealtime(restaurantData?.id);
 
-  // Admin: see everything
+  // Admin: see everything - hooks must be called unconditionally
   useAllTripsRealtime(isAdmin);
-  if (isAdmin) {
-    useAllOrdersRealtime();
-    useOnlineDriversRealtime();
-  }
+  useAllOrdersRealtime(isAdmin);
+  useOnlineDriversRealtime(isAdmin);
 
   return (
     <RealtimeSyncContext.Provider value={{ isConnected: true }}>
