@@ -19,6 +19,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/hooks/useTrips";
+import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
 
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
 
@@ -36,6 +37,9 @@ const RiderApp = () => {
   const { calculateRoute, isCalculating } = useRouteCalculation();
   const { calculateFares } = useFareEstimation();
   const createTrip = useCreateTrip();
+
+  // Enable realtime subscriptions for trip updates
+  useRiderTripRealtime(user?.id);
 
   // Check for active trip
   const { data: activeTrip, isLoading: tripLoading } = useQuery({
@@ -59,7 +63,8 @@ const RiderApp = () => {
       return data as Trip | null;
     },
     enabled: !!user,
-    refetchInterval: 5000,
+    // Reduced polling since we have realtime now
+    refetchInterval: 30000,
   });
 
   // Calculate route when both locations are set
