@@ -46,8 +46,9 @@ const Header = () => {
               <Hotel className="w-4 h-4" />
               <span className="font-medium">Hotels</span>
             </button>
-            <button onClick={() => navigate("/car-rental")} className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Car Rental
+            <button onClick={() => navigate("/rent-car")} className="flex items-center gap-2 text-muted-foreground hover:text-rides transition-colors">
+              <Car className="w-4 h-4" />
+              <span className="font-medium">Car Rental</span>
             </button>
           </nav>
 
@@ -115,8 +116,9 @@ const Header = () => {
               <Hotel className="w-5 h-5 text-amber-500" />
               <span className="font-medium">Hotels</span>
             </button>
-            <button onClick={() => { navigate("/car-rental"); setIsMenuOpen(false); }} className="text-foreground py-2 font-medium text-left">
-              Car Rental
+            <button onClick={() => { navigate("/rent-car"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
+              <Car className="w-5 h-5 text-rides" />
+              <span className="font-medium">Car Rental</span>
             </button>
             {user && (
               <>
