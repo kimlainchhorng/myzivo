@@ -13,11 +13,25 @@ import {
   FileCheck,
   Store,
   Plane,
-  Building2
+  Building2,
+  ExternalLink,
+  User,
+  Utensils,
+  Hotel
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
@@ -47,6 +61,15 @@ const AdminDashboard = () => {
     { value: "hotels", label: "Hotels", icon: Building2 },
   ];
 
+  const dashboardLinks = [
+    { label: "Customer Dashboard", path: "/dashboard", icon: User },
+    { label: "Driver App", path: "/driver", icon: Car },
+    { label: "Restaurant Dashboard", path: "/restaurant", icon: Utensils },
+    { label: "Car Rental Dashboard", path: "/car-rental", icon: Car },
+    { label: "Flight Dashboard", path: "/flights", icon: Plane },
+    { label: "Hotel Dashboard", path: "/hotels", icon: Hotel },
+  ];
+
   const handleLogout = async () => {
     await signOut();
     navigate("/login");
@@ -58,6 +81,35 @@ const AdminDashboard = () => {
         <Shield className="h-6 w-6 text-primary" />
         <span className="font-bold text-lg">Zivo Admin</span>
       </div>
+      
+      {/* Dashboard Switcher */}
+      <div className="px-2 py-3 border-b border-border">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <ExternalLink className="h-4 w-4" />
+                Switch Dashboard
+              </span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuLabel>Go to Dashboard</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {dashboardLinks.map((link) => (
+              <DropdownMenuItem
+                key={link.path}
+                onClick={() => navigate(link.path)}
+                className="cursor-pointer"
+              >
+                <link.icon className="h-4 w-4 mr-2" />
+                {link.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <nav className="px-2 py-4 space-y-1 flex-1 overflow-auto">
         {navItems.map((item) => (
           <button
