@@ -94,6 +94,7 @@ export type Database = {
           resolution_notes: string | null
           resolved_at: string | null
           root_cause_category: string | null
+          root_cause_confirmed: boolean | null
           root_cause_title: string | null
           severity: string
           status: string
@@ -113,6 +114,7 @@ export type Database = {
           resolution_notes?: string | null
           resolved_at?: string | null
           root_cause_category?: string | null
+          root_cause_confirmed?: boolean | null
           root_cause_title?: string | null
           severity: string
           status?: string
@@ -132,6 +134,7 @@ export type Database = {
           resolution_notes?: string | null
           resolved_at?: string | null
           root_cause_category?: string | null
+          root_cause_confirmed?: boolean | null
           root_cause_title?: string | null
           severity?: string
           status?: string
@@ -372,6 +375,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          driver_id: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          driver_id: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          driver_id?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_locations: {
         Row: {
