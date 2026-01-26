@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,10 @@ import {
   Waves,
   Utensils,
   Heart,
-  ChevronRight
+  ChevronRight,
+  Bed
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -33,6 +35,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
+import { toast } from "sonner";
 
 // Popular destinations
 const popularCities = [
@@ -123,7 +127,10 @@ const sampleHotels = [
   },
 ];
 
+type BookingStep = "search" | "select" | "details" | "confirmation";
+
 const HotelBooking = () => {
+  const navigate = useNavigate();
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
@@ -131,9 +138,15 @@ const HotelBooking = () => {
   const [rooms, setRooms] = useState("1");
   const [searchResults, setSearchResults] = useState<typeof sampleHotels | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [selectedHotel, setSelectedHotel] = useState<typeof sampleHotels[0] | null>(null);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("search");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmationNumber, setConfirmationNumber] = useState("");
 
   const handleSearch = () => {
     setSearchResults(sampleHotels);
+    setBookingStep("select");
   };
 
   const toggleFavorite = (id: number) => {
@@ -142,7 +155,32 @@ const HotelBooking = () => {
     );
   };
 
+  const handleSelectHotel = (hotel: typeof sampleHotels[0]) => {
+    setSelectedHotel(hotel);
+    setBookingStep("details");
+  };
+
+  const handleConfirmBooking = async () => {
+    setIsProcessing(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsProcessing(false);
+    setIsCheckoutOpen(false);
+    setConfirmationNumber(`HTL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+    setBookingStep("confirmation");
+  };
+
+  const handleReset = () => {
+    setSearchResults(null);
+    setSelectedHotel(null);
+    setBookingStep("search");
+    navigate("/book-hotel");
+  };
+
   const nights = checkIn && checkOut ? differenceInDays(checkOut, checkIn) : 1;
+  const roomCount = parseInt(rooms);
+  const subtotal = selectedHotel ? selectedHotel.pricePerNight * nights * roomCount : 0;
+  const taxes = subtotal * 0.15;
+  const grandTotal = subtotal + taxes;
 
   const getAmenityIcon = (amenity: string) => {
     switch (amenity) {
@@ -160,6 +198,30 @@ const HotelBooking = () => {
       <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
     ));
   };
+
+  // Show confirmation screen
+  if (bookingStep === "confirmation" && selectedHotel) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <BookingConfirmation
+          confirmationNumber={confirmationNumber}
+          title="Your stay is confirmed!"
+          subtitle={selectedHotel.name}
+          details={[
+            { label: "Check-in", value: checkIn ? format(checkIn, "MMM d, yyyy") : "Selected date", icon: <CalendarIcon className="w-4 h-4" /> },
+            { label: "Check-out", value: checkOut ? format(checkOut, "MMM d, yyyy") : "Selected date", icon: <CalendarIcon className="w-4 h-4" /> },
+            { label: "Room", value: `${roomCount} × ${selectedHotel.roomType}`, icon: <Bed className="w-4 h-4" /> },
+            { label: "Guests", value: `${guests} guest${parseInt(guests) > 1 ? 's' : ''}`, icon: <Users className="w-4 h-4" /> },
+          ]}
+          totalAmount={grandTotal}
+          onGoHome={handleReset}
+          accentColor="amber"
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -433,7 +495,10 @@ const HotelBooking = () => {
                                 <p className="text-xs text-muted-foreground mb-3">
                                   Includes taxes & fees
                                 </p>
-                                <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white">
+                                <Button
+                                  className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+                                  onClick={() => handleSelectHotel(hotel)}
+                                >
                                   Book Now
                                 </Button>
                               </div>
@@ -522,6 +587,59 @@ const HotelBooking = () => {
           </section>
         )}
       </main>
+
+      {/* Selected Hotel Summary Sidebar */}
+      <AnimatePresence>
+        {selectedHotel && bookingStep === "details" && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50"
+          >
+            <BookingSummaryCard
+              title={selectedHotel.name}
+              subtitle={selectedHotel.location}
+              icon={<Hotel className="w-5 h-5" />}
+              items={[
+                { label: `${nights} night${nights > 1 ? 's' : ''} × ${roomCount} room${roomCount > 1 ? 's' : ''}`, amount: subtotal },
+                { label: "Taxes & Fees (15%)", amount: taxes },
+                { label: "Total", amount: grandTotal, isTotal: true },
+              ]}
+              ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
+              onConfirm={() => setIsCheckoutOpen(true)}
+              accentColor="amber"
+              features={[
+                selectedHotel.freeCancellation ? "Free Cancellation" : "",
+                selectedHotel.breakfast ? "Breakfast Included" : "",
+              ].filter(Boolean)}
+              estimatedTime={`Check-in: ${checkIn ? format(checkIn, "MMM d") : "Select date"}`}
+            />
+            <Button
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => {
+                setSelectedHotel(null);
+                setBookingStep("select");
+              }}
+            >
+              Choose Different Hotel
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        open={isCheckoutOpen}
+        onOpenChange={setIsCheckoutOpen}
+        amount={grandTotal}
+        serviceName={selectedHotel?.name || "Hotel"}
+        serviceDetails={`${nights} night${nights > 1 ? 's' : ''} • ${guests} guest${parseInt(guests) > 1 ? 's' : ''}`}
+        onConfirm={handleConfirmBooking}
+        isProcessing={isProcessing}
+        accentColor="amber"
+      />
 
       <Footer />
     </div>

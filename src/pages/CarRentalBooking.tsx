@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,10 @@ import {
   ChevronRight,
   Snowflake,
   Radio,
-  Shield
+  Shield,
+  Key
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
+import { toast } from "sonner";
 
 // Popular locations
 const popularLocations = [
@@ -152,16 +156,25 @@ const sampleCars = [
   },
 ];
 
+type BookingStep = "search" | "select" | "details" | "confirmation";
+
 const CarRentalBooking = () => {
+  const navigate = useNavigate();
   const [pickupLocation, setPickupLocation] = useState("");
   const [pickupDate, setPickupDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
   const [carType, setCarType] = useState("all");
   const [searchResults, setSearchResults] = useState<typeof sampleCars | null>(null);
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [selectedCar, setSelectedCar] = useState<typeof sampleCars[0] | null>(null);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("search");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmationNumber, setConfirmationNumber] = useState("");
 
   const handleSearch = () => {
     setSearchResults(sampleCars);
+    setBookingStep("select");
   };
 
   const toggleFavorite = (id: number) => {
@@ -170,7 +183,31 @@ const CarRentalBooking = () => {
     );
   };
 
+  const handleSelectCar = (car: typeof sampleCars[0]) => {
+    setSelectedCar(car);
+    setBookingStep("details");
+  };
+
+  const handleConfirmBooking = async () => {
+    setIsProcessing(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsProcessing(false);
+    setIsCheckoutOpen(false);
+    setConfirmationNumber(`CAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+    setBookingStep("confirmation");
+  };
+
+  const handleReset = () => {
+    setSearchResults(null);
+    setSelectedCar(null);
+    setBookingStep("search");
+    navigate("/rent-car");
+  };
+
   const days = pickupDate && returnDate ? differenceInDays(returnDate, pickupDate) : 1;
+  const rentalCost = selectedCar ? selectedCar.pricePerDay * days : 0;
+  const insurance = rentalCost * 0.15;
+  const grandTotal = rentalCost + insurance;
 
   const getFeatureIcon = (feature: string) => {
     switch (feature) {
@@ -180,6 +217,30 @@ const CarRentalBooking = () => {
       default: return null;
     }
   };
+
+  // Show confirmation screen
+  if (bookingStep === "confirmation" && selectedCar) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <BookingConfirmation
+          confirmationNumber={confirmationNumber}
+          title="Your car is reserved!"
+          subtitle={`${selectedCar.make} ${selectedCar.model} ${selectedCar.year}`}
+          details={[
+            { label: "Pickup", value: pickupDate ? format(pickupDate, "MMM d, yyyy") : "Selected date", icon: <CalendarIcon className="w-4 h-4" /> },
+            { label: "Return", value: returnDate ? format(returnDate, "MMM d, yyyy") : "Selected date", icon: <CalendarIcon className="w-4 h-4" /> },
+            { label: "Location", value: selectedCar.location, icon: <MapPin className="w-4 h-4" /> },
+            { label: "Duration", value: `${days} day${days > 1 ? 's' : ''}`, icon: <Key className="w-4 h-4" /> },
+          ]}
+          totalAmount={grandTotal}
+          onGoHome={handleReset}
+          accentColor="rides"
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -439,7 +500,10 @@ const CarRentalBooking = () => {
                                 ${car.pricePerDay * days} total for {days} day{days > 1 ? "s" : ""}
                               </p>
                             </div>
-                            <Button className="bg-rides hover:bg-rides/90 text-white">
+                            <Button
+                              className="bg-rides hover:bg-rides/90 text-white"
+                              onClick={() => handleSelectCar(car)}
+                            >
                               Book Now
                             </Button>
                           </div>
@@ -556,6 +620,54 @@ const CarRentalBooking = () => {
           </section>
         )}
       </main>
+
+      {/* Selected Car Summary */}
+      <AnimatePresence>
+        {selectedCar && bookingStep === "details" && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50"
+          >
+            <BookingSummaryCard
+              title={`${selectedCar.make} ${selectedCar.model}`}
+              subtitle={selectedCar.location}
+              icon={<Car className="w-5 h-5" />}
+              items={[
+                { label: `${days} day${days > 1 ? 's' : ''} rental`, amount: rentalCost },
+                { label: "Insurance", amount: insurance },
+                { label: "Total", amount: grandTotal, isTotal: true },
+              ]}
+              ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
+              onConfirm={() => setIsCheckoutOpen(true)}
+              accentColor="rides"
+              features={["Free Cancellation", selectedCar.mileage]}
+            />
+            <Button
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => {
+                setSelectedCar(null);
+                setBookingStep("select");
+              }}
+            >
+              Choose Different Car
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <CheckoutModal
+        open={isCheckoutOpen}
+        onOpenChange={setIsCheckoutOpen}
+        amount={grandTotal}
+        serviceName={`${selectedCar?.make} ${selectedCar?.model}`}
+        serviceDetails={`${days} day${days > 1 ? 's' : ''} • ${selectedCar?.location}`}
+        onConfirm={handleConfirmBooking}
+        isProcessing={isProcessing}
+        accentColor="rides"
+      />
 
       <Footer />
     </div>

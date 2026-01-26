@@ -173,6 +173,94 @@ export type Database = {
         }
         Relationships: []
       }
+      bill_split_payments: {
+        Row: {
+          amount: number
+          bill_split_id: string
+          created_at: string
+          id: string
+          is_paid: boolean | null
+          paid_at: string | null
+          payer_name: string | null
+          payment_method: string | null
+          tip_amount: number | null
+        }
+        Insert: {
+          amount: number
+          bill_split_id: string
+          created_at?: string
+          id?: string
+          is_paid?: boolean | null
+          paid_at?: string | null
+          payer_name?: string | null
+          payment_method?: string | null
+          tip_amount?: number | null
+        }
+        Update: {
+          amount?: number
+          bill_split_id?: string
+          created_at?: string
+          id?: string
+          is_paid?: boolean | null
+          paid_at?: string | null
+          payer_name?: string | null
+          payment_method?: string | null
+          tip_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_split_payments_bill_split_id_fkey"
+            columns: ["bill_split_id"]
+            isOneToOne: false
+            referencedRelation: "bill_splits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_splits: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string | null
+          original_amount: number
+          restaurant_id: string
+          split_type: string
+          status: string | null
+          total_splits: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          original_amount: number
+          restaurant_id: string
+          split_type?: string
+          status?: string | null
+          total_splits?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          original_amount?: number
+          restaurant_id?: string
+          split_type?: string
+          status?: string | null
+          total_splits?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_splits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       car_rentals: {
         Row: {
           actual_return_date: string | null
@@ -2803,6 +2891,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waste_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          restaurant_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          restaurant_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waste_categories_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
