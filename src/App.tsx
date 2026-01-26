@@ -23,6 +23,12 @@ import FlightDashboard from "./pages/FlightDashboard";
 import HotelDashboard from "./pages/HotelDashboard";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import TermsOfService from "./pages/legal/TermsOfService";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import RefundPolicy from "./pages/legal/RefundPolicy";
+import PartnerAgreement from "./pages/legal/PartnerAgreement";
+import HelpCenter from "./pages/HelpCenter";
+import Promotions from "./pages/Promotions";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +56,12 @@ const App = () => (
               <Route path="/flights" element={<FlightDashboard />} />
               <Route path="/hotels" element={<HotelDashboard />} />
               <Route path="/auth-callback" element={<AuthCallback />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/partner-agreement" element={<PartnerAgreement />} />
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/promotions" element={<Promotions />} />
               <Route
                 path="/admin"
                 element={
