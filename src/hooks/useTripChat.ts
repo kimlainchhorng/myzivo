@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -169,4 +169,79 @@ export const useTripChatRealtime = (
       supabase.removeChannel(channel);
     };
   }, [tripId, queryClient, onNewMessage]);
+};
+
+// Typing indicator hook using Supabase Realtime broadcast
+export const useTypingIndicator = (
+  tripId: string | undefined,
+  myType: "rider" | "driver"
+) => {
+  const [isOtherTyping, setIsOtherTyping] = useState(false);
+  const { user } = useAuth();
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastBroadcastRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!tripId || !user) return;
+
+    const channel = supabase.channel(`typing-${tripId}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    channel
+      .on("broadcast", { event: "typing" }, (payload) => {
+        const { senderType, isTyping } = payload.payload as {
+          senderType: "rider" | "driver";
+          isTyping: boolean;
+        };
+
+        // Only show typing from the other party
+        if (senderType !== myType) {
+          setIsOtherTyping(isTyping);
+
+          // Clear existing timeout
+          if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+          }
+
+          // Auto-clear typing indicator after 3 seconds of no updates
+          if (isTyping) {
+            typingTimeoutRef.current = setTimeout(() => {
+              setIsOtherTyping(false);
+            }, 3000);
+          }
+        }
+      })
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [tripId, user, myType]);
+
+  const sendTypingStatus = useCallback(
+    (isTyping: boolean) => {
+      if (!channelRef.current) return;
+
+      // Throttle typing broadcasts to max once per 500ms
+      const now = Date.now();
+      if (isTyping && now - lastBroadcastRef.current < 500) return;
+      lastBroadcastRef.current = now;
+
+      channelRef.current.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { senderType: myType, isTyping },
+      });
+    },
+    [myType]
+  );
+
+  return { isOtherTyping, sendTypingStatus };
 };

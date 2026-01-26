@@ -47,6 +47,66 @@ export type Database = {
         }
         Relationships: []
       }
+      anomaly_logs: {
+        Row: {
+          actual_value: number
+          anomaly_date: string
+          anomaly_type: string
+          created_at: string
+          direction: string
+          expected_value: number
+          id: string
+          message: string
+          percent_deviation: number
+          resolution_notes: string | null
+          resolved_at: string | null
+          root_cause_category: string | null
+          root_cause_title: string | null
+          severity: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_value: number
+          anomaly_date: string
+          anomaly_type: string
+          created_at?: string
+          direction: string
+          expected_value: number
+          id?: string
+          message: string
+          percent_deviation: number
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          root_cause_category?: string | null
+          root_cause_title?: string | null
+          severity: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_value?: number
+          anomaly_date?: string
+          anomaly_type?: string
+          created_at?: string
+          direction?: string
+          expected_value?: number
+          id?: string
+          message?: string
+          percent_deviation?: number
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          root_cause_category?: string | null
+          root_cause_title?: string | null
+          severity?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -160,6 +220,48 @@ export type Database = {
           vehicle_model?: string | null
           vehicle_plate?: string
           vehicle_type?: string
+        }
+        Relationships: []
+      }
+      goal_completions: {
+        Row: {
+          all_goals_met: boolean | null
+          created_at: string | null
+          deliveries_met: boolean | null
+          earnings_met: boolean | null
+          hours_met: boolean | null
+          id: string
+          period_end: string
+          period_start: string
+          period_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          all_goals_met?: boolean | null
+          created_at?: string | null
+          deliveries_met?: boolean | null
+          earnings_met?: boolean | null
+          hours_met?: boolean | null
+          id?: string
+          period_end: string
+          period_start: string
+          period_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          all_goals_met?: boolean | null
+          created_at?: string | null
+          deliveries_met?: boolean | null
+          earnings_met?: boolean | null
+          hours_met?: boolean | null
+          id?: string
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
