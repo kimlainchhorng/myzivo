@@ -10,7 +10,10 @@ import {
   Shield,
   Menu,
   LogOut,
-  FileCheck
+  FileCheck,
+  Store,
+  Plane,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,6 +24,10 @@ import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
 import AdminPricingControls from "@/components/admin/AdminPricingControls";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import AdminDocumentReview from "@/components/admin/AdminDocumentReview";
+import AdminRestaurantManagement from "@/components/admin/AdminRestaurantManagement";
+import AdminCarRentalManagement from "@/components/admin/AdminCarRentalManagement";
+import AdminFlightManagement from "@/components/admin/AdminFlightManagement";
+import AdminHotelManagement from "@/components/admin/AdminHotelManagement";
 
 const AdminDashboard = () => {
   const { signOut, user } = useAuth();
@@ -34,6 +41,10 @@ const AdminDashboard = () => {
     { value: "documents", label: "Documents", icon: FileCheck },
     { value: "trips", label: "Trips", icon: MapPin },
     { value: "pricing", label: "Pricing", icon: DollarSign },
+    { value: "restaurants", label: "Restaurants", icon: Store },
+    { value: "car-rentals", label: "Car Rentals", icon: Car },
+    { value: "flights", label: "Flights", icon: Plane },
+    { value: "hotels", label: "Hotels", icon: Building2 },
   ];
 
   const handleLogout = async () => {
@@ -47,7 +58,7 @@ const AdminDashboard = () => {
         <Shield className="h-6 w-6 text-primary" />
         <span className="font-bold text-lg">Zivo Admin</span>
       </div>
-      <nav className="px-2 py-4 space-y-1 flex-1">
+      <nav className="px-2 py-4 space-y-1 flex-1 overflow-auto">
         {navItems.map((item) => (
           <button
             key={item.value}
@@ -135,6 +146,22 @@ const AdminDashboard = () => {
 
             <TabsContent value="pricing" className="mt-0">
               <AdminPricingControls />
+            </TabsContent>
+
+            <TabsContent value="restaurants" className="mt-0">
+              <AdminRestaurantManagement />
+            </TabsContent>
+
+            <TabsContent value="car-rentals" className="mt-0">
+              <AdminCarRentalManagement />
+            </TabsContent>
+
+            <TabsContent value="flights" className="mt-0">
+              <AdminFlightManagement />
+            </TabsContent>
+
+            <TabsContent value="hotels" className="mt-0">
+              <AdminHotelManagement />
             </TabsContent>
           </Tabs>
         </main>
