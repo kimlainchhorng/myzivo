@@ -43,6 +43,7 @@ import PackageDelivery from "./pages/PackageDelivery";
 import GroundTransport from "./pages/GroundTransport";
 import Events from "./pages/Events";
 import TravelInsurance from "./pages/TravelInsurance";
+import Install from "./pages/Install";
 
 const queryClient = new QueryClient();
 
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/ground-transport" element={<GroundTransport />} />
               <Route path="/events" element={<Events />} />
               <Route path="/travel-insurance" element={<TravelInsurance />} />
+              <Route path="/install" element={<Install />} />
               <Route
                 path="/admin"
                 element={
