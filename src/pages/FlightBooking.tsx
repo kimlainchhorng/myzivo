@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { 
   Plane,
   Search,
@@ -18,10 +20,11 @@ import {
   Wifi,
   Coffee,
   Tv,
-  ChevronDown,
-  ArrowLeftRight
+  ArrowLeftRight,
+  MapPin,
+  CheckCircle
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import {
   Select,
@@ -30,6 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BookingStepIndicator, BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
+import { toast } from "sonner";
 
 // Popular destinations
 const popularDestinations = [
@@ -110,7 +115,10 @@ const sampleFlights = [
   },
 ];
 
+type BookingStep = "search" | "select" | "details" | "confirmation";
+
 const FlightBooking = () => {
+  const navigate = useNavigate();
   const [tripType, setTripType] = useState<"roundtrip" | "oneway">("roundtrip");
   const [fromCity, setFromCity] = useState("Los Angeles (LAX)");
   const [toCity, setToCity] = useState("");
@@ -120,10 +128,55 @@ const FlightBooking = () => {
   const [cabinClass, setCabinClass] = useState("economy");
   const [searchResults, setSearchResults] = useState<typeof sampleFlights | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<typeof sampleFlights[0] | null>(null);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("search");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmationNumber, setConfirmationNumber] = useState("");
+
+  const bookingSteps = [
+    { id: "search", label: "Search" },
+    { id: "select", label: "Select" },
+    { id: "details", label: "Book" },
+  ];
+
+  const getCurrentStepIndex = () => {
+    switch (bookingStep) {
+      case "search": return 0;
+      case "select": return 1;
+      case "details": return 2;
+      default: return 0;
+    }
+  };
 
   const handleSearch = () => {
     setSearchResults(sampleFlights);
+    setBookingStep("select");
   };
+
+  const handleSelectFlight = (flight: typeof sampleFlights[0]) => {
+    setSelectedFlight(flight);
+    setBookingStep("details");
+  };
+
+  const handleConfirmBooking = async () => {
+    setIsProcessing(true);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsProcessing(false);
+    setIsCheckoutOpen(false);
+    setConfirmationNumber(`ZV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+    setBookingStep("confirmation");
+  };
+
+  const handleReset = () => {
+    setSearchResults(null);
+    setSelectedFlight(null);
+    setBookingStep("search");
+    navigate("/book-flight");
+  };
+
+  const totalPrice = selectedFlight ? selectedFlight.price * parseInt(passengers) : 0;
+  const taxes = totalPrice * 0.12;
+  const grandTotal = totalPrice + taxes;
 
   const swapCities = () => {
     const temp = fromCity;
@@ -140,6 +193,30 @@ const FlightBooking = () => {
       default: return null;
     }
   };
+
+  // Show confirmation screen
+  if (bookingStep === "confirmation" && selectedFlight) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <BookingConfirmation
+          confirmationNumber={confirmationNumber}
+          title="Your flight is booked!"
+          subtitle={`${selectedFlight.departure.city} → ${selectedFlight.arrival.city}`}
+          details={[
+            { label: "Flight", value: `${selectedFlight.airline} ${selectedFlight.flightNumber}`, icon: <Plane className="w-4 h-4" /> },
+            { label: "Date", value: departDate ? format(departDate, "MMM d, yyyy") : "Selected date", icon: <CalendarIcon className="w-4 h-4" /> },
+            { label: "Passengers", value: `${passengers} passenger${parseInt(passengers) > 1 ? 's' : ''}`, icon: <Users className="w-4 h-4" /> },
+            { label: "Class", value: cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1), icon: <Luggage className="w-4 h-4" /> },
+          ]}
+          totalAmount={grandTotal}
+          onGoHome={handleReset}
+          accentColor="sky"
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -418,7 +495,10 @@ const FlightBooking = () => {
                                 Only {flight.seatsLeft} seats left
                               </p>
                             )}
-                            <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white">
+                            <Button
+                              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
+                              onClick={() => handleSelectFlight(flight)}
+                            >
                               Select
                             </Button>
                           </div>
@@ -489,6 +569,56 @@ const FlightBooking = () => {
           </section>
         )}
       </main>
+
+      {/* Selected Flight Summary Sidebar */}
+      <AnimatePresence>
+        {selectedFlight && bookingStep === "details" && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50"
+          >
+            <BookingSummaryCard
+              title={`${selectedFlight.departure.code} → ${selectedFlight.arrival.code}`}
+              subtitle={`${selectedFlight.airline} • ${selectedFlight.flightNumber}`}
+              icon={<Plane className="w-5 h-5" />}
+              items={[
+                { label: `${passengers} × Flight Ticket`, amount: totalPrice },
+                { label: "Taxes & Fees", amount: taxes },
+                { label: "Total", amount: grandTotal, isTotal: true },
+              ]}
+              ctaLabel={`Book for $${grandTotal.toFixed(0)}`}
+              onConfirm={() => setIsCheckoutOpen(true)}
+              accentColor="sky"
+              features={["Free Cancellation", "Seat Selection"]}
+              estimatedTime={`${selectedFlight.duration} flight`}
+            />
+            <Button
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => {
+                setSelectedFlight(null);
+                setBookingStep("select");
+              }}
+            >
+              Choose Different Flight
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        open={isCheckoutOpen}
+        onOpenChange={setIsCheckoutOpen}
+        amount={grandTotal}
+        serviceName={`${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
+        serviceDetails={`${selectedFlight?.departure.city} → ${selectedFlight?.arrival.city} • ${passengers} passenger${parseInt(passengers) > 1 ? 's' : ''}`}
+        onConfirm={handleConfirmBooking}
+        isProcessing={isProcessing}
+        accentColor="sky"
+      />
 
       <Footer />
     </div>

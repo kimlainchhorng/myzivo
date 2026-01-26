@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { 
   Search, 
   MapPin, 
@@ -25,10 +26,15 @@ import {
   Plus,
   Minus,
   X,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Bike,
+  CreditCard,
+  ArrowLeft
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookingStepIndicator, CheckoutModal, BookingConfirmation } from "@/components/booking";
+import { toast } from "sonner";
 
 // Categories data
 const categories = [
@@ -173,6 +179,8 @@ interface CartItem {
   image: string;
 }
 
+type CheckoutStep = "browse" | "cart" | "delivery" | "payment" | "confirmation";
+
 const FoodOrdering = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,6 +188,12 @@ const FoodOrdering = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<typeof featuredRestaurants[0] | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>("browse");
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [confirmationNumber, setConfirmationNumber] = useState("");
 
   const filteredRestaurants = featuredRestaurants.filter(restaurant => {
     const matchesSearch = restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -210,6 +224,80 @@ const FoodOrdering = () => {
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const deliveryFee = cartTotal >= 25 ? 0 : 2.99;
+  const serviceFee = cartTotal * 0.05;
+  const orderTotal = cartTotal + deliveryFee + serviceFee;
+
+  const checkoutSteps = [
+    { id: "cart", label: "Cart" },
+    { id: "delivery", label: "Delivery" },
+    { id: "payment", label: "Payment" },
+  ];
+
+  const getCurrentStepIndex = () => {
+    switch (checkoutStep) {
+      case "cart": return 0;
+      case "delivery": return 1;
+      case "payment": return 2;
+      default: return 0;
+    }
+  };
+
+  const handleProceedToDelivery = () => {
+    setCheckoutStep("delivery");
+  };
+
+  const handleProceedToPayment = () => {
+    if (!deliveryAddress) {
+      toast.error("Please enter a delivery address");
+      return;
+    }
+    setCheckoutStep("payment");
+    setIsCheckoutOpen(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    setIsProcessing(true);
+    // Simulate order processing
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsProcessing(false);
+    setIsCheckoutOpen(false);
+    setConfirmationNumber(`ZIVO-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
+    setCheckoutStep("confirmation");
+    setIsCartOpen(false);
+  };
+
+  const handleResetOrder = () => {
+    setCart([]);
+    setCheckoutStep("browse");
+    setSelectedRestaurant(null);
+    setDeliveryAddress("");
+    setDeliveryInstructions("");
+    navigate("/food");
+  };
+
+  // Show confirmation screen
+  if (checkoutStep === "confirmation") {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <BookingConfirmation
+          confirmationNumber={confirmationNumber}
+          title="Your order is on its way!"
+          subtitle={selectedRestaurant?.name}
+          details={[
+            { label: "Delivery Address", value: deliveryAddress, icon: <MapPin className="w-4 h-4" /> },
+            { label: "Estimated Delivery", value: "25-35 min", icon: <Clock className="w-4 h-4" /> },
+            { label: "Items", value: `${cartCount} item${cartCount > 1 ? 's' : ''}`, icon: <ShoppingCart className="w-4 h-4" /> },
+          ]}
+          totalAmount={orderTotal}
+          onGoHome={handleResetOrder}
+          accentColor="eats"
+        />
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -513,55 +601,186 @@ const FoodOrdering = () => {
               </span>
             </motion.button>
           </SheetTrigger>
-          <SheetContent className="w-full sm:max-w-md">
+          <SheetContent className="w-full sm:max-w-md flex flex-col">
             <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5" />
-                Your Cart
-              </SheetTitle>
-            </SheetHeader>
-            <div className="mt-6 space-y-4">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 p-3 glass-card rounded-lg">
-                  <span className="text-2xl">{item.image}</span>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.name}</h4>
-                    <p className="text-sm text-muted-foreground">${item.price} each</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, description: "", image: item.image, popular: false })}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="flex justify-between text-lg font-bold mb-4">
-                <span>Total</span>
-                <span className="text-eats">${cartTotal.toFixed(2)}</span>
+              <div className="flex items-center gap-3">
+                {checkoutStep !== "cart" && checkoutStep !== "browse" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCheckoutStep(checkoutStep === "delivery" ? "cart" : "delivery")}
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                )}
+                <SheetTitle className="flex items-center gap-2">
+                  <ShoppingCart className="w-5 h-5" />
+                  {checkoutStep === "delivery" ? "Delivery Details" : "Your Cart"}
+                </SheetTitle>
               </div>
-              <Button variant="eats" className="w-full" size="lg">
-                Proceed to Checkout
-              </Button>
+            </SheetHeader>
+
+            {/* Step Indicator */}
+            {(checkoutStep === "cart" || checkoutStep === "delivery" || checkoutStep === "payment") && (
+              <div className="mt-4 px-2">
+                <BookingStepIndicator
+                  steps={checkoutSteps}
+                  currentStep={getCurrentStepIndex()}
+                  accentColor="eats"
+                />
+              </div>
+            )}
+
+            <div className="flex-1 overflow-y-auto mt-6">
+              <AnimatePresence mode="wait">
+                {/* Cart Items View */}
+                {(checkoutStep === "browse" || checkoutStep === "cart") && (
+                  <motion.div
+                    key="cart"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
+                    {cart.map((item) => (
+                      <div key={item.id} className="flex items-center gap-4 p-3 glass-card rounded-lg">
+                        <span className="text-2xl">{item.image}</span>
+                        <div className="flex-1">
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-sm text-muted-foreground">${item.price} each</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="w-8 text-center font-medium">{item.quantity}</span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => addToCart({ id: item.id, name: item.name, price: item.price, description: "", image: item.image, popular: false })}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {/* Delivery Details View */}
+                {checkoutStep === "delivery" && (
+                  <motion.div
+                    key="delivery"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Delivery Address</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-eats" />
+                        <Input
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          placeholder="Enter your delivery address"
+                          className="pl-10 h-12"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Delivery Instructions (optional)</label>
+                      <Input
+                        value={deliveryInstructions}
+                        onChange={(e) => setDeliveryInstructions(e.target.value)}
+                        placeholder="e.g., Ring doorbell, leave at door"
+                      />
+                    </div>
+                    <Card className="glass-card">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-full bg-eats/20 flex items-center justify-center">
+                            <Bike className="w-5 h-5 text-eats" />
+                          </div>
+                          <div>
+                            <p className="font-medium">Standard Delivery</p>
+                            <p className="text-sm text-muted-foreground">25-35 min</p>
+                          </div>
+                          <Badge className="ml-auto">{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Order Summary & CTA */}
+            <div className="mt-auto pt-4 border-t border-border space-y-3">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>${cartTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Delivery</span>
+                  <span className={deliveryFee === 0 ? "text-green-500" : ""}>
+                    {deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Service Fee</span>
+                  <span>${serviceFee.toFixed(2)}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span className="text-eats">${orderTotal.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {(checkoutStep === "browse" || checkoutStep === "cart") && (
+                <Button
+                  variant="eats"
+                  className="w-full h-12"
+                  onClick={() => setCheckoutStep("delivery")}
+                >
+                  Continue to Delivery
+                </Button>
+              )}
+
+              {checkoutStep === "delivery" && (
+                <Button
+                  variant="eats"
+                  className="w-full h-12"
+                  onClick={handleProceedToPayment}
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Continue to Payment
+                </Button>
+              )}
             </div>
           </SheetContent>
         </Sheet>
       )}
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        open={isCheckoutOpen}
+        onOpenChange={setIsCheckoutOpen}
+        amount={orderTotal}
+        serviceName={`Order from ${selectedRestaurant?.name || "Restaurant"}`}
+        serviceDetails={`${cartCount} item${cartCount > 1 ? 's' : ''} • Delivery to ${deliveryAddress}`}
+        onConfirm={handleConfirmOrder}
+        isProcessing={isProcessing}
+        accentColor="eats"
+      />
 
       <Footer />
     </div>
