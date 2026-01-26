@@ -42,7 +42,7 @@ const Header = () => {
               <Plane className="w-4 h-4" />
               <span className="font-medium">Flights</span>
             </button>
-            <button onClick={() => navigate("/hotels")} className="flex items-center gap-2 text-muted-foreground hover:text-amber-500 transition-colors">
+            <button onClick={() => navigate("/book-hotel")} className="flex items-center gap-2 text-muted-foreground hover:text-amber-500 transition-colors">
               <Hotel className="w-4 h-4" />
               <span className="font-medium">Hotels</span>
             </button>
@@ -111,7 +111,7 @@ const Header = () => {
               <Plane className="w-5 h-5 text-sky-500" />
               <span className="font-medium">Flights</span>
             </button>
-            <button onClick={() => { navigate("/hotels"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
+            <button onClick={() => { navigate("/book-hotel"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
               <Hotel className="w-5 h-5 text-amber-500" />
               <span className="font-medium">Hotels</span>
             </button>
