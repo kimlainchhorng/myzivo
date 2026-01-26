@@ -302,6 +302,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_sample_trips_for_driver: {
+        Args: { p_driver_id: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
