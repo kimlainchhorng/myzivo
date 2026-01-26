@@ -32,6 +32,7 @@ import { useDriverTripRealtime } from "@/hooks/useTripRealtime";
 import DriverTripCard from "@/components/driver/DriverTripCard";
 import ActiveTripPanel from "@/components/driver/ActiveTripPanel";
 import { TripStatus } from "@/hooks/useTrips";
+import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 
 const DriverApp = () => {
   const navigate = useNavigate();
@@ -356,6 +357,7 @@ const DriverApp = () => {
           </Tabs>
         )}
       </div>
+      <AdminFloatingButton />
     </div>
   );
 };
