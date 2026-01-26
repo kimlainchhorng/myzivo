@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import LocationSearchInput from "@/components/rider/LocationSearchInput";
 import VehicleSelector from "@/components/rider/VehicleSelector";
 import BookingMap from "@/components/rider/BookingMap";
+import SavedLocationsPanel from "@/components/rider/SavedLocationsPanel";
+import QuickLocationPicker from "@/components/rider/QuickLocationPicker";
 import TripTracker from "@/components/rider/TripTracker";
 import {
   Location,
@@ -229,19 +231,48 @@ const RiderApp = () => {
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           {/* Location Step */}
           {step === "location" && (
-            <div className="space-y-3">
-              <LocationSearchInput
-                placeholder="Pickup location"
-                value={pickup}
-                onChange={setPickup}
-                icon="pickup"
+            <div className="space-y-4">
+              {/* Quick Location Picker */}
+              <QuickLocationPicker
+                userId={user?.id}
+                onSelect={(location) => {
+                  if (!pickup) {
+                    setPickup(location);
+                  } else {
+                    setDropoff(location);
+                  }
+                }}
               />
-              <LocationSearchInput
-                placeholder="Where to?"
-                value={dropoff}
-                onChange={setDropoff}
-                icon="dropoff"
-              />
+
+              <div className="space-y-3">
+                <LocationSearchInput
+                  placeholder="Pickup location"
+                  value={pickup}
+                  onChange={setPickup}
+                  icon="pickup"
+                />
+                <LocationSearchInput
+                  placeholder="Where to?"
+                  value={dropoff}
+                  onChange={setDropoff}
+                  icon="dropoff"
+                />
+              </div>
+
+              {/* Saved Locations */}
+              <div className="pt-2 border-t">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Saved Places</p>
+                <SavedLocationsPanel
+                  userId={user?.id}
+                  onSelect={(location) => {
+                    if (!pickup) {
+                      setPickup(location);
+                    } else {
+                      setDropoff(location);
+                    }
+                  }}
+                />
+              </div>
             </div>
           )}
 
