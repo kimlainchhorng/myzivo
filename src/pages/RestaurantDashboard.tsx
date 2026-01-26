@@ -22,6 +22,7 @@ import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
+import CrossAppNavigation from "@/components/CrossAppNavigation";
 
 const RestaurantDashboard = () => {
   const { signOut, user } = useAuth();
@@ -106,16 +107,19 @@ const RestaurantDashboard = () => {
           <UtensilsCrossed className="h-6 w-6 text-eats" />
           <span className="font-bold text-lg">Restaurant Hub</span>
         </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MenuIcon className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <NavContent />
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-2">
+          <CrossAppNavigation currentApp="restaurant" />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MenuIcon className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <NavContent />
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
       <div className="flex">

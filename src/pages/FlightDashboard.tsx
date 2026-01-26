@@ -23,6 +23,7 @@ import FlightSettings from "@/components/flight/FlightSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
+import CrossAppNavigation from "@/components/CrossAppNavigation";
 
 const FlightDashboard = () => {
   const { signOut, user } = useAuth();
@@ -107,16 +108,19 @@ const FlightDashboard = () => {
           <Plane className="h-6 w-6 text-sky-500" />
           <span className="font-bold text-lg">Flight Booking</span>
         </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <NavContent />
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-2">
+          <CrossAppNavigation currentApp="main" />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <NavContent />
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
       <div className="flex">

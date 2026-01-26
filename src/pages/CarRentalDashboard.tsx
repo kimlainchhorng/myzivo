@@ -22,6 +22,7 @@ import CarRentalSettings from "@/components/carRental/CarRentalSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
+import CrossAppNavigation from "@/components/CrossAppNavigation";
 
 const CarRentalDashboard = () => {
   const { signOut, user } = useAuth();
@@ -106,16 +107,19 @@ const CarRentalDashboard = () => {
           <Car className="h-6 w-6 text-primary" />
           <span className="font-bold text-lg">Car Rental Hub</span>
         </div>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0">
-            <NavContent />
-          </SheetContent>
-        </Sheet>
+        <div className="flex items-center gap-2">
+          <CrossAppNavigation currentApp="main" />
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <NavContent />
+            </SheetContent>
+          </Sheet>
+        </div>
       </header>
 
       <div className="flex">
