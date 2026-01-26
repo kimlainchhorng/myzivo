@@ -253,6 +253,36 @@ export type Database = {
           },
         ]
       }
+      cross_app_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          target_app: string
+          token: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          target_app: string
+          token: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          target_app?: string
+          token?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -1479,6 +1509,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_tokens: { Args: never; Returns: undefined }
       create_driver_on_signup: {
         Args: {
           p_email: string

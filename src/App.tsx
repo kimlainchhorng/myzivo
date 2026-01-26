@@ -20,6 +20,7 @@ import RestaurantDashboard from "./pages/RestaurantDashboard";
 import CarRentalDashboard from "./pages/CarRentalDashboard";
 import FlightDashboard from "./pages/FlightDashboard";
 import HotelDashboard from "./pages/HotelDashboard";
+import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/car-rental" element={<CarRentalDashboard />} />
             <Route path="/flights" element={<FlightDashboard />} />
             <Route path="/hotels" element={<HotelDashboard />} />
+            <Route path="/auth-callback" element={<AuthCallback />} />
             <Route
               path="/admin"
               element={
