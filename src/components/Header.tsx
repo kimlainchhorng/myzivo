@@ -38,7 +38,7 @@ const Header = () => {
               <UtensilsCrossed className="w-4 h-4" />
               <span className="font-medium">Eats</span>
             </button>
-            <button onClick={() => navigate("/flights")} className="flex items-center gap-2 text-muted-foreground hover:text-sky-500 transition-colors">
+            <button onClick={() => navigate("/book-flight")} className="flex items-center gap-2 text-muted-foreground hover:text-sky-500 transition-colors">
               <Plane className="w-4 h-4" />
               <span className="font-medium">Flights</span>
             </button>
@@ -107,7 +107,7 @@ const Header = () => {
               <UtensilsCrossed className="w-5 h-5 text-eats" />
               <span className="font-medium">Eats</span>
             </button>
-            <button onClick={() => { navigate("/flights"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
+            <button onClick={() => { navigate("/book-flight"); setIsMenuOpen(false); }} className="flex items-center gap-3 text-foreground py-2 text-left">
               <Plane className="w-5 h-5 text-sky-500" />
               <span className="font-medium">Flights</span>
             </button>

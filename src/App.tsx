@@ -35,6 +35,7 @@ import Promotions from "./pages/Promotions";
 import RestaurantRegistration from "./pages/RestaurantRegistration";
 import CookieConsent from "./components/common/CookieConsent";
 import FoodOrdering from "./pages/FoodOrdering";
+import FlightBooking from "./pages/FlightBooking";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/food" element={<FoodOrdering />} />
               <Route path="/ride" element={<RiderApp />} />
+              <Route path="/book-flight" element={<FlightBooking />} />
               <Route path="/trips" element={<TripHistory />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
