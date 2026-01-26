@@ -24,6 +24,7 @@ import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const FlightDashboard = () => {
   const { signOut, user } = useAuth();
@@ -109,6 +110,7 @@ const FlightDashboard = () => {
           <span className="font-bold text-lg">Flight Booking</span>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>

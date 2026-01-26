@@ -23,6 +23,7 @@ import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
+import NotificationCenter from "@/components/NotificationCenter";
 
 const CarRentalDashboard = () => {
   const { signOut, user } = useAuth();
@@ -108,6 +109,7 @@ const CarRentalDashboard = () => {
           <span className="font-bold text-lg">Car Rental Hub</span>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
