@@ -1,13 +1,30 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Train, Bus, MapPin, Calendar, Users, Clock, ArrowRight, Filter, Star, Wifi, Coffee, Plug } from "lucide-react";
+import { 
+  Train, 
+  Bus, 
+  MapPin, 
+  Calendar, 
+  Users, 
+  Clock, 
+  ArrowRight, 
+  Filter, 
+  Star, 
+  Wifi, 
+  Coffee, 
+  Plug,
+  RefreshCw,
+  ArrowUpRight
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const GroundTransport = () => {
   const navigate = useNavigate();
@@ -83,181 +100,239 @@ const GroundTransport = () => {
     ? sampleRoutes 
     : sampleRoutes.filter(r => r.type === transportType);
 
+  const stats = [
+    { value: "500+", label: "Routes" },
+    { value: "50+", label: "Operators" },
+    { value: "100+", label: "Cities" },
+    { value: "4.5★", label: "Avg Rating" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Link to="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
-              <Train className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-xl">Bus & Train</h1>
-              <p className="text-sm text-muted-foreground">Ground transportation booking</p>
-            </div>
-          </div>
-          <Badge className="ml-auto bg-amber-500/10 text-amber-500">New Service</Badge>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Search Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="grid md:grid-cols-5 gap-4 items-end">
-                <div className="space-y-2">
-                  <Label>From</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="New York" className="pl-10" />
-                  </div>
+      <main className="pt-20">
+        {/* Hero Section */}
+        <section className="relative py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-violet-500/10 via-transparent to-transparent opacity-50" />
+          <div className="absolute top-1/2 right-0 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl" />
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center max-w-3xl mx-auto mb-12"
+            >
+              <Badge className="mb-4 bg-violet-500/10 text-violet-500">New Service</Badge>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                Bus & Train <span className="text-violet-500">Tickets</span>
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Compare and book intercity buses and trains. Best prices, e-tickets, 
+                and flexible booking options.
+              </p>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="flex flex-wrap justify-center gap-8 mb-12"
+            >
+              {stats.map((stat) => (
+                <div key={stat.label} className="text-center">
+                  <p className="font-display text-3xl font-bold text-violet-500">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </div>
-                <div className="space-y-2">
-                  <Label>To</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-amber-500" />
-                    <Input placeholder="Boston" className="pl-10" />
+              ))}
+            </motion.div>
+
+            {/* Search Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="max-w-4xl mx-auto"
+            >
+              <Card className="p-6">
+                <div className="grid md:grid-cols-5 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label className="font-semibold">From</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input placeholder="New York" className="pl-11 h-12" />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="date" className="pl-10" />
+                  <div className="flex items-center justify-center md:mt-6">
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      <RefreshCw className="h-5 w-5" />
+                    </Button>
                   </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold">To</Label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-violet-500" />
+                      <Input placeholder="Boston" className="pl-11 h-12" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Date</Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input type="date" className="pl-11 h-12" />
+                    </div>
+                  </div>
+                  <Button className="h-12 bg-violet-500 hover:bg-violet-600">
+                    Search
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>Passengers</Label>
-                  <div className="relative">
+                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border">
+                  <div className="relative w-32">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="number" min="1" defaultValue="1" className="pl-10" />
+                    <Input type="number" min="1" defaultValue="1" className="pl-10 h-10" placeholder="1 passenger" />
                   </div>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <RefreshCw className="h-4 w-4" />
+                    Round trip
+                  </Button>
                 </div>
-                <Button variant="hero" className="h-10">
-                  Search
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
 
         {/* Results Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          {/* Filter Tabs */}
-          <div className="flex items-center justify-between mb-6">
-            <Tabs value={transportType} onValueChange={setTransportType}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="train" className="gap-2">
-                  <Train className="h-4 w-4" /> Trains
-                </TabsTrigger>
-                <TabsTrigger value="bus" className="gap-2">
-                  <Bus className="h-4 w-4" /> Buses
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filters
-            </Button>
-          </div>
+        <section className="py-16">
+          <div className="container mx-auto px-4 max-w-5xl">
+            {/* Filter Tabs */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
+            >
+              <div>
+                <h2 className="font-display text-2xl font-bold">Available Routes</h2>
+                <p className="text-muted-foreground">New York → Boston • {filteredRoutes.length} options</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <Tabs value={transportType} onValueChange={setTransportType}>
+                  <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="train" className="gap-2">
+                      <Train className="h-4 w-4" /> Trains
+                    </TabsTrigger>
+                    <TabsTrigger value="bus" className="gap-2">
+                      <Bus className="h-4 w-4" /> Buses
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Filter className="h-4 w-4" />
+                  Filters
+                </Button>
+              </div>
+            </motion.div>
 
-          {/* Results List */}
-          <div className="space-y-4">
-            {filteredRoutes.map((route, index) => (
-              <motion.div
-                key={route.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="hover:border-primary transition-colors cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-6">
-                      {/* Icon & Operator */}
-                      <div className="flex flex-col items-center gap-1 min-w-[80px]">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          route.type === "train" ? "bg-amber-500/10" : "bg-primary/10"
-                        }`}>
-                          {route.type === "train" ? (
-                            <Train className="h-5 w-5 text-amber-500" />
-                          ) : (
-                            <Bus className="h-5 w-5 text-primary" />
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{route.operator}</span>
-                      </div>
-
-                      {/* Times & Route */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-4">
-                          <div className="text-center">
-                            <p className="text-lg font-bold">{route.departureTime}</p>
-                            <p className="text-sm text-muted-foreground">{route.departure}</p>
+            {/* Results List */}
+            <div className="space-y-4">
+              {filteredRoutes.map((route, index) => (
+                <motion.div
+                  key={route.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="hover:border-violet-500/50 transition-colors cursor-pointer group">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                        {/* Icon & Operator */}
+                        <div className="flex items-center gap-4 lg:min-w-[120px]">
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                            route.type === "train" ? "bg-violet-500/10" : "bg-primary/10"
+                          }`}>
+                            {route.type === "train" ? (
+                              <Train className="h-6 w-6 text-violet-500" />
+                            ) : (
+                              <Bus className="h-6 w-6 text-primary" />
+                            )}
                           </div>
-                          <div className="flex-1 flex items-center gap-2">
-                            <div className="h-0.5 flex-1 bg-border" />
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Clock className="h-3 w-3" />
-                              {route.duration}
+                          <div>
+                            <p className="font-semibold">{route.operator}</p>
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
+                              {route.rating}
                             </div>
-                            <div className="h-0.5 flex-1 bg-border" />
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg font-bold">{route.arrivalTime}</p>
-                            <p className="text-sm text-muted-foreground">{route.arrival}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 mt-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-amber-500 fill-amber-500" />
-                            <span className="text-xs">{route.rating}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {route.amenities.map((amenity) => (
-                              <span key={amenity} className="text-muted-foreground" title={amenity}>
-                                {getAmenityIcon(amenity)}
-                              </span>
-                            ))}
-                          </div>
-                          {route.badge && (
-                            <Badge variant="secondary" className="text-xs">
-                              {route.badge}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
 
-                      {/* Price & Action */}
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">${route.price}</p>
-                        <p className="text-xs text-muted-foreground mb-2">per person</p>
-                        <Button size="sm" className="gap-1">
-                          Select <ArrowRight className="h-4 w-4" />
-                        </Button>
+                        {/* Times & Route */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4">
+                            <div className="text-center">
+                              <p className="text-xl lg:text-2xl font-bold">{route.departureTime}</p>
+                              <p className="text-sm text-muted-foreground">{route.departure}</p>
+                            </div>
+                            <div className="flex-1 flex items-center gap-3">
+                              <div className="h-px flex-1 bg-border" />
+                              <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted text-xs font-medium">
+                                <Clock className="h-3 w-3" />
+                                {route.duration}
+                              </div>
+                              <div className="h-px flex-1 bg-border" />
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xl lg:text-2xl font-bold">{route.arrivalTime}</p>
+                              <p className="text-sm text-muted-foreground">{route.arrival}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 mt-3">
+                            <div className="flex items-center gap-2">
+                              {route.amenities.map((amenity) => (
+                                <span 
+                                  key={amenity} 
+                                  className="p-1.5 rounded bg-muted text-muted-foreground"
+                                  title={amenity}
+                                >
+                                  {getAmenityIcon(amenity)}
+                                </span>
+                              ))}
+                            </div>
+                            {route.badge && (
+                              <Badge variant="secondary" className={
+                                route.badge === "Fastest" ? "bg-violet-500/10 text-violet-500" :
+                                route.badge === "Cheapest" ? "bg-emerald-500/10 text-emerald-500" :
+                                ""
+                              }>
+                                {route.badge}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Price & Action */}
+                        <div className="flex items-center justify-between lg:flex-col lg:items-end lg:min-w-[140px]">
+                          <div className="lg:text-right">
+                            <p className="text-3xl font-bold text-violet-500">${route.price}</p>
+                            <p className="text-xs text-muted-foreground">per person</p>
+                          </div>
+                          <Button className="gap-2 bg-violet-500 hover:bg-violet-600 lg:mt-3">
+                            Select <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </motion.div>
+        </section>
       </main>
+
+      <Footer />
     </div>
   );
 };
