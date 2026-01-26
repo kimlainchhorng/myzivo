@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
@@ -7,10 +8,12 @@ import {
   DollarSign, 
   BarChart3, 
   Shield,
-  Menu
+  Menu,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/contexts/AuthContext";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
@@ -18,6 +21,8 @@ import AdminPricingControls from "@/components/admin/AdminPricingControls";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 
 const AdminDashboard = () => {
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
 
   const navItems = [
@@ -28,13 +33,18 @@ const AdminDashboard = () => {
     { value: "pricing", label: "Pricing", icon: DollarSign },
   ];
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
   const NavContent = () => (
-    <div className="space-y-2">
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-4 border-b border-border">
         <Shield className="h-6 w-6 text-primary" />
         <span className="font-bold text-lg">Zivo Admin</span>
       </div>
-      <nav className="px-2 py-4 space-y-1">
+      <nav className="px-2 py-4 space-y-1 flex-1">
         {navItems.map((item) => (
           <button
             key={item.value}
@@ -50,6 +60,16 @@ const AdminDashboard = () => {
           </button>
         ))}
       </nav>
+      <div className="px-2 py-4 border-t border-border">
+        <p className="text-xs text-muted-foreground px-3 mb-2 truncate">{user?.email}</p>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-destructive/10 text-destructive"
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="font-medium">Sign Out</span>
+        </button>
+      </div>
     </div>
   );
 
