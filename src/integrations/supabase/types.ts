@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_goals: {
+        Row: {
+          created_at: string
+          goal_type: string
+          id: string
+          is_active: boolean | null
+          period: string
+          target_value: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_type: string
+          id?: string
+          is_active?: boolean | null
+          period: string
+          target_value: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_type?: string
+          id?: string
+          is_active?: boolean | null
+          period?: string
+          target_value?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -302,6 +335,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_driver_on_signup: {
+        Args: {
+          p_email: string
+          p_full_name: string
+          p_license_number: string
+          p_phone: string
+          p_user_id: string
+          p_vehicle_model?: string
+          p_vehicle_plate: string
+          p_vehicle_type: string
+        }
+        Returns: string
+      }
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number

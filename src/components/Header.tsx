@@ -1,8 +1,12 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Car, UtensilsCrossed, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -27,9 +31,9 @@ const Header = () => {
               <UtensilsCrossed className="w-4 h-4" />
               <span className="font-medium">Eats</span>
             </a>
-            <a href="#driver" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
-              Drive
-            </a>
+            <button onClick={() => navigate("/driver")} className="text-muted-foreground hover:text-foreground transition-colors font-medium">
+              Driver App
+            </button>
             <a href="#business" className="text-muted-foreground hover:text-foreground transition-colors font-medium">
               Business
             </a>
@@ -37,8 +41,17 @@ const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" size="sm">Log in</Button>
-            <Button variant="hero" size="sm">Sign up</Button>
+            {user ? (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/driver")}>Driver App</Button>
+                <Button variant="hero" size="sm" onClick={() => signOut()}>Sign out</Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Log in</Button>
+                <Button variant="hero" size="sm" onClick={() => navigate("/signup")}>Sign up</Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -63,11 +76,17 @@ const Header = () => {
               <UtensilsCrossed className="w-5 h-5 text-eats" />
               <span className="font-medium">Eats</span>
             </a>
-            <a href="#driver" className="text-foreground py-2 font-medium">Drive with ZIVO</a>
+            <button onClick={() => { navigate("/driver"); setIsMenuOpen(false); }} className="text-foreground py-2 font-medium text-left">Driver App</button>
             <a href="#business" className="text-foreground py-2 font-medium">Business</a>
             <div className="flex gap-3 pt-4 border-t border-border">
-              <Button variant="outline" className="flex-1">Log in</Button>
-              <Button variant="hero" className="flex-1">Sign up</Button>
+              {user ? (
+                <Button variant="outline" className="flex-1" onClick={() => signOut()}>Sign out</Button>
+              ) : (
+                <>
+                  <Button variant="outline" className="flex-1" onClick={() => navigate("/login")}>Log in</Button>
+                  <Button variant="hero" className="flex-1" onClick={() => navigate("/signup")}>Sign up</Button>
+                </>
+              )}
             </div>
           </nav>
         </div>
