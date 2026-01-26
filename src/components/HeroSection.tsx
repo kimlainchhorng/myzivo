@@ -18,45 +18,45 @@ const HeroSection = () => {
   const [deliveryAddress, setDeliveryAddress] = useState('');
 
   return (
-    <section className="relative min-h-screen flex items-center pt-20 pb-12 overflow-hidden">
+    <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 pb-8 sm:pb-12 overflow-hidden">
       {/* Enhanced Background Elements */}
       <div className="absolute inset-0 bg-gradient-radial from-rides/5 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-96 h-96 bg-rides/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 left-0 w-80 h-80 bg-eats/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-conic from-rides/5 via-transparent to-eats/5 rounded-full blur-3xl opacity-30" />
+      <div className="absolute top-1/4 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-rides/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-eats/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[1000px] h-[500px] sm:h-[1000px] bg-gradient-conic from-rides/5 via-transparent to-eats/5 rounded-full blur-3xl opacity-30" />
       
-      {/* Animated grid lines */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{
+      {/* Animated grid lines - hidden on mobile for performance */}
+      <div className="hidden sm:block absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
         backgroundSize: '100px 100px'
       }} />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
           {/* Left Content */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="space-y-8"
+            className="space-y-6 sm:space-y-8"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm font-medium">
-              <Sparkles className="w-4 h-4 text-rides" />
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-card text-xs sm:text-sm font-medium">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
               <span className="text-muted-foreground">The #1 mobility app</span>
             </div>
 
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
               Go anywhere.
               <br />
               <span className="text-gradient-rides">Get anything.</span>
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-lg">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-lg">
               Request a ride, order food, book flights, or rent a car. One super app for all your needs.
             </p>
 
             {/* Quick Stats */}
-            <div className="flex gap-6 py-4">
+            <div className="flex gap-4 sm:gap-6 py-2 sm:py-4">
               {heroStats.map((stat, index) => (
                 <motion.div 
                   key={stat.label}
@@ -65,19 +65,19 @@ const HeroSection = () => {
                   transition={{ delay: 0.3 + index * 0.1 }}
                   className="text-center"
                 >
-                  <p className="font-display text-2xl font-bold text-rides">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  <p className="font-display text-xl sm:text-2xl font-bold text-rides">{stat.value}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
 
             {/* Booking Card */}
-            <div className="glass-card p-6 max-w-md">
+            <div className="glass-card p-4 sm:p-6 max-w-md">
               {/* Tabs */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2 mb-4 sm:mb-6">
                 <button
                   onClick={() => setActiveTab('rides')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
                     activeTab === 'rides'
                       ? 'gradient-rides text-primary-foreground'
                       : 'bg-muted text-muted-foreground hover:text-foreground'
@@ -88,7 +88,7 @@ const HeroSection = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab('eats')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm sm:text-base font-medium transition-all ${
                     activeTab === 'eats'
                       ? 'gradient-eats text-secondary-foreground'
                       : 'bg-muted text-muted-foreground hover:text-foreground'

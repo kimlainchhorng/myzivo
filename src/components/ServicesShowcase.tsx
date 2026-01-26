@@ -139,11 +139,11 @@ const itemVariants = {
 
 const ServicesShowcase = () => {
   return (
-    <section className="py-20 lg:py-32 relative overflow-hidden">
+    <section className="py-12 sm:py-20 lg:py-32 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-radial from-rides/5 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/2 left-0 w-96 h-96 bg-eats/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-0 w-48 sm:w-96 h-48 sm:h-96 bg-eats/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-40 sm:w-80 h-40 sm:h-80 bg-sky-500/10 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -152,16 +152,16 @@ const ServicesShowcase = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-10 sm:mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4 text-rides" />
+          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-card text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
             <span className="text-muted-foreground">All-in-One Platform</span>
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
             Everything you need, <span className="text-gradient-rides">one app</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             From daily commutes to dream vacations, ZIVO has you covered with 9 integrated
             services
           </p>
@@ -173,7 +173,7 @@ const ServicesShowcase = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
         >
           {services.map((service) => (
             <motion.div
@@ -182,11 +182,11 @@ const ServicesShowcase = () => {
               className="group"
             >
               <Link to={service.href}>
-                <div className="glass-card p-6 h-full hover:border-white/20 transition-all duration-300 relative overflow-hidden">
+                <div className="glass-card p-4 sm:p-6 h-full hover:border-white/20 transition-all duration-300 relative overflow-hidden active:scale-[0.98]">
                   {/* New Badge */}
                   {service.isNew && (
-                    <div className="absolute top-4 right-4">
-                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-eats/10 text-eats">
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
+                      <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-eats/10 text-eats">
                         New
                       </span>
                     </div>
@@ -194,25 +194,25 @@ const ServicesShowcase = () => {
 
                   {/* Icon */}
                   <div
-                    className={`w-14 h-14 rounded-2xl ${service.gradient} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${service.gradient} flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform duration-300`}
                   >
-                    <service.icon className="w-7 h-7 text-white" />
+                    <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                   </div>
 
                   {/* Content */}
-                  <h3 className="font-display text-xl font-semibold mb-2 text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="font-display text-lg sm:text-xl font-semibold mb-1.5 sm:mb-2 text-foreground group-hover:text-primary transition-colors">
                     {service.title}
                   </h3>
-                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                  <p className="text-muted-foreground text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
                     {service.description}
                   </p>
 
                   {/* Features */}
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
                     {service.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground"
+                        className="text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-muted text-muted-foreground"
                       >
                         {feature}
                       </span>
@@ -220,9 +220,9 @@ const ServicesShowcase = () => {
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex items-center text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                     <span>Explore</span>
-                    <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </div>
 
                   {/* Hover Glow */}

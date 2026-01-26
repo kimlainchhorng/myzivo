@@ -22,15 +22,15 @@ const Header = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-xl border-b border-border/50 safe-area-top">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
-            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <div className="w-10 h-10 rounded-xl gradient-rides flex items-center justify-center group-hover:scale-105 transition-transform">
-                <span className="font-display font-bold text-xl text-primary-foreground">Z</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl gradient-rides flex items-center justify-center group-hover:scale-105 transition-transform">
+                <span className="font-display font-bold text-lg sm:text-xl text-primary-foreground">Z</span>
               </div>
-              <span className="font-display font-bold text-2xl text-foreground">ZIVO</span>
+              <span className="font-display font-bold text-xl sm:text-2xl text-foreground">ZIVO</span>
             </div>
 
             {/* Desktop Navigation - Mega Menus */}
@@ -116,10 +116,11 @@ const Header = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-foreground hover:bg-muted rounded-lg transition-colors"
+              className="lg:hidden p-2 -mr-2 text-foreground hover:bg-muted rounded-lg transition-colors active:scale-95"
               onClick={() => setIsMobileMenuOpen(true)}
+              aria-label="Open menu"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>

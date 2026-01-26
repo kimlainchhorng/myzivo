@@ -154,37 +154,37 @@ const getColorClasses = (color: string) => {
 
 const StatsSection = () => {
   return (
-    <section className="py-16 lg:py-24 relative overflow-hidden">
+    <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-rides/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-rides/5 rounded-full blur-3xl" />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-12 animate-fade-in">
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4">
             Trusted by <span className="text-gradient-rides">millions</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Powering transportation and delivery across the globe
           </p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
           {stats.map((stat, index) => {
             const colors = getColorClasses(stat.color);
             return (
               <div
                 key={stat.label}
-                className="glass-card p-6 text-center hover:scale-105 transition-transform duration-300 animate-fade-in"
+                className="glass-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className={`w-12 h-12 mx-auto rounded-xl ${colors.gradient} flex items-center justify-center mb-4`}>
-                  <stat.icon className={`w-6 h-6 ${colors.text}`} />
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-lg sm:rounded-xl ${colors.gradient} flex items-center justify-center mb-3 sm:mb-4`}>
+                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text}`} />
                 </div>
-                <p className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                <p className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
                 </p>
-                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground">{stat.label}</p>
               </div>
             );
           })}
