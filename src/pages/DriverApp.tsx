@@ -35,6 +35,7 @@ import { TripStatus } from "@/hooks/useTrips";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
+import CrossAppNavigation from "@/components/CrossAppNavigation";
 
 const DriverApp = () => {
   const navigate = useNavigate();
@@ -207,8 +208,9 @@ const DriverApp = () => {
             </div>
           </div>
           
-          {/* Online Toggle */}
+          {/* Online Toggle and Cross App Nav */}
           <div className="flex items-center gap-3">
+            <CrossAppNavigation currentApp="driver" />
             <div className="text-right">
               <p className="text-sm font-medium">{driver.is_online ? "Online" : "Offline"}</p>
               <p className="text-xs text-muted-foreground">
