@@ -1042,6 +1042,65 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          category: string
+          cost_per_unit: number
+          created_at: string
+          id: string
+          last_restocked: string | null
+          max_stock: number
+          min_stock: number
+          name: string
+          notes: string | null
+          quantity: number
+          restaurant_id: string
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          id?: string
+          last_restocked?: string | null
+          max_stock?: number
+          min_stock?: number
+          name: string
+          notes?: string | null
+          quantity?: number
+          restaurant_id: string
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          id?: string
+          last_restocked?: string | null
+          max_stock?: number
+          min_stock?: number
+          name?: string
+          notes?: string | null
+          quantity?: number
+          restaurant_id?: string
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           created_at: string
