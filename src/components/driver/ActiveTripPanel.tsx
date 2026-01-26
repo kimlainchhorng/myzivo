@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +12,16 @@ import {
   Clock, 
   DollarSign,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Locate
 } from "lucide-react";
 import { Trip, TripStatus } from "@/hooks/useTrips";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ActiveTripPanelProps {
   trip: Trip;
+  driverId: string;
   onUpdateStatus: (status: TripStatus) => void;
   isUpdating: boolean;
 }
@@ -31,10 +35,14 @@ const statusFlow: { status: TripStatus; label: string; nextLabel: string }[] = [
   { status: "in_progress", label: "Trip in Progress", nextLabel: "Complete Trip" },
 ];
 
-const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelProps) => {
+const ActiveTripPanel = ({ trip, driverId, onUpdateStatus, isUpdating }: ActiveTripPanelProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const driverMarker = useRef<mapboxgl.Marker | null>(null);
+  const watchId = useRef<number | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const currentStep = statusFlow.find(s => s.status === trip.status);
   const currentIndex = statusFlow.findIndex(s => s.status === trip.status);
@@ -68,6 +76,77 @@ const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelPr
 
   const destination = getDestination();
 
+  // Update driver location in database
+  const updateDriverLocation = useCallback(async (lat: number, lng: number) => {
+    if (!driverId) return;
+
+    try {
+      await supabase
+        .from("drivers")
+        .update({ current_lat: lat, current_lng: lng })
+        .eq("id", driverId);
+    } catch (error) {
+      console.error("Failed to update driver location:", error);
+    }
+  }, [driverId]);
+
+  // Start location tracking
+  const startLocationTracking = useCallback(() => {
+    if (!("geolocation" in navigator)) {
+      toast.error("Geolocation not supported");
+      return;
+    }
+
+    setIsTracking(true);
+
+    watchId.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        
+        // Update database with new location
+        updateDriverLocation(latitude, longitude);
+
+        // Update marker on map
+        if (driverMarker.current && map.current) {
+          driverMarker.current.setLngLat([longitude, latitude]);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        toast.error("Failed to get location");
+        setIsTracking(false);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 5000,
+        timeout: 10000,
+      }
+    );
+  }, [updateDriverLocation]);
+
+  // Stop location tracking
+  const stopLocationTracking = useCallback(() => {
+    if (watchId.current !== null) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+    }
+    setIsTracking(false);
+  }, []);
+
+  // Start tracking when trip is active
+  useEffect(() => {
+    if (["en_route", "in_progress"].includes(trip.status || "")) {
+      startLocationTracking();
+    } else {
+      stopLocationTracking();
+    }
+
+    return () => {
+      stopLocationTracking();
+    };
+  }, [trip.status, startLocationTracking, stopLocationTracking]);
+
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -95,8 +174,8 @@ const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelPr
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Clear existing markers
-    const markers = document.querySelectorAll('.mapboxgl-marker');
+    // Clear existing markers (except driver marker)
+    const markers = document.querySelectorAll('.mapboxgl-marker:not(.driver-marker)');
     markers.forEach(m => m.remove());
 
     // Add pickup marker
@@ -115,8 +194,8 @@ const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelPr
     // Add dropoff marker
     const dropoffEl = document.createElement("div");
     dropoffEl.innerHTML = `
-      <div class="w-8 h-8 bg-foreground rounded-sm shadow-lg flex items-center justify-center">
-        <div class="w-3 h-3 bg-background rounded-sm"></div>
+      <div class="w-8 h-8 bg-white rounded-sm shadow-lg flex items-center justify-center">
+        <div class="w-3 h-3 bg-gray-900 rounded-sm"></div>
       </div>
     `;
     new mapboxgl.Marker(dropoffEl)
@@ -127,8 +206,37 @@ const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelPr
     const bounds = new mapboxgl.LngLatBounds();
     bounds.extend([trip.pickup_lng, trip.pickup_lat]);
     bounds.extend([trip.dropoff_lng, trip.dropoff_lat]);
+    if (currentLocation) {
+      bounds.extend([currentLocation.lng, currentLocation.lat]);
+    }
     map.current.fitBounds(bounds, { padding: 80 });
-  }, [trip, mapLoaded]);
+  }, [trip, mapLoaded, currentLocation]);
+
+  // Add/update driver marker
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !currentLocation) return;
+
+    if (!driverMarker.current) {
+      const driverEl = document.createElement("div");
+      driverEl.className = "driver-marker";
+      driverEl.innerHTML = `
+        <div class="relative">
+          <div class="w-12 h-12 rounded-full bg-primary border-3 border-white shadow-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+            </svg>
+          </div>
+          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-primary rotate-45 -z-10"></div>
+        </div>
+      `;
+
+      driverMarker.current = new mapboxgl.Marker(driverEl)
+        .setLngLat([currentLocation.lng, currentLocation.lat])
+        .addTo(map.current);
+    } else {
+      driverMarker.current.setLngLat([currentLocation.lng, currentLocation.lat]);
+    }
+  }, [currentLocation, mapLoaded]);
 
   const handleNextStep = () => {
     const nextStatus = getNextStatus();
@@ -145,7 +253,30 @@ const ActiveTripPanel = ({ trip, onUpdateStatus, isUpdating }: ActiveTripPanelPr
   return (
     <div className="flex flex-col h-full">
       {/* Map */}
-      <div ref={mapContainer} className="h-[40vh] min-h-[250px]" />
+      <div className="relative h-[40vh] min-h-[250px]">
+        <div ref={mapContainer} className="h-full" />
+        
+        {/* Tracking indicator */}
+        {isTracking && (
+          <div className="absolute top-3 right-3 flex items-center gap-2 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-medium">Sharing location</span>
+          </div>
+        )}
+
+        {/* Manual location update */}
+        {!isTracking && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute top-3 right-3 shadow-lg"
+            onClick={startLocationTracking}
+          >
+            <Locate className="w-4 h-4 mr-2" />
+            Enable tracking
+          </Button>
+        )}
+      </div>
 
       {/* Trip Details */}
       <div className="flex-1 bg-card p-4 space-y-4 overflow-y-auto">

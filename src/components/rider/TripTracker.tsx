@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car } from "lucide-react";
 import { Trip } from "@/hooks/useTrips";
+import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TripTrackerProps {
   trip: Trip;
@@ -26,10 +28,59 @@ const statusSteps = [
 const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const driverMarker = useRef<mapboxgl.Marker | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [eta, setEta] = useState<number | null>(null);
 
   const currentStepIndex = statusSteps.findIndex(s => s.status === trip.status);
   const isActive = ["requested", "accepted", "en_route", "arrived", "in_progress"].includes(trip.status || "");
+
+  // Handle driver location updates
+  const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
+    setDriverLocation({ lat, lng });
+
+    // Update marker position smoothly
+    if (driverMarker.current && map.current) {
+      driverMarker.current.setLngLat([lng, lat]);
+
+      // Calculate ETA to pickup or dropoff
+      const targetLat = trip.status === "in_progress" ? trip.dropoff_lat : trip.pickup_lat;
+      const targetLng = trip.status === "in_progress" ? trip.dropoff_lng : trip.pickup_lng;
+
+      // Simple distance-based ETA calculation (approx 30 km/h average city speed)
+      const distance = Math.sqrt(
+        Math.pow((lat - targetLat) * 111, 2) + Math.pow((lng - targetLng) * 111 * Math.cos(lat * Math.PI / 180), 2)
+      );
+      const etaMinutes = Math.round((distance / 30) * 60);
+      setEta(etaMinutes > 0 ? etaMinutes : 1);
+    }
+  }, [trip.status, trip.pickup_lat, trip.pickup_lng, trip.dropoff_lat, trip.dropoff_lng]);
+
+  // Subscribe to driver location updates
+  useDriverLocationRealtime(trip.driver_id || undefined, handleDriverLocationUpdate);
+
+  // Fetch initial driver location
+  useEffect(() => {
+    if (!trip.driver_id) return;
+
+    const fetchDriverLocation = async () => {
+      const { data } = await supabase
+        .from("drivers")
+        .select("current_lat, current_lng")
+        .eq("id", trip.driver_id)
+        .maybeSingle();
+
+      if (data?.current_lat && data?.current_lng) {
+        setDriverLocation({
+          lat: Number(data.current_lat),
+          lng: Number(data.current_lng),
+        });
+      }
+    };
+
+    fetchDriverLocation();
+  }, [trip.driver_id]);
 
   // Initialize map
   useEffect(() => {
@@ -61,8 +112,8 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
       // Add dropoff marker
       const dropoffEl = document.createElement("div");
       dropoffEl.innerHTML = `
-        <div class="w-6 h-6 bg-foreground rounded-sm shadow-lg flex items-center justify-center">
-          <div class="w-2 h-2 bg-background rounded-sm"></div>
+        <div class="w-6 h-6 bg-white rounded-sm shadow-lg flex items-center justify-center">
+          <div class="w-2 h-2 bg-gray-900 rounded-sm"></div>
         </div>
       `;
       new mapboxgl.Marker(dropoffEl)
@@ -82,10 +133,65 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
     };
   }, [trip]);
 
+  // Add/update driver marker when location changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !driverLocation) return;
+
+    if (!driverMarker.current) {
+      // Create driver marker
+      const driverEl = document.createElement("div");
+      driverEl.innerHTML = `
+        <div class="relative">
+          <div class="w-10 h-10 rounded-full bg-primary border-3 border-white shadow-lg flex items-center justify-center animate-pulse">
+            <svg class="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8m-8 4h8m-4-8v16"></path>
+            </svg>
+          </div>
+          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-primary rotate-45 -z-10"></div>
+        </div>
+      `;
+      driverEl.className = "driver-marker";
+
+      driverMarker.current = new mapboxgl.Marker(driverEl)
+        .setLngLat([driverLocation.lng, driverLocation.lat])
+        .addTo(map.current);
+
+      // Expand bounds to include driver
+      const bounds = new mapboxgl.LngLatBounds();
+      bounds.extend([trip.pickup_lng, trip.pickup_lat]);
+      bounds.extend([trip.dropoff_lng, trip.dropoff_lat]);
+      bounds.extend([driverLocation.lng, driverLocation.lat]);
+      map.current.fitBounds(bounds, { padding: 60 });
+    } else {
+      // Animate marker to new position
+      driverMarker.current.setLngLat([driverLocation.lng, driverLocation.lat]);
+    }
+  }, [driverLocation, mapLoaded, trip.pickup_lat, trip.pickup_lng, trip.dropoff_lat, trip.dropoff_lng]);
+
   return (
     <div className="space-y-4">
       {/* Map */}
-      <div ref={mapContainer} className="h-[250px] rounded-xl overflow-hidden" />
+      <div className="relative">
+        <div ref={mapContainer} className="h-[250px] rounded-xl overflow-hidden" />
+        
+        {/* ETA Overlay */}
+        {eta && driverLocation && isActive && trip.status !== "arrived" && (
+          <div className="absolute top-3 left-3 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
+            <p className="text-xs text-muted-foreground">
+              {trip.status === "in_progress" ? "Arriving in" : "Driver arriving in"}
+            </p>
+            <p className="text-lg font-bold">{eta} min</p>
+          </div>
+        )}
+
+        {/* Live indicator */}
+        {driverLocation && isActive && (
+          <div className="absolute top-3 right-3 flex items-center gap-2 bg-card/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-xs font-medium">Live</span>
+          </div>
+        )}
+      </div>
 
       {/* Status Progress */}
       <Card>
@@ -143,6 +249,9 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
                   <span>4.8</span>
+                  {driverLocation && (
+                    <span className="ml-2 text-green-500">• Location tracking active</span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">

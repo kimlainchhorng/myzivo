@@ -186,3 +186,36 @@ export const useAllTripsRealtime = (enabled: boolean = true) => {
     };
   }, [enabled, queryClient]);
 };
+
+// Hook for real-time driver location updates
+export const useDriverLocationRealtime = (
+  driverId: string | undefined,
+  onLocationUpdate: (lat: number, lng: number) => void
+) => {
+  useEffect(() => {
+    if (!driverId) return;
+
+    const channel = supabase
+      .channel(`driver-location-${driverId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "drivers",
+          filter: `id=eq.${driverId}`,
+        },
+        (payload) => {
+          const { current_lat, current_lng } = payload.new;
+          if (current_lat && current_lng) {
+            onLocationUpdate(Number(current_lat), Number(current_lng));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [driverId, onLocationUpdate]);
+};

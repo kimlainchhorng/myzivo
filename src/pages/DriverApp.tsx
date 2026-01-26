@@ -181,6 +181,7 @@ const DriverApp = () => {
         </div>
         <ActiveTripPanel 
           trip={activeTrip} 
+          driverId={driver.id}
           onUpdateStatus={handleUpdateStatus}
           isUpdating={updateTripStatus.isPending}
         />
