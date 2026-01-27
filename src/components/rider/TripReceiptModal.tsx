@@ -6,9 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { 
-  MapPin, 
   Calendar, 
   Clock, 
   Navigation, 
@@ -21,11 +19,8 @@ import {
   Car,
   Shield,
   Sparkles,
-  ArrowRight,
-  Zap
 } from "lucide-react";
 import { Trip } from "@/hooks/useTrips";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TripReceiptModalProps {
@@ -55,19 +50,6 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
   const distanceFare = (trip.fare_amount || 0) * 0.3;
   const timeFare = (trip.fare_amount || 0) * 0.1;
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.06 }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0 }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md border-0 bg-gradient-to-br from-card/98 via-card/95 to-card/90 backdrop-blur-2xl shadow-2xl overflow-hidden rounded-3xl p-0">
@@ -78,14 +60,9 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
         <div className="p-6">
           <DialogHeader className="relative pb-4">
             <div className="flex items-center gap-4">
-              <motion.div 
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-lg"
-              >
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center shadow-lg animate-in zoom-in-75 duration-300">
                 <Receipt className="w-7 h-7 text-primary" />
-              </motion.div>
+              </div>
               <div>
                 <DialogTitle className="text-2xl font-bold">Trip Receipt</DialogTitle>
                 <div className="flex items-center gap-2 mt-1">
@@ -96,16 +73,11 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
             </div>
           </DialogHeader>
 
-          <motion.div 
-            className="space-y-5 relative"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className="space-y-5 relative">
             {/* Trip Date & Time - Enhanced */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center gap-3 text-sm bg-gradient-to-r from-muted/50 to-muted/20 rounded-2xl p-4 border border-white/10"
+            <div 
+              className="flex items-center gap-3 text-sm bg-gradient-to-r from-muted/50 to-muted/20 rounded-2xl p-4 border border-white/10 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              style={{ animationDelay: '50ms' }}
             >
               <div className="flex items-center gap-3 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center">
@@ -126,24 +98,21 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   <p className="font-semibold">{formatTime(trip.created_at)}</p>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Locations - Premium Design */}
-            <motion.div 
-              variants={itemVariants}
-              className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/10 p-5 overflow-hidden"
+            <div 
+              className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-muted/50 via-muted/30 to-muted/10 p-5 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200"
+              style={{ animationDelay: '100ms' }}
             >
               {/* Decorative line */}
               <div className="absolute left-[30px] top-[60px] bottom-[60px] w-0.5 bg-gradient-to-b from-emerald-500 via-primary/30 to-primary rounded-full" />
               
               <div className="space-y-6">
                 <div className="flex items-start gap-4 relative">
-                  <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center ring-4 ring-emerald-500/20 shadow-lg shadow-emerald-500/30 z-10"
-                  >
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center ring-4 ring-emerald-500/20 shadow-lg shadow-emerald-500/30 z-10 hover:scale-110 transition-transform">
                     <div className="w-2 h-2 bg-white rounded-full" />
-                  </motion.div>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest mb-1">Pickup</p>
                     <p className="text-sm font-semibold leading-tight">{trip.pickup_address}</p>
@@ -154,12 +123,9 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                 </div>
                 
                 <div className="flex items-start gap-4 relative">
-                  <motion.div 
-                    whileHover={{ scale: 1.1 }}
-                    className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center ring-4 ring-primary/20 shadow-lg shadow-primary/30 z-10"
-                  >
+                  <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center ring-4 ring-primary/20 shadow-lg shadow-primary/30 z-10 hover:scale-110 transition-transform">
                     <div className="w-2 h-2 bg-white rounded-sm" />
-                  </motion.div>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">Dropoff</p>
                     <p className="text-sm font-semibold leading-tight">{trip.dropoff_address}</p>
@@ -169,21 +135,18 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Driver Info - Enhanced */}
             {trip.driver && (
-              <motion.div 
-                variants={itemVariants}
-                className="flex items-center gap-4 p-5 rounded-2xl border border-white/10 bg-gradient-to-r from-card/80 to-card/50"
+              <div 
+                className="flex items-center gap-4 p-5 rounded-2xl border border-white/10 bg-gradient-to-r from-card/80 to-card/50 animate-in fade-in slide-in-from-bottom-2 duration-200"
+                style={{ animationDelay: '150ms' }}
               >
                 <div className="relative">
-                  <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
-                  >
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center hover:scale-105 transition-transform">
                     <Car className="w-7 h-7 text-primary" />
-                  </motion.div>
+                  </div>
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full border-2 border-background flex items-center justify-center shadow-lg">
                     <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                   </div>
@@ -198,24 +161,23 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
                   <span className="text-base font-bold text-amber-500">4.9</span>
                 </div>
-              </motion.div>
+              </div>
             )}
 
             {/* Trip Stats - Premium Grid */}
-            <motion.div 
-              variants={itemVariants}
-              className="grid grid-cols-3 gap-3"
+            <div 
+              className="grid grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              style={{ animationDelay: '200ms' }}
             >
               {[
                 { icon: Navigation, value: (trip.distance_km ? (trip.distance_km * 0.621371).toFixed(1) : null), label: "miles", color: "primary", gradient: "from-primary/20 to-primary/5" },
                 { icon: Clock, value: trip.duration_minutes, label: "minutes", color: "amber-500", gradient: "from-amber-500/20 to-amber-500/5" },
                 { icon: Star, value: trip.rating || "—", label: "rating", color: "amber-500", gradient: "from-amber-500/20 to-amber-500/5" },
               ].map((stat, index) => (
-                <motion.div 
+                <div 
                   key={index}
-                  whileHover={{ y: -3, scale: 1.02 }}
                   className={cn(
-                    "text-center p-4 rounded-2xl bg-gradient-to-br border border-white/10 transition-all",
+                    "text-center p-4 rounded-2xl bg-gradient-to-br border border-white/10 transition-all hover:-translate-y-1 hover:scale-[1.02]",
                     stat.gradient
                   )}
                 >
@@ -227,14 +189,17 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   </div>
                   <p className="text-2xl font-bold">{stat.value}</p>
                   <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{stat.label}</p>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             <Separator className="bg-white/10" />
 
             {/* Fare Breakdown - Premium */}
-            <motion.div variants={itemVariants} className="space-y-3">
+            <div 
+              className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              style={{ animationDelay: '250ms' }}
+            >
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <h4 className="font-bold">Fare Breakdown</h4>
@@ -245,42 +210,34 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   { label: `Distance (${trip.distance_km ? (trip.distance_km * 0.621371).toFixed(1) : 0} mi)`, value: distanceFare },
                   { label: `Time (${trip.duration_minutes} min)`, value: timeFare },
                 ].map((item, index) => (
-                  <motion.div 
+                  <div 
                     key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex justify-between items-center py-2 px-3 rounded-xl hover:bg-muted/20 transition-colors"
+                    className="flex justify-between items-center py-2 px-3 rounded-xl hover:bg-muted/20 transition-colors animate-in fade-in slide-in-from-left-2 duration-150"
+                    style={{ animationDelay: `${260 + index * 30}ms` }}
                   >
                     <span className="text-muted-foreground">{item.label}</span>
                     <span className="font-semibold">${item.value.toFixed(2)}</span>
-                  </motion.div>
+                  </div>
                 ))}
                 <Separator className="my-2 bg-white/10" />
-                <motion.div 
-                  whileHover={{ scale: 1.01 }}
-                  className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl border border-primary/20"
-                >
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-2xl border border-primary/20 hover:scale-[1.01] transition-transform">
                   <span className="font-bold text-base">Total</span>
                   <span className="text-3xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
                     ${trip.fare_amount?.toFixed(2)}
                   </span>
-                </motion.div>
+                </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Payment Status - Enhanced */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center justify-between p-5 bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-emerald-500/5 rounded-2xl border border-emerald-500/20"
+            <div 
+              className="flex items-center justify-between p-5 bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-emerald-500/5 rounded-2xl border border-emerald-500/20 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              style={{ animationDelay: '300ms' }}
             >
               <div className="flex items-center gap-4">
-                <motion.div 
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 flex items-center justify-center shadow-lg"
-                >
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-emerald-500/10 flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
                   <CreditCard className="w-6 h-6 text-emerald-500" />
-                </motion.div>
+                </div>
                 <div>
                   <p className="font-bold text-emerald-600 dark:text-emerald-400 capitalize">
                     Payment {trip.payment_status}
@@ -288,42 +245,33 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
                   <p className="text-xs text-muted-foreground">Visa ending in 4242</p>
                 </div>
               </div>
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", delay: 0.3 }}
-              >
-                <CheckCircle2 className="w-7 h-7 text-emerald-500" />
-              </motion.div>
-            </motion.div>
+              <CheckCircle2 className="w-7 h-7 text-emerald-500 animate-in zoom-in-50 duration-300" style={{ animationDelay: '400ms' }} />
+            </div>
 
             {/* Security Notice */}
-            <motion.div 
-              variants={itemVariants}
-              className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2"
-            >
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground py-2 animate-in fade-in duration-200" style={{ animationDelay: '350ms' }}>
               <Shield className="w-3.5 h-3.5" />
               <span>Your payment info is encrypted and secure</span>
-            </motion.div>
+            </div>
 
             {/* Actions - Enhanced */}
-            <motion.div variants={itemVariants} className="flex gap-3">
+            <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200" style={{ animationDelay: '400ms' }}>
               <Button 
                 variant="outline" 
-                className="flex-1 h-14 rounded-2xl border-2 border-white/10 hover:bg-primary/5 hover:border-primary/30 transition-all group"
+                className="flex-1 h-14 rounded-2xl border-2 border-white/10 hover:bg-primary/5 hover:border-primary/30 transition-all group active:scale-[0.98]"
               >
                 <Download className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                 Download PDF
               </Button>
               <Button 
                 variant="outline" 
-                className="flex-1 h-14 rounded-2xl border-2 border-white/10 hover:bg-primary/5 hover:border-primary/30 transition-all group"
+                className="flex-1 h-14 rounded-2xl border-2 border-white/10 hover:bg-primary/5 hover:border-primary/30 transition-all group active:scale-[0.98]"
               >
                 <Share2 className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                 Share
               </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
