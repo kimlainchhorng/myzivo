@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 const CustomerFoodOrders = () => {
   const { user } = useAuth();
 
-  const { data: orders, isLoading } = useQuery({
+  const { data: orders, isLoading, refetch } = useQuery({
     queryKey: ["customer-food-orders", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -20,12 +20,17 @@ const CustomerFoodOrders = () => {
         .from("food_orders")
         .select("*, restaurants(name, logo_url)")
         .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!user?.id,
   });
+
+  const activeOrdersCount = orders?.filter((o: any) => 
+    o.status === "pending" || o.status === "confirmed" || o.status === "in_progress"
+  ).length || 0;
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -77,12 +82,19 @@ const CustomerFoodOrders = () => {
           </h1>
           <p className="text-muted-foreground">Your order history and active orders</p>
         </div>
-        <Link to="/food">
-          <Button className="gap-2 bg-gradient-to-r from-eats to-red-500 shadow-lg hover:shadow-xl transition-shadow">
-            <UtensilsCrossed className="h-4 w-4" />
-            Order Food
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {activeOrdersCount > 0 && (
+            <Badge className="bg-eats/10 text-eats border-eats/20 border">
+              {activeOrdersCount} active
+            </Badge>
+          )}
+          <Link to="/food">
+            <Button className="gap-2 bg-gradient-to-r from-eats to-red-500 shadow-lg hover:shadow-xl transition-shadow">
+              <UtensilsCrossed className="h-4 w-4" />
+              Order Food
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       <motion.div
