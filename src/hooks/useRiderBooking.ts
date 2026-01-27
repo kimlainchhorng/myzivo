@@ -86,6 +86,9 @@ export const useRouteCalculation = () => {
   return { calculateRoute, isCalculating };
 };
 
+// 5% discount to beat Uber/Lyft pricing
+const COMPETITOR_DISCOUNT = 0.95;
+
 export const useFareEstimation = () => {
   const { data: pricingData } = usePricing();
 
@@ -102,7 +105,9 @@ export const useFareEstimation = () => {
         const distanceFare = pricing.per_km_rate * distanceKm;
         const timeFare = pricing.per_minute_rate * durationMinutes;
         const subtotal = baseFare + distanceFare + timeFare;
-        const totalFare = Math.max(subtotal * pricing.surge_multiplier, pricing.minimum_fare);
+        const rawFare = Math.max(subtotal * pricing.surge_multiplier, pricing.minimum_fare);
+        // Apply 5% discount to beat competitor pricing
+        const totalFare = Number((rawFare * COMPETITOR_DISCOUNT).toFixed(2));
 
         return {
           vehicleType: pricing.vehicle_type,
