@@ -363,23 +363,6 @@ const RiderApp = () => {
             </div>
           </div>}
 
-        {/* Quick Stats - Static for performance */}
-        {step === "location" && !pickup && <div className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap animate-in fade-in slide-in-from-top-4 duration-300">
-            {quickStats.map(stat => <div key={stat.label} className="group relative px-2.5 py-2 bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden rounded-sm">
-                <div className="relative z-10 flex items-center gap-2">
-                  <div className={cn("w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md", stat.gradient)}>
-                    <stat.icon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-0.5">
-                      <p className="text-sm font-bold">{stat.value}</p>
-                      {stat.label === "Top rated" && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
-                    </div>
-                    <p className="text-[9px] text-muted-foreground font-medium uppercase">{stat.label}</p>
-                  </div>
-                </div>
-              </div>)}
-          </div>}
       </div>
 
       {/* Bottom Sheet - Mobile Optimized */}
