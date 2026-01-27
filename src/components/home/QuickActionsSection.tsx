@@ -1,29 +1,10 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Car, UtensilsCrossed, Plane, Hotel, Zap, ChevronRight } from "lucide-react";
+import { Car, UtensilsCrossed, Plane, Hotel, Zap } from "lucide-react";
 import { QuickAction } from "@/components/ui/premium-card";
 import { QuickRepeatOrders, RecentlyViewed } from "@/components/ui/personalization";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.06 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-  },
-};
 
 const quickActions = [
   { id: "ride", icon: Car, label: "Book a Ride", description: "Get there in minutes", href: "/ride", color: "rides" as const, badge: "5 min" },
@@ -109,56 +90,35 @@ const QuickActionsSection = () => {
       <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
       
-      {/* Floating emoji */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-40"
-      >
+      {/* Floating emoji - CSS animated */}
+      <div className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
         ⚡
-      </motion.div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="space-y-12"
-        >
+        <div className="space-y-12">
           {/* Header with animated icon */}
-          <motion.div variants={itemVariants} className="flex items-center justify-between">
+          <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-4">
-              <motion.div 
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="relative p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30 overflow-hidden"
-              >
+              <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:rotate-3">
                 <Zap className="w-7 h-7 text-white relative z-10" />
-                {/* Shine effect */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '200%' }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                  style={{ transform: 'skewX(-15deg)' }}
-                />
-              </motion.div>
+                {/* CSS Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" style={{ transform: 'skewX(-15deg)' }} />
+              </div>
               <div>
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Quick Actions</h2>
                 <p className="text-sm sm:text-base text-muted-foreground">One tap to get started</p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Quick Action Grid */}
-          <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {quickActions.map((action, index) => (
-              <motion.div
+              <div
                 key={action.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
+                className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
               >
                 <QuickAction
                   icon={<action.icon className="w-6 h-6 text-white" />}
@@ -168,36 +128,26 @@ const QuickActionsSection = () => {
                   color={action.color}
                   badge={action.badge}
                 />
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
 
           {/* Recent + Repeat Orders */}
           <div className="grid lg:grid-cols-2 gap-8">
-            <motion.div 
-              variants={itemVariants}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
+            <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: '200ms' }}>
               <RecentlyViewed 
                 items={recentItems} 
                 onItemClick={(item) => console.log("Clicked:", item)}
               />
-            </motion.div>
-            <motion.div 
-              variants={itemVariants}
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
+            </div>
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: '200ms' }}>
               <QuickRepeatOrders 
                 orders={repeatOrders}
                 onReorder={(id) => console.log("Reorder:", id)}
               />
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
