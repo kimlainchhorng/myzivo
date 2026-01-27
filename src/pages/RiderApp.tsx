@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/hooks/useTrips";
 import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
+import ZivoLogo from "@/components/ZivoLogo";
 
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
 
@@ -186,10 +187,10 @@ const RiderApp = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
             <CardContent className="p-8 text-center relative">
               <motion.div 
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                className="w-18 h-18 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30"
+                whileHover={{ scale: 1.05 }}
+                className="mx-auto mb-6"
               >
-                <Car className="w-9 h-9 text-white" />
+                <ZivoLogo size="lg" />
               </motion.div>
               <h2 className="text-2xl font-bold mb-2">Sign in to book a ride</h2>
               <p className="text-muted-foreground mb-6">You need to be logged in to request trips</p>
