@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal, Star, Clock } from "lucide-react";
-import { useState } from "react";
+import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal, Star, Clock, ArrowRight } from "lucide-react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const heroStats = [
   { value: "5 min", label: "Avg. pickup" },
@@ -11,12 +11,12 @@ const heroStats = [
 ];
 
 const quickServices = [
-  { id: 'rides', label: 'Rides', icon: Car, href: '/ride', color: 'text-rides', bgColor: 'bg-rides/10 hover:bg-rides/20' },
-  { id: 'eats', label: 'Eats', icon: UtensilsCrossed, href: '/food', color: 'text-eats', bgColor: 'bg-eats/10 hover:bg-eats/20' },
-  { id: 'flights', label: 'Flights', icon: Plane, href: '/flights', color: 'text-sky-400', bgColor: 'bg-sky-500/10 hover:bg-sky-500/20' },
-  { id: 'hotels', label: 'Hotels', icon: Hotel, href: '/hotels', color: 'text-amber-400', bgColor: 'bg-amber-500/10 hover:bg-amber-500/20' },
-  { id: 'cars', label: 'Cars', icon: CarFront, href: '/car-rental', color: 'text-primary', bgColor: 'bg-primary/10 hover:bg-primary/20' },
-  { id: 'more', label: 'More', icon: MoreHorizontal, href: '/ground-transport', color: 'text-muted-foreground', bgColor: 'bg-muted hover:bg-muted/80' },
+  { id: 'rides', label: 'Rides', icon: Car, href: '/ride', color: 'text-rides', bgColor: 'bg-rides/10 hover:bg-rides/20', glowColor: 'hover:shadow-[0_0_20px_-5px_hsl(var(--rides))]' },
+  { id: 'eats', label: 'Eats', icon: UtensilsCrossed, href: '/food', color: 'text-eats', bgColor: 'bg-eats/10 hover:bg-eats/20', glowColor: 'hover:shadow-[0_0_20px_-5px_hsl(var(--eats))]' },
+  { id: 'flights', label: 'Flights', icon: Plane, href: '/flights', color: 'text-sky-400', bgColor: 'bg-sky-500/10 hover:bg-sky-500/20', glowColor: 'hover:shadow-[0_0_20px_-5px_rgb(56,189,248)]' },
+  { id: 'hotels', label: 'Hotels', icon: Hotel, href: '/hotels', color: 'text-amber-400', bgColor: 'bg-amber-500/10 hover:bg-amber-500/20', glowColor: 'hover:shadow-[0_0_20px_-5px_rgb(251,191,36)]' },
+  { id: 'cars', label: 'Cars', icon: CarFront, href: '/car-rental', color: 'text-primary', bgColor: 'bg-primary/10 hover:bg-primary/20', glowColor: 'hover:shadow-[0_0_20px_-5px_hsl(var(--primary))]' },
+  { id: 'more', label: 'More', icon: MoreHorizontal, href: '/ground-transport', color: 'text-muted-foreground', bgColor: 'bg-muted hover:bg-muted/80', glowColor: '' },
 ];
 
 const featuredRestaurants = [
@@ -28,12 +28,35 @@ const featuredRestaurants = [
   { id: 6, name: "Coffee Hub", cuisine: "Cafe", rating: 4.5, time: "10-15", image: "☕", promo: null },
 ];
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
+  }
+};
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'rides' | 'eats'>('rides');
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [hoveredService, setHoveredService] = useState<string | null>(null);
+  const restaurantScrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 pb-8 sm:pb-12 overflow-hidden">
@@ -50,85 +73,130 @@ const HeroSection = () => {
       }} />
       
       <div className="container mx-auto px-4 relative z-10">
-        {/* Quick Services Bar - Mobile Optimized */}
+        {/* Quick Services Bar - Enhanced with Better Flow */}
         <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6 sm:mb-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="mb-8 sm:mb-10"
         >
-          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center lg:justify-start">
-            {quickServices.map((service, index) => (
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center lg:justify-start">
+            {quickServices.map((service) => (
               <motion.button
                 key={service.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
+                variants={itemVariants}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                onHoverStart={() => setHoveredService(service.id)}
+                onHoverEnd={() => setHoveredService(null)}
                 onClick={() => navigate(service.href)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${service.bgColor} border border-border/50 backdrop-blur-sm transition-all duration-200 active:scale-95 touch-manipulation shrink-0`}
+                className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl ${service.bgColor} border border-white/10 backdrop-blur-sm transition-all duration-300 touch-manipulation shrink-0 group ${service.glowColor}`}
               >
-                <service.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${service.color}`} />
-                <span className="text-sm sm:text-base font-medium text-foreground whitespace-nowrap">{service.label}</span>
+                <motion.div
+                  animate={{ rotate: hoveredService === service.id ? [0, -10, 10, 0] : 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <service.icon className={`w-5 h-5 ${service.color} transition-transform duration-300`} />
+                </motion.div>
+                <span className="text-sm sm:text-base font-semibold text-foreground whitespace-nowrap">{service.label}</span>
+                <ChevronRight className={`w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 -ml-1 group-hover:ml-0`} />
               </motion.button>
             ))}
           </div>
         </motion.div>
 
-        {/* Featured Restaurants/Stores - Mobile Optimized */}
+        {/* Featured Restaurants/Stores - Enhanced with Better Flow */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mb-8 sm:mb-10"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-10 sm:mb-12"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <UtensilsCrossed className="w-4 h-4 text-eats" />
-              <h3 className="text-sm sm:text-base font-semibold text-foreground">Popular Near You</h3>
-            </div>
-            <button 
+          <div className="flex items-center justify-between mb-4">
+            <motion.div 
+              className="flex items-center gap-2.5"
+              whileHover={{ x: 3 }}
+              transition={{ type: "spring", stiffness: 400 }}
+            >
+              <div className="p-2 rounded-xl bg-eats/10 backdrop-blur-sm">
+                <UtensilsCrossed className="w-4 h-4 text-eats" />
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-foreground">Popular Near You</h3>
+            </motion.div>
+            <motion.button 
               onClick={() => navigate('/food')}
-              className="text-xs sm:text-sm text-eats hover:underline font-medium flex items-center gap-1 touch-manipulation"
+              whileHover={{ x: 3 }}
+              whileTap={{ scale: 0.95 }}
+              className="text-sm text-eats hover:text-eats/80 font-semibold flex items-center gap-1.5 touch-manipulation group"
             >
               See all
-              <ChevronRight className="w-3 h-3" />
-            </button>
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </motion.button>
           </div>
           
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div 
+            ref={restaurantScrollRef}
+            className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth"
+          >
             {featuredRestaurants.map((restaurant, index) => (
               <motion.button
                 key={restaurant.id}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
+                transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
+                whileHover={{ y: -6, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/food')}
-                className="flex-shrink-0 w-32 sm:w-40 glass-card p-3 rounded-xl hover:border-eats/50 transition-all duration-200 active:scale-95 touch-manipulation text-left"
+                className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-white/10 hover:border-eats/40 transition-all duration-300 touch-manipulation text-left group hover:shadow-[0_10px_40px_-15px_hsl(var(--eats)/0.3)]"
               >
-                <div className="relative mb-2">
-                  <div className="w-full aspect-square bg-muted rounded-lg flex items-center justify-center text-3xl sm:text-4xl">
-                    {restaurant.image}
+                <div className="relative mb-3">
+                  <div className="w-full aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center text-4xl sm:text-5xl overflow-hidden group-hover:scale-105 transition-transform duration-300">
+                    <span className="group-hover:scale-110 transition-transform duration-300">{restaurant.image}</span>
                   </div>
-                  {restaurant.promo && (
-                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-medium bg-eats text-white rounded-full">
-                      {restaurant.promo}
-                    </span>
-                  )}
+                  <AnimatePresence>
+                    {restaurant.promo && (
+                      <motion.span 
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, delay: 0.5 + index * 0.08 }}
+                        className="absolute -top-2 -right-2 px-2 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-lg shadow-lg"
+                      >
+                        {restaurant.promo}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <h4 className="font-semibold text-xs sm:text-sm text-foreground truncate">{restaurant.name}</h4>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{restaurant.cuisine}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <div className="flex items-center gap-0.5">
+                <h4 className="font-bold text-sm text-foreground truncate mb-0.5">{restaurant.name}</h4>
+                <p className="text-xs text-muted-foreground truncate mb-2">{restaurant.cuisine}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1 bg-eats/10 px-2 py-0.5 rounded-full">
                     <Star className="w-3 h-3 fill-eats text-eats" />
-                    <span className="text-[10px] sm:text-xs font-medium text-foreground">{restaurant.rating}</span>
+                    <span className="text-xs font-bold text-foreground">{restaurant.rating}</span>
                   </div>
-                  <div className="flex items-center gap-0.5 text-muted-foreground">
+                  <div className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="w-3 h-3" />
-                    <span className="text-[10px] sm:text-xs">{restaurant.time}</span>
+                    <span className="text-xs font-medium">{restaurant.time}</span>
                   </div>
                 </div>
               </motion.button>
             ))}
+            
+            {/* See More Card */}
+            <motion.button
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+              whileHover={{ y: -6, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate('/food')}
+              className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-dashed border-eats/30 hover:border-eats/60 transition-all duration-300 touch-manipulation flex flex-col items-center justify-center min-h-[180px] group"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-eats/10 flex items-center justify-center mb-3 group-hover:bg-eats/20 transition-colors duration-300">
+                <ArrowRight className="w-6 h-6 text-eats group-hover:translate-x-1 transition-transform duration-300" />
+              </div>
+              <span className="text-sm font-bold text-eats">View All</span>
+              <span className="text-xs text-muted-foreground mt-0.5">100+ restaurants</span>
+            </motion.button>
           </div>
         </motion.div>
 

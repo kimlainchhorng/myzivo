@@ -173,6 +173,76 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_stops: {
+        Row: {
+          address: string
+          arrived_at: string | null
+          batch_id: string
+          completed_at: string | null
+          food_order_id: string | null
+          id: string
+          lat: number
+          lng: number
+          notes: string | null
+          status: string
+          stop_order: number
+          stop_type: string
+          trip_id: string | null
+        }
+        Insert: {
+          address: string
+          arrived_at?: string | null
+          batch_id: string
+          completed_at?: string | null
+          food_order_id?: string | null
+          id?: string
+          lat: number
+          lng: number
+          notes?: string | null
+          status?: string
+          stop_order: number
+          stop_type: string
+          trip_id?: string | null
+        }
+        Update: {
+          address?: string
+          arrived_at?: string | null
+          batch_id?: string
+          completed_at?: string | null
+          food_order_id?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          notes?: string | null
+          status?: string
+          stop_order?: number
+          stop_type?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_stops_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_stops_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_split_payments: {
         Row: {
           amount: number
@@ -337,6 +407,54 @@ export type Database = {
             columns: ["car_id"]
             isOneToOne: false
             referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          order_id: string | null
+          sender_id: string
+          sender_type: string
+          trip_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          order_id?: string | null
+          sender_id: string
+          sender_type: string
+          trip_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          order_id?: string | null
+          sender_id?: string
+          sender_type?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
@@ -563,6 +681,47 @@ export type Database = {
           },
         ]
       }
+      delivery_batches: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          started_at: string | null
+          status: string
+          total_distance_km: number | null
+          total_earnings: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_distance_km?: number | null
+          total_earnings?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          total_distance_km?: number | null
+          total_earnings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_batches_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -606,6 +765,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "driver_documents_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_shifts: {
+        Row: {
+          actual_end: string | null
+          actual_start: string | null
+          created_at: string
+          driver_id: string
+          earnings: number | null
+          end_time: string
+          id: string
+          notes: string | null
+          shift_date: string
+          start_time: string
+          status: string
+          trips_completed: number | null
+          updated_at: string
+        }
+        Insert: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          driver_id: string
+          earnings?: number | null
+          end_time: string
+          id?: string
+          notes?: string | null
+          shift_date: string
+          start_time: string
+          status?: string
+          trips_completed?: number | null
+          updated_at?: string
+        }
+        Update: {
+          actual_end?: string | null
+          actual_start?: string | null
+          created_at?: string
+          driver_id?: string
+          earnings?: number | null
+          end_time?: string
+          id?: string
+          notes?: string | null
+          shift_date?: string
+          start_time?: string
+          status?: string
+          trips_completed?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_shifts_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
