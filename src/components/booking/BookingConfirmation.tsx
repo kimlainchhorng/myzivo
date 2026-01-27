@@ -12,6 +12,8 @@ import {
   Download,
   Home,
   Copy,
+  Sparkles,
+  PartyPopper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -42,11 +44,19 @@ const accentColorClasses = {
 };
 
 const bgAccentClasses = {
-  primary: "bg-primary/20",
-  eats: "bg-eats/20",
-  sky: "bg-sky-500/20",
-  amber: "bg-amber-500/20",
-  rides: "bg-rides/20",
+  primary: "bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10",
+  eats: "bg-gradient-to-br from-eats/30 via-eats/20 to-eats/10",
+  sky: "bg-gradient-to-br from-sky-500/30 via-sky-500/20 to-sky-500/10",
+  amber: "bg-gradient-to-br from-amber-500/30 via-amber-500/20 to-amber-500/10",
+  rides: "bg-gradient-to-br from-rides/30 via-rides/20 to-rides/10",
+};
+
+const gradientBorderClasses = {
+  primary: "from-primary/50 to-primary/10",
+  eats: "from-eats/50 to-eats/10",
+  sky: "from-sky-500/50 to-sky-500/10",
+  amber: "from-amber-500/50 to-amber-500/10",
+  rides: "from-rides/50 to-rides/10",
 };
 
 export const BookingConfirmation = ({
@@ -65,41 +75,90 @@ export const BookingConfirmation = ({
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center p-4">
+    <div className="min-h-[60vh] flex items-center justify-center p-4 relative">
+      {/* Background celebration effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          transition={{ delay: 0.5 }}
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl"
+        />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.3 }}
+          transition={{ delay: 0.7 }}
+          className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl"
+        />
+      </div>
+      
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-lg"
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full max-w-lg relative z-10"
       >
-        <Card className="glass-card overflow-hidden">
-          <CardContent className="p-0">
+        <Card className="glass-card overflow-hidden border-0 shadow-2xl shadow-black/20">
+          {/* Gradient border effect */}
+          <div className={cn(
+            "absolute inset-0 bg-gradient-to-b rounded-xl opacity-50 pointer-events-none",
+            gradientBorderClasses[accentColor]
+          )} style={{ padding: '1px' }}>
+            <div className="w-full h-full bg-card rounded-xl" />
+          </div>
+          
+          <CardContent className="p-0 relative">
             {/* Success Header */}
             <div
               className={cn(
-                "p-8 text-center",
+                "p-8 text-center relative overflow-hidden",
                 bgAccentClasses[accentColor]
               )}
             >
+              {/* Floating particles */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="mb-4"
+                initial={{ y: 0 }}
+                animate={{ y: [-5, 5, -5] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="absolute top-4 left-8"
               >
-                <CheckCircle2
-                  className={cn(
-                    "w-16 h-16 mx-auto",
-                    accentColorClasses[accentColor]
-                  )}
+                <Sparkles className="w-4 h-4 text-primary/40" />
+              </motion.div>
+              <motion.div
+                initial={{ y: 0 }}
+                animate={{ y: [5, -5, 5] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="absolute top-12 right-12"
+              >
+                <PartyPopper className="w-5 h-5 text-amber-500/40" />
+              </motion.div>
+              
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+                className="mb-4 relative inline-block"
+              >
+                <div className={cn(
+                  "w-20 h-20 rounded-full flex items-center justify-center mx-auto",
+                  "bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/30"
+                )}>
+                  <CheckCircle2 className="w-10 h-10 text-white" />
+                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: [0, 1.2, 1] }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="absolute -inset-2 rounded-full border-2 border-emerald-500/30"
                 />
               </motion.div>
+              
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
               >
-                <h2 className="text-2xl font-bold mb-1">Booking Confirmed!</h2>
+                <h2 className="text-2xl font-display font-bold mb-1">Booking Confirmed!</h2>
                 <p className="text-muted-foreground">{title}</p>
                 {subtitle && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -114,23 +173,23 @@ export const BookingConfirmation = ({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-muted/50 rounded-lg p-4"
+                transition={{ delay: 0.5 }}
+                className="bg-gradient-to-r from-muted/80 to-muted/40 rounded-xl p-4 border border-border/50"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                       Confirmation Number
                     </p>
-                    <p className="text-lg font-mono font-bold">
+                    <p className="text-xl font-mono font-bold tracking-wider">
                       {confirmationNumber}
                     </p>
                   </div>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={copyConfirmation}
-                    className="shrink-0"
+                    className="shrink-0 h-10 w-10 rounded-xl hover:bg-primary/10 hover:border-primary/30"
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
