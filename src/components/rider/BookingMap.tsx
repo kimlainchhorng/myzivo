@@ -26,26 +26,41 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
   const [isLocating, setIsLocating] = useState(false);
   const [mapStyle, setMapStyle] = useState<"dark" | "satellite">("dark");
   const [bearing, setBearing] = useState(0);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+    
+    // Check for valid token before initializing
+    if (!MAPBOX_TOKEN) {
+      setMapError("Map unavailable - configuration needed");
+      return;
+    }
 
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [-74.006, 40.7128],
-      zoom: 12,
-      attributionControl: false,
-      pitch: 45,
-      bearing: 0,
-    });
+    try {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-74.006, 40.7128],
+        zoom: 12,
+        attributionControl: false,
+        pitch: 45,
+        bearing: 0,
+      });
 
-    map.current.on("rotate", () => {
-      setBearing(map.current?.getBearing() || 0);
-    });
+      map.current.on("error", (e) => {
+        console.error("Mapbox error:", e);
+        if ((e.error as any)?.status === 401) {
+          setMapError("Invalid map configuration");
+        }
+      });
+
+      map.current.on("rotate", () => {
+        setBearing(map.current?.getBearing() || 0);
+      });
 
     map.current.on("load", () => {
       setMapLoaded(true);
@@ -125,6 +140,10 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
         },
       });
     });
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+      setMapError("Failed to load map");
+    }
 
     return () => {
       map.current?.remove();
@@ -270,6 +289,28 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
   const handleResetBearing = () => {
     map.current?.easeTo({ bearing: 0, pitch: 45, duration: 500 });
   };
+
+  // Error fallback UI
+  if (mapError) {
+    return (
+      <div className={cn("relative overflow-hidden rounded-2xl bg-card/50", className)}>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center bg-card/85 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl shadow-black/30 border border-white/10"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mx-auto mb-4 border border-white/10">
+              <MapPin className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <p className="text-base font-semibold mb-1">Map Preview</p>
+            <p className="text-xs text-muted-foreground">{mapError}</p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("relative overflow-hidden rounded-2xl", className)}>
