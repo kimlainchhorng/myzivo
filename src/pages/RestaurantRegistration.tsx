@@ -110,46 +110,80 @@ const RestaurantRegistration = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Enhanced Background effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-30 pointer-events-none"
+      >
+        🍔
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-40 left-[8%] text-4xl hidden lg:block opacity-25 pointer-events-none"
+      >
+        🍕
+      </motion.div>
+      
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border/50 bg-background/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-eats flex items-center justify-center">
-              <UtensilsCrossed className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 5 }}
+              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30"
+            >
+              <UtensilsCrossed className="h-6 w-6 text-white" />
+            </motion.div>
             <div>
               <h1 className="font-display font-bold text-xl">ZIVO Eats</h1>
               <p className="text-xs text-muted-foreground">Restaurant Partners</p>
             </div>
           </div>
           {!user && (
-            <Button variant="ghost" onClick={() => navigate("/login")}>
+            <Button variant="ghost" onClick={() => navigate("/login")} className="rounded-xl">
               Already a partner? Sign in
             </Button>
           )}
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
         {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          {[1, 2, 3].map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-center gap-4 mb-8"
+        >
+          {[1, 2, 3].map((s, index) => (
+            <motion.div 
+              key={s} 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="flex items-center gap-2"
+            >
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all shadow-lg ${
                 step >= s 
-                  ? "bg-eats text-primary-foreground" 
+                  ? "bg-gradient-to-br from-eats to-orange-500 text-white shadow-eats/30" 
                   : "bg-muted text-muted-foreground"
               }`}>
-                {step > s ? <Check className="h-4 w-4" /> : s}
+                {step > s ? <Check className="h-5 w-5" /> : s}
               </div>
-              <span className={`text-sm hidden sm:inline ${step >= s ? "text-foreground" : "text-muted-foreground"}`}>
+              <span className={`text-sm font-medium hidden sm:inline ${step >= s ? "text-foreground" : "text-muted-foreground"}`}>
                 {s === 1 ? "Account" : s === 2 ? "Restaurant Info" : "Complete"}
               </span>
-              {s < 3 && <div className={`w-8 h-0.5 ${step > s ? "bg-eats" : "bg-muted"}`} />}
-            </div>
+              {s < 3 && <div className={`w-8 h-0.5 rounded-full ${step > s ? "bg-gradient-to-r from-eats to-orange-500" : "bg-muted"}`} />}
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
         {/* Step 1: Account Creation */}
         {step === 1 && (
