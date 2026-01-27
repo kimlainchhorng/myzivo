@@ -1,12 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Car, UtensilsCrossed, Plane, Hotel, MapPin, TrendingUp, ArrowUpRight, Sparkles, ChevronRight, Calendar, CreditCard, Star } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Car, UtensilsCrossed, Plane, Hotel, MapPin, TrendingUp, ArrowUpRight, Sparkles, ChevronRight, Calendar, CreditCard, Star, Clock, Wallet, Gift, Award } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const CustomerOverview = () => {
   const { user } = useAuth();
@@ -32,6 +35,8 @@ const CustomerOverview = () => {
         (flights.data?.reduce((sum, f) => sum + (f.total_amount || 0), 0) || 0) +
         (hotels.data?.reduce((sum, h) => sum + (h.total_amount || 0), 0) || 0);
 
+      const totalBookings = (trips.count || 0) + (foodOrders.count || 0) + (carRentals.count || 0) + (flights.count || 0) + (hotels.count || 0);
+
       return {
         rides: trips.count || 0,
         foodOrders: foodOrders.count || 0,
@@ -39,6 +44,7 @@ const CustomerOverview = () => {
         flights: flights.count || 0,
         hotels: hotels.count || 0,
         totalSpent,
+        totalBookings,
       };
     },
     enabled: !!user?.id,
@@ -72,32 +78,19 @@ const CustomerOverview = () => {
   });
 
   const statCards = [
-    { label: "Total Rides", value: stats?.rides || 0, icon: MapPin, gradient: "from-rides to-green-500" },
-    { label: "Food Orders", value: stats?.foodOrders || 0, icon: UtensilsCrossed, gradient: "from-eats to-red-500" },
-    { label: "Car Rentals", value: stats?.carRentals || 0, icon: Car, gradient: "from-primary to-teal-400" },
-    { label: "Flights", value: stats?.flights || 0, icon: Plane, gradient: "from-sky-500 to-blue-600" },
-    { label: "Hotels", value: stats?.hotels || 0, icon: Hotel, gradient: "from-amber-500 to-orange-600" },
+    { label: "Rides", value: stats?.rides || 0, icon: MapPin, gradient: "from-rides to-green-500", color: "text-rides" },
+    { label: "Food", value: stats?.foodOrders || 0, icon: UtensilsCrossed, gradient: "from-eats to-red-500", color: "text-eats" },
+    { label: "Cars", value: stats?.carRentals || 0, icon: Car, gradient: "from-primary to-teal-400", color: "text-primary" },
+    { label: "Flights", value: stats?.flights || 0, icon: Plane, gradient: "from-sky-500 to-blue-600", color: "text-sky-500" },
+    { label: "Hotels", value: stats?.hotels || 0, icon: Hotel, gradient: "from-amber-500 to-orange-600", color: "text-amber-500" },
   ];
 
   const quickActions = [
-    { label: "Book Ride", icon: MapPin, gradient: "from-rides to-green-500", href: "/ride" },
-    { label: "Order Food", icon: UtensilsCrossed, gradient: "from-eats to-red-500", href: "/food" },
-    { label: "Book Flight", icon: Plane, gradient: "from-sky-500 to-blue-600", href: "/book-flight" },
-    { label: "Book Hotel", icon: Hotel, gradient: "from-amber-500 to-orange-600", href: "/book-hotel" },
+    { label: "Book Ride", icon: MapPin, gradient: "from-rides to-green-500", href: "/ride", description: "Get a ride now" },
+    { label: "Order Food", icon: UtensilsCrossed, gradient: "from-eats to-red-500", href: "/food", description: "Hungry? Order up" },
+    { label: "Book Flight", icon: Plane, gradient: "from-sky-500 to-blue-600", href: "/book-flight", description: "Find flights" },
+    { label: "Book Hotel", icon: Hotel, gradient: "from-amber-500 to-orange-600", href: "/book-hotel", description: "Places to stay" },
   ];
-
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -110,192 +103,257 @@ const CustomerOverview = () => {
     return format(date, "MMM d, yyyy");
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+      case "in_progress": case "preparing": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+      case "cancelled": return "bg-red-500/10 text-red-500 border-red-500/20";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
   return (
     <div className="space-y-6">
+      {/* Welcome Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+          <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+              <Sparkles className="h-5 w-5 text-white" />
+            </div>
+            Welcome{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
           </h1>
-          <p className="text-muted-foreground">Here's an overview of your bookings and activity.</p>
+          <p className="text-muted-foreground mt-1">Here's your activity overview.</p>
         </div>
+        
+        {/* Wallet Summary */}
         {!statsLoading && stats && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center gap-3 px-4 py-2 rounded-xl bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20"
+            className="flex items-center gap-4"
           >
-            <CreditCard className="h-5 w-5 text-primary" />
-            <div>
-              <p className="text-xs text-muted-foreground">Total Spent</p>
-              <p className="font-bold text-lg">${stats.totalSpent.toFixed(2)}</p>
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-gradient-to-r from-primary/10 to-emerald-500/10 border border-primary/20 backdrop-blur-sm">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center">
+                <Wallet className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Total Spent</p>
+                <p className="font-bold text-xl">${stats.totalSpent.toFixed(2)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-muted/30 border border-border/50">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                <Award className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Bookings</p>
+                <p className="font-bold text-xl">{stats.totalBookings}</p>
+              </div>
             </div>
           </motion.div>
         )}
       </motion.div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Premium Cards */}
       <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
       >
         {statCards.map((stat, index) => (
-          <motion.div key={stat.label} variants={item}>
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+          <motion.div 
+            key={stat.label} 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + index * 0.05 }}
+          >
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-[0.03] group-hover:opacity-[0.08] transition-opacity`} />
               <CardContent className="p-4 relative">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
                     <stat.icon className="h-4 w-4 text-white" />
                   </div>
-                  {statsLoading ? (
-                    <Skeleton className="h-4 w-8" />
-                  ) : stat.value > 0 && (
-                    <div className="flex items-center gap-0.5 text-xs font-medium text-emerald-500">
-                      <Star className="h-3 w-3 fill-emerald-500" />
-                    </div>
+                  {!statsLoading && stat.value > 0 && (
+                    <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-500 border-0">
+                      Active
+                    </Badge>
                   )}
                 </div>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-12 mb-1" />
                 ) : (
-                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <motion.p 
+                    initial={{ scale: 0.5 }}
+                    animate={{ scale: 1 }}
+                    className="text-3xl font-bold"
+                  >
+                    {stat.value}
+                  </motion.p>
                 )}
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-xs text-muted-foreground font-medium mt-1">{stat.label}</p>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Recent Activity */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Recent Activity - Enhanced */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent pointer-events-none" />
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                  </div>
+                  <span>Recent Activity</span>
                 </div>
-                Recent Activity
+                <Link to="/trip-history" className="text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                  View all
+                  <ArrowUpRight className="w-3 h-3" />
+                </Link>
               </CardTitle>
               <CardDescription>Your latest bookings and orders</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {activityLoading ? (
-                  [...Array(5)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                      <Skeleton className="h-10 w-10 rounded-lg" />
-                      <div className="flex-1">
-                        <Skeleton className="h-4 w-32 mb-1" />
-                        <Skeleton className="h-3 w-20" />
+            <CardContent className="relative">
+              <div className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {activityLoading ? (
+                    [...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                        <Skeleton className="h-11 w-11 rounded-xl" />
+                        <div className="flex-1">
+                          <Skeleton className="h-4 w-32 mb-1" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                        <Skeleton className="h-6 w-16" />
                       </div>
-                      <Skeleton className="h-5 w-16" />
-                    </div>
-                  ))
-                ) : recentActivity && recentActivity.length > 0 ? (
-                  recentActivity.map((activity, index) => (
+                    ))
+                  ) : recentActivity && recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <motion.div 
+                        key={index}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/20 border border-border/30 hover:bg-muted/40 hover:border-primary/20 transition-all duration-200 cursor-pointer group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${activity.gradient} shadow-md group-hover:scale-110 transition-transform`}>
+                            <activity.icon className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm truncate max-w-[160px]">{activity.description}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">{formatDate(activity.date)}</p>
+                              <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5 border capitalize", getStatusColor(activity.status))}>
+                                {activity.status?.replace("_", " ")}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">${activity.amount?.toFixed(2) || "0.00"}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                      </motion.div>
+                    ))
+                  ) : (
                     <motion.div 
-                      key={index}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + index * 0.08 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 cursor-pointer group"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-10"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg bg-gradient-to-br ${activity.gradient} shadow-md group-hover:scale-110 transition-transform`}>
-                          <activity.icon className="h-4 w-4 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm truncate max-w-[150px]">{activity.description}</p>
-                          <p className="text-xs text-muted-foreground">{formatDate(activity.date)}</p>
-                        </div>
+                      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                        <Calendar className="h-8 w-8 text-muted-foreground/50" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">${activity.amount?.toFixed(2) || "0.00"}</span>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </div>
+                      <p className="font-medium text-muted-foreground">No recent activity</p>
+                      <p className="text-xs text-muted-foreground mt-1">Book your first trip!</p>
                     </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
-                    <p className="text-sm text-muted-foreground">No recent activity</p>
-                    <p className="text-xs text-muted-foreground">Book your first trip!</p>
-                  </div>
-                )}
+                  )}
+                </AnimatePresence>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Enhanced */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-secondary/50">
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-secondary/[0.02] to-transparent pointer-events-none" />
+            <CardHeader className="relative">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-secondary/50 to-secondary/30">
                   <Sparkles className="h-5 w-5 text-secondary-foreground" />
                 </div>
                 Quick Actions
               </CardTitle>
               <CardDescription>Book your next adventure</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative">
               <div className="grid grid-cols-2 gap-3">
                 {quickActions.map((action, index) => (
                   <motion.div
                     key={action.label}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 + index * 0.1 }}
+                    transition={{ delay: 0.4 + index * 0.08 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Link
                       to={action.href}
-                      className="flex flex-col items-center justify-center p-5 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/30 transition-all duration-200 group"
+                      className="flex flex-col items-center justify-center p-5 rounded-2xl bg-muted/20 border border-border/30 hover:bg-muted/40 hover:border-primary/20 transition-all duration-200 group"
                     >
-                      <div className={`p-3 rounded-xl bg-gradient-to-br ${action.gradient} shadow-lg mb-3 group-hover:scale-110 transition-transform`}>
+                      <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${action.gradient} shadow-lg mb-3 group-hover:scale-110 group-hover:shadow-xl transition-all`}>
                         <action.icon className="h-6 w-6 text-white" />
                       </div>
-                      <span className="text-sm font-medium">{action.label}</span>
+                      <span className="font-semibold text-sm">{action.label}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">{action.description}</span>
                     </Link>
                   </motion.div>
                 ))}
               </div>
 
               {/* Additional quick links */}
-              <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="mt-5 pt-5 border-t border-border/30">
                 <div className="grid grid-cols-2 gap-2">
                   <Link
                     to="/rent-car"
-                    className="flex items-center gap-2 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors text-sm"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
-                    <Car className="h-4 w-4 text-primary" />
-                    <span>Rent Car</span>
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <Car className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium">Rent Car</span>
                   </Link>
                   <Link
-                    to="/trip-history"
-                    className="flex items-center gap-2 p-3 rounded-lg bg-muted/20 hover:bg-muted/40 transition-colors text-sm"
+                    to="/promotions"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors group"
                   >
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                    <span>Trip History</span>
+                    <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                      <Gift className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <span className="text-sm font-medium">Promos</span>
                   </Link>
                 </div>
               </div>
