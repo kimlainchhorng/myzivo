@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Star, X } from "lucide-react";
+import { Star, X, Sparkles, Send, ThumbsUp, ThumbsDown, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -68,90 +69,185 @@ const RatingModal = ({
   };
 
   const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+  const ratingEmojis = ['', '😞', '😐', '🙂', '😊', '🤩'];
+  const ratingColors = ['', 'text-red-500', 'text-orange-500', 'text-yellow-500', 'text-emerald-500', 'text-primary'];
+
+  const serviceIcons = {
+    ride: '🚗',
+    food: '🍕',
+    hotel: '🏨',
+    car: '🚙',
+    flight: '✈️',
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Rate Your Experience</DialogTitle>
-          <DialogDescription>{serviceName}</DialogDescription>
+      <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5 pointer-events-none" />
+        
+        <DialogHeader className="relative text-center pb-2">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-3"
+          >
+            <span className="text-3xl">{serviceIcons[serviceType]}</span>
+          </motion.div>
+          <DialogTitle className="text-xl font-display">Rate Your Experience</DialogTitle>
+          <DialogDescription className="text-muted-foreground">{serviceName}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Star Rating */}
+        <div className="space-y-6 py-4 relative">
+          {/* Star Rating - Enhanced */}
           <div className="text-center">
-            <div className="flex justify-center gap-2 mb-2">
+            <div className="flex justify-center gap-1 mb-3">
               {[1, 2, 3, 4, 5].map((star) => (
-                <button
+                <motion.button
                   key={star}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
-                  className="p-1 transition-transform hover:scale-110"
+                  whileHover={{ scale: 1.15, y: -4 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="p-1.5 transition-transform focus:outline-none"
                 >
                   <Star
                     className={cn(
-                      "h-10 w-10 transition-colors",
+                      "h-11 w-11 transition-all duration-200",
                       star <= (hoverRating || rating)
-                        ? "text-warning fill-warning"
-                        : "text-muted"
+                        ? "text-amber-400 fill-amber-400 drop-shadow-lg"
+                        : "text-muted/40"
                     )}
                   />
-                </button>
+                </motion.button>
               ))}
             </div>
-            {(hoverRating || rating) > 0 && (
-              <p className="text-sm font-medium text-primary">
-                {ratingLabels[hoverRating || rating]}
-              </p>
-            )}
+            
+            <AnimatePresence mode="wait">
+              {(hoverRating || rating) > 0 && (
+                <motion.div
+                  key={hoverRating || rating}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <span className="text-2xl">{ratingEmojis[hoverRating || rating]}</span>
+                  <span className={cn(
+                    "text-lg font-bold",
+                    ratingColors[hoverRating || rating]
+                  )}>
+                    {ratingLabels[hoverRating || rating]}
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Quick Tags */}
-          {rating > 0 && (
-            <div>
-              <p className="text-sm font-medium mb-2">
-                {rating >= 4 ? 'What went well?' : 'What could be better?'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Quick Tags - Enhanced */}
+          <AnimatePresence>
+            {rating > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  {rating >= 4 ? (
+                    <ThumbsUp className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <ThumbsDown className="w-4 h-4 text-orange-500" />
+                  )}
+                  <p className="text-sm font-semibold">
+                    {rating >= 4 ? 'What went well?' : 'What could be better?'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag, index) => (
+                    <motion.div
+                      key={tag}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <Badge
+                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                        className={cn(
+                          "cursor-pointer px-3 py-1.5 text-sm transition-all",
+                          selectedTags.includes(tag)
+                            ? rating >= 4 
+                              ? "bg-emerald-500 hover:bg-emerald-600 border-emerald-500"
+                              : "bg-orange-500 hover:bg-orange-600 border-orange-500"
+                            : "hover:bg-muted/80 border-border/50"
+                        )}
+                        onClick={() => toggleTag(tag)}
+                      >
+                        {tag}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Comment */}
-          {rating > 0 && (
-            <div>
-              <p className="text-sm font-medium mb-2">Additional comments (optional)</p>
-              <Textarea
-                placeholder="Share more details about your experience..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                rows={3}
-              />
-            </div>
-          )}
+          {/* Comment - Enhanced */}
+          <AnimatePresence>
+            {rating > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <p className="text-sm font-semibold">Additional comments</p>
+                  <span className="text-xs text-muted-foreground">(optional)</span>
+                </div>
+                <Textarea
+                  placeholder="Share more details about your experience..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={3}
+                  className="rounded-xl border-border/50 bg-muted/30 resize-none focus:ring-2 focus:ring-primary/20"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Service Details */}
           {serviceDetails && (
-            <p className="text-xs text-muted-foreground text-center">{serviceDetails}</p>
+            <p className="text-xs text-muted-foreground text-center bg-muted/30 rounded-lg py-2 px-4">
+              {serviceDetails}
+            </p>
           )}
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onClose}>
-            Skip
+        <div className="flex gap-3 pt-2">
+          <Button 
+            variant="outline" 
+            className="flex-1 h-12 rounded-xl border-2" 
+            onClick={onClose}
+          >
+            Skip for now
           </Button>
-          <Button className="flex-1" disabled={rating === 0} onClick={handleSubmit}>
+          <Button 
+            className={cn(
+              "flex-1 h-12 rounded-xl font-semibold transition-all",
+              rating >= 4 
+                ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/30"
+                : rating > 0
+                  ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/30"
+                  : ""
+            )}
+            disabled={rating === 0} 
+            onClick={handleSubmit}
+          >
+            <Send className="w-4 h-4 mr-2" />
             Submit Rating
           </Button>
         </div>
