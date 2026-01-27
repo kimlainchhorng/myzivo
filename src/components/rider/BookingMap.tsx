@@ -221,14 +221,16 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     }
   }, [dropoff, mapLoaded]);
 
-  // Update route and fit bounds
+  // Update route only (no camera moves). Camera animations are expensive and can feel laggy
+  // if they run every time the route geometry updates.
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     const source = map.current.getSource("route") as mapboxgl.GeoJSONSource;
     const glowSource = map.current.getSource("route-glow") as mapboxgl.GeoJSONSource;
-    
-    if (routeGeometry && source && glowSource) {
+    if (!source || !glowSource) return;
+
+    if (routeGeometry) {
       const data = {
         type: "Feature" as const,
         properties: {},
@@ -236,31 +238,47 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
       };
       source.setData(data);
       glowSource.setData(data);
-    } else if (source && glowSource) {
-      const emptyData = {
-        type: "Feature" as const,
-        properties: {},
-        geometry: {
-          type: "LineString" as const,
-          coordinates: [],
-        },
-      };
-      source.setData(emptyData);
-      glowSource.setData(emptyData);
+      return;
     }
 
-    // Fit bounds
+    const emptyData = {
+      type: "Feature" as const,
+      properties: {},
+      geometry: {
+        type: "LineString" as const,
+        coordinates: [],
+      },
+    };
+    source.setData(emptyData);
+    glowSource.setData(emptyData);
+  }, [routeGeometry, mapLoaded]);
+
+  // Viewport updates only when pickup/dropoff changes (not on every route update)
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
     if (pickup && dropoff) {
       const bounds = new mapboxgl.LngLatBounds();
       bounds.extend([pickup.lng, pickup.lat]);
       bounds.extend([dropoff.lng, dropoff.lat]);
-      map.current.fitBounds(bounds, { padding: 80, maxZoom: 14 });
-    } else if (pickup) {
-      map.current.flyTo({ center: [pickup.lng, pickup.lat], zoom: 14 });
-    } else if (dropoff) {
-      map.current.flyTo({ center: [dropoff.lng, dropoff.lat], zoom: 14 });
+      map.current.fitBounds(bounds, {
+        padding: 80,
+        maxZoom: 14,
+        // Faster / less janky than default for frequent interactions
+        duration: 0,
+      });
+      return;
     }
-  }, [pickup, dropoff, routeGeometry, mapLoaded]);
+
+    if (pickup) {
+      map.current.flyTo({ center: [pickup.lng, pickup.lat], zoom: 14, duration: 0 });
+      return;
+    }
+
+    if (dropoff) {
+      map.current.flyTo({ center: [dropoff.lng, dropoff.lat], zoom: 14, duration: 0 });
+    }
+  }, [pickup, dropoff, mapLoaded]);
 
   // Map control handlers
   const handleZoomIn = () => {

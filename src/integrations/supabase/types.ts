@@ -822,6 +822,50 @@ export type Database = {
           },
         ]
       }
+      driver_location_history: {
+        Row: {
+          accuracy: number | null
+          driver_id: string
+          heading: number | null
+          id: string
+          is_online: boolean
+          lat: number
+          lng: number
+          recorded_at: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          driver_id: string
+          heading?: number | null
+          id?: string
+          is_online?: boolean
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          is_online?: boolean
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_location_history_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_notifications: {
         Row: {
           action_url: string | null
@@ -3832,6 +3876,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      surge_zones: {
+        Row: {
+          base_multiplier: number
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number
+          lng: number
+          name: string
+          peak_hours_only: boolean
+          radius_km: number
+          updated_at: string
+        }
+        Insert: {
+          base_multiplier?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat: number
+          lng: number
+          name: string
+          peak_hours_only?: boolean
+          radius_km?: number
+          updated_at?: string
+        }
+        Update: {
+          base_multiplier?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number
+          lng?: number
+          name?: string
+          peak_hours_only?: boolean
+          radius_km?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       time_entries: {
         Row: {
