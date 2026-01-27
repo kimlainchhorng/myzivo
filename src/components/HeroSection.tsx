@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Shield, Clock } from "lucide-react";
+import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -8,6 +8,15 @@ const heroStats = [
   { value: "5 min", label: "Avg. pickup" },
   { value: "4.9★", label: "App rating" },
   { value: "24/7", label: "Support" },
+];
+
+const quickServices = [
+  { id: 'rides', label: 'Rides', icon: Car, href: '/ride', color: 'text-rides', bgColor: 'bg-rides/10 hover:bg-rides/20' },
+  { id: 'eats', label: 'Eats', icon: UtensilsCrossed, href: '/food', color: 'text-eats', bgColor: 'bg-eats/10 hover:bg-eats/20' },
+  { id: 'flights', label: 'Flights', icon: Plane, href: '/flights', color: 'text-sky-400', bgColor: 'bg-sky-500/10 hover:bg-sky-500/20' },
+  { id: 'hotels', label: 'Hotels', icon: Hotel, href: '/hotels', color: 'text-amber-400', bgColor: 'bg-amber-500/10 hover:bg-amber-500/20' },
+  { id: 'cars', label: 'Cars', icon: CarFront, href: '/car-rental', color: 'text-primary', bgColor: 'bg-primary/10 hover:bg-primary/20' },
+  { id: 'more', label: 'More', icon: MoreHorizontal, href: '/ground-transport', color: 'text-muted-foreground', bgColor: 'bg-muted hover:bg-muted/80' },
 ];
 
 const HeroSection = () => {
@@ -32,6 +41,30 @@ const HeroSection = () => {
       }} />
       
       <div className="container mx-auto px-4 relative z-10">
+        {/* Quick Services Bar - Mobile Optimized */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6 sm:mb-8"
+        >
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center lg:justify-start">
+            {quickServices.map((service, index) => (
+              <motion.button
+                key={service.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 + index * 0.05 }}
+                onClick={() => navigate(service.href)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl ${service.bgColor} border border-border/50 backdrop-blur-sm transition-all duration-200 active:scale-95 touch-manipulation shrink-0`}
+              >
+                <service.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${service.color}`} />
+                <span className="text-sm sm:text-base font-medium text-foreground whitespace-nowrap">{service.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
           {/* Left Content */}
           <motion.div 
