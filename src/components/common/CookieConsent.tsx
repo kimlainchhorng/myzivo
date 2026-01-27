@@ -88,69 +88,86 @@ const CookieConsent = () => {
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className="fixed bottom-0 left-0 right-0 z-[100] p-4 md:p-6"
         >
-          <Card className="max-w-4xl mx-auto shadow-2xl border-primary/20 bg-card/95 backdrop-blur-xl">
+          <Card className="max-w-4xl mx-auto shadow-2xl border-0 bg-card/95 backdrop-blur-xl overflow-hidden">
+            {/* Top gradient line */}
+            <div className="h-1 bg-gradient-to-r from-primary via-teal-400 to-eats" />
+            
             <CardContent className="p-6">
               {!showDetails ? (
                 <>
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-xl bg-primary/10 shrink-0">
-                      <Cookie className="h-6 w-6 text-primary" />
-                    </div>
+                    <motion.div 
+                      whileHover={{ scale: 1.1, rotate: 10 }}
+                      className="p-3 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shrink-0 shadow-lg"
+                    >
+                      <Cookie className="h-7 w-7 text-primary" />
+                    </motion.div>
                     <div className="flex-1">
-                      <h3 className="font-display font-bold text-lg mb-2">We Value Your Privacy</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <h3 className="font-display font-bold text-xl mb-2">We Value Your Privacy 🍪</h3>
+                      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                         We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
                         By clicking "Accept All", you consent to our use of cookies. 
                         Read our{" "}
-                        <a href="/privacy-policy" className="text-primary underline">Privacy Policy</a>.
+                        <a href="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</a>.
                       </p>
                       <div className="flex flex-wrap gap-3">
-                        <Button onClick={handleAcceptAll} className="gradient-rides">
-                          Accept All
-                        </Button>
-                        <Button variant="outline" onClick={handleRejectAll}>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                          <Button onClick={handleAcceptAll} className="bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30">
+                            Accept All
+                          </Button>
+                        </motion.div>
+                        <Button variant="outline" onClick={handleRejectAll} className="font-semibold">
                           Reject All
                         </Button>
-                        <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2">
+                        <Button variant="ghost" onClick={() => setShowDetails(true)} className="gap-2 font-semibold">
                           <Settings className="h-4 w-4" />
                           Customize
                         </Button>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={handleRejectAll}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 rounded-xl hover:bg-destructive/10"
+                        onClick={handleRejectAll}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
-                      <Shield className="h-5 w-5 text-primary" />
-                      <h3 className="font-display font-bold text-lg">Cookie Preferences</h3>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <Shield className="h-5 w-5 text-primary" />
+                      </div>
+                      <h3 className="font-display font-bold text-xl">Cookie Preferences</h3>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)}>
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)} className="rounded-xl">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </motion.div>
                   </div>
                   
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground mb-5">
                     Manage your cookie preferences below. Your choices are saved for 12 months.
                   </p>
 
-                  <div className="space-y-4 mb-6">
-                    {cookieCategories.map((category) => (
-                      <div
+                  <div className="space-y-3 mb-6">
+                    {cookieCategories.map((category, index) => (
+                      <motion.div
                         key={category.key}
-                        className="flex items-center justify-between p-4 rounded-lg border border-border"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-gradient-to-br from-muted/30 to-muted/10 hover:border-primary/30 transition-all"
                       >
                         <div>
-                          <p className="font-medium">{category.title}</p>
+                          <p className="font-semibold">{category.title}</p>
                           <p className="text-sm text-muted-foreground">{category.description}</p>
                         </div>
                         <Switch
@@ -160,15 +177,17 @@ const CookieConsent = () => {
                           }
                           disabled={category.required}
                         />
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
 
                   <div className="flex gap-3">
-                    <Button onClick={handleSavePreferences} className="flex-1 gradient-rides">
-                      Save Preferences
-                    </Button>
-                    <Button variant="outline" onClick={handleAcceptAll} className="flex-1">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
+                      <Button onClick={handleSavePreferences} className="w-full bg-gradient-to-r from-primary to-teal-400 text-white font-semibold shadow-lg shadow-primary/30">
+                        Save Preferences
+                      </Button>
+                    </motion.div>
+                    <Button variant="outline" onClick={handleAcceptAll} className="flex-1 font-semibold">
                       Accept All
                     </Button>
                   </div>
