@@ -69,7 +69,30 @@ const CustomerFoodOrders = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorations */}
+      <motion.div
+        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🍔
+      </motion.div>
+      <motion.div
+        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
+        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      >
+        ✨
+      </motion.div>
+      <motion.div
+        className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block"
+        animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        🍕
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -77,22 +100,29 @@ const CustomerFoodOrders = () => {
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ rotate: [0, 15, -15, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Sparkles className="h-6 w-6 text-eats" />
+            </motion.div>
             Food Orders
           </h1>
           <p className="text-muted-foreground">Your order history and active orders</p>
         </div>
         <div className="flex items-center gap-3">
           {activeOrdersCount > 0 && (
-            <Badge className="bg-eats/10 text-eats border-eats/20 border">
+            <Badge className="bg-eats/10 text-eats border-eats/20 border shadow-lg shadow-eats/10">
               {activeOrdersCount} active
             </Badge>
           )}
           <Link to="/food">
-            <Button className="gap-2 bg-gradient-to-r from-eats to-red-500 shadow-lg hover:shadow-xl transition-shadow">
-              <UtensilsCrossed className="h-4 w-4" />
-              Order Food
-            </Button>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button className="gap-2 bg-gradient-to-r from-eats to-red-500 shadow-lg shadow-eats/25 hover:shadow-xl hover:shadow-eats/30 transition-all">
+                <UtensilsCrossed className="h-4 w-4" />
+                Order Food
+              </Button>
+            </motion.div>
           </Link>
         </div>
       </motion.div>
