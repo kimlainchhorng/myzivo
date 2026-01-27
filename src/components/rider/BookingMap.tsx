@@ -21,6 +21,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
   const map = useRef<mapboxgl.Map | null>(null);
   const pickupMarker = useRef<mapboxgl.Marker | null>(null);
   const dropoffMarker = useRef<mapboxgl.Marker | null>(null);
+  const bearingRaf = useRef<number | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [mapStyle, setMapStyle] = useState<"dark" | "satellite">("dark");
@@ -63,8 +64,18 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
         }
       });
 
+      // Throttle bearing updates: Mapbox can emit rotate events at very high frequency.
+      // Updating React state on every event causes FPS drops on mobile.
       map.current.on("rotate", () => {
-        setBearing(map.current?.getBearing() || 0);
+        if (!showControls) return;
+        if (bearingRaf.current != null) return;
+
+        bearingRaf.current = window.requestAnimationFrame(() => {
+          bearingRaf.current = null;
+          // Quantize to reduce pointless renders from tiny float deltas.
+          const next = Math.round(map.current?.getBearing() || 0);
+          setBearing(next);
+        });
       });
 
     map.current.on("load", () => {
@@ -151,6 +162,10 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     }
 
     return () => {
+      if (bearingRaf.current != null) {
+        window.cancelAnimationFrame(bearingRaf.current);
+        bearingRaf.current = null;
+      }
       map.current?.remove();
       map.current = null;
     };
