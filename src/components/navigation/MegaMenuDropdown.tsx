@@ -201,7 +201,7 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
                         <span className="w-8 h-px bg-gradient-to-r from-primary/50 to-transparent" />
                         {section.title}
                       </h4>
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {section.items.map((item, itemIndex) => (
                           <Link
                             key={item.label}
@@ -211,49 +211,89 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.15 + sectionIndex * 0.05 + itemIndex * 0.03 }}
-                              whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.05)" }}
-                              className="flex items-start gap-3 p-3 rounded-xl transition-all duration-200 group cursor-pointer relative overflow-hidden"
+                              whileHover={{ 
+                                x: 6, 
+                                scale: 1.02,
+                                transition: { type: "spring", stiffness: 400, damping: 25 }
+                              }}
+                              whileTap={{ scale: 0.98 }}
+                              className="flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-300 group cursor-pointer relative overflow-hidden border border-transparent hover:border-white/10 hover:bg-gradient-to-r hover:from-white/5 hover:to-transparent hover:shadow-lg hover:shadow-primary/5"
                             >
-                              {/* Hover glow */}
+                              {/* Animated gradient background on hover */}
                               <motion.div
-                                initial={{ opacity: 0 }}
-                                whileHover={{ opacity: 1 }}
-                                className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none"
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                whileHover={{ opacity: 1, scale: 1 }}
+                                className="absolute inset-0 bg-gradient-to-r from-primary/8 via-transparent to-transparent pointer-events-none rounded-2xl"
                               />
                               
+                              {/* Left accent line */}
+                              <motion.div 
+                                initial={{ scaleY: 0 }}
+                                whileHover={{ scaleY: 1 }}
+                                className="absolute left-0 top-2 bottom-2 w-0.5 bg-gradient-to-b from-primary to-teal-400 rounded-full origin-center"
+                              />
+                              
+                              {/* Icon container with premium styling */}
                               <motion.div
-                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                whileHover={{ scale: 1.15, rotate: 8 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 15 }}
                                 className={cn(
-                                  "w-10 h-10 rounded-xl bg-muted/80 flex items-center justify-center shrink-0 relative overflow-hidden border border-white/5",
+                                  "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 relative overflow-hidden",
+                                  "bg-gradient-to-br from-muted/90 to-muted/50 border border-white/10",
+                                  "group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20",
+                                  "transition-all duration-300",
                                   item.color || "text-muted-foreground"
                                 )}
                               >
-                                <item.icon className="w-5 h-5 relative z-10" />
+                                {/* Icon glow effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                
+                                {/* Shine sweep */}
+                                <motion.div
+                                  initial={{ x: "-100%", opacity: 0 }}
+                                  whileHover={{ x: "200%", opacity: 0.4 }}
+                                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+                                />
+                                
+                                <item.icon className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform duration-200" />
                               </motion.div>
+                              
+                              {/* Text content */}
                               <div className="flex-1 min-w-0 relative z-10">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
+                                <div className="flex items-center gap-2.5">
+                                  <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-200">
                                     {item.label}
                                   </span>
                                   {item.badge && (
                                     <motion.div
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{ type: "spring", stiffness: 500, delay: 0.2 }}
+                                      initial={{ scale: 0, rotate: -10 }}
+                                      animate={{ scale: 1, rotate: 0 }}
+                                      transition={{ type: "spring", stiffness: 500, delay: 0.2 + itemIndex * 0.05 }}
                                     >
                                       <Badge
-                                        className="text-[10px] px-2 py-0.5 h-auto bg-gradient-to-r from-eats to-orange-500 text-white border-0 shadow-md shadow-eats/30 font-bold"
+                                        className="text-[10px] px-2.5 py-0.5 h-auto bg-gradient-to-r from-eats via-orange-500 to-eats text-white border-0 shadow-lg shadow-eats/40 font-bold uppercase tracking-wide animate-pulse"
                                       >
                                         {item.badge}
                                       </Badge>
                                     </motion.div>
                                   )}
                                 </div>
-                                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                <p className="text-xs text-muted-foreground/80 line-clamp-1 mt-1 group-hover:text-muted-foreground transition-colors duration-200">
                                   {item.description}
                                 </p>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all opacity-0 group-hover:opacity-100 mt-3" />
+                              
+                              {/* Arrow indicator */}
+                              <motion.div
+                                initial={{ opacity: 0, x: -8 }}
+                                whileHover={{ opacity: 1, x: 0 }}
+                                className="relative z-10"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
+                                  <ArrowRight className="w-4 h-4 text-primary" />
+                                </div>
+                              </motion.div>
                             </motion.div>
                           </Link>
                         ))}
