@@ -49,6 +49,8 @@ import AdminServiceHealth from "./AdminServiceHealth";
 import AdminQuickActions from "./AdminQuickActions";
 import AdminRecentActivity from "./AdminRecentActivity";
 import AdminPerformanceChart from "./AdminPerformanceChart";
+import AdminComparativeMetrics from "./AdminComparativeMetrics";
+import AdminRevenueBreakdown from "./AdminRevenueBreakdown";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -504,6 +506,12 @@ const AdminAnalytics = () => {
 
       {/* Live Metrics & Performance */}
       <AdminLiveMetrics />
+      
+      {/* Comparative Metrics */}
+      <AdminComparativeMetrics />
+      
+      {/* Revenue Breakdown */}
+      <AdminRevenueBreakdown />
       
       {/* Performance Chart */}
       <AdminPerformanceChart />
