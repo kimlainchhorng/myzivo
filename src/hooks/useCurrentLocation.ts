@@ -24,6 +24,7 @@ export const useCurrentLocation = () => {
       setIsGettingLocation(true);
       setError(null);
 
+      // Try fast location first (cached/low accuracy), then high accuracy
       navigator.geolocation.getCurrentPosition(
         (position) => {
           setIsGettingLocation(false);
@@ -53,9 +54,9 @@ export const useCurrentLocation = () => {
           reject(new Error(errorMessage));
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000, // Cache for 1 minute
+          enableHighAccuracy: false, // Faster - use network/cached location
+          timeout: 5000, // Reduced timeout for faster response
+          maximumAge: 300000, // Accept cached location up to 5 minutes old
         }
       );
     });
