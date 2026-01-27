@@ -89,10 +89,27 @@ const RideOptionsSection = () => {
 
   return (
     <section id="rides" className="py-20 lg:py-32 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 left-0 w-[400px] h-[400px] bg-gradient-to-br from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-gradient-to-tl from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/15 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-gradient-radial from-sky-500/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-40"
+      >
+        🚙
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-40 left-[6%] text-4xl hidden lg:block opacity-30"
+      >
+        ⚡
+      </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
