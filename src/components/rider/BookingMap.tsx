@@ -48,6 +48,12 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
         attributionControl: false,
         pitch: 45,
         bearing: 0,
+        // Performance optimizations
+        fadeDuration: 0,
+        trackResize: false,
+        renderWorldCopies: false,
+        maxTileCacheSize: 50,
+        collectResourceTiming: false,
       });
 
       map.current.on("error", (e) => {
@@ -162,13 +168,9 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     if (pickup) {
       const el = document.createElement("div");
       el.innerHTML = `
-        <div class="relative group">
-          <div class="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-30"></div>
-          <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 border-3 border-white shadow-lg shadow-emerald-500/50 flex items-center justify-center">
-            <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
-          </div>
-          <div class="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-card/95 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-medium shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            Pickup
+        <div class="relative">
+          <div class="w-8 h-8 rounded-full bg-emerald-500 border-2 border-white shadow-md flex items-center justify-center">
+            <div class="w-2 h-2 bg-white rounded-full"></div>
           </div>
         </div>
       `;
@@ -191,13 +193,9 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     if (dropoff) {
       const el = document.createElement("div");
       el.innerHTML = `
-        <div class="relative group">
-          <div class="relative w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg shadow-lg shadow-black/30 flex items-center justify-center border-2 border-white">
-            <div class="w-2.5 h-2.5 bg-white rounded-sm"></div>
-          </div>
-          <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-slate-800 rotate-45 border-r-2 border-b-2 border-white -z-10"></div>
-          <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-card/95 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-medium shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
-            Dropoff
+        <div class="relative">
+          <div class="w-8 h-8 bg-slate-800 rounded-lg shadow-md border-2 border-white flex items-center justify-center">
+            <div class="w-2 h-2 bg-white rounded-sm"></div>
           </div>
         </div>
       `;
@@ -312,16 +310,10 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
       {/* Map container */}
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Premium gradient overlays */}
+      {/* Minimal edge fade */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/50 via-background/20 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/60 via-background/30 to-transparent" />
-        <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background/20 to-transparent" />
-        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background/20 to-transparent" />
-        
-        {/* Subtle corner vignettes */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-radial-gradient from-primary/5 to-transparent rounded-full blur-2xl" />
-        <div className="absolute bottom-0 right-0 w-40 h-40 bg-radial-gradient from-teal-500/5 to-transparent rounded-full blur-2xl" />
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/50 to-transparent" />
       </div>
 
       {/* Map Controls - Premium glassmorphism */}
