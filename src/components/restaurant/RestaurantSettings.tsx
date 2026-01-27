@@ -19,7 +19,8 @@ import {
   MapPin,
   Phone,
   Mail,
-  Globe
+  Globe,
+  Sparkles
 } from "lucide-react";
 
 const container = {
@@ -41,16 +42,43 @@ const RestaurantSettings = () => {
       variants={container}
       initial="hidden"
       animate="show"
-      className="space-y-6"
+      className="space-y-6 relative"
     >
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        ⚙️
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, delay: 1 }}
+        className="absolute top-24 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🔧
+      </motion.div>
+
       {/* Header */}
       <motion.div variants={item}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-eats/20 to-orange-500/10">
-            <Settings className="h-6 w-6 text-eats" />
-          </div>
+          <motion.div 
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="p-2.5 rounded-xl bg-gradient-to-br from-eats to-red-500 shadow-lg"
+          >
+            <Settings className="h-6 w-6 text-white" />
+          </motion.div>
           <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Settings
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Sparkles className="h-5 w-5 text-eats" />
+              </motion.div>
+            </h1>
             <p className="text-muted-foreground">Manage your restaurant settings</p>
           </div>
         </div>
