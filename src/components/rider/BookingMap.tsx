@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Location } from "@/hooks/useRiderBooking";
-import { MapPin, Navigation, Locate, ZoomIn, ZoomOut, Layers, Compass, Route } from "lucide-react";
+import { MapPin, Navigation, Locate, ZoomIn, ZoomOut, Layers, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -326,7 +326,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
 
       {/* Map Controls - Premium glassmorphism */}
       {showControls && mapLoaded && (
-        <div className="absolute right-3 top-3 flex flex-col gap-1.5 animate-in fade-in slide-in-from-right-2 duration-200">
+        <div className="absolute right-3 top-3 flex flex-col gap-1.5">
           <div className="bg-card/80 backdrop-blur-xl rounded-xl border border-white/10 p-1.5 shadow-2xl shadow-black/20">
             <Button
               variant="ghost"
@@ -382,24 +382,14 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
 
       {/* Route Info Badge - Premium */}
       {pickup && dropoff && routeGeometry && (
-        <div className="absolute bottom-4 left-4 right-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          <div className="relative flex items-center gap-3 bg-card/90 backdrop-blur-2xl rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-white/10 overflow-hidden">
-            <div className="relative flex items-center gap-2">
-              <div className="relative">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-30" />
-              </div>
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="flex items-center gap-3 bg-card/90 backdrop-blur-xl rounded-2xl px-4 py-3 shadow-xl border border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="text-xs text-muted-foreground font-medium">Route active</span>
             </div>
-            
-            <div className="flex-1 flex justify-center">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                <Route className="w-3 h-3 text-primary" />
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Optimized</span>
-              </div>
-            </div>
-            
-            <div className="relative flex items-center gap-1.5 text-xs">
+            <div className="flex-1" />
+            <div className="flex items-center gap-1.5 text-xs">
               <Navigation className="w-4 h-4 text-primary" />
               <span className="font-semibold">Live</span>
             </div>
@@ -410,27 +400,12 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
       {/* Empty state indicator - Premium */}
       {!pickup && !dropoff && mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="relative text-center bg-card/85 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl shadow-black/30 border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Decorative gradient orbs */}
-            <div className="absolute -top-10 -left-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
-            <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-teal-500/15 rounded-full blur-2xl" />
-            
-            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center mx-auto mb-4 border border-white/10">
-              <MapPin className="w-7 h-7 text-primary" />
+          <div className="text-center bg-card/85 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/10">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center mx-auto mb-3 border border-white/10">
+              <MapPin className="w-6 h-6 text-primary" />
             </div>
-            
-            <p className="relative text-base font-semibold mb-1">Where to?</p>
-            <p className="relative text-xs text-muted-foreground">Enter pickup & destination</p>
-            
-            {/* Decorative dots */}
-            <div className="flex justify-center gap-1.5 mt-4">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="w-1.5 h-1.5 rounded-full bg-primary/50"
-                />
-              ))}
-            </div>
+            <p className="text-sm font-semibold mb-1">Where to?</p>
+            <p className="text-xs text-muted-foreground">Enter pickup & destination</p>
           </div>
         </div>
       )}
