@@ -20,7 +20,10 @@ import {
   TrendingUp,
   Zap,
   Star,
-  Shield
+  Shield,
+  Target,
+  Award,
+  ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -107,21 +110,22 @@ const DriverApp = () => {
   // Loading state
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <Card className="w-full max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl">
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl">
             <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-muted/30 flex items-center justify-center mx-auto mb-5">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-5">
                 <AlertCircle className="w-8 h-8 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-bold mb-2">Sign in required</h2>
               <p className="text-muted-foreground mb-6">You need to be logged in to access the driver app</p>
               <div className="flex gap-3 justify-center">
                 <Button variant="outline" className="rounded-xl" onClick={() => navigate("/")}>Home</Button>
-                <Button className="rounded-xl bg-gradient-to-r from-primary to-teal-400" onClick={() => navigate("/login")}>Sign In</Button>
+                <Button className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30" onClick={() => navigate("/login")}>Sign In</Button>
               </div>
             </CardContent>
           </Card>
@@ -136,9 +140,9 @@ const DriverApp = () => {
         <div className="max-w-lg mx-auto space-y-4">
           <Skeleton className="h-16 w-full rounded-2xl" />
           <div className="grid grid-cols-3 gap-3">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-24 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
           </div>
           <Skeleton className="h-48 w-full rounded-2xl" />
           <Skeleton className="h-48 w-full rounded-2xl" />
@@ -150,23 +154,29 @@ const DriverApp = () => {
   // Not a driver yet
   if (!driver) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
+        <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="w-full max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-500/10 pointer-events-none" />
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5 pointer-events-none" />
             <CardContent className="p-8 text-center relative">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-5">
-                <Car className="w-10 h-10 text-primary" />
-              </div>
+              <motion.div 
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/30"
+              >
+                <Car className="w-10 h-10 text-white" />
+              </motion.div>
               <h2 className="text-2xl font-bold mb-2">Become a Driver</h2>
               <p className="text-muted-foreground mb-6">Register as a driver to start accepting trips and earning money</p>
               <div className="flex gap-3 justify-center">
                 <Button variant="outline" className="rounded-xl" onClick={() => navigate("/")}>Home</Button>
-                <Button className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30" onClick={() => navigate("/drive")}>
-                  <Sparkles className="w-4 h-4 mr-2" />
+                <Button className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30 gap-2" onClick={() => navigate("/drive")}>
+                  <Sparkles className="w-4 h-4" />
                   Register Now
                 </Button>
               </div>
@@ -185,6 +195,7 @@ const DriverApp = () => {
         title: "Verification Pending",
         description: "Your application is being reviewed. We'll notify you once approved.",
         color: "text-amber-500",
+        gradient: "from-amber-500 to-orange-500",
         bg: "from-amber-500/20 to-amber-500/5",
       },
       rejected: {
@@ -192,6 +203,7 @@ const DriverApp = () => {
         title: "Application Rejected",
         description: "Unfortunately, your application was not approved. Please contact support.",
         color: "text-red-500",
+        gradient: "from-red-500 to-rose-500",
         bg: "from-red-500/20 to-red-500/5",
       },
       suspended: {
@@ -199,6 +211,7 @@ const DriverApp = () => {
         title: "Account Suspended",
         description: "Your account has been suspended. Please contact support for assistance.",
         color: "text-red-500",
+        gradient: "from-red-500 to-rose-500",
         bg: "from-red-500/20 to-red-500/5",
       },
     };
@@ -207,17 +220,22 @@ const DriverApp = () => {
     const StatusIcon = config.icon;
 
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-radial ${config.bg} opacity-30`} />
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <Card className="w-full max-w-md border-0 bg-card/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className={`absolute inset-0 bg-gradient-to-br ${config.bg} pointer-events-none`} />
             <CardContent className="p-8 text-center relative">
-              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${config.bg} flex items-center justify-center mx-auto mb-5`}>
-                <StatusIcon className={`w-8 h-8 ${config.color}`} />
-              </div>
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center mx-auto mb-5 shadow-lg`}
+              >
+                <StatusIcon className="w-8 h-8 text-white" />
+              </motion.div>
               <h2 className="text-xl font-bold mb-2">{config.title}</h2>
               <p className="text-muted-foreground mb-5">{config.description}</p>
               <Badge variant={driver.status === "pending" ? "secondary" : "destructive"} className="text-sm px-4 py-1.5">
@@ -234,10 +252,14 @@ const DriverApp = () => {
   if (activeTrip) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4"
+        >
           <div className="flex items-center justify-between max-w-lg mx-auto">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
                 <Navigation className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -245,11 +267,11 @@ const DriverApp = () => {
                 <p className="text-xs text-muted-foreground">In progress</p>
               </div>
             </div>
-            <Badge variant="default" className="capitalize bg-gradient-to-r from-primary to-teal-400 border-0">
+            <Badge variant="default" className="capitalize bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg">
               {activeTrip.status?.replace("_", " ")}
             </Badge>
           </div>
-        </div>
+        </motion.div>
         <ActiveTripPanel 
           trip={activeTrip} 
           driverId={driver.id}
@@ -261,9 +283,16 @@ const DriverApp = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30 pointer-events-none" />
+      
       {/* Premium Header */}
-      <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50">
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50"
+      >
         <div className="max-w-lg mx-auto p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -271,12 +300,25 @@ const DriverApp = () => {
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <Car className="w-5 h-5 text-primary" />
+                <div className="relative">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                    <Car className="w-5 h-5 text-primary" />
+                  </div>
+                  {driver.is_online && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-card" />
+                  )}
                 </div>
                 <div>
                   <h1 className="font-bold">{driver.full_name}</h1>
-                  <p className="text-xs text-muted-foreground">{driver.vehicle_model}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs text-muted-foreground">{driver.vehicle_model}</p>
+                    {driver.rating && (
+                      <div className="flex items-center gap-0.5">
+                        <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                        <span className="text-xs font-semibold">{driver.rating.toFixed(1)}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -288,32 +330,37 @@ const DriverApp = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Online/Offline Toggle Banner */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className={cn(
-          "py-4 px-4 transition-colors",
+          "py-5 px-4 transition-all duration-500",
           driver.is_online 
-            ? "bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent border-b border-emerald-500/20" 
+            ? "bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border-b border-emerald-500/20" 
             : "bg-gradient-to-r from-muted via-muted/50 to-transparent border-b border-border/50"
         )}
       >
         <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center transition-all",
-              driver.is_online 
-                ? "bg-emerald-500 shadow-lg shadow-emerald-500/30" 
-                : "bg-muted"
-            )}>
+          <div className="flex items-center gap-4">
+            <motion.div 
+              animate={driver.is_online ? { scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 2, repeat: Infinity }}
+              className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg",
+                driver.is_online 
+                  ? "bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/30" 
+                  : "bg-muted shadow-none"
+              )}
+            >
               <Power className={cn(
-                "w-6 h-6 transition-colors",
+                "w-7 h-7 transition-colors",
                 driver.is_online ? "text-white" : "text-muted-foreground"
               )} />
-            </div>
+            </motion.div>
             <div>
               <p className="font-bold text-lg">{driver.is_online ? "You're Online" : "You're Offline"}</p>
               <p className="text-sm text-muted-foreground">
@@ -331,42 +378,74 @@ const DriverApp = () => {
       </motion.div>
 
       {/* Content */}
-      <div className="max-w-lg mx-auto p-4 space-y-5">
+      <div className="max-w-lg mx-auto p-4 space-y-5 relative z-10">
         {/* Earnings Summary - Premium Design */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2 }}
           className="grid grid-cols-3 gap-3"
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4 text-center relative">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-2">
-                <DollarSign className="w-5 h-5 text-emerald-500" />
+          {[
+            { icon: DollarSign, value: `$${earnings?.today.toFixed(0) || 0}`, label: "Today", gradient: "from-emerald-500 to-green-500", glow: "shadow-emerald-500/20" },
+            { icon: Navigation, value: `${earnings?.trips_today || 0}`, label: "Trips", gradient: "from-primary to-teal-400", glow: "shadow-primary/20" },
+            { icon: TrendingUp, value: `$${earnings?.week.toFixed(0) || 0}`, label: "This Week", gradient: "from-sky-500 to-blue-500", glow: "shadow-sky-500/20" },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 + index * 0.1 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+            >
+              <Card className={cn(
+                "border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all",
+                stat.glow
+              )}>
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity`} />
+                <CardContent className="p-4 text-center relative">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center mx-auto mb-2 shadow-lg",
+                    stat.gradient
+                  )}>
+                    <stat.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Goals Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                    <Target className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Daily Goal</h3>
+                    <p className="text-xs text-muted-foreground">Complete 10 trips today</p>
+                  </div>
+                </div>
+                <span className="text-2xl font-bold text-amber-500">{earnings?.trips_today || 0}/10</span>
               </div>
-              <p className="text-2xl font-bold">${earnings?.today.toFixed(0) || 0}</p>
-              <p className="text-xs text-muted-foreground font-medium">Today</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4 text-center relative">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-2">
-                <Navigation className="w-5 h-5 text-primary" />
+              <div className="h-2.5 rounded-full bg-muted/50 overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min((earnings?.trips_today || 0) / 10 * 100, 100)}%` }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                />
               </div>
-              <p className="text-2xl font-bold">{earnings?.trips_today || 0}</p>
-              <p className="text-xs text-muted-foreground font-medium">Trips</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all">
-            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <CardContent className="p-4 text-center relative">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center mx-auto mb-2">
-                <TrendingUp className="w-5 h-5 text-sky-500" />
-              </div>
-              <p className="text-2xl font-bold">${earnings?.week.toFixed(0) || 0}</p>
-              <p className="text-xs text-muted-foreground font-medium">This Week</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -376,9 +455,9 @@ const DriverApp = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.5 }}
           >
-            <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl overflow-hidden">
+            <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent pointer-events-none" />
               <CardContent className="p-10 text-center relative">
                 <motion.div
@@ -395,15 +474,17 @@ const DriverApp = () => {
                 <p className="text-muted-foreground mb-6 max-w-xs mx-auto">
                   Go online to start receiving trip requests and earn money
                 </p>
-                <Button 
-                  onClick={handleToggleOnline} 
-                  disabled={toggleOnline.isPending}
-                  size="lg"
-                  className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30 font-semibold"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
-                  Go Online
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    onClick={handleToggleOnline} 
+                    disabled={toggleOnline.isPending}
+                    size="lg"
+                    className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30 font-bold gap-2"
+                  >
+                    <Zap className="w-5 h-5" />
+                    Go Online
+                  </Button>
+                </motion.div>
               </CardContent>
             </Card>
           </motion.div>
@@ -411,66 +492,51 @@ const DriverApp = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.5 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full h-12 p-1 bg-muted/50 rounded-2xl mb-4">
-                <TabsTrigger value="requests" className="flex-1 h-10 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-md transition-all">
-                  <MapPin className="w-4 h-4 mr-2" />
+              <TabsList className="w-full grid grid-cols-2 h-14 p-1.5 rounded-2xl bg-muted/50 mb-5">
+                <TabsTrigger 
+                  value="requests" 
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-2 font-semibold"
+                >
+                  <Navigation className="w-4 h-4" />
                   Requests
-                  {(availableTrips?.length || 0) > 0 && (
-                    <Badge variant="destructive" className="ml-2 h-5 px-1.5 min-w-[20px] text-xs animate-pulse">
-                      {availableTrips?.length}
-                    </Badge>
+                  {availableTrips && availableTrips.length > 0 && (
+                    <span className="ml-1 px-2 py-0.5 text-xs bg-white/20 rounded-full">
+                      {availableTrips.length}
+                    </span>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="history" className="flex-1 h-10 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-md transition-all">
-                  <History className="w-4 h-4 mr-2" />
+                <TabsTrigger 
+                  value="history" 
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-2 font-semibold"
+                >
+                  <History className="w-4 h-4" />
                   History
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="requests" className="space-y-3 mt-0">
-                <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="wait">
+                <TabsContent value="requests" className="mt-0 space-y-4">
                   {tripsLoading ? (
                     <>
-                      <Skeleton className="h-44 w-full rounded-2xl" />
-                      <Skeleton className="h-44 w-full rounded-2xl" />
+                      <Skeleton className="h-32 w-full rounded-2xl" />
+                      <Skeleton className="h-32 w-full rounded-2xl" />
                     </>
-                  ) : !availableTrips?.length ? (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
-                      <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg">
-                        <CardContent className="p-10 text-center">
-                          <motion.div
-                            animate={{ rotate: [0, 10, -10, 0] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4"
-                          >
-                            <Clock className="w-8 h-8 text-muted-foreground" />
-                          </motion.div>
-                          <h3 className="font-bold text-lg mb-2">No Trip Requests</h3>
-                          <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                            New trip requests will appear here. Stay online to receive them.
-                          </p>
-                          <div className="flex items-center justify-center gap-2 mt-4 text-xs text-emerald-500">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>Listening for requests...</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ) : (
+                  ) : availableTrips && availableTrips.length > 0 ? (
                     availableTrips.map((trip, index) => (
                       <motion.div
                         key={trip.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, x: -100 }}
-                        transition={{ delay: index * 0.05 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
                       >
+                        <DriverTripCard
+                          trip={trip}
+                          onAccept={() => handleAcceptTrip(trip.id)}
+                          isAccepting={acceptTrip.isPending}
+                        />
                         <DriverTripCard
                           trip={trip}
                           onAccept={() => handleAcceptTrip(trip.id)}
@@ -478,80 +544,76 @@ const DriverApp = () => {
                         />
                       </motion.div>
                     ))
-                  )}
-                </AnimatePresence>
-              </TabsContent>
-
-              <TabsContent value="history" className="space-y-3 mt-0">
-                <AnimatePresence mode="popLayout">
-                  {!tripHistory?.length ? (
+                  ) : (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                     >
-                      <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg">
+                      <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                         <CardContent className="p-10 text-center">
-                          <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                            <History className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                          <h3 className="font-bold text-lg mb-2">No Trip History</h3>
+                          <motion.div
+                            animate={{ y: [0, -5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-4"
+                          >
+                            <MapPin className="w-8 h-8 text-primary" />
+                          </motion.div>
+                          <h3 className="font-bold text-lg mb-2">Waiting for trips...</h3>
                           <p className="text-muted-foreground text-sm">
-                            Your completed trips will appear here
+                            Stay online to receive trip requests from nearby riders
                           </p>
                         </CardContent>
                       </Card>
                     </motion.div>
-                  ) : (
-                    tripHistory.map((trip, index) => (
+                  )}
+                </TabsContent>
+
+                <TabsContent value="history" className="mt-0 space-y-4">
+                  {tripHistory && tripHistory.length > 0 ? (
+                    tripHistory.slice(0, 10).map((trip, index) => (
                       <motion.div
                         key={trip.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
                       >
-                        <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-md hover:shadow-lg transition-all overflow-hidden group">
-                          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <CardContent className="p-4 relative">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <Badge variant={trip.status === "completed" ? "default" : "secondary"} className={cn(
-                                  "capitalize",
-                                  trip.status === "completed" && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 border"
-                                )}>
-                                  {trip.status}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {trip.completed_at 
-                                    ? new Date(trip.completed_at).toLocaleDateString()
-                                    : new Date(trip.created_at).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="font-bold text-lg text-emerald-500">${trip.fare_amount?.toFixed(2)}</p>
+                        <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
+                          <CardContent className="p-5">
+                            <div className="flex items-center justify-between mb-3">
+                              <Badge variant={trip.status === "completed" ? "default" : "secondary"} className={trip.status === "completed" ? "bg-gradient-to-r from-emerald-500 to-green-500 border-0" : ""}>
+                                {trip.status}
+                              </Badge>
+                              <span className="font-bold text-lg">${trip.fare_amount?.toFixed(2)}</span>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 text-sm">
                               <div className="flex items-start gap-2">
-                                <div className="w-3 h-3 rounded-full bg-emerald-500 mt-1 flex-shrink-0" />
-                                <p className="text-sm truncate">{trip.pickup_address}</p>
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 ring-4 ring-emerald-500/20" />
+                                <span className="text-muted-foreground line-clamp-1">{trip.pickup_address}</span>
                               </div>
                               <div className="flex items-start gap-2">
-                                <div className="w-3 h-3 rounded-sm bg-foreground mt-1 flex-shrink-0" />
-                                <p className="text-sm text-muted-foreground truncate">{trip.dropoff_address}</p>
+                                <div className="w-2.5 h-2.5 rounded-sm bg-foreground mt-1.5 ring-4 ring-foreground/10" />
+                                <span className="text-muted-foreground line-clamp-1">{trip.dropoff_address}</span>
                               </div>
                             </div>
-                            {trip.rating && (
-                              <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/50">
-                                <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
-                                <span className="text-sm font-medium">{trip.rating}</span>
-                                <span className="text-xs text-muted-foreground">from rider</span>
-                              </div>
-                            )}
                           </CardContent>
                         </Card>
                       </motion.div>
                     ))
+                  ) : (
+                    <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
+                      <CardContent className="p-10 text-center">
+                        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                          <History className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">No trip history</h3>
+                        <p className="text-muted-foreground text-sm">
+                          Your completed trips will appear here
+                        </p>
+                      </CardContent>
+                    </Card>
                   )}
-                </AnimatePresence>
-              </TabsContent>
+                </TabsContent>
+              </AnimatePresence>
             </Tabs>
           </motion.div>
         )}
