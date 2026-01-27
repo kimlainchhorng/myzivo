@@ -72,38 +72,61 @@ const Signup = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-eats/25 to-orange-500/15 rounded-full blur-3xl" 
+          className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-eats/30 to-orange-500/20 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-          className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-gradient-to-tr from-primary/20 to-teal-500/10 rounded-full blur-3xl" 
+          className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-gradient-to-tr from-primary/25 to-teal-500/15 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
+          animate={{ opacity: 0.5 }}
           transition={{ duration: 2, delay: 0.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-eats/5 to-transparent rounded-full" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-radial from-eats/8 to-transparent rounded-full" 
         />
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.3 }}
+          transition={{ duration: 2, delay: 0.8 }}
+          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" 
+        />
+        
+        {/* Floating emojis */}
+        <motion.div
+          animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+          transition={{ duration: 6, repeat: Infinity }}
+          className="absolute top-[20%] right-[12%] text-4xl opacity-30"
+        >
+          ✨
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
+          transition={{ duration: 7, repeat: Infinity }}
+          className="absolute bottom-[25%] left-[10%] text-4xl opacity-25"
+        >
+          🚀
+        </motion.div>
+        
         {/* Floating particles */}
-        {[...Array(5)].map((_, i) => (
+        {[...Array(6)].map((_, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 100 }}
             animate={{ 
               opacity: [0.3, 0.6, 0.3],
-              y: [-100, -300],
+              y: [-100, -400],
               x: [0, Math.random() * 100 - 50]
             }}
             transition={{ 
-              duration: 10 + i * 2, 
+              duration: 12 + i * 2, 
               repeat: Infinity, 
-              delay: i * 2,
+              delay: i * 1.5,
               ease: "linear"
             }}
-            className="absolute bottom-0 w-2 h-2 rounded-full bg-eats/30"
-            style={{ left: `${20 + i * 15}%` }}
+            className="absolute bottom-0 w-2 h-2 rounded-full bg-gradient-to-r from-eats/40 to-orange-500/40"
+            style={{ left: `${15 + i * 12}%` }}
           />
         ))}
       </div>

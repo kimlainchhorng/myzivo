@@ -97,25 +97,33 @@ const TrustSection = () => {
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-radial from-primary/15 via-transparent to-transparent rounded-full blur-3xl" />
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-emerald-500/15 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-transparent rounded-full blur-3xl" />
-      <div className="absolute top-1/4 left-1/4 w-[200px] h-[200px] bg-gradient-radial from-sky-500/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-primary/18 via-transparent to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-emerald-500/20 to-green-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-violet-500/20 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-sky-500/12 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 right-1/4 w-[250px] h-[250px] bg-gradient-radial from-amber-500/10 to-transparent rounded-full blur-3xl" />
 
       {/* Floating safety icons */}
       <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-36 right-[12%] text-4xl hidden lg:block opacity-40"
+        className="absolute top-36 right-[12%] text-5xl hidden lg:block opacity-40"
       >
         🛡️
       </motion.div>
       <motion.div
         animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 left-[8%] text-3xl hidden lg:block opacity-30"
+        className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-30"
       >
         ✅
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 7, repeat: Infinity }}
+        className="absolute top-1/2 left-[5%] text-4xl hidden lg:block opacity-25"
+      >
+        🔒
       </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -125,7 +133,7 @@ const TrustSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-14 sm:mb-20"
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
