@@ -27,6 +27,7 @@ import { useRiderTripHistory } from "@/hooks/useRiderTripHistory";
 import TripReceiptModal from "@/components/rider/TripReceiptModal";
 import { Trip } from "@/hooks/useTrips";
 import { cn } from "@/lib/utils";
+import ZivoLogo from "@/components/ZivoLogo";
 
 const TripHistory = () => {
   const navigate = useNavigate();
@@ -77,11 +78,15 @@ const TripHistory = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                <Car className="w-8 h-8 text-white" />
-              </div>
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
+            <CardContent className="p-8 text-center relative">
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="mx-auto mb-6"
+              >
+                <ZivoLogo size="lg" />
+              </motion.div>
               <h2 className="text-2xl font-bold mb-2">Sign in to view history</h2>
               <p className="text-muted-foreground mb-6">
                 You need to be logged in to see your trip history
