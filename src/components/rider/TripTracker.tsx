@@ -10,7 +10,6 @@ import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import { useUnreadMessageCount } from "@/hooks/useTripChat";
 import { supabase } from "@/integrations/supabase/client";
 import TripChatModal from "@/components/chat/TripChatModal";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface TripTrackerProps {
@@ -165,11 +164,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
   return (
     <div className="space-y-4">
       {/* Map with Premium Overlays */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative"
-      >
+      <div className="relative animate-in fade-in zoom-in-95 duration-300">
         <div ref={mapContainer} className="h-[320px] rounded-3xl overflow-hidden ring-1 ring-white/10" />
         
         {/* Premium gradient overlays */}
@@ -181,74 +176,41 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
         </div>
         
         {/* ETA Overlay - Premium Design */}
-        <AnimatePresence>
-          {eta && driverLocation && isActive && trip.status !== "arrived" && (
-            <motion.div 
-              initial={{ opacity: 0, y: -15, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -15, scale: 0.9 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="absolute top-4 left-4 bg-gradient-to-br from-card/98 via-card/95 to-card/90 backdrop-blur-2xl px-6 py-5 rounded-3xl shadow-2xl shadow-black/30 border border-white/10"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-2 h-2 rounded-full bg-emerald-500"
-                />
-                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                  {trip.status === "in_progress" ? "Arriving in" : "Driver arriving"}
-                </p>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <motion.span 
-                  key={eta}
-                  initial={{ scale: 1.3, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="text-5xl font-bold bg-gradient-to-r from-primary via-teal-400 to-emerald-400 bg-clip-text text-transparent"
-                >
-                  {eta}
-                </motion.span>
-                <span className="text-lg text-muted-foreground font-medium">min</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {eta && driverLocation && isActive && trip.status !== "arrived" && (
+          <div className="absolute top-4 left-4 bg-gradient-to-br from-card/98 via-card/95 to-card/90 backdrop-blur-2xl px-6 py-5 rounded-3xl shadow-2xl shadow-black/30 border border-white/10 animate-in fade-in slide-in-from-top-4 zoom-in-95 duration-300">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                {trip.status === "in_progress" ? "Arriving in" : "Driver arriving"}
+              </p>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-bold bg-gradient-to-r from-primary via-teal-400 to-emerald-400 bg-clip-text text-transparent">
+                {eta}
+              </span>
+              <span className="text-lg text-muted-foreground font-medium">min</span>
+            </div>
+          </div>
+        )}
 
         {/* Live indicator - Premium */}
         {driverLocation && isActive && (
-          <motion.div 
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-emerald-500/25 to-emerald-500/10 backdrop-blur-2xl px-5 py-3 rounded-2xl shadow-xl border border-emerald-500/30"
-          >
+          <div className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-emerald-500/25 to-emerald-500/10 backdrop-blur-2xl px-5 py-3 rounded-2xl shadow-xl border border-emerald-500/30 animate-in fade-in slide-in-from-right-4 duration-300">
             <span className="relative flex h-3 w-3">
-              <motion.span 
-                animate={{ scale: [1, 2], opacity: [0.6, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="absolute inline-flex h-full w-full rounded-full bg-emerald-500"
-              />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
               <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-lg shadow-emerald-500/50" />
             </span>
             <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Live</span>
-          </motion.div>
+          </div>
         )}
 
         {/* Vehicle & Fare Card - Premium */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="absolute bottom-4 left-4 right-4"
-        >
+        <div className="absolute bottom-4 left-4 right-4 animate-in fade-in slide-in-from-bottom-4 duration-300 delay-150">
           <div className="flex items-center justify-between bg-gradient-to-r from-card/98 via-card/95 to-card/90 backdrop-blur-2xl rounded-2xl px-5 py-4 shadow-2xl shadow-black/20 border border-white/10">
             <div className="flex items-center gap-4">
-              <motion.div 
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
-              >
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center transition-transform duration-200 hover:scale-110 hover:rotate-3">
                 <Car className="w-6 h-6 text-primary" />
-              </motion.div>
+              </div>
               <div>
                 <p className="text-sm font-bold">Premium Ride</p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -261,19 +223,14 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
               </div>
             </div>
             <div className="text-right">
-              <motion.p 
-                key={trip.fare_amount}
-                initial={{ scale: 1.1 }}
-                animate={{ scale: 1 }}
-                className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent"
-              >
+              <p className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">
                 ${trip.fare_amount?.toFixed(2)}
-              </motion.p>
+              </p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Total fare</p>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
 
       {/* Status Progress - Enhanced */}
       <Card className="glass-card overflow-hidden">
@@ -294,21 +251,17 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
           <div className="relative">
             {/* Progress Line */}
             <div className="absolute left-[15px] top-0 bottom-0 w-0.5 bg-muted" />
-            <motion.div 
-              className="absolute left-[15px] top-0 w-0.5 bg-primary"
-              initial={{ height: 0 }}
-              animate={{ height: `${Math.min((currentStepIndex / (statusSteps.length - 1)) * 100, 100)}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+            <div 
+              className="absolute left-[15px] top-0 w-0.5 bg-primary transition-all duration-500 ease-out"
+              style={{ height: `${Math.min((currentStepIndex / (statusSteps.length - 1)) * 100, 100)}%` }}
             />
             
             <div className="space-y-4">
               {statusSteps.slice(0, 5).map((step, index) => (
-                <motion.div 
+                <div 
                   key={step.status} 
-                  className="flex items-center gap-4 relative"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center gap-4 relative animate-in fade-in slide-in-from-left-2 duration-200"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className={cn(
                     "w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all duration-300",
@@ -332,7 +285,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                   )}>
                     {step.label}
                   </span>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -341,10 +294,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
 
       {/* Driver Info - Enhanced */}
       {trip.driver && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <Card className="glass-card overflow-hidden">
             <CardContent className="p-5">
               <div className="flex items-center gap-4">
@@ -379,13 +329,13 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon" className="rounded-full w-11 h-11">
+                  <Button variant="outline" size="icon" className="rounded-full w-11 h-11 transition-all duration-200 hover:scale-105 active:scale-95">
                     <Phone className="w-4 h-4" />
                   </Button>
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="relative rounded-full w-11 h-11"
+                    className="relative rounded-full w-11 h-11 transition-all duration-200 hover:scale-105 active:scale-95"
                     onClick={() => setIsChatOpen(true)}
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -399,7 +349,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       {/* Trip Details - Enhanced */}
@@ -456,11 +406,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
 
       {/* Safety Banner - Enhanced */}
       {isActive && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-xl border border-emerald-500/20"
-        >
+        <div className="relative overflow-hidden rounded-xl border border-emerald-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent" />
           <div className="relative flex items-center gap-4 p-4">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
@@ -474,14 +420,14 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
               Share Trip
             </Button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Cancel Button - Enhanced */}
       {isActive && trip.status !== "in_progress" && onCancel && (
         <Button 
           variant="outline" 
-          className="w-full h-12 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all" 
+          className="w-full h-12 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all duration-200 active:scale-[0.98]" 
           onClick={onCancel}
         >
           <X className="w-4 h-4 mr-2" />

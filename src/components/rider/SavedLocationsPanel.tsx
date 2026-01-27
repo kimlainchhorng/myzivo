@@ -24,7 +24,6 @@ import {
   useDeleteSavedLocation,
 } from "@/hooks/useSavedLocations";
 import { useLocationSearch, Location } from "@/hooks/useRiderBooking";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SavedLocationsPanelProps {
@@ -146,17 +145,16 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
           const colors = colorMap[preset.icon];
 
           return (
-            <motion.div
+            <div
               key={preset.label}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
+              className="animate-in fade-in slide-in-from-bottom-2"
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               <Card
                 className={cn(
                   "cursor-pointer transition-all duration-200 overflow-hidden border",
                   saved 
-                    ? "active:scale-[0.98] border-border/50" 
+                    ? "active:scale-[0.98] border-border/50 hover:shadow-md" 
                     : "border-dashed border-muted-foreground/20"
                 )}
                 onClick={() => saved && handleLocationClick(saved)}
@@ -191,65 +189,57 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           );
         })}
       </div>
 
       {/* Other Saved Locations */}
-      <AnimatePresence>
-        {otherLocations && otherLocations.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-1.5"
-          >
-            {otherLocations.map((location, index) => {
-              const Icon = iconMap[location.icon] || MapPin;
-              const colors = colorMap[location.icon] || colorMap.pin;
-              
-              return (
-                <motion.div
-                  key={location.id}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 6 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-lg cursor-pointer group transition-all active:scale-[0.98]",
-                    "bg-gradient-to-r",
-                    colors.bg,
-                    "border border-border/30"
-                  )}
-                  onClick={() => handleLocationClick(location)}
+      {otherLocations && otherLocations.length > 0 && (
+        <div className="space-y-1.5 animate-in fade-in duration-200">
+          {otherLocations.map((location, index) => {
+            const Icon = iconMap[location.icon] || MapPin;
+            const colors = colorMap[location.icon] || colorMap.pin;
+            
+            return (
+              <div
+                key={location.id}
+                className={cn(
+                  "flex items-center gap-2 p-2.5 rounded-lg cursor-pointer group transition-all duration-200 active:scale-[0.98]",
+                  "bg-gradient-to-r",
+                  colors.bg,
+                  "border border-border/30 hover:shadow-md",
+                  "animate-in fade-in slide-in-from-left-2"
+                )}
+                style={{ animationDelay: `${index * 30}ms` }}
+                onClick={() => handleLocationClick(location)}
+              >
+                <div className={cn(
+                  "w-7 h-7 rounded-lg flex items-center justify-center",
+                  colors.iconBg
+                )}>
+                  <Icon className={cn("w-3.5 h-3.5", colors.text)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold">{location.label}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{location.address}</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-md hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteLocation.mutate(location.id);
+                  }}
                 >
-                  <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center",
-                    colors.iconBg
-                  )}>
-                    <Icon className={cn("w-3.5 h-3.5", colors.text)} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold">{location.label}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{location.address}</p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-md hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteLocation.mutate(location.id);
-                    }}
-                  >
-                    <Trash2 className="w-3 h-3 text-destructive" />
-                  </Button>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Add New Location Button */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -310,55 +300,41 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
                 onChange={(e) => handleSearch(e.target.value)}
                 className="h-11 rounded-xl"
               />
-              <AnimatePresence>
-                {searchResults.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute z-10 w-full mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl max-h-48 overflow-y-auto"
-                  >
-                    {searchResults.map((result, idx) => (
-                      <button
-                        key={idx}
-                        className="w-full px-4 py-3 text-left text-sm hover:bg-muted/50 flex items-start gap-3 transition-colors"
-                        onClick={() => handleSelectSearchResult(result)}
-                      >
-                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                        <span className="truncate">{result.address}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {searchResults.length > 0 && (
+                <div className="absolute z-10 w-full mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl max-h-48 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                  {searchResults.map((result, idx) => (
+                    <button
+                      key={idx}
+                      className="w-full px-4 py-3 text-left text-sm hover:bg-muted/50 flex items-start gap-3 transition-colors"
+                      onClick={() => handleSelectSearchResult(result)}
+                    >
+                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                      <span className="truncate">{result.address}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <AnimatePresence>
-              {selectedAddress && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+            {selectedAddress && (
+              <div className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                </div>
+                <span className="text-sm flex-1 truncate font-medium">{selectedAddress.address}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 rounded-lg hover:bg-destructive/10"
+                  onClick={() => {
+                    setSelectedAddress(null);
+                    setSearchQuery("");
+                  }}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <span className="text-sm flex-1 truncate font-medium">{selectedAddress.address}</span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 rounded-lg hover:bg-destructive/10"
-                    onClick={() => {
-                      setSelectedAddress(null);
-                      setSearchQuery("");
-                    }}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </Button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            )}
 
             <Button
               className="w-full h-12 rounded-xl font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/30"

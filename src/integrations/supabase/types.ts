@@ -4004,6 +4004,126 @@ export type Database = {
           },
         ]
       }
+      vehicle_maintenance_reminders: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          driver_id: string
+          due_date: string | null
+          due_mileage: number | null
+          estimated_cost: number | null
+          id: string
+          notifications_enabled: boolean | null
+          priority: string
+          service_type: string
+          status: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          driver_id: string
+          due_date?: string | null
+          due_mileage?: number | null
+          estimated_cost?: number | null
+          id?: string
+          notifications_enabled?: boolean | null
+          priority?: string
+          service_type: string
+          status?: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          driver_id?: string
+          due_date?: string | null
+          due_mileage?: number | null
+          estimated_cost?: number | null
+          id?: string
+          notifications_enabled?: boolean | null
+          priority?: string
+          service_type?: string
+          status?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_maintenance_reminders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_maintenance_reminders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_service_logs: {
+        Row: {
+          cost: number
+          created_at: string
+          driver_id: string
+          id: string
+          mileage: number
+          notes: string | null
+          receipt_url: string | null
+          service_date: string
+          service_type: string
+          shop_name: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          driver_id: string
+          id?: string
+          mileage: number
+          notes?: string | null
+          receipt_url?: string | null
+          service_date?: string
+          service_type: string
+          shop_name?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          driver_id?: string
+          id?: string
+          mileage?: number
+          notes?: string | null
+          receipt_url?: string | null
+          service_date?: string
+          service_type?: string
+          shop_name?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_service_logs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_service_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           color: string | null
