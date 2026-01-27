@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -6,49 +6,57 @@ interface Step {
   id: string;
   label: string;
   icon?: React.ReactNode;
+  description?: string;
 }
 
 interface BookingStepIndicatorProps {
   steps: Step[];
   currentStep: number;
   accentColor?: "primary" | "eats" | "sky" | "amber" | "rides";
+  variant?: "default" | "compact" | "vertical";
+  onStepClick?: (stepIndex: number) => void;
 }
 
 const colorClasses = {
   primary: {
-    active: "bg-primary text-primary-foreground border-primary",
-    completed: "bg-primary text-primary-foreground border-primary",
-    upcoming: "bg-muted text-muted-foreground border-border",
-    line: "bg-primary",
+    active: "bg-gradient-to-br from-primary to-teal-400 text-white shadow-lg shadow-primary/40",
+    completed: "bg-gradient-to-br from-primary to-teal-400 text-white shadow-md shadow-primary/30",
+    upcoming: "bg-muted text-muted-foreground border-2 border-border",
+    line: "bg-gradient-to-r from-primary to-teal-400",
     lineInactive: "bg-border",
+    glow: "shadow-primary/30",
   },
   eats: {
-    active: "bg-eats text-secondary-foreground border-eats",
-    completed: "bg-eats text-secondary-foreground border-eats",
-    upcoming: "bg-muted text-muted-foreground border-border",
-    line: "bg-eats",
+    active: "bg-gradient-to-br from-eats to-orange-500 text-white shadow-lg shadow-eats/40",
+    completed: "bg-gradient-to-br from-eats to-orange-500 text-white shadow-md shadow-eats/30",
+    upcoming: "bg-muted text-muted-foreground border-2 border-border",
+    line: "bg-gradient-to-r from-eats to-orange-500",
     lineInactive: "bg-border",
+    glow: "shadow-eats/30",
   },
   sky: {
-    active: "bg-sky-500 text-white border-sky-500",
-    completed: "bg-sky-500 text-white border-sky-500",
-    upcoming: "bg-muted text-muted-foreground border-border",
-    line: "bg-sky-500",
+    active: "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/40",
+    completed: "bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-md shadow-sky-500/30",
+    upcoming: "bg-muted text-muted-foreground border-2 border-border",
+    line: "bg-gradient-to-r from-sky-500 to-blue-600",
     lineInactive: "bg-border",
+    glow: "shadow-sky-500/30",
   },
   amber: {
-    active: "bg-amber-500 text-white border-amber-500",
-    completed: "bg-amber-500 text-white border-amber-500",
-    upcoming: "bg-muted text-muted-foreground border-border",
-    line: "bg-amber-500",
+    active: "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/40",
+    completed: "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30",
+    upcoming: "bg-muted text-muted-foreground border-2 border-border",
+    line: "bg-gradient-to-r from-amber-500 to-orange-500",
     lineInactive: "bg-border",
+    glow: "shadow-amber-500/30",
   },
   rides: {
-    active: "bg-rides text-primary-foreground border-rides",
-    completed: "bg-rides text-primary-foreground border-rides",
-    upcoming: "bg-muted text-muted-foreground border-border",
-    line: "bg-rides",
+    active: "bg-gradient-to-br from-rides to-green-400 text-white shadow-lg shadow-rides/40",
+    completed: "bg-gradient-to-br from-rides to-green-400 text-white shadow-md shadow-rides/30",
+    upcoming: "bg-muted text-muted-foreground border-2 border-border",
+    line: "bg-gradient-to-r from-rides to-green-400",
     lineInactive: "bg-border",
+    glow: "shadow-rides/30",
   },
 };
 
@@ -56,64 +64,200 @@ export const BookingStepIndicator = ({
   steps,
   currentStep,
   accentColor = "primary",
+  variant = "default",
+  onStepClick,
 }: BookingStepIndicatorProps) => {
   const colors = colorClasses[accentColor];
 
-  return (
-    <div className="w-full">
-      <div className="flex items-center justify-between relative">
-        {/* Background line */}
-        <div className="absolute left-0 right-0 top-5 h-0.5 bg-border" />
-        
-        {/* Progress line */}
-        <motion.div
-          className={cn("absolute left-0 top-5 h-0.5", colors.line)}
-          initial={{ width: "0%" }}
-          animate={{
-            width: `${Math.min((currentStep / (steps.length - 1)) * 100, 100)}%`,
-          }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
-        />
+  if (variant === "vertical") {
+    return (
+      <div className="flex flex-col gap-2">
+        {steps.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isActive = index === currentStep;
+          const isClickable = onStepClick && index <= currentStep;
 
+          return (
+            <motion.div
+              key={step.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={cn(
+                "flex items-start gap-4 p-3 rounded-xl transition-all",
+                isClickable && "cursor-pointer hover:bg-muted/50",
+                isActive && "bg-muted/30"
+              )}
+              onClick={() => isClickable && onStepClick(index)}
+            >
+              <div className="relative flex flex-col items-center">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: isActive ? 1.1 : 1,
+                  }}
+                  className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
+                    isCompleted && colors.completed,
+                    isActive && colors.active,
+                    !isCompleted && !isActive && colors.upcoming
+                  )}
+                >
+                  {isCompleted ? (
+                    <Check className="w-5 h-5" />
+                  ) : step.icon ? (
+                    step.icon
+                  ) : (
+                    <span className="text-sm font-bold">{index + 1}</span>
+                  )}
+                </motion.div>
+                {index < steps.length - 1 && (
+                  <div className={cn(
+                    "w-0.5 h-8 mt-2 rounded-full transition-colors duration-300",
+                    index < currentStep ? colors.line : colors.lineInactive
+                  )} />
+                )}
+              </div>
+              <div className="flex-1 pt-1">
+                <p className={cn(
+                  "font-semibold text-sm transition-colors",
+                  (isActive || isCompleted) ? "text-foreground" : "text-muted-foreground"
+                )}>
+                  {step.label}
+                </p>
+                {step.description && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                )}
+              </div>
+              {isCompleted && (
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  if (variant === "compact") {
+    return (
+      <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-xl">
         {steps.map((step, index) => {
           const isCompleted = index < currentStep;
           const isActive = index === currentStep;
 
           return (
+            <motion.div
+              key={step.id}
+              initial={false}
+              animate={{ scale: isActive ? 1 : 0.95 }}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-sm",
+                isActive && "bg-background shadow-md",
+                isCompleted && "text-foreground",
+                !isCompleted && !isActive && "text-muted-foreground"
+              )}
+            >
+              <div className={cn(
+                "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
+                isCompleted && "bg-emerald-500 text-white",
+                isActive && colors.active.replace("shadow-lg", "").replace("shadow-md", ""),
+                !isCompleted && !isActive && "bg-muted"
+              )}>
+                {isCompleted ? <Check className="w-3 h-3" /> : index + 1}
+              </div>
+              <span className={cn("hidden sm:inline font-medium", isActive && "font-semibold")}>
+                {step.label}
+              </span>
+              {index < steps.length - 1 && (
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Default variant
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between relative">
+        {/* Background line */}
+        <div className="absolute left-6 right-6 top-6 h-1 bg-muted rounded-full" />
+        
+        {/* Progress line */}
+        <motion.div
+          className={cn("absolute left-6 top-6 h-1 rounded-full", colors.line)}
+          initial={{ width: "0%" }}
+          animate={{
+            width: `calc(${Math.min((currentStep / (steps.length - 1)) * 100, 100)}% - 24px)`,
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+
+        {steps.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isActive = index === currentStep;
+          const isClickable = onStepClick && index <= currentStep;
+
+          return (
             <div
               key={step.id}
-              className="flex flex-col items-center relative z-10"
+              className={cn(
+                "flex flex-col items-center relative z-10",
+                isClickable && "cursor-pointer"
+              )}
+              onClick={() => isClickable && onStepClick(index)}
             >
               <motion.div
                 initial={false}
                 animate={{
-                  scale: isActive ? 1.1 : 1,
+                  scale: isActive ? 1.15 : 1,
                 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 className={cn(
-                  "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors duration-200",
+                  "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
                   isCompleted && colors.completed,
                   isActive && colors.active,
-                  !isCompleted && !isActive && colors.upcoming
+                  !isCompleted && !isActive && colors.upcoming,
+                  isActive && "ring-4 ring-offset-2 ring-offset-background",
+                  isActive && colors.glow
                 )}
               >
                 {isCompleted ? (
-                  <Check className="w-5 h-5" />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Check className="w-6 h-6" />
+                  </motion.div>
                 ) : step.icon ? (
                   step.icon
                 ) : (
-                  <span className="text-sm font-semibold">{index + 1}</span>
+                  <span className="text-base font-bold">{index + 1}</span>
                 )}
               </motion.div>
-              <span
-                className={cn(
-                  "mt-2 text-xs font-medium transition-colors",
-                  isActive || isCompleted
-                    ? "text-foreground"
-                    : "text-muted-foreground"
+              <div className="mt-3 text-center">
+                <span
+                  className={cn(
+                    "text-sm font-semibold transition-colors block",
+                    isActive || isCompleted
+                      ? "text-foreground"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {step.label}
+                </span>
+                {step.description && (
+                  <span className="text-xs text-muted-foreground hidden sm:block mt-0.5">
+                    {step.description}
+                  </span>
                 )}
-              >
-                {step.label}
-              </span>
+              </div>
             </div>
           );
         })}
