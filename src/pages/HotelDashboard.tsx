@@ -25,6 +25,8 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
+import { motion } from "framer-motion";
+import ZivoLogo from "@/components/ZivoLogo";
 
 const HotelDashboard = () => {
   const { signOut, user } = useAuth();
@@ -47,9 +49,11 @@ const HotelDashboard = () => {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 py-4 border-b border-border">
-        <Hotel className="h-6 w-6 text-amber-500" />
-        <span className="font-bold text-lg">Hotel Booking</span>
+      <div className="flex items-center gap-3 px-3 py-4 border-b border-border/50">
+        <motion.div whileHover={{ scale: 1.05 }}>
+          <ZivoLogo size="sm" />
+        </motion.div>
+        <span className="font-bold text-lg">Hotels</span>
       </div>
       <nav className="px-2 py-4 space-y-1 flex-1">
         {navItems.map((item) => (
@@ -102,12 +106,19 @@ const HotelDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-gradient-radial from-amber-500/10 via-transparent to-transparent opacity-40 pointer-events-none" />
+      <div className="fixed top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-amber-500/15 to-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <Hotel className="h-6 w-6 text-amber-500" />
-          <span className="font-bold text-lg">Hotel Booking</span>
+      <header className="lg:hidden flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl relative z-10">
+        <div className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <ZivoLogo size="sm" />
+          </motion.div>
+          <span className="font-bold text-lg">Hotels</span>
         </div>
         <div className="flex items-center gap-2">
           <NotificationCenter />
