@@ -173,14 +173,28 @@ const TrustSection = () => {
               className="group"
             >
               <div className="relative p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                {/* Decorative corner glow */}
-                <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.gradient} opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity`} />
+                {/* Shine sweep effect */}
+                <motion.div
+                  initial={{ x: "-100%", opacity: 0 }}
+                  whileHover={{ x: "200%", opacity: 0.1 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+                />
+                
+                {/* Animated corner glow */}
+                <motion.div 
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.25, 0.1] }}
+                  transition={{ duration: 4, repeat: Infinity, delay: index * 0.4 }}
+                  className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.gradient} rounded-full blur-3xl`} 
+                />
                 
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg ${feature.glow}`}
+                  whileHover={{ scale: 1.15, rotate: 8 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg ${feature.glow} relative overflow-hidden`}
                 >
-                  <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white relative z-10" />
+                  <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.div>
                 <h3 className="font-display text-lg sm:text-xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
                   {feature.title}
@@ -188,6 +202,14 @@ const TrustSection = () => {
                 <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
                   {feature.description}
                 </p>
+                
+                {/* Subtle bottom accent line */}
+                <motion.div
+                  initial={{ scaleX: 0 }}
+                  whileHover={{ scaleX: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${feature.gradient} origin-left`}
+                />
               </div>
             </motion.div>
           ))}

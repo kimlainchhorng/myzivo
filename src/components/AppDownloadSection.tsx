@@ -50,10 +50,44 @@ const AppDownloadSection = () => {
           transition={{ duration: 0.6 }}
           className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl text-center relative overflow-hidden"
         >
-          {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-br from-primary/15 to-teal-400/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
+          {/* Animated border glow */}
+          <motion.div
+            animate={{ 
+              background: [
+                "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.15))",
+                "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.15))",
+                "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.15))",
+                "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.15))",
+                "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.15))"
+              ]
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
+          />
+          
+          {/* Recurring shine sweep */}
+          <motion.div
+            animate={{ x: ["-100%", "200%"] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 4 }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
+          />
+          
+          {/* Animated background decoration */}
+          <motion.div 
+            animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-0 right-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-br from-primary/15 to-teal-400/10 rounded-full blur-3xl" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.2, 0.15] }}
+            transition={{ duration: 6, repeat: Infinity, delay: 1 }}
+            className="absolute bottom-0 left-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" 
+          />
 
           <div className="relative z-10">
             <motion.div

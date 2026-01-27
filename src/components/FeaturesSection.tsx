@@ -162,6 +162,14 @@ const FeaturesSection = () => {
               whileHover={{ y: -8, scale: 1.02 }}
               className="relative p-6 sm:p-7 lg:p-8 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-default"
             >
+              {/* Shine sweep effect */}
+              <motion.div
+                initial={{ x: "-100%", opacity: 0 }}
+                whileHover={{ x: "200%", opacity: 0.12 }}
+                transition={{ duration: 0.7, ease: "easeInOut" }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+              />
+              
               {/* Background gradient on hover */}
               <div className={cn(
                 "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
@@ -169,31 +177,45 @@ const FeaturesSection = () => {
               )} />
               
               {/* Corner glow */}
-              <div className={cn(
-                "absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br rounded-full blur-2xl opacity-0 group-hover:opacity-30 transition-opacity duration-500",
-                feature.gradient
-              )} />
-
-              {/* Stat badge */}
-              <div className="absolute top-4 right-4 sm:top-5 sm:right-5">
-                <span className={cn(
-                  "text-sm font-bold px-3 py-1 rounded-full bg-gradient-to-r text-white shadow-lg",
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
+                transition={{ duration: 3, repeat: Infinity, delay: index * 0.3 }}
+                className={cn(
+                  "absolute -top-10 -right-10 w-24 h-24 bg-gradient-to-br rounded-full blur-2xl",
                   feature.gradient
-                )}>
-                  {feature.stat}
-                </span>
+                )} 
+              />
+
+              {/* Stat badge with pulse */}
+              <div className="absolute top-4 right-4 sm:top-5 sm:right-5">
+                <motion.span 
+                  whileHover={{ scale: 1.1 }}
+                  className={cn(
+                    "text-sm font-bold px-3 py-1 rounded-full bg-gradient-to-r text-white shadow-lg relative overflow-hidden",
+                    feature.gradient
+                  )}
+                >
+                  <motion.span
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 bg-white/20 rounded-full"
+                  />
+                  <span className="relative">{feature.stat}</span>
+                </motion.span>
               </div>
 
               <motion.div 
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                whileHover={{ scale: 1.15, rotate: 8 }}
                 transition={{ type: "spring", stiffness: 400 }}
                 className={cn(
-                  "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-5 sm:mb-6 shadow-lg",
+                  "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-5 sm:mb-6 shadow-lg relative overflow-hidden",
                   feature.gradient,
                   feature.glow
                 )}
               >
-                <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white relative z-10" />
+                {/* Icon inner glow */}
+                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.div>
               
               <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
@@ -204,10 +226,16 @@ const FeaturesSection = () => {
               </p>
 
               {/* Learn more link */}
-              <div className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <motion.div 
+                initial={{ x: -10, opacity: 0 }}
+                whileHover={{ x: 0, opacity: 1 }}
+                className="mt-5 flex items-center gap-1.5 text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-all duration-300"
+              >
                 <span>Learn more</span>
-                <ChevronRight className="w-4 h-4" />
-              </div>
+                <motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                  <ChevronRight className="w-4 h-4" />
+                </motion.div>
+              </motion.div>
             </motion.div>
           ))}
         </motion.div>

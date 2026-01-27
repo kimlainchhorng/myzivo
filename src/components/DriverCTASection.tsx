@@ -77,21 +77,51 @@ const DriverCTASection = () => {
           viewport={{ once: true }}
           className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden relative"
         >
-          {/* Decorative corner glows */}
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl opacity-25" />
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl opacity-20" />
+          {/* Animated border glow */}
+          <motion.div
+            animate={{ 
+              background: [
+                "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.2))",
+                "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2))",
+                "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.2))",
+                "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.2))",
+                "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.2))"
+              ]
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
+          />
+          
+          {/* Recurring shine sweep */}
+          <motion.div
+            animate={{ x: ["-100%", "200%"] }}
+            transition={{ duration: 6, repeat: Infinity, ease: "linear", repeatDelay: 4 }}
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
+          />
+          
+          {/* Animated corner glows */}
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl" 
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
+            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+            className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl" 
+          />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl" />
           
           {/* Animated floating elements inside card */}
           <motion.div
-            animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+            animate={{ y: [0, -12, 0], rotate: [0, 8, 0], scale: [1, 1.1, 1] }}
             transition={{ duration: 5, repeat: Infinity }}
             className="absolute top-12 right-12 text-5xl hidden lg:block opacity-40"
           >
             🚗
           </motion.div>
           <motion.div
-            animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+            animate={{ y: [0, 10, 0], rotate: [0, -5, 0], scale: [1, 1.05, 1] }}
             transition={{ duration: 6, repeat: Infinity }}
             className="absolute bottom-24 right-1/4 text-4xl hidden lg:block opacity-30"
           >

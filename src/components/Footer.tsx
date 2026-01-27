@@ -377,12 +377,17 @@ const Footer = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-2.5 text-sm text-muted-foreground"
+                whileHover={{ y: -3, scale: 1.05 }}
+                className="flex items-center gap-2.5 text-sm text-muted-foreground group cursor-default"
               >
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center">
+                <motion.div 
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, delay: index * 0.3 }}
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-teal-400/20 transition-all"
+                >
                   <badge.icon className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-medium">{badge.label}</span>
+                </motion.div>
+                <span className="font-medium group-hover:text-foreground transition-colors">{badge.label}</span>
               </motion.div>
             ))}
           </div>
