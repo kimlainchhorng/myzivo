@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal } from "lucide-react";
+import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal, Star, Clock } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -17,6 +17,15 @@ const quickServices = [
   { id: 'hotels', label: 'Hotels', icon: Hotel, href: '/hotels', color: 'text-amber-400', bgColor: 'bg-amber-500/10 hover:bg-amber-500/20' },
   { id: 'cars', label: 'Cars', icon: CarFront, href: '/car-rental', color: 'text-primary', bgColor: 'bg-primary/10 hover:bg-primary/20' },
   { id: 'more', label: 'More', icon: MoreHorizontal, href: '/ground-transport', color: 'text-muted-foreground', bgColor: 'bg-muted hover:bg-muted/80' },
+];
+
+const featuredRestaurants = [
+  { id: 1, name: "Burger Joint", cuisine: "American", rating: 4.8, time: "15-25", image: "🍔", promo: "Free Delivery" },
+  { id: 2, name: "Sakura Sushi", cuisine: "Japanese", rating: 4.9, time: "25-35", image: "🍣", promo: null },
+  { id: 3, name: "Pizza Palace", cuisine: "Italian", rating: 4.7, time: "20-30", image: "🍕", promo: "20% Off" },
+  { id: 4, name: "Taco Fiesta", cuisine: "Mexican", rating: 4.6, time: "15-20", image: "🌮", promo: null },
+  { id: 5, name: "Thai Spice", cuisine: "Thai", rating: 4.8, time: "25-35", image: "🍜", promo: "Free Delivery" },
+  { id: 6, name: "Coffee Hub", cuisine: "Cafe", rating: 4.5, time: "10-15", image: "☕", promo: null },
 ];
 
 const HeroSection = () => {
@@ -60,6 +69,64 @@ const HeroSection = () => {
               >
                 <service.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${service.color}`} />
                 <span className="text-sm sm:text-base font-medium text-foreground whitespace-nowrap">{service.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Featured Restaurants/Stores - Mobile Optimized */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mb-8 sm:mb-10"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <UtensilsCrossed className="w-4 h-4 text-eats" />
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">Popular Near You</h3>
+            </div>
+            <button 
+              onClick={() => navigate('/food')}
+              className="text-xs sm:text-sm text-eats hover:underline font-medium flex items-center gap-1 touch-manipulation"
+            >
+              See all
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+          
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {featuredRestaurants.map((restaurant, index) => (
+              <motion.button
+                key={restaurant.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + index * 0.05 }}
+                onClick={() => navigate('/food')}
+                className="flex-shrink-0 w-32 sm:w-40 glass-card p-3 rounded-xl hover:border-eats/50 transition-all duration-200 active:scale-95 touch-manipulation text-left"
+              >
+                <div className="relative mb-2">
+                  <div className="w-full aspect-square bg-muted rounded-lg flex items-center justify-center text-3xl sm:text-4xl">
+                    {restaurant.image}
+                  </div>
+                  {restaurant.promo && (
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-medium bg-eats text-white rounded-full">
+                      {restaurant.promo}
+                    </span>
+                  )}
+                </div>
+                <h4 className="font-semibold text-xs sm:text-sm text-foreground truncate">{restaurant.name}</h4>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{restaurant.cuisine}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <div className="flex items-center gap-0.5">
+                    <Star className="w-3 h-3 fill-eats text-eats" />
+                    <span className="text-[10px] sm:text-xs font-medium text-foreground">{restaurant.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-0.5 text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span className="text-[10px] sm:text-xs">{restaurant.time}</span>
+                  </div>
+                </div>
               </motion.button>
             ))}
           </div>
