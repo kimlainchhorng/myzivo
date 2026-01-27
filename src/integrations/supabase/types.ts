@@ -5090,6 +5090,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_customer_view_driver: {
+        Args: { _driver_id: string }
+        Returns: boolean
+      }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       create_driver_on_signup: {
         Args: {
