@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Car, DollarSign, Clock, Shield, ChevronRight, Calendar, Sparkles, TrendingUp, Zap, Users } from "lucide-react";
@@ -54,167 +53,105 @@ const DriverCTASection = () => {
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-bl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating emojis outside card */}
-      <motion.div
-        animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[6%] text-5xl hidden lg:block opacity-40"
-      >
+      {/* Static floating emojis outside card */}
+      <div className="absolute top-32 left-[6%] text-5xl hidden lg:block opacity-40 animate-float">
         🚀
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6.5, repeat: Infinity }}
-        className="absolute bottom-40 right-[5%] text-4xl hidden lg:block opacity-35"
-      >
+      </div>
+      <div className="absolute bottom-40 right-[5%] text-4xl hidden lg:block opacity-35 animate-float-delayed">
         ⭐
-      </motion.div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden relative"
+        <div 
+          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden relative animate-in fade-in slide-in-from-bottom-6 duration-500"
         >
-          {/* Animated border glow */}
-          <motion.div
-            animate={{ 
-              background: [
-                "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.2))",
-                "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.2))",
-                "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.2))",
-                "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.2))",
-                "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.2))"
-              ]
-            }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
-          />
+          {/* Animated border glow - CSS animation */}
+          <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none animate-border-glow-emerald" />
           
-          {/* Recurring shine sweep */}
-          <motion.div
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "linear", repeatDelay: 4 }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
-          />
+          {/* Recurring shine sweep - CSS animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none animate-shine" />
           
           {/* Animated corner glows */}
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.35, 0.2] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl" 
+          <div 
+            className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl animate-pulse-slow opacity-25" 
           />
-          <motion.div 
-            animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-            className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl" 
+          <div 
+            className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl animate-pulse-slower opacity-20" 
           />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl" />
           
-          {/* Animated floating elements inside card */}
-          <motion.div
-            animate={{ y: [0, -12, 0], rotate: [0, 8, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-12 right-12 text-5xl hidden lg:block opacity-40"
-          >
+          {/* Static floating elements inside card */}
+          <div className="absolute top-12 right-12 text-5xl hidden lg:block opacity-40 animate-float">
             🚗
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 10, 0], rotate: [0, -5, 0], scale: [1, 1.05, 1] }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-24 right-1/4 text-4xl hidden lg:block opacity-30"
-          >
+          </div>
+          <div className="absolute bottom-24 right-1/4 text-4xl hidden lg:block opacity-30 animate-float-delayed">
             💰
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -8, 0], rotate: [0, 6, 0] }}
-            transition={{ duration: 7, repeat: Infinity }}
-            className="absolute top-1/3 left-[5%] text-3xl hidden lg:block opacity-25"
-          >
+          </div>
+          <div className="absolute top-1/3 left-[5%] text-3xl hidden lg:block opacity-25 animate-float">
             🏆
-          </motion.div>
+          </div>
           
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center relative">
             {/* Left Content */}
             <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1, type: "spring" }}
+              <div
+                className="animate-in fade-in zoom-in-95 duration-300"
+                style={{ animationDelay: '100ms', animationFillMode: 'both' }}
               >
                 <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary/20">
                   <Car className="w-4 h-4 mr-2" />
                   Drive with ZIVO
                 </Badge>
-              </motion.div>
+              </div>
               
-              <motion.h2 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground leading-tight"
+              <h2 
+                className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground leading-tight animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ animationDelay: '150ms', animationFillMode: 'both' }}
               >
                 Turn your car into a
                 <br className="hidden sm:block" />
                 <span className="bg-gradient-to-r from-primary via-teal-400 to-primary bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent"> money machine</span>
-              </motion.h2>
+              </h2>
               
-              <motion.p 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed"
+              <p 
+                className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-8 max-w-lg leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ animationDelay: '200ms', animationFillMode: 'both' }}
               >
                 Join thousands of drivers earning on their own terms. Whether you drive full-time or just a few hours a week, <span className="text-foreground font-medium">ZIVO puts you in control</span>.
-              </motion.p>
+              </p>
               
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
-                className="flex flex-col sm:flex-row gap-4"
+              <div 
+                className="flex flex-col sm:flex-row gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ animationDelay: '250ms', animationFillMode: 'both' }}
               >
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                  <Button 
-                    size="lg" 
-                    onClick={() => navigate("/drive")} 
-                    className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2"
-                  >
-                    Start driving
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-                </motion.div>
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate("/drive")} 
+                  className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2 transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+                >
+                  Start driving
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
                 <Button 
                   variant="outline" 
                   size="lg" 
-                  className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2"
+                  className="w-full sm:w-auto h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2 transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
                 >
                   <Sparkles className="w-5 h-5 text-eats" />
                   Deliver with ZIVO Eats
                 </Button>
-              </motion.div>
+              </div>
 
               {/* Stats */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
-                className="grid grid-cols-3 gap-6 sm:gap-10 mt-10 pt-10 border-t border-border"
+              <div 
+                className="grid grid-cols-3 gap-6 sm:gap-10 mt-10 pt-10 border-t border-border animate-in fade-in slide-in-from-bottom-4 duration-500"
+                style={{ animationDelay: '300ms', animationFillMode: 'both' }}
               >
                 {stats.map((stat, index) => (
-                  <motion.div 
+                  <div 
                     key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                    className="text-center sm:text-left"
+                    className="text-center sm:text-left animate-in fade-in zoom-in-95"
+                    style={{ animationDelay: `${350 + index * 75}ms`, animationFillMode: 'both' }}
                   >
                     <div className="flex items-center gap-2 justify-center sm:justify-start mb-1">
                       <stat.icon className="w-5 h-5 text-primary hidden sm:block" />
@@ -223,22 +160,18 @@ const DriverCTASection = () => {
                       </p>
                     </div>
                     <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
-                  </motion.div>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
             </div>
 
             {/* Right - Benefits */}
             <div className="grid grid-cols-2 gap-4 sm:gap-5">
               {benefits.map((benefit, index) => (
-                <motion.div
+                <div
                   key={benefit.title}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + index * 0.1, type: "spring" }}
-                  whileHover={{ y: -10, scale: 1.03 }}
-                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 border border-border/50 hover:border-primary/40 transition-all group cursor-default shadow-lg hover:shadow-xl overflow-hidden relative"
+                  className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 border border-border/50 hover:border-primary/40 transition-all duration-300 group cursor-default shadow-lg hover:shadow-xl overflow-hidden relative hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${200 + index * 75}ms`, animationFillMode: 'both' }}
                 >
                   {/* Decorative glow on hover */}
                   <div className={cn(
@@ -246,28 +179,27 @@ const DriverCTASection = () => {
                     `bg-gradient-to-br ${benefit.gradient}`
                   )} />
                   
-                  <motion.div 
-                    whileHover={{ scale: 1.15, rotate: 8 }}
+                  <div 
                     className={cn(
-                      "w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-xl relative",
+                      "w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br flex items-center justify-center mb-4 shadow-xl relative transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3",
                       benefit.gradient,
                       benefit.glow
                     )}
                   >
                     <benefit.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </motion.div>
+                  </div>
                   <h3 className="font-display text-base sm:text-lg font-bold mb-2 text-foreground group-hover:text-primary transition-colors relative">
                     {benefit.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed relative">
                     {benefit.description}
                   </p>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

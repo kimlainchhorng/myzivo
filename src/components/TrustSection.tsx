@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import {
   Shield,
   Lock,
@@ -8,8 +7,8 @@ import {
   FileCheck,
   MapPin,
   Sparkles,
-  Star,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const trustFeatures = [
   {
@@ -71,27 +70,6 @@ const stats = [
   { value: "500K+", label: "Reviews Daily" },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
-};
-
 const TrustSection = () => {
   return (
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
@@ -103,49 +81,28 @@ const TrustSection = () => {
       <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-sky-500/12 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 right-1/4 w-[250px] h-[250px] bg-gradient-radial from-amber-500/10 to-transparent rounded-full blur-3xl" />
 
-      {/* Floating safety icons */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-36 right-[12%] text-5xl hidden lg:block opacity-40"
-      >
+      {/* Static floating safety icons */}
+      <div className="absolute top-36 right-[12%] text-5xl hidden lg:block opacity-40 animate-float">
         🛡️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-30"
-      >
+      </div>
+      <div className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
         ✅
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="absolute top-1/2 left-[5%] text-4xl hidden lg:block opacity-25"
-      >
+      </div>
+      <div className="absolute top-1/2 left-[5%] text-4xl hidden lg:block opacity-25 animate-float">
         🔒
-      </motion.div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-14 sm:mb-20"
+        <div
+          className="text-center mb-14 sm:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500"
         >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-emerald-500/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
+          <div
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-emerald-500/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300"
           >
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-              <Shield className="w-4 h-4 text-primary" />
-            </motion.div>
+            <Shield className="w-4 h-4 text-primary animate-pulse" />
             <span className="text-muted-foreground">Safety & Trust</span>
-          </motion.div>
+          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 px-2">
             Your safety is our{" "}
             <span className="bg-gradient-to-r from-primary via-emerald-500 to-primary bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
@@ -155,47 +112,43 @@ const TrustSection = () => {
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
             Industry-leading safety features and support to protect every journey
           </p>
-        </motion.div>
+        </div>
 
         {/* Trust Features Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
+        <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-12 sm:mb-16"
         >
           {trustFeatures.map((feature, index) => (
-            <motion.div
+            <div
               key={feature.title}
-              variants={itemVariants}
-              whileHover={{ y: -8, scale: 1.01 }}
-              className="group"
+              className="group animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
             >
-              <div className="relative p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                {/* Shine sweep effect */}
-                <motion.div
-                  initial={{ x: "-100%", opacity: 0 }}
-                  whileHover={{ x: "200%", opacity: 0.1 }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+              <div className="relative p-6 sm:p-7 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden hover:-translate-y-2 hover:scale-[1.01]">
+                {/* Shine sweep effect on hover */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none -translate-x-full group-hover:translate-x-[200%] transition-transform duration-700"
                 />
                 
                 {/* Animated corner glow */}
-                <motion.div 
-                  animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.25, 0.1] }}
-                  transition={{ duration: 4, repeat: Infinity, delay: index * 0.4 }}
-                  className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${feature.gradient} rounded-full blur-3xl`} 
+                <div 
+                  className={cn(
+                    "absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl animate-pulse-slow",
+                    `bg-gradient-to-br ${feature.gradient}`
+                  )}
+                  style={{ animationDelay: `${index * 400}ms` }}
                 />
                 
-                <motion.div
-                  whileHover={{ scale: 1.15, rotate: 8 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg ${feature.glow} relative overflow-hidden`}
+                <div
+                  className={cn(
+                    "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-5 shadow-lg relative overflow-hidden transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3",
+                    feature.gradient,
+                    feature.glow
+                  )}
                 >
                   <feature.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white relative z-10" />
                   <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </motion.div>
+                </div>
                 <h3 className="font-display text-lg sm:text-xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
                   {feature.title}
                 </h3>
@@ -204,53 +157,45 @@ const TrustSection = () => {
                 </p>
                 
                 {/* Subtle bottom accent line */}
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.3 }}
-                  className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${feature.gradient} origin-left`}
+                <div
+                  className={cn(
+                    "absolute bottom-0 left-0 right-0 h-0.5 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300",
+                    `bg-gradient-to-r ${feature.gradient}`
+                  )}
                 />
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Stats Row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl mb-12 sm:mb-16 overflow-hidden relative"
+        <div
+          className="p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl mb-12 sm:mb-16 overflow-hidden relative animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
         >
           {/* Background gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-emerald-500/5" />
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 text-center relative">
             {stats.map((stat, index) => (
-              <motion.div
+              <div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 + index * 0.1 }}
+                className="animate-in fade-in zoom-in-95"
+                style={{ animationDelay: `${300 + index * 100}ms`, animationFillMode: 'both' }}
               >
                 <p className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary to-emerald-500 bg-clip-text text-transparent mb-1">
                   {stat.value}
                 </p>
                 <p className="text-sm sm:text-base text-muted-foreground font-medium">{stat.label}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Press Mentions */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="text-center"
+        <div
+          className="text-center animate-in fade-in duration-500"
+          style={{ animationDelay: '400ms', animationFillMode: 'both' }}
         >
           <p className="text-sm text-muted-foreground mb-6 flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
@@ -258,20 +203,16 @@ const TrustSection = () => {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:gap-12">
             {partnerLogos.map((partner, index) => (
-              <motion.div
+              <div
                 key={partner.name}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 + index * 0.05 }}
-                whileHover={{ scale: 1.1 }}
-                className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-muted-foreground/40 hover:text-muted-foreground transition-colors cursor-default"
+                className="text-xl sm:text-2xl lg:text-3xl font-display font-bold text-muted-foreground/40 hover:text-muted-foreground transition-all duration-200 cursor-default hover:scale-110 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${500 + index * 50}ms`, animationFillMode: 'both' }}
               >
                 {partner.logo}
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
