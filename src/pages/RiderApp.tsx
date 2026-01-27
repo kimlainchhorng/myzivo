@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Phone, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LocationSearchInput from "@/components/rider/LocationSearchInput";
 import VehicleSelector from "@/components/rider/VehicleSelector";
@@ -11,6 +11,8 @@ import BookingMap from "@/components/rider/BookingMap";
 import SavedLocationsPanel from "@/components/rider/SavedLocationsPanel";
 import QuickLocationPicker from "@/components/rider/QuickLocationPicker";
 import TripTracker from "@/components/rider/TripTracker";
+import { StatusTracker, LivePulse, ETADisplay } from "@/components/ui/status-tracker";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Location,
   FareEstimate,
@@ -24,6 +26,18 @@ import { Trip } from "@/hooks/useTrips";
 import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
 
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
+
+const bookingSteps = [
+  { id: "location", label: "Pickup", icon: <MapPin className="w-4 h-4" /> },
+  { id: "vehicle", label: "Select Ride", icon: <Car className="w-4 h-4" /> },
+  { id: "confirm", label: "Confirm", icon: <Shield className="w-4 h-4" /> },
+];
+
+const quickStats = [
+  { icon: Clock, value: "< 5 min", label: "Avg pickup" },
+  { icon: Star, value: "4.9★", label: "Driver rating" },
+  { icon: Shield, value: "100%", label: "Verified" },
+];
 
 const RiderApp = () => {
   const navigate = useNavigate();
@@ -192,18 +206,46 @@ const RiderApp = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b p-4">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => step === "location" ? navigate("/") : handleReset()}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="font-semibold text-lg">
-            {step === "location" && "Where to?"}
-            {step === "vehicle" && "Choose a ride"}
-            {step === "confirm" && "Confirm booking"}
-          </h1>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 p-4"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => step === "location" ? navigate("/") : handleReset()}
+              className="rounded-full"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
+              <h1 className="font-display font-bold text-lg">
+                {step === "location" && "Where to?"}
+                {step === "vehicle" && "Choose a ride"}
+                {step === "confirm" && "Confirm booking"}
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                {step === "location" && "Enter your destination"}
+                {step === "vehicle" && `${routeInfo?.distance.toFixed(1)} km • ${routeInfo?.duration} min`}
+              </p>
+            </div>
+          </div>
+          <LivePulse color="rides" size="sm" label="Live" />
         </div>
-      </div>
+
+        {/* Step Indicator */}
+        <div className="mt-4">
+          <StatusTracker 
+            steps={bookingSteps}
+            currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2}
+            color="rides"
+            orientation="horizontal"
+          />
+        </div>
+      </motion.div>
 
       {/* Map */}
       <div className="flex-1 relative">
@@ -216,53 +258,64 @@ const RiderApp = () => {
 
         {isCalculating && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center">
-            <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-full shadow-lg">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Calculating route...</span>
-            </div>
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex items-center gap-2 bg-card px-4 py-3 rounded-2xl shadow-lg border border-white/10"
+            >
+              <Loader2 className="w-5 h-5 animate-spin text-rides" />
+              <span className="font-medium">Finding best routes...</span>
+            </motion.div>
           </div>
+        )}
+
+        {/* Quick Stats Floating */}
+        {step === "location" && !pickup && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-4 left-4 right-4 flex gap-2 justify-center"
+          >
+            {quickStats.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="glass-card px-3 py-2 rounded-xl flex items-center gap-2"
+              >
+                <stat.icon className="w-4 h-4 text-rides" />
+                <div>
+                  <p className="text-sm font-bold">{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         )}
       </div>
 
       {/* Bottom Sheet */}
-      <div className="bg-card border-t rounded-t-3xl shadow-lg">
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className="bg-card border-t border-white/10 rounded-t-3xl shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.5)]"
+      >
         <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mt-3" />
         
         <div className="p-4 max-h-[60vh] overflow-y-auto">
           {/* Location Step */}
-          {step === "location" && (
-            <div className="space-y-4">
-              {/* Quick Location Picker */}
-              <QuickLocationPicker
-                userId={user?.id}
-                onSelect={(location) => {
-                  if (!pickup) {
-                    setPickup(location);
-                  } else {
-                    setDropoff(location);
-                  }
-                }}
-              />
-
-              <div className="space-y-3">
-                <LocationSearchInput
-                  placeholder="Pickup location"
-                  value={pickup}
-                  onChange={setPickup}
-                  icon="pickup"
-                />
-                <LocationSearchInput
-                  placeholder="Where to?"
-                  value={dropoff}
-                  onChange={setDropoff}
-                  icon="dropoff"
-                />
-              </div>
-
-              {/* Saved Locations */}
-              <div className="pt-2 border-t">
-                <p className="text-sm font-medium text-muted-foreground mb-3">Saved Places</p>
-                <SavedLocationsPanel
+          <AnimatePresence mode="wait">
+            {step === "location" && (
+              <motion.div
+                key="location"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-4"
+              >
+                {/* Quick Location Picker */}
+                <QuickLocationPicker
                   userId={user?.id}
                   onSelect={(location) => {
                     if (!pickup) {
@@ -272,41 +325,96 @@ const RiderApp = () => {
                     }
                   }}
                 />
-              </div>
-            </div>
-          )}
 
-          {/* Vehicle Selection Step */}
-          {step === "vehicle" && fareEstimates.length > 0 && (
-            <div className="space-y-4">
-              <VehicleSelector
-                fareEstimates={fareEstimates}
-                selectedVehicle={selectedVehicle}
-                onSelect={setSelectedVehicle}
-              />
-              
-              <Button
-                variant="rides"
-                size="lg"
-                className="w-full"
-                disabled={!selectedVehicle || createTrip.isPending}
-                onClick={handleConfirmBooking}
+                <div className="space-y-3">
+                  <LocationSearchInput
+                    placeholder="Pickup location"
+                    value={pickup}
+                    onChange={setPickup}
+                    icon="pickup"
+                  />
+                  <LocationSearchInput
+                    placeholder="Where to?"
+                    value={dropoff}
+                    onChange={setDropoff}
+                    icon="dropoff"
+                  />
+                </div>
+
+                {/* Saved Locations */}
+                <div className="pt-2 border-t border-white/10">
+                  <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-rides" />
+                    Saved Places
+                  </p>
+                  <SavedLocationsPanel
+                    userId={user?.id}
+                    onSelect={(location) => {
+                      if (!pickup) {
+                        setPickup(location);
+                      } else {
+                        setDropoff(location);
+                      }
+                    }}
+                  />
+                </div>
+              </motion.div>
+            )}
+
+            {/* Vehicle Selection Step */}
+            {step === "vehicle" && fareEstimates.length > 0 && (
+              <motion.div
+                key="vehicle"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-4"
               >
-                {createTrip.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    Requesting...
-                  </>
-                ) : (
-                  <>
-                    Confirm {selectedFare && `$${selectedFare.totalFare.toFixed(2)}`}
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+                {/* Route Summary */}
+                <div className="glass-card p-3 rounded-xl flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-rides/10">
+                    <Navigation className="w-5 h-5 text-rides" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium truncate">{pickup?.address}</p>
+                    <p className="text-xs text-muted-foreground truncate">→ {dropoff?.address}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-rides">{routeInfo?.duration} min</p>
+                    <p className="text-xs text-muted-foreground">{routeInfo?.distance.toFixed(1)} km</p>
+                  </div>
+                </div>
+
+                <VehicleSelector
+                  fareEstimates={fareEstimates}
+                  selectedVehicle={selectedVehicle}
+                  onSelect={setSelectedVehicle}
+                />
+                
+                <Button
+                  variant="rides"
+                  size="lg"
+                  className="w-full h-14 text-base font-bold gap-2"
+                  disabled={!selectedVehicle || createTrip.isPending}
+                  onClick={handleConfirmBooking}
+                >
+                  {createTrip.isPending ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Finding driver...
+                    </>
+                  ) : (
+                    <>
+                      <Zap className="w-5 h-5" />
+                      Confirm ${selectedFare?.totalFare.toFixed(2)}
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
