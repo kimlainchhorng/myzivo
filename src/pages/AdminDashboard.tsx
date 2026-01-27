@@ -17,13 +17,13 @@ import {
   ExternalLink,
   User,
   Utensils,
-  Hotel
+  Hotel,
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,9 @@ import AdminFlightManagement from "@/components/admin/AdminFlightManagement";
 import AdminHotelManagement from "@/components/admin/AdminHotelManagement";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
+import { motion } from "framer-motion";
+import ZivoLogo from "@/components/ZivoLogo";
+import { cn } from "@/lib/utils";
 
 const AdminDashboard = () => {
   const { signOut, user } = useAuth();
@@ -51,16 +54,16 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("analytics");
 
   const navItems = [
-    { value: "analytics", label: "Analytics", icon: BarChart3 },
-    { value: "users", label: "Users", icon: Users },
-    { value: "drivers", label: "Drivers", icon: Car },
-    { value: "documents", label: "Documents", icon: FileCheck },
-    { value: "trips", label: "Trips", icon: MapPin },
-    { value: "pricing", label: "Pricing", icon: DollarSign },
-    { value: "restaurants", label: "Restaurants", icon: Store },
-    { value: "car-rentals", label: "Car Rentals", icon: Car },
-    { value: "flights", label: "Flights", icon: Plane },
-    { value: "hotels", label: "Hotels", icon: Building2 },
+    { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
+    { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
+    { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
+    { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+    { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+    { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+    { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
+    { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
+    { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
+    { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
   ];
 
   const dashboardLinks = [
@@ -79,16 +82,37 @@ const AdminDashboard = () => {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 py-4 border-b border-border">
-        <Shield className="h-6 w-6 text-primary" />
-        <span className="font-bold text-lg">Zivo Admin</span>
+      {/* Header with Logo */}
+      <div className="p-5 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <ZivoLogo size="sm" />
+          </motion.div>
+          <div>
+            <span className="font-bold text-lg block">Admin</span>
+            <span className="text-xs text-muted-foreground">Control Center</span>
+          </div>
+        </div>
+      </div>
+
+      {/* User Info */}
+      <div className="p-4">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center">
+            <Shield className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">Admin</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
       </div>
       
       {/* Dashboard Switcher */}
-      <div className="px-2 py-3 border-b border-border">
+      <div className="px-4 mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
+            <Button variant="outline" className="w-full justify-between rounded-xl bg-muted/30 border-border/50">
               <span className="flex items-center gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Switch Dashboard
@@ -112,29 +136,54 @@ const AdminDashboard = () => {
         </DropdownMenu>
       </div>
 
-      <nav className="px-2 py-4 space-y-1 flex-1 overflow-auto">
-        {navItems.map((item) => (
-          <button
-            key={item.value}
-            onClick={() => setActiveTab(item.value)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-              activeTab === item.value
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
+      {/* Navigation */}
+      <nav className="px-3 py-2 space-y-1 flex-1 overflow-y-auto">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Platform Management</p>
+        {navItems.map((item, index) => {
+          const isActive = activeTab === item.value;
+          return (
+            <motion.button
+              key={item.value}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.02 }}
+              onClick={() => setActiveTab(item.value)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                isActive 
+                  ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
+                  : "bg-muted/50 group-hover:bg-muted"
+              )}>
+                <item.icon className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
+                )} />
+              </div>
+              <span className="font-medium text-sm flex-1">{item.label}</span>
+              {isActive && (
+                <ChevronRight className="w-4 h-4 text-primary" />
+              )}
+            </motion.button>
+          );
+        })}
       </nav>
-      <div className="px-2 py-4 border-t border-border">
-        <p className="text-xs text-muted-foreground px-3 mb-2 truncate">{user?.email}</p>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-border/50">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-destructive/10 text-destructive"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group"
         >
-          <LogOut className="h-5 w-5" />
+          <div className="w-8 h-8 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
+            <LogOut className="h-4 w-4" />
+          </div>
           <span className="font-medium">Sign Out</span>
         </button>
       </div>
@@ -142,37 +191,71 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Premium Background Effects */}
+      <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-1/2 left-1/2 w-[400px] h-[400px] bg-gradient-radial from-sky-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="fixed top-24 right-[8%] text-4xl pointer-events-none opacity-25 hidden xl:block"
+      >
+        🛡️
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -20, 0] }}
+        transition={{ duration: 7, repeat: Infinity, delay: 1 }}
+        className="fixed bottom-32 right-[12%] text-3xl pointer-events-none opacity-20 hidden xl:block"
+      >
+        📊
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
+        transition={{ duration: 5, repeat: Infinity, delay: 2 }}
+        className="fixed top-1/3 right-[5%] text-2xl pointer-events-none opacity-15 hidden xl:block"
+      >
+        ⚙️
+      </motion.div>
+
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <Shield className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">Zivo Admin</span>
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <ZivoLogo size="sm" />
+          </motion.div>
+          <div>
+            <span className="font-bold text-lg">Admin</span>
+            <span className="text-xs text-muted-foreground block">Control Center</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="rounded-xl">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-72 p-0 border-r-0">
               <NavContent />
             </SheetContent>
           </Sheet>
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative z-10">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 min-h-screen border-r border-border bg-card">
+        <aside className="hidden lg:block w-72 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm sticky top-0">
           <NavContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-4 lg:p-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="hidden">
               {navItems.map((item) => (

@@ -167,7 +167,7 @@ const RestaurantOverview = () => {
 
   if (!restaurant && !restaurantLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-eats" />
@@ -186,16 +186,47 @@ const RestaurantOverview = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Food Emojis */}
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        🍕
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+        className="absolute top-20 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🍔
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
       >
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles className="h-6 w-6 text-eats" />
-          {restaurant?.name || "Restaurant Dashboard"}
-        </h1>
-        <p className="text-muted-foreground">Manage your orders and menu</p>
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="h-6 w-6 text-eats" />
+            </motion.div>
+            {restaurant?.name || "Restaurant Dashboard"}
+          </h1>
+          <p className="text-muted-foreground">Manage your orders and menu</p>
+        </div>
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-eats/10 border border-eats/20">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-eats opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-eats"></span>
+          </span>
+          <span className="text-sm font-medium text-eats">Live Orders</span>
+        </div>
       </motion.div>
 
       <motion.div 
@@ -208,6 +239,7 @@ const RestaurantOverview = () => {
           <motion.div key={stat.label} variants={item}>
             <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-2">
                   <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
@@ -240,7 +272,8 @@ const RestaurantOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-eats to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-eats/10">
@@ -296,7 +329,7 @@ const RestaurantOverview = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">${order.total_amount?.toFixed(2) || "0.00"}</span>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-eats transition-colors" />
                         </div>
                       </motion.div>
                     );
@@ -317,7 +350,8 @@ const RestaurantOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-400" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
@@ -337,7 +371,7 @@ const RestaurantOverview = () => {
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.5 + index * 0.08 }}
-                    className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50"
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
                   >
                     <span className="text-muted-foreground">{stat.label}</span>
                     {isLoading ? (

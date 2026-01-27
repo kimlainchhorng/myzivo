@@ -169,7 +169,23 @@ const FlightOverview = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -15, 0], x: [0, 5, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        ✈️
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, delay: 1 }}
+        className="absolute top-24 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🌤️
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -177,17 +193,22 @@ const FlightOverview = () => {
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="h-6 w-6 text-sky-500" />
+            </motion.div>
             Flight Booking Dashboard
           </h1>
           <p className="text-muted-foreground">Manage flights and bookings</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
           </span>
-          <span className="text-sm font-medium text-primary">Live Data</span>
+          <span className="text-sm font-medium text-sky-500">Live Data</span>
         </div>
       </motion.div>
 
@@ -201,6 +222,7 @@ const FlightOverview = () => {
           <motion.div key={stat.label} variants={item}>
             <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
@@ -235,7 +257,8 @@ const FlightOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-blue-600" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-sky-500/10">
@@ -294,7 +317,7 @@ const FlightOverview = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">${booking.total_amount?.toFixed(2) || "0.00"}</span>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-sky-500 transition-colors" />
                         </div>
                       </motion.div>
                     );
@@ -315,7 +338,8 @@ const FlightOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-teal-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -327,7 +351,7 @@ const FlightOverview = () => {
                     <CardDescription>Popular flight destinations</CardDescription>
                   </div>
                 </div>
-                <button className="text-sm text-primary hover:underline">View All</button>
+                <button className="text-sm text-sky-500 hover:underline">View All</button>
               </div>
             </CardHeader>
             <CardContent className="p-4">
@@ -353,7 +377,7 @@ const FlightOverview = () => {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + index * 0.08 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer"
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-sky-500/20 transition-all duration-200 group cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform">
@@ -365,7 +389,7 @@ const FlightOverview = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg text-primary">From ${route.economy_price}</p>
+                        <p className="font-bold text-lg text-sky-500">From ${route.economy_price}</p>
                       </div>
                     </motion.div>
                   ))}
