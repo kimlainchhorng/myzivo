@@ -48,39 +48,64 @@ const DriverCTASection = () => {
   return (
     <section id="driver" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Enhanced background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-eats/10" />
-      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-gradient-to-bl from-violet-500/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/12 via-background to-eats/12" />
+      <div className="absolute top-1/4 left-0 w-[600px] h-[600px] bg-gradient-to-br from-primary/25 to-teal-500/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tr from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
+      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-bl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating emojis outside card */}
+      <motion.div
+        animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 left-[6%] text-5xl hidden lg:block opacity-40"
+      >
+        🚀
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6.5, repeat: Infinity }}
+        className="absolute bottom-40 right-[5%] text-4xl hidden lg:block opacity-35"
+      >
+        ⭐
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="p-6 sm:p-10 lg:p-16 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden relative"
+          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden relative"
         >
           {/* Decorative corner glows */}
-          <div className="absolute -top-32 -right-32 w-64 h-64 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl opacity-20" />
-          <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl opacity-15" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary to-teal-400 rounded-full blur-3xl opacity-25" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-eats to-orange-500 rounded-full blur-3xl opacity-20" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl" />
           
-          {/* Animated floating elements */}
+          {/* Animated floating elements inside card */}
           <motion.div
-            animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+            animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-10 right-10 text-4xl hidden lg:block opacity-40"
+            className="absolute top-12 right-12 text-5xl hidden lg:block opacity-40"
           >
             🚗
           </motion.div>
           <motion.div
             animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
             transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-20 right-1/4 text-3xl hidden lg:block opacity-30"
+            className="absolute bottom-24 right-1/4 text-4xl hidden lg:block opacity-30"
           >
             💰
           </motion.div>
+          <motion.div
+            animate={{ y: [0, -8, 0], rotate: [0, 6, 0] }}
+            transition={{ duration: 7, repeat: Infinity }}
+            className="absolute top-1/3 left-[5%] text-3xl hidden lg:block opacity-25"
+          >
+            🏆
+          </motion.div>
           
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center relative">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center relative">
             {/* Left Content */}
             <div>
               <motion.div
