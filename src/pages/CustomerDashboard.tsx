@@ -13,13 +13,11 @@ import {
   LayoutDashboard,
   Settings,
   HelpCircle,
-  Bell,
   ChevronRight,
   Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import CustomerOverview from "@/components/customer/CustomerOverview";
@@ -33,6 +31,7 @@ import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import ZivoLogo from "@/components/ZivoLogo";
 
 const CustomerDashboard = () => {
   const { signOut, user } = useAuth();
@@ -58,9 +57,9 @@ const CustomerDashboard = () => {
       {/* Header */}
       <div className="p-5 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-            <Sparkles className="h-6 w-6 text-white" />
-          </div>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <ZivoLogo size="sm" />
+          </motion.div>
           <div>
             <span className="font-bold text-lg block">ZIVO</span>
             <span className="text-xs text-muted-foreground">My Dashboard</span>
@@ -166,15 +165,35 @@ const CustomerDashboard = () => {
       <div className="fixed top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-eats/10 to-orange-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="fixed top-32 right-[10%] text-4xl pointer-events-none opacity-25 hidden lg:block"
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -20, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 7, repeat: Infinity, delay: 1 }}
+        className="fixed bottom-32 right-[15%] text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        ✈️
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 5, repeat: Infinity, delay: 2 }}
+        className="fixed top-1/2 right-[5%] text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🏨
+      </motion.div>
       
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <motion.div 
-            whileHover={{ scale: 1.05, rotate: 5 }}
-            className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
-          >
-            <Sparkles className="h-5 w-5 text-white" />
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <ZivoLogo size="sm" />
           </motion.div>
           <div>
             <span className="font-bold text-lg">ZIVO</span>

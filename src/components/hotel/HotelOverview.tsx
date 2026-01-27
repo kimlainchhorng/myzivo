@@ -180,10 +180,10 @@ const HotelOverview = () => {
 
   if (!hotel && !hotelLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 relative">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <Sparkles className="h-6 w-6 text-amber-500" />
             Hotel Dashboard
           </h1>
         </motion.div>
@@ -199,7 +199,30 @@ const HotelOverview = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 3, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        🏨
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, delay: 1 }}
+        className="absolute top-20 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🛏️
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
+        transition={{ duration: 7, repeat: Infinity, delay: 2 }}
+        className="absolute bottom-0 right-8 text-2xl pointer-events-none opacity-10 hidden lg:block"
+      >
+        ✨
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -207,17 +230,22 @@ const HotelOverview = () => {
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="h-6 w-6 text-amber-500" />
+            </motion.div>
             {hotel?.name || "Hotel Dashboard"}
           </h1>
           <p className="text-muted-foreground">Manage hotels and reservations</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
           </span>
-          <span className="text-sm font-medium text-primary">Live Data</span>
+          <span className="text-sm font-medium text-amber-500">Live Data</span>
         </div>
       </motion.div>
 
@@ -231,6 +259,7 @@ const HotelOverview = () => {
           <motion.div key={stat.label} variants={item}>
             <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-3">
                   <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
@@ -265,7 +294,8 @@ const HotelOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-amber-500/10">
@@ -320,7 +350,7 @@ const HotelOverview = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-lg">${booking.total_amount?.toFixed(2) || "0.00"}</span>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-amber-500 transition-colors" />
                         </div>
                       </motion.div>
                     );
@@ -341,7 +371,8 @@ const HotelOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10">
@@ -376,14 +407,19 @@ const HotelOverview = () => {
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.5 + index * 0.08 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-blue-500/20 transition-all duration-200 group cursor-pointer"
                     >
-                      <div>
-                        <p className="font-semibold">{room.name}</p>
-                        <p className="text-sm text-muted-foreground">{room.total_rooms} rooms</p>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg group-hover:scale-110 transition-transform">
+                          <BedDouble className="h-4 w-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{room.name}</p>
+                          <p className="text-sm text-muted-foreground">{room.total_rooms} rooms</p>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-lg">${room.price_per_night}</p>
+                        <p className="font-bold text-lg text-blue-500">${room.price_per_night}</p>
                         <Badge variant={room.is_available ? "default" : "secondary"} className="text-xs">
                           {room.is_available ? "Available" : "Full"}
                         </Badge>
@@ -398,9 +434,9 @@ const HotelOverview = () => {
                 </div>
               )}
 
-              <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
                 <div className="flex items-center gap-3 mb-3">
-                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <TrendingUp className="h-5 w-5 text-amber-500" />
                   <span className="font-semibold">Quick Stats</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -408,17 +444,17 @@ const HotelOverview = () => {
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (
-                      <p className="text-xl font-bold text-primary">{bookingStats?.totalRooms || 0}</p>
+                      <p className="text-xl font-bold text-amber-500">{bookingStats?.confirmedCount || 0}</p>
                     )}
-                    <p className="text-xs text-muted-foreground">Total Rooms</p>
+                    <p className="text-xs text-muted-foreground">Confirmed</p>
                   </div>
                   <div className="text-center p-2 rounded-lg bg-background/50">
                     {isLoading ? (
                       <Skeleton className="h-6 w-8 mx-auto mb-1" />
                     ) : (
-                      <p className="text-xl font-bold text-emerald-500">{bookingStats?.confirmedCount || 0}</p>
+                      <p className="text-xl font-bold text-blue-500">{bookingStats?.pendingCount || 0}</p>
                     )}
-                    <p className="text-xs text-muted-foreground">Confirmed</p>
+                    <p className="text-xs text-muted-foreground">Pending</p>
                   </div>
                 </div>
               </div>
