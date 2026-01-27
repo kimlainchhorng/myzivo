@@ -8,6 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { StatCard, QuickAction } from "@/components/ui/premium-card";
 import { RecommendationCard, QuickRepeatOrders, RecentlyViewed } from "@/components/ui/personalization";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,25 +37,81 @@ const quickActions = [
   { id: "hotel", icon: Hotel, label: "Find Hotel", description: "Best rates guaranteed", href: "/book-hotel", color: "amber" as const },
 ];
 
-const trendingServices = [
+const defaultTrendingServices = [
   { id: 1, title: "Airport Transfer", emoji: "✈️", subtitle: "LAX, JFK, ORD", reason: "Trending this week", rating: 4.9, price: "From $45", color: "rides" as const },
   { id: 2, title: "Burger Joint", emoji: "🍔", subtitle: "American • Fast Food", reason: "Based on your orders", rating: 4.8, price: "Free delivery", color: "eats" as const, badge: "20% OFF" },
   { id: 3, title: "NYC → Miami", emoji: "🌴", subtitle: "Jan 28 - Feb 2", reason: "Prices dropped 15%", rating: 4.7, price: "From $189", color: "sky" as const },
 ];
 
-const recentItems = [
+const defaultRecentItems = [
   { id: "1", title: "Pizza Palace", subtitle: "Italian", emoji: "🍕", type: "restaurant" as const },
   { id: "2", title: "Grand Plaza", subtitle: "New York", emoji: "🏨", type: "hotel" as const },
   { id: "3", title: "Home → Work", subtitle: "Daily commute", emoji: "🏠", type: "ride" as const },
 ];
 
-const repeatOrders = [
+const defaultRepeatOrders = [
   { id: "1", title: "Burger Joint", items: ["Double Stack", "Fries", "Coke"], price: "$24.99", emoji: "🍔", lastOrdered: "2 days ago" },
   { id: "2", title: "Sakura Sushi", items: ["Dragon Roll", "Miso Soup"], price: "$32.50", emoji: "🍣", lastOrdered: "Last week" },
 ];
 
 const QuickActionsSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Fetch real recent activity for logged-in users
+  const { data: recentActivity } = useQuery({
+    queryKey: ["home-recent-activity", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const [trips, foodOrders, hotels] = await Promise.all([
+        supabase.from("trips").select("id, pickup_address, created_at").eq("rider_id", user.id).order("created_at", { ascending: false }).limit(2),
+        supabase.from("food_orders").select("id, restaurants(name), created_at").eq("customer_id", user.id).order("created_at", { ascending: false }).limit(2),
+        supabase.from("hotel_bookings").select("id, hotels(name, city), created_at").eq("customer_id", user.id).order("created_at", { ascending: false }).limit(1),
+      ]);
+
+      const items: any[] = [];
+      trips.data?.forEach(t => items.push({ id: t.id, title: t.pickup_address?.slice(0, 20) || "Ride", subtitle: "Recent trip", emoji: "🚗", type: "ride" as const }));
+      foodOrders.data?.forEach((o: any) => items.push({ id: o.id, title: o.restaurants?.name || "Order", subtitle: "Food order", emoji: "🍕", type: "restaurant" as const }));
+      hotels.data?.forEach((h: any) => items.push({ id: h.id, title: h.hotels?.name || "Hotel", subtitle: h.hotels?.city || "Stay", emoji: "🏨", type: "hotel" as const }));
+      
+      return items.slice(0, 3);
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch repeat food orders
+  const { data: repeatFoodOrders } = useQuery({
+    queryKey: ["home-repeat-orders", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data } = await supabase
+        .from("food_orders")
+        .select("id, total_amount, items, restaurants(name), created_at")
+        .eq("customer_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(2);
+      
+      return data?.map((order: any) => {
+        const items = Array.isArray(order.items) ? order.items.slice(0, 3).map((i: any) => i.name || "Item") : [];
+        const daysAgo = Math.floor((Date.now() - new Date(order.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          id: order.id,
+          title: order.restaurants?.name || "Restaurant",
+          items,
+          price: `$${order.total_amount?.toFixed(2) || "0.00"}`,
+          emoji: "🍔",
+          lastOrdered: daysAgo === 0 ? "Today" : daysAgo === 1 ? "Yesterday" : `${daysAgo} days ago`
+        };
+      }) || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const recentItems = recentActivity?.length ? recentActivity : defaultRecentItems;
+  const repeatOrders = repeatFoodOrders?.length ? repeatFoodOrders : defaultRepeatOrders;
   
   return (
     <section className="py-12 lg:py-16">
@@ -115,6 +174,58 @@ const QuickActionsSection = () => {
 
 const TrendingSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Fetch personalized recommendations
+  const { data: recommendations } = useQuery({
+    queryKey: ["home-recommendations", user?.id],
+    queryFn: async () => {
+      const items: any[] = [];
+      
+      // Fetch popular restaurants
+      const { data: restaurants } = await supabase
+        .from("restaurants")
+        .select("id, name, cuisine_type, rating")
+        .eq("status", "active")
+        .order("rating", { ascending: false })
+        .limit(2);
+      
+      restaurants?.forEach(r => items.push({
+        id: r.id,
+        title: r.name,
+        emoji: "🍔",
+        subtitle: r.cuisine_type || "Restaurant",
+        reason: "Top rated",
+        rating: r.rating || 4.5,
+        price: "Free delivery",
+        color: "eats" as const,
+      }));
+
+      // Fetch popular flights
+      const { data: flights } = await supabase
+        .from("flights")
+        .select("id, departure_city, arrival_city, economy_price")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      flights?.forEach(f => items.push({
+        id: f.id,
+        title: `${f.departure_city} → ${f.arrival_city}`,
+        emoji: "✈️",
+        subtitle: "Available now",
+        reason: "Popular route",
+        rating: 4.7,
+        price: `From $${f.economy_price || 199}`,
+        color: "sky" as const,
+      }));
+      
+      return items.length ? items : defaultTrendingServices;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const trendingServices = recommendations?.length ? recommendations : defaultTrendingServices;
 
   return (
     <section className="py-12 lg:py-16 relative overflow-hidden">
