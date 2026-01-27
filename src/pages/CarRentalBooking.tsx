@@ -248,25 +248,33 @@ const CarRentalBooking = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-16 lg:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-rides/15 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-violet-500/20 to-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-rides/15 to-cyan-500/10 rounded-full blur-3xl" />
+        <section className="relative py-16 lg:py-28 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-rides/18 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-500/25 to-purple-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-rides/20 to-cyan-500/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/4 w-[350px] h-[350px] bg-gradient-radial from-fuchsia-500/10 to-transparent rounded-full blur-3xl" />
           
           {/* Floating emojis */}
           <motion.div
-            animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+            animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-50"
+            className="absolute top-32 left-[8%] text-6xl hidden lg:block opacity-50"
           >
             🚗
           </motion.div>
           <motion.div
-            animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+            animate={{ y: [0, 14, 0], rotate: [0, -10, 0] }}
             transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-40 right-[10%] text-4xl hidden lg:block opacity-40"
+            className="absolute bottom-40 right-[10%] text-5xl hidden lg:block opacity-40"
           >
             🛣️
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, -10, 0], rotate: [0, 6, 0] }}
+            transition={{ duration: 7, repeat: Infinity }}
+            className="absolute top-1/2 right-[12%] text-4xl hidden lg:block opacity-30"
+          >
+            🏎️
           </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">

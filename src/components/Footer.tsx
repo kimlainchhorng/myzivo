@@ -104,10 +104,27 @@ const Footer = () => {
 
   return (
     <footer className="bg-gradient-to-b from-card/50 to-card border-t border-border relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary/10 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-primary/12 to-teal-500/12 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/12 to-orange-500/8 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/3 w-[350px] h-[350px] bg-gradient-radial from-violet-500/8 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating elements */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 8, repeat: Infinity }}
+        className="absolute top-24 right-[8%] text-4xl hidden lg:block opacity-20"
+      >
+        ✨
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 9, repeat: Infinity }}
+        className="absolute bottom-1/3 left-[5%] text-3xl hidden lg:block opacity-15"
+      >
+        🌐
+      </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Section */}
