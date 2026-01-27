@@ -1,21 +1,28 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Car, Plus, Edit, Trash2, Search, Sparkles, DollarSign, Fuel, Settings2 } from "lucide-react";
+import { Car, Plus, Edit, Trash2, Search, Sparkles, DollarSign } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CarRentalInventory = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const cars = [
-    { id: 1, make: "Tesla", model: "Model 3", year: 2024, category: "Electric", dailyRate: 85, status: "available", plate: "ABC-1234", color: "White" },
-    { id: 2, make: "BMW", model: "X5", year: 2023, category: "SUV", dailyRate: 120, status: "rented", plate: "DEF-5678", color: "Black" },
-    { id: 3, make: "Mercedes", model: "C-Class", year: 2024, category: "Luxury", dailyRate: 95, status: "available", plate: "GHI-9012", color: "Silver" },
-    { id: 4, make: "Audi", model: "A4", year: 2023, category: "Sedan", dailyRate: 75, status: "maintenance", plate: "JKL-3456", color: "Blue" },
-    { id: 5, make: "Toyota", model: "Camry", year: 2024, category: "Economy", dailyRate: 55, status: "available", plate: "MNO-7890", color: "Red" },
-  ];
+  const { data: cars, isLoading } = useQuery({
+    queryKey: ["rental-cars-inventory"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rental_cars")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -27,17 +34,17 @@ const CarRentalInventory = () => {
   };
 
   const getCategoryGradient = (category: string) => {
-    switch (category) {
-      case "Electric": return "from-emerald-500 to-teal-400";
-      case "SUV": return "from-amber-500 to-orange-500";
-      case "Luxury": return "from-purple-500 to-pink-500";
-      case "Sedan": return "from-blue-500 to-indigo-500";
-      case "Economy": return "from-gray-500 to-slate-500";
+    switch (category?.toLowerCase()) {
+      case "electric": return "from-emerald-500 to-teal-400";
+      case "suv": return "from-amber-500 to-orange-500";
+      case "luxury": return "from-purple-500 to-pink-500";
+      case "sedan": return "from-blue-500 to-indigo-500";
+      case "economy": return "from-gray-500 to-slate-500";
       default: return "from-primary to-teal-400";
     }
   };
 
-  const filteredCars = cars.filter(car =>
+  const filteredCars = (cars || []).filter((car: any) =>
     `${car.make} ${car.model}`.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -53,6 +60,23 @@ const CarRentalInventory = () => {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     show: { opacity: 1, y: 0, scale: 1 }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <Skeleton className="h-10 w-64" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Skeleton key={i} className="h-48 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -95,9 +119,10 @@ const CarRentalInventory = () => {
         animate="show"
         className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
       >
-        {filteredCars.map((car) => {
-          const statusConfig = getStatusConfig(car.status);
+      {filteredCars.map((car: any) => {
+          const statusConfig = getStatusConfig(car.status || "available");
           const categoryGradient = getCategoryGradient(car.category);
+          const colorValue = car.color?.toLowerCase() === 'white' ? '#e5e5e5' : car.color?.toLowerCase() || '#888';
           return (
             <motion.div key={car.id} variants={item}>
               <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -109,27 +134,34 @@ const CarRentalInventory = () => {
                     </div>
                     <Badge className={`${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} mr-1.5 ${car.status === 'rented' ? 'animate-pulse' : ''}`} />
-                      {car.status}
+                      {car.status || "available"}
                     </Badge>
                   </div>
                   <h3 className="font-bold text-xl">{car.year} {car.make} {car.model}</h3>
                   <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                     <Badge variant="secondary" className="bg-muted/50 font-normal">
-                      {car.category}
+                      {car.category || "Standard"}
                     </Badge>
                     <span>•</span>
-                    <span>{car.plate}</span>
+                    <span>{car.license_plate || "N/A"}</span>
                   </div>
                   <div className="flex items-center gap-3 mt-3">
-                    <span className="flex items-center gap-1 text-sm text-muted-foreground px-2 py-1 rounded-md bg-muted/50">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: car.color.toLowerCase() === 'white' ? '#e5e5e5' : car.color.toLowerCase() }} />
-                      {car.color}
-                    </span>
+                    {car.color && (
+                      <span className="flex items-center gap-1 text-sm text-muted-foreground px-2 py-1 rounded-md bg-muted/50">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colorValue }} />
+                        {car.color}
+                      </span>
+                    )}
+                    {car.fuel_type && (
+                      <span className="text-sm text-muted-foreground px-2 py-1 rounded-md bg-muted/50">
+                        {car.fuel_type}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                     <span className="flex items-center gap-1 text-lg font-bold text-emerald-500">
                       <DollarSign className="h-4 w-4" />
-                      {car.dailyRate}
+                      {car.daily_rate || 0}
                       <span className="text-xs text-muted-foreground font-normal">/day</span>
                     </span>
                     <div className="flex gap-2">
