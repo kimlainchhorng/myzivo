@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart, 
   Bar, 
@@ -14,7 +16,11 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend
 } from "recharts";
 import { 
   TrendingUp, 
@@ -27,18 +33,23 @@ import {
   Target,
   ThumbsUp,
   AlertCircle,
-  Trophy
+  Trophy,
+  Calendar,
+  ChevronDown
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const COLORS = ["hsl(var(--primary))", "hsl(142, 76%, 36%)", "hsl(48, 96%, 53%)", "hsl(262, 83%, 58%)"];
 
 const AdminDriverPerformance = () => {
+  const [periodDays, setPeriodDays] = useState(30);
+  
   // Fetch aggregated performance data
   const { data: performanceData, isLoading } = useQuery({
-    queryKey: ["admin-driver-performance"],
+    queryKey: ["admin-driver-performance", periodDays],
     queryFn: async () => {
       // Get all drivers with their trip stats
       const { data: drivers, error: driversError } = await supabase
@@ -55,7 +66,7 @@ const AdminDriverPerformance = () => {
         .from("trips")
         .select("driver_id, status, rating, fare_amount, duration_minutes, created_at")
         .in("status", ["completed", "cancelled"])
-        .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+        .gte("created_at", new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000).toISOString());
 
       if (tripsError) throw tripsError;
 
@@ -114,6 +125,31 @@ const AdminDriverPerformance = () => {
 
   return (
     <div className="space-y-6">
+      {/* Period Selector */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10">
+            <TrendingUp className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold">Performance Analytics</h2>
+            <p className="text-sm text-muted-foreground">Driver metrics and trends</p>
+          </div>
+        </div>
+        <Select value={periodDays.toString()} onValueChange={(v) => setPeriodDays(Number(v))}>
+          <SelectTrigger className="w-36 bg-card/50">
+            <Calendar className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="7">Last 7 days</SelectItem>
+            <SelectItem value="14">Last 14 days</SelectItem>
+            <SelectItem value="30">Last 30 days</SelectItem>
+            <SelectItem value="90">Last 90 days</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Performance Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
@@ -123,7 +159,7 @@ const AdminDriverPerformance = () => {
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Total Trips (30d)</p>
+                <p className="text-xs text-muted-foreground">Total Trips ({periodDays}d)</p>
                 {isLoading ? (
                   <Skeleton className="h-6 w-16" />
                 ) : (
