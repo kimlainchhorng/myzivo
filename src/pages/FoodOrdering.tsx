@@ -429,25 +429,33 @@ const FoodOrdering = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-12 lg:py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-eats/10 via-transparent to-transparent" />
+        <section className="relative py-16 lg:py-24 overflow-hidden">
+          {/* Enhanced background effects */}
+          <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/20 to-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
+              className="text-center mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full gradient-eats text-secondary-foreground text-sm font-medium mb-6">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-semibold mb-6 shadow-lg shadow-eats/30"
+              >
                 <UtensilsCrossed className="w-4 h-4" />
                 ZIVO Eats
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+              </motion.div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold mb-6">
                 Delicious food,
                 <br />
-                <span className="text-gradient-eats">delivered fast</span>
+                <span className="bg-gradient-to-r from-eats to-orange-500 bg-clip-text text-transparent">delivered fast</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
                 Discover the best restaurants near you. Order from thousands of local favorites.
               </p>
             </motion.div>
@@ -456,27 +464,31 @@ const FoodOrdering = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="max-w-2xl mx-auto"
+              transition={{ delay: 0.2 }}
+              className="max-w-3xl mx-auto"
             >
-              <div className="glass-card p-2 flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 text-muted-foreground">
-                  <MapPin className="w-5 h-5 text-eats" />
-                  <span className="text-sm hidden sm:inline">Current Location</span>
+              <div className="p-2 sm:p-3 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2 px-3 sm:px-4 text-muted-foreground">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-eats" />
+                  </div>
+                  <span className="text-sm font-medium hidden sm:inline">Current Location</span>
                 </div>
                 <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
                     placeholder="Search restaurants, cuisines..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-background/50 border-none h-12"
+                    className="pl-12 bg-muted/30 border-border/50 h-14 text-base rounded-xl focus:border-eats/50"
                   />
                 </div>
-                <Button variant="eats" size="lg" className="hidden sm:flex">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filters
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="lg" className="hidden sm:flex h-14 px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30 hover:opacity-90 gap-2">
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </Button>
+                </motion.div>
               </div>
             </motion.div>
           </div>
@@ -599,38 +611,45 @@ const FoodOrdering = () => {
                     View all <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
                   {filteredRestaurants.filter(r => r.promoted).map((restaurant, index) => (
                     <motion.div
                       key={restaurant.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
+                      whileHover={{ y: -8 }}
                       onClick={() => setSelectedRestaurant(restaurant)}
                       className="cursor-pointer"
                     >
-                      <Card className="glass-card overflow-hidden hover:border-eats/50 transition-all group">
-                        <div className="relative h-32 bg-gradient-to-br from-eats/20 to-transparent flex items-center justify-center">
-                          <span className="text-5xl group-hover:scale-110 transition-transform">
+                      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group">
+                        <div className="relative h-36 bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
+                          <motion.span 
+                            className="text-6xl"
+                            whileHover={{ scale: 1.2, rotate: 5 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
                             {restaurant.image}
-                          </span>
+                          </motion.span>
                           {restaurant.discount && (
-                            <Badge className="absolute top-3 left-3 gradient-eats">
+                            <Badge className="absolute top-3 left-3 bg-gradient-to-r from-eats to-orange-500 text-white border-0 font-semibold shadow-lg">
                               {restaurant.discount}
                             </Badge>
                           )}
+                          {/* Corner glow */}
+                          <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-eats to-orange-500 rounded-full blur-2xl opacity-0 group-hover:opacity-30 transition-opacity" />
                         </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-display font-semibold text-lg">{restaurant.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{restaurant.cuisine}</p>
+                        <CardContent className="p-5">
+                          <h3 className="font-display font-bold text-lg mb-1 group-hover:text-eats transition-colors">{restaurant.name}</h3>
+                          <p className="text-sm text-muted-foreground mb-3">{restaurant.cuisine}</p>
                           <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-eats/10">
                               <Star className="w-4 h-4 fill-eats text-eats" />
-                              <span className="font-medium">{restaurant.rating}</span>
+                              <span className="font-semibold text-eats">{restaurant.rating}</span>
                             </div>
-                            <div className="flex items-center gap-1 text-muted-foreground">
+                            <div className="flex items-center gap-1.5 text-muted-foreground">
                               <Clock className="w-4 h-4" />
-                              <span>{restaurant.deliveryTime} min</span>
+                              <span className="font-medium">{restaurant.deliveryTime} min</span>
                             </div>
                           </div>
                         </CardContent>

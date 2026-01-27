@@ -22,10 +22,12 @@ import {
   ChevronRight,
   Globe,
   ArrowRight,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 const footerLinks = {
   services: [
@@ -74,127 +76,177 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { name: "Twitter", icon: Twitter, href: "#" },
-  { name: "Facebook", icon: Facebook, href: "#" },
-  { name: "Instagram", icon: Instagram, href: "#" },
-  { name: "LinkedIn", icon: Linkedin, href: "#" },
-  { name: "YouTube", icon: Youtube, href: "#" },
+  { name: "Twitter", icon: Twitter, href: "#", gradient: "from-sky-400 to-blue-500" },
+  { name: "Facebook", icon: Facebook, href: "#", gradient: "from-blue-500 to-blue-600" },
+  { name: "Instagram", icon: Instagram, href: "#", gradient: "from-pink-500 to-rose-500" },
+  { name: "LinkedIn", icon: Linkedin, href: "#", gradient: "from-blue-600 to-blue-700" },
+  { name: "YouTube", icon: Youtube, href: "#", gradient: "from-red-500 to-red-600" },
+];
+
+const trustBadges = [
+  { icon: Shield, label: "Secure Payments" },
+  { icon: CheckCircle2, label: "Verified Drivers" },
+  { icon: Phone, label: "24/7 Support" },
+  { icon: Shield, label: "Insurance Coverage" },
+  { icon: Shield, label: "Privacy Protected" },
 ];
 
 const Footer = () => {
   const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle newsletter signup
+    setSubscribed(true);
     setEmail("");
+    setTimeout(() => setSubscribed(false), 3000);
   };
 
   return (
-    <footer className="bg-card/50 border-t border-border relative overflow-hidden">
+    <footer className="bg-gradient-to-b from-card/50 to-card border-t border-border relative overflow-hidden">
       {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-20" />
+      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/5 to-teal-500/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Section */}
-        <div className="py-8 sm:py-12 lg:py-16 border-b border-border">
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 items-center">
+        <div className="py-10 sm:py-14 lg:py-20 border-b border-border">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="grid lg:grid-cols-2 gap-8 items-center"
+          >
             <div className="text-center lg:text-left">
-              <h3 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2">
-                Stay in the <span className="text-gradient-rides">loop</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-4">
+                <Sparkles className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Newsletter</span>
+              </div>
+              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+                Stay in the{" "}
+                <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">loop</span>
               </h3>
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-base sm:text-lg text-muted-foreground">
                 Get exclusive deals, travel tips, and updates delivered to your inbox.
               </p>
             </div>
             <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 sm:pl-11 bg-input border-border h-11 sm:h-12 text-sm sm:text-base"
+                  className="pl-12 h-14 text-base rounded-xl bg-muted/50 border-border/50 focus:border-primary/50"
                   required
                 />
               </div>
-              <Button type="submit" variant="hero" size="lg" className="gap-2 shrink-0 h-11 sm:h-12">
-                Subscribe
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className={cn(
+                    "h-14 px-8 rounded-xl font-bold gap-2 transition-all",
+                    subscribed 
+                      ? "bg-gradient-to-r from-emerald-500 to-green-500" 
+                      : "bg-gradient-to-r from-primary to-teal-400"
+                  )}
+                >
+                  {subscribed ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Subscribed!
+                    </>
+                  ) : (
+                    <>
+                      Subscribe
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </Button>
+              </motion.div>
             </form>
-          </div>
+          </motion.div>
         </div>
 
         {/* Main Footer Grid */}
-        <div className="py-8 sm:py-12 lg:py-16">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 sm:gap-8 lg:gap-6">
+        <div className="py-12 sm:py-16 lg:py-20">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
             {/* Brand Column */}
             <div className="col-span-2 sm:col-span-3 lg:col-span-2 text-center sm:text-left">
-              <Link to="/" className="inline-flex items-center gap-2 mb-4 sm:mb-6 group">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl gradient-rides flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <span className="font-display font-bold text-xl sm:text-2xl text-primary-foreground">Z</span>
-                </div>
-                <span className="font-display font-bold text-2xl sm:text-3xl text-foreground">ZIVO</span>
+              <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
+                >
+                  <span className="font-display font-bold text-2xl sm:text-3xl text-white">Z</span>
+                </motion.div>
+                <span className="font-display font-bold text-3xl sm:text-4xl text-foreground">ZIVO</span>
               </Link>
-              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-sm mx-auto sm:mx-0">
+              <p className="text-base text-muted-foreground mb-6 max-w-sm mx-auto sm:mx-0">
                 The all-in-one super app for rides, food, flights, hotels, and more. Go anywhere.
                 Get anything. Travel everywhere.
               </p>
 
               {/* App Store Buttons */}
-              <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 justify-center sm:justify-start">
-                <a
+              <div className="flex flex-wrap gap-3 mb-6 justify-center sm:justify-start">
+                <motion.a
                   href="#"
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-colors"
                 >
-                  <Apple className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <Apple className="w-7 h-7" />
                   <div className="text-left">
-                    <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">Download on the</p>
-                    <p className="text-xs sm:text-sm font-semibold leading-tight">App Store</p>
+                    <p className="text-[10px] text-muted-foreground leading-none">Download on the</p>
+                    <p className="text-sm font-bold leading-tight">App Store</p>
                   </div>
-                </a>
-                <a
+                </motion.a>
+                <motion.a
                   href="#"
-                  className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-colors"
                 >
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3.609 1.814L13.792 12 3.609 22.186a.994.994 0 01-.609-.92V2.734a.99.99 0 01.609-.92zM14.961 13.169l2.652 2.652-9.156 5.211 6.504-7.863zm4.07-2.652l2.4 1.371a.997.997 0 010 1.724l-2.4 1.371L16.84 12l2.192-1.483zM8.457 3.968l9.156 5.211-2.652 2.652-6.504-7.863z" />
                   </svg>
                   <div className="text-left">
-                    <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-none">Get it on</p>
-                    <p className="text-xs sm:text-sm font-semibold leading-tight">Google Play</p>
+                    <p className="text-[10px] text-muted-foreground leading-none">Get it on</p>
+                    <p className="text-sm font-bold leading-tight">Google Play</p>
                   </div>
-                </a>
+                </motion.a>
               </div>
 
               {/* Social Links */}
               <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
                 {socialLinks.map((social) => (
-                  <a
+                  <motion.a
                     key={social.name}
                     href={social.href}
-                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                    whileHover={{ scale: 1.1, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border/50"
                     aria-label={social.name}
                   >
-                    <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </a>
+                    <social.icon className="w-5 h-5" />
+                  </motion.a>
                 ))}
               </div>
             </div>
 
             {/* Services */}
             <div>
-              <h4 className="font-display font-semibold text-foreground mb-4 text-sm">Services</h4>
-              <ul className="space-y-2.5">
+              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Services</h4>
+              <ul className="space-y-3">
                 {footerLinks.services.slice(0, 6).map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
                     >
-                      <link.icon className="w-3.5 h-3.5" />
+                      <link.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
                       {link.name}
                     </Link>
                   </li>
@@ -204,13 +256,13 @@ const Footer = () => {
 
             {/* Company */}
             <div>
-              <h4 className="font-display font-semibold text-foreground mb-4 text-sm">Company</h4>
-              <ul className="space-y-2.5">
+              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Company</h4>
+              <ul className="space-y-3">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -221,13 +273,13 @@ const Footer = () => {
 
             {/* Partners */}
             <div>
-              <h4 className="font-display font-semibold text-foreground mb-4 text-sm">Partners</h4>
-              <ul className="space-y-2.5">
+              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Partners</h4>
+              <ul className="space-y-3">
                 {footerLinks.partners.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -238,13 +290,13 @@ const Footer = () => {
 
             {/* Support & Legal */}
             <div>
-              <h4 className="font-display font-semibold text-foreground mb-4 text-sm">Support</h4>
-              <ul className="space-y-2.5">
+              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Support</h4>
+              <ul className="space-y-3">
                 {footerLinks.support.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -262,7 +314,7 @@ const Footer = () => {
               <Link
                 key={link.name}
                 to={link.href}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
               >
                 {link.name}
               </Link>
@@ -277,13 +329,13 @@ const Footer = () => {
               © {new Date().getFullYear()} ZIVO Technologies Inc. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+              <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
                 <Globe className="w-4 h-4" />
                 <span>English (US)</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
               <span className="text-border">|</span>
-              <button className="flex items-center gap-1.5 hover:text-foreground transition-colors">
+              <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
                 <MapPin className="w-4 h-4" />
                 <span>United States</span>
               </button>
@@ -292,28 +344,23 @@ const Footer = () => {
         </div>
 
         {/* Trust Badges */}
-        <div className="py-6 border-t border-border">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-rides" />
-              <span>Secure Payments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-rides" />
-              <span>Verified Drivers</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-rides" />
-              <span>24/7 Support</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-rides" />
-              <span>Insurance Coverage</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-rides" />
-              <span>Privacy Protected</span>
-            </div>
+        <div className="py-8 border-t border-border">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+            {trustBadges.map((badge, index) => (
+              <motion.div
+                key={badge.label}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center gap-2.5 text-sm text-muted-foreground"
+              >
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center">
+                  <badge.icon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="font-medium">{badge.label}</span>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
