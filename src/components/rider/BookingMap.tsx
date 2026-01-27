@@ -308,7 +308,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
   }
 
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl", className)}>
+    <div className={cn("relative overflow-hidden rounded-2xl [&_.mapboxgl-ctrl-logo]:hidden [&_.mapboxgl-ctrl-attrib]:hidden", className)}>
       {/* Map container */}
       <div ref={mapContainer} className="w-full h-full" />
       
