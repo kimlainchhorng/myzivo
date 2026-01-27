@@ -1,7 +1,24 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Clock, Star, TrendingUp, Bookmark, ChevronRight, Sparkles, Crown, Gift, Zap, MapPin, ArrowRight, Check } from "lucide-react";
+import { 
+  Heart, 
+  Clock, 
+  Star, 
+  TrendingUp, 
+  Bookmark, 
+  ChevronRight, 
+  Sparkles, 
+  Crown, 
+  Gift, 
+  Zap, 
+  MapPin, 
+  ArrowRight, 
+  Check, 
+  Award,
+  Flame,
+  Shield
+} from "lucide-react";
 import { Card, CardContent } from "./card";
 import { Badge } from "./badge";
 import { Button } from "./button";
@@ -23,6 +40,39 @@ interface RecentlyViewedProps {
   maxItems?: number;
 }
 
+const typeConfig = {
+  restaurant: { 
+    color: "text-eats", 
+    bg: "bg-gradient-to-br from-eats/25 to-eats/5",
+    border: "border-eats/30",
+    glow: "shadow-eats/20"
+  },
+  hotel: { 
+    color: "text-amber-400", 
+    bg: "bg-gradient-to-br from-amber-500/25 to-amber-500/5",
+    border: "border-amber-500/30",
+    glow: "shadow-amber-500/20"
+  },
+  flight: { 
+    color: "text-sky-400", 
+    bg: "bg-gradient-to-br from-sky-500/25 to-sky-500/5",
+    border: "border-sky-500/30",
+    glow: "shadow-sky-500/20"
+  },
+  car: { 
+    color: "text-primary", 
+    bg: "bg-gradient-to-br from-primary/25 to-primary/5",
+    border: "border-primary/30",
+    glow: "shadow-primary/20"
+  },
+  ride: { 
+    color: "text-rides", 
+    bg: "bg-gradient-to-br from-rides/25 to-rides/5",
+    border: "border-rides/30",
+    glow: "shadow-rides/20"
+  },
+};
+
 export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
   items,
   onItemClick,
@@ -30,51 +80,65 @@ export const RecentlyViewed: React.FC<RecentlyViewedProps> = ({
 }) => {
   if (items.length === 0) return null;
 
-  const typeColors = {
-    restaurant: "text-eats bg-eats/10",
-    hotel: "text-amber-400 bg-amber-500/10",
-    flight: "text-sky-400 bg-sky-500/10",
-    car: "text-primary bg-primary/10",
-    ride: "text-rides bg-rides/10",
-  };
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-muted-foreground" />
-          <h4 className="text-sm font-semibold">Recently Viewed</h4>
+        <div className="flex items-center gap-3">
+          <motion.div 
+            whileHover={{ rotate: 360 }}
+            transition={{ duration: 0.5 }}
+            className="w-10 h-10 rounded-2xl bg-gradient-to-br from-muted/60 to-muted/30 flex items-center justify-center"
+          >
+            <Clock className="w-5 h-5 text-muted-foreground" />
+          </motion.div>
+          <div>
+            <h4 className="font-bold">Recently Viewed</h4>
+            <p className="text-xs text-muted-foreground">Pick up where you left off</p>
+          </div>
         </div>
         {items.length > maxItems && (
-          <button className="text-xs text-primary hover:underline">
+          <Button variant="ghost" size="sm" className="text-xs gap-1 hover:text-primary">
             See all
-          </button>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
         )}
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {items.slice(0, maxItems).map((item, index) => (
-          <motion.button
-            key={item.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            onClick={() => onItemClick?.(item)}
-            className="flex-shrink-0 w-32 glass-card p-3 rounded-xl border border-white/10 hover:border-white/20 transition-all text-left group"
-          >
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-2",
-              typeColors[item.type]
-            )}>
-              {item.emoji || "📍"}
-            </div>
-            <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-              {item.title}
-            </p>
-            {item.subtitle && (
-              <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
-            )}
-          </motion.button>
-        ))}
+        {items.slice(0, maxItems).map((item, index) => {
+          const config = typeConfig[item.type];
+          return (
+            <motion.button
+              key={item.id}
+              initial={{ opacity: 0, x: 20, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              onClick={() => onItemClick?.(item)}
+              className={cn(
+                "flex-shrink-0 w-36 p-4 rounded-2xl border bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm transition-all text-left group",
+                "hover:shadow-xl",
+                config.border,
+                `hover:${config.glow}`
+              )}
+            >
+              <motion.div 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3 shadow-lg",
+                  config.bg
+                )}
+              >
+                {item.emoji || "📍"}
+              </motion.div>
+              <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">
+                {item.title}
+              </p>
+              {item.subtitle && (
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{item.subtitle}</p>
+              )}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );
@@ -106,10 +170,21 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
 }) => {
   if (items.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Heart className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">{emptyMessage}</p>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="text-center py-12 rounded-3xl bg-gradient-to-br from-muted/30 to-muted/10 border border-white/10"
+      >
+        <motion.div
+          animate={{ scale: [1, 1.1, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500/20 to-red-500/5 flex items-center justify-center mx-auto mb-4"
+        >
+          <Heart className="w-8 h-8 text-red-400 opacity-50" />
+        </motion.div>
+        <p className="text-sm text-muted-foreground font-medium">{emptyMessage}</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">Start exploring to add favorites</p>
+      </motion.div>
     );
   }
 
@@ -118,40 +193,46 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
       {items.map((item, index) => (
         <motion.div
           key={item.id}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-          className="flex items-center gap-3 p-3 glass-card rounded-xl border border-white/10 hover:border-white/20 transition-all group"
+          transition={{ delay: index * 0.05, type: "spring" }}
+          whileHover={{ x: 4 }}
+          className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-card/80 to-card/50 border border-white/10 hover:border-white/20 transition-all group"
         >
           <button
             onClick={() => onItemClick?.(item)}
-            className="flex items-center gap-3 flex-1 min-w-0 text-left"
+            className="flex items-center gap-4 flex-1 min-w-0 text-left"
           >
-            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-2xl shrink-0">
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 flex items-center justify-center text-2xl shrink-0 shadow-lg"
+            >
               {item.emoji || "❤️"}
-            </div>
+            </motion.div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate group-hover:text-primary transition-colors">
+              <p className="font-bold truncate group-hover:text-primary transition-colors">
                 {item.title}
               </p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
                 {item.subtitle && <span className="truncate">{item.subtitle}</span>}
                 {item.rating && (
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full">
                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                    {item.rating}
+                    <span className="text-xs font-semibold text-amber-500">{item.rating}</span>
                   </span>
                 )}
               </div>
             </div>
           </button>
           {onRemove && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => onRemove(item.id)}
-              className="p-2 rounded-lg hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+              className="p-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-colors opacity-0 group-hover:opacity-100"
             >
               <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-            </button>
+            </motion.button>
           )}
         </motion.div>
       ))}
@@ -163,20 +244,52 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
 interface PersonalizedGreetingProps {
   name: string;
   memberSince?: string;
-  tier?: "bronze" | "silver" | "gold" | "platinum";
+  tier?: "bronze" | "silver" | "gold" | "platinum" | "diamond";
   stats?: {
     trips?: number;
     points?: number;
     savings?: number;
   };
   className?: string;
+  streak?: number;
 }
 
 const tierConfig = {
-  bronze: { color: "from-amber-600 to-amber-800", icon: Star, label: "Bronze" },
-  silver: { color: "from-gray-400 to-gray-600", icon: Star, label: "Silver" },
-  gold: { color: "from-amber-400 to-amber-600", icon: Crown, label: "Gold" },
-  platinum: { color: "from-violet-400 to-violet-600", icon: Crown, label: "Platinum" },
+  bronze: { 
+    gradient: "from-amber-600 via-amber-700 to-amber-800", 
+    glow: "shadow-amber-600/30",
+    icon: Award, 
+    label: "Bronze",
+    textColor: "text-amber-600"
+  },
+  silver: { 
+    gradient: "from-gray-300 via-gray-400 to-gray-500", 
+    glow: "shadow-gray-400/30",
+    icon: Award, 
+    label: "Silver",
+    textColor: "text-gray-400"
+  },
+  gold: { 
+    gradient: "from-amber-400 via-yellow-500 to-amber-600", 
+    glow: "shadow-amber-500/40",
+    icon: Crown, 
+    label: "Gold",
+    textColor: "text-amber-400"
+  },
+  platinum: { 
+    gradient: "from-violet-400 via-purple-500 to-violet-600", 
+    glow: "shadow-violet-500/40",
+    icon: Crown, 
+    label: "Platinum",
+    textColor: "text-violet-400"
+  },
+  diamond: { 
+    gradient: "from-cyan-400 via-blue-500 to-indigo-600", 
+    glow: "shadow-cyan-500/50",
+    icon: Sparkles, 
+    label: "Diamond",
+    textColor: "text-cyan-400"
+  },
 };
 
 export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
@@ -185,6 +298,7 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
   tier = "bronze",
   stats,
   className,
+  streak,
 }) => {
   const config = tierConfig[tier];
   const TierIcon = config.icon;
@@ -196,49 +310,121 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
     return "Good evening";
   };
 
+  const greetingEmoji = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "☀️";
+    if (hour < 18) return "🌤️";
+    return "🌙";
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -15 }}
       animate={{ opacity: 1, y: 0 }}
-      className={cn("relative overflow-hidden rounded-2xl p-6 bg-card border border-border/50", className)}
+      transition={{ type: "spring", stiffness: 300 }}
+      className={cn(
+        "relative overflow-hidden rounded-3xl p-6 bg-gradient-to-br from-card/95 to-card border border-white/10 shadow-xl",
+        className
+      )}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${config.color} opacity-10`} />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/10 to-transparent rounded-bl-full" />
+      {/* Background decorations */}
+      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-10 pointer-events-none", config.gradient)} />
+      <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-white/10 to-transparent rounded-bl-full" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-white/5 to-transparent rounded-tr-full" />
       
       <div className="relative flex items-start justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground font-medium">{getTimeOfDayGreeting()}</p>
-          <h1 className="text-2xl font-bold mt-1">{name} 👋</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-sm text-muted-foreground font-medium">{getTimeOfDayGreeting()}</p>
+            <span className="text-lg">{greetingEmoji()}</span>
+          </div>
+          <motion.h1 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-3xl font-bold"
+          >
+            {name}
+          </motion.h1>
           {memberSince && (
-            <p className="text-xs text-muted-foreground mt-1">Member since {memberSince}</p>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+              <Shield className="w-3 h-3" />
+              Member since {memberSince}
+            </p>
           )}
         </div>
         
-        <Badge className={`bg-gradient-to-r ${config.color} text-white border-0 shadow-lg`}>
-          <TierIcon className="w-3 h-3 mr-1" />
-          {config.label}
-        </Badge>
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", delay: 0.2 }}
+        >
+          <Badge className={cn(
+            "bg-gradient-to-r text-white border-0 px-4 py-2 text-sm font-bold shadow-xl",
+            config.gradient,
+            config.glow
+          )}>
+            <TierIcon className="w-4 h-4 mr-1.5" />
+            {config.label}
+          </Badge>
+        </motion.div>
       </div>
 
+      {/* Streak indicator */}
+      {streak && streak > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center gap-2 mt-4 p-3 rounded-xl bg-gradient-to-r from-orange-500/15 to-orange-500/5 border border-orange-500/20"
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500/30 to-orange-500/10 flex items-center justify-center">
+            <Flame className="w-5 h-5 text-orange-500" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-orange-500">{streak} day streak!</p>
+            <p className="text-xs text-muted-foreground">Keep it up!</p>
+          </div>
+        </motion.div>
+      )}
+
       {stats && (
-        <div className="flex gap-4 mt-4 pt-4 border-t border-white/10">
+        <div className="flex gap-4 mt-5 pt-5 border-t border-white/10">
           {stats.trips !== undefined && (
-            <div>
-              <p className="text-2xl font-bold">{stats.trips}</p>
-              <p className="text-xs text-muted-foreground">Trips</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              whileHover={{ y: -2 }}
+              className="flex-1 p-3 rounded-2xl bg-gradient-to-br from-muted/40 to-muted/20"
+            >
+              <p className="text-3xl font-bold">{stats.trips}</p>
+              <p className="text-xs text-muted-foreground font-medium">Trips</p>
+            </motion.div>
           )}
           {stats.points !== undefined && (
-            <div>
-              <p className="text-2xl font-bold">{stats.points.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground">Points</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ y: -2 }}
+              className="flex-1 p-3 rounded-2xl bg-gradient-to-br from-muted/40 to-muted/20"
+            >
+              <p className="text-3xl font-bold">{stats.points.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground font-medium">Points</p>
+            </motion.div>
           )}
           {stats.savings !== undefined && (
-            <div>
-              <p className="text-2xl font-bold text-emerald-500">${stats.savings}</p>
-              <p className="text-xs text-muted-foreground">Saved</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              whileHover={{ y: -2 }}
+              className="flex-1 p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5"
+            >
+              <p className="text-3xl font-bold text-emerald-500">${stats.savings}</p>
+              <p className="text-xs text-muted-foreground font-medium">Saved</p>
+            </motion.div>
           )}
         </div>
       )}
@@ -261,24 +447,28 @@ interface PromoBannerProps {
 
 const promoVariants = {
   default: {
-    bg: "from-primary/20 to-teal-500/20",
+    bg: "from-primary/20 via-primary/10 to-teal-500/20",
     accent: "from-primary to-teal-400",
     icon: Gift,
+    glow: "shadow-primary/20",
   },
   urgent: {
-    bg: "from-red-500/20 to-orange-500/20",
+    bg: "from-red-500/20 via-red-500/10 to-orange-500/20",
     accent: "from-red-500 to-orange-500",
     icon: Zap,
+    glow: "shadow-red-500/20",
   },
   special: {
-    bg: "from-violet-500/20 to-purple-500/20",
+    bg: "from-violet-500/20 via-violet-500/10 to-purple-500/20",
     accent: "from-violet-500 to-purple-500",
     icon: Sparkles,
+    glow: "shadow-violet-500/20",
   },
   referral: {
-    bg: "from-emerald-500/20 to-teal-500/20",
+    bg: "from-emerald-500/20 via-emerald-500/10 to-teal-500/20",
     accent: "from-emerald-500 to-teal-500",
     icon: Heart,
+    glow: "shadow-emerald-500/20",
   },
 };
 
@@ -298,56 +488,80 @@ export const PromoBanner: React.FC<PromoBannerProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+      whileHover={{ y: -2 }}
+      transition={{ type: "spring", stiffness: 300 }}
     >
       <Card className={cn(
-        "overflow-hidden border-0 relative",
+        "overflow-hidden border-0 relative shadow-xl",
+        config.glow,
         className
       )}>
         <div className={`absolute inset-0 bg-gradient-to-r ${config.bg}`} />
-        <CardContent className="p-4 relative">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/10 to-transparent rounded-bl-full" />
+        
+        <CardContent className="p-5 relative">
           <div className="flex items-start gap-4">
-            <div className={`p-3 rounded-xl bg-gradient-to-br ${config.accent} shadow-lg`}>
-              <PromoIcon className="w-6 h-6 text-white" />
-            </div>
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className={`p-4 rounded-2xl bg-gradient-to-br ${config.accent} shadow-xl`}
+            >
+              <PromoIcon className="w-7 h-7 text-white" />
+            </motion.div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-bold">{title}</h3>
-                  <p className="text-sm text-muted-foreground">{description}</p>
+                  <h3 className="font-bold text-lg">{title}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
                 </div>
                 {discount && (
-                  <Badge className={`bg-gradient-to-r ${config.accent} text-white border-0 text-lg font-bold px-3`}>
-                    {discount}
-                  </Badge>
+                  <motion.div
+                    initial={{ scale: 0, rotate: -10 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", delay: 0.2 }}
+                  >
+                    <Badge className={`bg-gradient-to-r ${config.accent} text-white border-0 text-xl font-bold px-4 py-2 shadow-lg`}>
+                      {discount}
+                    </Badge>
+                  </motion.div>
                 )}
               </div>
               
-              <div className="flex items-center gap-3 mt-3">
+              <div className="flex items-center gap-3 mt-4">
                 {code && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background/50 border border-dashed border-white/20">
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-background/60 border-2 border-dashed border-white/20"
+                  >
                     <code className="text-sm font-mono font-bold">{code}</code>
-                  </div>
+                  </motion.div>
                 )}
                 {expiresAt && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="w-3 h-3" />
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/30 px-3 py-1.5 rounded-lg">
+                    <Clock className="w-3.5 h-3.5" />
                     Expires {expiresAt}
                   </div>
                 )}
               </div>
 
               {onClaim && (
-                <Button 
-                  size="sm" 
-                  className={`mt-3 bg-gradient-to-r ${config.accent} hover:opacity-90 shadow-lg`}
-                  onClick={onClaim}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-4"
                 >
-                  Claim Now
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Button>
+                  <Button 
+                    className={`bg-gradient-to-r ${config.accent} hover:opacity-90 shadow-xl h-12 px-6 rounded-xl font-bold`}
+                    onClick={onClaim}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Claim Now
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </motion.div>
               )}
             </div>
           </div>
@@ -371,6 +585,39 @@ interface RecommendationProps {
   badge?: string;
 }
 
+const recommendationColors = {
+  rides: {
+    gradient: "from-rides/25 to-rides/5",
+    border: "border-rides/30",
+    text: "text-rides",
+    glow: "hover:shadow-rides/20",
+  },
+  eats: {
+    gradient: "from-eats/25 to-eats/5",
+    border: "border-eats/30",
+    text: "text-eats",
+    glow: "hover:shadow-eats/20",
+  },
+  sky: {
+    gradient: "from-sky-500/25 to-sky-500/5",
+    border: "border-sky-400/30",
+    text: "text-sky-400",
+    glow: "hover:shadow-sky-500/20",
+  },
+  amber: {
+    gradient: "from-amber-500/25 to-amber-500/5",
+    border: "border-amber-400/30",
+    text: "text-amber-400",
+    glow: "hover:shadow-amber-500/20",
+  },
+  primary: {
+    gradient: "from-primary/25 to-primary/5",
+    border: "border-primary/30",
+    text: "text-primary",
+    glow: "hover:shadow-primary/20",
+  },
+};
+
 export const RecommendationCard: React.FC<RecommendationProps> = ({
   title,
   subtitle,
@@ -382,76 +629,81 @@ export const RecommendationCard: React.FC<RecommendationProps> = ({
   color = "primary",
   badge,
 }) => {
-  const colorClasses = {
-    rides: "from-rides/20 to-rides/5 border-rides/30",
-    eats: "from-eats/20 to-eats/5 border-eats/30",
-    sky: "from-sky-500/20 to-sky-500/5 border-sky-400/30",
-    amber: "from-amber-500/20 to-amber-500/5 border-amber-400/30",
-    primary: "from-primary/20 to-primary/5 border-primary/30",
-  };
-
-  const iconColors = {
-    rides: "text-rides",
-    eats: "text-eats",
-    sky: "text-sky-400",
-    amber: "text-amber-400",
-    primary: "text-primary",
-  };
+  const config = recommendationColors[color];
 
   return (
     <motion.button
       onClick={onClick}
       className={cn(
-        "relative w-full p-4 rounded-2xl bg-gradient-to-br border text-left group overflow-hidden",
-        colorClasses[color]
+        "relative w-full p-5 rounded-3xl bg-gradient-to-br border text-left group overflow-hidden shadow-xl transition-all",
+        config.gradient,
+        config.border,
+        config.glow,
+        "hover:shadow-2xl"
       )}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.02, y: -4 }}
       whileTap={{ scale: 0.98 }}
     >
       {/* Sparkle accent */}
-      <div className="absolute top-3 right-3">
-        <Sparkles className={cn("w-4 h-4", iconColors[color])} />
-      </div>
+      <motion.div 
+        className="absolute top-4 right-4"
+        animate={{ rotate: [0, 15, -15, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <Sparkles className={cn("w-5 h-5", config.text)} />
+      </motion.div>
 
       {badge && (
-        <span className="absolute top-3 left-3 px-2 py-0.5 text-xs font-semibold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full">
+        <motion.span 
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute top-4 left-4 px-3 py-1 text-xs font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg"
+        >
           {badge}
-        </span>
+        </motion.span>
       )}
 
-      <div className="flex items-start gap-3 mt-2">
-        <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-3xl shrink-0">
+      <div className="flex items-start gap-4 mt-4">
+        <motion.div 
+          whileHover={{ scale: 1.15, rotate: 10 }}
+          className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-4xl shrink-0 shadow-lg"
+        >
           {emoji || "✨"}
-        </div>
+        </motion.div>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
+          <p className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
             {title}
           </p>
           {subtitle && (
-            <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
+            <p className="text-sm text-muted-foreground truncate mt-0.5">{subtitle}</p>
           )}
           {reason && (
-            <p className={cn("text-xs mt-1 flex items-center gap-1", iconColors[color])}>
-              <TrendingUp className="w-3 h-3" />
+            <p className={cn("text-xs mt-2 flex items-center gap-1.5 font-medium", config.text)}>
+              <TrendingUp className="w-3.5 h-3.5" />
               {reason}
             </p>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/10">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mt-5 pt-4 border-t border-white/10">
+        <div className="flex items-center gap-4">
           {rating && (
-            <span className="flex items-center gap-1 text-sm">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-              {rating}
+            <span className="flex items-center gap-1.5 text-sm bg-amber-500/15 px-3 py-1.5 rounded-xl">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <span className="font-bold">{rating}</span>
             </span>
           )}
           {price && (
-            <span className="text-sm font-semibold">{price}</span>
+            <span className="text-base font-bold">{price}</span>
           )}
         </div>
-        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+        <motion.div
+          animate={{ x: [0, 4, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+        </motion.div>
       </div>
     </motion.button>
   );
@@ -477,35 +729,48 @@ export const QuickRepeatOrders: React.FC<QuickRepeatProps> = ({
   if (orders.length === 0) return null;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <Bookmark className="w-4 h-4 text-eats" />
-        <h4 className="text-sm font-semibold">Order Again</h4>
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <motion.div 
+          whileHover={{ rotate: 360 }}
+          transition={{ duration: 0.5 }}
+          className="w-10 h-10 rounded-2xl bg-gradient-to-br from-eats/20 to-eats/5 flex items-center justify-center"
+        >
+          <Bookmark className="w-5 h-5 text-eats" />
+        </motion.div>
+        <div>
+          <h4 className="font-bold">Order Again</h4>
+          <p className="text-xs text-muted-foreground">Your favorites, one tap away</p>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {orders.map((order, index) => (
           <motion.button
             key={order.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            transition={{ delay: index * 0.05, type: "spring" }}
+            whileHover={{ y: -3, scale: 1.01 }}
             onClick={() => onReorder?.(order.id)}
-            className="flex items-center gap-3 p-3 glass-card rounded-xl border border-white/10 hover:border-eats/50 transition-all text-left group"
+            className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-card/80 to-card/50 border border-white/10 hover:border-eats/40 hover:shadow-xl hover:shadow-eats/10 transition-all text-left group"
           >
-            <div className="w-12 h-12 rounded-lg bg-eats/10 flex items-center justify-center text-2xl shrink-0">
+            <motion.div 
+              whileHover={{ scale: 1.1, rotate: 5 }}
+              className="w-14 h-14 rounded-2xl bg-gradient-to-br from-eats/20 to-eats/5 flex items-center justify-center text-2xl shrink-0 shadow-lg"
+            >
               {order.emoji || "🍽️"}
-            </div>
+            </motion.div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate group-hover:text-eats transition-colors">
+              <p className="font-bold truncate group-hover:text-eats transition-colors">
                 {order.title}
               </p>
               {order.items && (
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground truncate mt-0.5">
                   {order.items.join(", ")}
                 </p>
               )}
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm font-semibold text-eats">{order.price}</span>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm font-bold text-eats bg-eats/10 px-2.5 py-1 rounded-lg">{order.price}</span>
                 {order.lastOrdered && (
                   <span className="text-xs text-muted-foreground">• {order.lastOrdered}</span>
                 )}
@@ -537,20 +802,26 @@ export const SavedPreferences: React.FC<SavedPreferencesProps> = ({
 }) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {preferences.map((pref) => (
-        <button
+      {preferences.map((pref, index) => (
+        <motion.button
           key={pref.id}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.05 }}
+          whileHover={{ y: -3, scale: 1.02 }}
           onClick={() => onEdit?.(pref.id)}
-          className="p-3 glass-card rounded-xl border border-white/10 hover:border-white/20 transition-all text-left group"
+          className="p-4 rounded-2xl bg-gradient-to-br from-card/80 to-card/50 border border-white/10 hover:border-primary/30 transition-all text-left group shadow-lg hover:shadow-xl"
         >
-          <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-            {pref.icon}
-            <span className="text-xs">{pref.label}</span>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-xl bg-muted/40 flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors">
+              {pref.icon || <MapPin className="w-4 h-4" />}
+            </div>
+            <span className="text-xs text-muted-foreground font-medium">{pref.label}</span>
           </div>
-          <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+          <p className="font-bold text-sm truncate group-hover:text-primary transition-colors">
             {pref.value}
           </p>
-        </button>
+        </motion.button>
       ))}
     </div>
   );
@@ -583,41 +854,51 @@ export const FeatureTour: React.FC<FeatureTourProps> = ({
   const isLast = step === totalSteps;
 
   const positionClasses = {
-    top: "bottom-full mb-2",
-    bottom: "top-full mt-2",
-    left: "right-full mr-2",
-    right: "left-full ml-2",
+    top: "bottom-full mb-3",
+    bottom: "top-full mt-3",
+    left: "right-full mr-3",
+    right: "left-full ml-3",
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: -10 }}
+      transition={{ type: "spring", stiffness: 300 }}
       className={cn(
-        "absolute z-50 w-72 p-4 rounded-2xl bg-card border shadow-xl",
+        "absolute z-50 w-80 p-5 rounded-3xl bg-gradient-to-br from-card/98 to-card border border-white/10 shadow-2xl backdrop-blur-xl",
         positionClasses[position],
         className
       )}
     >
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <span className="text-sm font-bold text-primary">{step}</span>
-        </div>
-        <div>
-          <h4 className="font-semibold">{title}</h4>
-          <p className="text-sm text-muted-foreground">{description}</p>
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent rounded-bl-full pointer-events-none" />
+      
+      <div className="flex items-start gap-4 mb-4 relative">
+        <motion.div 
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-lg"
+        >
+          <span className="text-lg font-bold text-primary">{step}</span>
+        </motion.div>
+        <div className="flex-1">
+          <h4 className="font-bold text-lg">{title}</h4>
+          <p className="text-sm text-muted-foreground mt-1">{description}</p>
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1">
+      <div className="flex items-center justify-between relative">
+        <div className="flex gap-2">
           {Array.from({ length: totalSteps }).map((_, i) => (
-            <div
+            <motion.div
               key={i}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: i * 0.05 }}
               className={cn(
-                "w-1.5 h-1.5 rounded-full transition-colors",
-                i < step ? "bg-primary" : "bg-muted"
+                "w-2.5 h-2.5 rounded-full transition-all duration-300",
+                i < step ? "bg-primary shadow-lg shadow-primary/30" : "bg-muted"
               )}
             />
           ))}
@@ -625,27 +906,29 @@ export const FeatureTour: React.FC<FeatureTourProps> = ({
         
         <div className="flex gap-2">
           {onSkip && !isLast && (
-            <Button variant="ghost" size="sm" onClick={onSkip}>
+            <Button variant="ghost" size="sm" className="rounded-xl" onClick={onSkip}>
               Skip
             </Button>
           )}
-          <Button 
-            size="sm" 
-            onClick={isLast ? onComplete : onNext}
-            className="bg-gradient-to-r from-primary to-teal-400"
-          >
-            {isLast ? (
-              <>
-                <Check className="w-4 h-4 mr-1" />
-                Done
-              </>
-            ) : (
-              <>
-                Next
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </>
-            )}
-          </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button 
+              size="sm" 
+              onClick={isLast ? onComplete : onNext}
+              className="bg-gradient-to-r from-primary to-teal-400 rounded-xl shadow-lg shadow-primary/30 font-bold px-4"
+            >
+              {isLast ? (
+                <>
+                  <Check className="w-4 h-4 mr-1.5" />
+                  Done
+                </>
+              ) : (
+                <>
+                  Next
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                </>
+              )}
+            </Button>
+          </motion.div>
         </div>
       </div>
     </motion.div>
