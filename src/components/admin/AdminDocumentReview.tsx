@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +41,10 @@ import {
   RotateCw,
   Download,
   X,
+  CheckSquare,
+  Sparkles,
+  Filter,
+  RefreshCw,
 } from "lucide-react";
 import {
   useDriverDocuments,
@@ -49,17 +56,22 @@ import {
 } from "@/hooks/useDriverDocuments";
 import { format } from "date-fns";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const AdminDocumentReview = () => {
   const [activeTab, setActiveTab] = useState("pending");
   const [selectedDocument, setSelectedDocument] = useState<DriverDocumentWithDriver | null>(null);
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [isBatchRejectOpen, setIsBatchRejectOpen] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   const { data: allDocuments, isLoading: isLoadingAll } = useDriverDocuments();
   const { data: pendingDocuments, isLoading: isLoadingPending } = usePendingDocuments();
@@ -159,11 +171,124 @@ const AdminDocumentReview = () => {
     return <FileText className="h-5 w-5" />;
   };
 
+  const toggleDocumentSelection = (docId: string) => {
+    setSelectedDocuments(prev => 
+      prev.includes(docId) 
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
+    );
+  };
+
+  const selectAllPending = () => {
+    if (pendingDocuments) {
+      setSelectedDocuments(pendingDocuments.map(d => d.id));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedDocuments([]);
+  };
+
+  const handleBatchApprove = async () => {
+    if (selectedDocuments.length === 0) return;
+    setIsBatchProcessing(true);
+    
+    try {
+      for (const docId of selectedDocuments) {
+        await updateStatus.mutateAsync({ id: docId, status: "approved" });
+      }
+      toast.success(`Approved ${selectedDocuments.length} documents`);
+      setSelectedDocuments([]);
+    } catch (error) {
+      toast.error("Failed to approve some documents");
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
+  const handleBatchReject = async () => {
+    if (selectedDocuments.length === 0 || !rejectNotes) return;
+    setIsBatchProcessing(true);
+    
+    try {
+      for (const docId of selectedDocuments) {
+        await updateStatus.mutateAsync({ id: docId, status: "rejected", notes: rejectNotes });
+      }
+      toast.success(`Rejected ${selectedDocuments.length} documents`);
+      setSelectedDocuments([]);
+      setIsBatchRejectOpen(false);
+      setRejectNotes("");
+    } catch (error) {
+      toast.error("Failed to reject some documents");
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Document Review</h1>
-        <p className="text-muted-foreground">Review and verify driver uploaded documents</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <motion.div 
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 shadow-lg"
+          >
+            <FileText className="h-6 w-6 text-violet-500" />
+          </motion.div>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              Document Review
+              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                <Sparkles className="h-5 w-5 text-violet-500" />
+              </motion.div>
+            </h1>
+            <p className="text-muted-foreground">Review and verify driver uploaded documents</p>
+          </div>
+        </div>
+
+        {/* Batch Actions */}
+        <AnimatePresence>
+          {selectedDocuments.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex items-center gap-2 p-2 rounded-xl bg-violet-500/10 border border-violet-500/20"
+            >
+              <Badge className="bg-violet-500/20 text-violet-500">
+                {selectedDocuments.length} selected
+              </Badge>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={clearSelection}
+                className="h-8"
+              >
+                Clear
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={handleBatchApprove}
+                disabled={isBatchProcessing}
+                className="h-8 bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="h-4 w-4 mr-1" />
+                Approve All
+              </Button>
+              <Button 
+                size="sm" 
+                variant="destructive"
+                onClick={() => setIsBatchRejectOpen(true)}
+                disabled={isBatchProcessing}
+                className="h-8"
+              >
+                <XCircle className="h-4 w-4 mr-1" />
+                Reject All
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Stats Cards */}
@@ -221,30 +346,53 @@ const AdminDocumentReview = () => {
         </Card>
       </div>
 
-      <Card>
+      <Card className="border-0 bg-card/50 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle>Driver Documents</CardTitle>
-          <CardDescription>Click on a document to preview and review</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck className="h-5 w-5 text-primary" />
+                Driver Documents
+              </CardTitle>
+              <CardDescription>Click on a document to preview and review</CardDescription>
+            </div>
+            {activeTab === "pending" && pendingCount > 0 && (
+              <Button variant="outline" size="sm" onClick={selectAllPending} className="gap-2">
+                <CheckSquare className="h-4 w-4" />
+                Select All Pending
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="pending">
-                Pending {pendingCount > 0 && `(${pendingCount})`}
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSelectedDocuments([]); }}>
+            <TabsList className="mb-4 bg-muted/30">
+              <TabsTrigger value="pending" className="gap-1">
+                <Clock className="h-3.5 w-3.5" />
+                Pending {pendingCount > 0 && <Badge className="ml-1 h-5 w-5 p-0 justify-center bg-amber-500/20 text-amber-500">{pendingCount}</Badge>}
               </TabsTrigger>
-              <TabsTrigger value="approved">Approved</TabsTrigger>
-              <TabsTrigger value="rejected">Rejected</TabsTrigger>
-              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="approved" className="gap-1">
+                <CheckCircle className="h-3.5 w-3.5" />
+                Approved
+              </TabsTrigger>
+              <TabsTrigger value="rejected" className="gap-1">
+                <XCircle className="h-3.5 w-3.5" />
+                Rejected
+              </TabsTrigger>
+              <TabsTrigger value="all" className="gap-1">
+                <Filter className="h-3.5 w-3.5" />
+                All
+              </TabsTrigger>
             </TabsList>
 
             <ScrollArea className="h-[500px]">
               {isLoading ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {[...Array(6)].map((_, i) => (
-                    <Card key={i} className="cursor-pointer">
+                    <Card key={i} className="cursor-pointer border-0 bg-muted/30">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <Skeleton className="h-10 w-10 rounded" />
+                          <Skeleton className="h-10 w-10 rounded-xl" />
                           <div className="flex-1">
                             <Skeleton className="h-4 w-24 mb-2" />
                             <Skeleton className="h-3 w-32 mb-2" />
@@ -267,43 +415,80 @@ const AdminDocumentReview = () => {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {displayedDocuments.map((doc) => (
-                    <Card
-                      key={doc.id}
-                      className="cursor-pointer hover:border-primary transition-colors"
-                      onClick={() => handleViewDocument(doc)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center">
-                            {getDocumentIcon(doc.document_type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">
-                              {getDocumentTypeLabel(doc.document_type)}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Avatar className="h-5 w-5">
-                                <AvatarImage src={doc.driver?.avatar_url || undefined} />
-                                <AvatarFallback className="text-xs">
-                                  {doc.driver?.full_name?.charAt(0) || "?"}
-                                </AvatarFallback>
-                              </Avatar>
-                              <p className="text-sm text-muted-foreground truncate">
-                                {doc.driver?.full_name || "Unknown"}
-                              </p>
+                  {displayedDocuments.map((doc, index) => {
+                    const isSelected = selectedDocuments.includes(doc.id);
+                    return (
+                      <motion.div
+                        key={doc.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.03 }}
+                      >
+                        <Card
+                          className={cn(
+                            "cursor-pointer transition-all border-0 bg-muted/30 hover:bg-muted/50 group",
+                            isSelected && "ring-2 ring-violet-500 bg-violet-500/5"
+                          )}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              {/* Checkbox for batch selection (only for pending) */}
+                              {activeTab === "pending" && (
+                                <div 
+                                  className="pt-1"
+                                  onClick={(e) => { e.stopPropagation(); toggleDocumentSelection(doc.id); }}
+                                >
+                                  <Checkbox 
+                                    checked={isSelected}
+                                    className="data-[state=checked]:bg-violet-500 data-[state=checked]:border-violet-500"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div 
+                                className="flex items-start gap-3 flex-1"
+                                onClick={() => handleViewDocument(doc)}
+                              >
+                                <motion.div 
+                                  whileHover={{ scale: 1.05 }}
+                                  className={cn(
+                                    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                                    doc.status === "approved" ? "bg-green-500/10" :
+                                    doc.status === "rejected" ? "bg-red-500/10" :
+                                    "bg-amber-500/10"
+                                  )}
+                                >
+                                  {getDocumentIcon(doc.document_type)}
+                                </motion.div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate group-hover:text-primary transition-colors">
+                                    {getDocumentTypeLabel(doc.document_type)}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Avatar className="h-5 w-5 border border-border/50">
+                                      <AvatarImage src={doc.driver?.avatar_url || undefined} />
+                                      <AvatarFallback className="text-xs bg-muted">
+                                        {doc.driver?.full_name?.charAt(0) || "?"}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <p className="text-sm text-muted-foreground truncate">
+                                      {doc.driver?.full_name || "Unknown"}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-2">
+                                    {getStatusBadge(doc.status)}
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(doc.uploaded_at), "MMM d, yyyy")}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center justify-between mt-2">
-                              {getStatusBadge(doc.status)}
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(doc.uploaded_at), "MMM d, yyyy")}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
