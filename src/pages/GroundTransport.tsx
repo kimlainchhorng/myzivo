@@ -121,9 +121,26 @@ const GroundTransport = () => {
         {/* Hero Section */}
         <section className="relative py-20 lg:py-32 overflow-hidden">
           {/* Enhanced background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-violet-500/15 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-violet-500/20 to-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-indigo-500/10 to-violet-500/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-radial from-violet-500/18 via-transparent to-transparent opacity-60" />
+          <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-500/25 to-purple-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-indigo-500/15 to-violet-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/3 w-[350px] h-[350px] bg-gradient-radial from-fuchsia-500/10 to-transparent rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -18, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 right-[10%] text-6xl hidden lg:block opacity-45"
+          >
+            🚆
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute bottom-40 left-[8%] text-5xl hidden lg:block opacity-35"
+          >
+            🚌
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Back Navigation */}

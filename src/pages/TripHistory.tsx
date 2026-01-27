@@ -221,9 +221,26 @@ const TripHistory = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      {/* Enhanced Background effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-emerald-500/10 to-green-500/5 rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-32 right-[8%] text-5xl hidden lg:block opacity-40"
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 7, repeat: Infinity }}
+        className="absolute bottom-1/3 left-[5%] text-4xl hidden lg:block opacity-30"
+      >
+        📍
+      </motion.div>
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 p-4">
