@@ -51,6 +51,11 @@ import AdminRecentActivity from "./AdminRecentActivity";
 import AdminPerformanceChart from "./AdminPerformanceChart";
 import AdminComparativeMetrics from "./AdminComparativeMetrics";
 import AdminRevenueBreakdown from "./AdminRevenueBreakdown";
+import AdminKPITracker from "./AdminKPITracker";
+import AdminDemandHeatmap from "./AdminDemandHeatmap";
+import AdminNotificationsPanel from "./AdminNotificationsPanel";
+import AdminSparklineStats from "./AdminSparklineStats";
+import AdminBulkActionsPanel from "./AdminBulkActionsPanel";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -506,15 +511,30 @@ const AdminAnalytics = () => {
 
       {/* Live Metrics & Performance */}
       <AdminLiveMetrics />
+
+      {/* Sparkline Stats Row */}
+      <AdminSparklineStats />
       
       {/* Comparative Metrics */}
       <AdminComparativeMetrics />
       
-      {/* Revenue Breakdown */}
-      <AdminRevenueBreakdown />
+      {/* Revenue Breakdown & KPI Tracker */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminRevenueBreakdown />
+        <AdminKPITracker />
+      </div>
       
       {/* Performance Chart */}
       <AdminPerformanceChart />
+
+      {/* Demand & Notifications Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminDemandHeatmap />
+        <AdminNotificationsPanel />
+      </div>
+
+      {/* Bulk Actions */}
+      <AdminBulkActionsPanel />
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
