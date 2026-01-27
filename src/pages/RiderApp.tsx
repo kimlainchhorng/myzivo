@@ -178,34 +178,10 @@ const RiderApp = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Premium gradient background */}
+        {/* Static gradient background - no animations */}
         <div className="absolute inset-0 bg-gradient-radial from-primary/15 via-transparent to-transparent opacity-60" />
-        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-0 left-1/3 w-[300px] h-[300px] bg-gradient-to-br from-cyan-500/10 to-teal-500/5 rounded-full blur-3xl" />
-        
-        {/* Floating emojis with enhanced animations */}
-        <motion.div
-          animate={{ y: [0, -20, 0], rotate: [0, 12, 0], scale: [1, 1.1, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[18%] right-[12%] text-5xl opacity-40"
-        >
-          🚗
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-[22%] left-[10%] text-5xl opacity-35"
-        >
-          📍
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, -12, 0], x: [0, 8, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute top-[35%] left-[18%] text-3xl opacity-25"
-        >
-          ✨
-        </motion.div>
+        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
         
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -287,44 +263,30 @@ const RiderApp = () => {
   if (activeTrip && step === "tracking") {
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Background glow effects */}
+        {/* Static background glow effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/20 to-teal-500/10 rounded-full blur-3xl opacity-60" />
-          <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-emerald-500/10 to-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-emerald-500/8 to-cyan-500/4 rounded-full blur-3xl" />
         </div>
         
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-50 bg-card/80 backdrop-blur-2xl border-b border-white/10 shadow-lg"
-        >
+        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => navigate("/")} 
-                    className="rounded-xl hover:bg-white/10 border border-white/5"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
-                </motion.div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => navigate("/")} 
+                  className="rounded-xl hover:bg-white/10 border border-white/5 h-10 w-10 active:scale-95 transition-transform"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
                 <div className="flex items-center gap-3">
-                  <motion.div 
-                    animate={{ rotate: [0, 5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                    className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40"
-                  >
+                  <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40">
                     <Navigation className="w-6 h-6 text-white" />
-                    {/* Pulse ring */}
-                    <motion.div
-                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute inset-0 rounded-2xl bg-primary/40 blur-sm"
-                    />
-                  </motion.div>
+                    {/* Static pulse ring */}
+                    <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-sm animate-pulse" />
+                  </div>
                   <div>
                     <h1 className="font-bold text-lg">Your Trip</h1>
                     <div className="flex items-center gap-2">
@@ -337,16 +299,11 @@ const RiderApp = () => {
               <LivePulse color="rides" size="sm" label="Live" />
             </div>
           </div>
-        </motion.div>
+        </div>
         
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="p-4"
-        >
+        <div className="p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <TripTracker trip={activeTrip} onCancel={handleCancelTrip} />
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -355,39 +312,10 @@ const RiderApp = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Enhanced Background Effects */}
+      {/* Static Background Effects - No animations for performance */}
       <div className="fixed inset-0 pointer-events-none">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.1, 0.15, 0.1]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.15, 1],
-            opacity: [0.08, 0.12, 0.08]
-          }}
-          transition={{ duration: 10, repeat: Infinity, delay: 1 }}
-          className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" 
-        />
-        {/* Floating particles */}
-        <motion.div
-          animate={{ y: [0, -30, 0], x: [0, 15, 0], rotate: [0, 10, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[30%] right-[10%] text-3xl opacity-20"
-        >
-          🚗
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-[40%] left-[5%] text-2xl opacity-15"
-        >
-          📍
-        </motion.div>
+        <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/12 to-teal-500/6 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-violet-500/8 to-purple-500/4 rounded-full blur-3xl" />
       </div>
       
       {/* Premium Header with Glassmorphism */}
@@ -512,48 +440,35 @@ const RiderApp = () => {
           )}
         </AnimatePresence>
 
-        {/* Quick Stats - Mobile Optimized */}
-        <AnimatePresence>
-          {step === "location" && !pickup && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap"
-            >
-              {quickStats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.8, y: -15 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, type: "spring", stiffness: 350, damping: 25 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group relative px-2.5 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden"
-                >
-                  {/* Content */}
-                  <div className="relative z-10 flex items-center gap-2">
-                    <div className={cn(
-                      "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md",
-                      stat.gradient
-                    )}>
-                      <stat.icon className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-0.5">
-                        <p className="text-sm font-bold">{stat.value}</p>
-                        {stat.label === "Top rated" && (
-                          <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                        )}
-                      </div>
-                      <p className="text-[9px] text-muted-foreground font-medium uppercase">{stat.label}</p>
-                    </div>
+        {/* Quick Stats - Static for performance */}
+        {step === "location" && !pickup && (
+          <div className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap animate-in fade-in slide-in-from-top-4 duration-300">
+            {quickStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="group relative px-2.5 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden"
+              >
+                <div className="relative z-10 flex items-center gap-2">
+                  <div className={cn(
+                    "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md",
+                    stat.gradient
+                  )}>
+                    <stat.icon className="w-4 h-4 text-white" />
                   </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-0.5">
+                      <p className="text-sm font-bold">{stat.value}</p>
+                      {stat.label === "Top rated" && (
+                        <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                      )}
+                    </div>
+                    <p className="text-[9px] text-muted-foreground font-medium uppercase">{stat.label}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Sheet - Mobile Optimized */}
@@ -590,25 +505,13 @@ const RiderApp = () => {
                   }}
                 />
 
-                {/* Location Inputs with Enhanced Connection Line */}
+                {/* Location Inputs with Static Connection Line */}
                 <div className="relative">
-                  {/* Connection line between inputs with animated gradient */}
-                  <div className="absolute left-[1.35rem] top-[3.5rem] bottom-[3rem] w-0.5 overflow-hidden rounded-full">
-                    <motion.div 
-                      animate={{ y: ["-100%", "100%"] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 bg-gradient-to-b from-emerald-500 via-primary to-teal-400"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/40 via-muted/20 to-primary/40" />
-                  </div>
+                  {/* Static connection line */}
+                  <div className="absolute left-[1.35rem] top-[3.5rem] bottom-[3rem] w-0.5 rounded-full bg-gradient-to-b from-emerald-500/60 via-muted/30 to-primary/60" />
                   
                   <div className="space-y-4">
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05, type: "spring" }}
-                      className="relative"
-                    >
+                    <div className="relative">
                       <LocationSearchInput
                         placeholder="Pickup location"
                         value={pickup}
@@ -617,17 +520,13 @@ const RiderApp = () => {
                       />
                       {/* Use My Location Button */}
                       {!pickup && (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="mt-2"
-                        >
+                        <div className="mt-2 animate-in fade-in duration-200">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={handleUseMyLocation}
                             disabled={isGettingLocation}
-                            className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all"
+                            className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all active:scale-[0.98]"
                           >
                             {isGettingLocation ? (
                               <>
@@ -641,39 +540,26 @@ const RiderApp = () => {
                               </>
                             )}
                           </Button>
-                        </motion.div>
+                        </div>
                       )}
-                    </motion.div>
-                    <motion.div
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.12, type: "spring" }}
-                    >
+                    </div>
+                    <div>
                       <LocationSearchInput
                         placeholder="Where to?"
                         value={dropoff}
                         onChange={setDropoff}
                         icon="dropoff"
                       />
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Saved Locations with Enhanced Header */}
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="pt-6 border-t border-white/8"
-                >
+                {/* Saved Locations */}
+                <div className="pt-6 border-t border-white/8">
                   <div className="flex items-center gap-3 mb-5">
-                    <motion.div 
-                      whileHover={{ scale: 1.15, rotate: 8 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 via-primary/15 to-teal-500/15 flex items-center justify-center border border-primary/20"
-                    >
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/25 via-primary/15 to-teal-500/15 flex items-center justify-center border border-primary/20">
                       <MapPin className="w-5 h-5 text-primary" />
-                    </motion.div>
+                    </div>
                     <div>
                       <span className="text-sm font-bold text-foreground">Saved Places</span>
                       <p className="text-[11px] text-muted-foreground">Your favorite locations</p>
@@ -689,7 +575,7 @@ const RiderApp = () => {
                       }
                     }}
                   />
-                </motion.div>
+                </div>
               </motion.div>
             )}
 
@@ -697,47 +583,35 @@ const RiderApp = () => {
             {step === "vehicle" && fareEstimates.length > 0 && (
               <motion.div
                 key="vehicle"
-                initial={{ opacity: 0, x: 40 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -40 }}
-                transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.2 }}
                 className="space-y-6"
               >
-                {/* Route Summary Card - Mobile Optimized */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="relative p-4 rounded-2xl bg-card border border-white/10 overflow-hidden"
-                >
-                  {/* Subtle background */}
+                {/* Route Summary Card */}
+                <div className="relative p-4 rounded-2xl bg-card border border-white/10 overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
                   
                   <div className="relative flex items-center gap-3">
-                    {/* Navigation icon - smaller for mobile */}
                     <div className="relative flex-shrink-0">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
                         <Navigation className="w-6 h-6 text-white" />
                       </div>
-                      {/* Live dot */}
                       <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
                     </div>
                     
-                    {/* Route details - compact */}
                     <div className="flex-1 min-w-0 space-y-1.5">
-                      {/* Pickup */}
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow shadow-emerald-500/50" />
                         <p className="text-xs font-semibold truncate">{pickup?.address?.split(',')[0]}</p>
                       </div>
-                      {/* Dropoff */}
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-sm bg-primary shadow shadow-primary/50" />
                         <p className="text-xs text-muted-foreground truncate">{dropoff?.address?.split(',')[0]}</p>
                       </div>
                     </div>
                     
-                    {/* Trip stats - compact */}
                     <div className="flex-shrink-0 text-right bg-muted/30 px-3 py-2 rounded-xl">
                       <p className="text-xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
                         {routeInfo?.duration}<span className="text-xs text-muted-foreground ml-0.5">min</span>
@@ -745,43 +619,25 @@ const RiderApp = () => {
                       <p className="text-[11px] text-muted-foreground font-medium">{(routeInfo?.distance * 0.621371).toFixed(1)} mi</p>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
-                {/* Vehicle Selector with premium wrapper */}
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1, type: "spring", stiffness: 300 }}
-                  className="relative"
-                >
+                {/* Vehicle Selector */}
+                <div>
                   <VehicleSelector
                     fareEstimates={fareEstimates}
                     selectedVehicle={selectedVehicle}
                     onSelect={setSelectedVehicle}
                   />
-                </motion.div>
+                </div>
                 
-                {/* Confirm Button - Mobile Optimized */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, type: "spring" }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                {/* Confirm Button */}
+                <div>
                   <Button
                     size="lg"
-                    className="relative w-full h-14 text-base font-bold gap-3 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/40 overflow-hidden"
+                    className="relative w-full h-14 text-base font-bold gap-3 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/40 overflow-hidden active:scale-[0.98] transition-transform"
                     disabled={!selectedVehicle || createTrip.isPending}
                     onClick={handleConfirmBooking}
                   >
-                    {/* Shine effect */}
-                    <motion.div
-                      initial={{ x: "-100%" }}
-                      animate={{ x: "200%" }}
-                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                    />
-                    
                     {createTrip.isPending ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -798,12 +654,11 @@ const RiderApp = () => {
                     )}
                   </Button>
                   
-                  {/* Safety note */}
                   <p className="text-center text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
                     <Shield className="w-3 h-3 text-emerald-400" />
                     Secure payment • Trip protection
                   </p>
-                </motion.div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
