@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Car,
   UtensilsCrossed,
@@ -111,43 +110,27 @@ const Footer = () => {
       <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/12 to-orange-500/8 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/3 w-[350px] h-[350px] bg-gradient-radial from-violet-500/8 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating elements */}
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 8, repeat: Infinity }}
-        className="absolute top-24 right-[8%] text-4xl hidden lg:block opacity-20"
-      >
+      {/* Static floating elements */}
+      <div className="absolute top-24 right-[8%] text-4xl hidden lg:block opacity-20 animate-float">
         ✨
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
-        transition={{ duration: 9, repeat: Infinity }}
-        className="absolute bottom-1/3 left-[5%] text-3xl hidden lg:block opacity-15"
-      >
+      </div>
+      <div className="absolute bottom-1/3 left-[5%] text-3xl hidden lg:block opacity-15 animate-float-delayed">
         🌐
-      </motion.div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Section */}
         <div className="py-12 sm:py-16 lg:py-24 border-b border-border">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid lg:grid-cols-2 gap-10 items-center"
+          <div 
+            className="grid lg:grid-cols-2 gap-10 items-center animate-in fade-in slide-in-from-bottom-4 duration-500"
           >
             <div className="text-center lg:text-left">
-              <motion.div 
-                initial={{ scale: 0.9 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10"
+              <div 
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300"
               >
-                <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <Sparkles className="w-4 h-4 text-primary" />
-                </motion.div>
+                <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '3s' }} />
                 <span className="text-muted-foreground">Newsletter</span>
-              </motion.div>
+              </div>
               <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3">
                 Stay in the{" "}
                 <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">loop</span>
@@ -170,32 +153,30 @@ const Footer = () => {
                   required
                 />
               </div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                <Button 
-                  type="submit" 
-                  size="lg" 
-                  className={cn(
-                    "h-14 px-10 rounded-2xl font-bold gap-2 transition-all shadow-xl",
-                    subscribed 
-                      ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30" 
-                      : "bg-gradient-to-r from-primary to-teal-400 shadow-primary/30"
-                  )}
-                >
-                  {subscribed ? (
-                    <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      Subscribed!
-                    </>
-                  ) : (
-                    <>
-                      Subscribe
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </Button>
-              </motion.div>
+              <Button 
+                type="submit" 
+                size="lg" 
+                className={cn(
+                  "h-14 px-10 rounded-2xl font-bold gap-2 transition-all duration-200 shadow-xl hover:scale-[1.03] active:scale-[0.97]",
+                  subscribed 
+                    ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30" 
+                    : "bg-gradient-to-r from-primary to-teal-400 shadow-primary/30"
+                )}
+              >
+                {subscribed ? (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    Subscribed!
+                  </>
+                ) : (
+                  <>
+                    Subscribe
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </Button>
             </form>
-          </motion.div>
+          </div>
         </div>
 
         {/* Main Footer Grid */}
@@ -203,10 +184,8 @@ const Footer = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
             {/* Brand Column */}
             <div className="col-span-2 sm:col-span-3 lg:col-span-2 text-center sm:text-left">
-              <Link to="/" className="inline-block mb-6">
-                <motion.div whileHover={{ scale: 1.05 }}>
-                  <ZivoLogo size="lg" />
-                </motion.div>
+              <Link to="/" className="inline-block mb-6 transition-transform duration-200 hover:scale-105">
+                <ZivoLogo size="lg" />
               </Link>
               <p className="text-base text-muted-foreground mb-6 max-w-sm mx-auto sm:mx-0">
                 The all-in-one super app for rides, food, flights, hotels, and more. Go anywhere.
@@ -215,23 +194,19 @@ const Footer = () => {
 
               {/* App Store Buttons */}
               <div className="flex flex-wrap gap-3 mb-6 justify-center sm:justify-start">
-                <motion.a
+                <a
                   href="#"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Apple className="w-7 h-7" />
                   <div className="text-left">
                     <p className="text-[10px] text-muted-foreground leading-none">Download on the</p>
                     <p className="text-sm font-bold leading-tight">App Store</p>
                   </div>
-                </motion.a>
-                <motion.a
+                </a>
+                <a
                   href="#"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M3.609 1.814L13.792 12 3.609 22.186a.994.994 0 01-.609-.92V2.734a.99.99 0 01.609-.92zM14.961 13.169l2.652 2.652-9.156 5.211 6.504-7.863zm4.07-2.652l2.4 1.371a.997.997 0 010 1.724l-2.4 1.371L16.84 12l2.192-1.483zM8.457 3.968l9.156 5.211-2.652 2.652-6.504-7.863z" />
@@ -240,22 +215,20 @@ const Footer = () => {
                     <p className="text-[10px] text-muted-foreground leading-none">Get it on</p>
                     <p className="text-sm font-bold leading-tight">Google Play</p>
                   </div>
-                </motion.a>
+                </a>
               </div>
 
               {/* Social Links */}
               <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
                 {socialLinks.map((social) => (
-                  <motion.a
+                  <a
                     key={social.name}
                     href={social.href}
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors border border-border/50"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200 border border-border/50 hover:scale-110 hover:-translate-y-0.5 active:scale-95"
                     aria-label={social.name}
                   >
                     <social.icon className="w-5 h-5" />
-                  </motion.a>
+                  </a>
                 ))}
               </div>
             </div>
@@ -371,24 +344,19 @@ const Footer = () => {
         <div className="py-8 border-t border-border">
           <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
             {trustBadges.map((badge, index) => (
-              <motion.div
+              <div
                 key={badge.label}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -3, scale: 1.05 }}
-                className="flex items-center gap-2.5 text-sm text-muted-foreground group cursor-default"
+                className="flex items-center gap-2.5 text-sm text-muted-foreground group cursor-default transition-all duration-200 hover:-translate-y-1 hover:scale-105 animate-in fade-in slide-in-from-bottom-2"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
               >
-                <motion.div 
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 3, repeat: Infinity, delay: index * 0.3 }}
-                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-teal-400/20 transition-all"
+                <div 
+                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-teal-400/20 transition-all animate-pulse-slow"
+                  style={{ animationDelay: `${index * 300}ms` }}
                 >
                   <badge.icon className="w-4 h-4 text-primary" />
-                </motion.div>
+                </div>
                 <span className="font-medium group-hover:text-foreground transition-colors">{badge.label}</span>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
