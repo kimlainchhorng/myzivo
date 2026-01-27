@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Phone, MessageSquare, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Phone, MessageSquare, Sparkles, Locate } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LocationSearchInput from "@/components/rider/LocationSearchInput";
 import VehicleSelector from "@/components/rider/VehicleSelector";
@@ -25,6 +25,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/hooks/useTrips";
 import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { toast } from "sonner";
 import ZivoLogo from "@/components/ZivoLogo";
 
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
@@ -55,6 +57,23 @@ const RiderApp = () => {
   const { calculateRoute, isCalculating } = useRouteCalculation();
   const { calculateFares } = useFareEstimation();
   const createTrip = useCreateTrip();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
+
+  // Auto-set pickup from GPS
+  const handleUseMyLocation = async () => {
+    try {
+      const location = await getCurrentLocation();
+      const address = await reverseGeocode(location.lat, location.lng);
+      setPickup({
+        address,
+        lat: location.lat,
+        lng: location.lng,
+      });
+      toast.success("Pickup location set to your current location");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to get location");
+    }
+  };
 
   // Enable realtime subscriptions for trip updates
   useRiderTripRealtime(user?.id);
@@ -588,6 +607,7 @@ const RiderApp = () => {
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05, type: "spring" }}
+                      className="relative"
                     >
                       <LocationSearchInput
                         placeholder="Pickup location"
@@ -595,6 +615,34 @@ const RiderApp = () => {
                         onChange={setPickup}
                         icon="pickup"
                       />
+                      {/* Use My Location Button */}
+                      {!pickup && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="mt-2"
+                        >
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleUseMyLocation}
+                            disabled={isGettingLocation}
+                            className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all"
+                          >
+                            {isGettingLocation ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Getting location...
+                              </>
+                            ) : (
+                              <>
+                                <Locate className="w-4 h-4 mr-2" />
+                                Use my current location
+                              </>
+                            )}
+                          </Button>
+                        </motion.div>
+                      )}
                     </motion.div>
                     <motion.div
                       initial={{ opacity: 0, y: 15 }}
