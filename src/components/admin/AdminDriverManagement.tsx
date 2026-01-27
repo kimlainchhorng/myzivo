@@ -10,7 +10,11 @@ import {
   Banknote,
   UserPlus,
   DollarSign,
-  Calendar
+  Calendar,
+  Wallet,
+  Navigation,
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import AdminLiveDriverMap from "./AdminLiveDriverMap";
 import AdminDriverOnboardingQueue from "./AdminDriverOnboardingQueue";
@@ -20,6 +24,10 @@ import AdminCashCollection from "./AdminCashCollection";
 import AdminDriverControl from "./AdminDriverControl";
 import AdminDriverEarnings from "./AdminDriverEarnings";
 import AdminDriverSchedules from "./AdminDriverSchedules";
+import AdminPayouts from "./AdminPayouts";
+import AdminTripAssignment from "./AdminTripAssignment";
+import AdminDocumentReview from "./AdminDocumentReview";
+import AdminDriverMessaging from "./AdminDriverMessaging";
 
 const container = {
   hidden: { opacity: 0 },
@@ -39,9 +47,13 @@ const AdminDriverManagement = () => {
 
   const tabs = [
     { value: "tracking", label: "Live Tracking", icon: MapPin },
+    { value: "trips", label: "Trip Assignment", icon: Navigation },
     { value: "onboarding", label: "Onboarding", icon: UserPlus },
+    { value: "documents", label: "Documents", icon: FileText },
     { value: "performance", label: "Performance", icon: TrendingUp },
     { value: "control", label: "Control Panel", icon: Settings2 },
+    { value: "messaging", label: "Messaging", icon: MessageSquare },
+    { value: "payouts", label: "Payouts", icon: Wallet },
     { value: "earnings", label: "Earnings", icon: DollarSign },
     { value: "schedules", label: "Schedules", icon: Calendar },
     { value: "commissions", label: "Commissions", icon: Percent },
@@ -85,8 +97,16 @@ const AdminDriverManagement = () => {
             <AdminLiveDriverMap />
           </TabsContent>
 
+          <TabsContent value="trips" className="mt-0">
+            <AdminTripAssignment />
+          </TabsContent>
+
           <TabsContent value="onboarding" className="mt-0">
             <AdminDriverOnboardingQueue />
+          </TabsContent>
+
+          <TabsContent value="documents" className="mt-0">
+            <AdminDocumentReview />
           </TabsContent>
 
           <TabsContent value="performance" className="mt-0">
@@ -95,6 +115,14 @@ const AdminDriverManagement = () => {
 
           <TabsContent value="control" className="mt-0">
             <AdminDriverControl />
+          </TabsContent>
+
+          <TabsContent value="messaging" className="mt-0">
+            <AdminDriverMessaging />
+          </TabsContent>
+
+          <TabsContent value="payouts" className="mt-0">
+            <AdminPayouts />
           </TabsContent>
 
           <TabsContent value="earnings" className="mt-0">
