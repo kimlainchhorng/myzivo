@@ -1,7 +1,6 @@
-import { Apple, Smartphone, Download, Star, Shield, Zap, Sparkles, Users, Globe } from "lucide-react";
+import { Apple, Smartphone, Download, Star, Shield, Zap, Sparkles, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 
@@ -26,123 +25,60 @@ const AppDownloadSection = () => {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating phone emojis */}
-      <motion.div
-        animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40"
-      >
+      {/* Static floating emojis */}
+      <div className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40 animate-float">
         📱
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30"
-      >
+      </div>
+      <div className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
         ⬇️
-      </motion.div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl text-center relative overflow-hidden"
+        <div 
+          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl text-center relative overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-500"
         >
-          {/* Animated border glow */}
-          <motion.div
-            animate={{ 
-              background: [
-                "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.15))",
-                "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.15))",
-                "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.15))",
-                "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.15))",
-                "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.15))"
-              ]
-            }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-0 rounded-[2.5rem] pointer-events-none"
-          />
+          {/* Animated border glow - CSS animation */}
+          <div className="absolute inset-0 rounded-[2.5rem] pointer-events-none animate-border-glow" />
           
-          {/* Recurring shine sweep */}
-          <motion.div
-            animate={{ x: ["-100%", "200%"] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 4 }}
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
-          />
+          {/* Recurring shine sweep - CSS animation */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none animate-shine" />
           
           {/* Animated background decoration */}
-          <motion.div 
-            animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-0 right-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-br from-primary/15 to-teal-400/10 rounded-full blur-3xl" 
-          />
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.2, 0.15] }}
-            transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-            className="absolute bottom-0 left-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" 
-          />
-          <motion.div 
-            animate={{ scale: [1, 1.3, 1] }}
-            transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" 
-          />
+          <div className="absolute top-0 right-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-br from-primary/15 to-teal-400/10 rounded-full blur-3xl animate-pulse-slow" />
+          <div className="absolute bottom-0 left-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl animate-pulse-slower" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl animate-pulse-slow" />
 
           <div className="relative z-10">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2, type: "spring" }}
-            >
+            <div className="animate-in zoom-in-95 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
               <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-eats/20 text-primary border-primary/30 px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary/20">
-                <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                </motion.div>
+                <Sparkles className="w-4 h-4 mr-2 animate-spin" style={{ animationDuration: '3s' }} />
                 Available now
               </Badge>
-            </motion.div>
+            </div>
 
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-foreground"
+            <h2 
+              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-foreground animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: '150ms', animationFillMode: 'both' }}
             >
               Get the{" "}
               <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">ZIVO</span>{" "}
               app
-            </motion.h2>
+            </h2>
             
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.4 }}
-              className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 px-4 leading-relaxed"
+            <p 
+              className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 px-4 leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: '200ms', animationFillMode: 'both' }}
             >
               Download the app and start riding in minutes. Available on <span className="text-foreground font-medium">iOS</span> and <span className="text-foreground font-medium">Android</span>.
-            </motion.p>
+            </p>
 
             {/* Features */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
-              className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-10"
-            >
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-10">
               {appFeatures.map((feature, index) => (
-                <motion.div
+                <div
                   key={feature.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-muted/50 border border-border/50"
+                  className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-muted/50 border border-border/50 transition-transform duration-200 hover:-translate-y-1 animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${250 + index * 75}ms`, animationFillMode: 'both' }}
                 >
                   <div className={cn(
                     "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
@@ -151,54 +87,44 @@ const AppDownloadSection = () => {
                     <feature.icon className="w-5 h-5 text-white" />
                   </div>
                   <span className="font-semibold">{feature.label}</span>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
             
             {/* Download Buttons */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 mb-12"
+            <div 
+              className="flex flex-col sm:flex-row flex-wrap justify-center gap-4 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: '400ms', animationFillMode: 'both' }}
             >
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" className="gap-3 h-16 px-8 text-base rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 hover:opacity-90">
-                  <Apple className="w-7 h-7" />
-                  <div className="text-left">
-                    <p className="text-xs opacity-80">Download on the</p>
-                    <p className="font-bold text-lg">App Store</p>
-                  </div>
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button size="lg" className="gap-3 h-16 px-8 text-base rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-xl shadow-emerald-500/30 hover:opacity-90">
-                  <Smartphone className="w-7 h-7" />
-                  <div className="text-left">
-                    <p className="text-xs opacity-80">Get it on</p>
-                    <p className="font-bold text-lg">Google Play</p>
-                  </div>
-                </Button>
-              </motion.div>
-            </motion.div>
+              <Button 
+                size="lg" 
+                className="gap-3 h-16 px-8 text-base rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 hover:opacity-90 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              >
+                <Apple className="w-7 h-7" />
+                <div className="text-left">
+                  <p className="text-xs opacity-80">Download on the</p>
+                  <p className="font-bold text-lg">App Store</p>
+                </div>
+              </Button>
+              <Button 
+                size="lg" 
+                className="gap-3 h-16 px-8 text-base rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-xl shadow-emerald-500/30 hover:opacity-90 transition-all duration-200 hover:scale-[1.03] active:scale-[0.98]"
+              >
+                <Smartphone className="w-7 h-7" />
+                <div className="text-left">
+                  <p className="text-xs opacity-80">Get it on</p>
+                  <p className="font-bold text-lg">Google Play</p>
+                </div>
+              </Button>
+            </div>
 
             {/* Stats Row */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.7 }}
-              className="grid grid-cols-3 gap-6 max-w-md mx-auto mb-12"
-            >
+            <div className="grid grid-cols-3 gap-6 max-w-md mx-auto mb-12">
               {stats.map((stat, index) => (
-                <motion.div
+                <div
                   key={stat.label}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.8 + index * 0.1 }}
-                  className="text-center"
+                  className="text-center animate-in fade-in zoom-in-95"
+                  style={{ animationDelay: `${500 + index * 75}ms`, animationFillMode: 'both' }}
                 >
                   <div className="w-12 h-12 mx-auto mb-2 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
                     <stat.icon className="w-6 h-6 text-primary" />
@@ -207,17 +133,14 @@ const AppDownloadSection = () => {
                     {stat.value}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             {/* QR Code - Hidden on mobile */}
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.9 }}
-              className="hidden sm:inline-block"
+            <div 
+              className="hidden sm:inline-block animate-in fade-in zoom-in-95 duration-500"
+              style={{ animationDelay: '600ms', animationFillMode: 'both' }}
             >
               <div className="p-5 rounded-3xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 shadow-xl">
                 <div className="w-32 h-32 sm:w-36 sm:h-36 bg-foreground rounded-2xl flex items-center justify-center relative overflow-hidden">
@@ -240,9 +163,9 @@ const AppDownloadSection = () => {
                 </div>
                 <p className="text-sm text-muted-foreground mt-4 font-medium">Scan to download</p>
               </div>
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
