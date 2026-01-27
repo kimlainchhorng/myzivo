@@ -4,6 +4,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { 
   Calendar, 
   Clock, 
@@ -14,12 +25,14 @@ import {
   Sun,
   Moon,
   Sunrise,
-  Sunset
+  Sunset,
+  CheckCircle
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, startOfWeek, endOfWeek, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const TIME_SLOTS = [
@@ -31,6 +44,27 @@ const TIME_SLOTS = [
 
 const AdminDriverSchedules = () => {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date()));
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [newShift, setNewShift] = useState({
+    driver_id: "",
+    start_time: "09:00",
+    end_time: "17:00"
+  });
+  const queryClient = useQueryClient();
+
+  // Fetch verified drivers for assignment
+  const { data: drivers } = useQuery({
+    queryKey: ["verified-drivers-for-schedule"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, avatar_url, vehicle_type")
+        .eq("status", "verified");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Fetch driver schedules
   const { data: schedules, isLoading } = useQuery({
@@ -93,6 +127,43 @@ const AdminDriverSchedules = () => {
     return driversWithSchedule;
   };
 
+  // Create shift mutation
+  const createShiftMutation = useMutation({
+    mutationFn: async (data: { driver_id: string; shift_date: string; start_time: string; end_time: string }) => {
+      const { error } = await supabase
+        .from("driver_shifts")
+        .insert([data]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-driver-shifts"] });
+      toast.success("Shift created successfully");
+      setIsCreateShiftOpen(false);
+      setNewShift({ driver_id: "", start_time: "09:00", end_time: "17:00" });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to create shift");
+    },
+  });
+
+  const handleCreateShift = () => {
+    if (!selectedDate || !newShift.driver_id) {
+      toast.error("Please select a driver and date");
+      return;
+    }
+    createShiftMutation.mutate({
+      driver_id: newShift.driver_id,
+      shift_date: format(selectedDate, "yyyy-MM-dd"),
+      start_time: newShift.start_time,
+      end_time: newShift.end_time
+    });
+  };
+
+  const openCreateShift = (date: Date) => {
+    setSelectedDate(date);
+    setIsCreateShiftOpen(true);
+  };
+
   const weekDays = getWeekDays();
   const isCurrentWeek = isSameDay(currentWeekStart, startOfWeek(new Date()));
 
@@ -152,9 +223,10 @@ const AdminDriverSchedules = () => {
                 <div 
                   key={i}
                   className={cn(
-                    "p-3 text-center border-r border-border/50 last:border-r-0",
+                    "p-3 text-center border-r border-border/50 last:border-r-0 group cursor-pointer hover:bg-muted/30",
                     isToday && "bg-primary/5"
                   )}
+                  onClick={() => openCreateShift(day)}
                 >
                   <p className={cn(
                     "text-xs font-medium",
@@ -168,10 +240,12 @@ const AdminDriverSchedules = () => {
                   )}>
                     {format(day, "d")}
                   </p>
-                  {dayShifts.length > 0 && (
+                  {dayShifts.length > 0 ? (
                     <Badge variant="secondary" className="mt-1 text-xs">
                       {dayShifts.length} shifts
                     </Badge>
+                  ) : (
+                    <Plus className="h-4 w-4 mx-auto mt-1 opacity-0 group-hover:opacity-50 transition-opacity" />
                   )}
                 </div>
               );
@@ -198,9 +272,10 @@ const AdminDriverSchedules = () => {
                   <div 
                     key={dayIndex}
                     className={cn(
-                      "p-2 border-r border-border/50 last:border-r-0 min-h-[80px]",
+                      "p-2 border-r border-border/50 last:border-r-0 min-h-[80px] cursor-pointer hover:bg-muted/20",
                       isToday && "bg-primary/5"
                     )}
+                    onClick={() => openCreateShift(day)}
                   >
                     {isLoading ? (
                       <div className="space-y-1">
@@ -209,7 +284,7 @@ const AdminDriverSchedules = () => {
                       </div>
                     ) : driversInSlot.length === 0 ? (
                       <div className="h-full flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground/50">—</span>
+                        <Plus className="h-4 w-4 text-muted-foreground/30" />
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-1">
@@ -295,6 +370,81 @@ const AdminDriverSchedules = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Create Shift Dialog */}
+      <Dialog open={isCreateShiftOpen} onOpenChange={setIsCreateShiftOpen}>
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Create Shift
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDate && `Assign a driver for ${format(selectedDate, "EEEE, MMMM d, yyyy")}`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Driver</Label>
+              <Select value={newShift.driver_id} onValueChange={(v) => setNewShift({ ...newShift, driver_id: v })}>
+                <SelectTrigger className="bg-background/50">
+                  <SelectValue placeholder="Select a driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers?.map((driver) => (
+                    <SelectItem key={driver.id} value={driver.id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={driver.avatar_url || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {driver.full_name.split(" ").map(n => n[0]).join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{driver.full_name}</span>
+                        <Badge variant="outline" className="ml-1 text-xs capitalize">
+                          {driver.vehicle_type}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={newShift.start_time}
+                  onChange={(e) => setNewShift({ ...newShift, start_time: e.target.value })}
+                  className="bg-background/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={newShift.end_time}
+                  onChange={(e) => setNewShift({ ...newShift, end_time: e.target.value })}
+                  className="bg-background/50"
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateShiftOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateShift} disabled={createShiftMutation.isPending}>
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Create Shift
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   MapPin, 
   RefreshCw, 
@@ -13,7 +15,12 @@ import {
   Star,
   MessageSquare,
   MoreVertical,
-  Ban
+  Ban,
+  Search,
+  Filter,
+  Bike,
+  Truck,
+  Zap
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -38,8 +45,27 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<OnlineDriver | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [vehicleFilter, setVehicleFilter] = useState<string>("_all");
   
   const { data: onlineDrivers, isLoading, refetch } = useOnlineDrivers();
+
+  // Filter drivers based on search and vehicle type
+  const filteredDrivers = onlineDrivers?.filter(driver => {
+    const matchesSearch = driver.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      driver.vehicle_plate?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesVehicle = vehicleFilter === "_all" || driver.vehicle_type === vehicleFilter;
+    return matchesSearch && matchesVehicle;
+  }) || [];
+
+  // Get vehicle type icon
+  const getVehicleIcon = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "bike": return Bike;
+      case "truck": return Truck;
+      default: return Car;
+    }
+  };
 
   // Initialize map
   useEffect(() => {
@@ -64,14 +90,14 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
 
   // Update markers when drivers change
   useEffect(() => {
-    if (!map.current || !onlineDrivers) return;
+    if (!map.current || !filteredDrivers) return;
 
     // Clear existing markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
-    // Add markers for each online driver
-    onlineDrivers.forEach((driver) => {
+    // Add markers for each filtered driver
+    filteredDrivers.forEach((driver) => {
       if (!driver.current_lat || !driver.current_lng) return;
 
       const el = document.createElement("div");
@@ -102,8 +128,8 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
     });
 
     // Fit bounds to show all drivers
-    if (onlineDrivers.length > 0) {
-      const coords = onlineDrivers
+    if (filteredDrivers.length > 0) {
+      const coords = filteredDrivers
         .filter(d => d.current_lat && d.current_lng)
         .map(d => [d.current_lng!, d.current_lat!] as [number, number]);
 
@@ -115,7 +141,7 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
         map.current.fitBounds(bounds, { padding: 50 });
       }
     }
-  }, [onlineDrivers, onDriverSelect]);
+  }, [filteredDrivers, onDriverSelect]);
 
   const handleRefresh = () => {
     refetch();
@@ -146,6 +172,32 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
             </Button>
           </div>
         </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-2 px-4 pb-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search drivers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-background/50 h-9"
+            />
+          </div>
+          <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
+            <SelectTrigger className="w-36 h-9 bg-background/50">
+              <Filter className="h-3 w-3 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All Vehicles</SelectItem>
+              <SelectItem value="car">Car</SelectItem>
+              <SelectItem value="bike">Bike</SelectItem>
+              <SelectItem value="suv">SUV</SelectItem>
+              <SelectItem value="truck">Truck</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="flex flex-col lg:flex-row">
@@ -173,13 +225,17 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
                     </div>
                   </div>
                 ))
-              ) : !onlineDrivers?.length ? (
+              ) : !filteredDrivers?.length ? (
                 <div className="p-8 text-center">
                   <WifiOff className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                  <p className="text-sm text-muted-foreground">No drivers online</p>
+                  <p className="text-sm text-muted-foreground">
+                    {searchQuery || vehicleFilter !== "_all" ? "No matching drivers" : "No drivers online"}
+                  </p>
                 </div>
               ) : (
-                onlineDrivers.map((driver) => (
+                filteredDrivers.map((driver) => {
+                  const VehicleIcon = getVehicleIcon(driver.vehicle_type);
+                  return (
                   <div
                     key={driver.id}
                     className={cn(
@@ -198,20 +254,20 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
                         </Avatar>
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{driver.full_name}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Car className="h-3 w-3" />
-                          <span>{driver.vehicle_type}</span>
-                          {driver.rating && (
-                            <>
-                              <span>•</span>
-                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                              <span>{Number(driver.rating).toFixed(1)}</span>
-                            </>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{driver.full_name}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <VehicleIcon className="h-3 w-3" />
+                            <span className="capitalize">{driver.vehicle_type}</span>
+                            {driver.rating && (
+                              <>
+                                <span>•</span>
+                                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                <span>{Number(driver.rating).toFixed(1)}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -235,11 +291,12 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
                             <Ban className="h-4 w-4 mr-2" />
                             Suspend Driver
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
