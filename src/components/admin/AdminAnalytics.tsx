@@ -61,6 +61,11 @@ import AdminUserActivity from "./AdminUserActivity";
 import AdminGrowthMetrics from "./AdminGrowthMetrics";
 import AdminTopPerformers from "./AdminTopPerformers";
 import AdminSystemStatus from "./AdminSystemStatus";
+import AdminRevenueGoals from "./AdminRevenueGoals";
+import AdminGeographicInsights from "./AdminGeographicInsights";
+import AdminCustomerInsights from "./AdminCustomerInsights";
+import AdminOperationalMetrics from "./AdminOperationalMetrics";
+import AdminPeakHoursChart from "./AdminPeakHoursChart";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -555,6 +560,21 @@ const AdminAnalytics = () => {
 
       {/* System Status */}
       <AdminSystemStatus />
+
+      {/* Revenue Goals & Geographic Insights */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminRevenueGoals />
+        <AdminGeographicInsights />
+      </div>
+
+      {/* Customer Insights & Operational Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminCustomerInsights />
+        <AdminOperationalMetrics />
+      </div>
+
+      {/* Peak Hours Chart */}
+      <AdminPeakHoursChart />
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
