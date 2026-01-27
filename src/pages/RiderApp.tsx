@@ -36,9 +36,9 @@ const bookingSteps = [
 ];
 
 const quickStats = [
-  { icon: Clock, value: "< 5 min", label: "Avg pickup", gradient: "from-primary to-teal-400" },
-  { icon: Star, value: "4.9★", label: "Driver rating", gradient: "from-amber-500 to-orange-500" },
-  { icon: Shield, value: "100%", label: "Verified", gradient: "from-emerald-500 to-green-500" },
+  { icon: Clock, value: "~3 min", label: "Avg pickup", gradient: "from-primary via-teal-400 to-cyan-400", glow: "shadow-primary/40" },
+  { icon: Star, value: "4.9", label: "Top rated", gradient: "from-amber-400 via-orange-500 to-rose-500", glow: "shadow-amber-500/40" },
+  { icon: Shield, value: "100%", label: "Verified drivers", gradient: "from-emerald-400 via-green-500 to-teal-500", glow: "shadow-emerald-500/40" },
 ];
 
 const RiderApp = () => {
@@ -413,36 +413,66 @@ const RiderApp = () => {
           )}
         </AnimatePresence>
 
-        {/* Enhanced Quick Stats Floating */}
+        {/* Premium Quick Stats Floating */}
         <AnimatePresence>
           {step === "location" && !pickup && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-4 left-4 right-4 flex gap-2.5 justify-center flex-wrap"
+              exit={{ opacity: 0, y: -30, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="absolute top-4 left-4 right-4 flex gap-3 justify-center flex-wrap"
             >
               {quickStats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, type: "spring", stiffness: 300 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  className="px-4 py-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-xl flex items-center gap-3 cursor-default"
+                  initial={{ opacity: 0, scale: 0.7, y: -20, rotateX: -15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+                  transition={{ 
+                    delay: index * 0.12, 
+                    type: "spring", 
+                    stiffness: 350,
+                    damping: 25
+                  }}
+                  whileHover={{ scale: 1.08, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="group relative px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-2xl border border-white/15 shadow-2xl flex items-center gap-3 cursor-default overflow-hidden"
                 >
+                  {/* Animated gradient border glow */}
                   <motion.div 
-                    whileHover={{ rotate: 10 }}
                     className={cn(
-                      "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                      "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl",
+                      "bg-gradient-to-r",
                       stat.gradient
                     )}
-                  >
-                    <stat.icon className="w-5 h-5 text-white" />
-                  </motion.div>
-                  <div>
-                    <p className="text-base font-bold">{stat.value}</p>
-                    <p className="text-[11px] text-muted-foreground font-medium">{stat.label}</p>
+                    style={{ padding: '1px', margin: '-1px' }}
+                  />
+                  
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                  
+                  {/* Content */}
+                  <div className="relative z-10 flex items-center gap-3">
+                    <motion.div 
+                      whileHover={{ rotate: 12, scale: 1.1 }}
+                      transition={{ type: "spring", stiffness: 400 }}
+                      className={cn(
+                        "w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                        stat.gradient,
+                        stat.glow
+                      )}
+                    >
+                      <stat.icon className="w-5 h-5 text-white drop-shadow-md" />
+                    </motion.div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <p className="text-lg font-bold tracking-tight">{stat.value}</p>
+                        {stat.label === "Top rated" && (
+                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase">{stat.label}</p>
+                    </div>
                   </div>
                 </motion.div>
               ))}
