@@ -52,6 +52,7 @@ const ZivoLogo = ({ size = "md", showText = true, className, animate = true }: Z
           sizeClasses[size],
           "w-auto object-contain relative z-10 drop-shadow-lg",
           "transition-all duration-300",
+          "mix-blend-lighten brightness-110",
           className
         )}
         initial={{ opacity: 0, y: -5 }}
