@@ -224,26 +224,51 @@ const FlightBooking = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-12 lg:py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-sky-500/10 via-transparent to-transparent" />
+        <section className="relative py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-sky-500/15 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-sky-500/20 to-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-50"
+          >
+            ✈️
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute bottom-40 right-[10%] text-4xl hidden lg:block opacity-40"
+          >
+            🌍
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
+              className="text-center mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/20 text-sky-400 text-sm font-medium mb-6">
-                <Plane className="w-4 h-4" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring" }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 text-white text-sm font-bold mb-6 shadow-xl shadow-sky-500/40"
+              >
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Plane className="w-4 h-4" />
+                </motion.div>
                 ZIVO Flights
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+              </motion.div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
                 Fly anywhere,
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-blue-600">save everywhere</span>
+                <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">save everywhere</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Compare prices from hundreds of airlines. Book your perfect flight in minutes.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Compare prices from <span className="text-foreground font-medium">hundreds of airlines</span>. Book your perfect flight in minutes.
               </p>
             </motion.div>
 

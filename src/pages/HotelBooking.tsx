@@ -229,26 +229,51 @@ const HotelBooking = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-12 lg:py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-amber-500/10 via-transparent to-transparent" />
+        <section className="relative py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-amber-500/15 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-amber-500/20 to-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-yellow-500/10 to-amber-500/5 rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-50"
+          >
+            🏨
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-40"
+          >
+            🌴
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
+              className="text-center mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 text-amber-400 text-sm font-medium mb-6">
-                <Hotel className="w-4 h-4" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring" }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-amber-500/40"
+              >
+                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Hotel className="w-4 h-4" />
+                </motion.div>
                 ZIVO Hotels
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+              </motion.div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
                 Find your perfect
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-500">place to stay</span>
+                <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">place to stay</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                From cozy boutique hotels to luxurious resorts. Book the best deals worldwide.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                From cozy boutique hotels to <span className="text-foreground font-medium">luxurious resorts</span>. Book the best deals worldwide.
               </p>
             </motion.div>
 

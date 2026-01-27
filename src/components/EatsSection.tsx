@@ -53,23 +53,30 @@ const restaurants = [
 
 const EatsSection = () => {
   return (
-    <section id="eats" className="py-20 lg:py-32 relative bg-gradient-to-b from-background via-card/50 to-background">
-      <div className="absolute inset-0 bg-gradient-radial from-eats/5 via-transparent to-transparent opacity-30" />
+    <section id="eats" className="py-20 lg:py-32 relative bg-gradient-to-b from-background via-card/50 to-background overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-radial from-eats/10 via-transparent to-transparent opacity-40" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
+      
+      {/* Floating food emojis */}
+      <div className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-40 animate-float">🍕</div>
+      <div className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-30 animate-float" style={{ animationDelay: '1s' }}>🍜</div>
+      <div className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-30 animate-float" style={{ animationDelay: '2s' }}>🍔</div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full gradient-eats text-secondary-foreground text-sm font-medium mb-6">
+        <div className="text-center mb-14 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-eats/40">
             <UtensilsCrossed className="w-4 h-4" />
             ZIVO Eats
           </div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6">
             Hungry? We've got
             <br />
-            <span className="text-gradient-eats">you covered</span>
+            <span className="bg-gradient-to-r from-eats via-orange-500 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">you covered</span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Thousands of restaurants at your fingertips. Order now and get it delivered in minutes.
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            <span className="text-foreground font-medium">Thousands of restaurants</span> at your fingertips. Order now and get it delivered in minutes.
           </p>
         </div>
 

@@ -62,10 +62,28 @@ const itemVariants = {
 
 const HowItWorks = () => {
   return (
-    <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-transparent to-muted/20" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full blur-3xl" />
+    <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden bg-muted/20">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-40 left-[8%] text-4xl hidden lg:block opacity-40"
+      >
+        📍
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-32 right-[10%] text-4xl hidden lg:block opacity-30"
+      >
+        ✅
+      </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -73,25 +91,27 @@ const HowItWorks = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-14 sm:mb-20"
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-teal-400/10 border border-primary/20 text-sm font-medium mb-6"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
             <span className="text-muted-foreground">Simple Process</span>
           </motion.div>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             How it{" "}
-            <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-teal-400 to-primary bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
               works
             </span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get started in just a few simple steps
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Get started in just a few <span className="text-foreground font-medium">simple steps</span>
           </p>
         </motion.div>
 
