@@ -1,6 +1,7 @@
 import { MapPin, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MessageStatus from "./MessageStatus";
+import { motion } from "framer-motion";
 
 interface LocationMessageProps {
   lat: number;
@@ -25,9 +26,13 @@ const LocationMessage = ({ lat, lng, address, isMe, isRead = false }: LocationMe
   };
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       className={cn(
-        "max-w-[75%] rounded-2xl overflow-hidden cursor-pointer transition-transform hover:scale-[1.02]",
+        "max-w-[75%] rounded-2xl overflow-hidden cursor-pointer transition-all shadow-lg hover:shadow-xl",
         isMe ? "rounded-br-sm" : "rounded-bl-sm"
       )}
       onClick={openInMaps}
@@ -75,7 +80,7 @@ const LocationMessage = ({ lat, lng, address, isMe, isRead = false }: LocationMe
           />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

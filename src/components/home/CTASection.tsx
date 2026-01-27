@@ -20,20 +20,41 @@ const CTASection = () => {
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-tl from-eats/25 to-orange-500/15 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
 
-      {/* Floating emojis */}
+      {/* Enhanced Floating emojis */}
       <motion.div
         animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
         transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-50"
+        className="absolute top-32 left-[10%] text-6xl hidden lg:block opacity-50"
       >
         🚀
       </motion.div>
       <motion.div
         animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
         transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-40"
+        className="absolute bottom-40 right-[8%] text-5xl hidden lg:block opacity-40"
       >
         ✨
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4.5, repeat: Infinity, delay: 1 }}
+        className="absolute top-56 right-[15%] text-4xl hidden lg:block opacity-35"
+      >
+        🎯
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 5.5, repeat: Infinity, delay: 0.5 }}
+        className="absolute bottom-60 left-[12%] text-3xl hidden lg:block opacity-30"
+      >
+        💎
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 8, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 4, repeat: Infinity, delay: 1.5 }}
+        className="absolute top-1/2 right-[6%] text-3xl hidden lg:block opacity-25"
+      >
+        🌟
       </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">

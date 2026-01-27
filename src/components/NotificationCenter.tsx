@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Check, CheckCheck, Trash2, Car, UtensilsCrossed, Truck, X } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, Car, UtensilsCrossed, Truck, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotificationCenter, Notification } from "@/hooks/useNotificationCenter";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NotificationIcon = ({ type }: { type: Notification["type"] }) => {
   switch (type) {
@@ -33,35 +34,45 @@ const NotificationItem = ({
   onMarkAsRead: (id: string) => void;
 }) => {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: -5 }}
+      animate={{ opacity: 1, y: 0 }}
       className={cn(
-        "flex items-start gap-3 p-3 border-b border-border last:border-0 transition-colors",
-        !notification.read && "bg-primary/5"
+        "flex items-start gap-3 p-4 border-b border-border/50 last:border-0 transition-all hover:bg-muted/30",
+        !notification.read && "bg-gradient-to-r from-primary/5 to-teal-400/5"
       )}
     >
-      <div className="flex-shrink-0 mt-0.5">
+      <div className={cn(
+        "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
+        notification.type === "trip" && "bg-primary/10",
+        notification.type === "order" && "bg-eats/10",
+        notification.type === "delivery" && "bg-emerald-500/10",
+        !["trip", "order", "delivery"].includes(notification.type) && "bg-muted"
+      )}>
         <NotificationIcon type={notification.type} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-medium text-sm truncate">{notification.title}</p>
+          <p className="font-semibold text-sm truncate">{notification.title}</p>
           {!notification.read && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 flex-shrink-0"
-              onClick={() => onMarkAsRead(notification.id)}
-            >
-              <Check className="h-3 w-3" />
-            </Button>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-primary/10"
+                onClick={() => onMarkAsRead(notification.id)}
+              >
+                <Check className="h-3 w-3" />
+              </Button>
+            </motion.div>
           )}
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-        <p className="text-[10px] text-muted-foreground mt-1">
+        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{notification.message}</p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1.5 font-medium">
           {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -72,27 +83,40 @@ const NotificationCenter = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </Badge>
-          )}
-        </Button>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-primary/10">
+            <Bell className="h-5 w-5" />
+            <AnimatePresence>
+              {unreadCount > 0 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
+                  <Badge
+                    className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg shadow-primary/30"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Button>
+        </motion.div>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-3 border-b border-border">
-          <h3 className="font-semibold text-sm">Notifications</h3>
+      <PopoverContent className="w-80 p-0 border-0 bg-card/95 backdrop-blur-xl shadow-2xl" align="end">
+        <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-teal-400/5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h3 className="font-bold text-sm">Notifications</h3>
+          </div>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs"
+                className="h-7 text-xs rounded-lg hover:bg-primary/10"
                 onClick={markAllAsRead}
               >
                 <CheckCheck className="h-3 w-3 mr-1" />
@@ -103,29 +127,46 @@ const NotificationCenter = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-lg hover:bg-destructive/10"
                 onClick={clearAll}
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-3 w-3 text-destructive" />
               </Button>
             )}
           </div>
         </div>
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-[320px]">
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full py-8 text-muted-foreground">
-              <Bell className="h-8 w-8 mb-2 opacity-50" />
-              <p className="text-sm">No notifications yet</p>
+            <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mb-4"
+              >
+                <Bell className="h-8 w-8 opacity-50" />
+              </motion.div>
+              <p className="text-sm font-medium">No notifications yet</p>
               <p className="text-xs">Updates will appear here</p>
             </div>
           ) : (
-            notifications.map((notification) => (
-              <NotificationItem
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={markAsRead}
-              />
-            ))
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              {notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                >
+                  <NotificationItem
+                    notification={notification}
+                    onMarkAsRead={markAsRead}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
           )}
         </ScrollArea>
       </PopoverContent>
