@@ -3213,6 +3213,56 @@ export type Database = {
           },
         ]
       }
+      pending_profile_changes: {
+        Row: {
+          change_data: Json
+          change_type: string
+          created_at: string
+          driver_id: string
+          file_path: string | null
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["approval_status"]
+          updated_at: string
+        }
+        Insert: {
+          change_data: Json
+          change_type: string
+          created_at?: string
+          driver_id: string
+          file_path?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          updated_at?: string
+        }
+        Update: {
+          change_data?: Json
+          change_type?: string
+          created_at?: string
+          driver_id?: string
+          file_path?: string | null
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_profile_changes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing: {
         Row: {
           base_fare: number
@@ -5486,6 +5536,7 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"]
           color: string | null
           created_at: string
           driver_id: string
@@ -5500,11 +5551,14 @@ export type Database = {
           mileage: number | null
           model: string
           next_service_miles: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           updated_at: string
           vin: string | null
           year: number
         }
         Insert: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
           color?: string | null
           created_at?: string
           driver_id: string
@@ -5519,11 +5573,14 @@ export type Database = {
           mileage?: number | null
           model: string
           next_service_miles?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           updated_at?: string
           vin?: string | null
           year: number
         }
         Update: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
           color?: string | null
           created_at?: string
           driver_id?: string
@@ -5538,6 +5595,8 @@ export type Database = {
           mileage?: number | null
           model?: string
           next_service_miles?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           updated_at?: string
           vin?: string | null
           year?: number
@@ -5826,6 +5885,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      approval_status: "pending" | "approved" | "rejected"
       booking_status:
         | "pending"
         | "confirmed"
@@ -5972,6 +6032,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      approval_status: ["pending", "approved", "rejected"],
       booking_status: [
         "pending",
         "confirmed",

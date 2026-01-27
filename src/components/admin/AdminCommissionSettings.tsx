@@ -366,14 +366,14 @@ const AdminCommissionSettings = () => {
               <div>
                 <label className="text-sm font-medium">Vehicle Type (optional)</label>
                 <Select 
-                  value={formData.vehicle_type} 
-                  onValueChange={(v) => setFormData({ ...formData, vehicle_type: v })}
+                  value={formData.vehicle_type || "_all"} 
+                  onValueChange={(v) => setFormData({ ...formData, vehicle_type: v === "_all" ? "" : v })}
                 >
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="All vehicles" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All vehicles</SelectItem>
+                    <SelectItem value="_all">All vehicles</SelectItem>
                     <SelectItem value="economy">Economy</SelectItem>
                     <SelectItem value="comfort">Comfort</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
