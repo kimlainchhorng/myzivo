@@ -10,10 +10,17 @@ import {
   Menu,
   LogOut,
   User,
-  History
+  LayoutDashboard,
+  Settings,
+  HelpCircle,
+  Bell,
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import CustomerOverview from "@/components/customer/CustomerOverview";
 import CustomerRides from "@/components/customer/CustomerRides";
@@ -24,6 +31,8 @@ import CustomerHotels from "@/components/customer/CustomerHotels";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const CustomerDashboard = () => {
   const { signOut, user } = useAuth();
@@ -31,12 +40,12 @@ const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   const navItems = [
-    { value: "overview", label: "Overview", icon: User },
-    { value: "rides", label: "Rides", icon: MapPin },
-    { value: "food", label: "Food Orders", icon: UtensilsCrossed },
-    { value: "cars", label: "Car Rentals", icon: Car },
-    { value: "flights", label: "Flights", icon: Plane },
-    { value: "hotels", label: "Hotels", icon: Hotel },
+    { value: "overview", label: "Overview", icon: LayoutDashboard, gradient: "from-primary to-teal-400" },
+    { value: "rides", label: "Rides", icon: MapPin, gradient: "from-rides to-green-500" },
+    { value: "food", label: "Food Orders", icon: UtensilsCrossed, gradient: "from-eats to-red-500" },
+    { value: "cars", label: "Car Rentals", icon: Car, gradient: "from-primary to-teal-400" },
+    { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600" },
+    { value: "hotels", label: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-600" },
   ];
 
   const handleLogout = async () => {
@@ -46,33 +55,104 @@ const CustomerDashboard = () => {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 py-4 border-b border-border">
-        <User className="h-6 w-6 text-primary" />
-        <span className="font-bold text-lg">My Dashboard</span>
+      {/* Header */}
+      <div className="p-5 border-b border-border/50">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+            <Sparkles className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <span className="font-bold text-lg block">ZIVO</span>
+            <span className="text-xs text-muted-foreground">My Dashboard</span>
+          </div>
+        </div>
       </div>
-      <nav className="px-2 py-4 space-y-1 flex-1">
-        {navItems.map((item) => (
-          <button
-            key={item.value}
-            onClick={() => setActiveTab(item.value)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
-              activeTab === item.value
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="font-medium">{item.label}</span>
-          </button>
-        ))}
+
+      {/* User Info */}
+      <div className="p-4">
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+            <User className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.email?.split('@')[0]}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="px-3 py-2 space-y-1 flex-1 overflow-y-auto">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Bookings</p>
+        {navItems.map((item, index) => {
+          const isActive = activeTab === item.value;
+          return (
+            <motion.button
+              key={item.value}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.03 }}
+              onClick={() => setActiveTab(item.value)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <div className={cn(
+                "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                isActive 
+                  ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
+                  : "bg-muted/50 group-hover:bg-muted"
+              )}>
+                <item.icon className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
+                )} />
+              </div>
+              <span className="font-medium flex-1">{item.label}</span>
+              {isActive && (
+                <ChevronRight className="w-4 h-4 text-primary" />
+              )}
+            </motion.button>
+          );
+        })}
+
+        <Separator className="my-4" />
+        
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Account</p>
+        
+        <button
+          onClick={() => navigate("/profile")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
+            <Settings className="h-4 w-4" />
+          </div>
+          <span className="font-medium">Settings</span>
+        </button>
+        
+        <button
+          onClick={() => navigate("/help")}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
+            <HelpCircle className="h-4 w-4" />
+          </div>
+          <span className="font-medium">Help Center</span>
+        </button>
       </nav>
-      <div className="px-2 py-4 border-t border-border">
-        <p className="text-xs text-muted-foreground px-3 mb-2 truncate">{user?.email}</p>
+
+      {/* Logout */}
+      <div className="p-4 border-t border-border/50">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-destructive/10 text-destructive"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group"
         >
-          <LogOut className="h-5 w-5" />
+          <div className="w-9 h-9 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
+            <LogOut className="h-4 w-4" />
+          </div>
           <span className="font-medium">Sign Out</span>
         </button>
       </div>
@@ -82,21 +162,26 @@ const CustomerDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card">
-        <div className="flex items-center gap-2">
-          <User className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg">My Dashboard</span>
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+            <Sparkles className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <span className="font-bold">ZIVO</span>
+            <span className="text-xs text-muted-foreground block">Dashboard</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="rounded-xl">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-72 p-0 border-r-0">
               <NavContent />
             </SheetContent>
           </Sheet>
@@ -105,45 +190,57 @@ const CustomerDashboard = () => {
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 min-h-screen border-r border-border bg-card">
+        <aside className="hidden lg:block w-72 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm sticky top-0">
           <NavContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="hidden">
-              {navItems.map((item) => (
-                <TabsTrigger key={item.value} value={item.value}>
-                  {item.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        <main className="flex-1 p-4 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="hidden">
+                {navItems.map((item) => (
+                  <TabsTrigger key={item.value} value={item.value}>
+                    {item.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <TabsContent value="overview" className="mt-0">
-              <CustomerOverview />
-            </TabsContent>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TabsContent value="overview" className="mt-0">
+                    <CustomerOverview />
+                  </TabsContent>
 
-            <TabsContent value="rides" className="mt-0">
-              <CustomerRides />
-            </TabsContent>
+                  <TabsContent value="rides" className="mt-0">
+                    <CustomerRides />
+                  </TabsContent>
 
-            <TabsContent value="food" className="mt-0">
-              <CustomerFoodOrders />
-            </TabsContent>
+                  <TabsContent value="food" className="mt-0">
+                    <CustomerFoodOrders />
+                  </TabsContent>
 
-            <TabsContent value="cars" className="mt-0">
-              <CustomerCarRentals />
-            </TabsContent>
+                  <TabsContent value="cars" className="mt-0">
+                    <CustomerCarRentals />
+                  </TabsContent>
 
-            <TabsContent value="flights" className="mt-0">
-              <CustomerFlights />
-            </TabsContent>
+                  <TabsContent value="flights" className="mt-0">
+                    <CustomerFlights />
+                  </TabsContent>
 
-            <TabsContent value="hotels" className="mt-0">
-              <CustomerHotels />
-            </TabsContent>
-          </Tabs>
+                  <TabsContent value="hotels" className="mt-0">
+                    <CustomerHotels />
+                  </TabsContent>
+                </motion.div>
+              </AnimatePresence>
+            </Tabs>
+          </div>
         </main>
       </div>
       <AdminFloatingButton />
