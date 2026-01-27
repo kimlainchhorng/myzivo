@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -21,9 +22,11 @@ import {
   CheckCircle,
   Upload,
   X,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
+import ZivoLogo from "@/components/ZivoLogo";
 
 const personalInfoSchema = z.object({
   full_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
@@ -229,24 +232,68 @@ const DriverRegistration = () => {
   const progress = (step / 4) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-background relative overflow-hidden py-8 px-4">
+      {/* Enhanced Background effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/8 to-transparent rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-30 pointer-events-none"
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-25 pointer-events-none"
+      >
+        🔑
+      </motion.div>
+      <div className="max-w-2xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" onClick={() => step === 1 ? navigate("/") : setStep(step - 1)} className="mb-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <Button variant="ghost" onClick={() => step === 1 ? navigate("/") : setStep(step - 1)} className="mb-4 rounded-xl hover:bg-primary/10">
             <ArrowLeft className="w-4 h-4 mr-2" />
             {step === 1 ? "Home" : "Back"}
           </Button>
           
-          <h1 className="text-3xl font-bold mb-2">Become a Driver</h1>
-          <p className="text-muted-foreground">Complete your application to start earning</p>
+          <div className="flex items-center gap-4 mb-4">
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <ZivoLogo size="sm" />
+            </motion.div>
+            <div>
+              <h1 className="text-3xl font-display font-bold flex items-center gap-2">
+                Become a Driver
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Sparkles className="h-6 w-6 text-primary" />
+                </motion.div>
+              </h1>
+              <p className="text-muted-foreground">Complete your application to start earning</p>
+            </div>
+          </div>
           
           <div className="mt-6">
             <div className="flex items-center justify-between text-sm mb-2">
               <span>Step {step} of 4</span>
-              <span>{Math.round(progress)}% complete</span>
+              <span className="font-semibold text-primary">{Math.round(progress)}% complete</span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <div className="h-2 rounded-full bg-muted overflow-hidden">
+              <motion.div 
+                className="h-full bg-gradient-to-r from-primary to-teal-400 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
           </div>
 
           {/* Step indicators */}
@@ -268,7 +315,7 @@ const DriverRegistration = () => {
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Step 1: Personal Info */}
         {step === 1 && (
