@@ -15,7 +15,7 @@ interface BookingMapProps {
   showControls?: boolean;
 }
 
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNsNHoxZzl2YzFyaHQza29hMGZzYWdqcHoifQ.SR4M8qPT-wXTR6IPq8oYkg";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = true }: BookingMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
