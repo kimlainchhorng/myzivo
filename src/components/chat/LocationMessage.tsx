@@ -11,7 +11,7 @@ interface LocationMessageProps {
   isRead?: boolean;
 }
 
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNsNHoxZzl2YzFyaHQza29hMGZzYWdqcHoifQ.SR4M8qPT-wXTR6IPq8oYkg";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const LocationMessage = ({ lat, lng, address, isMe, isRead = false }: LocationMessageProps) => {
   // Generate static map URL
