@@ -8,7 +8,8 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Warehouse
+  Warehouse,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -48,35 +49,96 @@ const CarRentalDashboard = () => {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-3 py-4 border-b border-border/50">
-        <motion.div whileHover={{ scale: 1.05 }}>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border/50">
+        <motion.div 
+          whileHover={{ scale: 1.05 }}
+          className="relative"
+        >
           <ZivoLogo size="sm" />
+          <motion.div
+            className="absolute -top-1 -right-1"
+            animate={{ rotate: [0, 15, -15, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <Sparkles className="h-3 w-3 text-primary" />
+          </motion.div>
         </motion.div>
-        <span className="font-bold text-lg">Car Rental</span>
+        <div>
+          <span className="font-bold text-lg block">Car Rental</span>
+          <span className="text-xs text-muted-foreground">Fleet Management</span>
+        </div>
       </div>
-      <nav className="px-2 py-4 space-y-1 flex-1">
-        {navItems.map((item) => (
-          <button
+      <nav className="px-3 py-4 space-y-1.5 flex-1">
+        {navItems.map((item, index) => (
+          <motion.button
             key={item.value}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
             onClick={() => setActiveTab(item.value)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left ${
+            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left group ${
               activeTab === item.value
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                ? "bg-gradient-to-r from-primary to-teal-500 text-white shadow-lg shadow-primary/25"
+                : "hover:bg-muted/80 text-muted-foreground hover:text-foreground"
             }`}
           >
-            <item.icon className="h-5 w-5" />
+            <div className={`p-1.5 rounded-lg transition-colors ${
+              activeTab === item.value 
+                ? "bg-white/20" 
+                : "bg-muted/50 group-hover:bg-primary/10"
+            }`}>
+              <item.icon className={`h-4 w-4 ${
+                activeTab === item.value ? "text-white" : "group-hover:text-primary"
+              }`} />
+            </div>
             <span className="font-medium">{item.label}</span>
-          </button>
+            {activeTab === item.value && (
+              <motion.div
+                layoutId="activeIndicator"
+                className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
+              />
+            )}
+          </motion.button>
         ))}
       </nav>
-      <div className="px-2 py-4 border-t border-border">
-        <p className="text-xs text-muted-foreground px-3 mb-2 truncate">{user?.email}</p>
+      
+      {/* Quick Stats in Sidebar */}
+      <div className="px-3 py-4 border-t border-border/50">
+        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/10 to-teal-500/5 border border-primary/20">
+          <div className="flex items-center gap-2 mb-2">
+            <Car className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Quick Stats</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="text-center p-2 rounded-lg bg-background/50">
+              <p className="text-lg font-bold text-primary">24</p>
+              <p className="text-[10px] text-muted-foreground">Active</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-background/50">
+              <p className="text-lg font-bold text-emerald-500">78%</p>
+              <p className="text-[10px] text-muted-foreground">Utilization</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-3 py-4 border-t border-border/50">
+        <div className="flex items-center gap-3 px-3 mb-3">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-teal-500 flex items-center justify-center text-white text-sm font-bold">
+            {user?.email?.[0]?.toUpperCase() || "U"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{user?.email?.split("@")[0]}</p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left hover:bg-destructive/10 text-destructive"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-left hover:bg-destructive/10 text-destructive group"
         >
-          <LogOut className="h-5 w-5" />
+          <div className="p-1.5 rounded-lg bg-destructive/10 group-hover:bg-destructive/20">
+            <LogOut className="h-4 w-4" />
+          </div>
           <span className="font-medium">Sign Out</span>
         </button>
       </div>
@@ -106,10 +168,34 @@ const CarRentalDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background effects */}
+      {/* Premium Background Effects */}
       <div className="fixed inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40 pointer-events-none" />
-      <div className="fixed top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-3/4 right-1/4 w-[300px] h-[300px] bg-gradient-to-tl from-emerald-500/8 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Floating Decorative Elements */}
+      <motion.div
+        className="fixed top-20 right-20 text-4xl pointer-events-none hidden lg:block"
+        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        className="fixed bottom-40 right-40 text-3xl pointer-events-none hidden lg:block"
+        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      >
+        ✨
+      </motion.div>
+      <motion.div
+        className="fixed top-1/2 right-10 text-2xl pointer-events-none hidden lg:block"
+        animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        🔑
+      </motion.div>
 
       {/* Mobile Header */}
       <header className="lg:hidden flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl relative z-10">
@@ -117,18 +203,21 @@ const CarRentalDashboard = () => {
           <motion.div whileHover={{ scale: 1.05 }}>
             <ZivoLogo size="sm" />
           </motion.div>
-          <span className="font-bold text-lg">Car Rental</span>
+          <div>
+            <span className="font-bold text-lg block">Car Rental</span>
+            <span className="text-xs text-muted-foreground">Fleet Hub</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="relative">
                 <Menu className="h-6 w-6" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side="left" className="w-72 p-0 border-r border-border/50">
               <NavContent />
             </SheetContent>
           </Sheet>
@@ -137,12 +226,29 @@ const CarRentalDashboard = () => {
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 min-h-screen border-r border-border bg-card">
+        <aside className="hidden lg:block w-72 min-h-screen border-r border-border/50 bg-card/80 backdrop-blur-xl relative z-10">
           <NavContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 lg:p-6">
+        <main className="flex-1 p-4 lg:p-8 relative z-10">
+          {/* Desktop Header */}
+          <div className="hidden lg:flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                </span>
+                <span className="text-sm font-medium text-primary">Live Dashboard</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <CrossAppNavigation currentApp="main" />
+            </div>
+          </div>
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="hidden">
               {navItems.map((item) => (

@@ -166,23 +166,44 @@ const CarRentalOverview = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorations */}
+      <motion.div
+        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block"
+        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      >
+        ✨
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Sparkles className="h-6 w-6 text-primary" />
+            </motion.div>
             Car Rental Dashboard
           </h1>
-          <p className="text-muted-foreground">Manage your fleet and bookings</p>
+          <p className="text-muted-foreground">Manage your fleet and bookings with ease</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-          <span className="relative flex h-2 w-2">
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 shadow-sm">
+          <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
           </span>
           <span className="text-sm font-medium text-primary">Live Data</span>
         </div>
@@ -194,34 +215,43 @@ const CarRentalOverview = () => {
         animate="show"
         className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        {stats.map((stat) => (
+        {stats.map((stat, index) => (
           <motion.div key={stat.label} variants={item}>
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
-              <CardContent className="p-4 relative">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`p-2 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                    <stat.icon className="h-4 w-4 text-white" />
+            <motion.div
+              whileHover={{ y: -4, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <CardContent className="p-4 relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <motion.div 
+                      className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                    >
+                      <stat.icon className="h-4 w-4 text-white" />
+                    </motion.div>
+                    {isLoading ? (
+                      <Skeleton className="h-5 w-12" />
+                    ) : (
+                      <div className={`flex items-center gap-0.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                        stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+                      }`}>
+                        <ArrowUpRight className="h-3 w-3" />
+                        {stat.trend}
+                      </div>
+                    )}
                   </div>
                   {isLoading ? (
-                    <Skeleton className="h-5 w-12" />
+                    <Skeleton className="h-8 w-16 mb-1" />
                   ) : (
-                    <div className={`flex items-center gap-0.5 text-xs font-medium px-2 py-1 rounded-full ${
-                      stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
-                    }`}>
-                      <ArrowUpRight className="h-3 w-3" />
-                      {stat.trend}
-                    </div>
+                    <p className="text-2xl font-bold">{stat.value}</p>
                   )}
-                </div>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16 mb-1" />
-                ) : (
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                )}
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
-              </CardContent>
-            </Card>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                </CardContent>
+              </Card>
+            </motion.div>
           </motion.div>
         ))}
       </motion.div>
@@ -232,14 +262,21 @@ const CarRentalOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
+                <motion.div 
+                  className="p-2.5 rounded-xl bg-primary/10"
+                  whileHover={{ scale: 1.1 }}
+                >
                   <Calendar className="h-5 w-5 text-primary" />
-                </div>
+                </motion.div>
                 <div>
-                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    Recent Bookings
+                    <span className="text-lg">📋</span>
+                  </CardTitle>
                   <CardDescription>Latest rental bookings</CardDescription>
                 </div>
               </div>
@@ -319,19 +356,26 @@ const CarRentalOverview = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+          <Card className="border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-xl h-full overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Car className="h-5 w-5 text-primary" />
-                  </div>
+                  <motion.div 
+                    className="p-2.5 rounded-xl bg-emerald-500/10"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    <Car className="h-5 w-5 text-emerald-500" />
+                  </motion.div>
                   <div>
-                    <CardTitle>Available Fleet</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      Available Fleet
+                      <span className="text-lg">🚗</span>
+                    </CardTitle>
                     <CardDescription>Cars ready for rental</CardDescription>
                   </div>
                 </div>
-                <button className="text-sm text-primary hover:underline">View All</button>
+                <button className="text-sm text-primary hover:underline font-medium">View All →</button>
               </div>
             </CardHeader>
             <CardContent className="p-4">

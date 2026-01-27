@@ -78,21 +78,42 @@ const CarRentalBookings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorations */}
+      <motion.div
+        className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block"
+        animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        📋
+      </motion.div>
+      <motion.div
+        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
+        animate={{ y: [0, 8, 0], scale: [1, 1.1, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        ✨
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+            >
+              <Sparkles className="h-6 w-6 text-primary" />
+            </motion.div>
             My Rentals
           </h1>
           <p className="text-muted-foreground">View and manage your car rentals</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 bg-card/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -135,14 +156,18 @@ const CarRentalBookings = () => {
             
             return (
               <motion.div key={booking.id} variants={item}>
-                <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient}`} />
                   <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${statusConfig.gradient}`} />
                   <CardContent className="p-5 pl-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
-                        <div className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg group-hover:scale-105 transition-transform`}>
+                        <motion.div 
+                          className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg`}
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                        >
                           <Car className="h-7 w-7 text-white" />
-                        </div>
+                        </motion.div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <span className="font-bold text-xl">
