@@ -83,10 +83,11 @@ const RiderApp = () => {
   // Enable realtime subscriptions for trip updates
   useRiderTripRealtime(user?.id);
 
-  // Check for active trip
+  // Check for active trip - optimized to avoid skeleton flash on revisits
   const {
     data: activeTrip,
-    isLoading: tripLoading
+    isLoading: tripLoading,
+    isFetching
   } = useQuery({
     queryKey: ["active-rider-trip", user?.id],
     queryFn: async () => {
@@ -104,8 +105,14 @@ const RiderApp = () => {
       return data as Trip | null;
     },
     enabled: !!user,
-    refetchInterval: 30000
+    refetchInterval: 30000,
+    staleTime: 1000 * 60, // Data stays fresh for 1 minute - no refetch on mount
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+    placeholderData: (prev) => prev, // Show previous data while refetching
   });
+
+  // Only show loading skeleton on first load, not on background refetches
+  const showLoadingSkeleton = tripLoading && !activeTrip;
 
   // Calculate route when both locations are set
   // Use primitive deps to avoid re-running when object references change but values don't
@@ -219,7 +226,7 @@ const RiderApp = () => {
         </div>
       </div>;
   }
-  if (tripLoading) {
+  if (showLoadingSkeleton) {
     return <div className="min-h-screen bg-background p-6 space-y-4">
         <div className="flex items-center gap-4 mb-6">
           <Skeleton className="h-12 w-12 rounded-2xl" />
