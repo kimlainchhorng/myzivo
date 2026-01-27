@@ -106,51 +106,61 @@ const Footer = () => {
     <footer className="bg-gradient-to-b from-card/50 to-card border-t border-border relative overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/5 to-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary/10 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Newsletter Section */}
-        <div className="py-10 sm:py-14 lg:py-20 border-b border-border">
+        <div className="py-12 sm:py-16 lg:py-24 border-b border-border">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="grid lg:grid-cols-2 gap-8 items-center"
+            className="grid lg:grid-cols-2 gap-10 items-center"
           >
             <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-4">
-                <Sparkles className="w-4 h-4 text-primary" />
+              <motion.div 
+                initial={{ scale: 0.9 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10"
+              >
+                <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </motion.div>
                 <span className="text-muted-foreground">Newsletter</span>
-              </div>
-              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+              </motion.div>
+              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3">
                 Stay in the{" "}
-                <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">loop</span>
+                <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">loop</span>
               </h3>
-              <p className="text-base sm:text-lg text-muted-foreground">
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
                 Get exclusive deals, travel tips, and updates delivered to your inbox.
               </p>
             </div>
             <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <div className="flex-1 relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center group-focus-within:from-primary/30 group-focus-within:to-teal-400/20 transition-all">
+                  <Mail className="w-5 h-5 text-primary" />
+                </div>
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-12 h-14 text-base rounded-xl bg-muted/50 border-border/50 focus:border-primary/50"
+                  className="pl-16 h-14 text-base rounded-2xl bg-muted/50 border-border/50 focus:border-primary/50 shadow-lg"
                   required
                 />
               </div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Button 
                   type="submit" 
                   size="lg" 
                   className={cn(
-                    "h-14 px-8 rounded-xl font-bold gap-2 transition-all",
+                    "h-14 px-10 rounded-2xl font-bold gap-2 transition-all shadow-xl",
                     subscribed 
-                      ? "bg-gradient-to-r from-emerald-500 to-green-500" 
-                      : "bg-gradient-to-r from-primary to-teal-400"
+                      ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30" 
+                      : "bg-gradient-to-r from-primary to-teal-400 shadow-primary/30"
                   )}
                 >
                   {subscribed ? (
