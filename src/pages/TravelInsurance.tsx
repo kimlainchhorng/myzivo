@@ -11,7 +11,8 @@ import {
   AlertTriangle, 
   FileText, 
   Phone, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft,
   Star, 
   Heart, 
   Clock, 
@@ -19,7 +20,10 @@ import {
   Globe,
   Users,
   Award,
-  ArrowRight
+  ArrowRight,
+  Sparkles,
+  Zap,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -40,8 +44,8 @@ const TravelInsurance = () => {
       price: 29,
       period: "per trip",
       description: "Essential coverage for peace of mind",
-      color: "border-muted-foreground",
-      bgColor: "bg-muted",
+      gradient: "from-slate-500 to-slate-600",
+      glow: "shadow-slate-500/20",
       features: [
         "Trip cancellation up to $2,500",
         "Medical expenses up to $10,000",
@@ -61,8 +65,8 @@ const TravelInsurance = () => {
       period: "per trip",
       description: "Our most popular comprehensive coverage",
       recommended: true,
-      color: "border-primary",
-      bgColor: "gradient-rides",
+      gradient: "from-primary to-teal-400",
+      glow: "shadow-primary/30",
       features: [
         "Trip cancellation up to $10,000",
         "Medical expenses up to $50,000",
@@ -82,8 +86,8 @@ const TravelInsurance = () => {
       price: 99,
       period: "per trip",
       description: "Maximum protection for worry-free travel",
-      color: "border-amber-500",
-      bgColor: "bg-gradient-to-br from-amber-500 to-amber-600",
+      gradient: "from-amber-500 to-orange-500",
+      glow: "shadow-amber-500/30",
       features: [
         "Trip cancellation up to $25,000",
         "Medical expenses up to $150,000",
@@ -101,10 +105,10 @@ const TravelInsurance = () => {
   ];
 
   const coverageTypes = [
-    { icon: Plane, label: "Flights", description: "Flight delays & cancellations" },
-    { icon: Hotel, label: "Hotels", description: "Booking protection" },
-    { icon: Car, label: "Car Rentals", description: "Rental car coverage" },
-    { icon: Package, label: "Luggage", description: "Lost luggage protection" },
+    { icon: Plane, label: "Flights", description: "Flight delays & cancellations", gradient: "from-sky-500 to-blue-500" },
+    { icon: Hotel, label: "Hotels", description: "Booking protection", gradient: "from-amber-500 to-orange-500" },
+    { icon: Car, label: "Car Rentals", description: "Rental car coverage", gradient: "from-violet-500 to-purple-500" },
+    { icon: Package, label: "Luggage", description: "Lost luggage protection", gradient: "from-emerald-500 to-green-500" },
   ];
 
   const stats = [
@@ -114,36 +118,76 @@ const TravelInsurance = () => {
     { icon: Award, value: "A+", label: "Insurance Rating" },
   ];
 
+  const benefits = [
+    { icon: Clock, title: "Instant Coverage", description: "Protection starts immediately" },
+    { icon: Phone, title: "24/7 Support", description: "Help when you need it" },
+    { icon: DollarSign, title: "Fast Claims", description: "Get paid within 48 hours" },
+    { icon: Star, title: "4.9 Rating", description: "Trusted by millions" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
       <main className="pt-20">
         {/* Hero Section */}
-        <section className="relative py-16 lg:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
-          <div className="absolute top-1/2 left-0 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+        <section className="relative py-20 lg:py-32 overflow-hidden">
+          {/* Enhanced background effects */}
+          <div className="absolute inset-0 bg-gradient-radial from-cyan-500/15 via-transparent to-transparent opacity-60" />
+          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-cyan-500/20 to-teal-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/10 to-cyan-500/5 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
+            {/* Back Navigation */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center max-w-3xl mx-auto mb-12"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-8"
             >
-              <Badge className="mb-4 bg-primary/10 text-primary">New Service</Badge>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                Travel with <span className="text-gradient-rides">Confidence</span>
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="gap-2 text-muted-foreground hover:text-foreground touch-manipulation active:scale-95 rounded-xl"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center max-w-4xl mx-auto mb-14"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Badge className="mb-6 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 text-cyan-500 border-cyan-500/30 px-4 py-2 text-sm font-semibold">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  New Service
+                </Badge>
+              </motion.div>
+              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+                Travel with{" "}
+                <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">
+                  Confidence
+                </span>
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
                 Comprehensive travel insurance that covers trip cancellations, medical emergencies, 
                 lost luggage, and more. Peace of mind for every journey.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <Button variant="hero" size="lg" className="gap-2">
-                  Get Protected Now
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-                <Button variant="outline" size="lg" className="gap-2">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                  <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 gap-2">
+                    Get Protected Now
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </motion.div>
+                <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2">
                   Compare Plans
                 </Button>
               </div>
@@ -153,7 +197,7 @@ const TravelInsurance = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.2 }}
               className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto"
             >
               {stats.map((stat, index) => (
@@ -161,13 +205,13 @@ const TravelInsurance = () => {
                   key={stat.label}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
                   className="text-center"
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-xl gradient-rides flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-primary-foreground" />
+                  <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <stat.icon className="w-7 h-7 text-white" />
                   </div>
-                  <p className="font-display text-3xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">{stat.value}</p>
                   <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </motion.div>
               ))}
@@ -176,19 +220,21 @@ const TravelInsurance = () => {
         </section>
 
         {/* Coverage Types */}
-        <section className="py-16 bg-muted/20">
+        <section className="py-16 lg:py-24 bg-muted/20">
           <div className="container mx-auto px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-14"
             >
-              <h2 className="font-display text-3xl font-bold mb-4">What We Cover</h2>
-              <p className="text-muted-foreground">Comprehensive protection for all aspects of your trip</p>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                What We <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Cover</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">Comprehensive protection for all aspects of your trip</p>
             </motion.div>
             
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
               {coverageTypes.map((type, index) => (
                 <motion.div
                   key={type.label}
@@ -196,13 +242,18 @@ const TravelInsurance = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -8 }}
                 >
-                  <Card className="text-center h-full hover:border-primary/50 transition-colors cursor-pointer group">
-                    <CardContent className="pt-6">
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl gradient-rides flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <type.icon className="h-7 w-7 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-lg mb-1">{type.label}</h3>
+                  <Card className="text-center h-full border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CardContent className="pt-8 pb-6 relative">
+                      <motion.div 
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                        className={`w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}
+                      >
+                        <type.icon className="h-8 w-8 text-white" />
+                      </motion.div>
+                      <h3 className="font-bold text-xl mb-2">{type.label}</h3>
                       <p className="text-sm text-muted-foreground">{type.description}</p>
                     </CardContent>
                   </Card>
@@ -214,15 +265,17 @@ const TravelInsurance = () => {
 
         {/* Plans */}
         <section className="py-16 lg:py-24">
-          <div className="container mx-auto px-4 max-w-5xl">
+          <div className="container mx-auto px-4 max-w-6xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-center mb-12"
+              className="text-center mb-14"
             >
-              <h2 className="font-display text-3xl font-bold mb-4">Choose Your Plan</h2>
-              <p className="text-muted-foreground">Select the coverage that fits your travel needs</p>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                Choose Your <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Plan</span>
+              </h2>
+              <p className="text-lg text-muted-foreground">Select the coverage that fits your travel needs</p>
             </motion.div>
             
             <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="grid lg:grid-cols-3 gap-6">
@@ -233,32 +286,37 @@ const TravelInsurance = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
+                  whileHover={{ y: -8 }}
                 >
                   <Label htmlFor={plan.id} className="cursor-pointer block h-full">
-                    <Card className={`relative h-full transition-all ${
+                    <Card className={`relative h-full transition-all overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card ${
                       selectedPlan === plan.id 
-                        ? `${plan.color} border-2 shadow-xl` 
-                        : "border hover:border-muted-foreground"
+                        ? "ring-2 ring-primary shadow-2xl shadow-primary/20" 
+                        : "shadow-xl hover:shadow-2xl"
                     }`}>
                       {plan.recommended && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                        <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-teal-400 text-white border-0 px-4 py-1.5 font-semibold shadow-lg">
+                          <Zap className="w-3 h-3 mr-1" />
                           Most Popular
                         </Badge>
                       )}
-                      <CardHeader className="text-center pb-4">
+                      <CardHeader className="text-center pb-4 pt-8">
                         <RadioGroupItem value={plan.id} id={plan.id} className="sr-only" />
-                        <CardTitle className="text-2xl">{plan.name}</CardTitle>
+                        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg ${plan.glow}`}>
+                          <Shield className="w-8 h-8 text-white" />
+                        </div>
+                        <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                         <div className="mt-4">
-                          <span className="text-5xl font-bold">${plan.price}</span>
+                          <span className="text-5xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">${plan.price}</span>
                           <span className="text-muted-foreground">/{plan.period}</span>
                         </div>
-                        <CardDescription className="mt-3">{plan.description}</CardDescription>
+                        <CardDescription className="mt-3 text-base">{plan.description}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-3">
                         {plan.features.map((feature) => (
                           <div key={feature} className="flex items-start gap-3">
-                            <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center shrink-0 mt-0.5">
-                              <Check className="h-3 w-3 text-success" />
+                            <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                              <Check className="h-3 w-3 text-emerald-500" />
                             </div>
                             <span className="text-sm">{feature}</span>
                           </div>
@@ -272,13 +330,23 @@ const TravelInsurance = () => {
                           </div>
                         ))}
                       </CardContent>
-                      <CardFooter className="pt-4">
-                        <Button 
-                          variant={selectedPlan === plan.id ? "hero" : "outline"} 
-                          className="w-full h-12"
-                        >
-                          {selectedPlan === plan.id ? "Selected" : "Select Plan"}
-                        </Button>
+                      <CardFooter className="pt-4 pb-6">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
+                          <Button 
+                            className={`w-full h-12 font-bold rounded-xl ${
+                              selectedPlan === plan.id 
+                                ? "bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30" 
+                                : "bg-muted hover:bg-muted/80"
+                            }`}
+                          >
+                            {selectedPlan === plan.id ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Selected
+                              </>
+                            ) : "Select Plan"}
+                          </Button>
+                        </motion.div>
                       </CardFooter>
                     </Card>
                   </Label>
@@ -289,44 +357,36 @@ const TravelInsurance = () => {
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-16 bg-muted/20">
-          <div className="container mx-auto px-4 max-w-4xl">
+        <section className="py-16 lg:py-24 bg-muted/20">
+          <div className="container mx-auto px-4 max-w-5xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Card className="border-0 bg-gradient-to-r from-primary/10 via-rides/5 to-eats/10">
-                <CardContent className="p-8">
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-                    <div>
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-xl gradient-rides flex items-center justify-center">
-                        <Clock className="h-7 w-7 text-white" />
-                      </div>
-                      <h4 className="font-semibold text-lg mb-1">Instant Coverage</h4>
-                      <p className="text-sm text-muted-foreground">Protection starts immediately</p>
-                    </div>
-                    <div>
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-xl gradient-rides flex items-center justify-center">
-                        <Phone className="h-7 w-7 text-white" />
-                      </div>
-                      <h4 className="font-semibold text-lg mb-1">24/7 Support</h4>
-                      <p className="text-sm text-muted-foreground">Help when you need it</p>
-                    </div>
-                    <div>
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-xl gradient-rides flex items-center justify-center">
-                        <DollarSign className="h-7 w-7 text-white" />
-                      </div>
-                      <h4 className="font-semibold text-lg mb-1">Fast Claims</h4>
-                      <p className="text-sm text-muted-foreground">Get paid within 48 hours</p>
-                    </div>
-                    <div>
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-xl gradient-rides flex items-center justify-center">
-                        <Star className="h-7 w-7 text-white" />
-                      </div>
-                      <h4 className="font-semibold text-lg mb-1">4.9 Rating</h4>
-                      <p className="text-sm text-muted-foreground">Trusted by millions</p>
-                    </div>
+              <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5" />
+                <CardContent className="p-8 lg:p-12 relative">
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    {benefits.map((benefit, index) => (
+                      <motion.div
+                        key={benefit.title}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                        className="text-center"
+                      >
+                        <motion.div 
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30"
+                        >
+                          <benefit.icon className="h-8 w-8 text-white" />
+                        </motion.div>
+                        <h4 className="font-bold text-lg mb-1">{benefit.title}</h4>
+                        <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                      </motion.div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -343,39 +403,47 @@ const TravelInsurance = () => {
               viewport={{ once: true }}
               className="text-center"
             >
-              <h2 className="font-display text-3xl font-bold mb-4">Ready to Travel Worry-Free?</h2>
-              <p className="text-muted-foreground mb-8">Get instant coverage and peace of mind for your next trip</p>
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                Ready to Travel <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Worry-Free?</span>
+              </h2>
+              <p className="text-lg text-muted-foreground mb-10">Get instant coverage and peace of mind for your next trip</p>
               
-              <Button variant="hero" size="lg" className="h-14 px-8 text-lg gap-2 mb-8">
-                Get Insured Now
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="inline-block mb-10">
+                <Button size="lg" className="h-16 px-10 text-xl font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-3">
+                  Get Insured Now
+                  <ArrowRight className="w-6 h-6" />
+                </Button>
+              </motion.div>
               
               <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                <Card className="cursor-pointer hover:border-primary transition-colors group" onClick={() => navigate("/insurance")}>
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <FileText className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <h4 className="font-semibold">Full Policy Details</h4>
-                      <p className="text-sm text-muted-foreground">Read complete terms</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
-                  </CardContent>
-                </Card>
-                <Card className="cursor-pointer hover:border-primary transition-colors group" onClick={() => navigate("/help#insurance")}>
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                      <Heart className="h-6 w-6 text-muted-foreground group-hover:text-primary" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <h4 className="font-semibold">Claims & Support</h4>
-                      <p className="text-sm text-muted-foreground">How to file a claim</p>
-                    </div>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary" />
-                  </CardContent>
-                </Card>
+                <motion.div whileHover={{ y: -4 }}>
+                  <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group" onClick={() => navigate("/insurance")}>
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <FileText className="h-7 w-7 text-cyan-500" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h4 className="font-bold text-lg">Full Policy Details</h4>
+                        <p className="text-sm text-muted-foreground">Read complete terms</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div whileHover={{ y: -4 }}>
+                  <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group" onClick={() => navigate("/help#insurance")}>
+                    <CardContent className="flex items-center gap-4 p-6">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Heart className="h-7 w-7 text-cyan-500" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h4 className="font-bold text-lg">Claims & Support</h4>
+                        <p className="text-sm text-muted-foreground">How to file a claim</p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </div>
             </motion.div>
           </div>
