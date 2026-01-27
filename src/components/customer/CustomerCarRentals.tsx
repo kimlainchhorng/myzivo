@@ -18,14 +18,19 @@ const CustomerCarRentals = () => {
       if (!user?.id) return [];
       const { data, error } = await supabase
         .from("car_rentals")
-        .select("*, rental_cars(make, model, year, images)")
+        .select("*, rental_cars(make, model, year, images, color)")
         .eq("customer_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
-      return data;
+      return data || [];
     },
     enabled: !!user?.id,
   });
+
+  const activeRentalsCount = rentals?.filter((r: any) => 
+    r.status === "confirmed" || r.status === "in_progress"
+  ).length || 0;
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -77,12 +82,19 @@ const CustomerCarRentals = () => {
           </h1>
           <p className="text-muted-foreground">Your rental history and active bookings</p>
         </div>
-        <Link to="/rent-car">
-          <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg hover:shadow-xl transition-shadow">
-            <Car className="h-4 w-4" />
-            Rent a Car
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          {activeRentalsCount > 0 && (
+            <Badge className="bg-primary/10 text-primary border-primary/20 border">
+              {activeRentalsCount} active
+            </Badge>
+          )}
+          <Link to="/rent-car">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg hover:shadow-xl transition-shadow">
+              <Car className="h-4 w-4" />
+              Rent a Car
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       <motion.div
