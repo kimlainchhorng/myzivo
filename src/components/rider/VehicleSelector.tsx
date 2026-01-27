@@ -1,7 +1,7 @@
-import { Car, Users, Crown, Truck, Clock, Zap, Sparkles, Shield, CheckCircle, Star, Leaf, Bolt, TrendingUp, Award } from "lucide-react";
+import { Car, Users, Crown, Truck, Clock, Shield, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FareEstimate } from "@/hooks/useRiderBooking";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 interface VehicleSelectorProps {
@@ -91,54 +91,32 @@ const VehicleSelector = ({
   selectedVehicle,
   onSelect,
 }: VehicleSelectorProps) => {
-  // Find lowest fare for "Best Value" badge
   const lowestFare = Math.min(...fareEstimates.map(e => e.totalFare));
   const fastestPickup = Math.min(...fareEstimates.map(e => e.estimatedDuration));
   
   return (
-    <div className="space-y-5">
-      {/* Enhanced Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 300 }}
-        className="flex items-center justify-between"
-      >
-        <div className="flex items-center gap-4">
-          <motion.div 
-            whileHover={{ scale: 1.08, rotate: 5 }}
-            className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-rides via-green-400 to-emerald-400 flex items-center justify-center shadow-xl shadow-rides/40"
-          >
-            <Car className="w-7 h-7 text-white drop-shadow-md" />
-            {/* Glow ring */}
-            <div className="absolute inset-0 rounded-2xl bg-rides/30 blur-xl -z-10" />
-          </motion.div>
+    <div className="space-y-3">
+      {/* Compact Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rides to-emerald-400 flex items-center justify-center shadow-md">
+            <Car className="w-5 h-5 text-white" />
+          </div>
           <div>
-            <h3 className="font-bold text-xl text-foreground">Choose your ride</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              <span className="text-primary font-semibold">{fareEstimates.length}</span> options available
+            <h3 className="font-bold text-base text-foreground">Choose your ride</h3>
+            <p className="text-xs text-muted-foreground">
+              {fareEstimates.length} options
             </p>
           </div>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="relative"
-        >
-          <Badge className="text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg shadow-emerald-500/30 px-4 py-1.5 font-semibold">
-            <Shield className="w-3.5 h-3.5 mr-1.5" />
-            Insured
-          </Badge>
-          {/* Pulse ring */}
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute inset-0 rounded-full bg-emerald-500/30 -z-10"
-          />
-        </motion.div>
-      </motion.div>
+        <Badge className="text-[10px] bg-emerald-500/20 text-emerald-400 border-emerald-500/30 px-2 py-0.5">
+          <Shield className="w-3 h-3 mr-1" />
+          Insured
+        </Badge>
+      </div>
       
-      {/* Vehicle Cards */}
-      <div className="space-y-3">
+      {/* Vehicle Cards - Mobile Optimized */}
+      <div className="space-y-2">
         {fareEstimates.map((estimate, index) => {
           const info = vehicleInfo[estimate.vehicleType] || { 
             description: "Standard ride", 
@@ -149,198 +127,97 @@ const VehicleSelector = ({
           const isSelected = selectedVehicle === estimate.vehicleType;
           const isBestValue = estimate.totalFare === lowestFare && fareEstimates.length > 1;
           const isFastest = estimate.estimatedDuration === fastestPickup && fareEstimates.length > 1;
-          const isPremium = estimate.vehicleType === 'premium';
           
           return (
             <motion.button
               key={estimate.vehicleType}
-              initial={{ opacity: 0, x: -25, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              transition={{ delay: index * 0.1, type: "spring", stiffness: 280, damping: 22 }}
-              whileHover={{ scale: 1.015, y: -3 }}
-              whileTap={{ scale: 0.99 }}
+              initial={{ opacity: 0, x: -15 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(estimate.vehicleType)}
               className={cn(
-                "w-full p-5 rounded-3xl border-2 transition-all relative overflow-hidden group",
+                "w-full p-3 rounded-xl border transition-all relative overflow-hidden",
                 isSelected
-                  ? `border-transparent bg-gradient-to-br from-card via-card to-card shadow-2xl ${colors.shadow} ring-2 ${colors.ring}`
-                  : "border-border/30 hover:border-border/50 hover:bg-muted/20 bg-card/60 backdrop-blur-xl"
+                  ? `border-primary/50 bg-primary/5 shadow-md`
+                  : "border-border/30 bg-card/80"
               )}
             >
-              {/* Selected indicator line with gradient */}
-              <AnimatePresence>
-                {isSelected && (
-                  <motion.div 
-                    initial={{ scaleY: 0 }}
-                    animate={{ scaleY: 1 }}
-                    exit={{ scaleY: 0 }}
-                    className={cn("absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b rounded-l-3xl", colors.gradient)}
-                    style={{ originY: 0 }}
-                  />
-                )}
-              </AnimatePresence>
-              
-              {/* Premium background glow */}
-              {isPremium && (
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/8 via-transparent to-amber-500/8 pointer-events-none" />
+              {/* Selected indicator */}
+              {isSelected && (
+                <div className={cn("absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b rounded-l-xl", colors.gradient)} />
               )}
               
-              {/* Hover shimmer effect */}
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-1000"
-              />
-              
-              <div className="flex items-center gap-5 relative z-10">
-                {/* Vehicle Icon - Enhanced */}
-                <motion.div 
-                  whileHover={{ rotate: 8, scale: 1.08 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                  className={cn(
-                    "w-18 h-18 rounded-2xl flex items-center justify-center transition-all relative",
-                    isSelected
-                      ? `bg-gradient-to-br ${colors.gradient} text-white shadow-xl ${colors.shadow}`
-                      : isPremium 
-                        ? `bg-gradient-to-br ${colors.iconBg} text-amber-400`
-                        : "bg-muted/80 text-muted-foreground group-hover:bg-muted"
-                  )}
-                  style={{ width: '72px', height: '72px' }}
-                >
-                  {vehicleIcons[estimate.vehicleType] || <Car className="w-7 h-7" />}
-                  
-                  {/* Corner sparkle for premium */}
-                  {isPremium && !isSelected && (
-                    <motion.div
-                      animate={{ rotate: [0, 20, 0], scale: [1, 1.2, 1] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                      className="absolute -top-1.5 -right-1.5"
-                    >
-                      <Sparkles className="w-5 h-5 text-amber-400" />
-                    </motion.div>
-                  )}
-                  
-                  {/* Eco badge */}
-                  {info.eco && (
-                    <motion.div 
-                      whileHover={{ scale: 1.1 }}
-                      className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/40"
-                    >
-                      <Leaf className="w-3.5 h-3.5 text-white" />
-                    </motion.div>
-                  )}
-                  
-                  {/* Selection glow */}
-                  {isSelected && (
-                    <div className={cn("absolute inset-0 rounded-2xl blur-xl -z-10", `bg-gradient-to-br ${colors.gradient} opacity-40`)} />
-                  )}
-                </motion.div>
+              <div className="flex items-center gap-3">
+                {/* Vehicle Icon - Compact */}
+                <div className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                  isSelected
+                    ? `bg-gradient-to-br ${colors.gradient} text-white shadow-md`
+                    : "bg-muted/60 text-muted-foreground"
+                )}>
+                  {vehicleIcons[estimate.vehicleType] || <Car className="w-5 h-5" />}
+                </div>
                 
-                {/* Info */}
+                {/* Info - Compact */}
                 <div className="flex-1 text-left min-w-0">
-                  <div className="flex items-center gap-2.5 flex-wrap mb-1.5">
-                    <span className="font-bold capitalize text-foreground text-lg tracking-tight">{estimate.vehicleType}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="font-bold capitalize text-sm">{estimate.vehicleType}</span>
                     
                     {isBestValue && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 400 }}
-                      >
-                        <Badge className="bg-gradient-to-r from-emerald-500/15 to-green-500/10 text-emerald-400 border-emerald-500/30 text-[10px] px-2.5 py-0.5 font-bold">
-                          <Star className="w-3 h-3 mr-1 fill-current" />
-                          Best Value
-                        </Badge>
-                      </motion.div>
-                    )}
-                    
-                    {isFastest && !isBestValue && (
-                      <Badge className="bg-gradient-to-r from-sky-500/15 to-blue-500/10 text-sky-400 border-sky-500/30 text-[10px] px-2.5 py-0.5 font-bold">
-                        <Bolt className="w-3 h-3 mr-1" />
-                        Fastest
+                      <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-[9px] px-1.5 py-0">
+                        Best Value
                       </Badge>
                     )}
                     
-                    {estimate.surgeMultiplier > 1 && (
-                      <Badge variant="outline" className="text-orange-400 border-orange-500/30 bg-orange-500/10 text-[10px] px-2.5 py-0.5 font-bold">
-                        <Zap className="w-3 h-3 mr-1" />
-                        {estimate.surgeMultiplier}x
+                    {isFastest && !isBestValue && (
+                      <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/30 text-[9px] px-1.5 py-0">
+                        Fastest
                       </Badge>
                     )}
                   </div>
                   
-                  <p className="text-sm text-muted-foreground truncate">
-                    {info.description}
-                  </p>
-                  
-                  <div className="flex items-center gap-3 mt-3">
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5 bg-muted/40 px-3 py-1.5 rounded-full border border-white/5">
-                      <Clock className="w-3.5 h-3.5" />
-                      <span className="font-semibold">{Math.round(estimate.estimatedDuration)} min</span>
+                  <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {Math.round(estimate.estimatedDuration)} min
                     </span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5 bg-muted/40 px-3 py-1.5 rounded-full border border-white/5">
-                      <Users className="w-3.5 h-3.5" />
-                      <span className="font-semibold">{info.passengers}</span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-3 h-3" />
+                      {info.passengers}
                     </span>
                   </div>
                 </div>
 
-                {/* Price - Enhanced */}
-                <div className="text-right shrink-0">
-                  <motion.div 
-                    key={estimate.totalFare}
-                    initial={{ scale: 0.85, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="relative"
-                  >
-                    <p className={cn(
-                      "font-bold text-3xl tracking-tight",
-                      isSelected 
-                        ? `bg-gradient-to-r ${colors.gradient} bg-clip-text text-transparent` 
-                        : "text-foreground"
-                    )}>
-                      <span className="text-lg font-medium text-muted-foreground">$</span>
-                      {estimate.totalFare.toFixed(2)}
-                    </p>
-                  </motion.div>
-                  <p className="text-xs text-muted-foreground mt-1 font-medium">
+                {/* Price - Compact */}
+                <div className="text-right flex-shrink-0">
+                  <p className={cn(
+                    "font-bold text-lg",
+                    isSelected ? "text-primary" : "text-foreground"
+                  )}>
+                    ${estimate.totalFare.toFixed(2)}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
                     {estimate.estimatedDistance.toFixed(1)} km
                   </p>
                 </div>
-              </div>
-              
-              {/* Selection checkmark - Enhanced */}
-              <AnimatePresence>
+                
+                {/* Checkmark */}
                 {isSelected && (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    exit={{ scale: 0, rotate: 180 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                    className={cn(
-                      "absolute top-4 right-4 w-8 h-8 rounded-full bg-gradient-to-br flex items-center justify-center shadow-xl",
-                      colors.gradient, colors.shadow
-                    )}
-                  >
-                    <CheckCircle className="w-5 h-5 text-white" />
-                  </motion.div>
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                    <CheckCircle className="w-3.5 h-3.5 text-white" />
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </motion.button>
           );
         })}
       </div>
       
-      {/* Bottom info - Enhanced */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="flex items-center justify-center gap-3 pt-4"
-      >
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 px-4 py-2 rounded-full border border-white/5">
-          <TrendingUp className="w-3.5 h-3.5 text-primary" />
-          <span>Prices may vary based on traffic and demand</span>
-        </div>
-      </motion.div>
+      {/* Bottom note - Compact */}
+      <p className="text-center text-[10px] text-muted-foreground pt-2">
+        Prices may vary based on traffic and demand
+      </p>
     </div>
   );
 };

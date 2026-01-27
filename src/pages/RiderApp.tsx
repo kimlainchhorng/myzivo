@@ -503,65 +503,41 @@ const RiderApp = () => {
           )}
         </AnimatePresence>
 
-        {/* Premium Quick Stats Floating */}
+        {/* Quick Stats - Mobile Optimized */}
         <AnimatePresence>
           {step === "location" && !pickup && (
             <motion.div
-              initial={{ opacity: 0, y: -30 }}
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30, scale: 0.95 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="absolute top-4 left-4 right-4 flex gap-3 justify-center flex-wrap"
+              className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap"
             >
               {quickStats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, scale: 0.7, y: -20, rotateX: -15 }}
-                  animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-                  transition={{ 
-                    delay: index * 0.12, 
-                    type: "spring", 
-                    stiffness: 350,
-                    damping: 25
-                  }}
-                  whileHover={{ scale: 1.08, y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="group relative px-4 py-3 rounded-2xl bg-card/95 backdrop-blur-2xl border border-white/15 shadow-2xl flex items-center gap-3 cursor-default overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.8, y: -15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: index * 0.08, type: "spring", stiffness: 350, damping: 25 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group relative px-2.5 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden"
                 >
-                  {/* Animated gradient border glow */}
-                  <motion.div 
-                    className={cn(
-                      "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl",
-                      "bg-gradient-to-r",
-                      stat.gradient
-                    )}
-                    style={{ padding: '1px', margin: '-1px' }}
-                  />
-                  
-                  {/* Shimmer effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  
                   {/* Content */}
-                  <div className="relative z-10 flex items-center gap-3">
-                    <motion.div 
-                      whileHover={{ rotate: 12, scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                      className={cn(
-                        "w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
-                        stat.gradient,
-                        stat.glow
-                      )}
-                    >
-                      <stat.icon className="w-5 h-5 text-white drop-shadow-md" />
-                    </motion.div>
+                  <div className="relative z-10 flex items-center gap-2">
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md",
+                      stat.gradient
+                    )}>
+                      <stat.icon className="w-4 h-4 text-white" />
+                    </div>
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-1">
-                        <p className="text-lg font-bold tracking-tight">{stat.value}</p>
+                      <div className="flex items-center gap-0.5">
+                        <p className="text-sm font-bold">{stat.value}</p>
                         {stat.label === "Top rated" && (
-                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                          <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
                         )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground font-medium tracking-wide uppercase">{stat.label}</p>
+                      <p className="text-[9px] text-muted-foreground font-medium uppercase">{stat.label}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -571,25 +547,17 @@ const RiderApp = () => {
         </AnimatePresence>
       </div>
 
-      {/* Premium Bottom Sheet with Enhanced Design */}
+      {/* Bottom Sheet - Mobile Optimized */}
       <motion.div 
-        initial={{ y: 150 }}
+        initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 280, damping: 32 }}
-        className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/15 rounded-t-[2.5rem] shadow-[0_-25px_70px_-12px_rgba(0,0,0,0.5)]"
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/10 rounded-t-[1.5rem] shadow-[0_-15px_40px_-12px_rgba(0,0,0,0.4)]"
       >
-        {/* Decorative top gradient line */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent rounded-full" />
+        {/* Handle */}
+        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3" />
         
-        {/* Handle with glow */}
-        <div className="relative w-12 h-1.5 bg-white/25 rounded-full mx-auto mt-4 cursor-grab group">
-          <motion.div 
-            whileHover={{ scale: 1.2 }}
-            className="absolute inset-0 bg-white/20 rounded-full blur-sm group-hover:bg-primary/30 transition-colors" 
-          />
-        </div>
-        
-        <div className="p-6 pb-10 max-h-[65vh] overflow-y-auto scrollbar-hide">
+        <div className="p-4 pb-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
           {/* Location Step */}
           <AnimatePresence mode="wait">
             {step === "location" && (
@@ -697,126 +665,47 @@ const RiderApp = () => {
                 transition={{ type: "spring", stiffness: 320, damping: 28 }}
                 className="space-y-6"
               >
-                {/* Premium Route Summary Card */}
+                {/* Route Summary Card - Mobile Optimized */}
                 <motion.div 
-                  initial={{ opacity: 0, y: 20, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  className="group relative p-6 rounded-[1.75rem] bg-gradient-to-br from-card via-card/95 to-card/90 border border-white/15 overflow-hidden shadow-2xl shadow-black/20"
+                  className="relative p-4 rounded-2xl bg-card border border-white/10 overflow-hidden"
                 >
-                  {/* Multi-layer background effects */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-500/8" />
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-radial from-primary/20 via-primary/5 to-transparent rounded-full blur-3xl" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-radial from-teal-500/15 via-teal-500/5 to-transparent rounded-full blur-2xl" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-radial from-cyan-500/8 to-transparent rounded-full blur-3xl" />
+                  {/* Subtle background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
                   
-                  {/* Animated border glow */}
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    className="absolute -inset-[1px] rounded-[1.75rem] bg-gradient-conic from-primary/30 via-transparent via-50% to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  />
-                  <div className="absolute inset-[1px] rounded-[1.6rem] bg-card" />
-                  
-                  {/* Shimmer sweep on hover */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-transparent via-white/8 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                  
-                  <div className="relative flex items-center gap-5">
-                    {/* Animated navigation icon */}
-                    <motion.div 
-                      whileHover={{ rotate: 20, scale: 1.1 }}
-                      transition={{ type: "spring", stiffness: 400 }}
-                      className="relative flex-shrink-0"
-                    >
-                      <div className="w-[4.5rem] h-[4.5rem] rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/50 border border-white/20">
-                        <Navigation className="w-9 h-9 text-white drop-shadow-lg" />
+                  <div className="relative flex items-center gap-3">
+                    {/* Navigation icon - smaller for mobile */}
+                    <div className="relative flex-shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                        <Navigation className="w-6 h-6 text-white" />
                       </div>
-                      {/* Pulse rings */}
-                      <motion.div
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute inset-0 rounded-2xl bg-primary/40 blur-md"
-                      />
-                      <motion.div
-                        animate={{ scale: [1, 1.6, 1], opacity: [0.3, 0, 0.3] }}
-                        transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
-                        className="absolute inset-0 rounded-2xl bg-teal-400/30 blur-lg"
-                      />
-                      {/* Live indicator */}
-                      <motion.div 
-                        animate={{ scale: [1, 1.3, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 border-2 border-card shadow-lg shadow-emerald-500/50 flex items-center justify-center"
-                      >
-                        <div className="w-2 h-2 rounded-full bg-white" />
-                      </motion.div>
-                    </motion.div>
+                      {/* Live dot */}
+                      <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
+                    </div>
                     
-                    {/* Route details */}
-                    <div className="flex-1 min-w-0 space-y-3">
+                    {/* Route details - compact */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
                       {/* Pickup */}
-                      <div className="flex items-center gap-3 group/pickup">
-                        <div className="relative">
-                          <motion.div 
-                            animate={{ scale: [1, 1.15, 1] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="w-3.5 h-3.5 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg shadow-emerald-500/60"
-                          />
-                          <div className="absolute inset-0 rounded-full bg-emerald-400/50 blur-sm animate-pulse" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-emerald-400/80 font-semibold uppercase tracking-wider mb-0.5">Pickup</p>
-                          <p className="text-sm font-bold truncate group-hover/pickup:text-primary transition-colors">{pickup?.address?.split(',')[0]}</p>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow shadow-emerald-500/50" />
+                        <p className="text-xs font-semibold truncate">{pickup?.address?.split(',')[0]}</p>
                       </div>
-                      
-                      {/* Animated connection dots */}
-                      <div className="flex items-center gap-1.5 pl-1">
-                        {[0, 1, 2].map((i) => (
-                          <motion.div
-                            key={i}
-                            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                            className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-primary/60 to-teal-400/60"
-                          />
-                        ))}
-                      </div>
-                      
                       {/* Dropoff */}
-                      <div className="flex items-center gap-3 group/dropoff">
-                        <div className="relative">
-                          <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-br from-primary to-teal-400 shadow-lg shadow-primary/60" />
-                          <div className="absolute inset-0 rounded-sm bg-primary/40 blur-sm" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-primary/80 font-semibold uppercase tracking-wider mb-0.5">Drop-off</p>
-                          <p className="text-sm font-bold truncate group-hover/dropoff:text-teal-400 transition-colors">{dropoff?.address?.split(',')[0]}</p>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-sm bg-primary shadow shadow-primary/50" />
+                        <p className="text-xs text-muted-foreground truncate">{dropoff?.address?.split(',')[0]}</p>
                       </div>
                     </div>
                     
-                    {/* Trip stats card */}
-                    <motion.div 
-                      whileHover={{ scale: 1.03, y: -2 }}
-                      className="relative flex-shrink-0 bg-gradient-to-br from-card via-card/95 to-muted/30 backdrop-blur-2xl px-5 py-4 rounded-2xl border border-white/15 shadow-xl overflow-hidden"
-                    >
-                      {/* Inner glow */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
-                      
-                      <div className="relative text-center">
-                        <motion.p 
-                          key={routeInfo?.duration}
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-3xl font-black bg-gradient-to-r from-primary via-teal-400 to-cyan-400 bg-clip-text text-transparent"
-                        >
-                          {routeInfo?.duration}
-                        </motion.p>
-                        <p className="text-xs text-muted-foreground font-bold tracking-wide">min</p>
-                        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/15 to-transparent my-2" />
-                        <p className="text-lg font-bold text-foreground">{routeInfo?.distance.toFixed(1)} <span className="text-xs text-muted-foreground">km</span></p>
-                      </div>
-                    </motion.div>
+                    {/* Trip stats - compact */}
+                    <div className="flex-shrink-0 text-right bg-muted/30 px-3 py-2 rounded-xl">
+                      <p className="text-xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+                        {routeInfo?.duration}<span className="text-xs text-muted-foreground ml-0.5">min</span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground font-medium">{routeInfo?.distance.toFixed(1)} km</p>
+                    </div>
                   </div>
                 </motion.div>
 
@@ -834,105 +723,48 @@ const RiderApp = () => {
                   />
                 </motion.div>
                 
-                {/* Premium Confirm Button */}
+                {/* Confirm Button - Mobile Optimized */}
                 <motion.div 
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 280 }}
-                  className="relative pt-2"
+                  transition={{ delay: 0.15, type: "spring" }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  {/* Floating glow behind button */}
-                  <div className="absolute inset-x-4 -top-2 bottom-4 bg-gradient-to-r from-primary/30 via-teal-400/25 to-primary/30 rounded-3xl blur-2xl" />
-                  
-                  <motion.div
-                    whileHover={{ scale: 1.015, y: -3 }} 
-                    whileTap={{ scale: 0.98 }}
+                  <Button
+                    size="lg"
+                    className="relative w-full h-14 text-base font-bold gap-3 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/40 overflow-hidden"
+                    disabled={!selectedVehicle || createTrip.isPending}
+                    onClick={handleConfirmBooking}
                   >
-                    <Button
-                      size="lg"
-                      className="relative w-full h-20 text-xl font-bold gap-4 rounded-[1.25rem] bg-gradient-to-r from-primary via-primary to-teal-400 text-white shadow-2xl shadow-primary/60 overflow-hidden group border border-white/20"
-                      disabled={!selectedVehicle || createTrip.isPending}
-                      onClick={handleConfirmBooking}
-                    >
-                      {/* Animated background layers */}
-                      <motion.div
-                        animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
-                        className="absolute inset-0 bg-gradient-to-r from-primary via-teal-400 via-cyan-400 to-primary bg-[length:200%_100%] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      />
-                      
-                      {/* Shine sweep effect */}
-                      <motion.div
-                        initial={{ x: "-100%", opacity: 0 }}
-                        animate={{ x: "200%", opacity: [0, 0.5, 0] }}
-                        transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                      />
-                      
-                      {/* Top highlight */}
-                      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                      
-                      {createTrip.isPending ? (
-                        <div className="relative flex items-center gap-4">
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-8 h-8 rounded-full border-3 border-white/30 border-t-white"
-                          />
-                          <span className="text-lg">Finding your driver...</span>
-                          <motion.div
-                            animate={{ opacity: [0.5, 1, 0.5] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                            className="flex gap-1"
-                          >
-                            {[0, 1, 2].map((i) => (
-                              <motion.div
-                                key={i}
-                                animate={{ y: [0, -4, 0] }}
-                                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
-                                className="w-1.5 h-1.5 rounded-full bg-white"
-                              />
-                            ))}
-                          </motion.div>
-                        </div>
-                      ) : (
-                        <div className="relative flex items-center justify-center gap-5 w-full">
-                          <motion.div
-                            animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.15, 1.15, 1] }}
-                            transition={{ duration: 2.5, repeat: Infinity }}
-                            className="relative"
-                          >
-                            <Sparkles className="w-8 h-8 drop-shadow-lg" />
-                            <div className="absolute inset-0 blur-md bg-white/40" />
-                          </motion.div>
-                          
-                          <span className="text-xl font-bold tracking-wide">Confirm Ride</span>
-                          
-                          <motion.div 
-                            initial={{ scale: 0.9 }}
-                            animate={{ scale: 1 }}
-                            whileHover={{ scale: 1.05 }}
-                            className="relative ml-2 px-5 py-2 bg-white/25 backdrop-blur-md rounded-xl border border-white/30 shadow-inner"
-                          >
-                            <span className="text-lg font-black">${selectedFare?.totalFare.toFixed(2)}</span>
-                            {/* Subtle shine */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-xl opacity-60" />
-                          </motion.div>
-                        </div>
-                      )}
-                    </Button>
-                  </motion.div>
+                    {/* Shine effect */}
+                    <motion.div
+                      initial={{ x: "-100%" }}
+                      animate={{ x: "200%" }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                    />
+                    
+                    {createTrip.isPending ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Finding driver...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-3 w-full">
+                        <Sparkles className="w-5 h-5" />
+                        <span>Confirm Ride</span>
+                        <span className="px-3 py-1 bg-white/20 rounded-lg text-sm font-bold">
+                          ${selectedFare?.totalFare.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </Button>
                   
-                  {/* Safety message */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground"
-                  >
-                    <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Secure payment • Trip protection included</span>
-                  </motion.div>
+                  {/* Safety note */}
+                  <p className="text-center text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
+                    <Shield className="w-3 h-3 text-emerald-400" />
+                    Secure payment • Trip protection
+                  </p>
                 </motion.div>
               </motion.div>
             )}
