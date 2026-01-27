@@ -33,7 +33,7 @@ interface ActiveTripPanelProps {
   isUpdating: boolean;
 }
 
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNsNHoxZzl2YzFyaHQza29hMGZzYWdqcHoifQ.SR4M8qPT-wXTR6IPq8oYkg";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const statusFlow: { status: TripStatus; label: string; nextLabel: string; icon: React.ElementType }[] = [
   { status: "accepted", label: "Trip Accepted", nextLabel: "Start Navigation", icon: CheckCircle },
