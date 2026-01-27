@@ -419,7 +419,7 @@ const RiderApp = () => {
                     {step === "vehicle" && (
                       <span className="flex items-center gap-1">
                         <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                        {routeInfo?.distance.toFixed(1)} km • {routeInfo?.duration} min
+                        {(routeInfo?.distance * 0.621371).toFixed(1)} mi • {routeInfo?.duration} min
                       </span>
                     )}
                   </motion.p>
@@ -694,7 +694,7 @@ const RiderApp = () => {
                       <p className="text-xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
                         {routeInfo?.duration}<span className="text-xs text-muted-foreground ml-0.5">min</span>
                       </p>
-                      <p className="text-[11px] text-muted-foreground font-medium">{routeInfo?.distance.toFixed(1)} km</p>
+                      <p className="text-[11px] text-muted-foreground font-medium">{(routeInfo?.distance * 0.621371).toFixed(1)} mi</p>
                     </div>
                   </div>
                 </motion.div>

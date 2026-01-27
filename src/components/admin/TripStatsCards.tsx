@@ -80,7 +80,7 @@ const detailedStatConfig = [
     icon: Route,
     gradient: "from-indigo-500 to-violet-500",
     bgGradient: "from-indigo-500/10 to-violet-500/5",
-    format: (v: number) => `${v.toFixed(0)} km`,
+    format: (v: number) => `${(v * 0.621371).toFixed(0)} mi`,
   },
   { 
     key: "averageRating",

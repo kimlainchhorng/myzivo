@@ -207,7 +207,7 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
               className="grid grid-cols-3 gap-3"
             >
               {[
-                { icon: Navigation, value: trip.distance_km?.toFixed(1), label: "kilometers", color: "primary", gradient: "from-primary/20 to-primary/5" },
+                { icon: Navigation, value: (trip.distance_km ? (trip.distance_km * 0.621371).toFixed(1) : null), label: "miles", color: "primary", gradient: "from-primary/20 to-primary/5" },
                 { icon: Clock, value: trip.duration_minutes, label: "minutes", color: "amber-500", gradient: "from-amber-500/20 to-amber-500/5" },
                 { icon: Star, value: trip.rating || "—", label: "rating", color: "amber-500", gradient: "from-amber-500/20 to-amber-500/5" },
               ].map((stat, index) => (
@@ -242,7 +242,7 @@ const TripReceiptModal = ({ trip, open, onOpenChange }: TripReceiptModalProps) =
               <div className="space-y-2 text-sm">
                 {[
                   { label: "Base fare", value: baseFare },
-                  { label: `Distance (${trip.distance_km?.toFixed(1)} km)`, value: distanceFare },
+                  { label: `Distance (${trip.distance_km ? (trip.distance_km * 0.621371).toFixed(1) : 0} mi)`, value: distanceFare },
                   { label: `Time (${trip.duration_minutes} min)`, value: timeFare },
                 ].map((item, index) => (
                   <motion.div 

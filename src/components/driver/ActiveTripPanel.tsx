@@ -400,8 +400,8 @@ const ActiveTripPanel = ({ trip, driverId, onUpdateStatus, isUpdating }: ActiveT
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
                 <Navigation className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-2xl font-bold">{trip.distance_km?.toFixed(1)}</p>
-              <p className="text-xs text-muted-foreground font-medium">kilometers</p>
+              <p className="text-2xl font-bold">{trip.distance_km ? (trip.distance_km * 0.621371).toFixed(1) : "—"}</p>
+              <p className="text-xs text-muted-foreground font-medium">miles</p>
             </CardContent>
           </Card>
           <Card className="border-0 bg-muted/30">
