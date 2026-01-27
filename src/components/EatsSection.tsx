@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Clock, Star, ChevronRight, Flame, Leaf, Pizza, Coffee } from "lucide-react";
 
@@ -54,14 +55,40 @@ const restaurants = [
 const EatsSection = () => {
   return (
     <section id="eats" className="py-20 lg:py-32 relative bg-gradient-to-b from-background via-card/50 to-background overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-radial from-eats/10 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-red-500/10 to-transparent rounded-full blur-3xl" />
       
       {/* Floating food emojis */}
-      <div className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-40 animate-float">🍕</div>
-      <div className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-30 animate-float" style={{ animationDelay: '1s' }}>🍜</div>
-      <div className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-30 animate-float" style={{ animationDelay: '2s' }}>🍔</div>
+      <motion.div
+        animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-45"
+      >
+        🍕
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-35"
+      >
+        🍜
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 7, repeat: Infinity }}
+        className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-35"
+      >
+        🍔
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 5.5, repeat: Infinity }}
+        className="absolute bottom-48 left-[12%] text-4xl hidden lg:block opacity-30"
+      >
+        🍣
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
