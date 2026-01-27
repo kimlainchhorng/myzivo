@@ -45,29 +45,30 @@ const PromoBanner = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-8 relative overflow-hidden">
+    <section className="py-8 sm:py-12 relative overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-5 sm:gap-6">
           {promos.map((promo, index) => (
             <motion.div
               key={promo.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ delay: index * 0.1, type: "spring" }}
+              whileHover={{ y: -6, scale: 1.02 }}
               onClick={() => navigate(promo.href)}
-              className="relative p-6 rounded-3xl cursor-pointer group overflow-hidden"
+              className="relative p-6 sm:p-8 rounded-3xl cursor-pointer group overflow-hidden shadow-xl hover:shadow-2xl transition-shadow"
             >
               {/* Background gradient */}
               <div className={cn(
-                "absolute inset-0 bg-gradient-to-br opacity-90",
+                "absolute inset-0 bg-gradient-to-br opacity-95",
                 promo.gradient
               )} />
               
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full blur-2xl" />
+              {/* Enhanced decorative elements */}
+              <div className="absolute top-0 right-0 w-60 h-60 bg-white/15 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/15 rounded-full blur-3xl" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-white/5 rounded-full blur-2xl" />
               
               {/* Content */}
               <div className="relative z-10 flex items-center justify-between">

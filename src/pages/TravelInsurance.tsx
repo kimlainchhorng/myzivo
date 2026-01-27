@@ -133,9 +133,33 @@ const TravelInsurance = () => {
         {/* Hero Section */}
         <section className="relative py-20 lg:py-32 overflow-hidden">
           {/* Enhanced background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-cyan-500/15 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-cyan-500/20 to-teal-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/10 to-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-radial from-cyan-500/20 via-transparent to-transparent opacity-70" />
+          <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-cyan-500/25 to-teal-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary/15 to-cyan-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-50"
+          >
+            🛡️
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-40"
+          >
+            ✈️
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute bottom-40 right-[15%] text-4xl hidden lg:block opacity-30"
+          >
+            🏥
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Back Navigation */}
@@ -158,38 +182,42 @@ const TravelInsurance = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-center max-w-4xl mx-auto mb-14"
+              className="text-center max-w-4xl mx-auto mb-16"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
+                transition={{ delay: 0.1, type: "spring" }}
               >
-                <Badge className="mb-6 bg-gradient-to-r from-cyan-500/20 to-teal-500/20 text-cyan-500 border-cyan-500/30 px-4 py-2 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4 mr-2" />
+                <Badge className="mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-5 py-2.5 text-sm font-bold shadow-xl shadow-cyan-500/40">
+                  <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  </motion.div>
                   New Service
                 </Badge>
               </motion.div>
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight">
                 Travel with{" "}
-                <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
                   Confidence
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-10">
-                Comprehensive travel insurance that covers trip cancellations, medical emergencies, 
+              <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-12">
+                Comprehensive travel insurance that covers <span className="text-foreground font-medium">trip cancellations</span>, medical emergencies, 
                 lost luggage, and more. Peace of mind for every journey.
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                  <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 gap-2">
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2">
                     Get Protected Now
                     <ChevronRight className="w-5 h-5" />
                   </Button>
                 </motion.div>
-                <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2">
-                  Compare Plans
-                </Button>
+                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                  <Button variant="outline" size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl border-2 gap-2">
+                    Compare Plans
+                  </Button>
+                </motion.div>
               </div>
             </motion.div>
 

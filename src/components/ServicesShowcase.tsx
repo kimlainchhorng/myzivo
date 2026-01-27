@@ -163,10 +163,27 @@ const ServicesShowcase = () => {
   return (
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-br from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-0 w-[350px] h-[350px] bg-gradient-to-tl from-sky-500/10 to-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-gradient-to-bl from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/3 left-0 w-[500px] h-[500px] bg-gradient-to-br from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-0 w-[450px] h-[450px] bg-gradient-to-tl from-sky-500/15 to-blue-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-bl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
+
+      {/* Floating icons */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-40 left-[8%] text-4xl hidden lg:block opacity-40"
+      >
+        🚀
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-48 right-[6%] text-4xl hidden lg:block opacity-30"
+      >
+        ✨
+      </motion.div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -181,20 +198,21 @@ const ServicesShowcase = () => {
             initial={{ scale: 0.9, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-6"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
             <span className="text-muted-foreground">All-in-One Platform</span>
           </motion.div>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
             Everything you need,{" "}
-            <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
               one app
             </span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
-            From daily commutes to dream vacations, ZIVO has you covered with 9 integrated
-            services
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            From daily commutes to dream vacations, ZIVO has you covered with <span className="text-foreground font-medium">9 integrated services</span>
           </p>
         </motion.div>
 

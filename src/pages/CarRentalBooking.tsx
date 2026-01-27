@@ -248,26 +248,51 @@ const CarRentalBooking = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-12 lg:py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-rides/10 via-transparent to-transparent" />
+        <section className="relative py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-rides/15 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-violet-500/20 to-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-rides/15 to-cyan-500/10 rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-50"
+          >
+            🚗
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute bottom-40 right-[10%] text-4xl hidden lg:block opacity-40"
+          >
+            🛣️
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
+              className="text-center mb-10"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rides/20 text-rides text-sm font-medium mb-6">
-                <Car className="w-4 h-4" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring" }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-bold mb-6 shadow-xl shadow-violet-500/40"
+              >
+                <motion.div animate={{ rotate: [0, 15, -15, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Car className="w-4 h-4" />
+                </motion.div>
                 ZIVO Car Rental
-              </div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">
+              </motion.div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
                 Drive your way
                 <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-rides to-cyan-400">anywhere you go</span>
+                <span className="bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">anywhere you go</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                From compact city cars to luxury SUVs. Pick up and drop off at your convenience.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                From compact city cars to <span className="text-foreground font-medium">luxury SUVs</span>. Pick up and drop off at your convenience.
               </p>
             </motion.div>
 

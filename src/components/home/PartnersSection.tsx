@@ -14,21 +14,31 @@ const partners = [
 
 const PartnersSection = () => {
   return (
-    <section className="py-12 sm:py-16 relative overflow-hidden bg-muted/20">
+    <section className="py-14 sm:py-20 relative overflow-hidden bg-muted/30 border-y border-border/50">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
+      
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-teal-400/10 border border-primary/20 text-sm font-medium mb-4">
-            <Sparkles className="w-4 h-4 text-primary" />
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10"
+          >
+            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
             <span className="text-muted-foreground">Trusted Partners</span>
-          </div>
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-muted-foreground">
-            Partnered with leading brands worldwide
+          </motion.div>
+          <h3 className="font-display text-2xl sm:text-3xl font-bold">
+            Partnered with <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">leading brands</span> worldwide
           </h3>
         </motion.div>
 
