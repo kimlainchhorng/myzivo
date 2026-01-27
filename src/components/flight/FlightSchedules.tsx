@@ -1,72 +1,142 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Clock } from "lucide-react";
+import { Plane, Clock, ArrowRight, Sparkles, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 
 const FlightSchedules = () => {
   const schedules = [
-    { flight: "DL 1234", route: "NYC → LAX", departure: "08:00", arrival: "11:30", aircraft: "Boeing 737", status: "on_time" },
-    { flight: "UA 5678", route: "LAX → SFO", departure: "10:15", arrival: "11:30", aircraft: "Airbus A320", status: "on_time" },
-    { flight: "AA 9012", route: "MIA → NYC", departure: "14:30", arrival: "17:45", aircraft: "Boeing 777", status: "delayed" },
-    { flight: "B6 3456", route: "BOS → JFK", departure: "16:00", arrival: "17:15", aircraft: "Embraer 190", status: "on_time" },
-    { flight: "SW 7890", route: "DEN → PHX", departure: "18:45", arrival: "20:00", aircraft: "Boeing 737 MAX", status: "cancelled" },
+    { flight: "DL 1234", route: "NYC → LAX", departure: "08:00", arrival: "11:30", aircraft: "Boeing 737", status: "on_time", gate: "A12" },
+    { flight: "UA 5678", route: "LAX → SFO", departure: "10:15", arrival: "11:30", aircraft: "Airbus A320", status: "on_time", gate: "B5" },
+    { flight: "AA 9012", route: "MIA → NYC", departure: "14:30", arrival: "17:45", aircraft: "Boeing 777", status: "delayed", gate: "C8" },
+    { flight: "B6 3456", route: "BOS → JFK", departure: "16:00", arrival: "17:15", aircraft: "Embraer 190", status: "on_time", gate: "D3" },
+    { flight: "SW 7890", route: "DEN → PHX", departure: "18:45", arrival: "20:00", aircraft: "Boeing 737 MAX", status: "cancelled", gate: "-" },
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
-      case "on_time": return "bg-green-500/10 text-green-500";
-      case "delayed": return "bg-amber-500/10 text-amber-500";
-      case "cancelled": return "bg-red-500/10 text-red-500";
-      default: return "bg-muted text-muted-foreground";
+      case "on_time": return { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20", label: "On Time", dot: "bg-emerald-500" };
+      case "delayed": return { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20", label: "Delayed", dot: "bg-amber-500" };
+      case "cancelled": return { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20", label: "Cancelled", dot: "bg-red-500" };
+      default: return { bg: "bg-muted", text: "text-muted-foreground", border: "border-muted", label: status, dot: "bg-muted-foreground" };
     }
+  };
+
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, x: -20 },
+    show: { opacity: 1, x: 0 }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Flight Schedules</h1>
-        <p className="text-muted-foreground">Today's flight schedule</p>
-      </div>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            Flight Schedules
+          </h1>
+          <p className="text-muted-foreground">Today's flight schedule</p>
+        </div>
+        <Button variant="outline" size="sm" className="gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </motion.div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Today's Flights</CardTitle>
-          <CardDescription>Live flight status and schedules</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {schedules.map((flight, index) => (
-              <div key={index} className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-sky-500/10">
-                    <Plane className="h-5 w-5 text-sky-500" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold">{flight.flight}</span>
-                      <Badge className={getStatusColor(flight.status)}>
-                        {flight.status.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{flight.route}</p>
-                    <p className="text-xs text-muted-foreground">{flight.aircraft}</p>
-                  </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl overflow-hidden">
+          <CardHeader className="border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-sky-500/10">
+                  <Plane className="h-5 w-5 text-sky-500" />
                 </div>
-                <div className="flex items-center gap-8">
-                  <div className="text-center">
-                    <p className="font-bold">{flight.departure}</p>
-                    <p className="text-xs text-muted-foreground">Departure</p>
-                  </div>
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="font-bold">{flight.arrival}</p>
-                    <p className="text-xs text-muted-foreground">Arrival</p>
-                  </div>
+                <div>
+                  <CardTitle>Today's Flights</CardTitle>
+                  <CardDescription>Live flight status and schedules</CardDescription>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-sm font-medium text-emerald-500">Live Updates</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <motion.div 
+              variants={container}
+              initial="hidden"
+              animate="show"
+              className="divide-y divide-border/50"
+            >
+              {schedules.map((flight, index) => {
+                const statusConfig = getStatusConfig(flight.status);
+                return (
+                  <motion.div 
+                    key={index}
+                    variants={item}
+                    className={`flex items-center justify-between p-5 hover:bg-muted/30 transition-colors ${flight.status === 'cancelled' ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className={`p-3 rounded-xl ${flight.status === 'cancelled' ? 'bg-muted' : 'bg-gradient-to-br from-sky-500 to-blue-600'} shadow-lg`}>
+                        <Plane className={`h-6 w-6 ${flight.status === 'cancelled' ? 'text-muted-foreground' : 'text-white'}`} />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <span className="font-bold text-lg">{flight.flight}</span>
+                          <Badge className={`${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} mr-1.5 ${flight.status === 'on_time' ? 'animate-pulse' : ''}`} />
+                            {statusConfig.label}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground">{flight.route}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{flight.aircraft}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-8">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{flight.departure}</p>
+                        <p className="text-xs text-muted-foreground">Departure</p>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                        <div className="w-16 h-0.5 bg-gradient-to-r from-primary/50 to-primary rounded-full" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold">{flight.arrival}</p>
+                        <p className="text-xs text-muted-foreground">Arrival</p>
+                      </div>
+                      <div className="text-center min-w-[60px]">
+                        <p className="text-lg font-semibold text-primary">{flight.gate}</p>
+                        <p className="text-xs text-muted-foreground">Gate</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };
