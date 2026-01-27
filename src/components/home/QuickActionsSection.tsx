@@ -126,14 +126,22 @@ const QuickActionsSection = () => {
           viewport={{ once: true }}
           className="space-y-12"
         >
-          {/* Header */}
+          {/* Header with animated icon */}
           <motion.div variants={itemVariants} className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30"
+                className="relative p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30 overflow-hidden"
               >
-                <Zap className="w-7 h-7 text-white" />
+                <Zap className="w-7 h-7 text-white relative z-10" />
+                {/* Shine effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '200%' }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  style={{ transform: 'skewX(-15deg)' }}
+                />
               </motion.div>
               <div>
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Quick Actions</h2>

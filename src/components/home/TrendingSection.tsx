@@ -98,14 +98,26 @@ const TrendingSection = () => {
           viewport={{ once: true }}
           className="space-y-12"
         >
-          {/* Header */}
+          {/* Header with enhanced styling */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: -5 }}
-                className="p-3.5 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30"
+                className="relative p-3.5 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30 overflow-hidden"
               >
-                <TrendingUp className="w-7 h-7 text-white" />
+                <TrendingUp className="w-7 h-7 text-white relative z-10" />
+                {/* Animated glow ring */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl"
+                  animate={{ 
+                    boxShadow: [
+                      '0 0 0 0 hsl(var(--eats) / 0.4)',
+                      '0 0 0 10px hsl(var(--eats) / 0)',
+                      '0 0 0 0 hsl(var(--eats) / 0)',
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
               </motion.div>
               <div>
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Recommended For You</h2>
