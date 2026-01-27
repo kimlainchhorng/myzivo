@@ -1,13 +1,12 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import StatsSection from "@/components/StatsSection";
 import FeaturesSection from "@/components/FeaturesSection";
-import ServicesShowcase from "@/components/ServicesShowcase";
 import TrustSection from "@/components/TrustSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import DriverCTASection from "@/components/DriverCTASection";
 import AppDownloadSection from "@/components/AppDownloadSection";
 import Footer from "@/components/Footer";
+import { QuickActionsSection, TrendingSection, LiveStatsSection, AllServicesSection } from "@/components/home/HomeSections";
 
 const Index = () => {
   return (
@@ -15,9 +14,11 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
-        <StatsSection />
+        <QuickActionsSection />
+        <TrendingSection />
+        <LiveStatsSection />
         <FeaturesSection />
-        <ServicesShowcase />
+        <AllServicesSection />
         <TrustSection />
         <TestimonialsSection />
         <DriverCTASection />
