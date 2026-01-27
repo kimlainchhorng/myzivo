@@ -378,40 +378,32 @@ const RiderApp = () => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="sticky top-0 z-50 bg-card/70 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/5"
       >
-        <div className="p-4">
+        <div className="p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+            <div className="flex items-center gap-2">
+              <motion.div whileTap={{ scale: 0.95 }}>
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => step === "location" ? navigate("/") : handleReset()}
-                  className="rounded-xl hover:bg-white/10 backdrop-blur-sm border border-white/5"
+                  className="h-8 w-8 rounded-lg hover:bg-white/10 backdrop-blur-sm border border-white/5"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
               </motion.div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <motion.div 
-                  whileHover={{ scale: 1.08, rotate: 5 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40"
+                  className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
                 >
-                  <Car className="w-6 h-6 text-white" />
-                  {/* Shine effect */}
-                  <motion.div
-                    initial={{ x: "-100%", opacity: 0 }}
-                    animate={{ x: "200%", opacity: [0, 0.5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 rounded-2xl"
-                  />
+                  <Car className="w-4 h-4 text-white" />
                 </motion.div>
                 <div>
                   <motion.h1 
                     key={step}
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="font-display font-bold text-lg bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text"
+                    className="font-display font-bold text-sm bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text"
                   >
                     {step === "location" && "Where to?"}
                     {step === "vehicle" && "Choose a ride"}
@@ -421,12 +413,12 @@ const RiderApp = () => {
                     key={`sub-${step}`}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-xs text-muted-foreground"
+                    className="text-[10px] text-muted-foreground"
                   >
                     {step === "location" && "Enter your destination"}
                     {step === "vehicle" && (
-                      <span className="flex items-center gap-1.5">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="flex items-center gap-1">
+                        <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                         {routeInfo?.distance.toFixed(1)} km • {routeInfo?.duration} min
                       </span>
                     )}
@@ -434,17 +426,15 @@ const RiderApp = () => {
                 </div>
               </div>
             </div>
-            <motion.div whileHover={{ scale: 1.05 }}>
-              <LivePulse color="rides" size="sm" label="Live" />
-            </motion.div>
+            <LivePulse color="rides" size="sm" label="Live" />
           </div>
 
-          {/* Enhanced Step Indicator */}
+          {/* Compact Step Indicator */}
           <motion.div 
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="mt-4 px-2"
+            className="mt-2.5 px-1"
           >
             <StatusTracker 
               steps={bookingSteps}
