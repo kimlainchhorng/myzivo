@@ -100,30 +100,48 @@ const LocationSearchInput = ({
     <div ref={wrapperRef} className={cn("relative", className)}>
       <motion.div 
         className={cn(
-          "relative rounded-xl transition-all duration-200",
-          isFocused && "ring-2 ring-primary/20"
+          "relative rounded-2xl transition-all duration-300",
+          isFocused && "ring-2 ring-primary/30 shadow-lg shadow-primary/10"
         )}
         animate={{ scale: isFocused ? 1.01 : 1 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.2, type: "spring", stiffness: 300 }}
       >
-        {/* Icon indicator */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+        {/* Icon indicator with enhanced styling */}
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
           {icon === "pickup" ? (
             <motion.div 
               className={cn(
-                "w-3.5 h-3.5 rounded-full transition-all",
-                isFocused ? "bg-emerald-500 shadow-lg shadow-emerald-500/50" : "bg-emerald-500"
+                "relative w-4 h-4 rounded-full transition-all",
+                isFocused ? "bg-emerald-500 shadow-lg shadow-emerald-500/60" : "bg-emerald-500"
               )}
-              animate={{ scale: isFocused ? 1.2 : 1 }}
-            />
+              animate={{ scale: isFocused ? 1.25 : 1 }}
+            >
+              {isFocused && (
+                <motion.div
+                  initial={{ scale: 1, opacity: 0.5 }}
+                  animate={{ scale: 2, opacity: 0 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="absolute inset-0 rounded-full bg-emerald-500"
+                />
+              )}
+            </motion.div>
           ) : (
             <motion.div 
               className={cn(
-                "w-3.5 h-3.5 rounded-sm transition-all",
-                isFocused ? "bg-primary shadow-lg shadow-primary/50" : "bg-foreground"
+                "relative w-4 h-4 rounded transition-all",
+                isFocused ? "bg-primary shadow-lg shadow-primary/60" : "bg-foreground"
               )}
-              animate={{ scale: isFocused ? 1.2 : 1 }}
-            />
+              animate={{ scale: isFocused ? 1.25 : 1, rotate: isFocused ? 45 : 0 }}
+            >
+              {isFocused && (
+                <motion.div
+                  initial={{ scale: 1, opacity: 0.5 }}
+                  animate={{ scale: 2, opacity: 0 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="absolute inset-0 rounded bg-primary"
+                />
+              )}
+            </motion.div>
           )}
         </div>
         
@@ -135,35 +153,37 @@ const LocationSearchInput = ({
           onChange={handleInputChange}
           onFocus={handleFocus}
           className={cn(
-            "pl-10 pr-10 h-12 rounded-xl border-2 transition-all bg-card/50 backdrop-blur-sm",
+            "pl-12 pr-12 h-14 rounded-2xl border-2 transition-all duration-200 bg-card/80 backdrop-blur-xl text-base font-medium",
             isFocused 
-              ? "border-primary/50 bg-card" 
-              : "border-border/50 hover:border-border",
-            value && "border-emerald-500/30 bg-emerald-500/5"
+              ? "border-primary/40 bg-card shadow-inner" 
+              : "border-white/10 hover:border-white/20",
+            value && "border-emerald-500/40 bg-emerald-500/5"
           )}
         />
         
-        {/* Right side indicator */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        {/* Right side indicator with enhanced animations */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2">
           <AnimatePresence mode="wait">
             {isSearching ? (
               <motion.div
                 key="loading"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center"
               >
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
               </motion.div>
             ) : value ? (
               <motion.div
                 key="check"
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center"
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/40"
               >
-                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </motion.div>
@@ -172,37 +192,40 @@ const LocationSearchInput = ({
         </div>
       </motion.div>
 
-      {/* Suggestions dropdown */}
+      {/* Enhanced Suggestions dropdown */}
       <AnimatePresence>
         {isOpen && suggestions.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            initial={{ opacity: 0, y: -15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            className="absolute z-50 w-full mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl shadow-black/20 overflow-hidden"
+            exit={{ opacity: 0, y: -15, scale: 0.95 }}
+            transition={{ duration: 0.2, type: "spring", stiffness: 300, damping: 25 }}
+            className="absolute z-50 w-full mt-3 bg-card/98 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl shadow-black/30 overflow-hidden"
           >
-            <div className="p-1">
+            <div className="p-2">
               {suggestions.map((location, index) => (
                 <motion.button
                   key={index}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -15 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.04, type: "spring", stiffness: 300 }}
                   onClick={() => handleSelect(location)}
                   className={cn(
-                    "w-full px-3 py-3 text-left rounded-lg transition-all flex items-start gap-3 group",
-                    "hover:bg-primary/10"
+                    "w-full px-4 py-3.5 text-left rounded-xl transition-all flex items-start gap-3 group",
+                    "hover:bg-gradient-to-r hover:from-primary/10 hover:to-teal-500/5"
                   )}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-muted/80 flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-colors flex-shrink-0">
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all flex-shrink-0 shadow-sm"
+                  >
                     {getLocationIcon(location.address)}
-                  </div>
+                  </motion.div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                    <p className="text-sm font-bold truncate group-hover:text-primary transition-colors">
                       {location.address.split(',')[0]}
                     </p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-xs text-muted-foreground truncate mt-0.5">
                       {location.address.split(',').slice(1).join(',').trim() || 'Location'}
                     </p>
                   </div>
@@ -210,9 +233,9 @@ const LocationSearchInput = ({
               ))}
             </div>
             
-            {/* Powered by hint */}
-            <div className="px-4 py-2 border-t border-border/50 bg-muted/30">
-              <p className="text-[10px] text-muted-foreground/60 text-center">
+            {/* Powered by hint with subtle styling */}
+            <div className="px-4 py-2.5 border-t border-white/5 bg-muted/20">
+              <p className="text-[10px] text-muted-foreground/50 text-center font-medium tracking-wide">
                 Powered by location services
               </p>
             </div>

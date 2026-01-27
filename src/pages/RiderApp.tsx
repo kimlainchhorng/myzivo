@@ -245,62 +245,128 @@ const RiderApp = () => {
   const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative">
-      {/* Background accents */}
-      <div className="fixed top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[250px] h-[250px] bg-gradient-to-tr from-violet-500/8 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.1, 0.15, 0.1]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl" 
+        />
+        <motion.div 
+          animate={{ 
+            scale: [1, 1.15, 1],
+            opacity: [0.08, 0.12, 0.08]
+          }}
+          transition={{ duration: 10, repeat: Infinity, delay: 1 }}
+          className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" 
+        />
+        {/* Floating particles */}
+        <motion.div
+          animate={{ y: [0, -30, 0], x: [0, 15, 0], rotate: [0, 10, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-[30%] right-[10%] text-3xl opacity-20"
+        >
+          🚗
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 20, 0], x: [0, -10, 0] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+          className="absolute bottom-[40%] left-[5%] text-2xl opacity-15"
+        >
+          📍
+        </motion.div>
+      </div>
       
-      {/* Premium Header */}
+      {/* Premium Header with Glassmorphism */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4"
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="sticky top-0 z-50 bg-card/70 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/5"
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => step === "location" ? navigate("/") : handleReset()}
-              className="rounded-xl hover:bg-primary/10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+        <div className="p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
-              >
-                <Car className="w-6 h-6 text-white" />
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => step === "location" ? navigate("/") : handleReset()}
+                  className="rounded-xl hover:bg-white/10 backdrop-blur-sm border border-white/5"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
               </motion.div>
-              <div>
-                <h1 className="font-display font-bold text-lg">
-                  {step === "location" && "Where to?"}
-                  {step === "vehicle" && "Choose a ride"}
-                  {step === "confirm" && "Confirm booking"}
-                </h1>
-                <p className="text-xs text-muted-foreground">
-                  {step === "location" && "Enter your destination"}
-                  {step === "vehicle" && `${routeInfo?.distance.toFixed(1)} km • ${routeInfo?.duration} min`}
-                </p>
+              <div className="flex items-center gap-3">
+                <motion.div 
+                  whileHover={{ scale: 1.08, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40"
+                >
+                  <Car className="w-6 h-6 text-white" />
+                  {/* Shine effect */}
+                  <motion.div
+                    initial={{ x: "-100%", opacity: 0 }}
+                    animate={{ x: "200%", opacity: [0, 0.5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 rounded-2xl"
+                  />
+                </motion.div>
+                <div>
+                  <motion.h1 
+                    key={step}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="font-display font-bold text-lg bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text"
+                  >
+                    {step === "location" && "Where to?"}
+                    {step === "vehicle" && "Choose a ride"}
+                    {step === "confirm" && "Confirm booking"}
+                  </motion.h1>
+                  <motion.p 
+                    key={`sub-${step}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    {step === "location" && "Enter your destination"}
+                    {step === "vehicle" && (
+                      <span className="flex items-center gap-1.5">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        {routeInfo?.distance.toFixed(1)} km • {routeInfo?.duration} min
+                      </span>
+                    )}
+                  </motion.p>
+                </div>
               </div>
             </div>
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <LivePulse color="rides" size="sm" label="Live" />
+            </motion.div>
           </div>
-          <LivePulse color="rides" size="sm" label="Live" />
-        </div>
 
-        {/* Step Indicator */}
-        <div className="mt-4">
-          <StatusTracker 
-            steps={bookingSteps}
-            currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2}
-            color="rides"
-            orientation="horizontal"
-          />
+          {/* Enhanced Step Indicator */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-4 px-2"
+          >
+            <StatusTracker 
+              steps={bookingSteps}
+              currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2}
+              color="rides"
+              orientation="horizontal"
+            />
+          </motion.div>
         </div>
       </motion.div>
 
-      {/* Map */}
+      {/* Map Section */}
       <div className="flex-1 relative">
         <BookingMap
           pickup={pickup}
@@ -309,67 +375,108 @@ const RiderApp = () => {
           className="absolute inset-0"
         />
 
-        {isCalculating && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center">
+        {/* Enhanced Loading Overlay */}
+        <AnimatePresence>
+          {isCalculating && (
             <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="flex items-center gap-3 bg-card/95 px-5 py-4 rounded-2xl shadow-xl border border-border/50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center"
             >
-              <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span className="font-medium">Finding best routes...</span>
-            </motion.div>
-          </div>
-        )}
-
-        {/* Quick Stats Floating */}
-        {step === "location" && !pickup && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute top-4 left-4 right-4 flex gap-2 justify-center"
-          >
-            {quickStats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className="px-4 py-2.5 rounded-xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-xl flex items-center gap-2.5"
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="flex flex-col items-center gap-4 bg-card/95 backdrop-blur-xl px-8 py-6 rounded-3xl shadow-2xl border border-white/10"
               >
-                <div className={cn(
-                  "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center",
-                  stat.gradient
-                )}>
-                  <stat.icon className="w-4 h-4 text-white" />
+                <div className="relative">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/40"
+                  >
+                    <Navigation className="w-7 h-7 text-white" />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute inset-0 rounded-2xl bg-primary/30 blur-md"
+                  />
                 </div>
-                <div>
-                  <p className="text-sm font-bold">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Finding best routes</p>
+                  <p className="text-sm text-muted-foreground">Analyzing traffic patterns...</p>
                 </div>
               </motion.div>
-            ))}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Enhanced Quick Stats Floating */}
+        <AnimatePresence>
+          {step === "location" && !pickup && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-4 left-4 right-4 flex gap-2.5 justify-center flex-wrap"
+            >
+              {quickStats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, type: "spring", stiffness: 300 }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="px-4 py-3 rounded-2xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-xl flex items-center gap-3 cursor-default"
+                >
+                  <motion.div 
+                    whileHover={{ rotate: 10 }}
+                    className={cn(
+                      "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                      stat.gradient
+                    )}
+                  >
+                    <stat.icon className="w-5 h-5 text-white" />
+                  </motion.div>
+                  <div>
+                    <p className="text-base font-bold">{stat.value}</p>
+                    <p className="text-[11px] text-muted-foreground font-medium">{stat.label}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Premium Bottom Sheet */}
+      {/* Premium Bottom Sheet with Enhanced Design */}
       <motion.div 
-        initial={{ y: 100 }}
+        initial={{ y: 120 }}
         animate={{ y: 0 }}
-        className="bg-gradient-to-b from-card to-card/95 border-t border-border/50 rounded-t-3xl shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
+        transition={{ type: "spring", stiffness: 300, damping: 35 }}
+        className="relative bg-gradient-to-b from-card via-card to-card/98 border-t border-white/10 rounded-t-[2rem] shadow-[0_-20px_60px_-12px_rgba(0,0,0,0.4)]"
       >
-        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mt-3" />
+        {/* Decorative top gradient line */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent rounded-full" />
         
-        <div className="p-5 max-h-[60vh] overflow-y-auto">
+        {/* Handle */}
+        <motion.div 
+          whileHover={{ scale: 1.1 }}
+          className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3 cursor-grab" 
+        />
+        
+        <div className="p-5 pb-8 max-h-[62vh] overflow-y-auto scrollbar-hide">
           {/* Location Step */}
           <AnimatePresence mode="wait">
             {step === "location" && (
               <motion.div
                 key="location"
-                initial={{ opacity: 0, x: -20 }}
+                initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
+                exit={{ opacity: 0, x: 30 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-5"
               >
                 {/* Quick Location Picker */}
@@ -384,29 +491,55 @@ const RiderApp = () => {
                   }}
                 />
 
-                <div className="space-y-3">
-                  <LocationSearchInput
-                    placeholder="Pickup location"
-                    value={pickup}
-                    onChange={setPickup}
-                    icon="pickup"
-                  />
-                  <LocationSearchInput
-                    placeholder="Where to?"
-                    value={dropoff}
-                    onChange={setDropoff}
-                    icon="dropoff"
-                  />
+                {/* Location Inputs with Connection Line */}
+                <div className="relative">
+                  {/* Connection line between inputs */}
+                  <div className="absolute left-[1.35rem] top-[3.25rem] bottom-[2.75rem] w-0.5 bg-gradient-to-b from-emerald-500/50 via-muted/30 to-primary/50 rounded-full" />
+                  
+                  <div className="space-y-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.05 }}
+                    >
+                      <LocationSearchInput
+                        placeholder="Pickup location"
+                        value={pickup}
+                        onChange={setPickup}
+                        icon="pickup"
+                      />
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                    >
+                      <LocationSearchInput
+                        placeholder="Where to?"
+                        value={dropoff}
+                        onChange={setDropoff}
+                        icon="dropoff"
+                      />
+                    </motion.div>
+                  </div>
                 </div>
 
-                {/* Saved Locations */}
-                <div className="pt-4 border-t border-border/50">
-                  <p className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <MapPin className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    Saved Places
-                  </p>
+                {/* Saved Locations with Enhanced Header */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                  className="pt-5 border-t border-white/5"
+                >
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <motion.div 
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center"
+                    >
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </motion.div>
+                    <span className="text-sm font-bold text-foreground">Saved Places</span>
+                  </div>
                   <SavedLocationsPanel
                     userId={user?.id}
                     onSelect={(location) => {
@@ -417,7 +550,7 @@ const RiderApp = () => {
                       }
                     }}
                   />
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
@@ -425,25 +558,44 @@ const RiderApp = () => {
             {step === "vehicle" && fareEstimates.length > 0 && (
               <motion.div
                 key="vehicle"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="space-y-5"
               >
-                {/* Route Summary */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
-                    <Navigation className="w-6 h-6 text-white" />
+                {/* Enhanced Route Summary Card */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="relative p-4 rounded-2xl bg-gradient-to-br from-primary/10 via-card to-teal-500/5 border border-white/10 overflow-hidden"
+                >
+                  {/* Background decoration */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-2xl" />
+                  
+                  <div className="flex items-center gap-4 relative">
+                    <motion.div 
+                      whileHover={{ rotate: 10 }}
+                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30"
+                    >
+                      <Navigation className="w-7 h-7 text-white" />
+                    </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                        <p className="text-sm font-bold truncate">{pickup?.address?.split(',')[0]}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-sm bg-primary shadow-lg shadow-primary/50" />
+                        <p className="text-sm text-muted-foreground truncate">{dropoff?.address?.split(',')[0]}</p>
+                      </div>
+                    </div>
+                    <div className="text-right bg-card/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/5">
+                      <p className="text-xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">{routeInfo?.duration} min</p>
+                      <p className="text-xs text-muted-foreground font-medium">{routeInfo?.distance.toFixed(1)} km</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate">{pickup?.address}</p>
-                    <p className="text-xs text-muted-foreground truncate">→ {dropoff?.address}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-primary">{routeInfo?.duration} min</p>
-                    <p className="text-xs text-muted-foreground">{routeInfo?.distance.toFixed(1)} km</p>
-                  </div>
-                </div>
+                </motion.div>
 
                 <VehicleSelector
                   fareEstimates={fareEstimates}
@@ -451,22 +603,50 @@ const RiderApp = () => {
                   onSelect={setSelectedVehicle}
                 />
                 
-                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                {/* Enhanced Confirm Button */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  whileHover={{ scale: 1.02 }} 
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     size="lg"
-                    className="w-full h-16 text-lg font-bold gap-3 rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30"
+                    className="relative w-full h-16 text-lg font-bold gap-3 rounded-2xl bg-gradient-to-r from-primary via-primary to-teal-400 text-white shadow-2xl shadow-primary/40 overflow-hidden group"
                     disabled={!selectedVehicle || createTrip.isPending}
                     onClick={handleConfirmBooking}
                   >
+                    {/* Shine sweep effect */}
+                    <motion.div
+                      initial={{ x: "-100%", opacity: 0 }}
+                      animate={{ x: "200%", opacity: [0, 0.3, 0] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 2 }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
+                    />
+                    
                     {createTrip.isPending ? (
                       <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Finding driver...
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader2 className="w-6 h-6" />
+                        </motion.div>
+                        <span>Finding your driver...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-5 h-5" />
-                        Confirm ${selectedFare?.totalFare.toFixed(2)}
+                        <motion.div
+                          animate={{ rotate: [0, 15, 0] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Sparkles className="w-6 h-6" />
+                        </motion.div>
+                        <span>Confirm Ride</span>
+                        <span className="ml-1 px-3 py-1 bg-white/20 rounded-lg text-base">
+                          ${selectedFare?.totalFare.toFixed(2)}
+                        </span>
                       </>
                     )}
                   </Button>
