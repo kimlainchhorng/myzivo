@@ -68,20 +68,40 @@ const Login = () => {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-rides/30 to-cyan-500/20 rounded-full blur-3xl" 
+          className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-primary/25 to-teal-500/15 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-          className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-eats/25 to-amber-500/15 rounded-full blur-3xl" 
+          className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-eats/20 to-orange-500/10 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
+          animate={{ opacity: 0.4 }}
           transition={{ duration: 2, delay: 0.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-primary/5 to-transparent rounded-full" 
         />
+        {/* Floating particles */}
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+              y: [-100, -300],
+              x: [0, Math.random() * 100 - 50]
+            }}
+            transition={{ 
+              duration: 10 + i * 2, 
+              repeat: Infinity, 
+              delay: i * 2,
+              ease: "linear"
+            }}
+            className="absolute bottom-0 w-2 h-2 rounded-full bg-primary/30"
+            style={{ left: `${20 + i * 15}%` }}
+          />
+        ))}
       </div>
 
       <motion.div
@@ -90,8 +110,9 @@ const Login = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="glass-card border-white/10 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          <CardHeader className="space-y-1 text-center pb-8 pt-8">
+        <Card className="border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-eats/5 pointer-events-none" />
+          <CardHeader className="space-y-1 text-center pb-8 pt-8 relative">
             {/* Logo */}
             <motion.div 
               initial={{ scale: 0 }}
@@ -100,17 +121,24 @@ const Login = () => {
               className="flex justify-center mb-6"
             >
               <div className="relative group">
-                <div className="h-20 w-20 rounded-2xl gradient-rides flex items-center justify-center shadow-lg shadow-rides/30 group-hover:shadow-rides/50 transition-shadow duration-300">
-                  <span className="font-display font-bold text-3xl text-primary-foreground">Z</span>
-                </div>
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40 group-hover:shadow-primary/60 transition-shadow duration-300"
+                >
+                  <span className="font-display font-bold text-3xl text-white">Z</span>
+                </motion.div>
                 <motion.div 
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute -inset-2 rounded-3xl border border-dashed border-rides/30"
+                  className="absolute -inset-3 rounded-3xl border-2 border-dashed border-primary/20"
                 />
-                <div className="absolute -top-1 -right-1">
-                  <Sparkles className="w-5 h-5 text-rides animate-pulse" />
-                </div>
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-1 -right-1"
+                >
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </motion.div>
               </div>
             </motion.div>
 
@@ -204,10 +232,12 @@ const Login = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 }}
                   className="w-full"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
                   <Button 
                     type="submit" 
-                    className="w-full h-13 text-base font-semibold gradient-rides shadow-lg shadow-rides/30 hover:shadow-rides/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl group" 
+                    className="w-full h-14 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 hover:opacity-90 transition-all duration-200 rounded-xl group" 
                     disabled={isLoading}
                   >
                     {isLoading ? (

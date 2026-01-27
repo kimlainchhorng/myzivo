@@ -65,27 +65,47 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
       {/* Animated background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-br from-eats/30 to-amber-500/20 rounded-full blur-3xl" 
+          className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-gradient-to-br from-eats/25 to-orange-500/15 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-          className="absolute -bottom-40 -right-40 w-96 h-96 bg-gradient-to-tr from-rides/25 to-cyan-500/15 rounded-full blur-3xl" 
+          className="absolute -bottom-40 -right-40 w-[400px] h-[400px] bg-gradient-to-tr from-primary/20 to-teal-500/10 rounded-full blur-3xl" 
         />
         <motion.div 
           initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
+          animate={{ opacity: 0.4 }}
           transition={{ duration: 2, delay: 0.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-primary/5 to-transparent rounded-full" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-radial from-eats/5 to-transparent rounded-full" 
         />
+        {/* Floating particles */}
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ 
+              opacity: [0.3, 0.6, 0.3],
+              y: [-100, -300],
+              x: [0, Math.random() * 100 - 50]
+            }}
+            transition={{ 
+              duration: 10 + i * 2, 
+              repeat: Infinity, 
+              delay: i * 2,
+              ease: "linear"
+            }}
+            className="absolute bottom-0 w-2 h-2 rounded-full bg-eats/30"
+            style={{ left: `${20 + i * 15}%` }}
+          />
+        ))}
       </div>
 
       <motion.div
@@ -94,8 +114,9 @@ const Signup = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="glass-card border-white/10 shadow-2xl shadow-black/20 backdrop-blur-xl">
-          <CardHeader className="space-y-1 text-center pb-6 pt-8">
+        <Card className="border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-eats/5 via-transparent to-primary/5 pointer-events-none" />
+          <CardHeader className="space-y-1 text-center pb-6 pt-8 relative">
             {/* Logo */}
             <motion.div 
               initial={{ scale: 0 }}
@@ -104,17 +125,24 @@ const Signup = () => {
               className="flex justify-center mb-6"
             >
               <div className="relative group">
-                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-eats to-amber-500 flex items-center justify-center shadow-lg shadow-eats/30 group-hover:shadow-eats/50 transition-shadow duration-300">
-                  <span className="font-display font-bold text-3xl text-primary-foreground">Z</span>
-                </div>
+                <motion.div 
+                  whileHover={{ scale: 1.05, rotate: -5 }}
+                  className="h-20 w-20 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-xl shadow-eats/40 group-hover:shadow-eats/60 transition-shadow duration-300"
+                >
+                  <span className="font-display font-bold text-3xl text-white">Z</span>
+                </motion.div>
                 <motion.div 
                   animate={{ rotate: -360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute -inset-2 rounded-3xl border border-dashed border-eats/30"
+                  className="absolute -inset-3 rounded-3xl border-2 border-dashed border-eats/20"
                 />
-                <div className="absolute -top-1 -right-1">
-                  <Sparkles className="w-5 h-5 text-eats animate-pulse" />
-                </div>
+                <motion.div 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-1 -right-1"
+                >
+                  <Sparkles className="w-6 h-6 text-eats" />
+                </motion.div>
               </div>
             </motion.div>
 
@@ -257,10 +285,12 @@ const Signup = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.55 }}
                   className="w-full"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                 >
                   <Button 
                     type="submit" 
-                    className="w-full h-13 text-base font-semibold bg-gradient-to-r from-eats to-amber-500 shadow-lg shadow-eats/30 hover:shadow-eats/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 rounded-xl group" 
+                    className="w-full h-14 text-base font-bold bg-gradient-to-r from-eats to-orange-500 text-white shadow-xl shadow-eats/30 hover:opacity-90 transition-all duration-200 rounded-xl group" 
                     disabled={isLoading}
                   >
                     {isLoading ? (
