@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,25 @@ import {
   Save,
   X,
   AlertTriangle,
-  AlertCircle
+  AlertCircle,
+  Zap,
+  TrendingUp,
+  Calculator
 } from "lucide-react";
 import { usePricing, useUpdatePricing, useApplyGlobalSurge, Pricing } from "@/hooks/usePricing";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 const vehicleIcons: Record<string, string> = {
   economy: "🚗",
@@ -39,6 +56,13 @@ const vehicleDescriptions: Record<string, string> = {
   comfort: "More space and comfort",
   premium: "Luxury vehicles for special occasions",
   xl: "Large vehicles for groups",
+};
+
+const vehicleGradients: Record<string, string> = {
+  economy: "from-green-500/20 to-emerald-500/10",
+  comfort: "from-blue-500/20 to-cyan-500/10",
+  premium: "from-purple-500/20 to-pink-500/10",
+  xl: "from-amber-500/20 to-orange-500/10",
 };
 
 const AdminPricingControls = () => {
@@ -93,39 +117,55 @@ const AdminPricingControls = () => {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Pricing Controls</h1>
-          <p className="text-muted-foreground">Manage fare rates and surge pricing</p>
-        </div>
-        <Card>
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+        <motion.div variants={item}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Pricing Controls</h1>
+              <p className="text-muted-foreground">Manage fare rates and surge pricing</p>
+            </div>
+          </div>
+        </motion.div>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-12 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
             <p className="text-lg font-medium">Failed to load pricing</p>
             <p className="text-muted-foreground">{error.message}</p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Pricing Controls</h1>
-          <p className="text-muted-foreground">Manage fare rates and surge pricing</p>
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Header */}
+      <motion.div variants={item} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10">
+            <DollarSign className="h-6 w-6 text-green-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Pricing Controls</h1>
+            <p className="text-muted-foreground">Manage fare rates and surge pricing</p>
+          </div>
         </div>
         <Dialog open={surgeDialogOpen} onOpenChange={setSurgeDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Percent className="h-4 w-4" />
+            <Button variant="outline" className="gap-2 border-amber-500/30 hover:bg-amber-500/10">
+              <Zap className="h-4 w-4 text-amber-500" />
               Set Global Surge
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="border-0 bg-card/95 backdrop-blur-xl">
             <DialogHeader>
-              <DialogTitle>Set Global Surge Multiplier</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-500" />
+                Set Global Surge Multiplier
+              </DialogTitle>
               <DialogDescription>
                 Apply a surge multiplier to all vehicle types at once
               </DialogDescription>
@@ -141,31 +181,82 @@ const AdminPricingControls = () => {
                   max="5"
                   value={globalSurge}
                   onChange={(e) => setGlobalSurge(parseFloat(e.target.value) || 1)}
-                  className="w-24"
+                  className="w-24 bg-background/50"
                 />
                 <span className="text-muted-foreground">x</span>
               </div>
               {globalSurge > 1 && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-500/10 text-yellow-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  <p className="text-sm">Surge pricing will increase all fares by {((globalSurge - 1) * 100).toFixed(0)}%</p>
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                  <p className="text-sm text-amber-500">Surge pricing will increase all fares by {((globalSurge - 1) * 100).toFixed(0)}%</p>
                 </div>
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setSurgeDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleApplyGlobalSurge} disabled={applyGlobalSurge.isPending}>
+              <Button onClick={handleApplyGlobalSurge} disabled={applyGlobalSurge.isPending} className="gap-2">
+                <Zap className="h-4 w-4" />
                 Apply to All
               </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </motion.div>
+
+      {/* Quick Stats */}
+      {pricingData && pricingData.length > 0 && (
+        <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-green-500/10">
+                <DollarSign className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Lowest Base</p>
+                <p className="text-lg font-semibold">${Math.min(...pricingData.map(p => p.base_fare)).toFixed(2)}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <TrendingUp className="h-5 w-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Highest Base</p>
+                <p className="text-lg font-semibold">${Math.max(...pricingData.map(p => p.base_fare)).toFixed(2)}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-500/10">
+                <Car className="h-5 w-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Active Types</p>
+                <p className="text-lg font-semibold">{pricingData.filter(p => p.is_active).length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Zap className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Max Surge</p>
+                <p className="text-lg font-semibold">{Math.max(...pricingData.map(p => p.surge_multiplier))}x</p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+            <Card key={i} className="border-0 bg-card/50">
               <CardHeader className="pb-3">
                 <Skeleton className="h-6 w-32" />
                 <Skeleton className="h-4 w-48" />
@@ -182,208 +273,200 @@ const AdminPricingControls = () => {
           ))}
         </div>
       ) : pricingData?.length === 0 ? (
-        <Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-12 text-center">
+            <Car className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
             <p className="text-lg font-medium">No pricing tiers found</p>
             <p className="text-muted-foreground">Pricing tiers are automatically created when the database is set up.</p>
           </CardContent>
         </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {pricingData?.map((pricing) => (
-            <Card key={pricing.id} className={!pricing.is_active ? "opacity-60" : ""}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{vehicleIcons[pricing.vehicle_type] || "🚗"}</span>
-                    <div>
-                      <CardTitle className="capitalize">{pricing.vehicle_type}</CardTitle>
-                      <CardDescription>{vehicleDescriptions[pricing.vehicle_type] || "Vehicle type"}</CardDescription>
+          {pricingData?.map((pricing, index) => (
+            <motion.div 
+              key={pricing.id} 
+              variants={item}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+            >
+              <Card className={`relative overflow-hidden border-0 bg-card/50 backdrop-blur-xl transition-opacity ${!pricing.is_active ? "opacity-60" : ""}`}>
+                <div className={`absolute inset-0 bg-gradient-to-br ${vehicleGradients[pricing.vehicle_type] || "from-gray-500/20 to-gray-500/10"} opacity-30`} />
+                <CardHeader className="relative pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{vehicleIcons[pricing.vehicle_type] || "🚗"}</span>
+                      <div>
+                        <CardTitle className="capitalize">{pricing.vehicle_type}</CardTitle>
+                        <CardDescription>{vehicleDescriptions[pricing.vehicle_type] || "Vehicle type"}</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {pricing.surge_multiplier > 1 && (
+                        <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1">
+                          <Zap className="h-3 w-3" />
+                          {pricing.surge_multiplier}x
+                        </Badge>
+                      )}
+                      <Switch
+                        checked={pricing.is_active ?? true}
+                        onCheckedChange={() => handleToggleActive(pricing)}
+                        disabled={updatePricing.isPending}
+                      />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {pricing.surge_multiplier > 1 && (
-                      <Badge className="bg-orange-500/10 text-orange-600">
-                        {pricing.surge_multiplier}x Surge
-                      </Badge>
-                    )}
-                    <Switch
-                      checked={pricing.is_active ?? true}
-                      onCheckedChange={() => handleToggleActive(pricing)}
-                      disabled={updatePricing.isPending}
-                    />
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {editingId === pricing.id && editForm ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="baseFare">Base Fare ($)</Label>
-                        <Input
-                          id="baseFare"
-                          type="number"
-                          step="0.10"
-                          value={editForm.base_fare}
-                          onChange={(e) => setEditForm({ ...editForm, base_fare: parseFloat(e.target.value) || 0 })}
-                        />
+                </CardHeader>
+                <CardContent className="relative">
+                  {editingId === pricing.id && editForm ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="baseFare" className="text-xs">Base Fare ($)</Label>
+                          <Input
+                            id="baseFare"
+                            type="number"
+                            step="0.10"
+                            value={editForm.base_fare}
+                            onChange={(e) => setEditForm({ ...editForm, base_fare: parseFloat(e.target.value) || 0 })}
+                            className="bg-background/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="perKmRate" className="text-xs">Per KM Rate ($)</Label>
+                          <Input
+                            id="perKmRate"
+                            type="number"
+                            step="0.10"
+                            value={editForm.per_km_rate}
+                            onChange={(e) => setEditForm({ ...editForm, per_km_rate: parseFloat(e.target.value) || 0 })}
+                            className="bg-background/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="perMinuteRate" className="text-xs">Per Minute Rate ($)</Label>
+                          <Input
+                            id="perMinuteRate"
+                            type="number"
+                            step="0.05"
+                            value={editForm.per_minute_rate}
+                            onChange={(e) => setEditForm({ ...editForm, per_minute_rate: parseFloat(e.target.value) || 0 })}
+                            className="bg-background/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="minimumFare" className="text-xs">Minimum Fare ($)</Label>
+                          <Input
+                            id="minimumFare"
+                            type="number"
+                            step="0.50"
+                            value={editForm.minimum_fare}
+                            onChange={(e) => setEditForm({ ...editForm, minimum_fare: parseFloat(e.target.value) || 0 })}
+                            className="bg-background/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="surgeMultiplier" className="text-xs">Surge Multiplier</Label>
+                          <Input
+                            id="surgeMultiplier"
+                            type="number"
+                            step="0.1"
+                            min="1"
+                            max="5"
+                            value={editForm.surge_multiplier}
+                            onChange={(e) => setEditForm({ ...editForm, surge_multiplier: parseFloat(e.target.value) || 1 })}
+                            className="bg-background/50"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="perKmRate">Per KM Rate ($)</Label>
-                        <Input
-                          id="perKmRate"
-                          type="number"
-                          step="0.10"
-                          value={editForm.per_km_rate}
-                          onChange={(e) => setEditForm({ ...editForm, per_km_rate: parseFloat(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="perMinuteRate">Per Minute Rate ($)</Label>
-                        <Input
-                          id="perMinuteRate"
-                          type="number"
-                          step="0.05"
-                          value={editForm.per_minute_rate}
-                          onChange={(e) => setEditForm({ ...editForm, per_minute_rate: parseFloat(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="minimumFare">Minimum Fare ($)</Label>
-                        <Input
-                          id="minimumFare"
-                          type="number"
-                          step="0.50"
-                          value={editForm.minimum_fare}
-                          onChange={(e) => setEditForm({ ...editForm, minimum_fare: parseFloat(e.target.value) || 0 })}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="surgeMultiplier">Surge Multiplier</Label>
-                        <Input
-                          id="surgeMultiplier"
-                          type="number"
-                          step="0.1"
-                          min="1"
-                          max="5"
-                          value={editForm.surge_multiplier}
-                          onChange={(e) => setEditForm({ ...editForm, surge_multiplier: parseFloat(e.target.value) || 1 })}
-                        />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={handleCancel}>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={handleSave} disabled={updatePricing.isPending}>
+                          <Save className="h-4 w-4 mr-1" />
+                          Save
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={handleCancel}>
-                        <X className="h-4 w-4 mr-1" />
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={handleSave} disabled={updatePricing.isPending}>
-                        <Save className="h-4 w-4 mr-1" />
-                        Save
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <DollarSign className="h-4 w-4" />
-                          <span className="text-xs">Base Fare</span>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <DollarSign className="h-3 w-3" />
+                            <span className="text-xs">Base Fare</span>
+                          </div>
+                          <p className="text-lg font-semibold">${pricing.base_fare.toFixed(2)}</p>
                         </div>
-                        <p className="text-lg font-semibold">${pricing.base_fare.toFixed(2)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <Car className="h-4 w-4" />
-                          <span className="text-xs">Per KM</span>
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <Car className="h-3 w-3" />
+                            <span className="text-xs">Per KM</span>
+                          </div>
+                          <p className="text-lg font-semibold">${pricing.per_km_rate.toFixed(2)}</p>
                         </div>
-                        <p className="text-lg font-semibold">${pricing.per_km_rate.toFixed(2)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <span className="text-xs">⏱️ Per Minute</span>
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                          <div className="text-xs text-muted-foreground mb-1">⏱️ Per Minute</div>
+                          <p className="text-lg font-semibold">${pricing.per_minute_rate.toFixed(2)}</p>
                         </div>
-                        <p className="text-lg font-semibold">${pricing.per_minute_rate.toFixed(2)}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                          <span className="text-xs">📍 Minimum</span>
+                        <div className="p-3 rounded-xl bg-background/50 border border-border/50">
+                          <div className="text-xs text-muted-foreground mb-1">📍 Minimum</div>
+                          <p className="text-lg font-semibold">${pricing.minimum_fare.toFixed(2)}</p>
                         </div>
-                        <p className="text-lg font-semibold">${pricing.minimum_fare.toFixed(2)}</p>
                       </div>
-                    </div>
 
-                    <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 mb-4">
-                      <p className="text-xs text-muted-foreground mb-1">Estimated fare for 10km, 20min trip</p>
-                      <p className="text-xl font-bold text-primary">
-                        ${calculateEstimatedFare(pricing, 10, 20).toFixed(2)}
-                      </p>
-                    </div>
+                      <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 mb-4">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                          <Calculator className="h-3 w-3" />
+                          Estimated fare for 10km, 20min trip
+                        </div>
+                        <p className="text-xl font-bold text-primary">
+                          ${calculateEstimatedFare(pricing, 10, 20).toFixed(2)}
+                        </p>
+                      </div>
 
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleEdit(pricing)}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Pricing
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full gap-2"
+                        onClick={() => handleEdit(pricing)}
+                      >
+                        <Edit className="h-4 w-4" />
+                        Edit Pricing
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}
 
       {/* Pricing Formula Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Pricing Formula</CardTitle>
-          <CardDescription>How fares are calculated for each trip</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 rounded-lg bg-muted/50 font-mono text-sm">
-            <p className="mb-2">
-              <span className="text-primary font-semibold">Total Fare</span> = (Base Fare + (Distance × Per KM Rate) + (Duration × Per Minute Rate)) × Surge Multiplier
-            </p>
-            <p className="text-muted-foreground">
-              * If calculated fare is less than Minimum Fare, the Minimum Fare is applied
-            </p>
-          </div>
-          {pricingData && pricingData.length > 0 && (
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="text-center p-3 border rounded-lg">
-                <p className="text-2xl font-bold text-primary">
-                  ${Math.min(...pricingData.map(p => p.base_fare)).toFixed(2)}
-                </p>
-                <p className="text-sm text-muted-foreground">Lowest Base Fare</p>
-              </div>
-              <div className="text-center p-3 border rounded-lg">
-                <p className="text-2xl font-bold text-primary">
-                  ${Math.max(...pricingData.map(p => p.base_fare)).toFixed(2)}
-                </p>
-                <p className="text-sm text-muted-foreground">Highest Base Fare</p>
-              </div>
-              <div className="text-center p-3 border rounded-lg">
-                <p className="text-2xl font-bold text-primary">
-                  {pricingData.filter(p => p.is_active).length}
-                </p>
-                <p className="text-sm text-muted-foreground">Active Vehicle Types</p>
-              </div>
-              <div className="text-center p-3 border rounded-lg">
-                <p className="text-2xl font-bold text-primary">
-                  {Math.max(...pricingData.map(p => p.surge_multiplier))}x
-                </p>
-                <p className="text-sm text-muted-foreground">Current Max Surge</p>
-              </div>
+      <motion.div variants={item}>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calculator className="h-5 w-5 text-primary" />
+              Pricing Formula
+            </CardTitle>
+            <CardDescription>How fares are calculated for each trip</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 rounded-xl bg-muted/30 font-mono text-sm border border-border/50">
+              <p className="mb-2">
+                <span className="text-primary font-semibold">Total Fare</span> = (Base Fare + (Distance × Per KM Rate) + (Duration × Per Minute Rate)) × Surge Multiplier
+              </p>
+              <p className="text-muted-foreground text-xs">
+                * If calculated fare is less than Minimum Fare, the Minimum Fare is applied
+              </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 };
 

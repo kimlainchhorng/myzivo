@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,27 @@ import {
   Navigation,
   Star,
   AlertCircle,
-  XCircle
+  XCircle,
+  Activity,
+  CheckCircle,
+  Route
 } from "lucide-react";
 import { useTrips, useTripStats, useCancelTrip, Trip, TripStatus } from "@/hooks/useTrips";
 import { useAllTripsRealtime } from "@/hooks/useTripRealtime";
 import TripMap from "./TripMap";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 const AdminTripMonitoring = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,27 +80,27 @@ const AdminTripMonitoring = () => {
   }) || [];
 
   const getStatusBadge = (status: TripStatus | null) => {
-    const statusConfig: Record<string, { class: string; label: string }> = {
-      requested: { class: "bg-blue-500/10 text-blue-600", label: "Requested" },
-      accepted: { class: "bg-indigo-500/10 text-indigo-600", label: "Accepted" },
-      en_route: { class: "bg-purple-500/10 text-purple-600", label: "En Route" },
-      arrived: { class: "bg-cyan-500/10 text-cyan-600", label: "Arrived" },
-      in_progress: { class: "bg-yellow-500/10 text-yellow-600", label: "In Progress" },
-      completed: { class: "bg-green-500/10 text-green-600", label: "Completed" },
-      cancelled: { class: "bg-red-500/10 text-red-600", label: "Cancelled" },
+    const statusConfig: Record<string, { class: string; label: string; icon: React.ElementType }> = {
+      requested: { class: "bg-blue-500/10 text-blue-500 border-blue-500/20", label: "Requested", icon: Clock },
+      accepted: { class: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20", label: "Accepted", icon: CheckCircle },
+      en_route: { class: "bg-purple-500/10 text-purple-500 border-purple-500/20", label: "En Route", icon: Route },
+      arrived: { class: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20", label: "Arrived", icon: MapPin },
+      in_progress: { class: "bg-amber-500/10 text-amber-500 border-amber-500/20", label: "In Progress", icon: Activity },
+      completed: { class: "bg-green-500/10 text-green-500 border-green-500/20", label: "Completed", icon: CheckCircle },
+      cancelled: { class: "bg-red-500/10 text-red-500 border-red-500/20", label: "Cancelled", icon: XCircle },
     };
-    const config = statusConfig[status || ""] || { class: "bg-gray-500/10 text-gray-600", label: status || "Unknown" };
+    const config = statusConfig[status || ""] || { class: "bg-gray-500/10 text-gray-500", label: status || "Unknown", icon: AlertCircle };
     return <Badge className={config.class}>{config.label}</Badge>;
   };
 
   const getPaymentBadge = (status: string | null) => {
     switch (status) {
       case "paid":
-        return <Badge className="bg-green-500/10 text-green-600">Paid</Badge>;
+        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Paid</Badge>;
       case "pending":
-        return <Badge className="bg-yellow-500/10 text-yellow-600">Pending</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Pending</Badge>;
       case "refunded":
-        return <Badge className="bg-gray-500/10 text-gray-600">Refunded</Badge>;
+        return <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">Refunded</Badge>;
       default:
         return <Badge variant="outline">{status || "Unknown"}</Badge>;
     }
@@ -100,74 +117,95 @@ const AdminTripMonitoring = () => {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Trip Monitoring</h1>
-          <p className="text-muted-foreground">Monitor and manage all trips in real-time</p>
-        </div>
-        <Card>
+      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+        <motion.div variants={item}>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Trip Monitoring</h1>
+              <p className="text-muted-foreground">Monitor and manage all trips in real-time</p>
+            </div>
+          </div>
+        </motion.div>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-12 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
             <p className="text-lg font-medium">Failed to load trips</p>
             <p className="text-muted-foreground">{error.message}</p>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Trip Monitoring</h1>
-        <p className="text-muted-foreground">Monitor and manage all trips in real-time</p>
-      </div>
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Header */}
+      <motion.div variants={item}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">Trip Monitoring</h1>
+              <p className="text-muted-foreground">Monitor and manage all trips in real-time</p>
+            </div>
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs text-green-500 font-medium">Live</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card>
+      <motion.div variants={item} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
-                <AlertCircle className="h-5 w-5 text-yellow-600" />
+              <div className="p-2.5 rounded-xl bg-amber-500/10">
+                <Activity className="h-5 w-5 text-amber-500" />
               </div>
               <div>
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-7 w-12" />
                 ) : (
                   <p className="text-2xl font-bold">{stats?.activeTrips || 0}</p>
                 )}
-                <p className="text-sm text-muted-foreground">Active Trips</p>
+                <p className="text-sm text-muted-foreground">Active</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-green-600" />
+              <div className="p-2.5 rounded-xl bg-green-500/10">
+                <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <div>
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-7 w-12" />
                 ) : (
                   <p className="text-2xl font-bold">{stats?.completedToday || 0}</p>
                 )}
-                <p className="text-sm text-muted-foreground">Completed Today</p>
+                <p className="text-sm text-muted-foreground">Completed</p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
-                <XCircle className="h-5 w-5 text-red-600" />
+              <div className="p-2.5 rounded-xl bg-red-500/10">
+                <XCircle className="h-5 w-5 text-red-500" />
               </div>
               <div>
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-7 w-12" />
                 ) : (
                   <p className="text-2xl font-bold">{stats?.cancelledToday || 0}</p>
                 )}
@@ -176,137 +214,158 @@ const AdminTripMonitoring = () => {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="p-2.5 rounded-xl bg-primary/10">
                 <DollarSign className="h-5 w-5 text-primary" />
               </div>
               <div>
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-7 w-16" />
                 ) : (
                   <p className="text-2xl font-bold">${stats?.revenueToday?.toFixed(0) || 0}</p>
                 )}
-                <p className="text-sm text-muted-foreground">Revenue Today</p>
+                <p className="text-sm text-muted-foreground">Revenue</p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Live Map */}
-      <TripMap />
+      <motion.div variants={item}>
+        <TripMap />
+      </motion.div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>All Trips</CardTitle>
-              <CardDescription>Track and monitor trip details and status</CardDescription>
+      {/* Trip Table */}
+      <motion.div variants={item}>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Route className="h-5 w-5 text-primary" />
+                  All Trips
+                </CardTitle>
+                <CardDescription>Track and monitor trip details and status</CardDescription>
+              </div>
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search trips..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-background/50 border-border/50"
+                />
+              </div>
             </div>
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search trips..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-            </TabsList>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-4 bg-muted/30">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="active">Active</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+                <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+              </TabsList>
 
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Trip ID</TableHead>
-                    <TableHead className="hidden md:table-cell">Pickup</TableHead>
-                    <TableHead className="hidden lg:table-cell">Driver</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="hidden sm:table-cell">Fare</TableHead>
-                    <TableHead className="hidden lg:table-cell">Payment</TableHead>
-                    <TableHead className="hidden md:table-cell">Time</TableHead>
-                    <TableHead className="w-10"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    [...Array(5)].map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
-                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
-                        <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-8 w-8" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : filteredTrips.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        {searchQuery ? "No trips match your search" : "No trips found. Trips will appear here when riders book rides."}
-                      </TableCell>
+              <div className="rounded-xl border border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Trip ID</TableHead>
+                      <TableHead className="hidden md:table-cell">Pickup</TableHead>
+                      <TableHead className="hidden lg:table-cell">Driver</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden sm:table-cell">Fare</TableHead>
+                      <TableHead className="hidden lg:table-cell">Payment</TableHead>
+                      <TableHead className="hidden md:table-cell">Time</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
-                  ) : (
-                    filteredTrips.map((trip) => (
-                      <TableRow key={trip.id}>
-                        <TableCell className="font-mono text-sm">{trip.id.slice(0, 8)}...</TableCell>
-                        <TableCell className="hidden md:table-cell max-w-[200px] truncate">
-                          {trip.pickup_address}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {trip.driver?.full_name || <span className="text-muted-foreground">Unassigned</span>}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(trip.status)}</TableCell>
-                        <TableCell className="hidden sm:table-cell">
-                          ${trip.fare_amount?.toFixed(2) || "0.00"}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">{getPaymentBadge(trip.payment_status)}</TableCell>
-                        <TableCell className="hidden md:table-cell">{formatTime(trip.created_at)}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedTrip(trip);
-                              setIsViewDialogOpen(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      [...Array(5)].map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell className="hidden lg:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                          <TableCell className="hidden sm:table-cell"><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell className="hidden lg:table-cell"><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredTrips.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-12">
+                          <Route className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                          <p className="text-muted-foreground">
+                            {searchQuery ? "No trips match your search" : "No trips found"}
+                          </p>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </Tabs>
-        </CardContent>
-      </Card>
+                    ) : (
+                      filteredTrips.map((trip, index) => (
+                        <motion.tr
+                          key={trip.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="group hover:bg-muted/30 transition-colors"
+                        >
+                          <TableCell className="font-mono text-sm">{trip.id.slice(0, 8)}...</TableCell>
+                          <TableCell className="hidden md:table-cell max-w-[200px] truncate text-muted-foreground">
+                            {trip.pickup_address}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {trip.driver?.full_name || <span className="text-muted-foreground">Unassigned</span>}
+                          </TableCell>
+                          <TableCell>{getStatusBadge(trip.status)}</TableCell>
+                          <TableCell className="hidden sm:table-cell font-medium">
+                            ${trip.fare_amount?.toFixed(2) || "0.00"}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">{getPaymentBadge(trip.payment_status)}</TableCell>
+                          <TableCell className="hidden md:table-cell text-muted-foreground">{formatTime(trip.created_at)}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => {
+                                setSelectedTrip(trip);
+                                setIsViewDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </motion.tr>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* View Trip Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg border-0 bg-card/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Trip Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Route className="h-5 w-5 text-primary" />
+              Trip Details
+            </DialogTitle>
             <DialogDescription>Complete trip information</DialogDescription>
           </DialogHeader>
           {selectedTrip && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30">
                 <div>
                   <p className="font-mono text-lg font-semibold">{selectedTrip.id.slice(0, 8)}...</p>
                   <p className="text-sm text-muted-foreground">
@@ -320,25 +379,25 @@ const AdminTripMonitoring = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Rider ID</p>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground mb-1">Rider ID</p>
                   <p className="font-medium truncate">{selectedTrip.rider_id || "N/A"}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Driver</p>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="text-xs text-muted-foreground mb-1">Driver</p>
                   <p className="font-medium">
                     {selectedTrip.driver?.full_name || "Unassigned"}
                   </p>
                 </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+              <div className="p-4 rounded-xl bg-muted/30 space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="h-6 w-6 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Navigation className="h-3 w-3 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Pickup</p>
+                    <p className="text-xs text-muted-foreground">Pickup</p>
                     <p className="font-medium">{selectedTrip.pickup_address}</p>
                   </div>
                 </div>
@@ -347,40 +406,34 @@ const AdminTripMonitoring = () => {
                     <MapPin className="h-3 w-3 text-white" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Dropoff</p>
+                    <p className="text-xs text-muted-foreground">Dropoff</p>
                     <p className="font-medium">{selectedTrip.dropoff_address}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                    <MapPin className="h-4 w-4" />
-                  </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl bg-muted/30 text-center">
+                  <MapPin className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
                   <p className="text-lg font-bold">{selectedTrip.distance_km || 0} km</p>
                   <p className="text-xs text-muted-foreground">Distance</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                    <Clock className="h-4 w-4" />
-                  </div>
+                <div className="p-3 rounded-xl bg-muted/30 text-center">
+                  <Clock className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
                   <p className="text-lg font-bold">
                     {selectedTrip.duration_minutes ? `${selectedTrip.duration_minutes} min` : "N/A"}
                   </p>
                   <p className="text-xs text-muted-foreground">Duration</p>
                 </div>
-                <div className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                    <DollarSign className="h-4 w-4" />
-                  </div>
-                  <p className="text-lg font-bold">${selectedTrip.fare_amount?.toFixed(2) || "0.00"}</p>
+                <div className="p-3 rounded-xl bg-primary/10 text-center">
+                  <DollarSign className="h-4 w-4 mx-auto text-primary mb-1" />
+                  <p className="text-lg font-bold text-primary">${selectedTrip.fare_amount?.toFixed(2) || "0.00"}</p>
                   <p className="text-xs text-muted-foreground">Fare</p>
                 </div>
               </div>
 
               {selectedTrip.rating && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10">
                   <p className="text-sm text-muted-foreground">Rating:</p>
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -388,7 +441,7 @@ const AdminTripMonitoring = () => {
                         key={i}
                         className={`h-4 w-4 ${
                           i < selectedTrip.rating!
-                            ? "fill-yellow-400 text-yellow-400"
+                            ? "fill-amber-400 text-amber-400"
                             : "text-muted"
                         }`}
                       />
@@ -404,7 +457,9 @@ const AdminTripMonitoring = () => {
                 variant="destructive"
                 onClick={() => handleCancelTrip(selectedTrip.id, true)}
                 disabled={cancelTrip.isPending}
+                className="gap-2"
               >
+                <XCircle className="h-4 w-4" />
                 Cancel & Refund
               </Button>
             )}
@@ -414,7 +469,7 @@ const AdminTripMonitoring = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 };
 

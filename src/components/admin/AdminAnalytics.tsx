@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Users, 
@@ -5,7 +6,11 @@ import {
   MapPin, 
   DollarSign, 
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Activity,
+  Zap,
+  Target,
+  Clock
 } from "lucide-react";
 import {
   ChartContainer,
@@ -25,9 +30,23 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  ResponsiveContainer,
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalyticsStats, useRevenueData, useTripsByType, useDailyTrips, useDriverActivity } from "@/hooks/useAnalytics";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -42,6 +61,7 @@ const StatCard = ({
   change, 
   changeType, 
   icon: Icon,
+  gradient,
   isLoading = false
 }: { 
   title: string; 
@@ -49,37 +69,41 @@ const StatCard = ({
   change?: string; 
   changeType?: "positive" | "negative"; 
   icon: React.ElementType;
+  gradient: string;
   isLoading?: boolean;
 }) => (
-  <Card>
-    <CardContent className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
-          {isLoading ? (
-            <Skeleton className="h-8 w-24 mt-1" />
-          ) : (
-            <p className="text-2xl font-bold mt-1">{value}</p>
-          )}
-          {change && changeType && (
-            <div className={`flex items-center gap-1 mt-2 text-sm ${
-              changeType === "positive" ? "text-green-600" : "text-red-600"
-            }`}>
-              {changeType === "positive" ? (
-                <TrendingUp className="h-4 w-4" />
-              ) : (
-                <TrendingDown className="h-4 w-4" />
-              )}
-              <span>{change} from last month</span>
-            </div>
-          )}
+  <motion.div variants={item}>
+    <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-xl">
+      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-50`} />
+      <CardContent className="relative p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            {isLoading ? (
+              <Skeleton className="h-8 w-24 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold mt-1">{value}</p>
+            )}
+            {change && changeType && (
+              <div className={`flex items-center gap-1 mt-2 text-sm ${
+                changeType === "positive" ? "text-green-500" : "text-red-500"
+              }`}>
+                {changeType === "positive" ? (
+                  <TrendingUp className="h-4 w-4" />
+                ) : (
+                  <TrendingDown className="h-4 w-4" />
+                )}
+                <span>{change} from last month</span>
+              </div>
+            )}
+          </div>
+          <div className="p-3 rounded-xl bg-background/50 backdrop-blur-sm">
+            <Icon className="h-6 w-6 text-primary" />
+          </div>
         </div>
-        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-          <Icon className="h-6 w-6 text-primary" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+      </CardContent>
+    </Card>
+  </motion.div>
 );
 
 const AdminAnalytics = () => {
@@ -97,10 +121,10 @@ const AdminAnalytics = () => {
   ];
 
   const defaultTripsByType = [
-    { name: "Economy", value: 25, color: "hsl(var(--primary))" },
-    { name: "Comfort", value: 25, color: "hsl(var(--chart-2))" },
-    { name: "Premium", value: 25, color: "hsl(var(--chart-3))" },
-    { name: "XL", value: 25, color: "hsl(var(--chart-4))" },
+    { name: "Economy", value: 25, color: "#22c55e" },
+    { name: "Comfort", value: 25, color: "#3b82f6" },
+    { name: "Premium", value: 25, color: "#8b5cf6" },
+    { name: "XL", value: 25, color: "#f59e0b" },
   ];
 
   const defaultDailyTrips = [
@@ -123,11 +147,24 @@ const AdminAnalytics = () => {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your ride-sharing platform</p>
-      </div>
+    <motion.div 
+      variants={container}
+      initial="hidden"
+      animate="show"
+      className="space-y-6"
+    >
+      {/* Header */}
+      <motion.div variants={item}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10">
+            <Activity className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
+            <p className="text-muted-foreground">Overview of your ride-sharing platform</p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -135,187 +172,270 @@ const AdminAnalytics = () => {
           title="Total Users" 
           value={stats?.totalUsers?.toLocaleString() || "0"} 
           icon={Users}
+          gradient="from-blue-500/20 to-cyan-500/10"
           isLoading={statsLoading}
         />
         <StatCard 
           title="Active Drivers" 
           value={stats?.activeDrivers?.toLocaleString() || "0"} 
           icon={Car}
+          gradient="from-green-500/20 to-emerald-500/10"
           isLoading={statsLoading}
         />
         <StatCard 
           title="Total Trips" 
           value={stats?.totalTrips?.toLocaleString() || "0"} 
           icon={MapPin}
+          gradient="from-purple-500/20 to-pink-500/10"
           isLoading={statsLoading}
         />
         <StatCard 
           title="Revenue" 
           value={`$${stats?.totalRevenue?.toLocaleString() || "0"}`} 
           icon={DollarSign}
+          gradient="from-amber-500/20 to-orange-500/10"
           isLoading={statsLoading}
         />
       </div>
 
+      {/* Quick Stats Row */}
+      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-green-500/10">
+              <Zap className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Conversion Rate</p>
+              <p className="text-lg font-semibold">68%</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Target className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg Rating</p>
+              <p className="text-lg font-semibold">4.8 ★</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-amber-500/10">
+              <Clock className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg Wait Time</p>
+              <p className="text-lg font-semibold">4.2 min</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-purple-500/10">
+              <TrendingUp className="h-5 w-5 text-purple-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Growth</p>
+              <p className="text-lg font-semibold text-green-500">+24%</p>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue & Trips Overview</CardTitle>
-            <CardDescription>Monthly revenue and trip trends</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {revenueLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <AreaChart data={revenueData?.length ? revenueData : defaultRevenueData}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="hsl(var(--primary))"
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Trips by Vehicle Type</CardTitle>
-            <CardDescription>Distribution of trips across vehicle types</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {tripsByTypeLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <>
-                <ChartContainer config={chartConfig} className="h-[300px]">
-                  <PieChart>
-                    <Pie
-                      data={tripsByType?.length ? tripsByType : defaultTripsByType}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {(tripsByType?.length ? tripsByType : defaultTripsByType).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                  </PieChart>
-                </ChartContainer>
-                <div className="flex flex-wrap justify-center gap-4 mt-4">
-                  {(tripsByType?.length ? tripsByType : defaultTripsByType).map((type) => (
-                    <div key={type.name} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: type.color }}
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {type.name} ({type.value}%)
-                      </span>
-                    </div>
-                  ))}
+        <motion.div variants={item}>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <TrendingUp className="h-4 w-4 text-primary" />
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                Revenue & Trips Overview
+              </CardTitle>
+              <CardDescription>Monthly revenue and trip trends</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {revenueLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                  <AreaChart data={revenueData?.length ? revenueData : defaultRevenueData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-purple-500/10">
+                  <Car className="h-4 w-4 text-purple-500" />
+                </div>
+                Trips by Vehicle Type
+              </CardTitle>
+              <CardDescription>Distribution of trips across vehicle types</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {tripsByTypeLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <>
+                  <ChartContainer config={chartConfig} className="h-[250px]">
+                    <PieChart>
+                      <Pie
+                        data={tripsByType?.length ? tripsByType : defaultTripsByType}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {(tripsByType?.length ? tripsByType : defaultTripsByType).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                    </PieChart>
+                  </ChartContainer>
+                  <div className="flex flex-wrap justify-center gap-4 mt-4">
+                    {(tripsByType?.length ? tripsByType : defaultTripsByType).map((type) => (
+                      <div key={type.name} className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: type.color }}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {type.name} ({type.value}%)
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Trip Volume</CardTitle>
-            <CardDescription>Number of trips per day this week</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {dailyTripsLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <ChartContainer config={chartConfig} className="h-[300px]">
-                <BarChart data={dailyTrips?.length ? dailyTrips : defaultDailyTrips}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="day" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar 
-                    dataKey="trips" 
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ChartContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Driver Activity</CardTitle>
-            <CardDescription>Online vs busy drivers throughout the day</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {driverActivityLoading ? (
-              <Skeleton className="h-[300px] w-full" />
-            ) : (
-              <>
-                <ChartContainer config={chartConfig} className="h-[300px]">
-                  <LineChart data={driverActivity?.length ? driverActivity : defaultDriverActivity}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="hour" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line 
-                      type="monotone" 
-                      dataKey="online" 
-                      stroke="hsl(var(--chart-3))" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="busy" 
-                      stroke="hsl(var(--chart-4))" 
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ChartContainer>
-                <div className="flex justify-center gap-6 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[hsl(var(--chart-3))]" />
-                    <span className="text-sm text-muted-foreground">Online Drivers</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[hsl(var(--chart-4))]" />
-                    <span className="text-sm text-muted-foreground">Busy Drivers</span>
-                  </div>
+        <motion.div variants={item}>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-green-500/10">
+                  <BarChart className="h-4 w-4 text-green-500" />
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                Daily Trip Volume
+              </CardTitle>
+              <CardDescription>Number of trips per day this week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dailyTripsLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ChartContainer config={chartConfig} className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={dailyTrips?.length ? dailyTrips : defaultDailyTrips}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar 
+                        dataKey="trips" 
+                        fill="hsl(var(--primary))" 
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={item}>
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-amber-500/10">
+                  <Activity className="h-4 w-4 text-amber-500" />
+                </div>
+                Driver Activity
+              </CardTitle>
+              <CardDescription>Online vs busy drivers throughout the day</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {driverActivityLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <>
+                  <ChartContainer config={chartConfig} className="h-[250px]">
+                    <LineChart data={driverActivity?.length ? driverActivity : defaultDriverActivity}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="hour" stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" className="text-xs" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Line 
+                        type="monotone" 
+                        dataKey="online" 
+                        stroke="#22c55e"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="busy" 
+                        stroke="#f59e0b"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                  <div className="flex justify-center gap-6 mt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <span className="text-sm text-muted-foreground">Online Drivers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-amber-500" />
+                      <span className="text-sm text-muted-foreground">Busy Drivers</span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
