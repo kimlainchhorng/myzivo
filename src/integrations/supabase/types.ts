@@ -3538,6 +3538,127 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_documents: {
+        Row: {
+          document_type: string
+          expires_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          reviewed_at: string | null
+          status: string
+          uploaded_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          document_type: string
+          expires_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: string
+          uploaded_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          document_type?: string
+          expires_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          reviewed_at?: string | null
+          status?: string
+          uploaded_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          color: string | null
+          created_at: string
+          driver_id: string
+          fuel_type: string | null
+          health_score: number | null
+          id: string
+          is_primary: boolean | null
+          last_oil_change: string | null
+          last_tire_rotation: string | null
+          license_plate: string
+          make: string
+          mileage: number | null
+          model: string
+          next_service_miles: number | null
+          updated_at: string
+          vin: string | null
+          year: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          driver_id: string
+          fuel_type?: string | null
+          health_score?: number | null
+          id?: string
+          is_primary?: boolean | null
+          last_oil_change?: string | null
+          last_tire_rotation?: string | null
+          license_plate: string
+          make: string
+          mileage?: number | null
+          model: string
+          next_service_miles?: number | null
+          updated_at?: string
+          vin?: string | null
+          year: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          driver_id?: string
+          fuel_type?: string | null
+          health_score?: number | null
+          id?: string
+          is_primary?: boolean | null
+          last_oil_change?: string | null
+          last_tire_rotation?: string | null
+          license_plate?: string
+          make?: string
+          mileage?: number | null
+          model?: string
+          next_service_miles?: number | null
+          updated_at?: string
+          vin?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waitlist: {
         Row: {
           check_in_time: string
