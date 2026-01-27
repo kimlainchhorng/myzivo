@@ -131,15 +131,15 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       {/* Section Header */}
-      <div className="flex items-center gap-2">
-        <Heart className="w-4 h-4 text-primary" />
-        <h3 className="text-sm font-semibold">Saved Places</h3>
+      <div className="flex items-center gap-1.5">
+        <Heart className="w-3.5 h-3.5 text-primary" />
+        <h3 className="text-xs font-semibold">Saved Places</h3>
       </div>
 
       {/* Preset Locations (Home & Work) */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         {presetLocations.map((preset, index) => {
           const saved = preset.label === "Home" ? homeLocation : workLocation;
           const Icon = iconMap[preset.icon];
@@ -148,44 +148,44 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
           return (
             <motion.div
               key={preset.label}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
               <Card
                 className={cn(
-                  "cursor-pointer transition-all duration-200 overflow-hidden border-2",
+                  "cursor-pointer transition-all duration-200 overflow-hidden border",
                   saved 
-                    ? "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 border-border/50" 
-                    : "border-dashed border-muted-foreground/20 hover:border-primary/30"
+                    ? "active:scale-[0.98] border-border/50" 
+                    : "border-dashed border-muted-foreground/20"
                 )}
                 onClick={() => saved && handleLocationClick(saved)}
               >
                 <CardContent className={cn(
-                  "p-4 bg-gradient-to-br",
+                  "p-2.5 bg-gradient-to-br",
                   saved ? colors.bg : "from-muted/30 to-muted/10"
                 )}>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className={cn(
-                      "w-11 h-11 rounded-xl flex items-center justify-center transition-colors",
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
                       saved ? colors.iconBg : "bg-muted/50"
                     )}>
                       <Icon className={cn(
-                        "w-5 h-5",
+                        "w-4 h-4",
                         saved ? colors.text : "text-muted-foreground"
                       )} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold">{preset.label}</p>
+                      <p className="text-xs font-semibold">{preset.label}</p>
                       {saved ? (
-                        <p className="text-xs text-muted-foreground truncate">{saved.address.split(',')[0]}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{saved.address.split(',')[0]}</p>
                       ) : (
-                        <p className="text-xs text-muted-foreground">Tap to add</p>
+                        <p className="text-[10px] text-muted-foreground">Tap to add</p>
                       )}
                     </div>
                     {saved && (
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-emerald-500" />
                       </div>
                     )}
                   </div>
@@ -202,7 +202,7 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-2"
+            className="space-y-1.5"
           >
             {otherLocations.map((location, index) => {
               const Icon = iconMap[location.icon] || MapPin;
@@ -211,38 +211,38 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
               return (
                 <motion.div
                   key={location.id}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
+                  exit={{ opacity: 0, x: 6 }}
                   transition={{ delay: index * 0.03 }}
                   className={cn(
-                    "flex items-center gap-3 p-3.5 rounded-xl cursor-pointer group transition-all",
-                    "bg-gradient-to-r hover:shadow-md",
+                    "flex items-center gap-2 p-2.5 rounded-lg cursor-pointer group transition-all active:scale-[0.98]",
+                    "bg-gradient-to-r",
                     colors.bg,
-                    "border border-border/30 hover:border-primary/20"
+                    "border border-border/30"
                   )}
                   onClick={() => handleLocationClick(location)}
                 >
                   <div className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center",
+                    "w-7 h-7 rounded-lg flex items-center justify-center",
                     colors.iconBg
                   )}>
-                    <Icon className={cn("w-4 h-4", colors.text)} />
+                    <Icon className={cn("w-3.5 h-3.5", colors.text)} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{location.label}</p>
-                    <p className="text-xs text-muted-foreground truncate">{location.address}</p>
+                    <p className="text-xs font-semibold">{location.label}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{location.address}</p>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 rounded-lg hover:bg-destructive/10"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-md hover:bg-destructive/10"
                     onClick={(e) => {
                       e.stopPropagation();
                       deleteLocation.mutate(location.id);
                     }}
                   >
-                    <Trash2 className="w-4 h-4 text-destructive" />
+                    <Trash2 className="w-3 h-3 text-destructive" />
                   </Button>
                 </motion.div>
               );
@@ -256,9 +256,9 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
         <DialogTrigger asChild>
           <Button 
             variant="outline" 
-            className="w-full h-12 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
+            className="w-full h-9 rounded-lg border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs"
           >
-            <Plus className="w-4 h-4 mr-2 text-primary" />
+            <Plus className="w-3.5 h-3.5 mr-1.5 text-primary" />
             <span className="text-primary font-medium">Add New Place</span>
           </Button>
         </DialogTrigger>
