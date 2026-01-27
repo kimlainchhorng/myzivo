@@ -11,8 +11,12 @@ import {
   Shield,
   ArrowRight,
   Sparkles,
+  Zap,
+  Star,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const services = [
   {
@@ -22,9 +26,11 @@ const services = [
     description: "Get where you need to go with reliable drivers",
     href: "/ride",
     color: "rides",
-    gradient: "gradient-rides",
+    gradient: "from-primary to-teal-400",
+    glow: "shadow-primary/30",
     features: ["5-min pickup", "Live tracking", "24/7 support"],
     isNew: false,
+    isPremium: true,
   },
   {
     id: "eats",
@@ -33,9 +39,11 @@ const services = [
     description: "Delicious food from 1000+ restaurants",
     href: "/food",
     color: "eats",
-    gradient: "gradient-eats",
+    gradient: "from-eats to-orange-500",
+    glow: "shadow-eats/30",
     features: ["30-min delivery", "1000+ restaurants", "Real-time tracking"],
     isNew: false,
+    isPremium: true,
   },
   {
     id: "flights",
@@ -44,9 +52,11 @@ const services = [
     description: "Book flights to 500+ destinations worldwide",
     href: "/book-flight",
     color: "sky-500",
-    gradient: "bg-gradient-to-br from-sky-500 to-sky-600",
+    gradient: "from-sky-500 to-blue-500",
+    glow: "shadow-sky-500/30",
     features: ["Best prices", "Flexible booking", "Instant confirmation"],
     isNew: false,
+    isPremium: false,
   },
   {
     id: "hotels",
@@ -55,9 +65,11 @@ const services = [
     description: "Find your perfect stay at 25,000+ properties",
     href: "/book-hotel",
     color: "amber-500",
-    gradient: "bg-gradient-to-br from-amber-500 to-amber-600",
+    gradient: "from-amber-500 to-orange-500",
+    glow: "shadow-amber-500/30",
     features: ["Free cancellation", "Best rate guarantee", "Verified reviews"],
     isNew: false,
+    isPremium: false,
   },
   {
     id: "car-rental",
@@ -66,9 +78,11 @@ const services = [
     description: "Rent vehicles for any occasion",
     href: "/rent-car",
     color: "primary",
-    gradient: "bg-gradient-to-br from-primary to-accent",
+    gradient: "from-violet-500 to-purple-500",
+    glow: "shadow-violet-500/30",
     features: ["No hidden fees", "Flexible pickup", "Full insurance"],
     isNew: false,
+    isPremium: false,
   },
   {
     id: "package",
@@ -77,9 +91,11 @@ const services = [
     description: "Send packages across the city fast",
     href: "/package-delivery",
     color: "emerald-500",
-    gradient: "bg-gradient-to-br from-emerald-500 to-emerald-600",
+    gradient: "from-emerald-500 to-green-500",
+    glow: "shadow-emerald-500/30",
     features: ["Same-day delivery", "Real-time tracking", "Secure handling"],
     isNew: true,
+    isPremium: false,
   },
   {
     id: "ground",
@@ -88,9 +104,11 @@ const services = [
     description: "Book intercity ground transportation",
     href: "/ground-transport",
     color: "violet-500",
-    gradient: "bg-gradient-to-br from-violet-500 to-violet-600",
+    gradient: "from-indigo-500 to-violet-500",
+    glow: "shadow-indigo-500/30",
     features: ["Compare routes", "E-tickets", "Flexible booking"],
     isNew: true,
+    isPremium: false,
   },
   {
     id: "events",
@@ -99,9 +117,11 @@ const services = [
     description: "Tickets to concerts, sports & entertainment",
     href: "/events",
     color: "pink-500",
-    gradient: "bg-gradient-to-br from-pink-500 to-pink-600",
+    gradient: "from-pink-500 to-rose-500",
+    glow: "shadow-pink-500/30",
     features: ["Best seats", "Secure tickets", "Instant delivery"],
     isNew: true,
+    isPremium: false,
   },
   {
     id: "insurance",
@@ -110,9 +130,11 @@ const services = [
     description: "Protect your trips with comprehensive coverage",
     href: "/travel-insurance",
     color: "cyan-500",
-    gradient: "bg-gradient-to-br from-cyan-500 to-cyan-600",
+    gradient: "from-cyan-500 to-teal-500",
+    glow: "shadow-cyan-500/30",
     features: ["Medical coverage", "Trip cancellation", "24/7 assistance"],
     isNew: true,
+    isPremium: false,
   },
 ];
 
@@ -121,13 +143,13 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
+      staggerChildren: 0.06,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
@@ -139,11 +161,12 @@ const itemVariants = {
 
 const ServicesShowcase = () => {
   return (
-    <section className="py-12 sm:py-20 lg:py-32 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-rides/5 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/2 left-0 w-48 sm:w-96 h-48 sm:h-96 bg-eats/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-40 sm:w-80 h-40 sm:h-80 bg-sky-500/10 rounded-full blur-3xl" />
+    <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-40" />
+      <div className="absolute top-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-br from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-0 w-[350px] h-[350px] bg-gradient-to-tl from-sky-500/10 to-blue-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-0 right-1/4 w-[300px] h-[300px] bg-gradient-to-bl from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -152,16 +175,24 @@ const ServicesShowcase = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-16"
+          className="text-center mb-14 sm:mb-20"
         >
-          <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-card text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-            <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-6"
+          >
+            <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-muted-foreground">All-in-One Platform</span>
-          </div>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
-            Everything you need, <span className="text-gradient-rides">one app</span>
+          </motion.div>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6">
+            Everything you need,{" "}
+            <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">
+              one app
+            </span>
           </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
             From daily commutes to dream vacations, ZIVO has you covered with 9 integrated
             services
           </p>
@@ -173,46 +204,58 @@ const ServicesShowcase = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
         >
           {services.map((service) => (
             <motion.div
               key={service.id}
               variants={itemVariants}
+              whileHover={{ y: -8, scale: 1.01 }}
               className="group"
             >
               <Link to={service.href}>
-                <div className="glass-card p-4 sm:p-6 h-full hover:border-white/20 transition-all duration-300 relative overflow-hidden active:scale-[0.98]">
-                  {/* New Badge */}
-                  {service.isNew && (
-                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4">
-                      <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-xs font-semibold rounded-full bg-eats/10 text-eats">
+                <div className="relative p-5 sm:p-6 h-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden">
+                  {/* Decorative corner glow */}
+                  <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${service.gradient} opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity`} />
+                  
+                  {/* Badges */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    {service.isNew && (
+                      <Badge className="bg-gradient-to-r from-eats to-orange-500 text-white border-0 text-xs font-semibold px-2.5 py-1">
+                        <Zap className="w-3 h-3 mr-1" />
                         New
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Icon */}
-                  <div
-                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${service.gradient} flex items-center justify-center mb-4 sm:mb-5 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <service.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                      </Badge>
+                    )}
+                    {service.isPremium && (
+                      <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-500 border-amber-500/30 text-xs font-semibold px-2.5 py-1">
+                        <Star className="w-3 h-3 mr-1 fill-amber-500" />
+                        Popular
+                      </Badge>
+                    )}
                   </div>
 
+                  {/* Icon */}
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center mb-5 shadow-lg ${service.glow}`}
+                  >
+                    <service.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+                  </motion.div>
+
                   {/* Content */}
-                  <h3 className="font-display text-lg sm:text-xl font-semibold mb-1.5 sm:mb-2 text-foreground group-hover:text-primary transition-colors">
+                  <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
                     {service.title}
                   </h3>
-                  <p className="text-muted-foreground text-xs sm:text-sm mb-3 sm:mb-4 leading-relaxed">
+                  <p className="text-muted-foreground text-sm sm:text-base mb-4 leading-relaxed">
                     {service.description}
                   </p>
 
                   {/* Features */}
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+                  <div className="flex flex-wrap gap-2 mb-5">
                     {service.features.map((feature) => (
                       <span
                         key={feature}
-                        className="text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-muted text-muted-foreground"
+                        className="text-xs px-3 py-1.5 rounded-full bg-muted/50 text-muted-foreground font-medium"
                       >
                         {feature}
                       </span>
@@ -220,15 +263,10 @@ const ServicesShowcase = () => {
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex items-center text-xs sm:text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center text-sm font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
                     <span>Explore</span>
-                    <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
                   </div>
-
-                  {/* Hover Glow */}
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br from-transparent to-${service.color}/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`}
-                  />
                 </div>
               </Link>
             </motion.div>
@@ -241,18 +279,24 @@ const ServicesShowcase = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.4 }}
-          className="text-center mt-12"
+          className="text-center mt-16 sm:mt-20"
         >
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-6 text-lg">
             Download the ZIVO app to access all services
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <Button variant="hero" size="lg" className="gap-2">
-              Download for iOS
-            </Button>
-            <Button variant="outline" size="lg" className="gap-2">
-              Download for Android
-            </Button>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+              <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2">
+                <Download className="w-5 h-5" />
+                Download for iOS
+              </Button>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+              <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2">
+                <Download className="w-5 h-5" />
+                Download for Android
+              </Button>
+            </motion.div>
           </div>
         </motion.div>
       </div>

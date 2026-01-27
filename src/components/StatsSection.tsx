@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { Car, Users, MapPin, UtensilsCrossed, Plane, Hotel } from "lucide-react";
+import { motion } from "framer-motion";
+import { Car, Users, MapPin, UtensilsCrossed, Plane, Hotel, TrendingUp, Sparkles } from "lucide-react";
 
 const stats = [
   {
@@ -121,71 +122,107 @@ const getColorClasses = (color: string) => {
   switch (color) {
     case "rides":
       return {
-        gradient: "gradient-rides",
-        text: "text-primary-foreground",
-        iconColor: "text-rides",
+        gradient: "bg-gradient-to-br from-primary to-teal-400",
+        glow: "shadow-primary/30",
+        text: "text-white",
+        iconBg: "from-primary/20 to-teal-400/10",
       };
     case "eats":
       return {
-        gradient: "gradient-eats",
-        text: "text-secondary-foreground",
-        iconColor: "text-eats",
+        gradient: "bg-gradient-to-br from-eats to-orange-500",
+        glow: "shadow-eats/30",
+        text: "text-white",
+        iconBg: "from-eats/20 to-orange-500/10",
       };
     case "sky":
       return {
-        gradient: "bg-gradient-to-br from-sky-500 to-sky-600",
+        gradient: "bg-gradient-to-br from-sky-500 to-blue-500",
+        glow: "shadow-sky-500/30",
         text: "text-white",
-        iconColor: "text-sky-500",
+        iconBg: "from-sky-500/20 to-blue-500/10",
       };
     case "amber":
       return {
-        gradient: "bg-gradient-to-br from-amber-500 to-amber-600",
+        gradient: "bg-gradient-to-br from-amber-500 to-orange-500",
+        glow: "shadow-amber-500/30",
         text: "text-white",
-        iconColor: "text-amber-500",
+        iconBg: "from-amber-500/20 to-orange-500/10",
       };
     default:
       return {
-        gradient: "gradient-rides",
-        text: "text-primary-foreground",
-        iconColor: "text-rides",
+        gradient: "bg-gradient-to-br from-primary to-teal-400",
+        glow: "shadow-primary/30",
+        text: "text-white",
+        iconBg: "from-primary/20 to-teal-400/10",
       };
   }
 };
 
 const StatsSection = () => {
   return (
-    <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-rides/5 rounded-full blur-3xl" />
+    <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
+      {/* Enhanced Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[1000px] h-[600px] sm:h-[1000px] bg-gradient-radial from-primary/10 via-transparent to-transparent rounded-full blur-3xl" />
+      <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-eats/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-sky-500/10 to-transparent rounded-full blur-3xl" />
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="text-center mb-8 sm:mb-12 animate-fade-in">
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4">
-            Trusted by <span className="text-gradient-rides">millions</span>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12 sm:mb-16"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-6"
+          >
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="text-muted-foreground">Growing Every Day</span>
+          </motion.div>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+            Trusted by{" "}
+            <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">
+              millions
+            </span>
           </h2>
-          <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
             Powering transportation and delivery across the globe
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-6">
           {stats.map((stat, index) => {
             const colors = getColorClasses(stat.color);
             return (
-              <div
+              <motion.div
                 key={stat.label}
-                className="glass-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group"
               >
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 mx-auto rounded-lg sm:rounded-xl ${colors.gradient} flex items-center justify-center mb-3 sm:mb-4`}>
-                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text}`} />
+                <div className="relative p-5 sm:p-6 text-center rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                  {/* Decorative corner */}
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl ${colors.gradient} flex items-center justify-center mb-4 shadow-lg ${colors.glow}`}
+                  >
+                    <stat.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${colors.text}`} />
+                  </motion.div>
+                  <p className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                    <AnimatedCounter value={stat.value} suffix={stat.suffix} />
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
                 </div>
-                <p className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-0.5 sm:mb-1">
-                  <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-                </p>
-                <p className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground">{stat.label}</p>
-              </div>
+              </motion.div>
             );
           })}
         </div>
