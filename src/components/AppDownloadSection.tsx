@@ -21,8 +21,25 @@ const AppDownloadSection = () => {
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Enhanced background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/15 via-transparent to-transparent" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating phone emojis */}
+      <motion.div
+        animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40"
+      >
+        📱
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30"
+      >
+        ⬇️
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div 
@@ -30,21 +47,24 @@ const AppDownloadSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="p-8 sm:p-12 lg:p-20 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl text-center relative overflow-hidden"
+          className="p-8 sm:p-12 lg:p-20 rounded-[2.5rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl text-center relative overflow-hidden"
         >
           {/* Background decoration */}
-          <div className="absolute top-0 right-0 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-br from-primary/10 to-teal-400/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 sm:w-96 h-64 sm:h-96 bg-gradient-to-tr from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-br from-primary/15 to-teal-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
 
           <div className="relative z-10">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.2, type: "spring" }}
             >
-              <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-eats/20 text-primary border-primary/30 px-4 py-2 text-sm font-semibold">
-                <Sparkles className="w-4 h-4 mr-2" />
+              <Badge className="mb-6 bg-gradient-to-r from-primary/20 to-eats/20 text-primary border-primary/30 px-5 py-2.5 text-sm font-bold shadow-lg shadow-primary/20">
+                <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                </motion.div>
                 Available now
               </Badge>
             </motion.div>
@@ -54,10 +74,10 @@ const AppDownloadSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-foreground"
+              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 text-foreground"
             >
               Get the{" "}
-              <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">ZIVO</span>{" "}
+              <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">ZIVO</span>{" "}
               app
             </motion.h2>
             
@@ -66,9 +86,9 @@ const AppDownloadSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.4 }}
-              className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 px-4"
+              className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 px-4 leading-relaxed"
             >
-              Download the app and start riding in minutes. Available on iOS and Android.
+              Download the app and start riding in minutes. Available on <span className="text-foreground font-medium">iOS</span> and <span className="text-foreground font-medium">Android</span>.
             </motion.p>
 
             {/* Features */}

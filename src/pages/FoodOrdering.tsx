@@ -429,34 +429,60 @@ const FoodOrdering = () => {
       
       <main className="pt-20 pb-24">
         {/* Hero Section */}
-        <section className="relative py-16 lg:py-24 overflow-hidden">
+        <section className="relative py-16 lg:py-28 overflow-hidden">
           {/* Enhanced background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/20 to-orange-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-radial from-eats/20 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/25 to-orange-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-red-500/10 to-transparent rounded-full blur-3xl" />
+          
+          {/* Floating food emojis */}
+          <motion.div
+            animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-50"
+          >
+            🍔
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-40"
+          >
+            🍕
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="absolute bottom-40 right-[15%] text-4xl hidden lg:block opacity-30"
+          >
+            🍜
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-10"
+              className="text-center mb-12"
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-semibold mb-6 shadow-lg shadow-eats/30"
+                transition={{ delay: 0.1, type: "spring" }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-eats/40"
               >
-                <UtensilsCrossed className="w-4 h-4" />
+                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <UtensilsCrossed className="w-4 h-4" />
+                </motion.div>
                 ZIVO Eats
               </motion.div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-7xl font-bold mb-6">
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6">
                 Delicious food,
                 <br />
-                <span className="bg-gradient-to-r from-eats to-orange-500 bg-clip-text text-transparent">delivered fast</span>
+                <span className="bg-gradient-to-r from-eats via-orange-500 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">delivered fast</span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-                Discover the best restaurants near you. Order from thousands of local favorites.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
+                Discover the best restaurants near you. Order from <span className="text-foreground font-medium">thousands</span> of local favorites.
               </p>
             </motion.div>
 

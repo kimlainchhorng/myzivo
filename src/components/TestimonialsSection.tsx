@@ -106,8 +106,25 @@ const TestimonialsSection = () => {
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
       {/* Enhanced Background Effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating elements */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute top-32 left-[10%] text-4xl hidden lg:block opacity-40"
+      >
+        ⭐
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 7, repeat: Infinity }}
+        className="absolute bottom-40 right-[8%] text-3xl hidden lg:block opacity-30"
+      >
+        💬
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -121,18 +138,20 @@ const TestimonialsSection = () => {
             initial={{ scale: 0.9, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-eats/10 border border-primary/20 text-sm font-medium mb-6"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
             <span className="text-muted-foreground">Customer Stories</span>
           </motion.div>
-          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 px-2">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 px-2">
             Loved by{" "}
-            <span className="bg-gradient-to-r from-primary to-eats bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
               millions
             </span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
             See what our customers, drivers, and partners have to say about ZIVO
           </p>
         </motion.div>
