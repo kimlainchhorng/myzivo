@@ -459,6 +459,86 @@ export type Database = {
           },
         ]
       }
+      community_tip_likes: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          tip_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          tip_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          tip_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_tip_likes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_tip_likes_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "community_tips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_tips: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          driver_id: string
+          id: string
+          is_featured: boolean
+          likes: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_featured?: boolean
+          likes?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_featured?: boolean
+          likes?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_tips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cross_app_tokens: {
         Row: {
           created_at: string
@@ -4066,6 +4146,47 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_progress: {
+        Row: {
+          completed_at: string | null
+          completed_lessons: number
+          course_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_lessons?: number
+          course_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_lessons?: number
+          course_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_progress_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
         ]

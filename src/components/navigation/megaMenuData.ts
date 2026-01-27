@@ -21,9 +21,7 @@ import {
   CreditCard,
   Phone,
   ShieldCheck,
-  AlertTriangle,
   Scale,
-  BookOpen,
   MessageCircle,
   Building2,
   Bed,
@@ -31,6 +29,7 @@ import {
   Coffee,
   Wine,
   Truck,
+  Calendar,
   LucideIcon,
 } from "lucide-react";
 
@@ -296,5 +295,3 @@ export const moreServicesData: MegaMenuData = {
   ],
 };
 
-// Import Calendar for car rental section
-import { Calendar } from "lucide-react";
