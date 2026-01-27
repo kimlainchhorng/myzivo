@@ -40,35 +40,56 @@ const AllServicesSection = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-12 lg:py-24 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-eats/5 opacity-40" />
-      <div className="absolute top-1/4 left-0 w-[300px] h-[300px] bg-gradient-to-br from-violet-500/10 to-transparent rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-eats/10 to-transparent rounded-full blur-3xl" />
+    <section className="py-14 lg:py-28 relative overflow-hidden">
+      {/* Enhanced background */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-eats/8 opacity-50" />
+      <div className="absolute top-1/4 left-0 w-[400px] h-[400px] bg-gradient-to-br from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-radial from-primary/5 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-32 left-[8%] text-4xl hidden lg:block opacity-40"
+      >
+        🚀
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-40 right-[10%] text-4xl hidden lg:block opacity-30"
+      >
+        ✨
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12 sm:mb-16"
+          className="text-center mb-14 sm:mb-20"
         >
           <motion.div 
             initial={{ scale: 0.9 }}
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg"
+            transition={{ type: "spring" }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
+              <Sparkles className="w-4 h-4 text-primary" />
+            </motion.div>
             <span className="text-muted-foreground">All-in-One Platform</span>
           </motion.div>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4">
+          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6">
             Everything you need,{" "}
             <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
               one app
             </span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            From daily commutes to dream vacations, ZIVO has you covered
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed">
+            From daily commutes to <span className="text-foreground font-medium">dream vacations</span>, ZIVO has you covered
           </p>
         </motion.div>
 

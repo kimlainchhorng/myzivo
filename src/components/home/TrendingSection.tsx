@@ -69,34 +69,51 @@ const TrendingSection = () => {
   const trendingServices = recommendations?.length ? recommendations : defaultTrendingServices;
 
   return (
-    <section className="py-12 lg:py-20 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-radial from-eats/5 via-transparent to-transparent" />
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
+    <section className="py-14 lg:py-24 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 bg-gradient-radial from-eats/8 via-transparent to-transparent" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-24 left-[8%] text-4xl hidden lg:block opacity-40"
+      >
+        🔥
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-30"
+      >
+        ⭐
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="space-y-10"
+          className="space-y-12"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: -5 }}
-                className="p-3 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30"
+                className="p-3.5 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30"
               >
-                <TrendingUp className="w-6 h-6 text-white" />
+                <TrendingUp className="w-7 h-7 text-white" />
               </motion.div>
               <div>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold">Recommended For You</h2>
-                <p className="text-sm text-muted-foreground">Personalized picks based on your activity</p>
+                <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Recommended For You</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Personalized picks based on your activity</p>
               </div>
             </div>
             <motion.div whileHover={{ x: 5 }}>
-              <Button variant="ghost" className="text-eats gap-1 hidden sm:flex font-semibold group">
+              <Button variant="ghost" className="text-eats gap-1 hidden sm:flex font-bold group">
                 View all <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </motion.div>
