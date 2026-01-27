@@ -3,7 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Location } from "@/hooks/useRiderBooking";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Locate, ZoomIn, ZoomOut, Layers } from "lucide-react";
+import { MapPin, Navigation, Locate, ZoomIn, ZoomOut, Layers, Compass, Route } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
   const [mapStyle, setMapStyle] = useState<"dark" | "satellite">("dark");
+  const [bearing, setBearing] = useState(0);
 
   // Initialize map
   useEffect(() => {
@@ -38,6 +39,12 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
       center: [-74.006, 40.7128],
       zoom: 12,
       attributionControl: false,
+      pitch: 45,
+      bearing: 0,
+    });
+
+    map.current.on("rotate", () => {
+      setBearing(map.current?.getBearing() || 0);
     });
 
     map.current.on("load", () => {
@@ -239,8 +246,10 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
       (position) => {
         map.current?.flyTo({
           center: [position.coords.longitude, position.coords.latitude],
-          zoom: 15,
-          duration: 1000,
+          zoom: 16,
+          pitch: 60,
+          duration: 1500,
+          essential: true,
         });
         setIsLocating(false);
       },
@@ -258,102 +267,192 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     );
   };
 
+  const handleResetBearing = () => {
+    map.current?.easeTo({ bearing: 0, pitch: 45, duration: 500 });
+  };
+
   return (
     <div className={cn("relative overflow-hidden rounded-2xl", className)}>
       {/* Map container */}
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Gradient overlays for premium look */}
+      {/* Premium gradient overlays */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-background/30 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/50 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/50 via-background/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/60 via-background/30 to-transparent" />
+        <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-background/20 to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-background/20 to-transparent" />
+        
+        {/* Subtle corner vignettes */}
+        <div className="absolute top-0 left-0 w-32 h-32 bg-radial-gradient from-primary/5 to-transparent rounded-full blur-2xl" />
+        <div className="absolute bottom-0 right-0 w-40 h-40 bg-radial-gradient from-teal-500/5 to-transparent rounded-full blur-2xl" />
       </div>
 
-      {/* Map Controls */}
+      {/* Map Controls - Premium glassmorphism */}
       <AnimatePresence>
         {showControls && mapLoaded && (
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            className="absolute right-3 top-3 flex flex-col gap-2"
+            initial={{ opacity: 0, x: 20, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="absolute right-3 top-3 flex flex-col gap-1.5"
           >
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleZoomIn}
-              className="w-9 h-9 rounded-lg bg-card/90 backdrop-blur-sm border-border/50 hover:bg-card shadow-lg"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleZoomOut}
-              className="w-9 h-9 rounded-lg bg-card/90 backdrop-blur-sm border-border/50 hover:bg-card shadow-lg"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleLocate}
-              disabled={isLocating}
-              className="w-9 h-9 rounded-lg bg-card/90 backdrop-blur-sm border-border/50 hover:bg-card shadow-lg"
-            >
-              <Locate className={cn("w-4 h-4", isLocating && "animate-pulse text-primary")} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleStyle}
-              className="w-9 h-9 rounded-lg bg-card/90 backdrop-blur-sm border-border/50 hover:bg-card shadow-lg"
-            >
-              <Layers className="w-4 h-4" />
-            </Button>
+            <div className="bg-card/80 backdrop-blur-xl rounded-xl border border-white/10 p-1.5 shadow-2xl shadow-black/20">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleZoomIn}
+                  className="w-8 h-8 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleZoomOut}
+                  className="w-8 h-8 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </div>
+
+            <div className="bg-card/80 backdrop-blur-xl rounded-xl border border-white/10 p-1.5 shadow-2xl shadow-black/20">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLocate}
+                  disabled={isLocating}
+                  className="w-8 h-8 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Locate className={cn("w-4 h-4", isLocating && "animate-pulse text-primary")} />
+                </Button>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.05 }} 
+                whileTap={{ scale: 0.95 }}
+                style={{ rotate: -bearing }}
+              >
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetBearing}
+                  className={cn(
+                    "w-8 h-8 rounded-lg hover:bg-white/10 transition-colors",
+                    bearing !== 0 ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Compass className="w-4 h-4" />
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleToggleStyle}
+                  className="w-8 h-8 rounded-lg hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Layers className="w-4 h-4" />
+                </Button>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Route Info Badge */}
+      {/* Route Info Badge - Premium */}
       <AnimatePresence>
         {pickup && dropoff && routeGeometry && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="absolute bottom-4 left-4 right-4"
           >
-            <div className="flex items-center gap-2 bg-card/95 backdrop-blur-md rounded-xl px-4 py-3 shadow-xl border border-border/50">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="text-xs text-muted-foreground">Route active</span>
+            <div className="relative flex items-center gap-3 bg-card/90 backdrop-blur-2xl rounded-2xl px-4 py-3.5 shadow-2xl shadow-black/20 border border-white/10 overflow-hidden">
+              {/* Animated background shimmer */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+              
+              <div className="relative flex items-center gap-2">
+                <div className="relative">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-emerald-500"
+                    animate={{ scale: [1, 1.8], opacity: [0.5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground font-medium">Route active</span>
               </div>
-              <div className="flex-1" />
-              <div className="flex items-center gap-1.5 text-xs">
-                <Navigation className="w-3.5 h-3.5 text-primary" />
-                <span className="font-medium">Optimized path</span>
+              
+              <div className="flex-1 flex justify-center">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                  <Route className="w-3 h-3 text-primary" />
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Optimized</span>
+                </div>
+              </div>
+              
+              <div className="relative flex items-center gap-1.5 text-xs">
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                >
+                  <Navigation className="w-4 h-4 text-primary" />
+                </motion.div>
+                <span className="font-semibold">Live</span>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Empty state indicator */}
+      {/* Empty state indicator - Premium */}
       <AnimatePresence>
         {!pickup && !dropoff && mapLoaded && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
           >
-            <div className="text-center bg-card/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-border/50">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                <MapPin className="w-6 h-6 text-primary" />
+            <div className="relative text-center bg-card/85 backdrop-blur-2xl rounded-3xl p-8 shadow-2xl shadow-black/30 border border-white/10 overflow-hidden">
+              {/* Decorative gradient orbs */}
+              <div className="absolute -top-10 -left-10 w-24 h-24 bg-primary/20 rounded-full blur-2xl" />
+              <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-teal-500/15 rounded-full blur-2xl" />
+              
+              <motion.div 
+                className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center mx-auto mb-4 border border-white/10"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <MapPin className="w-7 h-7 text-primary" />
+              </motion.div>
+              
+              <p className="relative text-base font-semibold mb-1">Where to?</p>
+              <p className="relative text-xs text-muted-foreground">Enter pickup & destination</p>
+              
+              {/* Decorative dots */}
+              <div className="flex justify-center gap-1.5 mt-4">
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-primary/50"
+                    animate={{ opacity: [0.3, 1, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                  />
+                ))}
               </div>
-              <p className="text-sm font-medium">Enter your locations</p>
-              <p className="text-xs text-muted-foreground mt-1">to see your route</p>
             </div>
           </motion.div>
         )}
