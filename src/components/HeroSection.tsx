@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Car, UtensilsCrossed, MapPin, ChevronRight, Sparkles, Plane, Hotel, CarFront, MoreHorizontal, Star, Clock, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 const heroStats = [
   { value: "5 min", label: "Avg. pickup" },
@@ -28,67 +28,27 @@ const featuredRestaurants = [
   { id: 6, name: "Coffee Hub", cuisine: "Cafe", rating: 4.5, time: "10-15", image: "☕", promo: null },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-  }
-};
-
 const HeroSection = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'rides' | 'eats'>('rides');
   const [pickup, setPickup] = useState('');
   const [destination, setDestination] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [hoveredService, setHoveredService] = useState<string | null>(null);
   const restaurantScrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 pb-8 sm:pb-12 overflow-hidden">
-      {/* Enhanced Background Elements */}
+      {/* Enhanced Background Elements - Static for performance */}
       <div className="absolute inset-0 bg-gradient-radial from-rides/10 via-transparent to-transparent opacity-60" />
-      <div className="absolute top-1/4 right-0 w-64 sm:w-[500px] h-64 sm:h-[500px] bg-gradient-to-bl from-rides/15 to-teal-500/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 left-0 w-56 sm:w-[450px] h-56 sm:h-[450px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+      <div className="absolute top-1/4 right-0 w-64 sm:w-[500px] h-64 sm:h-[500px] bg-gradient-to-bl from-rides/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 left-0 w-56 sm:w-[450px] h-56 sm:h-[450px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[1200px] h-[600px] sm:h-[1200px] bg-gradient-conic from-rides/8 via-transparent to-eats/8 rounded-full blur-3xl opacity-40" />
       <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-40 left-[5%] text-5xl hidden lg:block opacity-50"
-      >
-        🚗
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-40"
-      >
-        🍔
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 4, repeat: Infinity }}
-        className="absolute top-60 right-[12%] text-4xl hidden lg:block opacity-30"
-      >
-        ✨
-      </motion.div>
+      {/* Static decorative emojis */}
+      <div className="absolute top-40 left-[5%] text-5xl hidden lg:block opacity-50">🚗</div>
+      <div className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-40">🍔</div>
+      <div className="absolute top-60 right-[12%] text-4xl hidden lg:block opacity-30">✨</div>
       
       {/* Animated grid lines - hidden on mobile for performance */}
       <div className="hidden sm:block absolute inset-0 opacity-[0.02]" style={{
@@ -98,64 +58,44 @@ const HeroSection = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Quick Services Bar - Enhanced with Better Flow */}
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="mb-8 sm:mb-10"
-        >
+        <div className="mb-8 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center lg:justify-start">
-            {quickServices.map((service) => (
-              <motion.button
+            {quickServices.map((service, index) => (
+              <button
                 key={service.id}
-                variants={itemVariants}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.95 }}
-                onHoverStart={() => setHoveredService(service.id)}
-                onHoverEnd={() => setHoveredService(null)}
                 onClick={() => navigate(service.href)}
-                className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl ${service.bgColor} border border-white/10 backdrop-blur-sm transition-all duration-300 touch-manipulation shrink-0 group ${service.glowColor}`}
+                className={cn(
+                  "flex items-center gap-2.5 px-5 py-3 rounded-2xl border border-white/10 backdrop-blur-sm transition-all duration-200 touch-manipulation shrink-0 group",
+                  "hover:scale-105 hover:-translate-y-0.5 active:scale-95",
+                  service.bgColor,
+                  service.glowColor
+                )}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <motion.div
-                  animate={{ rotate: hoveredService === service.id ? [0, -10, 10, 0] : 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <service.icon className={`w-5 h-5 ${service.color} transition-transform duration-300`} />
-                </motion.div>
+                <service.icon className={cn("w-5 h-5 transition-transform duration-200 group-hover:scale-110", service.color)} />
                 <span className="text-sm sm:text-base font-semibold text-foreground whitespace-nowrap">{service.label}</span>
-                <ChevronRight className={`w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 -ml-1 group-hover:ml-0`} />
-              </motion.button>
+                <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 -ml-1 group-hover:ml-0" />
+              </button>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Featured Restaurants/Stores - Enhanced with Better Flow */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mb-10 sm:mb-12"
-        >
+        <div className="mb-10 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
           <div className="flex items-center justify-between mb-4">
-            <motion.div 
-              className="flex items-center gap-2.5"
-              whileHover={{ x: 3 }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
+            <div className="flex items-center gap-2.5 hover:translate-x-0.5 transition-transform duration-200">
               <div className="p-2 rounded-xl bg-eats/10 backdrop-blur-sm">
                 <UtensilsCrossed className="w-4 h-4 text-eats" />
               </div>
               <h3 className="text-base sm:text-lg font-bold text-foreground">Popular Near You</h3>
-            </motion.div>
-            <motion.button 
+            </div>
+            <button 
               onClick={() => navigate('/food')}
-              whileHover={{ x: 3 }}
-              whileTap={{ scale: 0.95 }}
-              className="text-sm text-eats hover:text-eats/80 font-semibold flex items-center gap-1.5 touch-manipulation group"
+              className="text-sm text-eats hover:text-eats/80 font-semibold flex items-center gap-1.5 touch-manipulation group transition-all duration-200 hover:translate-x-0.5 active:scale-95"
             >
               See all
-              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </motion.button>
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </button>
           </div>
           
           <div 
@@ -163,32 +103,21 @@ const HeroSection = () => {
             className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth"
           >
             {featuredRestaurants.map((restaurant, index) => (
-              <motion.button
+              <button
                 key={restaurant.id}
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.08, type: "spring", stiffness: 200 }}
-                whileHover={{ y: -6, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/food')}
-                className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-white/10 hover:border-eats/40 transition-all duration-300 touch-manipulation text-left group hover:shadow-[0_10px_40px_-15px_hsl(var(--eats)/0.3)]"
+                className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-white/10 hover:border-eats/40 transition-all duration-200 touch-manipulation text-left group hover:shadow-[0_10px_40px_-15px_hsl(var(--eats)/0.3)] hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] animate-in fade-in slide-in-from-right-4"
+                style={{ animationDelay: `${200 + index * 50}ms` }}
               >
                 <div className="relative mb-3">
-                  <div className="w-full aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center text-4xl sm:text-5xl overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                    <span className="group-hover:scale-110 transition-transform duration-300">{restaurant.image}</span>
+                  <div className="w-full aspect-square bg-gradient-to-br from-muted to-muted/50 rounded-xl flex items-center justify-center text-4xl sm:text-5xl overflow-hidden group-hover:scale-105 transition-transform duration-200">
+                    <span className="group-hover:scale-110 transition-transform duration-200">{restaurant.image}</span>
                   </div>
-                  <AnimatePresence>
-                    {restaurant.promo && (
-                      <motion.span 
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ type: "spring", stiffness: 400, delay: 0.5 + index * 0.08 }}
-                        className="absolute -top-2 -right-2 px-2 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-lg shadow-lg"
-                      >
-                        {restaurant.promo}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {restaurant.promo && (
+                    <span className="absolute -top-2 -right-2 px-2 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-lg shadow-lg">
+                      {restaurant.promo}
+                    </span>
+                  )}
                 </div>
                 <h4 className="font-bold text-sm text-foreground truncate mb-0.5">{restaurant.name}</h4>
                 <p className="text-xs text-muted-foreground truncate mb-2">{restaurant.cuisine}</p>
@@ -202,48 +131,32 @@ const HeroSection = () => {
                     <span className="text-xs font-medium">{restaurant.time}</span>
                   </div>
                 </div>
-              </motion.button>
+              </button>
             ))}
             
             {/* See More Card */}
-            <motion.button
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
-              whileHover={{ y: -6, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               onClick={() => navigate('/food')}
-              className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-dashed border-eats/30 hover:border-eats/60 transition-all duration-300 touch-manipulation flex flex-col items-center justify-center min-h-[180px] group"
+              className="flex-shrink-0 w-36 sm:w-44 glass-card p-3.5 rounded-2xl border border-dashed border-eats/30 hover:border-eats/60 transition-all duration-200 touch-manipulation flex flex-col items-center justify-center min-h-[180px] group hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] animate-in fade-in slide-in-from-right-4"
+              style={{ animationDelay: '500ms' }}
             >
-              <div className="w-14 h-14 rounded-2xl bg-eats/10 flex items-center justify-center mb-3 group-hover:bg-eats/20 transition-colors duration-300">
-                <ArrowRight className="w-6 h-6 text-eats group-hover:translate-x-1 transition-transform duration-300" />
+              <div className="w-14 h-14 rounded-2xl bg-eats/10 flex items-center justify-center mb-3 group-hover:bg-eats/20 transition-colors duration-200">
+                <ArrowRight className="w-6 h-6 text-eats group-hover:translate-x-1 transition-transform duration-200" />
               </div>
               <span className="text-sm font-bold text-eats">View All</span>
               <span className="text-xs text-muted-foreground mt-0.5">100+ restaurants</span>
-            </motion.button>
+            </button>
           </div>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
           {/* Left Content */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-6 sm:space-y-8"
-          >
+          <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-left-4 duration-500 delay-200">
             {/* Badge */}
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring" }}
-              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-rides/15 to-teal-400/15 border border-rides/25 text-xs sm:text-sm font-bold shadow-lg shadow-rides/10"
-            >
-              <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
-              </motion.div>
+            <div className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-rides/15 to-teal-400/15 border border-rides/25 text-xs sm:text-sm font-bold shadow-lg shadow-rides/10">
+              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides animate-spin" style={{ animationDuration: '3s' }} />
               <span className="text-muted-foreground">The #1 mobility app</span>
-            </motion.div>
+            </div>
 
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
               Go anywhere.
@@ -257,16 +170,14 @@ const HeroSection = () => {
             {/* Quick Stats */}
             <div className="flex gap-4 sm:gap-6 py-3 sm:py-5">
               {heroStats.map((stat, index) => (
-                <motion.div 
+                <div 
                   key={stat.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="text-center"
+                  className="text-center animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ animationDelay: `${300 + index * 100}ms` }}
                 >
                   <p className="font-display text-xl sm:text-2xl font-bold text-rides">{stat.value}</p>
                   <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</p>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -348,15 +259,10 @@ const HeroSection = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Right Visual */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="hidden lg:block relative"
-          >
+          <div className="hidden lg:block relative animate-in fade-in zoom-in-95 duration-500 delay-300">
             <div className="relative aspect-square max-w-lg mx-auto">
               {/* Phone Mockup */}
               <div className="absolute inset-8 glass-card rounded-[3rem] p-4 glow-rides">
@@ -369,54 +275,31 @@ const HeroSection = () => {
                       backgroundSize: '40px 40px'
                     }} />
                     
-                    {/* Route line */}
+                    {/* Route line - static SVG */}
                     <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                      <motion.path
+                      <path
                         d="M30 70 Q 40 50, 50 45 T 70 30"
                         stroke="hsl(var(--rides))"
                         strokeWidth="2"
                         fill="none"
                         strokeDasharray="5,5"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 2, delay: 0.5 }}
                       />
                     </svg>
                     
                     {/* Pickup marker */}
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.8, type: "spring" }}
-                      className="absolute left-[28%] top-[65%] w-4 h-4 rounded-full bg-rides animate-pulse-glow" 
-                    />
+                    <div className="absolute left-[28%] top-[65%] w-4 h-4 rounded-full bg-rides animate-pulse" />
                     
                     {/* Destination marker */}
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 1, type: "spring" }}
-                      className="absolute left-[68%] top-[28%] w-4 h-4 bg-foreground rounded-sm" 
-                    />
+                    <div className="absolute left-[68%] top-[28%] w-4 h-4 bg-foreground rounded-sm" />
                     
                     {/* Car icon */}
-                    <motion.div 
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 1.2, type: "spring" }}
-                      className="absolute left-[45%] top-[48%] w-8 h-8 gradient-rides rounded-lg flex items-center justify-center shadow-lg"
-                    >
+                    <div className="absolute left-[45%] top-[48%] w-8 h-8 gradient-rides rounded-lg flex items-center justify-center shadow-lg">
                       <Car className="w-4 h-4 text-primary-foreground" />
-                    </motion.div>
+                    </div>
                   </div>
                   
                   {/* Bottom card */}
-                  <motion.div 
-                    initial={{ y: 100 }}
-                    animate={{ y: 0 }}
-                    transition={{ delay: 1.4, type: "spring", stiffness: 100 }}
-                    className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm p-4 rounded-t-2xl border-t border-white/10"
-                  >
+                  <div className="absolute bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm p-4 rounded-t-2xl border-t border-white/10">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 gradient-rides rounded-lg flex items-center justify-center">
                         <Car className="w-5 h-5 text-primary-foreground" />
@@ -431,37 +314,21 @@ const HeroSection = () => {
                       </div>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: "66%" }}
-                        transition={{ delay: 1.6, duration: 1 }}
-                        className="h-full gradient-rides rounded-full"
-                      />
+                      <div className="h-full gradient-rides rounded-full w-2/3" />
                     </div>
-                  </motion.div>
+                  </div>
                 </div>
               </div>
 
               {/* Floating elements */}
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.8 }}
-                className="absolute -top-4 -right-4 glass-card p-3 rounded-xl glow-eats animate-float"
-              >
+              <div className="absolute -top-4 -right-4 glass-card p-3 rounded-xl glow-eats animate-in fade-in slide-in-from-right-4 duration-500 delay-500">
                 <UtensilsCrossed className="w-6 h-6 text-eats" />
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 2 }}
-                className="absolute -bottom-4 -left-4 glass-card p-3 rounded-xl glow-rides animate-float" 
-                style={{ animationDelay: '-2s' }}
-              >
+              </div>
+              <div className="absolute -bottom-4 -left-4 glass-card p-3 rounded-xl glow-rides animate-in fade-in slide-in-from-left-4 duration-500 delay-700">
                 <Car className="w-6 h-6 text-rides" />
-              </motion.div>
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
