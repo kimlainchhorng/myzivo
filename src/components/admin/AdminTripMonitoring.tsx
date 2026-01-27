@@ -34,7 +34,8 @@ import {
   XCircle,
   Activity,
   CheckCircle,
-  Route
+  Route,
+  Sparkles
 } from "lucide-react";
 import { useTrips, useTripStats, useCancelTrip, Trip, TripStatus } from "@/hooks/useTrips";
 import { useAllTripsRealtime } from "@/hooks/useTripRealtime";
@@ -141,21 +142,52 @@ const AdminTripMonitoring = () => {
   }
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6 relative">
+      {/* Floating Decorations */}
+      <motion.div
+        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        🗺️
+      </motion.div>
+      <motion.div
+        className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block"
+        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+      >
+        ✨
+      </motion.div>
+      <motion.div
+        className="absolute top-48 right-8 text-xl pointer-events-none hidden lg:block"
+        animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        📍
+      </motion.div>
+
       {/* Header */}
       <motion.div variants={item}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10">
+          <motion.div 
+            className="p-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10 shadow-lg"
+            whileHover={{ scale: 1.05, rotate: 5 }}
+          >
             <Activity className="h-6 w-6 text-primary" />
-          </div>
+          </motion.div>
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="text-2xl font-bold">Trip Monitoring</h1>
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                Trip Monitoring
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
+                  <Sparkles className="h-5 w-5 text-primary" />
+                </motion.div>
+              </h1>
               <p className="text-muted-foreground">Monitor and manage all trips in real-time</p>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-emerald-500/10 border border-green-500/20 shadow-lg shadow-green-500/10">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-xs text-green-500 font-medium">Live</span>
+              <span className="text-xs text-green-500 font-semibold">Live</span>
             </div>
           </div>
         </div>
