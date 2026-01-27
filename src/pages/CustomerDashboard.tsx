@@ -161,20 +161,23 @@ const CustomerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Background effects */}
-      <div className="fixed inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30 pointer-events-none" />
+      {/* Enhanced Background effects */}
+      <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
+      <div className="fixed top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-eats/10 to-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <motion.div 
             whileHover={{ scale: 1.05, rotate: 5 }}
-            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
+            className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
           >
             <Sparkles className="h-5 w-5 text-white" />
           </motion.div>
           <div>
-            <span className="font-bold">ZIVO</span>
+            <span className="font-bold text-lg">ZIVO</span>
             <span className="text-xs text-muted-foreground block">Dashboard</span>
           </div>
         </div>
