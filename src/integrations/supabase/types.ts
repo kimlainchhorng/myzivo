@@ -110,6 +110,48 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          starts_at: string | null
+          target_audience: string | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          starts_at?: string | null
+          target_audience?: string | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          starts_at?: string | null
+          target_audience?: string | null
+          title?: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       anomaly_logs: {
         Row: {
           actual_value: number
@@ -170,6 +212,45 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2841,6 +2922,69 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          driver_id: string | null
+          id: string
+          notes: string | null
+          payout_method: string | null
+          processed_at: string | null
+          processed_by: string | null
+          reference_id: string | null
+          restaurant_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          driver_id?: string | null
+          id?: string
+          notes?: string | null
+          payout_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reference_id?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          driver_id?: string | null
+          id?: string
+          notes?: string | null
+          payout_method?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          reference_id?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing: {
         Row: {
           base_fare: number
@@ -2913,6 +3057,121 @@ export type Database = {
           status?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      promotion_usage: {
+        Row: {
+          created_at: string | null
+          discount_applied: number
+          food_order_id: string | null
+          id: string
+          promotion_id: string
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          discount_applied: number
+          food_order_id?: string | null
+          id?: string
+          promotion_id: string
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          discount_applied?: number
+          food_order_id?: string | null
+          id?: string
+          promotion_id?: string
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_usage_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_usage_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_usage_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          applicable_services: string[] | null
+          code: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          discount_type: string | null
+          discount_value: number
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          max_discount: number | null
+          min_order_amount: number | null
+          name: string
+          per_user_limit: number | null
+          starts_at: string | null
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+        }
+        Insert: {
+          applicable_services?: string[] | null
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string | null
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_order_amount?: number | null
+          name: string
+          per_user_limit?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Update: {
+          applicable_services?: string[] | null
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string | null
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_order_amount?: number | null
+          name?: string
+          per_user_limit?: number | null
+          starts_at?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
         }
         Relationships: []
       }
@@ -4126,6 +4385,72 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          created_at: string | null
+          description: string
+          driver_id: string | null
+          id: string
+          priority: string | null
+          resolved_at: string | null
+          restaurant_id: string | null
+          status: string | null
+          subject: string
+          ticket_number: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          driver_id?: string | null
+          id?: string
+          priority?: string | null
+          resolved_at?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subject: string
+          ticket_number: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          driver_id?: string | null
+          id?: string
+          priority?: string | null
+          resolved_at?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          subject?: string
+          ticket_number?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       surge_zones: {
         Row: {
           base_multiplier: number
@@ -4164,6 +4489,77 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      system_settings: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      ticket_replies: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_admin: boolean | null
+          message: string
+          ticket_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean | null
+          message: string
+          ticket_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_admin?: boolean | null
+          message?: string
+          ticket_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_replies_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       time_entries: {
         Row: {
@@ -4406,6 +4802,86 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          driver_id: string | null
+          food_order_id: string | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          restaurant_id: string | null
+          status: string | null
+          trip_id: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          driver_id?: string | null
+          food_order_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          trip_id?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          driver_id?: string | null
+          food_order_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          trip_id?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]

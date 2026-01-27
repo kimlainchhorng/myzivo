@@ -2,36 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Users, 
-  Car, 
-  MapPin, 
-  DollarSign, 
-  BarChart3, 
-  Shield,
-  Menu,
-  LogOut,
-  FileCheck,
-  Store,
-  Plane,
-  Building2,
-  ExternalLink,
-  User,
-  Utensils,
-  Hotel,
-  ChevronRight,
-  Sparkles
+  Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
+  ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
@@ -42,9 +20,15 @@ import AdminRestaurantManagement from "@/components/admin/AdminRestaurantManagem
 import AdminCarRentalManagement from "@/components/admin/AdminCarRentalManagement";
 import AdminFlightManagement from "@/components/admin/AdminFlightManagement";
 import AdminHotelManagement from "@/components/admin/AdminHotelManagement";
+import AdminRoleManagement from "@/components/admin/AdminRoleManagement";
+import AdminPayouts from "@/components/admin/AdminPayouts";
+import AdminSystemSettings from "@/components/admin/AdminSystemSettings";
+import AdminAuditLogs from "@/components/admin/AdminAuditLogs";
+import AdminAnnouncements from "@/components/admin/AdminAnnouncements";
+import AdminSupportTickets from "@/components/admin/AdminSupportTickets";
+import AdminPromotions from "@/components/admin/AdminPromotions";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-import { motion } from "framer-motion";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 
@@ -53,17 +37,36 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
 
-  const navItems = [
-    { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
-    { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
-    { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
-    { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
-    { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
-    { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
-    { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
-    { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
-    { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
-    { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
+  const navSections = [
+    { title: "Overview", items: [
+      { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
+    ]},
+    { title: "Administration", items: [
+      { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
+      { value: "roles", label: "Roles", icon: Crown, gradient: "from-amber-500 to-orange-500" },
+      { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
+      { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+    ]},
+    { title: "Operations", items: [
+      { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+      { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+      { value: "payouts", label: "Payouts", icon: Wallet, gradient: "from-green-500 to-emerald-500" },
+    ]},
+    { title: "Services", items: [
+      { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
+      { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
+      { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
+      { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
+    ]},
+    { title: "Engagement", items: [
+      { value: "promotions", label: "Promotions", icon: Ticket, gradient: "from-violet-500 to-purple-500" },
+      { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
+      { value: "support", label: "Support", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
+    ]},
+    { title: "System", items: [
+      { value: "settings", label: "Settings", icon: Settings, gradient: "from-slate-500 to-zinc-500" },
+      { value: "audit", label: "Audit Logs", icon: History, gradient: "from-indigo-500 to-purple-500" },
+    ]},
   ];
 
   const dashboardLinks = [
@@ -82,12 +85,9 @@ const AdminDashboard = () => {
 
   const NavContent = () => (
     <div className="flex flex-col h-full">
-      {/* Header with Logo */}
       <div className="p-5 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <ZivoLogo size="sm" />
-          </motion.div>
+          <ZivoLogo size="sm" />
           <div>
             <span className="font-bold text-lg block">Admin</span>
             <span className="text-xs text-muted-foreground">Control Center</span>
@@ -95,7 +95,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* User Info */}
       <div className="p-4">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/20 flex items-center justify-center">
@@ -108,8 +107,7 @@ const AdminDashboard = () => {
         </div>
       </div>
       
-      {/* Dashboard Switcher */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full justify-between rounded-xl bg-muted/30 border-border/50">
@@ -123,11 +121,7 @@ const AdminDashboard = () => {
             <DropdownMenuLabel>Go to Dashboard</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {dashboardLinks.map((link) => (
-              <DropdownMenuItem
-                key={link.path}
-                onClick={() => navigate(link.path)}
-                className="cursor-pointer"
-              >
+              <DropdownMenuItem key={link.path} onClick={() => navigate(link.path)} className="cursor-pointer">
                 <link.icon className="h-4 w-4 mr-2" />
                 {link.label}
               </DropdownMenuItem>
@@ -136,51 +130,40 @@ const AdminDashboard = () => {
         </DropdownMenu>
       </div>
 
-      {/* Navigation */}
-      <nav className="px-3 py-2 space-y-1 flex-1 overflow-y-auto">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Platform Management</p>
-        {navItems.map((item, index) => {
-          const isActive = activeTab === item.value;
-          return (
-            <motion.button
-              key={item.value}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.02 }}
-              onClick={() => setActiveTab(item.value)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group",
-                isActive
-                  ? "bg-primary/10 text-primary"
-                  : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <div className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                isActive 
-                  ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
-                  : "bg-muted/50 group-hover:bg-muted"
-              )}>
-                <item.icon className={cn(
-                  "h-4 w-4 transition-colors",
-                  isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
-                )} />
-              </div>
-              <span className="font-medium text-sm flex-1">{item.label}</span>
-              {isActive && (
-                <ChevronRight className="w-4 h-4 text-primary" />
-              )}
-            </motion.button>
-          );
-        })}
-      </nav>
+      <ScrollArea className="flex-1 px-3 py-2">
+        {navSections.map((section) => (
+          <div key={section.title} className="mb-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">{section.title}</p>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const isActive = activeTab === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    onClick={() => setActiveTab(item.value)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group animate-in fade-in duration-200",
+                      isActive ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                      isActive ? `bg-gradient-to-br ${item.gradient} shadow-lg` : "bg-muted/50 group-hover:bg-muted"
+                    )}>
+                      <item.icon className={cn("h-4 w-4 transition-colors", isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground")} />
+                    </div>
+                    <span className="font-medium text-sm flex-1">{item.label}</span>
+                    {isActive && <ChevronRight className="w-4 h-4 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </ScrollArea>
 
-      {/* Logout */}
       <div className="p-4 border-t border-border/50">
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group"
-        >
+        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group">
           <div className="w-8 h-8 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
             <LogOut className="h-4 w-4" />
           </div>
@@ -192,41 +175,13 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Premium Background Effects */}
       <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
       <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed top-1/2 left-1/2 w-[400px] h-[400px] bg-gradient-radial from-sky-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      {/* Floating Decorative Elements */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="fixed top-24 right-[8%] text-4xl pointer-events-none opacity-25 hidden xl:block"
-      >
-        🛡️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -20, 0] }}
-        transition={{ duration: 7, repeat: Infinity, delay: 1 }}
-        className="fixed bottom-32 right-[12%] text-3xl pointer-events-none opacity-20 hidden xl:block"
-      >
-        📊
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -10, 0], rotate: [0, -3, 0] }}
-        transition={{ duration: 5, repeat: Infinity, delay: 2 }}
-        className="fixed top-1/3 right-[5%] text-2xl pointer-events-none opacity-15 hidden xl:block"
-      >
-        ⚙️
-      </motion.div>
-
-      {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <ZivoLogo size="sm" />
-          </motion.div>
+          <ZivoLogo size="sm" />
           <div>
             <span className="font-bold text-lg">Admin</span>
             <span className="text-xs text-muted-foreground block">Control Center</span>
@@ -249,61 +204,31 @@ const AdminDashboard = () => {
       </header>
 
       <div className="flex relative z-10">
-        {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-72 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm sticky top-0">
           <NavContent />
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="hidden">
-              {navItems.map((item) => (
-                <TabsTrigger key={item.value} value={item.value}>
-                  {item.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <TabsList className="hidden">{navSections.flatMap(s => s.items).map((item) => (<TabsTrigger key={item.value} value={item.value}>{item.label}</TabsTrigger>))}</TabsList>
 
-            <TabsContent value="analytics" className="mt-0">
-              <AdminAnalytics />
-            </TabsContent>
-
-            <TabsContent value="users" className="mt-0">
-              <AdminUserManagement />
-            </TabsContent>
-
-            <TabsContent value="drivers" className="mt-0">
-              <AdminDriverVerification />
-            </TabsContent>
-
-            <TabsContent value="documents" className="mt-0">
-              <AdminDocumentReview />
-            </TabsContent>
-
-            <TabsContent value="trips" className="mt-0">
-              <AdminTripMonitoring />
-            </TabsContent>
-
-            <TabsContent value="pricing" className="mt-0">
-              <AdminPricingControls />
-            </TabsContent>
-
-            <TabsContent value="restaurants" className="mt-0">
-              <AdminRestaurantManagement />
-            </TabsContent>
-
-            <TabsContent value="car-rentals" className="mt-0">
-              <AdminCarRentalManagement />
-            </TabsContent>
-
-            <TabsContent value="flights" className="mt-0">
-              <AdminFlightManagement />
-            </TabsContent>
-
-            <TabsContent value="hotels" className="mt-0">
-              <AdminHotelManagement />
-            </TabsContent>
+            <TabsContent value="analytics" className="mt-0"><AdminAnalytics /></TabsContent>
+            <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
+            <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
+            <TabsContent value="drivers" className="mt-0"><AdminDriverVerification /></TabsContent>
+            <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
+            <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
+            <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
+            <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
+            <TabsContent value="restaurants" className="mt-0"><AdminRestaurantManagement /></TabsContent>
+            <TabsContent value="car-rentals" className="mt-0"><AdminCarRentalManagement /></TabsContent>
+            <TabsContent value="flights" className="mt-0"><AdminFlightManagement /></TabsContent>
+            <TabsContent value="hotels" className="mt-0"><AdminHotelManagement /></TabsContent>
+            <TabsContent value="promotions" className="mt-0"><AdminPromotions /></TabsContent>
+            <TabsContent value="announcements" className="mt-0"><AdminAnnouncements /></TabsContent>
+            <TabsContent value="support" className="mt-0"><AdminSupportTickets /></TabsContent>
+            <TabsContent value="settings" className="mt-0"><AdminSystemSettings /></TabsContent>
+            <TabsContent value="audit" className="mt-0"><AdminAuditLogs /></TabsContent>
           </Tabs>
         </main>
       </div>
