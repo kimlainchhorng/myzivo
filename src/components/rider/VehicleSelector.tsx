@@ -82,23 +82,26 @@ const VehicleSelector = ({
   const fastestPickup = Math.min(...fareEstimates.map(e => e.estimatedDuration));
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-5"
+        className="flex items-center justify-between mb-6"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rides/20 to-rides/5 flex items-center justify-center">
-            <Car className="w-5 h-5 text-rides" />
-          </div>
+          <motion.div 
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            className="w-12 h-12 rounded-xl bg-gradient-to-br from-rides to-green-400 flex items-center justify-center shadow-lg shadow-rides/30"
+          >
+            <Car className="w-6 h-6 text-white" />
+          </motion.div>
           <div>
-            <h3 className="font-bold text-foreground">Choose your ride</h3>
+            <h3 className="font-bold text-lg text-foreground">Choose your ride</h3>
             <p className="text-xs text-muted-foreground">{fareEstimates.length} options available</p>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+        <Badge className="text-xs bg-gradient-to-r from-emerald-500 to-green-500 text-white border-0 shadow-lg shadow-emerald-500/30 px-3 py-1">
           <Shield className="w-3 h-3 mr-1" />
           Insured
         </Badge>

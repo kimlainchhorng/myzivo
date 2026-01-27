@@ -103,9 +103,20 @@ const QuickActionsSection = () => {
   const repeatOrders = repeatFoodOrders?.length ? repeatFoodOrders : defaultRepeatOrders;
   
   return (
-    <section className="py-12 lg:py-20 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30" />
+    <section className="py-14 lg:py-24 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
+      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      
+      {/* Floating emoji */}
+      <motion.div
+        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-40"
+      >
+        ⚡
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
@@ -113,20 +124,20 @@ const QuickActionsSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="space-y-10"
+          className="space-y-12"
         >
           {/* Header */}
           <motion.div variants={itemVariants} className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <motion.div 
                 whileHover={{ scale: 1.1, rotate: 5 }}
-                className="p-3 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30"
+                className="p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30"
               >
-                <Zap className="w-6 h-6 text-white" />
+                <Zap className="w-7 h-7 text-white" />
               </motion.div>
               <div>
-                <h2 className="font-display text-2xl sm:text-3xl font-bold">Quick Actions</h2>
-                <p className="text-sm text-muted-foreground">One tap to get started</p>
+                <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Quick Actions</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">One tap to get started</p>
               </div>
             </div>
           </motion.div>

@@ -4,16 +4,34 @@ import { StatCard } from "@/components/ui/premium-card";
 
 const LiveStatsSection = () => {
   return (
-    <section className="py-12 lg:py-20 border-y border-border/30 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-eats/5" />
+    <section className="py-14 lg:py-24 border-y border-border/40 relative overflow-hidden">
+      {/* Enhanced Background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/8 via-transparent to-eats/8" />
+      <div className="absolute top-1/2 left-1/4 w-[400px] h-[400px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-gradient-radial from-eats/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-20 left-[8%] text-4xl hidden lg:block opacity-40"
+      >
+        📈
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-20 right-[10%] text-4xl hidden lg:block opacity-30"
+      >
+        🌍
+      </motion.div>
       
       <div className="container mx-auto px-4 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="space-y-10"
+          className="space-y-12"
         >
           {/* Header */}
           <div className="text-center">
@@ -21,7 +39,8 @@ const LiveStatsSection = () => {
               initial={{ scale: 0.9 }}
               whileInView={{ scale: 1 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10"
+              transition={{ type: "spring" }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-teal-400/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
             >
               <motion.div
                 animate={{ rotate: [0, 15, -15, 0] }}
@@ -30,8 +49,9 @@ const LiveStatsSection = () => {
                 <Sparkles className="w-4 h-4 text-primary" />
               </motion.div>
               <span className="text-muted-foreground">Live Platform Stats</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </motion.div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold">
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold">
               Trusted by{" "}
               <span className="bg-gradient-to-r from-primary via-teal-400 to-primary bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
                 millions

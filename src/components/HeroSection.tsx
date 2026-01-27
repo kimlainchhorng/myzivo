@@ -61,10 +61,34 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 pb-8 sm:pb-12 overflow-hidden">
       {/* Enhanced Background Elements */}
-      <div className="absolute inset-0 bg-gradient-radial from-rides/5 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-rides/10 rounded-full blur-3xl animate-float" />
-      <div className="absolute bottom-1/4 left-0 w-40 sm:w-80 h-40 sm:h-80 bg-eats/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[1000px] h-[500px] sm:h-[1000px] bg-gradient-conic from-rides/5 via-transparent to-eats/5 rounded-full blur-3xl opacity-30" />
+      <div className="absolute inset-0 bg-gradient-radial from-rides/10 via-transparent to-transparent opacity-60" />
+      <div className="absolute top-1/4 right-0 w-64 sm:w-[500px] h-64 sm:h-[500px] bg-gradient-to-bl from-rides/15 to-teal-500/10 rounded-full blur-3xl animate-float" />
+      <div className="absolute bottom-1/4 left-0 w-56 sm:w-[450px] h-56 sm:h-[450px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] sm:w-[1200px] h-[600px] sm:h-[1200px] bg-gradient-conic from-rides/8 via-transparent to-eats/8 rounded-full blur-3xl opacity-40" />
+      <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
+      
+      {/* Floating emojis */}
+      <motion.div
+        animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-40 left-[5%] text-5xl hidden lg:block opacity-50"
+      >
+        🚗
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity }}
+        className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-40"
+      >
+        🍔
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -12, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4, repeat: Infinity }}
+        className="absolute top-60 right-[12%] text-4xl hidden lg:block opacity-30"
+      >
+        ✨
+      </motion.div>
       
       {/* Animated grid lines - hidden on mobile for performance */}
       <div className="hidden sm:block absolute inset-0 opacity-[0.02]" style={{
@@ -209,22 +233,29 @@ const HeroSection = () => {
             className="space-y-6 sm:space-y-8"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass-card text-xs sm:text-sm font-medium">
-              <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring" }}
+              className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-gradient-to-r from-rides/15 to-teal-400/15 border border-rides/25 text-xs sm:text-sm font-bold shadow-lg shadow-rides/10"
+            >
+              <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 text-rides" />
+              </motion.div>
               <span className="text-muted-foreground">The #1 mobility app</span>
-            </div>
+            </motion.div>
 
             <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
               Go anywhere.
               <br />
-              <span className="text-gradient-rides">Get anything.</span>
+              <span className="bg-gradient-to-r from-rides via-teal-400 to-rides bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">Get anything.</span>
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-lg">
-              Request a ride, order food, book flights, or rent a car. One super app for all your needs.
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-lg leading-relaxed">
+              Request a ride, order food, book flights, or rent a car. <span className="text-foreground font-medium">One super app</span> for all your needs.
             </p>
 
             {/* Quick Stats */}
-            <div className="flex gap-4 sm:gap-6 py-2 sm:py-4">
+            <div className="flex gap-4 sm:gap-6 py-3 sm:py-5">
               {heroStats.map((stat, index) => (
                 <motion.div 
                   key={stat.label}
