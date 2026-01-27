@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import ZivoLogo from "./ZivoLogo";
 
 const footerLinks = {
   services: [
@@ -202,14 +203,10 @@ const Footer = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
             {/* Brand Column */}
             <div className="col-span-2 sm:col-span-3 lg:col-span-2 text-center sm:text-left">
-              <Link to="/" className="inline-flex items-center gap-3 mb-6 group">
-                <motion.div 
-                  whileHover={{ scale: 1.05, rotate: 5 }}
-                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
-                >
-                  <span className="font-display font-bold text-2xl sm:text-3xl text-white">Z</span>
+              <Link to="/" className="inline-block mb-6">
+                <motion.div whileHover={{ scale: 1.05 }}>
+                  <ZivoLogo size="lg" />
                 </motion.div>
-                <span className="font-display font-bold text-3xl sm:text-4xl text-foreground">ZIVO</span>
               </Link>
               <p className="text-base text-muted-foreground mb-6 max-w-sm mx-auto sm:mx-0">
                 The all-in-one super app for rides, food, flights, hotels, and more. Go anywhere.

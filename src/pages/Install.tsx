@@ -5,6 +5,7 @@ import { Download, Smartphone, Check, Share, Plus, MoreVertical, ArrowLeft, Spar
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import ZivoLogo from "@/components/ZivoLogo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -112,13 +113,10 @@ const Install = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.1, type: "spring" }}
-              whileHover={{ scale: 1.05, rotate: 3 }}
-              className="w-28 h-28 mx-auto mb-8 rounded-[2rem] bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/40 relative"
+              whileHover={{ scale: 1.05 }}
+              className="mx-auto mb-8"
             >
-              <span className="font-display font-bold text-5xl text-white">Z</span>
-              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
+              <ZivoLogo size="xl" />
             </motion.div>
 
             <Badge className="mb-4 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 px-4 py-2 text-sm font-semibold">

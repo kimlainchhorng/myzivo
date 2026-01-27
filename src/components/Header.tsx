@@ -16,6 +16,7 @@ import MobileNavMenu from "./navigation/MobileNavMenu";
 import { megaMenuData, moreServicesData } from "./navigation/megaMenuData";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import ZivoLogo from "./ZivoLogo";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -28,23 +29,14 @@ const Header = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
-            {/* Logo - Enhanced */}
+            {/* Logo */}
             <motion.div 
-              className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group" 
+              className="cursor-pointer" 
               onClick={() => navigate("/")}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary to-teal-400 rounded-lg sm:rounded-xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
-                <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30 group-hover:shadow-primary/50 transition-shadow">
-                  <span className="font-display font-black text-lg sm:text-xl text-white">Z</span>
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display font-black text-xl sm:text-2xl bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent leading-tight">ZIVO</span>
-                <span className="text-[9px] font-bold text-muted-foreground tracking-widest hidden sm:block">SUPER APP</span>
-              </div>
+              <ZivoLogo size="md" />
             </motion.div>
 
             {/* Desktop Navigation - Mega Menus */}

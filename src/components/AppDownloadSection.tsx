@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import ZivoLogo from "./ZivoLogo";
 
 const appFeatures = [
   { icon: Zap, label: "Lightning fast", gradient: "from-amber-500 to-orange-500" },
@@ -200,9 +201,7 @@ const AppDownloadSection = () => {
                   </div>
                   {/* ZIVO logo in center */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
-                      <span className="font-display font-bold text-base text-white">Z</span>
-                    </div>
+                    <ZivoLogo size="sm" />
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-4 font-medium">Scan to download</p>

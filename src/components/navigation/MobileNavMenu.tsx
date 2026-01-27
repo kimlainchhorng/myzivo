@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { megaMenuData, moreServicesData, MegaMenuData } from "./megaMenuData";
+import ZivoLogo from "@/components/ZivoLogo";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
@@ -135,10 +136,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg gradient-rides flex items-center justify-center">
-              <span className="font-display font-bold text-sm text-primary-foreground">Z</span>
-            </div>
-            <span className="font-display font-bold text-lg">ZIVO</span>
+            <ZivoLogo size="sm" />
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <X className="w-5 h-5" />

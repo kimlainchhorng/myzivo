@@ -12,6 +12,7 @@ import { Loader2, Mail, Lock, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Provider } from "@supabase/supabase-js";
+import ZivoLogo from "@/components/ZivoLogo";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -143,26 +144,7 @@ const Login = () => {
               transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
               className="flex justify-center mb-6"
             >
-              <div className="relative group">
-                <motion.div 
-                  whileHover={{ scale: 1.05, rotate: 5 }}
-                  className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40 group-hover:shadow-primary/60 transition-shadow duration-300"
-                >
-                  <span className="font-display font-bold text-3xl text-white">Z</span>
-                </motion.div>
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute -inset-3 rounded-3xl border-2 border-dashed border-primary/20"
-                />
-                <motion.div 
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute -top-1 -right-1"
-                >
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </motion.div>
-              </div>
+              <ZivoLogo size="lg" />
             </motion.div>
 
             <motion.div
