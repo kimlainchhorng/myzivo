@@ -14,6 +14,7 @@ import {
   Clock, 
   Filter,
   ChevronRight,
+  ChevronLeft,
   Flame,
   Leaf,
   Pizza,
@@ -31,10 +32,133 @@ import {
   CreditCard,
   ArrowLeft
 } from "lucide-react";
+import { useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookingStepIndicator, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
+
+// Categories Scroll Section Component
+interface Category {
+  id: string;
+  name: string;
+  icon: React.ComponentType<{ className?: string }>;
+  count: number;
+}
+
+const CategoriesScrollSection = ({ 
+  categories, 
+  selectedCategory, 
+  onSelectCategory 
+}: { 
+  categories: Category[];
+  selectedCategory: string;
+  onSelectCategory: (id: string) => void;
+}) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setShowLeftArrow(scrollLeft > 10);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 200;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <section className="py-6 sm:py-8 border-y border-border/50">
+      <div className="container mx-auto px-4">
+        <div className="relative">
+          {/* Left scroll button */}
+          <AnimatePresence>
+            {showLeftArrow && (
+              <motion.button
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                onClick={() => scroll('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-background/95 border border-border shadow-lg flex items-center justify-center hover:bg-muted transition-colors touch-manipulation active:scale-95"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Right scroll button with "More" indicator */}
+          <AnimatePresence>
+            {showRightArrow && (
+              <motion.button
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                onClick={() => scroll('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1 px-2 sm:px-3 h-8 sm:h-10 rounded-full bg-eats text-white shadow-lg hover:bg-eats/90 transition-colors touch-manipulation active:scale-95"
+                aria-label="Scroll right for more"
+              >
+                <span className="text-xs font-medium hidden sm:inline">More</span>
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+
+          {/* Scrollable categories */}
+          <div 
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 sm:px-8 scroll-smooth"
+          >
+            {categories.map((category, index) => (
+              <motion.button
+                key={category.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                onClick={() => onSelectCategory(category.id)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full whitespace-nowrap transition-all touch-manipulation active:scale-95 shrink-0 ${
+                  selectedCategory === category.id
+                    ? "gradient-eats text-secondary-foreground shadow-lg"
+                    : "glass-card hover:border-eats/50"
+                }`}
+              >
+                <category.icon className="w-4 h-4" />
+                <span className="font-medium text-sm sm:text-base">{category.name}</span>
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  selectedCategory === category.id
+                    ? "bg-white/20"
+                    : "bg-muted"
+                }`}>
+                  {category.count}
+                </span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Scroll hint for mobile */}
+          <div className="flex justify-center mt-3 sm:hidden">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="w-6 h-0.5 rounded-full bg-eats/50"></span>
+              <span>Swipe for more</span>
+              <ChevronRight className="w-3 h-3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 // Categories data
 const categories = [
@@ -359,33 +483,11 @@ const FoodOrdering = () => {
         </section>
 
         {/* Categories */}
-        <section className="py-8 border-y border-border/50">
-          <div className="container mx-auto px-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap transition-all ${
-                    selectedCategory === category.id
-                      ? "gradient-eats text-secondary-foreground"
-                      : "glass-card hover:border-eats/50"
-                  }`}
-                >
-                  <category.icon className="w-4 h-4" />
-                  <span className="font-medium">{category.name}</span>
-                  <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                    selectedCategory === category.id
-                      ? "bg-white/20"
-                      : "bg-muted"
-                  }`}>
-                    {category.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
+        <CategoriesScrollSection 
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
 
         {/* Restaurant View or List */}
         {selectedRestaurant ? (
