@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Loader2, MapPin } from "lucide-react";
+import { Send, Loader2, MapPin, MessageCircle } from "lucide-react";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import LocationMessage from "./LocationMessage";
 import MessageStatus from "./MessageStatus";
@@ -224,20 +224,28 @@ const TripChatModal = ({
         </DialogHeader>
 
         {/* Messages Area */}
-        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        <ScrollArea className="flex-1 px-5 py-4 bg-gradient-to-b from-muted/5 to-transparent" ref={scrollRef}>
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center gap-3">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+                </div>
+                <p className="text-sm text-muted-foreground">Loading messages...</p>
+              </div>
             </div>
           ) : !messages || messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <p className="text-muted-foreground mb-2">No messages yet</p>
+            <div className="flex flex-col items-center justify-center h-full text-center py-10">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-teal-400/5 flex items-center justify-center mb-4">
+                <MessageCircle className="w-8 h-8 text-primary/60" />
+              </div>
+              <p className="font-medium mb-1">No messages yet</p>
               <p className="text-sm text-muted-foreground">
-                Send a message to {otherPartyName}
+                Start a conversation with {otherPartyName}
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {messages.map((message, index) => {
                 const isMe = message.sender_id === user?.id;
                 const showTimestamp =
@@ -250,22 +258,22 @@ const TripChatModal = ({
                 return (
                   <div key={message.id}>
                     {showTimestamp && (
-                      <div className="text-center mb-2">
-                        <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                      <div className="text-center mb-3">
+                        <span className="text-xs text-muted-foreground bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50 shadow-sm">
                           {format(new Date(message.created_at), "MMM d, h:mm a")}
                         </span>
                       </div>
                     )}
                     <div
                       className={cn(
-                        "flex gap-2",
+                        "flex gap-2.5",
                         isMe ? "justify-end" : "justify-start"
                       )}
                     >
                       {!isMe && (
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                        <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-background shadow-md">
                           <AvatarImage src={otherPartyAvatar || undefined} />
-                          <AvatarFallback className="text-xs">
+                          <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-teal-400 text-white font-bold">
                             {getInitials(otherPartyName)}
                           </AvatarFallback>
                         </Avatar>
@@ -281,14 +289,14 @@ const TripChatModal = ({
                       ) : (
                         <div
                           className={cn(
-                            "max-w-[75%] px-4 py-2 rounded-2xl",
+                            "max-w-[75%] px-4 py-3 rounded-2xl shadow-sm transition-all",
                             isMe
-                              ? "bg-primary text-primary-foreground rounded-br-sm"
-                              : "bg-muted rounded-bl-sm"
+                              ? "bg-gradient-to-r from-primary to-teal-400 text-white rounded-br-md shadow-primary/20"
+                              : "bg-card border border-border/50 rounded-bl-md"
                           )}
                         >
-                          <div className="flex items-end gap-1">
-                            <p className="text-sm whitespace-pre-wrap break-words">
+                          <div className="flex items-end gap-1.5">
+                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                               {message.content}
                             </p>
                             {isMe && (
@@ -303,18 +311,18 @@ const TripChatModal = ({
               })}
               {/* Typing Indicator */}
               {isOtherTyping && (
-                <div className="flex gap-2 justify-start">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
+                <div className="flex gap-2.5 justify-start">
+                  <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-background shadow-md">
                     <AvatarImage src={otherPartyAvatar || undefined} />
-                    <AvatarFallback className="text-xs">
+                    <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-teal-400 text-white font-bold">
                       {getInitials(otherPartyName)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-muted px-4 py-2 rounded-2xl rounded-bl-sm">
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  <div className="bg-card border border-border/50 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   </div>
                 </div>
