@@ -822,6 +822,100 @@ export type Database = {
           },
         ]
       }
+      driver_notifications: {
+        Row: {
+          action_url: string | null
+          amount: number | null
+          created_at: string
+          description: string
+          driver_id: string
+          icon: string | null
+          id: string
+          is_read: boolean | null
+          title: string
+          type: string
+        }
+        Insert: {
+          action_url?: string | null
+          amount?: number | null
+          created_at?: string
+          description: string
+          driver_id: string
+          icon?: string | null
+          id?: string
+          is_read?: boolean | null
+          title: string
+          type: string
+        }
+        Update: {
+          action_url?: string | null
+          amount?: number | null
+          created_at?: string
+          description?: string
+          driver_id?: string
+          icon?: string | null
+          id?: string
+          is_read?: boolean | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_notifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_referrals: {
+        Row: {
+          bonus_earned: number | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          referee_email: string | null
+          referee_name: string
+          referrer_id: string
+          signed_up_at: string
+          status: string
+          trips_completed: number | null
+        }
+        Insert: {
+          bonus_earned?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referee_email?: string | null
+          referee_name: string
+          referrer_id: string
+          signed_up_at?: string
+          status?: string
+          trips_completed?: number | null
+        }
+        Update: {
+          bonus_earned?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          referee_email?: string | null
+          referee_name?: string
+          referrer_id?: string
+          signed_up_at?: string
+          status?: string
+          trips_completed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_shifts: {
         Row: {
           actual_end: string | null
@@ -1446,6 +1540,134 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_post_likes: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          post_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          post_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_post_likes_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_posts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          driver_id: string
+          id: string
+          is_pinned: boolean | null
+          likes: number | null
+          replies_count: number | null
+          title: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_pinned?: boolean | null
+          likes?: number | null
+          replies_count?: number | null
+          title: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_pinned?: boolean | null
+          likes?: number | null
+          replies_count?: number | null
+          title?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_posts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_replies: {
+        Row: {
+          content: string
+          created_at: string
+          driver_id: string
+          id: string
+          likes: number | null
+          post_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          likes?: number | null
+          post_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          likes?: number | null
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "forum_posts"
             referencedColumns: ["id"]
           },
         ]
