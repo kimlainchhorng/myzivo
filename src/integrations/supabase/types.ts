@@ -1941,6 +1941,36 @@ export type Database = {
         }
         Relationships: []
       }
+      goal_milestone_notifications: {
+        Row: {
+          goal_type: string
+          id: string
+          milestone: number
+          notified_at: string | null
+          period: string
+          period_key: string
+          user_id: string
+        }
+        Insert: {
+          goal_type: string
+          id?: string
+          milestone: number
+          notified_at?: string | null
+          period: string
+          period_key: string
+          user_id: string
+        }
+        Update: {
+          goal_type?: string
+          id?: string
+          milestone?: number
+          notified_at?: string | null
+          period?: string
+          period_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       hotel_bookings: {
         Row: {
           booking_reference: string

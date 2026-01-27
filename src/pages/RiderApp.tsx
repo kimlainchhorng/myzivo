@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Sparkles, Locate } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Zap, Car, Navigation, Sparkles, Locate, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LocationSearchInput from "@/components/rider/LocationSearchInput";
 import VehicleSelector from "@/components/rider/VehicleSelector";
@@ -34,25 +34,6 @@ const bookingSteps = [{
   id: "confirm",
   label: "Book",
   icon: <Zap className="w-4 h-4" />
-}];
-const quickStats = [{
-  icon: Clock,
-  value: "~3 min",
-  label: "Avg pickup",
-  gradient: "from-primary via-teal-400 to-cyan-400",
-  glow: "shadow-primary/40"
-}, {
-  icon: Star,
-  value: "4.9",
-  label: "Top rated",
-  gradient: "from-amber-400 via-orange-500 to-rose-500",
-  glow: "shadow-amber-500/40"
-}, {
-  icon: Shield,
-  value: "100%",
-  label: "Verified drivers",
-  gradient: "from-emerald-400 via-green-500 to-teal-500",
-  glow: "shadow-emerald-500/40"
 }];
 const RiderApp = () => {
   const navigate = useNavigate();
@@ -261,7 +242,7 @@ const RiderApp = () => {
           <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-emerald-500/8 to-cyan-500/4 rounded-full blur-3xl" />
         </div>
         
-        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 shadow-lg animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 shadow-lg">
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -288,7 +269,7 @@ const RiderApp = () => {
           </div>
         </div>
         
-        <div className="p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="p-4">
           <TripTracker trip={activeTrip} onCancel={handleCancelTrip} />
         </div>
       </div>;
@@ -302,7 +283,7 @@ const RiderApp = () => {
       </div>
       
       {/* Premium Header with Glassmorphism */}
-      <div className="sticky top-0 z-50 bg-card/70 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/5 animate-in fade-in slide-in-from-top-4 duration-300">
+      <div className="sticky top-0 z-50 bg-card/70 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/5">
         <div className="p-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -364,13 +345,13 @@ const RiderApp = () => {
       </div>
 
       {/* Bottom Sheet - Mobile Optimized */}
-      <div className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/10 rounded-t-[1.5rem] shadow-[0_-15px_40px_-12px_rgba(0,0,0,0.4)] animate-in slide-in-from-bottom-4 duration-300">
+      <div className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/10 rounded-t-[1.5rem] shadow-[0_-15px_40px_-12px_rgba(0,0,0,0.4)]">
         {/* Handle */}
         <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-3" />
         
         <div className="p-4 pb-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
           {/* Location Step */}
-          {step === "location" && <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-200">
+          {step === "location" && <div className="space-y-6">
               {/* Quick Location Picker */}
               <QuickLocationPicker userId={user?.id} onSelect={location => {
             if (!pickup) {
@@ -389,7 +370,7 @@ const RiderApp = () => {
                   <div className="relative">
                     <LocationSearchInput placeholder="Pickup location" value={pickup} onChange={setPickup} icon="pickup" />
                     {/* Use My Location Button */}
-                    {!pickup && <div className="mt-2 animate-in fade-in duration-200">
+                    {!pickup && <div className="mt-2">
                         <Button variant="outline" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation} className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all active:scale-[0.98]">
                           {isGettingLocation ? <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -429,7 +410,7 @@ const RiderApp = () => {
             </div>}
 
           {/* Vehicle Selection Step */}
-          {step === "vehicle" && fareEstimates.length > 0 && <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+          {step === "vehicle" && fareEstimates.length > 0 && <div className="space-y-6">
               {/* Route Summary Card */}
               <div className="relative p-4 rounded-2xl bg-card border border-white/10 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
