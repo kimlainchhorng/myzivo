@@ -916,6 +916,83 @@ export type Database = {
           },
         ]
       }
+      driver_settings: {
+        Row: {
+          auto_sync_enabled: boolean | null
+          cache_trips_days: number | null
+          created_at: string
+          driver_id: string
+          haptic_feedback_enabled: boolean | null
+          id: string
+          notification_earnings: boolean | null
+          notification_messages: boolean | null
+          notification_orders: boolean | null
+          notification_promotions: boolean | null
+          notification_sound_enabled: boolean | null
+          notification_vibration_enabled: boolean | null
+          offline_mode_enabled: boolean | null
+          push_notifications_enabled: boolean | null
+          sync_on_wifi_only: boolean | null
+          theme: string | null
+          updated_at: string
+          voice_commands_enabled: boolean | null
+          voice_feedback_enabled: boolean | null
+          voice_language: string | null
+        }
+        Insert: {
+          auto_sync_enabled?: boolean | null
+          cache_trips_days?: number | null
+          created_at?: string
+          driver_id: string
+          haptic_feedback_enabled?: boolean | null
+          id?: string
+          notification_earnings?: boolean | null
+          notification_messages?: boolean | null
+          notification_orders?: boolean | null
+          notification_promotions?: boolean | null
+          notification_sound_enabled?: boolean | null
+          notification_vibration_enabled?: boolean | null
+          offline_mode_enabled?: boolean | null
+          push_notifications_enabled?: boolean | null
+          sync_on_wifi_only?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          voice_commands_enabled?: boolean | null
+          voice_feedback_enabled?: boolean | null
+          voice_language?: string | null
+        }
+        Update: {
+          auto_sync_enabled?: boolean | null
+          cache_trips_days?: number | null
+          created_at?: string
+          driver_id?: string
+          haptic_feedback_enabled?: boolean | null
+          id?: string
+          notification_earnings?: boolean | null
+          notification_messages?: boolean | null
+          notification_orders?: boolean | null
+          notification_promotions?: boolean | null
+          notification_sound_enabled?: boolean | null
+          notification_vibration_enabled?: boolean | null
+          offline_mode_enabled?: boolean | null
+          push_notifications_enabled?: boolean | null
+          sync_on_wifi_only?: boolean | null
+          theme?: string | null
+          updated_at?: string
+          voice_commands_enabled?: boolean | null
+          voice_feedback_enabled?: boolean | null
+          voice_language?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_settings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_shifts: {
         Row: {
           actual_end: string | null
@@ -2483,6 +2560,50 @@ export type Database = {
           },
         ]
       }
+      offline_sync_queue: {
+        Row: {
+          action_data: Json
+          action_type: string
+          created_at: string
+          driver_id: string
+          error_message: string | null
+          id: string
+          retry_count: number | null
+          status: string | null
+          synced_at: string | null
+        }
+        Insert: {
+          action_data: Json
+          action_type: string
+          created_at?: string
+          driver_id: string
+          error_message?: string | null
+          id?: string
+          retry_count?: number | null
+          status?: string | null
+          synced_at?: string | null
+        }
+        Update: {
+          action_data?: Json
+          action_type?: string
+          created_at?: string
+          driver_id?: string
+          error_message?: string | null
+          id?: string
+          retry_count?: number | null
+          status?: string | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_sync_queue_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing: {
         Row: {
           base_fare: number
@@ -2674,6 +2795,50 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_notification_subscriptions: {
+        Row: {
+          auth_key: string | null
+          created_at: string
+          driver_id: string
+          endpoint: string
+          id: string
+          is_active: boolean | null
+          p256dh_key: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth_key?: string | null
+          created_at?: string
+          driver_id: string
+          endpoint: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth_key?: string | null
+          created_at?: string
+          driver_id?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean | null
+          p256dh_key?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_notification_subscriptions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
         ]
@@ -4185,6 +4350,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_command_logs: {
+        Row: {
+          command_type: string
+          confidence: number | null
+          created_at: string
+          driver_id: string
+          id: string
+          transcript: string | null
+          was_successful: boolean | null
+        }
+        Insert: {
+          command_type: string
+          confidence?: number | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          transcript?: string | null
+          was_successful?: boolean | null
+        }
+        Update: {
+          command_type?: string
+          confidence?: number | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          transcript?: string | null
+          was_successful?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_command_logs_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"

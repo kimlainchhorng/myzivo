@@ -303,23 +303,23 @@ const RiderApp = () => {
       
       {/* Premium Header with Glassmorphism */}
       <div className="sticky top-0 z-50 bg-card/70 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/5 animate-in fade-in slide-in-from-top-4 duration-300">
-        <div className="p-3">
+        <div className="p-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => step === "location" ? navigate("/") : handleReset()} className="h-8 w-8 rounded-lg hover:bg-white/10 backdrop-blur-sm border border-white/5 active:scale-95 transition-transform">
-                <ArrowLeft className="w-4 h-4" />
+            <div className="flex items-center gap-1.5">
+              <Button variant="ghost" size="icon" onClick={() => step === "location" ? navigate("/") : handleReset()} className="h-7 w-7 rounded-lg hover:bg-white/10 backdrop-blur-sm border border-white/5 active:scale-95 transition-transform">
+                <ArrowLeft className="w-3.5 h-3.5" />
               </Button>
-              <div className="flex items-center gap-2">
-                <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30 active:scale-95 transition-transform">
-                  <Car className="w-4 h-4 text-white" />
+              <div className="flex items-center gap-1.5">
+                <div className="relative w-7 h-7 rounded-lg bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-md shadow-primary/30">
+                  <Car className="w-3.5 h-3.5 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-display font-bold text-sm bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                  <h1 className="font-display font-bold text-xs bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                     {step === "location" && "Where to?"}
                     {step === "vehicle" && "Choose a ride"}
                     {step === "confirm" && "Confirm booking"}
                   </h1>
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-[9px] text-muted-foreground leading-tight">
                     {step === "location" && "Enter your destination"}
                     {step === "vehicle" && routeInfo && <span className="flex items-center gap-1">
                         <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
@@ -333,9 +333,7 @@ const RiderApp = () => {
           </div>
 
           {/* Compact Step Indicator */}
-          <div className="mt-2.5 px-1 animate-in fade-in slide-in-from-bottom-2 duration-200" style={{
-          animationDelay: '50ms'
-        }}>
+          <div className="mt-1.5 px-0.5">
             <StatusTracker steps={bookingSteps} currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2} color="rides" orientation="horizontal" />
           </div>
         </div>
