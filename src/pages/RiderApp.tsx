@@ -158,21 +158,44 @@ const RiderApp = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
+        <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
+        <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+        
+        {/* Floating emojis */}
+        <motion.div
+          animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
+          transition={{ duration: 5, repeat: Infinity }}
+          className="absolute top-[20%] right-[15%] text-4xl opacity-30"
+        >
+          🚗
+        </motion.div>
+        <motion.div
+          animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
+          transition={{ duration: 6, repeat: Infinity }}
+          className="absolute bottom-[25%] left-[12%] text-4xl opacity-25"
+        >
+          📍
+        </motion.div>
+        
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl">
-            <CardContent className="p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                <Car className="w-8 h-8 text-white" />
-              </div>
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
+            <CardContent className="p-8 text-center relative">
+              <motion.div 
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="w-18 h-18 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30"
+              >
+                <Car className="w-9 h-9 text-white" />
+              </motion.div>
               <h2 className="text-2xl font-bold mb-2">Sign in to book a ride</h2>
               <p className="text-muted-foreground mb-6">You need to be logged in to request trips</p>
               <div className="flex gap-3 justify-center">
                 <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl">Home</Button>
-                <Button onClick={() => navigate("/login")} className="rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white">Sign In</Button>
+                <Button onClick={() => navigate("/login")} className="rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30">Sign In</Button>
               </div>
             </CardContent>
           </Card>
@@ -221,7 +244,11 @@ const RiderApp = () => {
   const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
+      {/* Background accents */}
+      <div className="fixed top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[250px] h-[250px] bg-gradient-to-tr from-violet-500/8 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      
       {/* Premium Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -234,14 +261,17 @@ const RiderApp = () => {
               variant="ghost" 
               size="icon" 
               onClick={() => step === "location" ? navigate("/") : handleReset()}
-              className="rounded-xl"
+              className="rounded-xl hover:bg-primary/10"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                <Car className="w-5 h-5 text-white" />
-              </div>
+              <motion.div 
+                whileHover={{ scale: 1.05 }}
+                className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
+              >
+                <Car className="w-6 h-6 text-white" />
+              </motion.div>
               <div>
                 <h1 className="font-display font-bold text-lg">
                   {step === "location" && "Where to?"}
