@@ -165,40 +165,78 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
   return (
     <div className="space-y-4">
       {/* Map with Premium Overlays */}
-      <div className="relative">
-        <div ref={mapContainer} className="h-[280px] rounded-2xl overflow-hidden" />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative"
+      >
+        <div ref={mapContainer} className="h-[300px] rounded-2xl overflow-hidden ring-1 ring-border/50" />
         
-        {/* ETA Overlay */}
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/40 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/30 to-transparent" />
+        </div>
+        
+        {/* ETA Overlay - Enhanced */}
         <AnimatePresence>
           {eta && driverLocation && isActive && trip.status !== "arrived" && (
             <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute top-4 left-4 bg-card/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-border/50"
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute top-4 left-4 bg-gradient-to-br from-card/98 to-card/90 backdrop-blur-xl px-5 py-4 rounded-2xl shadow-2xl shadow-black/20 border border-border/50"
             >
-              <p className="text-xs text-muted-foreground font-medium">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
                 {trip.status === "in_progress" ? "Arriving in" : "Driver arriving"}
               </p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-primary">{eta}</span>
-                <span className="text-sm text-muted-foreground">min</span>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">{eta}</span>
+                <span className="text-sm text-muted-foreground font-medium">min</span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Live indicator */}
+        {/* Live indicator - Enhanced */}
         {driverLocation && isActive && (
-          <div className="absolute top-4 right-4 flex items-center gap-2 bg-card/95 backdrop-blur-md px-3 py-2 rounded-full shadow-xl border border-border/50">
+          <motion.div 
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="absolute top-4 right-4 flex items-center gap-2.5 bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 backdrop-blur-xl px-4 py-2.5 rounded-full shadow-xl border border-emerald-500/30"
+          >
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span className="text-xs font-semibold">Live</span>
-          </div>
+            <span className="text-xs font-bold text-emerald-500 uppercase tracking-wide">Live</span>
+          </motion.div>
         )}
-      </div>
+
+        {/* Vehicle type badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="absolute bottom-4 left-4 right-4"
+        >
+          <div className="flex items-center justify-between bg-card/95 backdrop-blur-xl rounded-xl px-4 py-3 shadow-xl border border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Car className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Premium Ride</p>
+                <p className="text-xs text-muted-foreground">{trip.driver ? "Driver assigned" : "Matching..."}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-primary">${trip.fare_amount?.toFixed(2)}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total fare</p>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
 
       {/* Status Progress - Enhanced */}
       <Card className="glass-card overflow-hidden">
@@ -379,24 +417,36 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
         </CardContent>
       </Card>
 
-      {/* Safety Banner */}
+      {/* Safety Banner - Enhanced */}
       {isActive && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 bg-green-500/10 rounded-xl border border-green-500/20"
+          className="relative overflow-hidden rounded-xl border border-emerald-500/20"
         >
-          <Shield className="w-5 h-5 text-green-500" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-green-500">Safety features active</p>
-            <p className="text-xs text-muted-foreground">Trip is being monitored for your safety</p>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent" />
+          <div className="relative flex items-center gap-4 p-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-emerald-500">Safety features active</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Trip is being monitored • Share your location with loved ones</p>
+            </div>
+            <Button variant="ghost" size="sm" className="text-xs text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10">
+              Share Trip
+            </Button>
           </div>
         </motion.div>
       )}
 
-      {/* Cancel Button */}
+      {/* Cancel Button - Enhanced */}
       {isActive && trip.status !== "in_progress" && onCancel && (
-        <Button variant="outline" className="w-full h-12" onClick={onCancel}>
+        <Button 
+          variant="outline" 
+          className="w-full h-12 rounded-xl border-2 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50 transition-all" 
+          onClick={onCancel}
+        >
           <X className="w-4 h-4 mr-2" />
           Cancel Trip
         </Button>
