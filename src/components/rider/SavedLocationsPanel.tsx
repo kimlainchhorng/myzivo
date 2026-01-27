@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Home, Briefcase, Star, MapPin, Plus, Trash2, X } from "lucide-react";
+import { Home, Briefcase, Star, MapPin, Plus, Trash2, X, Check, Sparkles, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +24,8 @@ import {
   useDeleteSavedLocation,
 } from "@/hooks/useSavedLocations";
 import { useLocationSearch, Location } from "@/hooks/useRiderBooking";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface SavedLocationsPanelProps {
   userId: string | undefined;
@@ -35,6 +37,29 @@ const iconMap: Record<string, React.ElementType> = {
   work: Briefcase,
   star: Star,
   pin: MapPin,
+};
+
+const colorMap: Record<string, { bg: string; iconBg: string; text: string }> = {
+  home: { 
+    bg: "from-blue-500/10 to-blue-600/5", 
+    iconBg: "bg-blue-500/20",
+    text: "text-blue-500" 
+  },
+  work: { 
+    bg: "from-amber-500/10 to-amber-600/5", 
+    iconBg: "bg-amber-500/20",
+    text: "text-amber-500" 
+  },
+  star: { 
+    bg: "from-purple-500/10 to-purple-600/5", 
+    iconBg: "bg-purple-500/20",
+    text: "text-purple-500" 
+  },
+  pin: { 
+    bg: "from-emerald-500/10 to-emerald-600/5", 
+    iconBg: "bg-emerald-500/20",
+    text: "text-emerald-500" 
+  },
 };
 
 const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => {
@@ -106,177 +131,251 @@ const SavedLocationsPanel = ({ userId, onSelect }: SavedLocationsPanelProps) => 
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Section Header */}
+      <div className="flex items-center gap-2">
+        <Heart className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold">Saved Places</h3>
+      </div>
+
       {/* Preset Locations (Home & Work) */}
-      <div className="grid grid-cols-2 gap-2">
-        {presetLocations.map((preset) => {
+      <div className="grid grid-cols-2 gap-3">
+        {presetLocations.map((preset, index) => {
           const saved = preset.label === "Home" ? homeLocation : workLocation;
           const Icon = iconMap[preset.icon];
+          const colors = colorMap[preset.icon];
 
           return (
-            <Card
+            <motion.div
               key={preset.label}
-              className={`cursor-pointer transition-colors ${
-                saved ? "hover:bg-muted" : "border-dashed"
-              }`}
-              onClick={() => saved && handleLocationClick(saved)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
             >
-              <CardContent className="p-3 flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  saved ? "bg-primary/10" : "bg-muted"
-                }`}>
-                  <Icon className={`w-4 h-4 ${saved ? "text-primary" : "text-muted-foreground"}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{preset.label}</p>
-                  {saved ? (
-                    <p className="text-xs text-muted-foreground truncate">{saved.address}</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">Add address</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+              <Card
+                className={cn(
+                  "cursor-pointer transition-all duration-200 overflow-hidden border-2",
+                  saved 
+                    ? "hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 border-border/50" 
+                    : "border-dashed border-muted-foreground/20 hover:border-primary/30"
+                )}
+                onClick={() => saved && handleLocationClick(saved)}
+              >
+                <CardContent className={cn(
+                  "p-4 bg-gradient-to-br",
+                  saved ? colors.bg : "from-muted/30 to-muted/10"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-11 h-11 rounded-xl flex items-center justify-center transition-colors",
+                      saved ? colors.iconBg : "bg-muted/50"
+                    )}>
+                      <Icon className={cn(
+                        "w-5 h-5",
+                        saved ? colors.text : "text-muted-foreground"
+                      )} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold">{preset.label}</p>
+                      {saved ? (
+                        <p className="text-xs text-muted-foreground truncate">{saved.address.split(',')[0]}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Tap to add</p>
+                      )}
+                    </div>
+                    {saved && (
+                      <div className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           );
         })}
       </div>
 
       {/* Other Saved Locations */}
-      {otherLocations && otherLocations.length > 0 && (
-        <div className="space-y-2">
-          {otherLocations.map((location) => {
-            const Icon = iconMap[location.icon] || MapPin;
-            return (
-              <div
-                key={location.id}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer group"
-                onClick={() => handleLocationClick(location)}
-              >
-                <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Icon className="w-4 h-4 text-accent-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{location.label}</p>
-                  <p className="text-xs text-muted-foreground truncate">{location.address}</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteLocation.mutate(location.id);
-                  }}
+      <AnimatePresence>
+        {otherLocations && otherLocations.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-2"
+          >
+            {otherLocations.map((location, index) => {
+              const Icon = iconMap[location.icon] || MapPin;
+              const colors = colorMap[location.icon] || colorMap.pin;
+              
+              return (
+                <motion.div
+                  key={location.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ delay: index * 0.03 }}
+                  className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-xl cursor-pointer group transition-all",
+                    "bg-gradient-to-r hover:shadow-md",
+                    colors.bg,
+                    "border border-border/30 hover:border-primary/20"
+                  )}
+                  onClick={() => handleLocationClick(location)}
                 >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center",
+                    colors.iconBg
+                  )}>
+                    <Icon className={cn("w-4 h-4", colors.text)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">{location.label}</p>
+                    <p className="text-xs text-muted-foreground truncate">{location.address}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 rounded-lg hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteLocation.mutate(location.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Add New Location Button */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Saved Location
+          <Button 
+            variant="outline" 
+            className="w-full h-12 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2 text-primary" />
+            <span className="text-primary font-medium">Add New Place</span>
           </Button>
         </DialogTrigger>
-        <DialogContent>
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl">
           <DialogHeader>
-            <DialogTitle>Add Saved Location</DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <MapPin className="w-5 h-5 text-primary" />
+              </div>
+              <DialogTitle>Add Saved Location</DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-5 mt-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">Label</label>
+                <label className="text-sm font-medium mb-2 block">Label</label>
                 <Input
                   placeholder="e.g., Gym, Mom's House"
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Icon</label>
+                <label className="text-sm font-medium mb-2 block">Icon</label>
                 <Select value={newIcon} onValueChange={setNewIcon}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="home">
-                      <div className="flex items-center gap-2">
-                        <Home className="w-4 h-4" /> Home
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="work">
-                      <div className="flex items-center gap-2">
-                        <Briefcase className="w-4 h-4" /> Work
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="star">
-                      <div className="flex items-center gap-2">
-                        <Star className="w-4 h-4" /> Favorite
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="pin">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" /> Pin
-                      </div>
-                    </SelectItem>
+                    {Object.entries(iconMap).map(([key, Icon]) => (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="w-4 h-4" />
+                          <span className="capitalize">{key}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="relative">
-              <label className="text-sm font-medium mb-1 block">Address</label>
+              <label className="text-sm font-medium mb-2 block">Address</label>
               <Input
                 placeholder="Search for address..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
+                className="h-11 rounded-xl"
               />
-              {searchResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {searchResults.map((result, idx) => (
-                    <button
-                      key={idx}
-                      className="w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-start gap-2"
-                      onClick={() => handleSelectSearchResult(result)}
-                    >
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                      <span className="truncate">{result.address}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute z-10 w-full mt-2 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-2xl max-h-48 overflow-y-auto"
+                  >
+                    {searchResults.map((result, idx) => (
+                      <button
+                        key={idx}
+                        className="w-full px-4 py-3 text-left text-sm hover:bg-muted/50 flex items-start gap-3 transition-colors"
+                        onClick={() => handleSelectSearchResult(result)}
+                      >
+                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                        <span className="truncate">{result.address}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {selectedAddress && (
-              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                <MapPin className="w-4 h-4 text-primary" />
-                <span className="text-sm flex-1 truncate">{selectedAddress.address}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => {
-                    setSelectedAddress(null);
-                    setSearchQuery("");
-                  }}
+            <AnimatePresence>
+              {selectedAddress && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex items-center gap-3 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
                 >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            )}
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <span className="text-sm flex-1 truncate font-medium">{selectedAddress.address}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-lg hover:bg-destructive/10"
+                    onClick={() => {
+                      setSelectedAddress(null);
+                      setSearchQuery("");
+                    }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <Button
-              className="w-full"
+              className="w-full h-12 rounded-xl font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/30"
               onClick={handleSave}
               disabled={!selectedAddress || !newLabel.trim() || addLocation.isPending}
             >
-              {addLocation.isPending ? "Saving..." : "Save Location"}
+              {addLocation.isPending ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Save Location
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
