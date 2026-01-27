@@ -772,6 +772,56 @@ export type Database = {
           },
         ]
       }
+      driver_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          description: string
+          driver_id: string
+          has_receipt: boolean | null
+          id: string
+          is_deductible: boolean | null
+          notes: string | null
+          receipt_url: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          description: string
+          driver_id: string
+          has_receipt?: boolean | null
+          id?: string
+          is_deductible?: boolean | null
+          notes?: string | null
+          receipt_url?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          description?: string
+          driver_id?: string
+          has_receipt?: boolean | null
+          id?: string
+          is_deductible?: boolean | null
+          notes?: string | null
+          receipt_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_expenses_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_shifts: {
         Row: {
           actual_end: string | null
@@ -893,6 +943,44 @@ export type Database = {
           vehicle_type?: string
         }
         Relationships: []
+      }
+      emergency_contacts: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          is_primary: boolean | null
+          name: string
+          phone: string
+          relationship: string | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_primary?: boolean | null
+          name: string
+          phone: string
+          relationship?: string | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_primary?: boolean | null
+          name?: string
+          phone?: string
+          relationship?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_contacts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       equipment: {
         Row: {
@@ -1358,6 +1446,56 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fuel_entries: {
+        Row: {
+          created_at: string
+          date: string
+          driver_id: string
+          gallons: number
+          id: string
+          mpg: number | null
+          notes: string | null
+          odometer: number
+          price_per_gallon: number
+          station_name: string | null
+          total_cost: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          driver_id: string
+          gallons: number
+          id?: string
+          mpg?: number | null
+          notes?: string | null
+          odometer: number
+          price_per_gallon: number
+          station_name?: string | null
+          total_cost: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          driver_id?: string
+          gallons?: number
+          id?: string
+          mpg?: number | null
+          notes?: string | null
+          odometer?: number
+          price_per_gallon?: number
+          station_name?: string | null
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fuel_entries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
         ]
@@ -2885,6 +3023,59 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      safety_incidents: {
+        Row: {
+          created_at: string
+          date: string
+          description: string
+          driver_id: string
+          id: string
+          incident_type: string
+          location: string | null
+          photos_count: number | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          description: string
+          driver_id: string
+          id?: string
+          incident_type: string
+          location?: string | null
+          photos_count?: number | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string
+          driver_id?: string
+          id?: string
+          incident_type?: string
+          location?: string | null
+          photos_count?: number | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_incidents_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_locations: {
         Row: {
