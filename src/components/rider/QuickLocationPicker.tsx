@@ -1,7 +1,6 @@
-import { Home, Briefcase, Star, MapPin, Sparkles, ArrowRight, Zap } from "lucide-react";
+import { Home, Briefcase, Star, MapPin, ArrowRight, Zap } from "lucide-react";
 import { SavedLocation, useSavedLocations } from "@/hooks/useSavedLocations";
 import { Location } from "@/hooks/useRiderBooking";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface QuickLocationPickerProps {
@@ -70,39 +69,24 @@ const QuickLocationPicker = ({ userId, onSelect }: QuickLocationPickerProps) => 
   const quickLocations = savedLocations.slice(0, 4);
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="space-y-4"
-    >
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
       {/* Enhanced Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
-          <motion.div
-            animate={{ 
-              rotate: [0, 10, -8, 0], 
-              scale: [1, 1.08, 1] 
-            }}
-            transition={{ duration: 3, repeat: Infinity, repeatDelay: 2.5 }}
-            className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary/25 to-teal-500/15 flex items-center justify-center border border-primary/20"
-          >
+          <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-primary/25 to-teal-500/15 flex items-center justify-center border border-primary/20">
             <Zap className="w-4 h-4 text-primary" />
             {/* Glow effect */}
             <div className="absolute inset-0 rounded-xl bg-primary/20 blur-lg -z-10" />
-          </motion.div>
+          </div>
           <div>
             <span className="text-sm font-bold text-foreground">Quick access</span>
             <p className="text-[10px] text-muted-foreground">Your saved places</p>
           </div>
         </div>
-        <motion.div
-          whileHover={{ x: 3 }}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer transition-colors"
-        >
+        <div className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary cursor-pointer transition-all hover:translate-x-0.5">
           <span className="font-medium">See all</span>
           <ArrowRight className="w-3 h-3" />
-        </motion.div>
+        </div>
       </div>
 
       {/* Location Cards */}
@@ -112,25 +96,19 @@ const QuickLocationPicker = ({ userId, onSelect }: QuickLocationPickerProps) => 
           const colors = colorMap[location.icon] || colorMap.pin;
           
           return (
-            <motion.button
+            <button
               key={location.id}
-              initial={{ opacity: 0, x: -20, scale: 0.9 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              transition={{ 
-                delay: index * 0.07, 
-                type: "spring", 
-                stiffness: 320,
-                damping: 22 
-              }}
-              whileHover={{ scale: 1.03, y: -4 }}
-              whileTap={{ scale: 0.97 }}
               onClick={() => handleClick(location)}
               className={cn(
-                "relative flex items-center gap-3.5 px-5 py-4 rounded-2xl transition-all flex-shrink-0 overflow-hidden group min-w-[160px]",
+                "relative flex items-center gap-3.5 px-5 py-4 rounded-2xl flex-shrink-0 overflow-hidden group min-w-[160px]",
                 "bg-card/95 backdrop-blur-2xl border border-white/10",
                 "hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/15",
-                "focus:outline-none focus:ring-2 focus:ring-primary/40"
+                "hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.97]",
+                "transition-all duration-200",
+                "focus:outline-none focus:ring-2 focus:ring-primary/40",
+                "animate-in fade-in slide-in-from-left-4"
               )}
+              style={{ animationDelay: `${index * 50}ms` }}
             >
               {/* Multi-layer background effects */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-transparent to-transparent" />
@@ -143,31 +121,19 @@ const QuickLocationPicker = ({ userId, onSelect }: QuickLocationPickerProps) => 
               )} />
               
               {/* Icon container with enhanced styling */}
-              <motion.div 
-                whileHover={{ rotate: 8, scale: 1.1 }}
-                transition={{ type: "spring", stiffness: 400 }}
-                className={cn(
-                  "relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg",
-                  colors.bg,
-                  `shadow-lg ${colors.glow}`
-                )}
-              >
+              <div className={cn(
+                "relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:rotate-3 group-hover:scale-110",
+                colors.bg,
+                `shadow-lg ${colors.glow}`
+              )}>
                 <Icon className={cn("w-5 h-5", colors.text)} />
-                
-                {/* Shine sweep effect */}
-                <motion.div
-                  initial={{ x: "-120%", opacity: 0 }}
-                  animate={{ x: "220%", opacity: [0, 0.5, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 + index * 0.5 }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 rounded-xl"
-                />
                 
                 {/* Active indicator ring */}
                 <div className={cn(
                   "absolute inset-0 rounded-xl ring-2 opacity-0 group-hover:opacity-100 transition-opacity",
                   colors.ring
                 )} />
-              </motion.div>
+              </div>
               
               {/* Content */}
               <div className="text-left relative z-10 flex-1 min-w-0">
@@ -180,19 +146,14 @@ const QuickLocationPicker = ({ userId, onSelect }: QuickLocationPickerProps) => 
               </div>
               
               {/* Hover arrow indicator */}
-              <motion.div
-                initial={{ opacity: 0, x: -5 }}
-                animate={{ opacity: 0, x: -5 }}
-                whileHover={{ opacity: 1, x: 0 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200">
                 <ArrowRight className="w-4 h-4 text-primary" />
-              </motion.div>
-            </motion.button>
+              </div>
+            </button>
           );
         })}
       </div>
-    </motion.div>
+    </div>
   );
 };
 
