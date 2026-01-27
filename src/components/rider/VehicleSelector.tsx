@@ -1,7 +1,6 @@
 import { Car, Users, Crown, Truck, Clock, Shield, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FareEstimate } from "@/hooks/useRiderBooking";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 interface VehicleSelectorProps {
@@ -115,9 +114,9 @@ const VehicleSelector = ({
         </Badge>
       </div>
       
-      {/* Vehicle Cards - Mobile Optimized */}
+      {/* Vehicle Cards - Performance Optimized */}
       <div className="space-y-2">
-        {fareEstimates.map((estimate, index) => {
+        {fareEstimates.map((estimate) => {
           const info = vehicleInfo[estimate.vehicleType] || { 
             description: "Standard ride", 
             passengers: "1-4",
@@ -129,18 +128,14 @@ const VehicleSelector = ({
           const isFastest = estimate.estimatedDuration === fastestPickup && fareEstimates.length > 1;
           
           return (
-            <motion.button
+            <button
               key={estimate.vehicleType}
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(estimate.vehicleType)}
               className={cn(
-                "w-full p-3 rounded-xl border transition-all relative overflow-hidden",
+                "w-full p-3 rounded-xl border transition-all duration-200 relative overflow-hidden active:scale-[0.98]",
                 isSelected
                   ? `border-primary/50 bg-primary/5 shadow-md`
-                  : "border-border/30 bg-card/80"
+                  : "border-border/30 bg-card/80 hover:bg-card"
               )}
             >
               {/* Selected indicator */}
@@ -151,7 +146,7 @@ const VehicleSelector = ({
               <div className="flex items-center gap-3">
                 {/* Vehicle Icon - Compact */}
                 <div className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0",
+                  "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200",
                   isSelected
                     ? `bg-gradient-to-br ${colors.gradient} text-white shadow-md`
                     : "bg-muted/60 text-muted-foreground"
@@ -192,7 +187,7 @@ const VehicleSelector = ({
                 {/* Price - Compact */}
                 <div className="text-right flex-shrink-0">
                   <p className={cn(
-                    "font-bold text-lg",
+                    "font-bold text-lg transition-colors duration-200",
                     isSelected ? "text-primary" : "text-foreground"
                   )}>
                     ${estimate.totalFare.toFixed(2)}
@@ -209,7 +204,7 @@ const VehicleSelector = ({
                   </div>
                 )}
               </div>
-            </motion.button>
+            </button>
           );
         })}
       </div>
