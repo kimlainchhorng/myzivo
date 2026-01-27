@@ -104,10 +104,27 @@ const PackageDelivery = () => {
       <main className="pt-20">
         {/* Hero Section */}
         <section className="relative py-20 lg:py-32 overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-eats/10 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+          {/* Enhanced Background effects */}
+          <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent opacity-60" />
+          <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-eats/25 to-orange-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/4 w-[350px] h-[350px] bg-gradient-radial from-amber-500/10 to-transparent rounded-full blur-3xl" />
+          
+          {/* Floating emojis */}
+          <motion.div
+            animate={{ y: [0, -18, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 5, repeat: Infinity }}
+            className="absolute top-32 left-[8%] text-6xl hidden lg:block opacity-45"
+          >
+            📦
+          </motion.div>
+          <motion.div
+            animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
+            transition={{ duration: 6, repeat: Infinity }}
+            className="absolute bottom-40 right-[10%] text-5xl hidden lg:block opacity-35"
+          >
+            🚚
+          </motion.div>
           
           <div className="container mx-auto px-4 relative z-10">
             <motion.div
