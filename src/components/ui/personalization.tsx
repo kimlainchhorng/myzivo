@@ -1,8 +1,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Clock, Star, TrendingUp, Bookmark, ChevronRight, Sparkles } from "lucide-react";
-import { PremiumCard } from "./premium-card";
+import { Heart, Clock, Star, TrendingUp, Bookmark, ChevronRight, Sparkles, Crown, Gift, Zap, MapPin, ArrowRight, Check } from "lucide-react";
+import { Card, CardContent } from "./card";
+import { Badge } from "./badge";
+import { Button } from "./button";
 
 // Recently Viewed Item
 interface RecentItem {
@@ -154,6 +156,204 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
         </motion.div>
       ))}
     </div>
+  );
+};
+
+// Personalized Greeting Component
+interface PersonalizedGreetingProps {
+  name: string;
+  memberSince?: string;
+  tier?: "bronze" | "silver" | "gold" | "platinum";
+  stats?: {
+    trips?: number;
+    points?: number;
+    savings?: number;
+  };
+  className?: string;
+}
+
+const tierConfig = {
+  bronze: { color: "from-amber-600 to-amber-800", icon: Star, label: "Bronze" },
+  silver: { color: "from-gray-400 to-gray-600", icon: Star, label: "Silver" },
+  gold: { color: "from-amber-400 to-amber-600", icon: Crown, label: "Gold" },
+  platinum: { color: "from-violet-400 to-violet-600", icon: Crown, label: "Platinum" },
+};
+
+export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
+  name,
+  memberSince,
+  tier = "bronze",
+  stats,
+  className,
+}) => {
+  const config = tierConfig[tier];
+  const TierIcon = config.icon;
+  
+  const getTimeOfDayGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={cn("relative overflow-hidden rounded-2xl p-6 bg-card border border-border/50", className)}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br ${config.color} opacity-10`} />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-white/10 to-transparent rounded-bl-full" />
+      
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground font-medium">{getTimeOfDayGreeting()}</p>
+          <h1 className="text-2xl font-bold mt-1">{name} 👋</h1>
+          {memberSince && (
+            <p className="text-xs text-muted-foreground mt-1">Member since {memberSince}</p>
+          )}
+        </div>
+        
+        <Badge className={`bg-gradient-to-r ${config.color} text-white border-0 shadow-lg`}>
+          <TierIcon className="w-3 h-3 mr-1" />
+          {config.label}
+        </Badge>
+      </div>
+
+      {stats && (
+        <div className="flex gap-4 mt-4 pt-4 border-t border-white/10">
+          {stats.trips !== undefined && (
+            <div>
+              <p className="text-2xl font-bold">{stats.trips}</p>
+              <p className="text-xs text-muted-foreground">Trips</p>
+            </div>
+          )}
+          {stats.points !== undefined && (
+            <div>
+              <p className="text-2xl font-bold">{stats.points.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Points</p>
+            </div>
+          )}
+          {stats.savings !== undefined && (
+            <div>
+              <p className="text-2xl font-bold text-emerald-500">${stats.savings}</p>
+              <p className="text-xs text-muted-foreground">Saved</p>
+            </div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
+// Promotional Banner Component
+interface PromoBannerProps {
+  title: string;
+  description: string;
+  code?: string;
+  discount?: string;
+  expiresAt?: string;
+  variant?: "default" | "urgent" | "special" | "referral";
+  onClaim?: () => void;
+  onDismiss?: () => void;
+  className?: string;
+}
+
+const promoVariants = {
+  default: {
+    bg: "from-primary/20 to-teal-500/20",
+    accent: "from-primary to-teal-400",
+    icon: Gift,
+  },
+  urgent: {
+    bg: "from-red-500/20 to-orange-500/20",
+    accent: "from-red-500 to-orange-500",
+    icon: Zap,
+  },
+  special: {
+    bg: "from-violet-500/20 to-purple-500/20",
+    accent: "from-violet-500 to-purple-500",
+    icon: Sparkles,
+  },
+  referral: {
+    bg: "from-emerald-500/20 to-teal-500/20",
+    accent: "from-emerald-500 to-teal-500",
+    icon: Heart,
+  },
+};
+
+export const PromoBanner: React.FC<PromoBannerProps> = ({
+  title,
+  description,
+  code,
+  discount,
+  expiresAt,
+  variant = "default",
+  onClaim,
+  onDismiss,
+  className,
+}) => {
+  const config = promoVariants[variant];
+  const PromoIcon = config.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+    >
+      <Card className={cn(
+        "overflow-hidden border-0 relative",
+        className
+      )}>
+        <div className={`absolute inset-0 bg-gradient-to-r ${config.bg}`} />
+        <CardContent className="p-4 relative">
+          <div className="flex items-start gap-4">
+            <div className={`p-3 rounded-xl bg-gradient-to-br ${config.accent} shadow-lg`}>
+              <PromoIcon className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-bold">{title}</h3>
+                  <p className="text-sm text-muted-foreground">{description}</p>
+                </div>
+                {discount && (
+                  <Badge className={`bg-gradient-to-r ${config.accent} text-white border-0 text-lg font-bold px-3`}>
+                    {discount}
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-3 mt-3">
+                {code && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-background/50 border border-dashed border-white/20">
+                    <code className="text-sm font-mono font-bold">{code}</code>
+                  </div>
+                )}
+                {expiresAt && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    Expires {expiresAt}
+                  </div>
+                )}
+              </div>
+
+              {onClaim && (
+                <Button 
+                  size="sm" 
+                  className={`mt-3 bg-gradient-to-r ${config.accent} hover:opacity-90 shadow-lg`}
+                  onClick={onClaim}
+                >
+                  Claim Now
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -355,3 +555,101 @@ export const SavedPreferences: React.FC<SavedPreferencesProps> = ({
     </div>
   );
 };
+
+// Feature Tour Tooltip
+interface FeatureTourProps {
+  title: string;
+  description: string;
+  step: number;
+  totalSteps: number;
+  onNext?: () => void;
+  onSkip?: () => void;
+  onComplete?: () => void;
+  position?: "top" | "bottom" | "left" | "right";
+  className?: string;
+}
+
+export const FeatureTour: React.FC<FeatureTourProps> = ({
+  title,
+  description,
+  step,
+  totalSteps,
+  onNext,
+  onSkip,
+  onComplete,
+  position = "bottom",
+  className,
+}) => {
+  const isLast = step === totalSteps;
+
+  const positionClasses = {
+    top: "bottom-full mb-2",
+    bottom: "top-full mt-2",
+    left: "right-full mr-2",
+    right: "left-full ml-2",
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className={cn(
+        "absolute z-50 w-72 p-4 rounded-2xl bg-card border shadow-xl",
+        positionClasses[position],
+        className
+      )}
+    >
+      <div className="flex items-start gap-3 mb-3">
+        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <span className="text-sm font-bold text-primary">{step}</span>
+        </div>
+        <div>
+          <h4 className="font-semibold">{title}</h4>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex gap-1">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "w-1.5 h-1.5 rounded-full transition-colors",
+                i < step ? "bg-primary" : "bg-muted"
+              )}
+            />
+          ))}
+        </div>
+        
+        <div className="flex gap-2">
+          {onSkip && !isLast && (
+            <Button variant="ghost" size="sm" onClick={onSkip}>
+              Skip
+            </Button>
+          )}
+          <Button 
+            size="sm" 
+            onClick={isLast ? onComplete : onNext}
+            className="bg-gradient-to-r from-primary to-teal-400"
+          >
+            {isLast ? (
+              <>
+                <Check className="w-4 h-4 mr-1" />
+                Done
+              </>
+            ) : (
+              <>
+                Next
+                <ArrowRight className="w-4 h-4 ml-1" />
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default PersonalizedGreeting;
