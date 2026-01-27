@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Hotel, Calendar, Users, MoreVertical, Download, Eye, X, Sparkles, Moon, AlertCircle } from "lucide-react";
+import { Hotel, Calendar, Users, MoreVertical, Download, Eye, X, Sparkles, Moon, AlertCircle, MapPin, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
@@ -61,11 +61,11 @@ const HotelBookings = () => {
 
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "confirmed": return { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20", dot: "bg-emerald-500" };
-      case "pending": return { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20", dot: "bg-amber-500" };
-      case "completed": return { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20", dot: "bg-blue-500" };
-      case "cancelled": return { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20", dot: "bg-red-500" };
-      default: return { bg: "bg-muted", text: "text-muted-foreground", border: "border-muted", dot: "bg-muted-foreground" };
+      case "confirmed": return { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20", dot: "bg-emerald-500", gradient: "from-emerald-500 to-green-600" };
+      case "pending": return { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20", dot: "bg-amber-500", gradient: "from-amber-500 to-orange-500" };
+      case "completed": return { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20", dot: "bg-blue-500", gradient: "from-blue-500 to-indigo-500" };
+      case "cancelled": return { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20", dot: "bg-red-500", gradient: "from-red-500 to-rose-500" };
+      default: return { bg: "bg-muted", text: "text-muted-foreground", border: "border-muted", dot: "bg-muted-foreground", gradient: "from-muted to-muted" };
     }
   };
 
@@ -83,7 +83,23 @@ const HotelBookings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Floating Decorative Elements */}
+      <motion.div
+        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 5, repeat: Infinity }}
+        className="absolute top-0 right-12 text-3xl pointer-events-none opacity-20 hidden lg:block"
+      >
+        📋
+      </motion.div>
+      <motion.div
+        animate={{ y: [0, -8, 0] }}
+        transition={{ duration: 6, repeat: Infinity, delay: 1 }}
+        className="absolute top-24 right-0 text-2xl pointer-events-none opacity-15 hidden lg:block"
+      >
+        🏨
+      </motion.div>
+
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -91,13 +107,18 @@ const HotelBookings = () => {
       >
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Sparkles className="h-6 w-6 text-amber-500" />
+            </motion.div>
             My Bookings
           </h1>
           <p className="text-muted-foreground">View and manage your hotel reservations</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 rounded-xl">
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -143,7 +164,7 @@ const HotelBookings = () => {
             return (
               <motion.div key={booking.id} variants={item}>
                 <Card className="relative border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 ${statusConfig.dot}`} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient}`} />
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
@@ -158,7 +179,8 @@ const HotelBookings = () => {
                               {booking.status}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-3">
+                          <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
+                            <MapPin className="h-3.5 w-3.5" />
                             {hotel?.city}, {hotel?.country} • {room?.name || room?.room_type || "Room"} • Ref: <span className="font-mono font-medium text-foreground">{booking.booking_reference}</span>
                           </p>
                           <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -182,13 +204,13 @@ const HotelBookings = () => {
                       <div className="text-right flex flex-col items-end gap-3">
                         <p className="font-bold text-2xl">${booking.total_amount?.toFixed(2) || "0.00"}</p>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="gap-1.5">
+                          <Button size="sm" variant="outline" className="gap-1.5 rounded-xl">
                             <Eye className="h-4 w-4" />
                             Details
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button size="sm" variant="ghost" className="h-9 w-9 p-0">
+                              <Button size="sm" variant="ghost" className="h-9 w-9 p-0 rounded-xl">
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -229,8 +251,8 @@ const HotelBookings = () => {
                 <AlertCircle className="h-10 w-10 text-muted-foreground" />
               </div>
               <p className="text-lg font-medium mb-1">No Bookings Yet</p>
-              <p className="text-muted-foreground">Start exploring hotels to make your first reservation.</p>
-              <Button className="mt-4 gap-2 bg-gradient-to-r from-amber-500 to-orange-600">
+              <p className="text-muted-foreground mb-6">Start exploring hotels to make your first reservation.</p>
+              <Button className="gap-2 bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg">
                 <Hotel className="h-4 w-4" />
                 Browse Hotels
               </Button>
