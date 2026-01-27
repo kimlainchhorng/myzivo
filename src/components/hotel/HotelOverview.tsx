@@ -1,27 +1,175 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hotel, DollarSign, Users, Star, ArrowUpRight, Sparkles, TrendingUp } from "lucide-react";
+import { Hotel, DollarSign, Users, Star, ArrowUpRight, Sparkles, TrendingUp, Calendar, BedDouble, AlertCircle, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { startOfDay, subDays, format } from "date-fns";
 
 const HotelOverview = () => {
+  const { user } = useAuth();
+
+  // Fetch hotel data
+  const { data: hotel, isLoading: hotelLoading } = useQuery({
+    queryKey: ["user-hotel-data", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from("hotels")
+        .select("*")
+        .eq("owner_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch booking stats
+  const { data: bookingStats, isLoading: statsLoading } = useQuery({
+    queryKey: ["hotel-booking-stats", hotel?.id],
+    queryFn: async () => {
+      if (!hotel?.id) return null;
+      
+      const todayStart = startOfDay(new Date()).toISOString();
+      const yesterdayStart = startOfDay(subDays(new Date(), 1)).toISOString();
+      
+      const [todayBookings, yesterdayBookings, allBookings, rooms] = await Promise.all([
+        supabase
+          .from("hotel_bookings")
+          .select("id, total_amount, status, created_at")
+          .eq("hotel_id", hotel.id)
+          .gte("created_at", todayStart),
+        supabase
+          .from("hotel_bookings")
+          .select("id, total_amount")
+          .eq("hotel_id", hotel.id)
+          .gte("created_at", yesterdayStart)
+          .lt("created_at", todayStart),
+        supabase
+          .from("hotel_bookings")
+          .select("id, status, total_amount, nights")
+          .eq("hotel_id", hotel.id),
+        supabase
+          .from("hotel_rooms")
+          .select("id, total_rooms, is_available")
+          .eq("hotel_id", hotel.id),
+      ]);
+      
+      const todayRevenue = todayBookings.data?.reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0;
+      const yesterdayRevenue = yesterdayBookings.data?.reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0;
+      const revenueChange = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue * 100).toFixed(0) : 0;
+      
+      const totalRooms = rooms.data?.reduce((sum, r) => sum + (r.total_rooms || 0), 0) || 0;
+      const occupiedRooms = allBookings.data?.filter(b => b.status === 'confirmed').length || 0;
+      const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+      
+      const confirmedCount = allBookings.data?.filter(b => b.status === 'confirmed').length || 0;
+      const pendingCount = allBookings.data?.filter(b => b.status === 'pending').length || 0;
+      const totalRevenue = allBookings.data?.reduce((sum, b) => sum + (b.total_amount || 0), 0) || 0;
+      
+      return {
+        todayBookings: todayBookings.data?.length || 0,
+        todayRevenue,
+        revenueChange,
+        occupancyRate,
+        confirmedCount,
+        pendingCount,
+        totalBookings: allBookings.data?.length || 0,
+        totalRevenue,
+        totalRooms,
+      };
+    },
+    enabled: !!hotel?.id,
+  });
+
+  // Fetch recent bookings
+  const { data: recentBookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ["hotel-recent-bookings", hotel?.id],
+    queryFn: async () => {
+      if (!hotel?.id) return [];
+      const { data, error } = await supabase
+        .from("hotel_bookings")
+        .select("id, guest_name, status, total_amount, check_in_date, check_out_date, nights, guests, booking_reference")
+        .eq("hotel_id", hotel.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!hotel?.id,
+  });
+
+  // Fetch room types
+  const { data: roomTypes, isLoading: roomsLoading } = useQuery({
+    queryKey: ["hotel-room-types", hotel?.id],
+    queryFn: async () => {
+      if (!hotel?.id) return [];
+      const { data, error } = await supabase
+        .from("hotel_rooms")
+        .select("id, name, room_type, total_rooms, price_per_night, is_available")
+        .eq("hotel_id", hotel.id)
+        .limit(4);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!hotel?.id,
+  });
+
+  const isLoading = hotelLoading || statsLoading || bookingsLoading || roomsLoading;
+
   const stats = [
-    { label: "Bookings Today", value: "18", icon: Hotel, gradient: "from-amber-500 to-orange-600", trend: "+5", trendUp: true },
-    { label: "Revenue", value: "$12,850", icon: DollarSign, gradient: "from-emerald-500 to-green-600", trend: "+10%", trendUp: true },
-    { label: "Occupancy", value: "85%", icon: Users, gradient: "from-blue-500 to-indigo-600", trend: "+8%", trendUp: true },
-    { label: "Avg Rating", value: "4.7", icon: Star, gradient: "from-primary to-teal-400", trend: "+0.2", trendUp: true },
+    { 
+      label: "Bookings Today", 
+      value: String(bookingStats?.todayBookings || 0), 
+      icon: Hotel, 
+      gradient: "from-amber-500 to-orange-600", 
+      trend: `+${bookingStats?.todayBookings || 0}`, 
+      trendUp: true 
+    },
+    { 
+      label: "Revenue", 
+      value: `$${(bookingStats?.todayRevenue || 0).toLocaleString()}`, 
+      icon: DollarSign, 
+      gradient: "from-emerald-500 to-green-600", 
+      trend: `${Number(bookingStats?.revenueChange) >= 0 ? '+' : ''}${bookingStats?.revenueChange || 0}%`, 
+      trendUp: Number(bookingStats?.revenueChange) >= 0 
+    },
+    { 
+      label: "Occupancy", 
+      value: `${bookingStats?.occupancyRate || 0}%`, 
+      icon: Users, 
+      gradient: "from-blue-500 to-indigo-600", 
+      trend: "+8%", 
+      trendUp: true 
+    },
+    { 
+      label: "Avg Rating", 
+      value: hotel?.rating?.toFixed(1) || "4.7", 
+      icon: Star, 
+      gradient: "from-primary to-teal-400", 
+      trend: "+0.2", 
+      trendUp: true 
+    },
   ];
 
-  const topHotels = [
-    { name: "Grand Plaza Hotel", city: "New York", rating: 4.8, bookings: 45, revenue: "$15,200", occupancy: "92%" },
-    { name: "Seaside Resort", city: "Miami", rating: 4.6, bookings: 38, revenue: "$12,800", occupancy: "87%" },
-    { name: "Mountain Lodge", city: "Denver", rating: 4.9, bookings: 28, revenue: "$9,400", occupancy: "78%" },
-    { name: "Urban Boutique", city: "Los Angeles", rating: 4.5, bookings: 32, revenue: "$10,600", occupancy: "81%" },
-  ];
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "confirmed": return { bg: "bg-emerald-500/10", text: "text-emerald-500", border: "border-emerald-500/20", dot: "bg-emerald-500" };
+      case "pending": return { bg: "bg-amber-500/10", text: "text-amber-500", border: "border-amber-500/20", dot: "bg-amber-500" };
+      case "completed": return { bg: "bg-blue-500/10", text: "text-blue-500", border: "border-blue-500/20", dot: "bg-blue-500" };
+      case "cancelled": return { bg: "bg-red-500/10", text: "text-red-500", border: "border-red-500/20", dot: "bg-red-500" };
+      default: return { bg: "bg-muted", text: "text-muted-foreground", border: "border-muted", dot: "bg-muted-foreground" };
+    }
+  };
 
   const container = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
+      transition: { staggerChildren: 0.08 }
     }
   };
 
@@ -29,6 +177,26 @@ const HotelOverview = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
+
+  if (!hotel && !hotelLoading) {
+    return (
+      <div className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Sparkles className="h-6 w-6 text-primary" />
+            Hotel Dashboard
+          </h1>
+        </motion.div>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-lg font-medium">No Hotel Found</p>
+            <p className="text-muted-foreground">Register your hotel to access the dashboard.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -40,7 +208,7 @@ const HotelOverview = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="h-6 w-6 text-primary" />
-            Hotel Booking Dashboard
+            {hotel?.name || "Hotel Dashboard"}
           </h1>
           <p className="text-muted-foreground">Manage hotels and reservations</p>
         </div>
@@ -65,17 +233,25 @@ const HotelOverview = () => {
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
               <CardContent className="p-4 relative">
                 <div className="flex items-center justify-between mb-3">
-                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
                     <stat.icon className="h-5 w-5 text-white" />
                   </div>
-                  <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
-                    stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
-                  }`}>
-                    <ArrowUpRight className="h-3 w-3" />
-                    {stat.trend}
-                  </div>
+                  {isLoading ? (
+                    <Skeleton className="h-5 w-12" />
+                  ) : (
+                    <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
+                      stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+                    }`}>
+                      <ArrowUpRight className="h-3 w-3" />
+                      {stat.trend}
+                    </div>
+                  )}
                 </div>
-                <p className="text-3xl font-bold tracking-tight">{stat.value}</p>
+                {isLoading ? (
+                  <Skeleton className="h-9 w-20 mb-1" />
+                ) : (
+                  <p className="text-3xl font-bold tracking-tight">{stat.value}</p>
+                )}
                 <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
               </CardContent>
             </Card>
@@ -83,72 +259,173 @@ const HotelOverview = () => {
         ))}
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-amber-500/10">
-                    <TrendingUp className="h-5 w-5 text-amber-500" />
-                  </div>
-                  Top Performing Hotels
-                </CardTitle>
-                <CardDescription>Hotels with highest bookings this week</CardDescription>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <Calendar className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle>Recent Bookings</CardTitle>
+                  <CardDescription>Latest guest reservations</CardDescription>
+                </div>
               </div>
-              <button className="text-sm text-primary hover:underline">View All</button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topHotels.map((hotel, index) => (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg group-hover:scale-110 transition-transform">
-                      <Hotel className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-lg">{hotel.name}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>{hotel.city}</span>
-                        <span>•</span>
-                        <span className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
-                          {hotel.rating}
-                        </span>
+            </CardHeader>
+            <CardContent className="p-0">
+              {bookingsLoading ? (
+                <div className="divide-y divide-border/50">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-48" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                        <Skeleton className="h-8 w-16" />
                       </div>
                     </div>
+                  ))}
+                </div>
+              ) : recentBookings && recentBookings.length > 0 ? (
+                <div className="divide-y divide-border/50">
+                  {recentBookings.map((booking: any, index: number) => {
+                    const statusConfig = getStatusConfig(booking.status);
+                    return (
+                      <motion.div 
+                        key={booking.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 + index * 0.08 }}
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{booking.guest_name || "Guest"}</span>
+                            <Badge className={`${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border text-xs`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusConfig.dot} mr-1.5 ${booking.status === 'pending' ? 'animate-pulse' : ''}`} />
+                              {booking.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(booking.check_in_date), "MMM d")} - {format(new Date(booking.check_out_date), "MMM d")} • {booking.nights} nights
+                          </p>
+                          <p className="text-xs text-muted-foreground font-mono mt-1">Ref: {booking.booking_reference}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-lg">${booking.total_amount?.toFixed(2) || "0.00"}</span>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Calendar className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-muted-foreground">No bookings yet</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl h-full">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <BedDouble className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <CardTitle>Room Types</CardTitle>
+                  <CardDescription>Availability & pricing</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4">
+              {roomsLoading ? (
+                <div className="space-y-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <Skeleton className="h-6 w-16" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : roomTypes && roomTypes.length > 0 ? (
+                <div className="space-y-3">
+                  {roomTypes.map((room: any, index: number) => (
+                    <motion.div 
+                      key={room.id}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + index * 0.08 }}
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-semibold">{room.name}</p>
+                        <p className="text-sm text-muted-foreground">{room.total_rooms} rooms</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">${room.price_per_night}</p>
+                        <Badge variant={room.is_available ? "default" : "secondary"} className="text-xs">
+                          {room.is_available ? "Available" : "Full"}
+                        </Badge>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BedDouble className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
+                  <p className="text-muted-foreground">No rooms configured</p>
+                </div>
+              )}
+
+              <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Quick Stats</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    {isLoading ? (
+                      <Skeleton className="h-6 w-8 mx-auto mb-1" />
+                    ) : (
+                      <p className="text-xl font-bold text-primary">{bookingStats?.totalRooms || 0}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">Total Rooms</p>
                   </div>
-                  <div className="flex items-center gap-6">
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{hotel.revenue}</p>
-                      <p className="text-sm text-muted-foreground">revenue</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{hotel.bookings}</p>
-                      <p className="text-sm text-muted-foreground">bookings</p>
-                    </div>
-                    <div className="text-right min-w-[70px]">
-                      <p className="font-semibold text-primary">{hotel.occupancy}</p>
-                      <p className="text-sm text-muted-foreground">occupancy</p>
-                    </div>
+                  <div className="text-center p-2 rounded-lg bg-background/50">
+                    {isLoading ? (
+                      <Skeleton className="h-6 w-8 mx-auto mb-1" />
+                    ) : (
+                      <p className="text-xl font-bold text-emerald-500">{bookingStats?.confirmedCount || 0}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">Confirmed</p>
                   </div>
-                </motion.div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 };
