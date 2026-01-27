@@ -227,15 +227,36 @@ const StatsSection = () => {
                 whileHover={{ y: -8, scale: 1.02 }}
                 className="group"
               >
-                <div className="relative p-5 sm:p-6 text-center rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
-                  {/* Decorative corner */}
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
+              <div className="relative p-5 sm:p-6 text-center rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+                  {/* Shine sweep effect */}
+                  <motion.div
+                    initial={{ x: "-100%", opacity: 0 }}
+                    whileHover={{ x: "200%", opacity: 0.1 }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+                  />
+                  
+                  {/* Decorative corner with pulse */}
+                  <motion.div 
+                    animate={{ opacity: [0.05, 0.1, 0.05] }}
+                    transition={{ duration: 3, repeat: Infinity, delay: index * 0.2 }}
+                    className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white to-transparent rounded-bl-full" 
+                  />
+                  
+                  {/* Animated background glow */}
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+                    transition={{ duration: 4, repeat: Infinity, delay: index * 0.3 }}
+                    className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 ${colors.gradient} rounded-full blur-2xl`}
+                  />
                   
                   <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className={`w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl ${colors.gradient} flex items-center justify-center mb-4 shadow-lg ${colors.glow}`}
+                    whileHover={{ scale: 1.15, rotate: 8 }}
+                    transition={{ type: "spring", stiffness: 400 }}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 mx-auto rounded-2xl ${colors.gradient} flex items-center justify-center mb-4 shadow-lg ${colors.glow} relative overflow-hidden`}
                   >
-                    <stat.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${colors.text}`} />
+                    <stat.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${colors.text} relative z-10`} />
+                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </motion.div>
                   <p className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
                     <AnimatedCounter value={stat.value} suffix={stat.suffix} />

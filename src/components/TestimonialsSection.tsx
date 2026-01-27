@@ -173,19 +173,49 @@ const TestimonialsSection = () => {
             className="relative"
           >
             <div className="p-6 sm:p-10 lg:p-14 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl relative overflow-hidden">
-              {/* Decorative quote */}
-              <div className={cn(
-                "absolute top-4 left-4 sm:top-6 sm:left-6 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center opacity-10",
-                serviceConfig.gradient
-              )}>
-                <Quote className="w-10 h-10 sm:w-12 sm:h-12" />
-              </div>
+              {/* Animated border glow */}
+              <motion.div
+                animate={{ 
+                  background: [
+                    "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.3))",
+                    "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.3))",
+                    "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.3))",
+                    "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.3))",
+                    "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.3))"
+                  ]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-3xl pointer-events-none"
+              />
               
-              {/* Corner glow */}
-              <div className={cn(
-                "absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br rounded-full blur-3xl opacity-20",
-                serviceConfig.gradient
-              )} />
+              {/* Shine sweep */}
+              <motion.div
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 3 }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
+              />
+              
+              {/* Decorative quote */}
+              <motion.div 
+                animate={{ rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
+                transition={{ duration: 6, repeat: Infinity }}
+                className={cn(
+                  "absolute top-4 left-4 sm:top-6 sm:left-6 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center opacity-10",
+                  serviceConfig.gradient
+                )}
+              >
+                <Quote className="w-10 h-10 sm:w-12 sm:h-12" />
+              </motion.div>
+              
+              {/* Animated corner glow */}
+              <motion.div 
+                animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
+                transition={{ duration: 4, repeat: Infinity }}
+                className={cn(
+                  "absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br rounded-full blur-3xl",
+                  serviceConfig.gradient
+                )} 
+              />
               
               <AnimatePresence mode="wait">
                 <motion.div
