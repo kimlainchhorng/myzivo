@@ -52,6 +52,12 @@ export const useLocationSearch = () => {
   return { searchLocations, isSearching };
 };
 
+// Simple in-memory cache for route calculations to avoid duplicate API calls
+const routeCache = new Map<string, { distance: number; duration: number; geometry: any }>();
+
+const buildCacheKey = (pickup: Location, dropoff: Location) =>
+  `${pickup.lat.toFixed(5)},${pickup.lng.toFixed(5)}-${dropoff.lat.toFixed(5)},${dropoff.lng.toFixed(5)}`;
+
 export const useRouteCalculation = () => {
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -59,20 +65,36 @@ export const useRouteCalculation = () => {
     pickup: Location,
     dropoff: Location
   ): Promise<{ distance: number; duration: number; geometry: any } | null> => {
+    const cacheKey = buildCacheKey(pickup, dropoff);
+
+    // Return cached result instantly
+    const cached = routeCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     setIsCalculating(true);
     try {
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?geometries=geojson&access_token=${MAPBOX_TOKEN}`
+        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?geometries=geojson&overview=simplified&access_token=${MAPBOX_TOKEN}`
       );
       const data = await response.json();
       
       if (data.routes && data.routes.length > 0) {
         const route = data.routes[0];
-        return {
+        const result = {
           distance: route.distance / 1000, // Convert to km
           duration: route.duration / 60, // Convert to minutes
           geometry: route.geometry,
         };
+        // Cache for future lookups
+        routeCache.set(cacheKey, result);
+        // Limit cache size to 20 entries
+        if (routeCache.size > 20) {
+          const firstKey = routeCache.keys().next().value;
+          if (firstKey) routeCache.delete(firstKey);
+        }
+        return result;
       }
       return null;
     } catch (error) {

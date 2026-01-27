@@ -108,27 +108,31 @@ const RiderApp = () => {
   });
 
   // Calculate route when both locations are set
+  // Use primitive deps to avoid re-running when object references change but values don't
+  const pickupKey = pickup ? `${pickup.lat.toFixed(5)},${pickup.lng.toFixed(5)}` : null;
+  const dropoffKey = dropoff ? `${dropoff.lat.toFixed(5)},${dropoff.lng.toFixed(5)}` : null;
+
   useEffect(() => {
+    if (!pickup || !dropoff) return;
+
+    let cancelled = false;
     const fetchRoute = async () => {
-      if (pickup && dropoff) {
-        const route = await calculateRoute(pickup, dropoff);
-        if (route) {
-          setRouteGeometry(route.geometry);
-          setRouteInfo({
-            distance: route.distance,
-            duration: route.duration
-          });
-          const fares = calculateFares(route.distance, route.duration);
-          setFareEstimates(fares);
-          if (fares.length > 0 && !selectedVehicle) {
-            setSelectedVehicle(fares[0].vehicleType);
-          }
-          setStep("vehicle");
-        }
+      const route = await calculateRoute(pickup, dropoff);
+      if (cancelled || !route) return;
+
+      setRouteGeometry(route.geometry);
+      setRouteInfo({ distance: route.distance, duration: route.duration });
+      const fares = calculateFares(route.distance, route.duration);
+      setFareEstimates(fares);
+      if (fares.length > 0 && !selectedVehicle) {
+        setSelectedVehicle(fares[0].vehicleType);
       }
+      setStep("vehicle");
     };
     fetchRoute();
-  }, [pickup, dropoff]);
+
+    return () => { cancelled = true; };
+  }, [pickupKey, dropoffKey]);
 
   // Switch to tracking if there's an active trip
   useEffect(() => {
