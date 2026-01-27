@@ -13,13 +13,7 @@ import QuickLocationPicker from "@/components/rider/QuickLocationPicker";
 import TripTracker from "@/components/rider/TripTracker";
 import { StatusTracker, LivePulse } from "@/components/ui/status-tracker";
 import { cn } from "@/lib/utils";
-import {
-  Location,
-  FareEstimate,
-  useRouteCalculation,
-  useFareEstimation,
-  useCreateTrip,
-} from "@/hooks/useRiderBooking";
+import { Location, FareEstimate, useRouteCalculation, useFareEstimation, useCreateTrip } from "@/hooks/useRiderBooking";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/hooks/useTrips";
@@ -27,36 +21,67 @@ import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { toast } from "sonner";
 import ZivoLogo from "@/components/ZivoLogo";
-
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
-
-const bookingSteps = [
-  { id: "location", label: "Pickup", icon: <MapPin className="w-4 h-4" /> },
-  { id: "vehicle", label: "Your Ride", icon: <Car className="w-4 h-4" /> },
-  { id: "confirm", label: "Book", icon: <Zap className="w-4 h-4" /> },
-];
-
-const quickStats = [
-  { icon: Clock, value: "~3 min", label: "Avg pickup", gradient: "from-primary via-teal-400 to-cyan-400", glow: "shadow-primary/40" },
-  { icon: Star, value: "4.9", label: "Top rated", gradient: "from-amber-400 via-orange-500 to-rose-500", glow: "shadow-amber-500/40" },
-  { icon: Shield, value: "100%", label: "Verified drivers", gradient: "from-emerald-400 via-green-500 to-teal-500", glow: "shadow-emerald-500/40" },
-];
-
+const bookingSteps = [{
+  id: "location",
+  label: "Pickup",
+  icon: <MapPin className="w-4 h-4" />
+}, {
+  id: "vehicle",
+  label: "Your Ride",
+  icon: <Car className="w-4 h-4" />
+}, {
+  id: "confirm",
+  label: "Book",
+  icon: <Zap className="w-4 h-4" />
+}];
+const quickStats = [{
+  icon: Clock,
+  value: "~3 min",
+  label: "Avg pickup",
+  gradient: "from-primary via-teal-400 to-cyan-400",
+  glow: "shadow-primary/40"
+}, {
+  icon: Star,
+  value: "4.9",
+  label: "Top rated",
+  gradient: "from-amber-400 via-orange-500 to-rose-500",
+  glow: "shadow-amber-500/40"
+}, {
+  icon: Shield,
+  value: "100%",
+  label: "Verified drivers",
+  gradient: "from-emerald-400 via-green-500 to-teal-500",
+  glow: "shadow-emerald-500/40"
+}];
 const RiderApp = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [step, setStep] = useState<BookingStep>("location");
   const [pickup, setPickup] = useState<Location | null>(null);
   const [dropoff, setDropoff] = useState<Location | null>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
   const [fareEstimates, setFareEstimates] = useState<FareEstimate[]>([]);
   const [routeGeometry, setRouteGeometry] = useState<any>(null);
-  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
-
-  const { calculateRoute, isCalculating } = useRouteCalculation();
-  const { calculateFares } = useFareEstimation();
+  const [routeInfo, setRouteInfo] = useState<{
+    distance: number;
+    duration: number;
+  } | null>(null);
+  const {
+    calculateRoute,
+    isCalculating
+  } = useRouteCalculation();
+  const {
+    calculateFares
+  } = useFareEstimation();
   const createTrip = useCreateTrip();
-  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
+  const {
+    getCurrentLocation,
+    reverseGeocode,
+    isGettingLocation
+  } = useCurrentLocation();
 
   // Auto-set pickup from GPS
   const handleUseMyLocation = async () => {
@@ -66,7 +91,7 @@ const RiderApp = () => {
       setPickup({
         address,
         lat: location.lat,
-        lng: location.lng,
+        lng: location.lng
       });
       toast.success("Pickup location set to your current location");
     } catch (error) {
@@ -78,28 +103,27 @@ const RiderApp = () => {
   useRiderTripRealtime(user?.id);
 
   // Check for active trip
-  const { data: activeTrip, isLoading: tripLoading } = useQuery({
+  const {
+    data: activeTrip,
+    isLoading: tripLoading
+  } = useQuery({
     queryKey: ["active-rider-trip", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      
-      const { data, error } = await supabase
-        .from("trips")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("trips").select(`
           *,
           driver:drivers(full_name, email, avatar_url)
-        `)
-        .eq("rider_id", user.id)
-        .in("status", ["requested", "accepted", "en_route", "arrived", "in_progress"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
+        `).eq("rider_id", user.id).in("status", ["requested", "accepted", "en_route", "arrived", "in_progress"]).order("created_at", {
+        ascending: false
+      }).limit(1).maybeSingle();
       if (error) throw error;
       return data as Trip | null;
     },
     enabled: !!user,
-    refetchInterval: 30000,
+    refetchInterval: 30000
   });
 
   // Calculate route when both locations are set
@@ -109,7 +133,10 @@ const RiderApp = () => {
         const route = await calculateRoute(pickup, dropoff);
         if (route) {
           setRouteGeometry(route.geometry);
-          setRouteInfo({ distance: route.distance, duration: route.duration });
+          setRouteInfo({
+            distance: route.distance,
+            duration: route.duration
+          });
           const fares = calculateFares(route.distance, route.duration);
           setFareEstimates(fares);
           if (fares.length > 0 && !selectedVehicle) {
@@ -119,7 +146,6 @@ const RiderApp = () => {
         }
       }
     };
-
     fetchRoute();
   }, [pickup, dropoff]);
 
@@ -129,30 +155,25 @@ const RiderApp = () => {
       setStep("tracking");
     }
   }, [activeTrip]);
-
   const handleConfirmBooking = async () => {
     if (!pickup || !dropoff || !selectedVehicle || !routeInfo) return;
-
     const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
     if (!selectedFare) return;
-
     await createTrip.mutateAsync({
       pickup,
       dropoff,
       fareAmount: selectedFare.totalFare,
       distanceKm: routeInfo.distance,
-      durationMinutes: routeInfo.duration,
+      durationMinutes: routeInfo.duration
     });
   };
-
   const handleCancelTrip = async () => {
     if (!activeTrip) return;
-    
-    const { error } = await supabase
-      .from("trips")
-      .update({ status: "cancelled" })
-      .eq("id", activeTrip.id);
-
+    const {
+      error
+    } = await supabase.from("trips").update({
+      status: "cancelled"
+    }).eq("id", activeTrip.id);
     if (!error) {
       setStep("location");
       setPickup(null);
@@ -163,7 +184,6 @@ const RiderApp = () => {
       setRouteInfo(null);
     }
   };
-
   const handleReset = () => {
     setStep("location");
     setPickup(null);
@@ -173,10 +193,8 @@ const RiderApp = () => {
     setRouteGeometry(null);
     setRouteInfo(null);
   };
-
   if (!user) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    return <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         {/* Static gradient background */}
         <div className="absolute inset-0 bg-gradient-radial from-primary/15 via-transparent to-transparent opacity-60" />
         <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
@@ -192,38 +210,32 @@ const RiderApp = () => {
                 <ZivoLogo size="lg" />
               </div>
               
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-200" style={{ animationDelay: '100ms' }}>
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-200" style={{
+              animationDelay: '100ms'
+            }}>
                 <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text">
                   Ready to ride?
                 </h2>
                 <p className="text-muted-foreground mb-8 text-base">Sign in to book your next trip</p>
               </div>
               
-              <div className="flex gap-4 justify-center animate-in fade-in slide-in-from-bottom-2 duration-200" style={{ animationDelay: '150ms' }}>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/")} 
-                  className="rounded-xl px-6 h-12 border-white/10 hover:bg-white/5 active:scale-95 transition-transform"
-                >
+              <div className="flex gap-4 justify-center animate-in fade-in slide-in-from-bottom-2 duration-200" style={{
+              animationDelay: '150ms'
+            }}>
+                <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl px-6 h-12 border-white/10 hover:bg-white/5 active:scale-95 transition-transform">
                   Home
                 </Button>
-                <Button 
-                  onClick={() => navigate("/login")} 
-                  className="rounded-xl px-8 h-12 bg-gradient-to-r from-primary via-primary to-teal-400 text-white shadow-xl shadow-primary/40 font-semibold active:scale-95 transition-transform"
-                >
+                <Button onClick={() => navigate("/login")} className="rounded-xl px-8 h-12 bg-gradient-to-r from-primary via-primary to-teal-400 text-white shadow-xl shadow-primary/40 font-semibold active:scale-95 transition-transform">
                   Sign In
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (tripLoading) {
-    return (
-      <div className="min-h-screen bg-background p-6 space-y-4">
+    return <div className="min-h-screen bg-background p-6 space-y-4">
         <div className="flex items-center gap-4 mb-6">
           <Skeleton className="h-12 w-12 rounded-2xl" />
           <div className="space-y-2 flex-1">
@@ -237,14 +249,12 @@ const RiderApp = () => {
           <Skeleton className="h-16 w-full rounded-2xl" />
           <Skeleton className="h-14 w-full rounded-2xl" />
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Show trip tracking if there's an active trip
   if (activeTrip && step === "tracking") {
-    return (
-      <div className="min-h-screen bg-background relative overflow-hidden">
+    return <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Static background glow effects */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl opacity-60" />
@@ -255,12 +265,7 @@ const RiderApp = () => {
           <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={() => navigate("/")} 
-                  className="rounded-xl hover:bg-white/10 border border-white/5 h-10 w-10 active:scale-95 transition-transform"
-                >
+                <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl hover:bg-white/10 border border-white/5 h-10 w-10 active:scale-95 transition-transform">
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div className="flex items-center gap-3">
@@ -286,14 +291,10 @@ const RiderApp = () => {
         <div className="p-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <TripTracker trip={activeTrip} onCancel={handleCancelTrip} />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
-
-  return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+  return <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
       {/* Static Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/12 to-teal-500/6 rounded-full blur-3xl" />
@@ -305,12 +306,7 @@ const RiderApp = () => {
         <div className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => step === "location" ? navigate("/") : handleReset()}
-                className="h-8 w-8 rounded-lg hover:bg-white/10 backdrop-blur-sm border border-white/5 active:scale-95 transition-transform"
-              >
+              <Button variant="ghost" size="icon" onClick={() => step === "location" ? navigate("/") : handleReset()} className="h-8 w-8 rounded-lg hover:bg-white/10 backdrop-blur-sm border border-white/5 active:scale-95 transition-transform">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div className="flex items-center gap-2">
@@ -325,12 +321,10 @@ const RiderApp = () => {
                   </h1>
                   <p className="text-[10px] text-muted-foreground">
                     {step === "location" && "Enter your destination"}
-                    {step === "vehicle" && routeInfo && (
-                      <span className="flex items-center gap-1">
+                    {step === "vehicle" && routeInfo && <span className="flex items-center gap-1">
                         <span className="inline-block w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                         {(routeInfo.distance * 0.621371).toFixed(1)} mi • {routeInfo.duration} min
-                      </span>
-                    )}
+                      </span>}
                   </p>
                 </div>
               </div>
@@ -339,32 +333,25 @@ const RiderApp = () => {
           </div>
 
           {/* Compact Step Indicator */}
-          <div className="mt-2.5 px-1 animate-in fade-in slide-in-from-bottom-2 duration-200" style={{ animationDelay: '50ms' }}>
-            <StatusTracker 
-              steps={bookingSteps}
-              currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2}
-              color="rides"
-              orientation="horizontal"
-            />
+          <div className="mt-2.5 px-1 animate-in fade-in slide-in-from-bottom-2 duration-200" style={{
+          animationDelay: '50ms'
+        }}>
+            <StatusTracker steps={bookingSteps} currentStep={step === "location" ? 0 : step === "vehicle" ? 1 : 2} color="rides" orientation="horizontal" />
           </div>
         </div>
       </div>
 
       {/* Map Section */}
       <div className="flex-1 relative">
-        <BookingMap
-          pickup={pickup}
-          dropoff={dropoff}
-          routeGeometry={routeGeometry}
-          className="absolute inset-0"
-        />
+        <BookingMap pickup={pickup} dropoff={dropoff} routeGeometry={routeGeometry} className="absolute inset-0" />
 
         {/* Loading Overlay - CSS based */}
-        {isCalculating && (
-          <div className="absolute inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
+        {isCalculating && <div className="absolute inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
             <div className="flex flex-col items-center gap-4 bg-card/95 backdrop-blur-xl px-8 py-6 rounded-3xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200">
               <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/40 animate-spin" style={{ animationDuration: '2s' }}>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/40 animate-spin" style={{
+              animationDuration: '2s'
+            }}>
                   <Navigation className="w-7 h-7 text-white" />
                 </div>
                 <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-md animate-pulse" />
@@ -374,38 +361,25 @@ const RiderApp = () => {
                 <p className="text-sm text-muted-foreground">Analyzing traffic patterns...</p>
               </div>
             </div>
-          </div>
-        )}
+          </div>}
 
         {/* Quick Stats - Static for performance */}
-        {step === "location" && !pickup && (
-          <div className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap animate-in fade-in slide-in-from-top-4 duration-300">
-            {quickStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="group relative px-2.5 py-2 rounded-xl bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden"
-              >
+        {step === "location" && !pickup && <div className="absolute top-3 left-3 right-3 flex gap-2 justify-center flex-wrap animate-in fade-in slide-in-from-top-4 duration-300">
+            {quickStats.map(stat => <div key={stat.label} className="group relative px-2.5 py-2 bg-card/90 backdrop-blur-xl border border-white/10 shadow-lg flex items-center gap-2 cursor-default overflow-hidden rounded-sm">
                 <div className="relative z-10 flex items-center gap-2">
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md",
-                    stat.gradient
-                  )}>
+                  <div className={cn("w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-md", stat.gradient)}>
                     <stat.icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-0.5">
                       <p className="text-sm font-bold">{stat.value}</p>
-                      {stat.label === "Top rated" && (
-                        <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                      )}
+                      {stat.label === "Top rated" && <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
                     </div>
                     <p className="text-[9px] text-muted-foreground font-medium uppercase">{stat.label}</p>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              </div>)}
+          </div>}
       </div>
 
       {/* Bottom Sheet - Mobile Optimized */}
@@ -415,19 +389,15 @@ const RiderApp = () => {
         
         <div className="p-4 pb-8 max-h-[60vh] overflow-y-auto scrollbar-hide">
           {/* Location Step */}
-          {step === "location" && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-200">
+          {step === "location" && <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-200">
               {/* Quick Location Picker */}
-              <QuickLocationPicker
-                userId={user?.id}
-                onSelect={(location) => {
-                  if (!pickup) {
-                    setPickup(location);
-                  } else {
-                    setDropoff(location);
-                  }
-                }}
-              />
+              <QuickLocationPicker userId={user?.id} onSelect={location => {
+            if (!pickup) {
+              setPickup(location);
+            } else {
+              setDropoff(location);
+            }
+          }} />
 
               {/* Location Inputs with Static Connection Line */}
               <div className="relative">
@@ -436,44 +406,22 @@ const RiderApp = () => {
                 
                 <div className="space-y-4">
                   <div className="relative">
-                    <LocationSearchInput
-                      placeholder="Pickup location"
-                      value={pickup}
-                      onChange={setPickup}
-                      icon="pickup"
-                    />
+                    <LocationSearchInput placeholder="Pickup location" value={pickup} onChange={setPickup} icon="pickup" />
                     {/* Use My Location Button */}
-                    {!pickup && (
-                      <div className="mt-2 animate-in fade-in duration-200">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleUseMyLocation}
-                          disabled={isGettingLocation}
-                          className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all active:scale-[0.98]"
-                        >
-                          {isGettingLocation ? (
-                            <>
+                    {!pickup && <div className="mt-2 animate-in fade-in duration-200">
+                        <Button variant="outline" size="sm" onClick={handleUseMyLocation} disabled={isGettingLocation} className="w-full h-10 rounded-xl border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all active:scale-[0.98]">
+                          {isGettingLocation ? <>
                               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                               Getting location...
-                            </>
-                          ) : (
-                            <>
+                            </> : <>
                               <Locate className="w-4 h-4 mr-2" />
                               Use my current location
-                            </>
-                          )}
+                            </>}
                         </Button>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   <div>
-                    <LocationSearchInput
-                      placeholder="Where to?"
-                      value={dropoff}
-                      onChange={setDropoff}
-                      icon="dropoff"
-                    />
+                    <LocationSearchInput placeholder="Where to?" value={dropoff} onChange={setDropoff} icon="dropoff" />
                   </div>
                 </div>
               </div>
@@ -489,23 +437,18 @@ const RiderApp = () => {
                     <p className="text-[11px] text-muted-foreground">Your favorite locations</p>
                   </div>
                 </div>
-                <SavedLocationsPanel
-                  userId={user?.id}
-                  onSelect={(location) => {
-                    if (!pickup) {
-                      setPickup(location);
-                    } else {
-                      setDropoff(location);
-                    }
-                  }}
-                />
+                <SavedLocationsPanel userId={user?.id} onSelect={location => {
+              if (!pickup) {
+                setPickup(location);
+              } else {
+                setDropoff(location);
+              }
+            }} />
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Vehicle Selection Step */}
-          {step === "vehicle" && fareEstimates.length > 0 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
+          {step === "vehicle" && fareEstimates.length > 0 && <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-200">
               {/* Route Summary Card */}
               <div className="relative p-4 rounded-2xl bg-card border border-white/10 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5" />
@@ -540,35 +483,22 @@ const RiderApp = () => {
 
               {/* Vehicle Selector */}
               <div>
-                <VehicleSelector
-                  fareEstimates={fareEstimates}
-                  selectedVehicle={selectedVehicle}
-                  onSelect={setSelectedVehicle}
-                />
+                <VehicleSelector fareEstimates={fareEstimates} selectedVehicle={selectedVehicle} onSelect={setSelectedVehicle} />
               </div>
               
               {/* Confirm Button */}
               <div>
-                <Button
-                  size="lg"
-                  className="relative w-full h-14 text-base font-bold gap-3 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/40 overflow-hidden active:scale-[0.98] transition-transform"
-                  disabled={!selectedVehicle || createTrip.isPending}
-                  onClick={handleConfirmBooking}
-                >
-                  {createTrip.isPending ? (
-                    <div className="flex items-center gap-2">
+                <Button size="lg" className="relative w-full h-14 text-base font-bold gap-3 rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/40 overflow-hidden active:scale-[0.98] transition-transform" disabled={!selectedVehicle || createTrip.isPending} onClick={handleConfirmBooking}>
+                  {createTrip.isPending ? <div className="flex items-center gap-2">
                       <Loader2 className="w-5 h-5 animate-spin" />
                       <span>Finding driver...</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-3 w-full">
+                    </div> : <div className="flex items-center justify-center gap-3 w-full">
                       <Sparkles className="w-5 h-5" />
                       <span>Confirm Ride</span>
                       <span className="px-3 py-1 bg-white/20 rounded-lg text-sm font-bold">
                         ${selectedFare?.totalFare.toFixed(2)}
                       </span>
-                    </div>
-                  )}
+                    </div>}
                 </Button>
                 
                 <p className="text-center text-[10px] text-muted-foreground mt-2 flex items-center justify-center gap-1">
@@ -576,12 +506,9 @@ const RiderApp = () => {
                   Secure payment • Trip protection
                 </p>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default RiderApp;
