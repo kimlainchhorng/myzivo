@@ -3565,6 +3565,48 @@ export type Database = {
         }
         Relationships: []
       }
+      safety_alerts: {
+        Row: {
+          created_at: string
+          description: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          lat: number | null
+          lng: number | null
+          location_area: string | null
+          radius_km: number | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_area?: string | null
+          radius_km?: number | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          location_area?: string | null
+          radius_km?: number | null
+          severity?: string
+          title?: string
+        }
+        Relationships: []
+      }
       safety_incidents: {
         Row: {
           created_at: string
@@ -3712,6 +3754,50 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sos_alerts: {
+        Row: {
+          cancelled_at: string | null
+          driver_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          resolved_at: string | null
+          status: string
+          triggered_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          driver_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          triggered_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          driver_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          resolved_at?: string | null
+          status?: string
+          triggered_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sos_alerts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
             referencedColumns: ["id"]
           },
         ]
@@ -4293,6 +4379,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trusted_contacts: {
+        Row: {
+          auto_share: boolean | null
+          created_at: string
+          driver_id: string
+          email: string | null
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          auto_share?: boolean | null
+          created_at?: string
+          driver_id: string
+          email?: string | null
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          auto_share?: boolean | null
+          created_at?: string
+          driver_id?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trusted_contacts_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"

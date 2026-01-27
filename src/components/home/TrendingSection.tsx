@@ -1,11 +1,11 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, ChevronRight, Sparkles } from "lucide-react";
+import { TrendingUp, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RecommendationCard } from "@/components/ui/personalization";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 const defaultTrendingServices = [
   { id: 1, title: "Airport Transfer", emoji: "✈️", subtitle: "LAX, JFK, ORD", reason: "Trending this week", rating: 4.9, price: "From $45", color: "rides" as const },
@@ -75,71 +75,41 @@ const TrendingSection = () => {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-amber-500/10 to-yellow-500/5 rounded-full blur-3xl" />
       
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-24 left-[8%] text-4xl hidden lg:block opacity-40"
-      >
-        🔥
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-30"
-      >
-        ⭐
-      </motion.div>
+      {/* Static floating emojis */}
+      <div className="absolute top-24 left-[8%] text-4xl hidden lg:block opacity-40">🔥</div>
+      <div className="absolute bottom-32 right-[6%] text-4xl hidden lg:block opacity-30">⭐</div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="space-y-12"
-        >
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header with enhanced styling */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <motion.div 
-                whileHover={{ scale: 1.1, rotate: -5 }}
-                className="relative p-3.5 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30 overflow-hidden"
-              >
+              <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-eats to-orange-500 shadow-xl shadow-eats/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:-rotate-3">
                 <TrendingUp className="w-7 h-7 text-white relative z-10" />
-                {/* Animated glow ring */}
-                <motion.div
-                  className="absolute inset-0 rounded-2xl"
-                  animate={{ 
-                    boxShadow: [
-                      '0 0 0 0 hsl(var(--eats) / 0.4)',
-                      '0 0 0 10px hsl(var(--eats) / 0)',
-                      '0 0 0 0 hsl(var(--eats) / 0)',
-                    ]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
+              </div>
               <div>
                 <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Recommended For You</h2>
                 <p className="text-sm sm:text-base text-muted-foreground">Personalized picks based on your activity</p>
               </div>
             </div>
-            <motion.div whileHover={{ x: 5 }}>
-              <Button variant="ghost" className="text-eats gap-1 hidden sm:flex font-bold group">
-                View all <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </motion.div>
+            <Button 
+              variant="ghost" 
+              className="text-eats gap-1 hidden sm:flex font-bold group transition-transform duration-200 hover:translate-x-1"
+            >
+              View all <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
           </div>
 
           {/* Recommendations Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {trendingServices.map((service, index) => (
-              <motion.div
+              <div
                 key={service.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
+                className={cn(
+                  "animate-in fade-in slide-in-from-bottom-4",
+                  "transition-transform duration-200 hover:-translate-y-1"
+                )}
+                style={{ animationDelay: `${index * 100}ms` }}
               >
                 <RecommendationCard
                   title={service.title}
@@ -152,10 +122,10 @@ const TrendingSection = () => {
                   badge={service.badge}
                   onClick={() => navigate(service.color === "eats" ? "/food" : service.color === "sky" ? "/book-flight" : "/ride")}
                 />
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
