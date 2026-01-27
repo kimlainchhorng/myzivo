@@ -56,6 +56,11 @@ import AdminDemandHeatmap from "./AdminDemandHeatmap";
 import AdminNotificationsPanel from "./AdminNotificationsPanel";
 import AdminSparklineStats from "./AdminSparklineStats";
 import AdminBulkActionsPanel from "./AdminBulkActionsPanel";
+import AdminAlertCenter from "./AdminAlertCenter";
+import AdminUserActivity from "./AdminUserActivity";
+import AdminGrowthMetrics from "./AdminGrowthMetrics";
+import AdminTopPerformers from "./AdminTopPerformers";
+import AdminSystemStatus from "./AdminSystemStatus";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -535,6 +540,21 @@ const AdminAnalytics = () => {
 
       {/* Bulk Actions */}
       <AdminBulkActionsPanel />
+
+      {/* Alert Center & User Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminAlertCenter />
+        <AdminUserActivity />
+      </div>
+
+      {/* Growth Metrics & Top Performers */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <AdminGrowthMetrics />
+        <AdminTopPerformers />
+      </div>
+
+      {/* System Status */}
+      <AdminSystemStatus />
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
