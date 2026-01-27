@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, DollarSign, Bell, Palette, Shield, Save, RefreshCw, AlertTriangle, Zap, Globe, Mail, Smartphone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Settings, DollarSign, Bell, Palette, Shield, Save, RefreshCw, AlertTriangle, Zap, Globe, Mail, Smartphone, CheckCircle, Database, Server, Clock, Activity } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,6 +30,14 @@ const categoryIcons: Record<string, any> = {
   contact: Mail,
   promotions: Zap,
   notifications: Bell,
+};
+
+// System health mock data
+const systemHealth = {
+  database: { status: "healthy", latency: 12, uptime: 99.99 },
+  api: { status: "healthy", latency: 45, uptime: 99.95 },
+  storage: { status: "healthy", usage: 42, total: 100 },
+  cache: { status: "healthy", hitRate: 94 },
 };
 
 const AdminSystemSettings = () => {
@@ -255,6 +265,99 @@ const AdminSystemSettings = () => {
         </Tabs>
       )}
 
+      {/* System Health */}
+      <Card className="border-0 bg-card/50 backdrop-blur-xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5 text-primary" />
+              System Health
+            </CardTitle>
+            <Badge variant="outline" className="gap-1 bg-green-500/10 text-green-500 border-green-500/20">
+              <CheckCircle className="h-3 w-3" />
+              All Systems Operational
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm font-medium">Database</span>
+                </div>
+                <Badge className="bg-green-500/10 text-green-500 text-xs">Healthy</Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Latency</span>
+                  <span>{systemHealth.database.latency}ms</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Uptime</span>
+                  <span>{systemHealth.database.uptime}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity className="h-4 w-4 text-purple-500" />
+                  <span className="text-sm font-medium">API</span>
+                </div>
+                <Badge className="bg-green-500/10 text-green-500 text-xs">Healthy</Badge>
+              </div>
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Latency</span>
+                  <span>{systemHealth.api.latency}ms</span>
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Uptime</span>
+                  <span>{systemHealth.api.uptime}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Server className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-medium">Storage</span>
+                </div>
+                <Badge className="bg-green-500/10 text-green-500 text-xs">Healthy</Badge>
+              </div>
+              <div className="space-y-2">
+                <Progress value={systemHealth.storage.usage} className="h-1.5" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{systemHealth.storage.usage}GB used</span>
+                  <span>{systemHealth.storage.total}GB total</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-cyan-500" />
+                  <span className="text-sm font-medium">Cache</span>
+                </div>
+                <Badge className="bg-green-500/10 text-green-500 text-xs">Healthy</Badge>
+              </div>
+              <div className="space-y-2">
+                <Progress value={systemHealth.cache.hitRate} className="h-1.5" />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Hit Rate</span>
+                  <span>{systemHealth.cache.hitRate}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
       <Card className="border-0 bg-card/50 backdrop-blur-xl">
         <CardHeader>
@@ -265,15 +368,15 @@ const AdminSystemSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 hover:bg-cyan-500/10 hover:border-cyan-500/20 hover:text-cyan-500">
               <RefreshCw className="h-5 w-5" />
               <span>Clear Cache</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 hover:bg-blue-500/10 hover:border-blue-500/20 hover:text-blue-500">
               <Bell className="h-5 w-5" />
               <span>Test Notifications</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button variant="outline" className="h-auto py-4 flex-col gap-2 hover:bg-green-500/10 hover:border-green-500/20 hover:text-green-500">
               <Mail className="h-5 w-5" />
               <span>Test Email</span>
             </Button>

@@ -129,18 +129,28 @@ const AdminLiveMetrics = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-emerald-500/10 border border-green-500/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-gradient-to-r from-green-500/15 to-emerald-500/10 border border-green-500/20 shadow-lg shadow-green-500/10">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs text-green-500 font-semibold">Live Metrics</span>
+            <span className="text-xs text-green-500 font-semibold tracking-wide">LIVE METRICS</span>
           </div>
-          <span className="text-xs text-muted-foreground">Auto-refresh every 30s</span>
+          <span className="text-xs text-muted-foreground hidden sm:inline">Auto-refresh every 30s</span>
         </div>
-        <Badge variant="outline" className="gap-1">
-          <Clock className="h-3 w-3" />
-          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="gap-1 bg-muted/30">
+            <Clock className="h-3 w-3" />
+            {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </Badge>
+          <Badge 
+            variant="outline" 
+            className="gap-1 cursor-pointer hover:bg-primary/10 transition-colors"
+            onClick={() => refetch()}
+          >
+            <Activity className="h-3 w-3" />
+            Refresh
+          </Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
