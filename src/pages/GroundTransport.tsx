@@ -9,13 +9,15 @@ import {
   Users, 
   Clock, 
   ArrowRight, 
+  ArrowLeft,
   Filter, 
   Star, 
   Wifi, 
   Coffee, 
   Plug,
   RefreshCw,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -118,6 +120,22 @@ const GroundTransport = () => {
           <div className="absolute top-1/2 right-0 w-96 h-96 bg-violet-500/20 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
+            {/* Back Navigation */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-6"
+            >
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="gap-2 text-muted-foreground hover:text-foreground touch-manipulation active:scale-95"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back
+              </Button>
+            </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
