@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Menu, User, Bell, Search, Sparkles, ChevronDown, X } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,14 +29,12 @@ const Header = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
-            <motion.div 
-              className="cursor-pointer" 
+            <div 
+              className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
               onClick={() => navigate("/")}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
               <ZivoLogo size="md" />
-            </motion.div>
+            </div>
 
             {/* Desktop Navigation - Mega Menus */}
             <nav className="hidden lg:flex items-center gap-0.5">
@@ -50,50 +47,40 @@ const Header = () => {
             {/* Desktop Actions - Enhanced */}
             <div className="hidden md:flex items-center gap-1.5">
               {/* Search Button */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50"
-                  onClick={() => setIsSearchOpen(!isSearchOpen)}
-                >
-                  <Search className="h-5 w-5" />
-                </Button>
-              </motion.div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-105 active:scale-95"
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
 
               {user ? (
                 <>
                   {/* Notifications - Enhanced */}
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50">
-                      <Bell className="h-5 w-5" />
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-0.5 -right-0.5"
-                      >
-                        <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 border-0 shadow-lg shadow-eats/30">
-                          3
-                        </Badge>
-                      </motion.div>
-                    </Button>
-                  </motion.div>
+                  <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-105 active:scale-95">
+                    <Bell className="h-5 w-5" />
+                    <div className="absolute -top-0.5 -right-0.5">
+                      <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 border-0 shadow-lg shadow-eats/30">
+                        3
+                      </Badge>
+                    </div>
+                  </Button>
 
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button variant="ghost" size="sm" className="gap-2 ml-1.5 rounded-xl hover:bg-muted/50 pr-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
-                            <User className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="hidden lg:flex flex-col items-start">
-                            <span className="text-sm font-semibold">Account</span>
-                            <span className="text-[10px] text-muted-foreground">Menu</span>
-                          </div>
-                          <ChevronDown className="w-4 h-4 text-muted-foreground hidden lg:block" />
-                        </Button>
-                      </motion.div>
+                      <Button variant="ghost" size="sm" className="gap-2 ml-1.5 rounded-xl hover:bg-muted/50 pr-3 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="hidden lg:flex flex-col items-start">
+                          <span className="text-sm font-semibold">Account</span>
+                          <span className="text-[10px] text-muted-foreground">Menu</span>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-muted-foreground hidden lg:block" />
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-2">
                       <div className="px-3 py-3 mb-2 rounded-xl bg-gradient-to-br from-primary/10 to-teal-400/5 border border-primary/20">
@@ -142,56 +129,45 @@ const Header = () => {
                   <Button variant="ghost" size="sm" onClick={() => navigate("/login")} className="rounded-xl font-semibold">
                     Log in
                   </Button>
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                    <Button 
-                      size="sm" 
-                      onClick={() => navigate("/signup")}
-                      className="rounded-xl font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-shadow"
-                    >
-                      Sign up free
-                    </Button>
-                  </motion.div>
+                  <Button 
+                    size="sm" 
+                    onClick={() => navigate("/signup")}
+                    className="rounded-xl font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 transition-all duration-150 hover:scale-[1.03] active:scale-[0.97]"
+                  >
+                    Sign up free
+                  </Button>
                 </div>
               )}
             </div>
 
             {/* Mobile Menu Button - Enhanced */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="lg:hidden p-2.5 -mr-2 text-foreground hover:bg-muted/50 rounded-xl transition-colors"
+            <button
+              className="lg:hidden p-2.5 -mr-2 text-foreground hover:bg-muted/50 rounded-xl transition-all duration-150 hover:scale-105 active:scale-95"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-            </motion.button>
+            </button>
           </div>
         </div>
 
         {/* Search Overlay */}
-        <AnimatePresence>
-          {isSearchOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border/50 p-4"
-            >
-              <div className="container mx-auto flex items-center gap-3">
-                <Search className="w-5 h-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search for rides, food, hotels, flights..."
-                  className="flex-1 bg-transparent border-0 outline-none text-lg placeholder:text-muted-foreground"
-                  autoFocus
-                />
-                <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(false)} className="rounded-xl">
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isSearchOpen && (
+          <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border/50 p-4 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="container mx-auto flex items-center gap-3">
+              <Search className="w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search for rides, food, hotels, flights..."
+                className="flex-1 bg-transparent border-0 outline-none text-lg placeholder:text-muted-foreground"
+                autoFocus
+              />
+              <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(false)} className="rounded-xl">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Mobile Navigation Menu */}
