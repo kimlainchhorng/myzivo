@@ -170,69 +170,106 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
         animate={{ opacity: 1, scale: 1 }}
         className="relative"
       >
-        <div ref={mapContainer} className="h-[300px] rounded-2xl overflow-hidden ring-1 ring-border/50" />
+        <div ref={mapContainer} className="h-[320px] rounded-3xl overflow-hidden ring-1 ring-white/10" />
         
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 pointer-events-none rounded-2xl overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/40 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/30 to-transparent" />
+        {/* Premium gradient overlays */}
+        <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/60 via-background/20 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-background/50 to-transparent" />
+          <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-background/30 to-transparent" />
+          <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-background/30 to-transparent" />
         </div>
         
-        {/* ETA Overlay - Enhanced */}
+        {/* ETA Overlay - Premium Design */}
         <AnimatePresence>
           {eta && driverLocation && isActive && trip.status !== "arrived" && (
             <motion.div 
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              initial={{ opacity: 0, y: -15, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute top-4 left-4 bg-gradient-to-br from-card/98 to-card/90 backdrop-blur-xl px-5 py-4 rounded-2xl shadow-2xl shadow-black/20 border border-border/50"
+              exit={{ opacity: 0, y: -15, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="absolute top-4 left-4 bg-gradient-to-br from-card/98 via-card/95 to-card/90 backdrop-blur-2xl px-6 py-5 rounded-3xl shadow-2xl shadow-black/30 border border-white/10"
             >
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                {trip.status === "in_progress" ? "Arriving in" : "Driver arriving"}
-              </p>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span className="text-4xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent">{eta}</span>
-                <span className="text-sm text-muted-foreground font-medium">min</span>
+              <div className="flex items-center gap-2 mb-2">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-2 h-2 rounded-full bg-emerald-500"
+                />
+                <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
+                  {trip.status === "in_progress" ? "Arriving in" : "Driver arriving"}
+                </p>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <motion.span 
+                  key={eta}
+                  initial={{ scale: 1.3, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-5xl font-bold bg-gradient-to-r from-primary via-teal-400 to-emerald-400 bg-clip-text text-transparent"
+                >
+                  {eta}
+                </motion.span>
+                <span className="text-lg text-muted-foreground font-medium">min</span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Live indicator - Enhanced */}
+        {/* Live indicator - Premium */}
         {driverLocation && isActive && (
           <motion.div 
-            initial={{ opacity: 0, x: 10 }}
+            initial={{ opacity: 0, x: 15 }}
             animate={{ opacity: 1, x: 0 }}
-            className="absolute top-4 right-4 flex items-center gap-2.5 bg-gradient-to-r from-emerald-500/20 to-emerald-500/10 backdrop-blur-xl px-4 py-2.5 rounded-full shadow-xl border border-emerald-500/30"
+            className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-emerald-500/25 to-emerald-500/10 backdrop-blur-2xl px-5 py-3 rounded-2xl shadow-xl border border-emerald-500/30"
           >
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            <span className="relative flex h-3 w-3">
+              <motion.span 
+                animate={{ scale: [1, 2], opacity: [0.6, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="absolute inline-flex h-full w-full rounded-full bg-emerald-500"
+              />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-lg shadow-emerald-500/50" />
             </span>
-            <span className="text-xs font-bold text-emerald-500 uppercase tracking-wide">Live</span>
+            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Live</span>
           </motion.div>
         )}
 
-        {/* Vehicle type badge */}
+        {/* Vehicle & Fare Card - Premium */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="absolute bottom-4 left-4 right-4"
         >
-          <div className="flex items-center justify-between bg-card/95 backdrop-blur-xl rounded-xl px-4 py-3 shadow-xl border border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Car className="w-5 h-5 text-primary" />
-              </div>
+          <div className="flex items-center justify-between bg-gradient-to-r from-card/98 via-card/95 to-card/90 backdrop-blur-2xl rounded-2xl px-5 py-4 shadow-2xl shadow-black/20 border border-white/10">
+            <div className="flex items-center gap-4">
+              <motion.div 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center"
+              >
+                <Car className="w-6 h-6 text-primary" />
+              </motion.div>
               <div>
-                <p className="text-sm font-semibold">Premium Ride</p>
-                <p className="text-xs text-muted-foreground">{trip.driver ? "Driver assigned" : "Matching..."}</p>
+                <p className="text-sm font-bold">Premium Ride</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={cn(
+                    "w-1.5 h-1.5 rounded-full",
+                    trip.driver ? "bg-emerald-500" : "bg-amber-500 animate-pulse"
+                  )} />
+                  <p className="text-xs text-muted-foreground">{trip.driver ? "Driver assigned" : "Finding driver..."}</p>
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold text-primary">${trip.fare_amount?.toFixed(2)}</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total fare</p>
+              <motion.p 
+                key={trip.fare_amount}
+                initial={{ scale: 1.1 }}
+                animate={{ scale: 1 }}
+                className="text-xl font-bold bg-gradient-to-r from-primary to-emerald-400 bg-clip-text text-transparent"
+              >
+                ${trip.fare_amount?.toFixed(2)}
+              </motion.p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Total fare</p>
             </div>
           </div>
         </motion.div>
