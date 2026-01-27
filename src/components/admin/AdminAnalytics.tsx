@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
@@ -13,7 +12,6 @@ import {
   TrendingDown,
   Activity,
   Zap,
-  Target,
   Clock,
   Download,
   RefreshCw,
@@ -46,6 +44,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAnalyticsStats, useRevenueData, useTripsByType, useDailyTrips, useDriverActivity } from "@/hooks/useAnalytics";
 import { cn } from "@/lib/utils";
+import AdminLiveMetrics from "./AdminLiveMetrics";
+import AdminServiceHealth from "./AdminServiceHealth";
+import AdminQuickActions from "./AdminQuickActions";
+import AdminRecentActivity from "./AdminRecentActivity";
+import AdminPerformanceChart from "./AdminPerformanceChart";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "hsl(var(--primary))" },
@@ -497,6 +500,25 @@ const AdminAnalytics = () => {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Live Metrics & Performance */}
+      <AdminLiveMetrics />
+      
+      {/* Performance Chart */}
+      <AdminPerformanceChart />
+
+      {/* Bottom Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <AdminQuickActions />
+        </div>
+        <div className="lg:col-span-1">
+          <AdminServiceHealth />
+        </div>
+        <div className="lg:col-span-1">
+          <AdminRecentActivity />
+        </div>
       </div>
     </div>
   );

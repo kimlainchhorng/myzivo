@@ -1,0 +1,176 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { 
+  CheckCircle, 
+  AlertTriangle, 
+  XCircle,
+  Server,
+  Database,
+  Wifi,
+  Shield,
+  Clock,
+  Activity
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ServiceStatus {
+  name: string;
+  status: "operational" | "degraded" | "down";
+  latency?: number;
+  uptime?: number;
+  lastCheck?: string;
+  icon: React.ElementType;
+}
+
+const services: ServiceStatus[] = [
+  { 
+    name: "Ride Service", 
+    status: "operational", 
+    latency: 45, 
+    uptime: 99.9,
+    icon: Activity 
+  },
+  { 
+    name: "Food Delivery", 
+    status: "operational", 
+    latency: 52, 
+    uptime: 99.8,
+    icon: Activity 
+  },
+  { 
+    name: "Payment Gateway", 
+    status: "operational", 
+    latency: 120, 
+    uptime: 99.99,
+    icon: Shield 
+  },
+  { 
+    name: "Database", 
+    status: "operational", 
+    latency: 12, 
+    uptime: 99.95,
+    icon: Database 
+  },
+  { 
+    name: "Authentication", 
+    status: "operational", 
+    latency: 35, 
+    uptime: 99.99,
+    icon: Shield 
+  },
+  { 
+    name: "Real-time Sync", 
+    status: "operational", 
+    latency: 8, 
+    uptime: 99.7,
+    icon: Wifi 
+  },
+];
+
+const getStatusIcon = (status: ServiceStatus["status"]) => {
+  switch (status) {
+    case "operational":
+      return <CheckCircle className="h-4 w-4 text-green-500" />;
+    case "degraded":
+      return <AlertTriangle className="h-4 w-4 text-amber-500" />;
+    case "down":
+      return <XCircle className="h-4 w-4 text-red-500" />;
+  }
+};
+
+const getStatusBadge = (status: ServiceStatus["status"]) => {
+  switch (status) {
+    case "operational":
+      return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Operational</Badge>;
+    case "degraded":
+      return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Degraded</Badge>;
+    case "down":
+      return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Down</Badge>;
+  }
+};
+
+const getLatencyColor = (latency: number) => {
+  if (latency < 50) return "text-green-500";
+  if (latency < 100) return "text-amber-500";
+  return "text-red-500";
+};
+
+const AdminServiceHealth = () => {
+  const operationalCount = services.filter(s => s.status === "operational").length;
+  const overallHealth = (operationalCount / services.length) * 100;
+
+  return (
+    <Card className="border-0 bg-card/50 backdrop-blur-xl">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Server className="h-5 w-5 text-primary" />
+            <CardTitle>System Health</CardTitle>
+          </div>
+          <Badge variant="outline" className="gap-1">
+            <Clock className="h-3 w-3" />
+            Last checked: just now
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Overall Health */}
+        <div className="p-4 rounded-xl bg-muted/30 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Overall System Health</span>
+            <span className="text-sm text-muted-foreground">{overallHealth.toFixed(1)}%</span>
+          </div>
+          <Progress value={overallHealth} className="h-2" />
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              {operationalCount} Operational
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              {services.filter(s => s.status === "degraded").length} Degraded
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-red-500" />
+              {services.filter(s => s.status === "down").length} Down
+            </span>
+          </div>
+        </div>
+
+        {/* Service List */}
+        <div className="space-y-2">
+          {services.map((service) => (
+            <div 
+              key={service.name}
+              className="flex items-center justify-between p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {getStatusIcon(service.status)}
+                <div className="flex items-center gap-2">
+                  <service.icon className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-sm">{service.name}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                {service.latency && (
+                  <span className={cn("text-xs", getLatencyColor(service.latency))}>
+                    {service.latency}ms
+                  </span>
+                )}
+                {service.uptime && (
+                  <span className="text-xs text-muted-foreground">
+                    {service.uptime}% uptime
+                  </span>
+                )}
+                {getStatusBadge(service.status)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default AdminServiceHealth;
