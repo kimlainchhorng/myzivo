@@ -1,4 +1,3 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { Star, Quote, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -87,6 +86,7 @@ const getServiceConfig = (service: string) => {
 
 const TestimonialsSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -96,8 +96,19 @@ const TestimonialsSection = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const goNext = () => setActiveIndex((prev) => (prev + 1) % testimonials.length);
-  const goPrev = () => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+  const goNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setActiveIndex((prev) => (prev + 1) % testimonials.length);
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
+  
+  const goPrev = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    setTimeout(() => setIsTransitioning(false), 400);
+  };
 
   const currentTestimonial = testimonials[activeIndex];
   const serviceConfig = getServiceConfig(currentTestimonial.service);
@@ -111,48 +122,18 @@ const TestimonialsSection = () => {
       <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-primary/12 to-transparent rounded-full blur-3xl" />
       <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-gradient-radial from-sky-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating elements */}
-      <motion.div
-        animate={{ y: [0, -18, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40"
-      >
-        ⭐
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6.5, repeat: Infinity }}
-        className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30"
-      >
-        💬
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="absolute top-1/2 right-[12%] text-4xl hidden lg:block opacity-25"
-      >
-        💖
-      </motion.div>
+      {/* Static floating elements */}
+      <div className="absolute top-32 left-[10%] text-5xl hidden lg:block opacity-40 animate-float">⭐</div>
+      <div className="absolute bottom-40 right-[8%] text-4xl hidden lg:block opacity-30 animate-float-delayed">💬</div>
+      <div className="absolute top-1/2 right-[12%] text-4xl hidden lg:block opacity-25 animate-float">💖</div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-14 sm:mb-20"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
-          >
-            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-              <Sparkles className="w-4 h-4 text-primary" />
-            </motion.div>
+        <div className="text-center mb-14 sm:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300">
+            <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '4s' }} />
             <span className="text-muted-foreground">Customer Stories</span>
-          </motion.div>
+          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 px-2">
             Loved by{" "}
             <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
@@ -162,144 +143,100 @@ const TestimonialsSection = () => {
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4 leading-relaxed">
             See what our customers, drivers, and partners have to say about ZIVO
           </p>
-        </motion.div>
+        </div>
 
         {/* Featured Testimonial */}
         <div className="max-w-4xl mx-auto mb-10 sm:mb-14">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative"
-          >
+          <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '150ms', animationFillMode: 'both' }}>
             <div className="p-6 sm:p-10 lg:p-14 rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl relative overflow-hidden">
               {/* Animated border glow */}
-              <motion.div
-                animate={{ 
-                  background: [
-                    "linear-gradient(0deg, transparent, rgba(34, 197, 94, 0.3))",
-                    "linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.3))",
-                    "linear-gradient(180deg, transparent, rgba(34, 197, 94, 0.3))",
-                    "linear-gradient(270deg, transparent, rgba(34, 197, 94, 0.3))",
-                    "linear-gradient(360deg, transparent, rgba(34, 197, 94, 0.3))"
-                  ]
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 rounded-3xl pointer-events-none"
-              />
+              <div className="absolute inset-0 rounded-3xl pointer-events-none animate-border-glow" />
               
               {/* Shine sweep */}
-              <motion.div
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "linear", repeatDelay: 3 }}
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none"
-              />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-12 pointer-events-none animate-shine" />
               
               {/* Decorative quote */}
-              <motion.div 
-                animate={{ rotate: [0, 5, 0], scale: [1, 1.05, 1] }}
-                transition={{ duration: 6, repeat: Infinity }}
+              <div className={cn(
+                "absolute top-4 left-4 sm:top-6 sm:left-6 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center opacity-10",
+                serviceConfig.gradient
+              )}>
+                <Quote className="w-10 h-10 sm:w-12 sm:h-12" />
+              </div>
+              
+              {/* Corner glow */}
+              <div className={cn(
+                "absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br rounded-full blur-3xl opacity-20 animate-pulse-slow",
+                serviceConfig.gradient
+              )} />
+              
+              <div
+                key={activeIndex}
                 className={cn(
-                  "absolute top-4 left-4 sm:top-6 sm:left-6 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br flex items-center justify-center opacity-10",
-                  serviceConfig.gradient
+                  "relative z-10 transition-all duration-400",
+                  isTransitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"
                 )}
               >
-                <Quote className="w-10 h-10 sm:w-12 sm:h-12" />
-              </motion.div>
-              
-              {/* Animated corner glow */}
-              <motion.div 
-                animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className={cn(
-                  "absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br rounded-full blur-3xl",
-                  serviceConfig.gradient
-                )} 
-              />
-              
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeIndex}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="relative z-10"
-                >
-                  {/* Stars */}
-                  <div className="flex items-center gap-1 mb-6 sm:mb-8">
-                    {[...Array(5)].map((_, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: i * 0.1, type: "spring" }}
-                      >
-                        <Star 
-                          className={cn(
-                            "w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 fill-current",
-                            serviceConfig.text
-                          )} 
-                        />
-                      </motion.div>
-                    ))}
-                  </div>
+                {/* Stars */}
+                <div className="flex items-center gap-1 mb-6 sm:mb-8">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i}
+                      className={cn(
+                        "w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 fill-current animate-in zoom-in-50",
+                        serviceConfig.text
+                      )} 
+                      style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'both' }}
+                    />
+                  ))}
+                </div>
 
-                  {/* Quote text */}
-                  <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl text-foreground font-medium mb-8 sm:mb-10 leading-relaxed">
-                    "{currentTestimonial.text}"
-                  </p>
+                {/* Quote text */}
+                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl text-foreground font-medium mb-8 sm:mb-10 leading-relaxed">
+                  "{currentTestimonial.text}"
+                </p>
 
-                  {/* Author info */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <motion.div 
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className={cn(
-                          "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg",
-                          serviceConfig.gradient
-                        )}
-                      >
-                        {currentTestimonial.avatar}
-                      </motion.div>
-                      <div>
-                        <p className="font-bold text-foreground text-lg sm:text-xl">{currentTestimonial.name}</p>
-                        <p className="text-sm sm:text-base text-muted-foreground">
-                          {currentTestimonial.role} • {currentTestimonial.location}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={cn(
-                      "self-start sm:self-auto px-4 py-2 rounded-full text-sm font-semibold",
-                      serviceConfig.bg, serviceConfig.text
+                {/* Author info */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center text-2xl sm:text-3xl shadow-lg transition-transform hover:scale-105",
+                      serviceConfig.gradient
                     )}>
-                      {currentTestimonial.service}
-                    </span>
+                      {currentTestimonial.avatar}
+                    </div>
+                    <div>
+                      <p className="font-bold text-foreground text-lg sm:text-xl">{currentTestimonial.name}</p>
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        {currentTestimonial.role} • {currentTestimonial.location}
+                      </p>
+                    </div>
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                  <span className={cn(
+                    "self-start sm:self-auto px-4 py-2 rounded-full text-sm font-semibold",
+                    serviceConfig.bg, serviceConfig.text
+                  )}>
+                    {currentTestimonial.service}
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Navigation arrows */}
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between pointer-events-none px-2 sm:-mx-6">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={goPrev}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-colors"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all hover:scale-105 active:scale-95"
               >
                 <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              </button>
+              <button
                 onClick={goNext}
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-colors"
+                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-background/90 backdrop-blur-sm border border-border shadow-xl flex items-center justify-center pointer-events-auto hover:border-primary/50 transition-all hover:scale-105 active:scale-95"
               >
                 <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-              </motion.button>
+              </button>
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* Navigation Dots */}
@@ -307,13 +244,11 @@ const TestimonialsSection = () => {
           {testimonials.map((testimonial, index) => {
             const config = getServiceConfig(testimonial.service);
             return (
-              <motion.button
+              <button
                 key={index}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
                 onClick={() => setActiveIndex(index)}
                 className={cn(
-                  "h-2.5 sm:h-3 rounded-full transition-all duration-300 touch-manipulation",
+                  "h-2.5 sm:h-3 rounded-full transition-all duration-300 touch-manipulation hover:scale-110",
                   index === activeIndex 
                     ? `w-8 sm:w-10 bg-gradient-to-r ${config.gradient}` 
                     : 'w-2.5 sm:w-3 bg-muted hover:bg-muted-foreground/50'
@@ -325,28 +260,18 @@ const TestimonialsSection = () => {
         </div>
 
         {/* Testimonial Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="hidden sm:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
-        >
+        <div className="hidden sm:grid md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {testimonials.slice(0, 3).map((testimonial, index) => {
             const config = getServiceConfig(testimonial.service);
             return (
-              <motion.div
+              <div
                 key={testimonial.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 + index * 0.1 }}
-                whileHover={{ y: -8 }}
                 onClick={() => setActiveIndex(index)}
                 className={cn(
-                  "p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden",
+                  "p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-4",
                   index === activeIndex % 3 && "ring-2 ring-primary/50"
                 )}
+                style={{ animationDelay: `${200 + index * 75}ms`, animationFillMode: 'both' }}
               >
                 {/* Corner glow */}
                 <div className={cn(
@@ -372,10 +297,10 @@ const TestimonialsSection = () => {
                     <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
