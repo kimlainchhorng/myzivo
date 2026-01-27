@@ -160,13 +160,19 @@ const CustomerDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent opacity-30 pointer-events-none" />
+      
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+          <motion.div 
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
+          >
             <Sparkles className="h-5 w-5 text-white" />
-          </div>
+          </motion.div>
           <div>
             <span className="font-bold">ZIVO</span>
             <span className="text-xs text-muted-foreground block">Dashboard</span>
@@ -188,7 +194,7 @@ const CustomerDashboard = () => {
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex relative z-10">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:block w-72 min-h-screen border-r border-border/50 bg-card/50 backdrop-blur-sm sticky top-0">
           <NavContent />
@@ -197,6 +203,28 @@ const CustomerDashboard = () => {
         {/* Main Content */}
         <main className="flex-1 p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
+            {/* Welcome Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <motion.div 
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                >
+                  <span className="text-3xl">👋</span>
+                </motion.div>
+                <h1 className="font-display text-2xl sm:text-3xl font-bold">
+                  Welcome back{user?.email?.split('@')[0] ? `, ${user.email.split('@')[0]}` : ''}!
+                </h1>
+              </div>
+              <p className="text-muted-foreground">
+                Here's an overview of your bookings and activity
+              </p>
+            </motion.div>
+
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="hidden">
                 {navItems.map((item) => (

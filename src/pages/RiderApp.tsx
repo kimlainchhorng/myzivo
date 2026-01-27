@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Phone, MessageSquare } from "lucide-react";
+import { ArrowLeft, Loader2, Clock, MapPin, Star, Shield, Zap, Car, Navigation, Phone, MessageSquare, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LocationSearchInput from "@/components/rider/LocationSearchInput";
 import VehicleSelector from "@/components/rider/VehicleSelector";
@@ -13,6 +13,7 @@ import QuickLocationPicker from "@/components/rider/QuickLocationPicker";
 import TripTracker from "@/components/rider/TripTracker";
 import { StatusTracker, LivePulse, ETADisplay } from "@/components/ui/status-tracker";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import {
   Location,
   FareEstimate,
@@ -34,9 +35,9 @@ const bookingSteps = [
 ];
 
 const quickStats = [
-  { icon: Clock, value: "< 5 min", label: "Avg pickup" },
-  { icon: Star, value: "4.9★", label: "Driver rating" },
-  { icon: Shield, value: "100%", label: "Verified" },
+  { icon: Clock, value: "< 5 min", label: "Avg pickup", gradient: "from-primary to-teal-400" },
+  { icon: Star, value: "4.9★", label: "Driver rating", gradient: "from-amber-500 to-orange-500" },
+  { icon: Shield, value: "100%", label: "Verified", gradient: "from-emerald-500 to-green-500" },
 ];
 
 const RiderApp = () => {
@@ -79,7 +80,6 @@ const RiderApp = () => {
       return data as Trip | null;
     },
     enabled: !!user,
-    // Reduced polling since we have realtime now
     refetchInterval: 30000,
   });
 
@@ -157,17 +157,26 @@ const RiderApp = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Sign in to book a ride</h2>
-            <p className="text-muted-foreground mb-4">You need to be logged in to request trips</p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => navigate("/")}>Home</Button>
-              <Button onClick={() => navigate("/login")}>Sign In</Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                <Car className="w-8 h-8 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Sign in to book a ride</h2>
+              <p className="text-muted-foreground mb-6">You need to be logged in to request trips</p>
+              <div className="flex gap-3 justify-center">
+                <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl">Home</Button>
+                <Button onClick={() => navigate("/login")} className="rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white">Sign In</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   }
@@ -175,9 +184,9 @@ const RiderApp = () => {
   if (tripLoading) {
     return (
       <div className="min-h-screen bg-background p-4">
-        <Skeleton className="h-[300px] w-full rounded-xl mb-4" />
-        <Skeleton className="h-20 w-full rounded-xl mb-2" />
-        <Skeleton className="h-20 w-full rounded-xl" />
+        <Skeleton className="h-[300px] w-full rounded-2xl mb-4" />
+        <Skeleton className="h-20 w-full rounded-2xl mb-2" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
       </div>
     );
   }
@@ -186,12 +195,20 @@ const RiderApp = () => {
   if (activeTrip && step === "tracking") {
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b p-4">
+        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-semibold text-lg">Your Trip</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+                <Navigation className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-bold">Your Trip</h1>
+                <p className="text-xs text-muted-foreground">In progress</p>
+              </div>
+            </div>
           </div>
         </div>
         <div className="p-4">
@@ -205,11 +222,11 @@ const RiderApp = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
+      {/* Premium Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 p-4"
+        className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -217,20 +234,25 @@ const RiderApp = () => {
               variant="ghost" 
               size="icon" 
               onClick={() => step === "location" ? navigate("/") : handleReset()}
-              className="rounded-full"
+              className="rounded-xl"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="font-display font-bold text-lg">
-                {step === "location" && "Where to?"}
-                {step === "vehicle" && "Choose a ride"}
-                {step === "confirm" && "Confirm booking"}
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                {step === "location" && "Enter your destination"}
-                {step === "vehicle" && `${routeInfo?.distance.toFixed(1)} km • ${routeInfo?.duration} min`}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                <Car className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="font-display font-bold text-lg">
+                  {step === "location" && "Where to?"}
+                  {step === "vehicle" && "Choose a ride"}
+                  {step === "confirm" && "Confirm booking"}
+                </h1>
+                <p className="text-xs text-muted-foreground">
+                  {step === "location" && "Enter your destination"}
+                  {step === "vehicle" && `${routeInfo?.distance.toFixed(1)} km • ${routeInfo?.duration} min`}
+                </p>
+              </div>
             </div>
           </div>
           <LivePulse color="rides" size="sm" label="Live" />
@@ -261,9 +283,9 @@ const RiderApp = () => {
             <motion.div 
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="flex items-center gap-2 bg-card px-4 py-3 rounded-2xl shadow-lg border border-white/10"
+              className="flex items-center gap-3 bg-card/95 px-5 py-4 rounded-2xl shadow-xl border border-border/50"
             >
-              <Loader2 className="w-5 h-5 animate-spin text-rides" />
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
               <span className="font-medium">Finding best routes...</span>
             </motion.div>
           </div>
@@ -282,9 +304,14 @@ const RiderApp = () => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
-                className="glass-card px-3 py-2 rounded-xl flex items-center gap-2"
+                className="px-4 py-2.5 rounded-xl bg-card/95 backdrop-blur-sm border border-border/50 shadow-xl flex items-center gap-2.5"
               >
-                <stat.icon className="w-4 h-4 text-rides" />
+                <div className={cn(
+                  "w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center",
+                  stat.gradient
+                )}>
+                  <stat.icon className="w-4 h-4 text-white" />
+                </div>
                 <div>
                   <p className="text-sm font-bold">{stat.value}</p>
                   <p className="text-[10px] text-muted-foreground">{stat.label}</p>
@@ -295,15 +322,15 @@ const RiderApp = () => {
         )}
       </div>
 
-      {/* Bottom Sheet */}
+      {/* Premium Bottom Sheet */}
       <motion.div 
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        className="bg-card border-t border-white/10 rounded-t-3xl shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.5)]"
+        className="bg-gradient-to-b from-card to-card/95 border-t border-border/50 rounded-t-3xl shadow-[0_-20px_50px_-12px_rgba(0,0,0,0.3)]"
       >
-        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mt-3" />
+        <div className="w-12 h-1.5 bg-muted/50 rounded-full mx-auto mt-3" />
         
-        <div className="p-4 max-h-[60vh] overflow-y-auto">
+        <div className="p-5 max-h-[60vh] overflow-y-auto">
           {/* Location Step */}
           <AnimatePresence mode="wait">
             {step === "location" && (
@@ -312,7 +339,7 @@ const RiderApp = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
+                className="space-y-5"
               >
                 {/* Quick Location Picker */}
                 <QuickLocationPicker
@@ -342,9 +369,11 @@ const RiderApp = () => {
                 </div>
 
                 {/* Saved Locations */}
-                <div className="pt-2 border-t border-white/10">
-                  <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-rides" />
+                <div className="pt-4 border-t border-border/50">
+                  <p className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <MapPin className="w-3.5 h-3.5 text-primary" />
+                    </div>
                     Saved Places
                   </p>
                   <SavedLocationsPanel
@@ -368,19 +397,19 @@ const RiderApp = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
+                className="space-y-5"
               >
                 {/* Route Summary */}
-                <div className="glass-card p-3 rounded-xl flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-rides/10">
-                    <Navigation className="w-5 h-5 text-rides" />
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+                    <Navigation className="w-6 h-6 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium truncate">{pickup?.address}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{pickup?.address}</p>
                     <p className="text-xs text-muted-foreground truncate">→ {dropoff?.address}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-rides">{routeInfo?.duration} min</p>
+                    <p className="text-lg font-bold text-primary">{routeInfo?.duration} min</p>
                     <p className="text-xs text-muted-foreground">{routeInfo?.distance.toFixed(1)} km</p>
                   </div>
                 </div>
@@ -391,25 +420,26 @@ const RiderApp = () => {
                   onSelect={setSelectedVehicle}
                 />
                 
-                <Button
-                  variant="rides"
-                  size="lg"
-                  className="w-full h-14 text-base font-bold gap-2"
-                  disabled={!selectedVehicle || createTrip.isPending}
-                  onClick={handleConfirmBooking}
-                >
-                  {createTrip.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Finding driver...
-                    </>
-                  ) : (
-                    <>
-                      <Zap className="w-5 h-5" />
-                      Confirm ${selectedFare?.totalFare.toFixed(2)}
-                    </>
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <Button
+                    size="lg"
+                    className="w-full h-16 text-lg font-bold gap-3 rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30"
+                    disabled={!selectedVehicle || createTrip.isPending}
+                    onClick={handleConfirmBooking}
+                  >
+                    {createTrip.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Finding driver...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Confirm ${selectedFare?.totalFare.toFixed(2)}
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
