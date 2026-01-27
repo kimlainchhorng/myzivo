@@ -198,7 +198,7 @@ const VehicleSelector = ({
                     ${estimate.totalFare.toFixed(2)}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {estimate.estimatedDistance.toFixed(1)} km
+                    {(estimate.estimatedDistance * 0.621371).toFixed(1)} mi
                   </p>
                 </div>
                 
