@@ -64,11 +64,34 @@ const CTASection = () => {
           viewport={{ once: true }}
           className="max-w-5xl mx-auto"
         >
-          <div className="relative p-8 sm:p-12 lg:p-20 rounded-[3rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden">
+          <div className="relative p-8 sm:p-12 lg:p-20 rounded-[3rem] bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-2xl overflow-hidden group">
+            {/* Animated border glow */}
+            <motion.div 
+              className="absolute inset-0 rounded-[3rem] opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+              style={{
+                background: 'linear-gradient(90deg, hsl(var(--primary)/0.3), hsl(var(--eats)/0.3), hsl(var(--primary)/0.3))',
+                backgroundSize: '200% 100%',
+                filter: 'blur(20px)',
+                zIndex: -1,
+              }}
+              animate={{
+                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+              }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'linear' }}
+            />
+            
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-primary/15 to-transparent rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-60 h-60 bg-gradient-to-tr from-eats/15 to-transparent rounded-full blur-3xl" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
+            
+            {/* Shine sweep effect */}
+            <motion.div
+              initial={{ x: '-100%', opacity: 0 }}
+              animate={{ x: '200%', opacity: [0, 0.15, 0] }}
+              transition={{ duration: 4, repeat: Infinity, repeatDelay: 3 }}
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent skew-x-12 pointer-events-none"
+            />
             
             <div className="relative text-center">
               <motion.div
@@ -82,6 +105,11 @@ const CTASection = () => {
                   <Sparkles className="w-4 h-4" />
                 </motion.div>
                 Join millions of users
+                <motion.span 
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-2 h-2 rounded-full bg-emerald-500"
+                />
               </motion.div>
 
               <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-8">
@@ -138,24 +166,32 @@ const CTASection = () => {
                 </motion.div>
               </div>
 
-              {/* App Store Badges */}
+              {/* App Store Badges - Enhanced */}
               <div className="flex justify-center gap-4 mt-8">
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="px-5 py-3 rounded-xl bg-foreground text-background flex items-center gap-3 cursor-pointer"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative px-5 py-3 rounded-xl bg-foreground text-background flex items-center gap-3 cursor-pointer overflow-hidden group/badge"
                 >
-                  <div className="text-2xl">🍎</div>
-                  <div className="text-left">
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity"
+                  />
+                  <div className="text-2xl relative z-10">🍎</div>
+                  <div className="text-left relative z-10">
                     <p className="text-[10px] opacity-80">Download on the</p>
                     <p className="font-semibold text-sm">App Store</p>
                   </div>
                 </motion.div>
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="px-5 py-3 rounded-xl bg-foreground text-background flex items-center gap-3 cursor-pointer"
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="relative px-5 py-3 rounded-xl bg-foreground text-background flex items-center gap-3 cursor-pointer overflow-hidden group/badge"
                 >
-                  <div className="text-2xl">▶️</div>
-                  <div className="text-left">
+                  <motion.div 
+                    className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover/badge:opacity-100 transition-opacity"
+                  />
+                  <div className="text-2xl relative z-10">▶️</div>
+                  <div className="text-left relative z-10">
                     <p className="text-[10px] opacity-80">Get it on</p>
                     <p className="font-semibold text-sm">Google Play</p>
                   </div>
