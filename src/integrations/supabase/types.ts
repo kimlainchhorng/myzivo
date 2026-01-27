@@ -47,6 +47,44 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_driver_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          metadata: Json | null
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_driver_actions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       airlines: {
         Row: {
           code: string
@@ -540,6 +578,45 @@ export type Database = {
           },
         ]
       }
+      commission_settings: {
+        Row: {
+          commission_percentage: number
+          created_at: string
+          id: string
+          is_active: boolean | null
+          maximum_fee: number | null
+          minimum_fee: number | null
+          name: string
+          service_type: string
+          updated_at: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          commission_percentage?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          maximum_fee?: number | null
+          minimum_fee?: number | null
+          name: string
+          service_type: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          commission_percentage?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          maximum_fee?: number | null
+          minimum_fee?: number | null
+          name?: string
+          service_type?: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
       community_tip_likes: {
         Row: {
           created_at: string
@@ -883,6 +960,53 @@ export type Database = {
           },
         ]
       }
+      driver_cash_collections: {
+        Row: {
+          amount: number
+          collection_method: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          notes: string | null
+          reference_number: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          collection_method?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          notes?: string | null
+          reference_number?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          collection_method?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          notes?: string | null
+          reference_number?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_cash_collections_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_certifications: {
         Row: {
           certification_icon: string
@@ -964,6 +1088,69 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_earnings: {
+        Row: {
+          base_amount: number
+          bonus_amount: number | null
+          created_at: string
+          description: string | null
+          driver_id: string
+          earning_type: string
+          id: string
+          is_cash_collected: boolean | null
+          net_amount: number
+          payment_method: string | null
+          platform_fee: number | null
+          tip_amount: number | null
+          trip_id: string | null
+        }
+        Insert: {
+          base_amount?: number
+          bonus_amount?: number | null
+          created_at?: string
+          description?: string | null
+          driver_id: string
+          earning_type?: string
+          id?: string
+          is_cash_collected?: boolean | null
+          net_amount?: number
+          payment_method?: string | null
+          platform_fee?: number | null
+          tip_amount?: number | null
+          trip_id?: string | null
+        }
+        Update: {
+          base_amount?: number
+          bonus_amount?: number | null
+          created_at?: string
+          description?: string | null
+          driver_id?: string
+          earning_type?: string
+          id?: string
+          is_cash_collected?: boolean | null
+          net_amount?: number
+          payment_method?: string | null
+          platform_fee?: number | null
+          tip_amount?: number | null
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
             referencedColumns: ["id"]
           },
         ]
@@ -1150,6 +1337,47 @@ export type Database = {
           {
             foreignKeyName: "driver_referrals_referrer_id_fkey"
             columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_schedules: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          driver_id: string
+          end_time: string
+          id: string
+          is_active: boolean | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          driver_id: string
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          driver_id?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_schedules_driver_id_fkey"
+            columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
             referencedColumns: ["id"]

@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import AdminUserManagement from "@/components/admin/AdminUserManagement";
-import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
+import AdminDriverManagement from "@/components/admin/AdminDriverManagement";
 import AdminTripMonitoring from "@/components/admin/AdminTripMonitoring";
 import AdminPricingControls from "@/components/admin/AdminPricingControls";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
@@ -221,7 +221,7 @@ const AdminDashboard = () => {
             <TabsContent value="activity" className="mt-0"><AdminActivityFeed /></TabsContent>
             <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
-            <TabsContent value="drivers" className="mt-0"><AdminDriverVerification /></TabsContent>
+            <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
             <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
             <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>

@@ -6,10 +6,14 @@ export type OnlineDriver = {
   full_name: string;
   vehicle_type: string;
   vehicle_model: string | null;
+  vehicle_plate: string;
   current_lat: number | null;
   current_lng: number | null;
   is_online: boolean | null;
   status: string | null;
+  avatar_url: string | null;
+  rating: number | null;
+  phone: string;
 };
 
 export const useOnlineDrivers = () => {
@@ -18,7 +22,7 @@ export const useOnlineDrivers = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, full_name, vehicle_type, vehicle_model, current_lat, current_lng, is_online, status")
+        .select("id, full_name, vehicle_type, vehicle_model, vehicle_plate, current_lat, current_lng, is_online, status, avatar_url, rating, phone")
         .eq("is_online", true)
         .eq("status", "verified")
         .not("current_lat", "is", null)
