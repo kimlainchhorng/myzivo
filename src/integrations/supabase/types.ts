@@ -802,6 +802,41 @@ export type Database = {
           },
         ]
       }
+      driver_certifications: {
+        Row: {
+          certification_icon: string
+          certification_name: string
+          description: string | null
+          driver_id: string
+          earned_at: string
+          id: string
+        }
+        Insert: {
+          certification_icon?: string
+          certification_name: string
+          description?: string | null
+          driver_id: string
+          earned_at?: string
+          id?: string
+        }
+        Update: {
+          certification_icon?: string
+          certification_name?: string
+          description?: string | null
+          driver_id?: string
+          earned_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_certifications_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -1166,6 +1201,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "driver_shifts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_training_progress: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          driver_id: string
+          id: string
+          lessons_completed: number
+          started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          driver_id: string
+          id?: string
+          lessons_completed?: number
+          started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          driver_id?: string
+          id?: string
+          lessons_completed?: number
+          started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_training_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_training_progress_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers"
@@ -4232,6 +4315,56 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_courses: {
+        Row: {
+          badge_id: string | null
+          category: string
+          created_at: string
+          description: string
+          duration_minutes: number
+          id: string
+          is_locked_by_default: boolean | null
+          lessons_count: number
+          prerequisite_course_id: string | null
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          badge_id?: string | null
+          category?: string
+          created_at?: string
+          description: string
+          duration_minutes?: number
+          id?: string
+          is_locked_by_default?: boolean | null
+          lessons_count?: number
+          prerequisite_course_id?: string | null
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          badge_id?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          duration_minutes?: number
+          id?: string
+          is_locked_by_default?: boolean | null
+          lessons_count?: number
+          prerequisite_course_id?: string | null
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_courses_prerequisite_course_id_fkey"
+            columns: ["prerequisite_course_id"]
+            isOneToOne: false
+            referencedRelation: "training_courses"
             referencedColumns: ["id"]
           },
         ]
