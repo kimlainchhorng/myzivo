@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, History, Eye, User, Settings, Shield, Database, FileEdit, Trash2, Plus, AlertCircle } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, History, Eye, User, Settings, Shield, Database, FileEdit, Trash2, Plus, AlertCircle, RefreshCw, Download, Calendar as CalendarIcon, Clock, TrendingUp } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { format, subDays, isAfter, parseISO } from "date-fns";
+import { toast } from "sonner";
 
 interface AuditLog {
   id: string;
@@ -52,18 +56,30 @@ const AdminAuditLogs = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [actionFilter, setActionFilter] = useState<string>("all");
   const [entityFilter, setEntityFilter] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  });
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ["admin-audit-logs"],
+  const { data: logs, isLoading, refetch } = useQuery({
+    queryKey: ["admin-audit-logs", dateRange],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("audit_logs")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(200);
+        .limit(500);
       
+      if (dateRange.from) {
+        query = query.gte("created_at", dateRange.from.toISOString());
+      }
+      if (dateRange.to) {
+        query = query.lte("created_at", dateRange.to.toISOString());
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as AuditLog[];
     },
@@ -83,6 +99,14 @@ const AdminAuditLogs = () => {
 
   const uniqueActions = [...new Set(logs?.map(l => l.action) || [])];
   const uniqueEntities = [...new Set(logs?.map(l => l.entity_type) || [])];
+
+  // Stats
+  const todayLogs = logs?.filter(l => 
+    isAfter(parseISO(l.created_at), subDays(new Date(), 1))
+  ).length || 0;
+  const createCount = logs?.filter(l => l.action.toLowerCase() === 'create').length || 0;
+  const updateCount = logs?.filter(l => l.action.toLowerCase() === 'update').length || 0;
+  const deleteCount = logs?.filter(l => l.action.toLowerCase() === 'delete').length || 0;
 
   const getActionIcon = (action: string) => {
     return actionIcons[action.toLowerCase()] || actionIcons.default;
@@ -104,19 +128,54 @@ const AdminAuditLogs = () => {
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    return format(date, "MMM d, yyyy");
+  };
+
+  const handleExport = () => {
+    if (!filteredLogs.length) return;
+    const csv = [
+      ["Timestamp", "Action", "Entity Type", "Entity ID", "User ID", "IP Address"].join(","),
+      ...filteredLogs.map(log => [
+        format(parseISO(log.created_at), "yyyy-MM-dd HH:mm:ss"),
+        log.action,
+        log.entity_type,
+        log.entity_id || "",
+        log.user_id || "System",
+        log.ip_address || "",
+      ].join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `audit-logs-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    toast.success("Audit logs exported");
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10">
-          <History className="h-6 w-6 text-indigo-500" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10">
+            <History className="h-6 w-6 text-indigo-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Audit Logs</h1>
+            <p className="text-muted-foreground">Track all system activities and changes</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">Audit Logs</h1>
-          <p className="text-muted-foreground">Track all system activities and changes</p>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+            <Download className="h-4 w-4" />
+            Export
+          </Button>
         </div>
       </div>
 
@@ -125,11 +184,11 @@ const AdminAuditLogs = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-indigo-500/10">
-              <History className="h-5 w-5 text-indigo-500" />
+              <TrendingUp className="h-5 w-5 text-indigo-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Total Events</p>
-              <p className="text-lg font-semibold">{logs?.length || 0}</p>
+              <p className="text-sm text-muted-foreground">Today</p>
+              <p className="text-lg font-semibold">{todayLogs}</p>
             </div>
           </CardContent>
         </Card>
@@ -140,9 +199,7 @@ const AdminAuditLogs = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Creates</p>
-              <p className="text-lg font-semibold">
-                {logs?.filter(l => l.action.toLowerCase() === 'create').length || 0}
-              </p>
+              <p className="text-lg font-semibold">{createCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -153,9 +210,7 @@ const AdminAuditLogs = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Updates</p>
-              <p className="text-lg font-semibold">
-                {logs?.filter(l => l.action.toLowerCase() === 'update').length || 0}
-              </p>
+              <p className="text-lg font-semibold">{updateCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -166,9 +221,7 @@ const AdminAuditLogs = () => {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Deletes</p>
-              <p className="text-lg font-semibold">
-                {logs?.filter(l => l.action.toLowerCase() === 'delete').length || 0}
-              </p>
+              <p className="text-lg font-semibold">{deleteCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -195,6 +248,28 @@ const AdminAuditLogs = () => {
                   className="pl-9 bg-background/50 border-border/50"
                 />
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    {dateRange.from && dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
+                      </>
+                    ) : (
+                      "Date Range"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="range"
+                    selected={{ from: dateRange.from!, to: dateRange.to! }}
+                    onSelect={(range) => setDateRange({ from: range?.from || null, to: range?.to || null })}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
               <Select value={actionFilter} onValueChange={setActionFilter}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Action" />
@@ -257,7 +332,7 @@ const AdminAuditLogs = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredLogs.map((log) => {
+                  filteredLogs.slice(0, 100).map((log) => {
                     const Icon = getActionIcon(log.action);
                     const colors = getActionColor(log.action);
                     return (
@@ -278,7 +353,10 @@ const AdminAuditLogs = () => {
                           {log.ip_address || "—"}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {formatTimestamp(log.created_at)}
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatTimestamp(log.created_at)}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Button
@@ -300,6 +378,11 @@ const AdminAuditLogs = () => {
               </TableBody>
             </Table>
           </div>
+          {filteredLogs.length > 100 && (
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Showing 100 of {filteredLogs.length} results
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -332,7 +415,7 @@ const AdminAuditLogs = () => {
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">Timestamp</p>
-                  <p className="font-medium">{new Date(selectedLog.created_at).toLocaleString()}</p>
+                  <p className="font-medium">{format(parseISO(selectedLog.created_at), "PPpp")}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground mb-1">IP Address</p>
