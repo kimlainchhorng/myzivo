@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap
+  Activity, FileText, Zap, TrendingUp, Trophy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -30,6 +30,9 @@ import AdminSupportTickets from "@/components/admin/AdminSupportTickets";
 import AdminPromotions from "@/components/admin/AdminPromotions";
 import AdminReports from "@/components/admin/AdminReports";
 import AdminActivityFeed from "@/components/admin/AdminActivityFeed";
+import AdminDriverPerformance from "@/components/admin/AdminDriverPerformance";
+import AdminDriverEarnings from "@/components/admin/AdminDriverEarnings";
+import AdminDriverScoring from "@/components/admin/AdminDriverScoring";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -50,6 +53,11 @@ const AdminDashboard = () => {
       { value: "roles", label: "Roles", icon: Crown, gradient: "from-amber-500 to-orange-500" },
       { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
       { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+    ]},
+    { title: "Driver Management", items: [
+      { value: "scoring", label: "Performance", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
+      { value: "earnings", label: "Earnings", icon: DollarSign, gradient: "from-green-500 to-emerald-500" },
+      { value: "performance", label: "Analytics", icon: TrendingUp, gradient: "from-blue-500 to-cyan-500" },
     ]},
     { title: "Operations", items: [
       { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
@@ -223,6 +231,9 @@ const AdminDashboard = () => {
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
             <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
+            <TabsContent value="scoring" className="mt-0"><AdminDriverScoring /></TabsContent>
+            <TabsContent value="earnings" className="mt-0"><AdminDriverEarnings /></TabsContent>
+            <TabsContent value="performance" className="mt-0"><AdminDriverPerformance /></TabsContent>
             <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
             <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
