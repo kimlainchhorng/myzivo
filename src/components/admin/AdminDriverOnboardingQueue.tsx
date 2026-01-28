@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Dialog, 
@@ -13,6 +13,13 @@ import {
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   UserPlus, 
@@ -27,11 +34,13 @@ import {
   Shield,
   AlertTriangle,
   Eye,
-  ChevronRight
+  Search,
+  Filter
 } from "lucide-react";
 import { useDrivers, useUpdateDriverStatus, Driver } from "@/hooks/useDrivers";
-import { useDriverDocuments } from "@/hooks/useDriverDocuments";
-import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -40,12 +49,55 @@ const AdminDriverOnboardingQueue = () => {
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [vehicleFilter, setVehicleFilter] = useState("all");
 
   const { data: drivers, isLoading } = useDrivers();
   const updateStatus = useUpdateDriverStatus();
+
+  // Fetch document counts for pending drivers
+  const { data: documentCounts } = useQuery({
+    queryKey: ["driver-document-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("driver_documents")
+        .select("driver_id, status");
+      if (error) throw error;
+      
+      const counts: Record<string, { total: number; approved: number }> = {};
+      data?.forEach(doc => {
+        if (!counts[doc.driver_id]) {
+          counts[doc.driver_id] = { total: 0, approved: 0 };
+        }
+        counts[doc.driver_id].total++;
+        if (doc.status === "approved") {
+          counts[doc.driver_id].approved++;
+        }
+      });
+      return counts;
+    },
+  });
   
-  const pendingDrivers = drivers?.filter(d => d.status === "pending") || [];
+  const allPendingDrivers = drivers?.filter(d => d.status === "pending") || [];
+  const pendingDrivers = allPendingDrivers.filter(d => {
+    const matchesSearch = d.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.vehicle_plate.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesVehicle = vehicleFilter === "all" || d.vehicle_type === vehicleFilter;
+    return matchesSearch && matchesVehicle;
+  });
   const recentApproved = drivers?.filter(d => d.status === "verified").slice(0, 5) || [];
+
+  // Calculate stats
+  const approvedToday = drivers?.filter(d => {
+    const today = new Date().toDateString();
+    return d.status === "verified" && new Date(d.updated_at).toDateString() === today;
+  }).length || 0;
+
+  const approvedThisWeek = drivers?.filter(d => {
+    const weekAgo = subDays(new Date(), 7);
+    return d.status === "verified" && new Date(d.updated_at) >= weekAgo;
+  }).length || 0;
 
   const handleApprove = (driver: Driver) => {
     updateStatus.mutate(
@@ -129,11 +181,11 @@ const AdminDriverOnboardingQueue = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Avg Review Time</p>
-                <p className="text-3xl font-bold text-blue-500">2.4h</p>
+                <p className="text-sm text-muted-foreground">Approved This Week</p>
+                <p className="text-3xl font-bold text-blue-500">{approvedThisWeek}</p>
               </div>
               <div className="p-3 rounded-xl bg-blue-500/10">
-                <UserPlus className="h-6 w-6 text-blue-500" />
+                <Calendar className="h-6 w-6 text-blue-500" />
               </div>
             </div>
           </CardContent>
@@ -143,13 +195,39 @@ const AdminDriverOnboardingQueue = () => {
       {/* Queue */}
       <Card className="border-0 bg-card/50 backdrop-blur-xl">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
-              <UserPlus className="h-5 w-5 text-amber-500" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10">
+                <UserPlus className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <CardTitle>Driver Onboarding Queue</CardTitle>
+                <CardDescription>Review and approve new driver applications</CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Driver Onboarding Queue</CardTitle>
-              <CardDescription>Review and approve new driver applications</CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search applicants..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 w-48 bg-background/50"
+                />
+              </div>
+              <Select value={vehicleFilter} onValueChange={setVehicleFilter}>
+                <SelectTrigger className="w-32">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="car">Car</SelectItem>
+                  <SelectItem value="bike">Bike</SelectItem>
+                  <SelectItem value="suv">SUV</SelectItem>
+                  <SelectItem value="truck">Truck</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -205,6 +283,12 @@ const AdminDriverOnboardingQueue = () => {
                           <Calendar className="h-3 w-3" />
                           {format(new Date(driver.created_at), "MMM d, h:mm a")}
                         </span>
+                        {documentCounts?.[driver.id] && (
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3 w-3" />
+                            {documentCounts[driver.id].approved}/{documentCounts[driver.id].total} docs
+                          </span>
+                        )}
                       </div>
                     </div>
 
