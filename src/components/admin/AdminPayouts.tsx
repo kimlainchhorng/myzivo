@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, DollarSign, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, ArrowUpRight, Wallet, CreditCard, Building2, Plus, Eye } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { Search, DollarSign, TrendingUp, TrendingDown, Clock, CheckCircle, XCircle, ArrowUpRight, Wallet, CreditCard, Building2, Plus, Eye, Download, RefreshCw, Sparkles, CheckSquare, Banknote } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface Payout {
   id: string;
@@ -40,10 +44,23 @@ interface Transaction {
   created_at: string;
 }
 
+interface CashCollection {
+  id: string;
+  driver_id: string;
+  amount: number;
+  status: string | null;
+  collection_method: string | null;
+  reference_number: string | null;
+  created_at: string;
+  confirmed_at: string | null;
+  driver?: { full_name: string } | null;
+}
+
 const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
   pending: { color: "text-amber-500", bg: "bg-amber-500/10", icon: Clock },
   processing: { color: "text-blue-500", bg: "bg-blue-500/10", icon: ArrowUpRight },
   completed: { color: "text-green-500", bg: "bg-green-500/10", icon: CheckCircle },
+  confirmed: { color: "text-green-500", bg: "bg-green-500/10", icon: CheckCircle },
   failed: { color: "text-red-500", bg: "bg-red-500/10", icon: XCircle },
   cancelled: { color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
 };
@@ -52,6 +69,7 @@ const AdminPayouts = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPayout, setSelectedPayout] = useState<Payout | null>(null);
+  const [selectedPayouts, setSelectedPayouts] = useState<string[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -87,6 +105,23 @@ const AdminPayouts = () => {
     },
   });
 
+  const { data: cashCollections, isLoading: cashLoading } = useQuery({
+    queryKey: ["admin-cash-collections"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("driver_cash_collections")
+        .select(`
+          *,
+          driver:drivers(full_name)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      
+      if (error) throw error;
+      return data as CashCollection[];
+    },
+  });
+
   const updatePayoutMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updates: any = { status };
@@ -111,6 +146,43 @@ const AdminPayouts = () => {
     },
   });
 
+  const batchProcessMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (const id of ids) {
+        const { error } = await supabase
+          .from("payouts")
+          .update({ status: "processing" })
+          .eq("id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-payouts"] });
+      toast.success(`Processing ${selectedPayouts.length} payouts`);
+      setSelectedPayouts([]);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to process payouts");
+    },
+  });
+
+  const confirmCashMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("driver_cash_collections")
+        .update({ 
+          status: "confirmed", 
+          confirmed_at: new Date().toISOString() 
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-cash-collections"] });
+      toast.success("Cash collection confirmed");
+    },
+  });
+
   const filteredPayouts = payouts?.filter((payout) => {
     const matchesSearch = 
       payout.driver?.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -129,6 +201,39 @@ const AdminPayouts = () => {
     const now = new Date();
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }).reduce((acc, p) => acc + p.amount, 0) || 0;
+  const pendingCash = cashCollections?.filter(c => c.status === "pending").reduce((acc, c) => acc + c.amount, 0) || 0;
+
+  const togglePayoutSelection = (id: string) => {
+    setSelectedPayouts(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllPending = () => {
+    const pendingIds = payouts?.filter(p => p.status === "pending").map(p => p.id) || [];
+    setSelectedPayouts(pendingIds);
+  };
+
+  const exportPayouts = () => {
+    const csv = [
+      ["Recipient", "Amount", "Method", "Status", "Date"],
+      ...filteredPayouts.map(p => [
+        p.driver?.full_name || p.restaurant?.name || "Unknown",
+        p.amount.toFixed(2),
+        p.payout_method,
+        p.status,
+        format(new Date(p.created_at), "yyyy-MM-dd")
+      ])
+    ].map(row => row.join(",")).join("\n");
+    
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payouts-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    toast.success("Exported payouts to CSV");
+  };
 
   const StatusBadge = ({ status }: { status: string }) => {
     const config = statusConfig[status] || statusConfig.pending;
@@ -202,6 +307,38 @@ const AdminPayouts = () => {
         </Card>
       </div>
 
+      {/* Batch Actions */}
+      <AnimatePresence>
+        {selectedPayouts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="flex items-center gap-3 p-3 rounded-xl bg-green-500/10 border border-green-500/20"
+          >
+            <Badge className="bg-green-500/20 text-green-500">
+              {selectedPayouts.length} selected
+            </Badge>
+            <Button size="sm" variant="outline" onClick={() => setSelectedPayouts([])}>
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => batchProcessMutation.mutate(selectedPayouts)}
+              disabled={batchProcessMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <ArrowUpRight className="h-4 w-4 mr-1" />
+              Process All
+            </Button>
+            <Button size="sm" variant="outline" onClick={exportPayouts}>
+              <Download className="h-4 w-4 mr-1" />
+              Export
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Tabs */}
       <Tabs defaultValue="payouts" className="space-y-4">
         <TabsList className="bg-card/50">
@@ -212,6 +349,15 @@ const AdminPayouts = () => {
           <TabsTrigger value="transactions" className="gap-2">
             <DollarSign className="h-4 w-4" />
             Transactions
+          </TabsTrigger>
+          <TabsTrigger value="cash" className="gap-2">
+            <Banknote className="h-4 w-4" />
+            Cash Collection
+            {cashCollections?.filter(c => c.status === "pending").length ? (
+              <Badge className="ml-1 h-5 w-5 p-0 justify-center bg-amber-500/20 text-amber-500">
+                {cashCollections.filter(c => c.status === "pending").length}
+              </Badge>
+            ) : null}
           </TabsTrigger>
         </TabsList>
 
@@ -253,6 +399,15 @@ const AdminPayouts = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="w-10">
+                        <Checkbox
+                          checked={selectedPayouts.length === filteredPayouts.filter(p => p.status === "pending").length && selectedPayouts.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) selectAllPending();
+                            else setSelectedPayouts([]);
+                          }}
+                        />
+                      </TableHead>
                       <TableHead>Recipient</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Method</TableHead>
@@ -282,7 +437,20 @@ const AdminPayouts = () => {
                       </TableRow>
                     ) : (
                       filteredPayouts.map((payout) => (
-                        <TableRow key={payout.id} className="group hover:bg-muted/30 transition-colors">
+                        <TableRow 
+                          key={payout.id} 
+                          className={cn(
+                            "group hover:bg-muted/30 transition-colors",
+                            selectedPayouts.includes(payout.id) && "bg-green-500/5"
+                          )}
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedPayouts.includes(payout.id)}
+                              onCheckedChange={() => togglePayoutSelection(payout.id)}
+                              disabled={payout.status !== "pending"}
+                            />
+                          </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <div className={cn(
@@ -393,6 +561,102 @@ const AdminPayouts = () => {
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {new Date(tx.created_at).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Cash Collection Tab */}
+        <TabsContent value="cash">
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Banknote className="h-5 w-5 text-primary" />
+                    Cash Collections
+                  </CardTitle>
+                  <CardDescription>Driver cash collection reconciliation</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10">
+                  <Banknote className="h-4 w-4 text-amber-500" />
+                  <span className="font-semibold text-amber-500">${pendingCash.toFixed(2)}</span>
+                  <span className="text-sm text-muted-foreground">pending</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-xl border border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Driver</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Date</TableHead>
+                      <TableHead>Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {cashLoading ? (
+                      [...Array(5)].map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                          <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-8 w-20" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : !cashCollections?.length ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-12">
+                          <Banknote className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                          <p className="text-muted-foreground">No cash collections</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      cashCollections.map((collection) => (
+                        <TableRow key={collection.id} className="hover:bg-muted/30 transition-colors">
+                          <TableCell className="font-medium">
+                            {collection.driver?.full_name || "Unknown"}
+                          </TableCell>
+                          <TableCell className="font-semibold text-green-500">
+                            ${collection.amount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="capitalize text-muted-foreground">
+                            {collection.collection_method?.replace("_", " ") || "Cash"}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge status={collection.status || "pending"} />
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-muted-foreground">
+                            {format(new Date(collection.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            {collection.status === "pending" ? (
+                              <Button
+                                size="sm"
+                                onClick={() => confirmCashMutation.mutate(collection.id)}
+                                disabled={confirmCashMutation.isPending}
+                                className="gap-1"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                                Confirm
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                {collection.confirmed_at && format(new Date(collection.confirmed_at), "MMM d")}
+                              </span>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))
