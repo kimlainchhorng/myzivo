@@ -10,7 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, History, Eye, User, Settings, Shield, Database, FileEdit, Trash2, Plus, AlertCircle, RefreshCw, Download, Calendar as CalendarIcon, Clock, TrendingUp } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, History, Eye, User, Settings, Shield, Database, FileEdit, Trash2, Plus, AlertCircle, RefreshCw, Download, Calendar as CalendarIcon, Clock, TrendingUp, ShieldAlert } from "lucide-react";
+import SecurityAlertsPanel from "./audit/SecurityAlertsPanel";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -163,8 +165,8 @@ const AdminAuditLogs = () => {
             <History className="h-6 w-6 text-indigo-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Audit Logs</h1>
-            <p className="text-muted-foreground">Track all system activities and changes</p>
+            <h1 className="text-2xl font-bold">Audit & Security</h1>
+            <p className="text-muted-foreground">Track activities and monitor security</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -179,7 +181,19 @@ const AdminAuditLogs = () => {
         </div>
       </div>
 
-      {/* Stats */}
+      <Tabs defaultValue="logs" className="space-y-6">
+        <TabsList className="bg-card/50">
+          <TabsTrigger value="logs" className="gap-2">
+            <History className="h-4 w-4" />
+            Activity Logs
+          </TabsTrigger>
+          <TabsTrigger value="security" className="gap-2">
+            <ShieldAlert className="h-4 w-4" />
+            Security Alerts
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="logs" className="space-y-6 mt-0">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
@@ -465,6 +479,12 @@ const AdminAuditLogs = () => {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="security" className="mt-0">
+          <SecurityAlertsPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -13,8 +13,9 @@ import { Progress } from "@/components/ui/progress";
 import { 
   Ticket, Plus, Edit, Trash2, Percent, DollarSign, Truck, Copy, 
   CheckCircle, Clock, Zap, Search, Calendar, TrendingUp, Users,
-  Gift, Tag, AlertCircle, RefreshCw
+  Gift, Tag, AlertCircle, RefreshCw, FlaskConical
 } from "lucide-react";
+import PromotionABTesting from "./promotions/PromotionABTesting";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -228,6 +229,20 @@ const AdminPromotions = () => {
           New Promotion
         </Button>
       </div>
+
+      <Tabs defaultValue="promotions" className="space-y-6">
+        <TabsList className="bg-card/50">
+          <TabsTrigger value="promotions" className="gap-2">
+            <Ticket className="h-4 w-4" />
+            All Promotions
+          </TabsTrigger>
+          <TabsTrigger value="ab-testing" className="gap-2">
+            <FlaskConical className="h-4 w-4" />
+            A/B Testing
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="promotions" className="space-y-6 mt-0">
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -589,6 +604,12 @@ const AdminPromotions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="ab-testing" className="mt-0">
+          <PromotionABTesting />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Settings, DollarSign, Bell, Palette, Shield, Save, RefreshCw, AlertTriangle, Zap, Globe, Mail, Smartphone, CheckCircle, Database, Server, Clock, Activity, Wifi, WifiOff, TrendingUp } from "lucide-react";
+import { Settings, DollarSign, Bell, Palette, Shield, Save, RefreshCw, AlertTriangle, Zap, Globe, Mail, Smartphone, CheckCircle, Database, Server, Clock, Activity, Wifi, WifiOff, TrendingUp, Flag } from "lucide-react";
+import FeatureFlagsPanel from "./settings/FeatureFlagsPanel";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -478,6 +479,9 @@ const AdminSystemSettings = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Feature Flags */}
+      <FeatureFlagsPanel />
     </div>
   );
 };

@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileText, Download, Calendar as CalendarIcon, BarChart3, Users, 
   Car, DollarSign, TrendingUp, Clock, FileSpreadsheet, FileDown,
-  RefreshCw, CheckCircle, AlertCircle, Utensils, Plane, Building2
+  RefreshCw, CheckCircle, AlertCircle, Utensils, Plane, Building2, CalendarDays
 } from "lucide-react";
+import ScheduledReports from "./reports/ScheduledReports";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -347,6 +348,10 @@ const AdminReports = () => {
             <FileText className="h-4 w-4" />
             Generate Report
           </TabsTrigger>
+          <TabsTrigger value="scheduled" className="gap-2">
+            <CalendarDays className="h-4 w-4" />
+            Scheduled Reports
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-2">
             <Clock className="h-4 w-4" />
             Report History
@@ -559,6 +564,10 @@ const AdminReports = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="scheduled">
+          <ScheduledReports />
         </TabsContent>
       </Tabs>
     </div>
