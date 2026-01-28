@@ -37,13 +37,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, MoreHorizontal, UserX, UserCheck, Eye, Mail, AlertCircle, Users, UserPlus, Shield, Activity, CheckSquare, Trash2, RefreshCw, Filter, Download } from "lucide-react";
+import { Search, MoreHorizontal, UserX, UserCheck, Eye, Mail, AlertCircle, Users, UserPlus, Shield, Activity, RefreshCw, Filter, Download } from "lucide-react";
 import { useProfiles, useUpdateProfileStatus, Profile } from "@/hooks/useProfiles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, subDays, isAfter } from "date-fns";
+import AdminEnhancedUserProfile from "./AdminEnhancedUserProfile";
+import AdminUserActivityTimeline from "./AdminUserActivityTimeline";
+import AdminUserSegments from "./AdminUserSegments";
 
 const container = {
   hidden: { opacity: 0 },
@@ -519,64 +522,31 @@ const AdminUserManagement = () => {
         </Card>
       </motion.div>
 
-      {/* View User Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              User Details
-            </DialogTitle>
-            <DialogDescription>Detailed information about the user</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
-                <Avatar className="h-16 w-16 border-2 border-primary/20">
-                  <AvatarImage src={selectedUser.avatar_url || undefined} />
-                  <AvatarFallback className="text-lg bg-gradient-to-br from-primary/20 to-blue-500/20">
-                    {selectedUser.full_name?.split(" ").map(n => n[0]).join("") || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-lg">{selectedUser.full_name || "Unnamed User"}</p>
-                  <p className="text-muted-foreground">{selectedUser.email || "No email"}</p>
-                  <div className="flex gap-1 mt-2">
-                    {getRoleBadges(selectedUser.id)}
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                  <p className="font-medium">{selectedUser.phone || "Not provided"}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Status</p>
-                  {getStatusBadge(selectedUser.status)}
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Member Since</p>
-                  <p className="font-medium">
-                    {format(new Date(selectedUser.created_at), "MMM d, yyyy")}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Last Updated</p>
-                  <p className="font-medium">
-                    {format(new Date(selectedUser.updated_at), "MMM d, yyyy")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Activity & Segments Row */}
+      <motion.div variants={item} className="grid lg:grid-cols-2 gap-6">
+        <AdminUserActivityTimeline />
+        <AdminUserSegments />
+      </motion.div>
+
+      {/* Enhanced User Profile Dialog */}
+      <AdminEnhancedUserProfile
+        user={selectedUser}
+        open={isViewDialogOpen}
+        onOpenChange={setIsViewDialogOpen}
+        userRoles={selectedUser ? (userRoles?.[selectedUser.id] || []) : []}
+        onSuspend={() => {
+          if (selectedUser) {
+            updateStatus.mutate({ id: selectedUser.id, status: "suspended" });
+            setIsViewDialogOpen(false);
+          }
+        }}
+        onActivate={() => {
+          if (selectedUser) {
+            updateStatus.mutate({ id: selectedUser.id, status: "active" });
+            setIsViewDialogOpen(false);
+          }
+        }}
+      />
 
       {/* Bulk Action Confirmation Dialog */}
       <Dialog open={isBulkActionDialogOpen} onOpenChange={setIsBulkActionDialogOpen}>
