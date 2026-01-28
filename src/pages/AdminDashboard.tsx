@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent
+  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,6 +37,8 @@ import AdminHeatmapView from "@/components/admin/AdminHeatmapView";
 import AdminCommissionAnalytics from "@/components/admin/AdminCommissionAnalytics";
 import AdminRevenueReconciliation from "@/components/admin/AdminRevenueReconciliation";
 import AdminPayoutProcessing from "@/components/admin/AdminPayoutProcessing";
+import AdminDriverOnboardingQueue from "@/components/admin/AdminDriverOnboardingQueue";
+import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -56,7 +58,11 @@ const AdminDashboard = () => {
       { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
       { value: "roles", label: "Roles", icon: Crown, gradient: "from-amber-500 to-orange-500" },
       { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
-      { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+    ]},
+    { title: "Driver Onboarding", items: [
+      { value: "onboarding", label: "Application Queue", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
+      { value: "documents", label: "Document Review", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+      { value: "verification", label: "Final Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
     ]},
     { title: "Driver Management", items: [
       { value: "scoring", label: "Performance", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
@@ -240,7 +246,9 @@ const AdminDashboard = () => {
             <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
+            <TabsContent value="onboarding" className="mt-0"><AdminDriverOnboardingQueue /></TabsContent>
             <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
+            <TabsContent value="verification" className="mt-0"><AdminDriverVerification /></TabsContent>
             <TabsContent value="scoring" className="mt-0"><AdminDriverScoring /></TabsContent>
             <TabsContent value="earnings" className="mt-0"><AdminDriverEarnings /></TabsContent>
             <TabsContent value="performance" className="mt-0"><AdminDriverPerformance /></TabsContent>
