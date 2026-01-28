@@ -10,11 +10,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Search, Headphones, MessageSquare, Clock, CheckCircle, AlertCircle, Send, User, Shield, Inbox, XCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Search, Headphones, MessageSquare, Clock, CheckCircle, AlertCircle, 
+  Send, User, Shield, Inbox, XCircle, RefreshCw, Filter, 
+  AlertTriangle, Zap, UserCheck, FileText
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface Ticket {
   id: string;
@@ -27,6 +33,7 @@ interface Ticket {
   status: string;
   created_at: string;
   updated_at: string;
+  assigned_to?: string | null;
 }
 
 interface TicketReply {
@@ -38,6 +45,14 @@ interface TicketReply {
   created_at: string;
 }
 
+const responseTemplates = [
+  { id: "greeting", name: "Greeting", text: "Hello! Thank you for reaching out. I'd be happy to help you with your inquiry." },
+  { id: "investigating", name: "Investigating", text: "Thank you for your patience. We're currently investigating this issue and will get back to you shortly." },
+  { id: "resolved", name: "Issue Resolved", text: "Great news! The issue has been resolved. Please let us know if you need any further assistance." },
+  { id: "more-info", name: "Need More Info", text: "To better assist you, could you please provide more details about the issue you're experiencing?" },
+  { id: "escalated", name: "Escalated", text: "Your case has been escalated to our senior support team. They will reach out to you within 24 hours." },
+];
+
 const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
   open: { color: "text-blue-500", bg: "bg-blue-500/10", icon: Inbox },
   in_progress: { color: "text-amber-500", bg: "bg-amber-500/10", icon: Clock },
@@ -46,18 +61,20 @@ const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
   closed: { color: "text-slate-500", bg: "bg-slate-500/10", icon: XCircle },
 };
 
-const priorityConfig: Record<string, { color: string; bg: string }> = {
-  low: { color: "text-slate-500", bg: "bg-slate-500/10" },
-  medium: { color: "text-blue-500", bg: "bg-blue-500/10" },
-  high: { color: "text-amber-500", bg: "bg-amber-500/10" },
-  urgent: { color: "text-red-500", bg: "bg-red-500/10" },
+const priorityConfig: Record<string, { color: string; bg: string; icon: any }> = {
+  low: { color: "text-slate-500", bg: "bg-slate-500/10", icon: null },
+  medium: { color: "text-blue-500", bg: "bg-blue-500/10", icon: null },
+  high: { color: "text-amber-500", bg: "bg-amber-500/10", icon: AlertTriangle },
+  urgent: { color: "text-red-500", bg: "bg-red-500/10", icon: Zap },
 };
 
 const AdminSupportTickets = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
   const queryClient = useQueryClient();
 
   const { data: tickets, isLoading } = useQuery({
@@ -144,13 +161,24 @@ const AdminSupportTickets = () => {
       ticket.subject.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
+    const matchesPriority = priorityFilter === "all" || ticket.priority === priorityFilter;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPriority;
   }) || [];
 
   const openCount = tickets?.filter(t => t.status === 'open').length || 0;
   const inProgressCount = tickets?.filter(t => t.status === 'in_progress').length || 0;
   const resolvedCount = tickets?.filter(t => t.status === 'resolved').length || 0;
+  const urgentCount = tickets?.filter(t => t.priority === 'urgent' && t.status !== 'resolved' && t.status !== 'closed').length || 0;
+
+  const handleAssignToMe = async (ticketId: string) => {
+    await updateStatusMutation.mutateAsync({ id: ticketId, status: "in_progress" });
+    toast.success("Ticket assigned to you");
+  };
+
+  const useTemplate = (template: typeof responseTemplates[0]) => {
+    setReplyMessage(template.text);
+  };
 
   const StatusBadge = ({ status }: { status: string }) => {
     const config = statusConfig[status] || statusConfig.open;
@@ -165,8 +193,10 @@ const AdminSupportTickets = () => {
 
   const PriorityBadge = ({ priority }: { priority: string }) => {
     const config = priorityConfig[priority] || priorityConfig.medium;
+    const Icon = config.icon;
     return (
-      <Badge variant="outline" className={cn("capitalize", config.color)}>
+      <Badge variant="outline" className={cn("capitalize gap-1", config.color, config.bg, "border-transparent")}>
+        {Icon && <Icon className="h-3 w-3" />}
         {priority}
       </Badge>
     );
@@ -186,8 +216,11 @@ const AdminSupportTickets = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className={cn(
+          "border-0 bg-card/50 backdrop-blur-xl cursor-pointer transition-all hover:shadow-lg",
+          statusFilter === "open" && "ring-2 ring-blue-500"
+        )} onClick={() => setStatusFilter(statusFilter === "open" ? "all" : "open")}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-blue-500/10">
               <Inbox className="h-5 w-5 text-blue-500" />
@@ -198,7 +231,10 @@ const AdminSupportTickets = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+        <Card className={cn(
+          "border-0 bg-card/50 backdrop-blur-xl cursor-pointer transition-all hover:shadow-lg",
+          statusFilter === "in_progress" && "ring-2 ring-amber-500"
+        )} onClick={() => setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-500/10">
               <Clock className="h-5 w-5 text-amber-500" />
@@ -209,7 +245,10 @@ const AdminSupportTickets = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+        <Card className={cn(
+          "border-0 bg-card/50 backdrop-blur-xl cursor-pointer transition-all hover:shadow-lg",
+          statusFilter === "resolved" && "ring-2 ring-green-500"
+        )} onClick={() => setStatusFilter(statusFilter === "resolved" ? "all" : "resolved")}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-500/10">
               <CheckCircle className="h-5 w-5 text-green-500" />
@@ -217,6 +256,20 @@ const AdminSupportTickets = () => {
             <div>
               <p className="text-sm text-muted-foreground">Resolved</p>
               <p className="text-lg font-semibold">{resolvedCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className={cn(
+          "border-0 bg-card/50 backdrop-blur-xl cursor-pointer transition-all hover:shadow-lg",
+          priorityFilter === "urgent" && "ring-2 ring-red-500"
+        )} onClick={() => setPriorityFilter(priorityFilter === "urgent" ? "all" : "urgent")}>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-red-500/10">
+              <Zap className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Urgent</p>
+              <p className="text-lg font-semibold">{urgentCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -414,8 +467,23 @@ const AdminSupportTickets = () => {
                 </div>
               </ScrollArea>
 
-              {/* Reply Input */}
-              <div className="pt-4 mt-auto">
+              {/* Reply Input with Templates */}
+              <div className="pt-4 mt-auto space-y-3">
+                {/* Quick Templates */}
+                <div className="flex flex-wrap gap-1.5">
+                  {responseTemplates.map((template) => (
+                    <Button
+                      key={template.id}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => useTemplate(template)}
+                      className="text-xs h-7"
+                    >
+                      {template.name}
+                    </Button>
+                  ))}
+                </div>
+                
                 <div className="flex gap-2">
                   <Textarea
                     value={replyMessage}

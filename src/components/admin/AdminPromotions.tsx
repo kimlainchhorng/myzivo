@@ -8,11 +8,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Ticket, Plus, Edit, Trash2, Percent, DollarSign, Truck, Copy, CheckCircle, Clock, Zap } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Ticket, Plus, Edit, Trash2, Percent, DollarSign, Truck, Copy, 
+  CheckCircle, Clock, Zap, Search, Calendar, TrendingUp, Users,
+  Gift, Tag, AlertCircle, RefreshCw
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { format, differenceInDays, isPast } from "date-fns";
 
 interface Promotion {
   id: string;
@@ -42,6 +49,8 @@ const discountTypeIcons: Record<string, any> = {
 const AdminPromotions = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingPromo, setEditingPromo] = useState<Promotion | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "expired">("all");
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -53,6 +62,7 @@ const AdminPromotions = () => {
     usage_limit: 0,
     per_user_limit: 1,
     is_active: true,
+    ends_at: "",
   });
   const queryClient = useQueryClient();
 
@@ -125,6 +135,7 @@ const AdminPromotions = () => {
       usage_limit: 0,
       per_user_limit: 1,
       is_active: true,
+      ends_at: "",
     });
   };
 
@@ -141,7 +152,33 @@ const AdminPromotions = () => {
       usage_limit: promo.usage_limit || 0,
       per_user_limit: promo.per_user_limit,
       is_active: promo.is_active,
+      ends_at: promo.ends_at || "",
     });
+  };
+
+  // Filter promotions
+  const filteredPromotions = promotions?.filter((promo) => {
+    const matchesSearch = promo.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      promo.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "active") return matchesSearch && promo.is_active && (!promo.ends_at || !isPast(new Date(promo.ends_at)));
+    if (statusFilter === "inactive") return matchesSearch && !promo.is_active;
+    if (statusFilter === "expired") return matchesSearch && promo.ends_at && isPast(new Date(promo.ends_at));
+    
+    return matchesSearch;
+  }) || [];
+
+  const getPromoStatus = (promo: Promotion) => {
+    if (promo.ends_at && isPast(new Date(promo.ends_at))) return "expired";
+    if (!promo.is_active) return "inactive";
+    if (promo.usage_limit && promo.usage_count >= promo.usage_limit) return "exhausted";
+    return "active";
+  };
+
+  const getUsagePercent = (promo: Promotion) => {
+    if (!promo.usage_limit) return 0;
+    return Math.min((promo.usage_count / promo.usage_limit) * 100, 100);
   };
 
   const handleSubmit = () => {
@@ -249,11 +286,37 @@ const AdminPromotions = () => {
       {/* Promotions Table */}
       <Card className="border-0 bg-card/50 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Percent className="h-5 w-5 text-primary" />
-            All Promotions
-          </CardTitle>
-          <CardDescription>Manage discount codes and offers</CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Percent className="h-5 w-5 text-primary" />
+                All Promotions
+              </CardTitle>
+              <CardDescription>Manage discount codes and offers</CardDescription>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search promotions..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-background/50 border-border/50"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="expired">Expired</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-xl border border-border/50 overflow-hidden">
@@ -264,6 +327,7 @@ const AdminPromotions = () => {
                   <TableHead>Name</TableHead>
                   <TableHead>Discount</TableHead>
                   <TableHead>Usage</TableHead>
+                  <TableHead>Expires</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-24"></TableHead>
                 </TableRow>
@@ -276,20 +340,24 @@ const AdminPromotions = () => {
                       <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                       <TableCell><Skeleton className="h-8 w-16" /></TableCell>
                     </TableRow>
                   ))
-                ) : !promotions?.length ? (
+                ) : !filteredPromotions.length ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12">
+                    <TableCell colSpan={7} className="text-center py-12">
                       <Ticket className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                      <p className="text-muted-foreground">No promotions yet</p>
+                      <p className="text-muted-foreground">No promotions found</p>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  promotions.map((promo) => {
+                  filteredPromotions.map((promo) => {
                     const Icon = discountTypeIcons[promo.discount_type] || Percent;
+                    const status = getPromoStatus(promo);
+                    const usagePercent = getUsagePercent(promo);
+                    const daysUntilExpiry = promo.ends_at ? differenceInDays(new Date(promo.ends_at), new Date()) : null;
                     return (
                       <TableRow key={promo.id} className="group hover:bg-muted/30 transition-colors">
                         <TableCell>
@@ -321,13 +389,43 @@ const AdminPromotions = () => {
                             {formatDiscount(promo)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {promo.usage_count}
-                          {promo.usage_limit && ` / ${promo.usage_limit}`}
+                        <TableCell>
+                          <div className="space-y-1">
+                            <span className="text-sm text-muted-foreground">
+                              {promo.usage_count}
+                              {promo.usage_limit && ` / ${promo.usage_limit}`}
+                            </span>
+                            {promo.usage_limit && (
+                              <Progress value={usagePercent} className="h-1.5 w-16" />
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={promo.is_active ? "default" : "secondary"}>
-                            {promo.is_active ? "Active" : "Inactive"}
+                          {daysUntilExpiry !== null ? (
+                            <span className={cn(
+                              "text-sm",
+                              daysUntilExpiry < 0 ? "text-red-500" :
+                              daysUntilExpiry < 7 ? "text-amber-500" : "text-muted-foreground"
+                            )}>
+                              {daysUntilExpiry < 0 ? "Expired" :
+                               daysUntilExpiry === 0 ? "Today" :
+                               `${daysUntilExpiry}d left`}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">No expiry</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={cn(
+                            "border-transparent",
+                            status === "active" ? "bg-green-500/10 text-green-500" :
+                            status === "expired" ? "bg-red-500/10 text-red-500" :
+                            status === "exhausted" ? "bg-amber-500/10 text-amber-500" :
+                            "bg-slate-500/10 text-slate-500"
+                          )}>
+                            {status === "active" && <CheckCircle className="h-3 w-3 mr-1" />}
+                            {status === "expired" && <AlertCircle className="h-3 w-3 mr-1" />}
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
                           </Badge>
                         </TableCell>
                         <TableCell>
