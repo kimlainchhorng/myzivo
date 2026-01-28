@@ -36,10 +36,12 @@ import {
   AlertTriangle,
   Power,
   History,
-  ExternalLink
+  ExternalLink,
+  Clock,
+  Activity
 } from "lucide-react";
 import { useDrivers, useUpdateDriverStatus, Driver, DriverStatus } from "@/hooks/useDrivers";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -55,9 +57,30 @@ const AdminDriverControl = () => {
   const [actionType, setActionType] = useState<"suspend" | "activate" | "message">("message");
   const [actionReason, setActionReason] = useState("");
   const [messageContent, setMessageContent] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: drivers, isLoading } = useDrivers();
+  
+  // Fetch action history
+  const { data: actionHistory } = useQuery({
+    queryKey: ["admin-driver-actions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("admin_driver_actions")
+        .select(`
+          id,
+          action_type,
+          reason,
+          created_at,
+          driver:drivers(id, full_name, avatar_url)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
   const updateStatus = useUpdateDriverStatus();
 
   const logActionMutation = useMutation({
@@ -181,8 +204,71 @@ const AdminDriverControl = () => {
     }
   };
 
+  // Stats
+  const verifiedCount = drivers?.filter(d => d.status === "verified").length || 0;
+  const suspendedCount = drivers?.filter(d => d.status === "suspended").length || 0;
+  const onlineCount = drivers?.filter(d => d.is_online).length || 0;
+
   return (
     <div className="space-y-6">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-0 bg-gradient-to-br from-green-500/10 to-emerald-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active Drivers</p>
+                <p className="text-2xl font-bold text-green-500">{verifiedCount}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-green-500/10">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Online Now</p>
+                <p className="text-2xl font-bold text-blue-500">{onlineCount}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-blue-500/10">
+                <Activity className="h-5 w-5 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-red-500/10 to-rose-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Suspended</p>
+                <p className="text-2xl font-bold text-red-500">{suspendedCount}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-red-500/10">
+                <Ban className="h-5 w-5 text-red-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-violet-500/10 to-purple-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Recent Actions</p>
+                <p className="text-2xl font-bold text-violet-500">{actionHistory?.length || 0}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-violet-500/10">
+                <History className="h-5 w-5 text-violet-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       {/* Header */}
       <Card className="border-0 bg-card/50 backdrop-blur-xl">
         <CardHeader>
@@ -193,13 +279,21 @@ const AdminDriverControl = () => {
               </div>
               <div>
                 <CardTitle>Driver Control Panel</CardTitle>
-                <CardDescription>Manage and control drivers remotely</CardDescription>
-              </div>
+              <CardDescription>Manage and control drivers remotely</CardDescription>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant={showHistory ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <History className="h-4 w-4 mr-2" />
+              Action History
+            </Button>
+            <div className="relative w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
                   placeholder="Search drivers..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -222,6 +316,47 @@ const AdminDriverControl = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Action History Panel */}
+          {showHistory && (
+            <div className="mb-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Recent Admin Actions
+              </h4>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {actionHistory?.map((action) => (
+                  <div key={action.id} className="flex items-center gap-3 p-2 rounded-lg bg-background/50">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={(action.driver as any)?.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {(action.driver as any)?.full_name?.split(" ").map((n: string) => n[0]).join("") || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">
+                        <span className="font-medium">{(action.driver as any)?.full_name}</span>
+                        <span className="text-muted-foreground"> - </span>
+                        <span className={cn(
+                          action.action_type === "suspend" && "text-red-500",
+                          action.action_type === "activate" && "text-green-500",
+                          action.action_type === "message" && "text-blue-500"
+                        )}>
+                          {action.action_type}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">{action.reason}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(action.created_at), "MMM d, h:mm a")}
+                    </span>
+                  </div>
+                ))}
+                {!actionHistory?.length && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No recent actions</p>
+                )}
+              </div>
+            </div>
+          )}
           {isLoading ? (
             <div className="space-y-3">
               {[...Array(4)].map((_, i) => (

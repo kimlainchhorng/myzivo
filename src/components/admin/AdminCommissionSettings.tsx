@@ -210,26 +210,97 @@ const AdminCommissionSettings = () => {
     }
   };
 
+  // Calculate summary stats
+  const activeSettings = settings?.filter(s => s.is_active) || [];
+  const avgCommission = activeSettings.length > 0 
+    ? activeSettings.reduce((acc, s) => acc + s.commission_percentage, 0) / activeSettings.length
+    : 0;
+  const byService = {
+    rides: settings?.filter(s => s.service_type === "rides").length || 0,
+    food_delivery: settings?.filter(s => s.service_type === "food_delivery").length || 0,
+    package_delivery: settings?.filter(s => s.service_type === "package_delivery").length || 0,
+  };
+
   return (
-    <Card className="border-0 bg-card/50 backdrop-blur-xl">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10">
-              <Percent className="h-5 w-5 text-green-500" />
+    <div className="space-y-6">
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-0 bg-gradient-to-br from-green-500/10 to-emerald-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active Rates</p>
+                <p className="text-2xl font-bold text-green-500">{activeSettings.length}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-green-500/10">
+                <Percent className="h-5 w-5 text-green-500" />
+              </div>
             </div>
-            <div>
-              <CardTitle>Commission Settings</CardTitle>
-              <CardDescription>Configure platform fees and driver commissions</CardDescription>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Commission</p>
+                <p className="text-2xl font-bold text-blue-500">{avgCommission.toFixed(1)}%</p>
+              </div>
+              <div className="p-2 rounded-xl bg-blue-500/10">
+                <DollarSign className="h-5 w-5 text-blue-500" />
+              </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-primary/10 to-teal-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Ride Rates</p>
+                <p className="text-2xl font-bold text-primary">{byService.rides}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Car className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 bg-gradient-to-br from-rose-500/10 to-pink-500/5 backdrop-blur-xl">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Delivery Rates</p>
+                <p className="text-2xl font-bold text-rose-500">{byService.food_delivery + byService.package_delivery}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-rose-500/10">
+                <Utensils className="h-5 w-5 text-rose-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-0 bg-card/50 backdrop-blur-xl">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10">
+                <Percent className="h-5 w-5 text-green-500" />
+              </div>
+              <div>
+                <CardTitle>Commission Settings</CardTitle>
+                <CardDescription>Configure platform fees and driver commissions</CardDescription>
+              </div>
+            </div>
+            <Button onClick={() => handleOpenDialog()} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Rate
+            </Button>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Rate
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
+        </CardHeader>
+        <CardContent>
         <div className="rounded-xl border border-border/50 overflow-hidden">
           <Table>
             <TableHeader>
@@ -319,8 +390,9 @@ const AdminCommissionSettings = () => {
               )}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Add/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -442,7 +514,7 @@ const AdminCommissionSettings = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 };
 
