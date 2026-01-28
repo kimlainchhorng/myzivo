@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck
+  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -39,6 +39,7 @@ import AdminRevenueReconciliation from "@/components/admin/AdminRevenueReconcili
 import AdminPayoutProcessing from "@/components/admin/AdminPayoutProcessing";
 import AdminDriverOnboardingQueue from "@/components/admin/AdminDriverOnboardingQueue";
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
+import AdminIntegrationManager from "@/components/admin/AdminIntegrationManager";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -92,6 +93,7 @@ const AdminDashboard = () => {
       { value: "support", label: "Support", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
     ]},
     { title: "System", items: [
+      { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
       { value: "reports", label: "Reports", icon: FileText, gradient: "from-emerald-500 to-teal-500" },
       { value: "settings", label: "Settings", icon: Settings, gradient: "from-slate-500 to-zinc-500" },
       { value: "audit", label: "Audit Logs", icon: History, gradient: "from-indigo-500 to-purple-500" },
@@ -266,6 +268,7 @@ const AdminDashboard = () => {
             <TabsContent value="promotions" className="mt-0"><AdminPromotions /></TabsContent>
             <TabsContent value="announcements" className="mt-0"><AdminAnnouncements /></TabsContent>
             <TabsContent value="support" className="mt-0"><AdminSupportTickets /></TabsContent>
+            <TabsContent value="integrations" className="mt-0"><AdminIntegrationManager /></TabsContent>
             <TabsContent value="reports" className="mt-0"><AdminReports /></TabsContent>
             <TabsContent value="settings" className="mt-0"><AdminSystemSettings /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AdminAuditLogs /></TabsContent>
