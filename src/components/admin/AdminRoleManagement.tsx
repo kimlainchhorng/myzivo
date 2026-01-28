@@ -9,13 +9,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Shield, ShieldCheck, ShieldAlert, UserCog, Plus, Trash2, Crown, Users, Car, Store, Eye, Check, X, Lock, Unlock, Settings } from "lucide-react";
+import { Search, Shield, ShieldCheck, ShieldAlert, UserCog, Plus, Trash2, Crown, Users, Car, Store, Check, X, Lock, History } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import AdminRoleAuditTrail from "./AdminRoleAuditTrail";
 
 type AppRole = 'admin' | 'moderator' | 'user';
 
@@ -268,7 +268,11 @@ const AdminRoleManagement = () => {
           </TabsTrigger>
           <TabsTrigger value="permissions" className="gap-2">
             <Lock className="h-4 w-4" />
-            Permission Matrix
+            Permissions
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2">
+            <History className="h-4 w-4" />
+            Audit Trail
           </TabsTrigger>
         </TabsList>
 
@@ -464,6 +468,10 @@ const AdminRoleManagement = () => {
               </ScrollArea>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="audit">
+          <AdminRoleAuditTrail />
         </TabsContent>
       </Tabs>
 
