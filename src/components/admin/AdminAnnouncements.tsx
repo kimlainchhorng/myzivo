@@ -9,11 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Megaphone, Plus, Edit, Trash2, Users, Car, Store, Shield, AlertCircle, CheckCircle, Info, Zap, Bell } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Megaphone, Plus, Edit, Trash2, Users, Car, Store, Shield, AlertCircle, CheckCircle, Info, Zap, Bell, Calendar as CalendarIcon, Clock, Send, Eye } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { format, isAfter, isBefore, parseISO } from "date-fns";
 
 interface Announcement {
   id: string;
@@ -46,12 +49,15 @@ const audienceConfig: Record<string, { icon: any; label: string }> = {
 const AdminAnnouncements = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
+  const [previewAnnouncement, setPreviewAnnouncement] = useState<Announcement | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     type: "info",
     target_audience: "all",
     is_active: true,
+    starts_at: new Date(),
+    ends_at: null as Date | null,
   });
   const queryClient = useQueryClient();
 
@@ -70,7 +76,15 @@ const AdminAnnouncements = () => {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from("announcements").insert(data);
+      const { error } = await supabase.from("announcements").insert({
+        title: data.title,
+        content: data.content,
+        type: data.type,
+        target_audience: data.target_audience,
+        is_active: data.is_active,
+        starts_at: data.starts_at.toISOString(),
+        ends_at: data.ends_at?.toISOString() || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -121,6 +135,8 @@ const AdminAnnouncements = () => {
       type: "info",
       target_audience: "all",
       is_active: true,
+      starts_at: new Date(),
+      ends_at: null,
     });
   };
 
@@ -132,18 +148,56 @@ const AdminAnnouncements = () => {
       type: announcement.type,
       target_audience: announcement.target_audience,
       is_active: announcement.is_active,
+      starts_at: parseISO(announcement.starts_at),
+      ends_at: announcement.ends_at ? parseISO(announcement.ends_at) : null,
     });
   };
 
   const handleSubmit = () => {
     if (editingAnnouncement) {
-      updateMutation.mutate({ id: editingAnnouncement.id, data: formData });
+      updateMutation.mutate({ 
+        id: editingAnnouncement.id, 
+        data: {
+          title: formData.title,
+          content: formData.content,
+          type: formData.type,
+          target_audience: formData.target_audience,
+          is_active: formData.is_active,
+          starts_at: formData.starts_at.toISOString(),
+          ends_at: formData.ends_at?.toISOString() || null,
+        }
+      });
     } else {
       createMutation.mutate(formData);
     }
   };
 
+  const getAnnouncementStatus = (announcement: Announcement) => {
+    const now = new Date();
+    const startsAt = parseISO(announcement.starts_at);
+    const endsAt = announcement.ends_at ? parseISO(announcement.ends_at) : null;
+    
+    if (!announcement.is_active) {
+      return { label: "Inactive", color: "bg-slate-500/10 text-slate-500" };
+    }
+    if (isBefore(now, startsAt)) {
+      return { label: "Scheduled", color: "bg-blue-500/10 text-blue-500" };
+    }
+    if (endsAt && isAfter(now, endsAt)) {
+      return { label: "Expired", color: "bg-amber-500/10 text-amber-500" };
+    }
+    return { label: "Live", color: "bg-green-500/10 text-green-500" };
+  };
+
   const activeCount = announcements?.filter(a => a.is_active).length || 0;
+  const liveCount = announcements?.filter(a => {
+    const status = getAnnouncementStatus(a);
+    return status.label === "Live";
+  }).length || 0;
+  const scheduledCount = announcements?.filter(a => {
+    const status = getAnnouncementStatus(a);
+    return status.label === "Scheduled";
+  }).length || 0;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -180,11 +234,22 @@ const AdminAnnouncements = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-500/10">
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <Send className="h-5 w-5 text-green-500" />
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Active</p>
-              <p className="text-lg font-semibold">{activeCount}</p>
+              <p className="text-sm text-muted-foreground">Live Now</p>
+              <p className="text-lg font-semibold">{liveCount}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-card/50 backdrop-blur-xl">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-500/10">
+              <Clock className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Scheduled</p>
+              <p className="text-lg font-semibold">{scheduledCount}</p>
             </div>
           </CardContent>
         </Card>
@@ -197,19 +262,6 @@ const AdminAnnouncements = () => {
               <p className="text-sm text-muted-foreground">Promos</p>
               <p className="text-lg font-semibold">
                 {announcements?.filter(a => a.type === 'promo').length || 0}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 bg-card/50 backdrop-blur-xl">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-amber-500/10">
-              <AlertCircle className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Alerts</p>
-              <p className="text-lg font-semibold">
-                {announcements?.filter(a => a.type === 'warning' || a.type === 'error').length || 0}
               </p>
             </div>
           </CardContent>
@@ -234,8 +286,8 @@ const AdminAnnouncements = () => {
                   <TableHead>Type</TableHead>
                   <TableHead>Audience</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="hidden md:table-cell">Created</TableHead>
-                  <TableHead className="w-20"></TableHead>
+                  <TableHead className="hidden md:table-cell">Schedule</TableHead>
+                  <TableHead className="w-24"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -263,6 +315,7 @@ const AdminAnnouncements = () => {
                     const audienceInfo = audienceConfig[announcement.target_audience] || audienceConfig.all;
                     const TypeIcon = typeInfo.icon;
                     const AudienceIcon = audienceInfo.icon;
+                    const status = getAnnouncementStatus(announcement);
                     
                     return (
                       <TableRow key={announcement.id} className="group hover:bg-muted/30 transition-colors">
@@ -287,15 +340,31 @@ const AdminAnnouncements = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={announcement.is_active ? "default" : "secondary"}>
-                            {announcement.is_active ? "Active" : "Inactive"}
+                          <Badge className={cn(status.color, "border-transparent")}>
+                            {status.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell text-muted-foreground">
-                          {new Date(announcement.created_at).toLocaleDateString()}
+                        <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {format(parseISO(announcement.starts_at), "MMM d, yyyy")}
+                          </div>
+                          {announcement.ends_at && (
+                            <div className="flex items-center gap-1 text-xs">
+                              → {format(parseISO(announcement.ends_at), "MMM d")}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setPreviewAnnouncement(announcement)}
+                              className="h-8 w-8"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -324,6 +393,34 @@ const AdminAnnouncements = () => {
         </CardContent>
       </Card>
 
+      {/* Preview Dialog */}
+      <Dialog open={!!previewAnnouncement} onOpenChange={() => setPreviewAnnouncement(null)}>
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl max-w-md">
+          <DialogHeader>
+            <DialogTitle>Announcement Preview</DialogTitle>
+            <DialogDescription>How users will see this announcement</DialogDescription>
+          </DialogHeader>
+          {previewAnnouncement && (
+            <div className={cn(
+              "p-4 rounded-xl border",
+              typeConfig[previewAnnouncement.type]?.bg,
+              "border-current/10"
+            )}>
+              <div className="flex items-start gap-3">
+                {(() => {
+                  const TypeIcon = typeConfig[previewAnnouncement.type]?.icon || Info;
+                  return <TypeIcon className={cn("h-5 w-5 mt-0.5", typeConfig[previewAnnouncement.type]?.color)} />;
+                })()}
+                <div className="flex-1">
+                  <p className="font-semibold">{previewAnnouncement.title}</p>
+                  <p className="text-sm mt-1">{previewAnnouncement.content}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Create/Edit Dialog */}
       <Dialog open={isCreateOpen || !!editingAnnouncement} onOpenChange={(open) => {
         if (!open) {
@@ -332,7 +429,7 @@ const AdminAnnouncements = () => {
           resetForm();
         }
       }}>
-        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl">
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Megaphone className="h-5 w-5 text-primary" />
@@ -392,6 +489,59 @@ const AdminAnnouncements = () => {
                 </Select>
               </div>
             </div>
+            
+            {/* Schedule */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Start Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {format(formData.starts_at, "PPP")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.starts_at}
+                      onSelect={(date) => date && setFormData({ ...formData, starts_at: date })}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">End Date (Optional)</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.ends_at ? format(formData.ends_at, "PPP") : "No end date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.ends_at || undefined}
+                      onSelect={(date) => setFormData({ ...formData, ends_at: date || null })}
+                    />
+                    {formData.ends_at && (
+                      <div className="p-2 border-t">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setFormData({ ...formData, ends_at: null })}
+                        >
+                          Clear end date
+                        </Button>
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
               <div>
                 <p className="font-medium">Active</p>
