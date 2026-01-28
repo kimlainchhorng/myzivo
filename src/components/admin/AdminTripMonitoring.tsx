@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Search, 
@@ -35,11 +42,19 @@ import {
   Activity,
   CheckCircle,
   Route,
-  Sparkles
+  Sparkles,
+  UserPlus,
+  RefreshCw,
+  Edit,
+  Car,
 } from "lucide-react";
 import { useTrips, useTripStats, useCancelTrip, Trip, TripStatus } from "@/hooks/useTrips";
 import { useAllTripsRealtime } from "@/hooks/useTripRealtime";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import TripMap from "./TripMap";
+import { cn } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -58,11 +73,74 @@ const AdminTripMonitoring = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [selectedDriverId, setSelectedDriverId] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [activeTab, setActiveTab] = useState("all");
+  const queryClient = useQueryClient();
 
-  const { data: trips, isLoading, error } = useTrips();
+  const { data: trips, isLoading, error, refetch } = useTrips();
   const { data: stats, isLoading: statsLoading } = useTripStats();
   const cancelTrip = useCancelTrip();
+
+  // Fetch available drivers
+  const { data: availableDrivers } = useQuery({
+    queryKey: ["available-drivers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, vehicle_type, is_online")
+        .eq("status", "verified")
+        .eq("is_online", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Manual driver assignment mutation
+  const assignDriverMutation = useMutation({
+    mutationFn: async ({ tripId, driverId }: { tripId: string; driverId: string }) => {
+      const { error } = await supabase
+        .from("trips")
+        .update({ driver_id: driverId, status: "accepted" })
+        .eq("id", tripId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      toast.success("Driver assigned successfully");
+      setIsAssignDialogOpen(false);
+      setSelectedDriverId("");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to assign driver");
+    },
+  });
+
+  // Status override mutation
+  const overrideStatusMutation = useMutation({
+    mutationFn: async ({ tripId, status }: { tripId: string; status: string }) => {
+      const updates: any = { status };
+      if (status === "completed") {
+        updates.completed_at = new Date().toISOString();
+      }
+      const { error } = await supabase
+        .from("trips")
+        .update(updates)
+        .eq("id", tripId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      toast.success("Trip status updated");
+      setIsStatusDialogOpen(false);
+      setSelectedStatus("");
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update status");
+    },
+  });
 
   // Enable realtime updates for all trips
   useAllTripsRealtime(true);
@@ -484,19 +562,153 @@ const AdminTripMonitoring = () => {
             </div>
           )}
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            {selectedTrip && !["completed", "cancelled"].includes(selectedTrip.status || "") && (
-              <Button 
-                variant="destructive"
-                onClick={() => handleCancelTrip(selectedTrip.id, true)}
-                disabled={cancelTrip.isPending}
+            {selectedTrip && !selectedTrip.driver_id && selectedTrip.status === "requested" && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsViewDialogOpen(false);
+                  setIsAssignDialogOpen(true);
+                }}
                 className="gap-2"
               >
-                <XCircle className="h-4 w-4" />
-                Cancel & Refund
+                <UserPlus className="h-4 w-4" />
+                Assign Driver
               </Button>
+            )}
+            {selectedTrip && !["completed", "cancelled"].includes(selectedTrip.status || "") && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedStatus(selectedTrip.status || "");
+                    setIsViewDialogOpen(false);
+                    setIsStatusDialogOpen(true);
+                  }}
+                  className="gap-2"
+                >
+                  <Edit className="h-4 w-4" />
+                  Override Status
+                </Button>
+                <Button 
+                  variant="destructive"
+                  onClick={() => handleCancelTrip(selectedTrip.id, true)}
+                  disabled={cancelTrip.isPending}
+                  className="gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Cancel & Refund
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Driver Dialog */}
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Assign Driver
+            </DialogTitle>
+            <DialogDescription>
+              Manually assign an online driver to this trip
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {selectedTrip && (
+              <div className="p-3 rounded-lg bg-muted/30">
+                <p className="text-xs text-muted-foreground mb-1">Trip</p>
+                <p className="font-medium">{selectedTrip.pickup_address}</p>
+                <p className="text-sm text-muted-foreground">→ {selectedTrip.dropoff_address}</p>
+              </div>
+            )}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Driver</label>
+              <Select value={selectedDriverId} onValueChange={setSelectedDriverId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an available driver" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDrivers?.length === 0 ? (
+                    <SelectItem value="none" disabled>No drivers online</SelectItem>
+                  ) : (
+                    availableDrivers?.map((driver) => (
+                      <SelectItem key={driver.id} value={driver.id}>
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4" />
+                          {driver.full_name} ({driver.vehicle_type})
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedTrip && assignDriverMutation.mutate({ tripId: selectedTrip.id, driverId: selectedDriverId })}
+              disabled={!selectedDriverId || assignDriverMutation.isPending}
+            >
+              Assign Driver
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Override Status Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent className="sm:max-w-md border-0 bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-primary" />
+              Override Trip Status
+            </DialogTitle>
+            <DialogDescription>
+              Manually change the status of this trip
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">New Status</label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select new status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="requested">Requested</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="en_route">En Route</SelectItem>
+                  <SelectItem value="arrived">Arrived</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <p className="text-sm text-amber-600">
+                ⚠️ Warning: Overriding status may affect driver earnings and customer experience.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsStatusDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => selectedTrip && overrideStatusMutation.mutate({ tripId: selectedTrip.id, status: selectedStatus })}
+              disabled={!selectedStatus || overrideStatusMutation.isPending}
+            >
+              Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
