@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -22,7 +24,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Search, 
   CheckCircle, 
@@ -34,9 +44,20 @@ import {
   FileText,
   AlertCircle,
   Shield,
-  Users
+  Users,
+  Filter,
+  Clock,
+  UserCheck,
+  Bike,
+  Truck,
+  BadgeCheck,
+  TrendingUp
 } from "lucide-react";
 import { useDrivers, useUpdateDriverStatus, Driver, DriverStatus } from "@/hooks/useDrivers";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow, subDays, startOfDay, endOfDay } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const container = {
   hidden: { opacity: 0 },
@@ -55,33 +76,74 @@ const AdminDriverVerification = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [vehicleFilter, setVehicleFilter] = useState("all");
 
   const { data: drivers, isLoading, error } = useDrivers();
   const updateStatus = useUpdateDriverStatus();
 
-  const filteredDrivers = drivers?.filter((driver) => {
-    const matchesSearch =
-      driver.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      driver.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      driver.vehicle_plate.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (activeTab === "all") return matchesSearch;
-    return matchesSearch && driver.status === activeTab;
-  }) || [];
+  // Fetch verification stats
+  const { data: verificationStats } = useQuery({
+    queryKey: ["verification-stats"],
+    queryFn: async () => {
+      const today = new Date();
+      const weekStart = subDays(today, 7);
+      
+      const { data: recentVerifications } = await supabase
+        .from("drivers")
+        .select("id, status, created_at")
+        .gte("created_at", weekStart.toISOString());
+      
+      const todayApprovals = recentVerifications?.filter(d => 
+        d.status === "verified" && 
+        new Date(d.created_at) >= startOfDay(today)
+      ).length || 0;
+      
+      const weekApprovals = recentVerifications?.filter(d => 
+        d.status === "verified"
+      ).length || 0;
+      
+      return { todayApprovals, weekApprovals };
+    },
+  });
+
+  const filteredDrivers = useMemo(() => {
+    if (!drivers) return [];
+    return drivers.filter((driver) => {
+      const matchesSearch =
+        driver.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        driver.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        driver.vehicle_plate.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = activeTab === "all" || driver.status === activeTab;
+      const matchesVehicle = vehicleFilter === "all" || driver.vehicle_type === vehicleFilter;
+      
+      return matchesSearch && matchesStatus && matchesVehicle;
+    });
+  }, [drivers, searchQuery, activeTab, vehicleFilter]);
 
   const getStatusBadge = (status: DriverStatus | null) => {
     switch (status) {
       case "verified":
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">Verified</Badge>;
+        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20"><BadgeCheck className="h-3 w-3 mr-1" />Verified</Badge>;
       case "pending":
-        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Pending</Badge>;
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
       case "rejected":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Rejected</Badge>;
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />Rejected</Badge>;
       case "suspended":
-        return <Badge variant="secondary">Suspended</Badge>;
+        return <Badge variant="secondary"><AlertCircle className="h-3 w-3 mr-1" />Suspended</Badge>;
       default:
         return <Badge variant="outline">{status || "Unknown"}</Badge>;
+    }
+  };
+
+  const getVehicleIcon = (type: string) => {
+    switch (type) {
+      case "bike": return <Bike className="h-3 w-3" />;
+      case "truck": return <Truck className="h-3 w-3" />;
+      default: return <Car className="h-3 w-3" />;
     }
   };
 
@@ -91,9 +153,14 @@ const AdminDriverVerification = () => {
       comfort: "bg-blue-500/10 text-blue-500 border-blue-500/20",
       premium: "bg-purple-500/10 text-purple-500 border-purple-500/20",
       xl: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      car: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      bike: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      suv: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+      truck: "bg-orange-500/10 text-orange-500 border-orange-500/20",
     };
     return (
-      <Badge className={colors[type] || "bg-gray-500/10 text-gray-500"}>
+      <Badge className={cn("gap-1", colors[type] || "bg-gray-500/10 text-gray-500")}>
+        {getVehicleIcon(type)}
         {type.charAt(0).toUpperCase() + type.slice(1)}
       </Badge>
     );
@@ -103,12 +170,23 @@ const AdminDriverVerification = () => {
     updateStatus.mutate({ id: driver.id, status: "verified", documents_verified: true });
   };
 
-  const handleReject = (driver: Driver) => {
-    updateStatus.mutate({ id: driver.id, status: "rejected", documents_verified: false });
+  const handleRejectClick = (driver: Driver) => {
+    setSelectedDriver(driver);
+    setIsRejectDialogOpen(true);
+  };
+
+  const confirmReject = () => {
+    if (selectedDriver) {
+      updateStatus.mutate({ id: selectedDriver.id, status: "rejected", documents_verified: false });
+      setIsRejectDialogOpen(false);
+      setRejectReason("");
+      setSelectedDriver(null);
+    }
   };
 
   const pendingCount = drivers?.filter((d) => d.status === "pending").length || 0;
   const verifiedCount = drivers?.filter((d) => d.status === "verified").length || 0;
+  const rejectedCount = drivers?.filter((d) => d.status === "rejected").length || 0;
   const onlineCount = drivers?.filter((d) => d.is_online).length || 0;
 
   if (error) {
@@ -356,7 +434,7 @@ const AdminDriverVerification = () => {
                                     variant="ghost" 
                                     size="icon" 
                                     className="text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => handleReject(driver)}
+                                    onClick={() => handleRejectClick(driver)}
                                     disabled={updateStatus.isPending}
                                   >
                                     <XCircle className="h-4 w-4" />
@@ -472,7 +550,7 @@ const AdminDriverVerification = () => {
                 <Button 
                   variant="destructive"
                   onClick={() => {
-                    handleReject(selectedDriver);
+                    handleRejectClick(selectedDriver);
                     setIsViewDialogOpen(false);
                   }}
                   disabled={updateStatus.isPending}
@@ -496,6 +574,56 @@ const AdminDriverVerification = () => {
             )}
             <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Confirmation Dialog */}
+      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <XCircle className="h-5 w-5" />
+              Reject Driver Application
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to reject this driver? They will need to reapply.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDriver && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={selectedDriver.avatar_url || undefined} />
+                  <AvatarFallback>{selectedDriver.full_name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{selectedDriver.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedDriver.email}</p>
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Rejection Reason (optional)</label>
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Enter reason for rejection..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsRejectDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmReject}
+              disabled={updateStatus.isPending}
+            >
+              {updateStatus.isPending ? "Rejecting..." : "Reject Application"}
             </Button>
           </DialogFooter>
         </DialogContent>
