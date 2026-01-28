@@ -105,6 +105,27 @@ const AdminReports = () => {
     },
   });
 
+  const generateCSV = (data: any[], filename: string) => {
+    if (!data || data.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+    
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(","),
+      ...data.map(row => headers.map(h => JSON.stringify(row[h] ?? "")).join(","))
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${filename}_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    toast.success("CSV downloaded successfully!");
+  };
+
   const handleGenerateReport = async () => {
     if (!selectedReport) {
       toast.error("Please select a report template");
@@ -113,24 +134,141 @@ const AdminReports = () => {
 
     setIsGenerating(true);
     
-    // Simulate report generation
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const newReport = {
-      id: `report-${Date.now()}`,
-      name: selectedReport.name,
-      date: new Date(),
-      status: "completed",
-    };
-    
-    setGeneratedReports(prev => [newReport, ...prev]);
-    setIsGenerating(false);
-    toast.success("Report generated successfully!");
+    try {
+      let reportData: any[] = [];
+      
+      // Fetch real data based on report type
+      switch (selectedReport.id) {
+        case "revenue-summary": {
+          const { data: trips } = await supabase
+            .from("trips")
+            .select("id, fare_amount, status, created_at")
+            .gte("created_at", dateRange.from?.toISOString() || "")
+            .lte("created_at", dateRange.to?.toISOString() || "");
+          
+          const { data: orders } = await supabase
+            .from("food_orders")
+            .select("id, total_amount, status, created_at")
+            .gte("created_at", dateRange.from?.toISOString() || "")
+            .lte("created_at", dateRange.to?.toISOString() || "");
+          
+          reportData = [
+            ...(trips || []).map((t: any) => ({ 
+              type: "Ride", 
+              id: t.id, 
+              amount: t.fare_amount || 0, 
+              status: t.status,
+              date: t.created_at 
+            })),
+            ...(orders || []).map((o: any) => ({ 
+              type: "Food Order", 
+              id: o.id, 
+              amount: o.total_amount || 0, 
+              status: o.status,
+              date: o.created_at 
+            }))
+          ];
+          break;
+        }
+        case "driver-performance": {
+          const { data: drivers } = await supabase
+            .from("drivers")
+            .select("id, full_name, rating, total_trips, vehicle_type, status");
+          reportData = (drivers || []).map((d: any) => ({
+            driver_id: d.id,
+            name: d.full_name,
+            rating: d.rating,
+            total_trips: d.total_trips,
+            vehicle_type: d.vehicle_type,
+            status: d.status
+          }));
+          break;
+        }
+        case "user-growth": {
+          const { data: users } = await supabase
+            .from("profiles")
+            .select("id, display_name, created_at")
+            .gte("created_at", dateRange.from?.toISOString() || "")
+            .lte("created_at", dateRange.to?.toISOString() || "");
+          reportData = (users || []).map((u: any) => ({
+            user_id: u.id,
+            name: u.display_name || "N/A",
+            joined: u.created_at
+          }));
+          break;
+        }
+        case "trip-analytics": {
+          const { data: trips } = await supabase
+            .from("trips")
+            .select("id, pickup_address, dropoff_address, fare_amount, distance_km, duration_minutes, rating, status, created_at")
+            .gte("created_at", dateRange.from?.toISOString() || "")
+            .lte("created_at", dateRange.to?.toISOString() || "");
+          reportData = (trips || []).map((t: any) => ({
+            trip_id: t.id,
+            pickup: t.pickup_address,
+            dropoff: t.dropoff_address,
+            fare: t.fare_amount,
+            distance_km: t.distance_km,
+            duration_min: t.duration_minutes,
+            rating: t.rating,
+            status: t.status,
+            date: t.created_at
+          }));
+          break;
+        }
+        case "restaurant-report": {
+          const { data: restaurants } = await supabase
+            .from("restaurants")
+            .select("id, name, cuisine_type, rating");
+          reportData = (restaurants || []).map((r: any) => ({
+            restaurant_id: r.id,
+            name: r.name,
+            cuisine: r.cuisine_type,
+            rating: r.rating
+          }));
+          break;
+        }
+        case "payout-summary": {
+          const { data: payouts } = await supabase
+            .from("payouts")
+            .select("id, amount, status, payout_method, created_at")
+            .gte("created_at", dateRange.from?.toISOString() || "")
+            .lte("created_at", dateRange.to?.toISOString() || "");
+          reportData = (payouts || []).map((p: any) => ({
+            payout_id: p.id,
+            amount: p.amount,
+            status: p.status,
+            method: p.payout_method,
+            date: p.created_at
+          }));
+          break;
+        }
+      }
+      
+      const newReport = {
+        id: `report-${Date.now()}`,
+        name: selectedReport.name,
+        date: new Date(),
+        status: "completed",
+        data: reportData,
+        recordCount: reportData.length,
+      };
+      
+      setGeneratedReports(prev => [newReport, ...prev]);
+      toast.success(`Report generated with ${reportData.length} records!`);
+    } catch (error) {
+      toast.error("Failed to generate report");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const handleDownload = (reportId: string, format: "csv" | "pdf") => {
-    toast.success(`Downloading ${format.toUpperCase()} report...`);
-    // In a real app, this would trigger actual file download
+  const handleDownload = (report: any, format: "csv" | "pdf") => {
+    if (format === "csv" && report.data) {
+      generateCSV(report.data, report.name.replace(/\s+/g, "_").toLowerCase());
+    } else {
+      toast.success(`Downloading ${format.toUpperCase()} report...`);
+    }
   };
 
   const categoryColors: Record<string, string> = {
@@ -401,7 +539,7 @@ const AdminReports = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDownload(report.id, "csv")}
+                          onClick={() => handleDownload(report, "csv")}
                           className="h-8 w-8"
                         >
                           <FileSpreadsheet className="h-4 w-4" />
@@ -409,7 +547,7 @@ const AdminReports = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDownload(report.id, "pdf")}
+                          onClick={() => handleDownload(report, "pdf")}
                           className="h-8 w-8"
                         >
                           <FileDown className="h-4 w-4" />
