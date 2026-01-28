@@ -14,13 +14,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, Headphones, MessageSquare, Clock, CheckCircle, AlertCircle, 
   Send, User, Shield, Inbox, XCircle, RefreshCw, Filter, 
-  AlertTriangle, Zap, UserCheck, FileText
+  AlertTriangle, Zap, UserCheck, FileText, TrendingUp, Bell
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import AdminTicketQueue from "./AdminTicketQueue";
+import AdminEscalationManager from "./AdminEscalationManager";
+import AdminSystemAlerts from "./AdminSystemAlerts";
 
 interface Ticket {
   id: string;
@@ -74,7 +77,8 @@ const AdminSupportTickets = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeTab, setActiveTab] = useState("tickets");
+  const [mainView, setMainView] = useState("support");
   const queryClient = useQueryClient();
 
   const { data: tickets, isLoading } = useQuery({
@@ -205,15 +209,54 @@ const AdminSupportTickets = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10">
-          <Headphones className="h-6 w-6 text-cyan-500" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10">
+            <Headphones className="h-6 w-6 text-cyan-500" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Support & Alerts</h1>
+            <p className="text-muted-foreground">Manage tickets, escalations, and system alerts</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold">Support Tickets</h1>
-          <p className="text-muted-foreground">Manage customer support requests</p>
+        
+        {/* Main View Toggle */}
+        <div className="flex gap-1 p-1 rounded-xl bg-muted/30">
+          <Button
+            variant={mainView === "support" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setMainView("support")}
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Support
+          </Button>
+          <Button
+            variant={mainView === "alerts" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setMainView("alerts")}
+            className="gap-2"
+          >
+            <Bell className="h-4 w-4" />
+            System Alerts
+          </Button>
         </div>
       </div>
+
+      {mainView === "alerts" ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <AdminSystemAlerts />
+          <div className="space-y-6">
+            <AdminTicketQueue />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Queue and Escalation Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AdminTicketQueue />
+            <AdminEscalationManager />
+          </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -535,6 +578,8 @@ const AdminSupportTickets = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </>
+      )}
     </div>
   );
 };

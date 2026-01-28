@@ -3,9 +3,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, 
-  UserCheck, 
-  UserPlus, 
-  UserMinus,
   Repeat,
   Heart,
   ShoppingBag,
@@ -26,11 +23,11 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const segmentData = [
-  { name: "Power Users", value: 15, color: "#14b8a6", description: "10+ orders/month" },
-  { name: "Regular", value: 35, color: "#3b82f6", description: "4-9 orders/month" },
-  { name: "Occasional", value: 30, color: "#8b5cf6", description: "1-3 orders/month" },
-  { name: "New", value: 12, color: "#22c55e", description: "First month" },
-  { name: "Dormant", value: 8, color: "#f59e0b", description: "No activity 30+ days" },
+  { name: "Power Users", value: 15, color: "hsl(var(--primary))", description: "10+ orders/month" },
+  { name: "Regular", value: 35, color: "hsl(217, 91%, 60%)", description: "4-9 orders/month" },
+  { name: "Occasional", value: 30, color: "hsl(263, 70%, 50%)", description: "1-3 orders/month" },
+  { name: "New", value: 12, color: "hsl(142, 71%, 45%)", description: "First month" },
+  { name: "Dormant", value: 8, color: "hsl(38, 92%, 50%)", description: "No activity 30+ days" },
 ];
 
 const retentionData = [
