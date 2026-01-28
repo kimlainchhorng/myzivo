@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug
+  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -40,6 +40,7 @@ import AdminPayoutProcessing from "@/components/admin/AdminPayoutProcessing";
 import AdminDriverOnboardingQueue from "@/components/admin/AdminDriverOnboardingQueue";
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import AdminIntegrationManager from "@/components/admin/AdminIntegrationManager";
+import AdminRealtimeDashboard from "@/components/admin/AdminRealtimeDashboard";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -54,6 +55,7 @@ const AdminDashboard = () => {
     { title: "Overview", items: [
       { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
       { value: "activity", label: "Activity Feed", icon: Activity, gradient: "from-cyan-500 to-blue-500" },
+      { value: "realtime", label: "Real-time", icon: Radio, gradient: "from-violet-500 to-purple-500" },
     ]},
     { title: "Administration", items: [
       { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
@@ -245,6 +247,7 @@ const AdminDashboard = () => {
 
             <TabsContent value="analytics" className="mt-0"><AdminAnalytics /></TabsContent>
             <TabsContent value="activity" className="mt-0"><AdminActivityFeed /></TabsContent>
+            <TabsContent value="realtime" className="mt-0"><AdminRealtimeDashboard /></TabsContent>
             <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
