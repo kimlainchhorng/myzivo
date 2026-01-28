@@ -33,6 +33,7 @@ import AdminActivityFeed from "@/components/admin/AdminActivityFeed";
 import AdminDriverPerformance from "@/components/admin/AdminDriverPerformance";
 import AdminDriverEarnings from "@/components/admin/AdminDriverEarnings";
 import AdminDriverScoring from "@/components/admin/AdminDriverScoring";
+import AdminHeatmapView from "@/components/admin/AdminHeatmapView";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -61,6 +62,7 @@ const AdminDashboard = () => {
     ]},
     { title: "Operations", items: [
       { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+      { value: "heatmap", label: "Geographic", icon: MapPin, gradient: "from-orange-500 to-red-500" },
       { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
       { value: "payouts", label: "Payouts", icon: Wallet, gradient: "from-green-500 to-emerald-500" },
     ]},
@@ -235,6 +237,7 @@ const AdminDashboard = () => {
             <TabsContent value="earnings" className="mt-0"><AdminDriverEarnings /></TabsContent>
             <TabsContent value="performance" className="mt-0"><AdminDriverPerformance /></TabsContent>
             <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
+            <TabsContent value="heatmap" className="mt-0"><AdminHeatmapView /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
             <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
             <TabsContent value="restaurants" className="mt-0"><AdminRestaurantManagement /></TabsContent>
