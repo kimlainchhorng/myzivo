@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap, TrendingUp, Trophy
+  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -34,6 +34,9 @@ import AdminDriverPerformance from "@/components/admin/AdminDriverPerformance";
 import AdminDriverEarnings from "@/components/admin/AdminDriverEarnings";
 import AdminDriverScoring from "@/components/admin/AdminDriverScoring";
 import AdminHeatmapView from "@/components/admin/AdminHeatmapView";
+import AdminCommissionAnalytics from "@/components/admin/AdminCommissionAnalytics";
+import AdminRevenueReconciliation from "@/components/admin/AdminRevenueReconciliation";
+import AdminPayoutProcessing from "@/components/admin/AdminPayoutProcessing";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -64,7 +67,12 @@ const AdminDashboard = () => {
       { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
       { value: "heatmap", label: "Geographic", icon: MapPin, gradient: "from-orange-500 to-red-500" },
       { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+    ]},
+    { title: "Financial", items: [
       { value: "payouts", label: "Payouts", icon: Wallet, gradient: "from-green-500 to-emerald-500" },
+      { value: "processing", label: "Processing", icon: Zap, gradient: "from-amber-500 to-orange-500" },
+      { value: "commissions", label: "Commission", icon: Percent, gradient: "from-violet-500 to-purple-500" },
+      { value: "reconciliation", label: "Reconcile", icon: Scale, gradient: "from-blue-500 to-cyan-500" },
     ]},
     { title: "Services", items: [
       { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
@@ -240,6 +248,9 @@ const AdminDashboard = () => {
             <TabsContent value="heatmap" className="mt-0"><AdminHeatmapView /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
             <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
+            <TabsContent value="processing" className="mt-0"><AdminPayoutProcessing /></TabsContent>
+            <TabsContent value="commissions" className="mt-0"><AdminCommissionAnalytics /></TabsContent>
+            <TabsContent value="reconciliation" className="mt-0"><AdminRevenueReconciliation /></TabsContent>
             <TabsContent value="restaurants" className="mt-0"><AdminRestaurantManagement /></TabsContent>
             <TabsContent value="car-rentals" className="mt-0"><AdminCarRentalManagement /></TabsContent>
             <TabsContent value="flights" className="mt-0"><AdminFlightManagement /></TabsContent>
