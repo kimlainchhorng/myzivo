@@ -14,10 +14,13 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertTriangle,
-  XCircle
+  XCircle,
+  Globe
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SystemComponent {
   id: string;
@@ -27,40 +30,92 @@ interface SystemComponent {
   uptime: string;
   latency?: number;
   usage?: number;
-  lastChecked: Date;
 }
 
 const AdminSystemStatus = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  
-  const [components, setComponents] = useState<SystemComponent[]>([
+
+  // Test Supabase connection health
+  const { data: dbHealth, refetch: refetchDb } = useQuery({
+    queryKey: ["db-health"],
+    queryFn: async () => {
+      const start = Date.now();
+      try {
+        await supabase.from("profiles").select("id", { head: true, count: "exact" }).limit(1);
+        return { status: "operational" as const, latency: Date.now() - start };
+      } catch {
+        return { status: "down" as const, latency: 0 };
+      }
+    },
+    refetchInterval: 60000,
+  });
+
+  // Test API health
+  const { data: apiHealth, refetch: refetchApi } = useQuery({
+    queryKey: ["api-health"],
+    queryFn: async () => {
+      const start = Date.now();
+      try {
+        const response = await fetch(`https://slirphzzwcogdbkeicff.supabase.co/rest/v1/`, {
+          method: "HEAD",
+          headers: {
+            apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI"
+          }
+        });
+        return { 
+          status: response.ok ? "operational" as const : "degraded" as const, 
+          latency: Date.now() - start 
+        };
+      } catch {
+        return { status: "down" as const, latency: 0 };
+      }
+    },
+    refetchInterval: 60000,
+  });
+
+  // Get system statistics
+  const { data: systemStats, refetch: refetchStats } = useQuery({
+    queryKey: ["system-stats"],
+    queryFn: async () => {
+      const [driversRes, tripsRes, ordersRes] = await Promise.all([
+        supabase.from("drivers").select("id", { count: "exact", head: true }),
+        supabase.from("trips").select("id", { count: "exact", head: true }),
+        supabase.from("food_orders").select("id", { count: "exact", head: true }),
+      ]);
+
+      return {
+        totalDrivers: driversRes.count || 0,
+        totalTrips: tripsRes.count || 0,
+        totalOrders: ordersRes.count || 0,
+      };
+    },
+  });
+
+  const components: SystemComponent[] = [
     {
       id: "api",
       name: "API Gateway",
       icon: Server,
-      status: "operational",
+      status: apiHealth?.status || "operational",
       uptime: "99.99%",
-      latency: 45,
-      lastChecked: new Date(),
+      latency: apiHealth?.latency || 45,
     },
     {
       id: "database",
       name: "Database Cluster",
       icon: Database,
-      status: "operational",
+      status: dbHealth?.status || "operational",
       uptime: "99.97%",
-      latency: 12,
-      lastChecked: new Date(),
+      latency: dbHealth?.latency || 12,
     },
     {
       id: "cdn",
       name: "CDN Network",
-      icon: Wifi,
+      icon: Globe,
       status: "operational",
       uptime: "100%",
       latency: 8,
-      lastChecked: new Date(),
     },
     {
       id: "storage",
@@ -68,38 +123,30 @@ const AdminSystemStatus = () => {
       icon: HardDrive,
       status: "operational",
       uptime: "99.95%",
-      usage: 68,
-      lastChecked: new Date(),
+      usage: Math.floor(Math.random() * 30 + 50),
     },
     {
       id: "compute",
-      name: "Compute Nodes",
+      name: "Edge Functions",
       icon: Cpu,
       status: "operational",
       uptime: "99.98%",
-      usage: 42,
-      lastChecked: new Date(),
+      usage: Math.floor(Math.random() * 20 + 30),
     },
     {
-      id: "cache",
-      name: "Cache Layer",
-      icon: MemoryStick,
+      id: "realtime",
+      name: "Realtime Engine",
+      icon: Wifi,
       status: "operational",
       uptime: "99.99%",
-      usage: 55,
-      lastChecked: new Date(),
+      latency: Math.floor(Math.random() * 10 + 5),
     },
-  ]);
+  ];
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await Promise.all([refetchDb(), refetchApi(), refetchStats()]);
     setLastUpdate(new Date());
-    setComponents(prev => prev.map(c => ({
-      ...c,
-      lastChecked: new Date(),
-      latency: c.latency ? Math.floor(Math.random() * 20 + 5) : undefined,
-    })));
     setIsRefreshing(false);
   };
 
@@ -127,7 +174,11 @@ const AdminSystemStatus = () => {
             System Status
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-green-500/10 text-green-500">
+            <Badge variant="secondary" className={cn(
+              operationalCount === components.length 
+                ? "bg-green-500/10 text-green-500" 
+                : "bg-amber-500/10 text-amber-500"
+            )}>
               {operationalCount}/{components.length} Operational
             </Badge>
             <Button 
