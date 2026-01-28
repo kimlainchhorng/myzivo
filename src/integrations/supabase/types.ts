@@ -1046,6 +1046,8 @@ export type Database = {
         Row: {
           document_type: string
           driver_id: string
+          expires_at: string | null
+          expiry_notified_at: string | null
           file_name: string
           file_path: string
           file_size: number | null
@@ -1059,6 +1061,8 @@ export type Database = {
         Insert: {
           document_type: string
           driver_id: string
+          expires_at?: string | null
+          expiry_notified_at?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
@@ -1072,6 +1076,8 @@ export type Database = {
         Update: {
           document_type?: string
           driver_id?: string
+          expires_at?: string | null
+          expiry_notified_at?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null
@@ -5857,6 +5863,7 @@ export type Database = {
         Args: { _driver_id: string }
         Returns: boolean
       }
+      check_expiring_documents: { Args: never; Returns: number }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       create_driver_on_signup: {
         Args: {
