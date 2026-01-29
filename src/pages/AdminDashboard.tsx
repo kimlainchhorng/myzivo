@@ -45,6 +45,7 @@ import AdminRealtimeDashboard from "@/components/admin/AdminRealtimeDashboard";
 import AdminRidesManagement from "@/components/admin/AdminRidesManagement";
 import AdminEatsManagement from "@/components/admin/AdminEatsManagement";
 import AdminAccountsManagement from "@/components/admin/AdminAccountsManagement";
+import AdminDeliveryManagement from "@/components/admin/AdminDeliveryManagement";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -84,6 +85,7 @@ const AdminDashboard = () => {
     { title: "Eats", items: [
       { value: "eats", label: "Eats Control", icon: Utensils, gradient: "from-eats to-red-500" },
       { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
+      { value: "delivery", label: "Delivery", icon: Bike, gradient: "from-cyan-500 to-blue-500" },
     ]},
     { title: "Travel Services", items: [
       { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
@@ -271,6 +273,7 @@ const AdminDashboard = () => {
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
             <TabsContent value="eats" className="mt-0"><AdminEatsManagement /></TabsContent>
             <TabsContent value="restaurants" className="mt-0"><AdminRestaurantManagement /></TabsContent>
+            <TabsContent value="delivery" className="mt-0"><AdminDeliveryManagement /></TabsContent>
             <TabsContent value="car-rentals" className="mt-0"><AdminCarRentalManagement /></TabsContent>
             <TabsContent value="flights" className="mt-0"><AdminFlightManagement /></TabsContent>
             <TabsContent value="hotels" className="mt-0"><AdminHotelManagement /></TabsContent>
