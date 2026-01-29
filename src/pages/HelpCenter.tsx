@@ -115,76 +115,59 @@ const HelpCenter = () => {
         </div>
 
         {/* Quick Categories */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-10"
-        >
-          {categories.map((cat, index) => (
-            <motion.a
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          {categories.map((cat) => (
+            <a
               key={cat.label}
               href={cat.href}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 + index * 0.05 }}
-              whileHover={{ y: -4 }}
-              className="flex flex-col items-center p-4 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all"
+              className="flex flex-col items-center p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all touch-manipulation active:scale-95"
             >
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center mb-2 shadow-lg`}>
-                <cat.icon className="h-6 w-6 text-white" />
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center mb-2 shadow-lg`}>
+                <cat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <span className="text-sm font-semibold">{cat.label}</span>
-            </motion.a>
+              <span className="text-xs sm:text-sm font-semibold">{cat.label}</span>
+            </a>
           ))}
-        </motion.div>
+        </div>
 
         {/* Main Content Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Tabs defaultValue="faq" className="mb-8">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1.5 rounded-xl h-auto">
-              <TabsTrigger value="faq" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold">
+            <TabsList className="grid w-full grid-cols-3 bg-muted/50 p-1 sm:p-1.5 rounded-xl h-auto">
+              <TabsTrigger value="faq" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
                 FAQ
               </TabsTrigger>
-              <TabsTrigger value="contact" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold">
+              <TabsTrigger value="contact" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
                 Contact Us
               </TabsTrigger>
-              <TabsTrigger value="ticket" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold">
-                Submit Ticket
+              <TabsTrigger value="ticket" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white font-semibold touch-manipulation">
+                Ticket
               </TabsTrigger>
             </TabsList>
 
             {/* FAQ Tab */}
-            <TabsContent value="faq" className="mt-6 space-y-8">
+            <TabsContent value="faq" className="mt-5 sm:mt-6 space-y-6 sm:space-y-8">
               {/* Popular Articles */}
               <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                <CardHeader className="pb-2 sm:pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Star className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 fill-amber-500" />
                     Popular Articles
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-2">
+                  <div className="grid md:grid-cols-2 gap-1 sm:gap-2">
                     {popularArticles.map((article, i) => (
-                      <motion.button
+                      <button
                         key={i}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        whileHover={{ x: 4 }}
-                        className="flex items-center justify-between p-4 rounded-xl hover:bg-muted/50 transition-colors text-left group"
+                        className="flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-muted/50 transition-colors text-left group touch-manipulation active:scale-[0.98]"
                       >
-                        <div>
-                          <p className="font-semibold group-hover:text-primary transition-colors">{article.title}</p>
-                          <p className="text-sm text-muted-foreground">{article.category} • {article.views} views</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm sm:text-base group-hover:text-primary transition-colors truncate">{article.title}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{article.category} • {article.views} views</p>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      </motion.button>
+                        <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 ml-2" />
+                      </button>
                     ))}
                   </div>
                 </CardContent>
@@ -258,36 +241,26 @@ const HelpCenter = () => {
             </TabsContent>
 
             {/* Contact Tab */}
-            <TabsContent value="contact" className="mt-6">
-              <div className="grid md:grid-cols-3 gap-4 mb-8">
+            <TabsContent value="contact" className="mt-5 sm:mt-6">
+              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
-                  { icon: MessageCircle, title: "Live Chat", desc: "Chat with a support agent in real-time", badge: "Available 24/7", gradient: "from-primary to-teal-400", action: "Start Chat" },
-                  { icon: Phone, title: "Phone Support", desc: "Speak directly with our team", badge: "1-800-ZIVO-HELP", gradient: "from-violet-500 to-purple-500", action: "Call Now" },
-                  { icon: Mail, title: "Email Support", desc: "Get a response within 24 hours", badge: "support@zivo.com", gradient: "from-sky-500 to-blue-500", action: "Send Email" },
+                  { icon: MessageCircle, title: "Live Chat", desc: "Chat with a support agent", badge: "24/7", gradient: "from-primary to-teal-400", action: "Start Chat" },
+                  { icon: Phone, title: "Phone", desc: "Speak with our team", badge: "1-800-ZIVO", gradient: "from-violet-500 to-purple-500", action: "Call Now" },
+                  { icon: Mail, title: "Email", desc: "Response within 24h", badge: "support@zivo.com", gradient: "from-sky-500 to-blue-500", action: "Send Email" },
                 ].map((contact, index) => (
-                  <motion.div
-                    key={contact.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ y: -4 }}
-                  >
-                    <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all">
-                      <CardContent className="p-6 text-center">
-                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${contact.gradient} flex items-center justify-center mx-auto mb-4 shadow-lg`}>
-                          <contact.icon className="h-7 w-7 text-white" />
-                        </div>
-                        <h3 className="font-bold text-lg mb-2">{contact.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-4">{contact.desc}</p>
-                        <Badge variant="outline" className="mb-4 font-semibold">{contact.badge}</Badge>
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                          <Button className={`w-full rounded-xl font-semibold ${index === 0 ? "bg-gradient-to-r from-primary to-teal-400 text-white" : ""}`} variant={index === 0 ? "default" : "outline"}>
-                            {contact.action}
-                          </Button>
-                        </motion.div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                  <Card key={contact.title} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all">
+                    <CardContent className="p-4 sm:p-6 text-center">
+                      <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${contact.gradient} flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg`}>
+                        <contact.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      </div>
+                      <h3 className="font-bold text-base sm:text-lg mb-1 sm:mb-2">{contact.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{contact.desc}</p>
+                      <Badge variant="outline" className="mb-3 sm:mb-4 font-semibold text-xs">{contact.badge}</Badge>
+                      <Button className={`w-full rounded-xl font-semibold touch-manipulation active:scale-[0.98] ${index === 0 ? "bg-gradient-to-r from-primary to-teal-400 text-white" : ""}`} variant={index === 0 ? "default" : "outline"}>
+                        {contact.action}
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
 
@@ -408,7 +381,7 @@ const HelpCenter = () => {
               </Card>
             </TabsContent>
           </Tabs>
-        </motion.div>
+        </div>
       </main>
     </div>
   );
