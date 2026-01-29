@@ -5212,6 +5212,10 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_name: string | null
+          customer_phone: string | null
           distance_km: number | null
           driver_id: string | null
           dropoff_address: string
@@ -5232,6 +5236,10 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_name?: string | null
+          customer_phone?: string | null
           distance_km?: number | null
           driver_id?: string | null
           dropoff_address: string
@@ -5252,6 +5260,10 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_name?: string | null
+          customer_phone?: string | null
           distance_km?: number | null
           driver_id?: string | null
           dropoff_address?: string

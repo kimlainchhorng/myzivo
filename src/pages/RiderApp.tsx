@@ -263,28 +263,27 @@ const RiderApp = () => {
     return <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Static background glow effects */}
         <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl opacity-60" />
-          <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-emerald-500/8 to-cyan-500/4 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-[250px] h-[250px] bg-gradient-to-bl from-primary/15 to-teal-500/8 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-1/3 left-0 w-[200px] h-[200px] bg-gradient-to-tr from-emerald-500/8 to-cyan-500/4 rounded-full blur-3xl" />
         </div>
         
         <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 shadow-lg">
-          <div className="p-4">
+          <div className="p-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl hover:bg-white/10 border border-white/5 h-10 w-10 active:scale-95 transition-transform">
-                  <ArrowLeft className="w-5 h-5" />
+              <div className="flex items-center gap-1.5">
+                <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-lg hover:bg-white/10 border border-white/5 h-8 w-8 active:scale-95 transition-transform">
+                  <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/40">
-                    <Navigation className="w-6 h-6 text-white" />
-                    {/* Static pulse ring */}
-                    <div className="absolute inset-0 rounded-2xl bg-primary/30 blur-sm animate-pulse" />
+                <div className="flex items-center gap-2">
+                  <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-primary via-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                    <Navigation className="w-4 h-4 text-white" />
+                    <div className="absolute inset-0 rounded-xl bg-primary/30 blur-sm animate-pulse" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg">Your Trip</h1>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <p className="text-xs text-muted-foreground">In progress</p>
+                    <h1 className="font-bold text-sm">Your Trip</h1>
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] text-muted-foreground">In progress</p>
                     </div>
                   </div>
                 </div>
@@ -294,7 +293,7 @@ const RiderApp = () => {
           </div>
         </div>
         
-        <div className="p-4">
+        <div className="p-2.5">
           <TripTracker trip={activeTrip} onCancel={handleCancelTrip} />
         </div>
       </div>;

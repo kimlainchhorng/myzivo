@@ -20,7 +20,7 @@ export const useRiderTripHistory = (userId: string | undefined) => {
         .limit(50);
 
       if (error) throw error;
-      return data as (Trip & { driver: { full_name: string; vehicle_model: string; vehicle_plate: string; rating: number; avatar_url: string | null } | null })[];
+      return data as unknown as (Trip & { driver: { full_name: string; vehicle_model: string; vehicle_plate: string; rating: number; avatar_url: string | null } | null })[];
     },
     enabled: !!userId,
   });
