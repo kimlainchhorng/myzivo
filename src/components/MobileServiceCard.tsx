@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for mobile performance
 import { ChevronRight, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -27,13 +27,10 @@ const MobileServiceCard = ({
   const navigate = useNavigate();
 
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, type: "spring", stiffness: 300 }}
-      whileTap={{ scale: 0.98 }}
+    <button
       onClick={() => navigate(href)}
-      className="w-full p-4 rounded-2xl bg-card/80 border border-border/50 flex items-center gap-4 touch-manipulation active:bg-muted/50 transition-colors"
+      className="w-full p-4 rounded-2xl bg-card/80 border border-border/50 flex items-center gap-4 touch-manipulation active:scale-[0.98] active:bg-muted/50 transition-all animate-in fade-in slide-in-from-bottom-4 duration-300"
+      style={{ animationDelay: `${delay * 1000}ms` }}
     >
       <div className={cn(
         "w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg",
@@ -53,7 +50,7 @@ const MobileServiceCard = ({
         <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
       <ChevronRight className="w-5 h-5 text-muted-foreground" />
-    </motion.button>
+    </button>
   );
 };
 

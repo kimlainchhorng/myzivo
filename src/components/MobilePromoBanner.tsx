@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for mobile performance
 import { ChevronRight, Sparkles, Percent, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -41,17 +41,14 @@ const MobilePromoBanner = () => {
     <div className="px-4 overflow-x-auto scrollbar-hide -mx-4 sm:mx-0">
       <div className="flex gap-3 px-4 sm:px-0">
         {promos.map((promo, index) => (
-          <motion.button
+          <button
             key={promo.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileTap={{ scale: 0.98 }}
             onClick={() => navigate(promo.href)}
             className={cn(
-              "flex-shrink-0 w-[280px] p-4 rounded-2xl text-left touch-manipulation relative overflow-hidden",
+              "flex-shrink-0 w-[280px] p-4 rounded-2xl text-left touch-manipulation active:scale-[0.98] transition-transform relative overflow-hidden animate-in fade-in slide-in-from-right-4 duration-300",
               promo.gradient
             )}
+            style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className="absolute top-2 right-2 w-16 h-16 rounded-full bg-white/10 blur-xl" />
             <div className="relative z-10">
@@ -65,7 +62,7 @@ const MobilePromoBanner = () => {
                 <ChevronRight className="w-4 h-4" />
               </div>
             </div>
-          </motion.button>
+          </button>
         ))}
       </div>
     </div>
