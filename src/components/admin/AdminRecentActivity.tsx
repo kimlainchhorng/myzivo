@@ -93,26 +93,28 @@ const AdminRecentActivity = () => {
       const activities: ActivityItem[] = [];
 
       tripsRes.data?.forEach(trip => {
-        activities.push({
-          id: trip.id,
-          type: "trip",
-          title: trip.status === "completed" ? "Trip Completed" : "New Trip Request",
-          description: trip.pickup_address.substring(0, 30) + "...",
-          timestamp: trip.created_at,
-          status: trip.status === "completed" ? "success" : trip.status === "cancelled" ? "error" : "info",
-          amount: trip.fare_amount
-        });
+        if (trip.pickup_address) {
+          activities.push({
+            id: trip.id,
+            type: "trip",
+            title: trip.status === "completed" ? "Trip Completed" : trip.status === "cancelled" ? "Trip Cancelled" : "New Trip Request",
+            description: trip.pickup_address.length > 30 ? trip.pickup_address.substring(0, 30) + "..." : trip.pickup_address,
+            timestamp: trip.created_at,
+            status: trip.status === "completed" ? "success" : trip.status === "cancelled" ? "error" : "info",
+            amount: trip.fare_amount || undefined
+          });
+        }
       });
 
       ordersRes.data?.forEach(order => {
         activities.push({
           id: order.id,
           type: "order",
-          title: order.status === "completed" ? "Order Delivered" : "New Food Order",
+          title: order.status === "completed" ? "Order Delivered" : order.status === "cancelled" ? "Order Cancelled" : "New Food Order",
           description: `Order #${order.id.slice(0, 8)}`,
           timestamp: order.created_at,
-          status: order.status === "completed" ? "success" : "info",
-          amount: order.total_amount
+          status: order.status === "completed" ? "success" : order.status === "cancelled" ? "error" : "info",
+          amount: order.total_amount || undefined
         });
       });
 
@@ -120,27 +122,32 @@ const AdminRecentActivity = () => {
         activities.push({
           id: payout.id,
           type: "payment",
-          title: payout.status === "completed" ? "Payout Completed" : "Payout Requested",
+          title: payout.status === "completed" ? "Payout Completed" : payout.status === "failed" ? "Payout Failed" : "Payout Pending",
           description: `Payout #${payout.id.slice(0, 8)}`,
           timestamp: payout.created_at,
           status: payout.status === "completed" ? "success" : payout.status === "failed" ? "error" : "warning",
-          amount: payout.amount
+          amount: payout.amount || undefined
         });
       });
 
       driversRes.data?.forEach(driver => {
-        activities.push({
-          id: driver.id,
-          type: "driver",
-          title: driver.status === "verified" ? "Driver Verified" : "New Driver Application",
-          description: driver.full_name,
-          timestamp: driver.created_at,
-          status: driver.status === "verified" ? "success" : driver.status === "rejected" ? "error" : "warning",
-          initials: driver.full_name.split(" ").map(n => n[0]).join("")
-        });
+        if (driver.full_name) {
+          const nameParts = driver.full_name.split(" ");
+          activities.push({
+            id: driver.id,
+            type: "driver",
+            title: driver.status === "verified" ? "Driver Verified" : driver.status === "rejected" ? "Driver Rejected" : "New Driver Application",
+            description: driver.full_name,
+            timestamp: driver.created_at,
+            status: driver.status === "verified" ? "success" : driver.status === "rejected" ? "error" : "warning",
+            initials: nameParts.map(n => n[0] || "").join("").toUpperCase().slice(0, 2)
+          });
+        }
       });
 
-      return activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 10);
+      // Sort by timestamp and return only real data
+      const sorted = activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      return sorted.slice(0, 10);
     },
     refetchInterval: 30000
   });
