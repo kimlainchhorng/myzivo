@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import { Provider } from "@supabase/supabase-js";
 import ZivoLogo from "@/components/ZivoLogo";
 

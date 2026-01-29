@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion } from "framer-motion";
 import { UtensilsCrossed, Store, MapPin, Phone, Mail, Clock, Upload, ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,18 +137,12 @@ const RestaurantRegistration = () => {
 
       <main className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
         {/* Progress Steps */}
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-center gap-4 mb-8"
-        >
+        <div className="flex items-center justify-center gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
           {[1, 2, 3].map((s, index) => (
-            <motion.div 
+            <div 
               key={s} 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300"
+              style={{ animationDelay: `${index * 75}ms` }}
             >
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all shadow-lg ${
                 step >= s 
@@ -162,17 +155,12 @@ const RestaurantRegistration = () => {
                 {s === 1 ? "Account" : s === 2 ? "Restaurant Info" : "Complete"}
               </span>
               {s < 3 && <div className={`w-8 h-0.5 rounded-full ${step > s ? "bg-gradient-to-r from-eats to-orange-500" : "bg-muted"}`} />}
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Step 1: Account Creation */}
         {step === 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="grid lg:grid-cols-2 gap-8"
-          >
+          <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Benefits */}
             <div className="space-y-6">
               <div>
@@ -256,15 +244,12 @@ const RestaurantRegistration = () => {
                 </form>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Step 2: Restaurant Details */}
         {step === 2 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Card className="max-w-2xl mx-auto">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -446,16 +431,12 @@ const RestaurantRegistration = () => {
                 </Form>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         )}
 
         {/* Step 3: Success */}
         {step === 3 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-12"
-          >
+          <div className="text-center py-12 animate-in fade-in zoom-in-95 duration-500">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success/10 flex items-center justify-center">
               <Check className="h-10 w-10 text-success" />
             </div>
@@ -472,7 +453,7 @@ const RestaurantRegistration = () => {
                 Visit Help Center
               </Button>
             </div>
-          </motion.div>
+          </div>
         )}
       </main>
     </div>
