@@ -1,29 +1,22 @@
+// CSS animations used instead of framer-motion for mobile performance
 import { ReactNode, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   Home, 
   Car, 
   UtensilsCrossed, 
   User, 
-  Search,
   Bell,
   Plane,
   Hotel,
   CarFront,
   Package,
-  Grid3X3,
   X,
   ChevronRight,
-  Sparkles,
-  MapPin,
-  Clock,
-  Shield,
-  Settings
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { Badge } from "@/components/ui/badge";
 import ZivoLogo from "./ZivoLogo";
 
 interface MobileAppShellProps {
@@ -101,21 +94,19 @@ const MobileAppShell = ({
           <div className="flex items-center justify-between h-14 px-4">
             {/* Left: Logo or Back */}
             {showBackButton ? (
-              <motion.button
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={onBackClick || (() => navigate(-1))}
-                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-colors -ml-1"
+                className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-colors -ml-1 active:scale-90 touch-manipulation"
               >
                 <ChevronRight className="w-5 h-5 rotate-180" />
-              </motion.button>
+              </button>
             ) : (
-              <motion.div 
-                whileTap={{ scale: 0.95 }}
+              <div 
                 onClick={() => navigate("/")}
-                className="cursor-pointer"
+                className="cursor-pointer active:scale-95 transition-transform touch-manipulation"
               >
                 <ZivoLogo size="sm" />
-              </motion.div>
+              </div>
             )}
 
             {/* Center: Title */}
@@ -129,13 +120,12 @@ const MobileAppShell = ({
             <div className="flex items-center gap-1">
               {headerAction || (
                 <>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-colors relative"
+                  <button
+                    className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-colors relative active:scale-90 touch-manipulation"
                   >
                     <Bell className="w-5 h-5" />
                     <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-eats rounded-full" />
-                  </motion.button>
+                  </button>
                 </>
               )}
             </div>
@@ -159,12 +149,11 @@ const MobileAppShell = ({
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
-                <motion.button
+                <button
                   key={item.id}
-                  whileTap={{ scale: 0.9 }}
                   onClick={() => navigate(item.href)}
                   className={cn(
-                    "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors touch-manipulation",
+                    "flex flex-col items-center justify-center flex-1 gap-0.5 transition-colors touch-manipulation active:scale-90",
                     isActive ? "text-primary" : "text-muted-foreground"
                   )}
                 >
@@ -180,7 +169,7 @@ const MobileAppShell = ({
                   )}>
                     {item.label}
                   </span>
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -188,59 +177,50 @@ const MobileAppShell = ({
       )}
 
       {/* More Services Overlay */}
-      <AnimatePresence>
-        {showMoreMenu && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowMoreMenu(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl border-t border-border/50 safe-area-bottom"
-            >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display font-bold text-lg">All Services</h3>
-                  <button
-                    onClick={() => setShowMoreMenu(false)}
-                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-4 gap-4">
-                  {moreServices.map((service) => (
-                    <motion.button
-                      key={service.id}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        navigate(service.href);
-                        setShowMoreMenu(false);
-                      }}
-                      className="flex flex-col items-center gap-2 touch-manipulation"
-                    >
-                      <div className={cn(
-                        "w-14 h-14 rounded-2xl flex items-center justify-center",
-                        service.bg
-                      )}>
-                        <service.icon className={cn("w-6 h-6", service.color)} />
-                      </div>
-                      <span className="text-xs font-medium text-center">{service.label}</span>
-                    </motion.button>
-                  ))}
-                </div>
+      {showMoreMenu && (
+        <>
+          <div
+            onClick={() => setShowMoreMenu(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-in fade-in duration-200"
+          />
+          <div
+            className="fixed bottom-0 left-0 right-0 z-50 bg-card rounded-t-3xl border-t border-border/50 safe-area-bottom animate-in slide-in-from-bottom duration-300"
+          >
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-bold text-lg">All Services</h3>
+                <button
+                  onClick={() => setShowMoreMenu(false)}
+                  className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform touch-manipulation"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+              <div className="grid grid-cols-4 gap-4">
+                {moreServices.map((service, index) => (
+                  <button
+                    key={service.id}
+                    onClick={() => {
+                      navigate(service.href);
+                      setShowMoreMenu(false);
+                    }}
+                    className="flex flex-col items-center gap-2 touch-manipulation active:scale-95 transition-transform animate-in fade-in zoom-in-95 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className={cn(
+                      "w-14 h-14 rounded-2xl flex items-center justify-center",
+                      service.bg
+                    )}>
+                      <service.icon className={cn("w-6 h-6", service.color)} />
+                    </div>
+                    <span className="text-xs font-medium text-center">{service.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
