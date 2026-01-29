@@ -88,7 +88,7 @@ const ResetPassword = () => {
 
   if (isValidSession === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
         <div className="flex items-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin" />
           <span>Verifying...</span>
@@ -99,16 +99,16 @@ const ResetPassword = () => {
 
   if (isValidSession === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
+        <Card className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Invalid or expired link</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Invalid or expired link</CardTitle>
             <CardDescription>
               This password reset link is invalid or has expired. Please request a new one.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full" onClick={() => navigate("/forgot-password")}>
+            <Button className="w-full h-12 rounded-xl touch-manipulation active:scale-[0.98]" onClick={() => navigate("/forgot-password")}>
               Request new link
             </Button>
           </CardContent>
@@ -119,13 +119,13 @@ const ResetPassword = () => {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
+        <Card className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
-              <CheckCircle className="w-8 h-8 text-green-500" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
+              <CheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-green-500" />
             </div>
-            <CardTitle className="text-2xl">Password updated!</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl">Password updated!</CardTitle>
             <CardDescription>
               Your password has been successfully updated. Redirecting to login...
             </CardDescription>
@@ -136,13 +136,13 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
+      <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <Lock className="w-8 h-8 text-primary" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+            <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl">Set new password</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">Set new password</CardTitle>
           <CardDescription>
             Enter your new password below.
           </CardDescription>

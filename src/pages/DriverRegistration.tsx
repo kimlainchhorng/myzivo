@@ -232,66 +232,40 @@ const DriverRegistration = () => {
   const progress = (step / 4) * 100;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden py-8 px-4">
+    <div className="min-h-screen bg-background relative overflow-hidden py-6 sm:py-8 px-4 safe-area-top safe-area-bottom">
       {/* Enhanced Background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/8 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl pointer-events-none" />
       
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-30 pointer-events-none"
-      >
-        🚗
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-25 pointer-events-none"
-      >
-        🔑
-      </motion.div>
       <div className="max-w-2xl mx-auto relative z-10">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Button variant="ghost" onClick={() => step === 1 ? navigate("/") : setStep(step - 1)} className="mb-4 rounded-xl hover:bg-primary/10">
+        <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Button variant="ghost" onClick={() => step === 1 ? navigate("/") : setStep(step - 1)} className="mb-3 sm:mb-4 rounded-xl hover:bg-primary/10 touch-manipulation active:scale-95">
             <ArrowLeft className="w-4 h-4 mr-2" />
             {step === 1 ? "Home" : "Back"}
           </Button>
           
-          <div className="flex items-center gap-4 mb-4">
-            <motion.div whileHover={{ scale: 1.05 }}>
-              <ZivoLogo size="sm" />
-            </motion.div>
+          <div className="flex items-center gap-3 sm:gap-4 mb-4">
+            <ZivoLogo size="sm" />
             <div>
-              <h1 className="text-3xl font-display font-bold flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-display font-bold flex items-center gap-2">
                 Become a Driver
-                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <Sparkles className="h-6 w-6 text-primary" />
-                </motion.div>
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-primary animate-pulse" />
               </h1>
-              <p className="text-muted-foreground">Complete your application to start earning</p>
+              <p className="text-sm sm:text-base text-muted-foreground">Complete your application to start earning</p>
             </div>
           </div>
           
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <div className="flex items-center justify-between text-sm mb-2">
               <span>Step {step} of 4</span>
               <span className="font-semibold text-primary">{Math.round(progress)}% complete</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <motion.div 
-                className="h-full bg-gradient-to-r from-primary to-teal-400 rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
+              <div 
+                className="h-full bg-gradient-to-r from-primary to-teal-400 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </div>
@@ -305,17 +279,17 @@ const DriverRegistration = () => {
               { icon: CheckCircle, label: "Complete" },
             ].map((s, i) => (
               <div key={i} className={`flex flex-col items-center gap-1 ${i + 1 <= step ? "text-primary" : "text-muted-foreground"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
                   i + 1 < step ? "bg-primary border-primary text-primary-foreground" :
                   i + 1 === step ? "border-primary" : "border-muted"
                 }`}>
-                  <s.icon className="w-5 h-5" />
+                  <s.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <span className="text-xs hidden sm:block">{s.label}</span>
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Step 1: Personal Info */}
         {step === 1 && (

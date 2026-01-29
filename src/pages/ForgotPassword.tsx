@@ -49,88 +49,37 @@ const ForgotPassword = () => {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
-        {/* Animated background gradients */}
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background safe-area-top safe-area-bottom">
+        {/* Background gradients */}
         <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-success/20 via-transparent to-transparent rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl"
-          />
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-success/20 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md relative z-10"
-        >
+        <div className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-500">
           <Card className="glass-card border-white/10 shadow-2xl">
             <CardHeader className="text-center space-y-4 pb-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                className="w-20 h-20 mx-auto rounded-2xl bg-success/10 flex items-center justify-center relative"
-              >
-                <CheckCircle className="w-10 h-10 text-success" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-2xl border-2 border-dashed border-success/30"
-                />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <CardTitle className="text-3xl font-display font-bold bg-gradient-to-r from-success to-success/70 bg-clip-text text-transparent">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl bg-success/10 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-success" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl sm:text-3xl font-display font-bold bg-gradient-to-r from-success to-success/70 bg-clip-text text-transparent">
                   Check your email
                 </CardTitle>
-                <CardDescription className="text-muted-foreground mt-2 text-base">
+                <CardDescription className="text-muted-foreground mt-2 text-sm sm:text-base">
                   We've sent a password reset link to your email address. Click the link to set a new password.
                 </CardDescription>
-              </motion.div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4 pb-8">
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-sm text-muted-foreground text-center"
-              >
+              <p className="text-sm text-muted-foreground text-center">
                 Didn't receive the email? Check your spam folder or try again.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex flex-col gap-3"
-              >
+              </p>
+              <div className="flex flex-col gap-3">
                 <Button 
                   variant="outline" 
                   onClick={() => setEmailSent(false)}
-                  className="w-full h-12 bg-background/50 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all rounded-xl"
+                  className="w-full h-12 bg-background/50 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all rounded-xl touch-manipulation active:scale-[0.98]"
                 >
                   Try another email
                 </Button>
@@ -144,101 +93,50 @@ const ForgotPassword = () => {
                     Back to login
                   </Link>
                 </Button>
-              </motion.div>
+              </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background">
-      {/* Animated background gradients */}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-background safe-area-top safe-area-bottom">
+      {/* Background gradients */}
       <div className="absolute inset-0 overflow-hidden">
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 via-transparent to-transparent rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl"
-        />
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-primary/20 via-transparent to-transparent rounded-full blur-3xl opacity-40" />
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-rides/20 via-transparent to-transparent rounded-full blur-3xl opacity-30" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md relative z-10"
-      >
+      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Card className="glass-card border-white/10 shadow-2xl">
           <CardHeader className="text-center space-y-4 pb-6">
             {/* Logo */}
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-              className="relative mx-auto"
-            >
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-primary to-rides flex items-center justify-center relative overflow-hidden">
-                <Mail className="w-10 h-10 text-primary-foreground relative z-10" />
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent"
-                />
+            <div className="relative mx-auto">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-primary via-primary to-rides flex items-center justify-center relative overflow-hidden">
+                <Mail className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground relative z-10" />
               </div>
-              {/* Rotating border */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -inset-2 rounded-3xl border-2 border-dashed border-primary/30"
-              />
               {/* Glow effect */}
               <div className="absolute -inset-4 bg-primary/20 rounded-3xl blur-xl -z-10" />
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <CardTitle className="text-3xl font-display font-bold">
+            <div>
+              <CardTitle className="text-2xl sm:text-3xl font-display font-bold">
                 <span className="bg-gradient-to-r from-primary via-primary to-rides bg-clip-text text-transparent">
                   Forgot password?
                 </span>
               </CardTitle>
-              <CardDescription className="text-muted-foreground mt-2 text-base">
+              <CardDescription className="text-muted-foreground mt-2 text-sm sm:text-base">
                 Enter your email and we'll send you a reset link
               </CardDescription>
-            </motion.div>
+            </div>
           </CardHeader>
 
           <CardContent className="pb-8">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
+                <div>
                   <FormField
                     control={form.control}
                     name="email"
@@ -260,17 +158,12 @@ const ForgotPassword = () => {
                       </FormItem>
                     )}
                   />
-                </motion.div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="space-y-3 pt-2"
-                >
+                <div className="space-y-3 pt-2">
                   <Button 
                     type="submit" 
-                    className="w-full h-12 bg-gradient-to-r from-primary to-rides hover:from-primary/90 hover:to-rides/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]" 
+                    className="w-full h-12 bg-gradient-to-r from-primary to-rides hover:from-primary/90 hover:to-rides/90 text-primary-foreground font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all duration-300 touch-manipulation active:scale-[0.98]" 
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -297,37 +190,27 @@ const ForgotPassword = () => {
                       Back to login
                     </Link>
                   </Button>
-                </motion.div>
+                </div>
 
                 {/* Decorative element */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.5 }}
-                  className="flex items-center justify-center gap-2 pt-4"
-                >
+                <div className="flex items-center justify-center gap-2 pt-4">
                   <Sparkles className="w-4 h-4 text-primary/50" />
                   <span className="text-xs text-muted-foreground">Secure password reset</span>
                   <Sparkles className="w-4 h-4 text-primary/50" />
-                </motion.div>
+                </div>
               </form>
             </Form>
           </CardContent>
         </Card>
 
         {/* Footer */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center text-sm text-muted-foreground mt-6"
-        >
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Remember your password?{" "}
           <Link to="/login" className="text-primary hover:text-primary/80 font-semibold transition-colors hover:underline">
             Sign in
           </Link>
-        </motion.p>
-      </motion.div>
+        </p>
+      </div>
     </div>
   );
 };
