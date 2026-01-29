@@ -160,42 +160,29 @@ const PackageDelivery = () => {
         </section>
 
         {/* Features Grid */}
-        <section className="py-20 bg-gradient-to-b from-muted/30 to-transparent">
+        <section className="py-12 sm:py-20 bg-gradient-to-b from-muted/30 to-transparent">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">Why Choose ZIVO Delivery?</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">Premium features for every package</p>
-            </motion.div>
+            <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Why Choose ZIVO Delivery?</h2>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">Premium features for every package</p>
+            </div>
             
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {features.map((feature, index) => (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -6, scale: 1.02 }}
+                <Card 
+                  key={feature.title} 
+                  className="h-full text-center border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <Card className="h-full text-center border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden group">
-                    <CardContent className="pt-8 pb-6 relative">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
-                      <motion.div 
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className={`w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}
-                      >
-                        <feature.icon className="h-8 w-8 text-white" />
-                      </motion.div>
-                      <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  <CardContent className="p-4 sm:pt-8 sm:pb-6 relative">
+                    <div className="absolute top-0 right-0 w-16 sm:w-24 h-16 sm:h-24 bg-gradient-to-bl from-white/5 to-transparent rounded-bl-full" />
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center shadow-lg`}>
+                      <feature.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-sm sm:text-lg mb-1 sm:mb-2">{feature.title}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>

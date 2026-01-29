@@ -261,39 +261,34 @@ const GroundTransport = () => {
         </section>
 
         {/* Results Section */}
-        <section className="py-16 lg:py-20">
+        <section className="py-10 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4 max-w-5xl">
             {/* Filter Tabs */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10"
-            >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 mb-6 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div>
-                <h2 className="font-display text-3xl font-bold mb-2">Available Routes</h2>
-                <p className="text-muted-foreground">New York → Boston • {filteredRoutes.length} options</p>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Available Routes</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">New York → Boston • {filteredRoutes.length} options</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
                 <Tabs value={transportType} onValueChange={setTransportType}>
-                  <TabsList className="bg-muted/50 p-1.5 rounded-xl">
-                    <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
+                  <TabsList className="bg-muted/50 p-1 sm:p-1.5 rounded-xl">
+                    <TabsTrigger value="all" className="rounded-lg px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white touch-manipulation">
                       All
                     </TabsTrigger>
-                    <TabsTrigger value="train" className="gap-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
-                      <Train className="h-4 w-4" /> Trains
+                    <TabsTrigger value="train" className="gap-1.5 sm:gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white touch-manipulation">
+                      <Train className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Trains
                     </TabsTrigger>
-                    <TabsTrigger value="bus" className="gap-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
-                      <Bus className="h-4 w-4" /> Buses
+                    <TabsTrigger value="bus" className="gap-1.5 sm:gap-2 rounded-lg px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-500 data-[state=active]:text-white touch-manipulation">
+                      <Bus className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Buses
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl touch-manipulation flex-shrink-0">
                   <Filter className="h-4 w-4" />
-                  Filters
+                  <span className="hidden sm:inline">Filters</span>
                 </Button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Results List */}
             <div className="space-y-4">
