@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Shield, 
   AlertTriangle, 
@@ -22,6 +22,9 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface ModerationItem {
   id: string;
@@ -34,64 +37,6 @@ interface ModerationItem {
   timestamp: Date;
   status: "pending" | "approved" | "rejected";
 }
-
-const mockItems: ModerationItem[] = [
-  {
-    id: "1",
-    type: "review",
-    content: "This driver was extremely rude and made inappropriate comments during the ride.",
-    reporter: "John D.",
-    reported: "Driver #4521",
-    reason: "Inappropriate behavior",
-    severity: "high",
-    timestamp: new Date(Date.now() - 15 * 60 * 1000),
-    status: "pending",
-  },
-  {
-    id: "2",
-    type: "photo",
-    content: "Profile photo flagged for potentially inappropriate content",
-    reporter: "Auto-detection",
-    reported: "User #8234",
-    reason: "Image policy violation",
-    severity: "medium",
-    timestamp: new Date(Date.now() - 45 * 60 * 1000),
-    status: "pending",
-  },
-  {
-    id: "3",
-    type: "message",
-    content: "Driver sent promotional messages outside of the trip context",
-    reporter: "Sarah M.",
-    reported: "Driver #2156",
-    reason: "Spam/Solicitation",
-    severity: "low",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    status: "pending",
-  },
-  {
-    id: "4",
-    type: "review",
-    content: "Review contains hate speech and discriminatory language",
-    reporter: "Auto-detection",
-    reported: "User #5678",
-    reason: "Hate speech",
-    severity: "critical",
-    timestamp: new Date(Date.now() - 30 * 60 * 1000),
-    status: "pending",
-  },
-  {
-    id: "5",
-    type: "profile",
-    content: "Profile bio contains contact information and external links",
-    reporter: "Auto-detection",
-    reported: "User #9012",
-    reason: "Policy violation",
-    severity: "low",
-    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    status: "pending",
-  },
-];
 
 const severityConfig = {
   low: { color: "text-blue-500", bg: "bg-blue-500/10", label: "Low" },
@@ -108,25 +53,143 @@ const typeConfig = {
 };
 
 const AdminContentModeration = () => {
-  const [items, setItems] = useState(mockItems);
   const [activeTab, setActiveTab] = useState("all");
+  const queryClient = useQueryClient();
 
-  const stats = {
-    pending: items.filter(i => i.status === "pending").length,
-    critical: items.filter(i => i.severity === "critical").length,
-    todayProcessed: 47,
-    avgResponseTime: "12m",
-  };
+  const { data: moderationData, isLoading } = useQuery({
+    queryKey: ['admin-content-moderation'],
+    queryFn: async () => {
+      // Fetch customer feedback that might need moderation
+      const { data: feedback } = await supabase
+        .from('customer_feedback')
+        .select('*, restaurants(name)')
+        .order('created_at', { ascending: false })
+        .limit(50);
 
-  const handleAction = (id: string, action: "approve" | "reject") => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, status: action === "approve" ? "approved" : "rejected" } : item
-    ));
+      // Fetch chat messages that might need moderation (flagged ones)
+      const { data: messages } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(30);
+
+      // Fetch driver documents pending review
+      const { data: pendingDocs } = await supabase
+        .from('driver_documents')
+        .select('*, drivers(full_name)')
+        .eq('status', 'pending')
+        .order('uploaded_at', { ascending: false })
+        .limit(20);
+
+      // Map to moderation items
+      const items: ModerationItem[] = [];
+
+      // Add feedback items
+      feedback?.forEach(fb => {
+        if (fb.comment && fb.comment.length > 10) {
+          items.push({
+            id: fb.id,
+            type: "review",
+            content: fb.comment || '',
+            reporter: fb.customer_name || 'Anonymous',
+            reported: (fb.restaurants as any)?.name || 'Restaurant',
+            reason: fb.rating < 3 ? "Negative review" : "Review submission",
+            severity: fb.rating <= 2 ? "medium" : "low",
+            timestamp: new Date(fb.created_at),
+            status: "pending"
+          });
+        }
+      });
+
+      // Add pending documents
+      pendingDocs?.forEach(doc => {
+        items.push({
+          id: doc.id,
+          type: doc.document_type.includes('photo') ? "photo" : "profile",
+          content: `${doc.document_type} document review`,
+          reporter: "System",
+          reported: (doc.drivers as any)?.full_name || `Driver`,
+          reason: "Document verification",
+          severity: "low",
+          timestamp: new Date(doc.uploaded_at),
+          status: doc.status === 'pending' ? "pending" : doc.status === 'approved' ? "approved" : "rejected"
+        });
+      });
+
+      // Add some message items (sample check)
+      messages?.slice(0, 5).forEach(msg => {
+        if (msg.message && msg.message.length > 50) {
+          items.push({
+            id: msg.id,
+            type: "message",
+            content: msg.message,
+            reporter: "Auto-detection",
+            reported: `${msg.sender_type} #${msg.sender_id.slice(0, 8)}`,
+            reason: "Message review",
+            severity: "low",
+            timestamp: new Date(msg.created_at),
+            status: "pending"
+          });
+        }
+      });
+
+      // Calculate stats
+      const pendingItems = items.filter(i => i.status === "pending");
+      const criticalItems = items.filter(i => i.severity === "critical" || i.severity === "high");
+
+      return {
+        items: items.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
+        stats: {
+          pending: pendingItems.length,
+          critical: criticalItems.length,
+          todayProcessed: items.filter(i => i.status !== "pending").length,
+          avgResponseTime: "12m"
+        }
+      };
+    },
+    staleTime: 30000,
+  });
+
+  const moderateMutation = useMutation({
+    mutationFn: async ({ id, action, type }: { id: string; action: "approve" | "reject"; type: string }) => {
+      if (type === 'photo' || type === 'profile') {
+        await supabase
+          .from('driver_documents')
+          .update({ status: action === 'approve' ? 'approved' : 'rejected' })
+          .eq('id', id);
+      }
+      return { id, action };
+    },
+    onSuccess: (_, { action }) => {
+      toast.success(`Item ${action}d successfully`);
+      queryClient.invalidateQueries({ queryKey: ['admin-content-moderation'] });
+    }
+  });
+
+  const items = moderationData?.items || [];
+  const stats = moderationData?.stats || { pending: 0, critical: 0, todayProcessed: 0, avgResponseTime: "N/A" };
+
+  const handleAction = (id: string, action: "approve" | "reject", type: string) => {
+    moderateMutation.mutate({ id, action, type });
   };
 
   const filteredItems = activeTab === "all" 
     ? items.filter(i => i.status === "pending")
     : items.filter(i => i.type === activeTab && i.status === "pending");
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-20 w-full" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+        <Skeleton className="h-[500px] w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -244,7 +307,7 @@ const AdminContentModeration = () => {
                             </span>
                           </div>
 
-                          <p className="text-sm mb-2">{item.content}</p>
+                          <p className="text-sm mb-2 line-clamp-2">{item.content}</p>
 
                           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mb-3">
                             <span>Reporter: <span className="text-foreground">{item.reporter}</span></span>
@@ -257,7 +320,7 @@ const AdminContentModeration = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 gap-1.5 text-green-500 hover:text-green-600 hover:bg-green-500/10"
-                              onClick={() => handleAction(item.id, "approve")}
+                              onClick={() => handleAction(item.id, "approve", item.type)}
                             >
                               <CheckCircle className="h-3.5 w-3.5" />
                               Approve
@@ -266,7 +329,7 @@ const AdminContentModeration = () => {
                               size="sm"
                               variant="outline"
                               className="h-8 gap-1.5 text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                              onClick={() => handleAction(item.id, "reject")}
+                              onClick={() => handleAction(item.id, "reject", item.type)}
                             >
                               <XCircle className="h-3.5 w-3.5" />
                               Reject
