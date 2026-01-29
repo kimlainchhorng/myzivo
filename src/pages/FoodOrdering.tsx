@@ -424,75 +424,32 @@ const FoodOrdering = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
       
-      <main className="pt-20 pb-24">
-        {/* Hero Section */}
-        <section className="relative py-16 lg:py-32 overflow-hidden">
-          {/* Enhanced background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-eats/25 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-eats/30 to-orange-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/20 to-yellow-500/15 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-red-500/12 to-transparent rounded-full blur-3xl" />
-          <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-gradient-radial from-pink-500/10 to-transparent rounded-full blur-3xl" />
-          
-          {/* Floating food emojis */}
-          <motion.div
-            animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-32 left-[8%] text-6xl hidden lg:block opacity-50"
-          >
-            🍔
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute top-48 right-[10%] text-5xl hidden lg:block opacity-45"
-          >
-            🍕
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -12, 0], rotate: [0, 6, 0] }}
-            transition={{ duration: 4.5, repeat: Infinity }}
-            className="absolute bottom-40 right-[15%] text-5xl hidden lg:block opacity-35"
-          >
-            🍜
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
-            transition={{ duration: 7, repeat: Infinity }}
-            className="absolute bottom-32 left-[12%] text-4xl hidden lg:block opacity-30"
-          >
-            🍣
-          </motion.div>
+      <main className="pt-16 pb-20">
+        {/* Hero Section - Mobile optimized */}
+        <section className="relative py-8 sm:py-16 lg:py-24 overflow-hidden">
+          {/* Background effects - reduced for mobile */}
+          <div className="absolute inset-0 bg-gradient-radial from-eats/15 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[150px] sm:w-[300px] h-[150px] sm:h-[300px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-12"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring" }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-eats/40"
-              >
-                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <UtensilsCrossed className="w-4 h-4" />
-                </motion.div>
+            <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-xs sm:text-sm font-bold mb-4 sm:mb-6 shadow-lg shadow-eats/30">
+                <UtensilsCrossed className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 ZIVO Eats
-              </motion.div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-7xl xl:text-8xl font-bold mb-6">
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-bold mb-4 sm:mb-6">
                 Delicious food,
                 <br />
                 <span className="bg-gradient-to-r from-eats via-orange-500 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">delivered fast</span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
-                Discover the best restaurants near you. Order from <span className="text-foreground font-medium">thousands</span> of local favorites.
+              <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto mb-8 sm:mb-12 leading-relaxed px-4">
+                Discover restaurants near you. Order from local favorites.
               </p>
-            </motion.div>
+            </div>
 
             {/* Search Bar */}
             <motion.div

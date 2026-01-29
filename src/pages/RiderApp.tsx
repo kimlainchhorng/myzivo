@@ -299,11 +299,11 @@ const RiderApp = () => {
       </div>;
   }
   const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
-  return <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+  return <div className="min-h-screen bg-background flex flex-col relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Static Background Effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/12 to-teal-500/6 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-violet-500/8 to-purple-500/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 right-0 w-[250px] h-[250px] bg-gradient-to-bl from-primary/12 to-teal-500/6 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-gradient-to-tr from-violet-500/8 to-purple-500/4 rounded-full blur-3xl" />
       </div>
       
       {/* Premium Header with Glassmorphism */}
@@ -369,11 +369,11 @@ const RiderApp = () => {
       </div>
 
       {/* Bottom Sheet - Mobile Optimized */}
-      <div className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/10 rounded-t-[1.25rem] shadow-[0_-15px_40px_-12px_rgba(0,0,0,0.4)]">
+      <div className="relative bg-gradient-to-b from-card via-card to-card/95 border-t border-white/10 rounded-t-[1.5rem] shadow-[0_-15px_40px_-12px_rgba(0,0,0,0.4)] safe-area-bottom">
         {/* Handle */}
-        <div className="w-8 h-1 bg-white/20 rounded-full mx-auto mt-2" />
+        <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mt-2.5" />
         
-        <div className="p-3 pb-6 max-h-[55vh] overflow-y-auto scrollbar-hide">
+        <div className="p-4 pb-8 max-h-[55vh] overflow-y-auto scrollbar-hide">
           {/* Location Step */}
           {step === "location" && <div className="space-y-4">
               {/* Quick Location Picker */}
