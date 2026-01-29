@@ -86,7 +86,8 @@ const AdminCommissionSettings = () => {
       const { data, error } = await supabase
         .from("commission_settings")
         .select("*")
-        .order("service_type", { ascending: true });
+        .order("commission_percentage", { ascending: true })
+        .order("minimum_fee", { ascending: true });
 
       if (error) throw error;
       return data as CommissionSetting[];
