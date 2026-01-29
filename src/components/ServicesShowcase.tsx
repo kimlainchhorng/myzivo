@@ -1,5 +1,5 @@
+// CSS animations used instead of framer-motion for performance
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Car,
   UtensilsCrossed,
@@ -138,27 +138,6 @@ const services = [
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.06,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-    },
-  },
-};
-
 const ServicesShowcase = () => {
   return (
     <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
@@ -169,42 +148,21 @@ const ServicesShowcase = () => {
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-gradient-to-bl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute bottom-1/3 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-primary/10 to-transparent rounded-full blur-3xl" />
 
-      {/* Floating icons */}
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-40 left-[8%] text-4xl hidden lg:block opacity-40"
-      >
+      {/* Static floating icons - removed motion */}
+      <div className="absolute top-40 left-[8%] text-4xl hidden lg:block opacity-40 animate-float">
         🚀
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-48 right-[6%] text-4xl hidden lg:block opacity-30"
-      >
+      </div>
+      <div className="absolute bottom-48 right-[6%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
         ✨
-      </motion.div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-14 sm:mb-20"
-        >
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10"
-          >
-            <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 4, repeat: Infinity, ease: "linear" }}>
-              <Sparkles className="w-4 h-4 text-primary" />
-            </motion.div>
+        <div className="text-center mb-14 sm:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-6 shadow-lg shadow-primary/10 animate-in fade-in zoom-in-95 duration-300">
+            <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '4s' }} />
             <span className="text-muted-foreground">All-in-One Platform</span>
-          </motion.div>
+          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
             Everything you need,{" "}
             <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
@@ -214,25 +172,18 @@ const ServicesShowcase = () => {
           <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             From daily commutes to dream vacations, ZIVO has you covered with <span className="text-foreground font-medium">9 integrated services</span>
           </p>
-        </motion.div>
+        </div>
 
         {/* Services Grid */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6"
-        >
-          {services.map((service) => (
-            <motion.div
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {services.map((service, index) => (
+            <div
               key={service.id}
-              variants={itemVariants}
-              whileHover={{ y: -8, scale: 1.01 }}
-              className="group"
+              className="group animate-in fade-in slide-in-from-bottom-4 duration-500"
+              style={{ animationDelay: `${index * 60}ms` }}
             >
               <Link to={service.href}>
-                <div className="relative p-5 sm:p-6 h-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden">
+                <div className="relative p-5 sm:p-6 h-full rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl hover:border-white/20 transition-all duration-300 overflow-hidden hover:-translate-y-2 hover:scale-[1.01] active:scale-[0.98]">
                   {/* Decorative corner glow */}
                   <div className={`absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br ${service.gradient} opacity-10 rounded-full blur-3xl group-hover:opacity-20 transition-opacity`} />
                   
@@ -253,12 +204,11 @@ const ServicesShowcase = () => {
                   </div>
 
                   {/* Icon */}
-                  <motion.div
-                    whileHover={{ scale: 1.1, rotate: 5 }}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center mb-5 shadow-lg ${service.glow}`}
+                  <div
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${service.gradient} flex items-center justify-center mb-5 shadow-lg ${service.glow} transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3`}
                   >
                     <service.icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-                  </motion.div>
+                  </div>
 
                   {/* Content */}
                   <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
@@ -287,36 +237,33 @@ const ServicesShowcase = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="text-center mt-16 sm:mt-20"
-        >
+        <div className="text-center mt-16 sm:mt-20 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
           <p className="text-muted-foreground mb-6 text-lg">
             Download the ZIVO app to access all services
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-              <Button size="lg" className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2">
-                <Download className="w-5 h-5" />
-                Download for iOS
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-              <Button variant="outline" size="lg" className="h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2">
-                <Download className="w-5 h-5" />
-                Download for Android
-              </Button>
-            </motion.div>
+            <Button 
+              size="lg" 
+              className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 gap-2 transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <Download className="w-5 h-5" />
+              Download for iOS
+            </Button>
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="h-14 px-8 text-lg font-bold rounded-xl border-2 gap-2 transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
+            >
+              <Download className="w-5 h-5" />
+              Download for Android
+            </Button>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
