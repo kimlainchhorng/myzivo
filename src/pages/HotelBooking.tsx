@@ -224,66 +224,31 @@ const HotelBooking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
       
-      <main className="pt-20 pb-24">
-        {/* Hero Section */}
-        <section className="relative py-16 lg:py-28 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-amber-500/18 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-amber-500/25 to-orange-500/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-yellow-500/15 to-amber-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/4 w-[350px] h-[350px] bg-gradient-radial from-rose-500/10 to-transparent rounded-full blur-3xl" />
-          
-          {/* Floating emojis */}
-          <motion.div
-            animate={{ y: [0, -18, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-32 left-[10%] text-6xl hidden lg:block opacity-50"
-          >
-            🏨
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-40 right-[8%] text-5xl hidden lg:block opacity-40"
-          >
-            🌴
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
-            transition={{ duration: 7, repeat: Infinity }}
-            className="absolute top-1/2 right-[12%] text-4xl hidden lg:block opacity-30"
-          >
-            ✨
-          </motion.div>
+      <main className="pt-16 pb-20">
+        {/* Hero Section - Mobile optimized */}
+        <section className="relative py-8 sm:py-16 lg:py-24 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-radial from-amber-500/12 via-transparent to-transparent" />
+          <div className="absolute top-1/4 right-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-gradient-to-bl from-amber-500/18 to-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[150px] sm:w-[300px] h-[150px] sm:h-[300px] bg-gradient-to-tr from-yellow-500/12 to-amber-500/8 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-10"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring" }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-amber-500/40"
-              >
-                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }}>
-                  <Hotel className="w-4 h-4" />
-                </motion.div>
+            <div className="text-center mb-8 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs sm:text-sm font-bold mb-4 sm:mb-6 shadow-lg shadow-amber-500/30">
+                <Hotel className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 ZIVO Hotels
-              </motion.div>
-              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6">
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
                 Find your perfect
                 <br />
                 <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">place to stay</span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                From cozy boutique hotels to <span className="text-foreground font-medium">luxurious resorts</span>. Book the best deals worldwide.
+              <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed px-4">
+                From cozy boutiques to luxurious resorts. Book the best deals.
               </p>
-            </motion.div>
+            </div>
 
             {/* Search Card */}
             <motion.div

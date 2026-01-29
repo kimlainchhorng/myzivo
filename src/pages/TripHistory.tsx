@@ -107,23 +107,17 @@ const TripHistory = () => {
   }
 
   const TripCard = ({ trip, index }: { trip: typeof trips[0]; index: number }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -4 }}
-    >
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all">
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
+    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${index * 50}ms` }}>
+      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-lg active:scale-[0.98] transition-transform">
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2.5">
+              <div
                 className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
+                  "w-10 h-10 rounded-xl flex items-center justify-center shadow-md",
                   trip.status === "completed" 
-                    ? "bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/30" 
-                    : "bg-gradient-to-br from-red-500 to-rose-500 shadow-red-500/30"
+                    ? "bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/20" 
+                    : "bg-gradient-to-br from-red-500 to-rose-500 shadow-red-500/20"
                 )}
               >
                 {trip.status === "completed" ? (
@@ -131,7 +125,7 @@ const TripHistory = () => {
                 ) : (
                   <XCircle className="w-6 h-6 text-white" />
                 )}
-              </motion.div>
+              </div>
               <div>
                 <p className="font-semibold">{formatDate(trip.created_at)}</p>
                 <p className="text-sm text-muted-foreground">{formatTime(trip.created_at)}</p>
@@ -221,43 +215,27 @@ const TripHistory = () => {
           </div>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Enhanced Background effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/3 left-0 w-[350px] h-[350px] bg-gradient-to-tr from-emerald-500/10 to-green-500/5 rounded-full blur-3xl" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-32 right-[8%] text-5xl hidden lg:block opacity-40"
-      >
-        🚗
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="absolute bottom-1/3 left-[5%] text-4xl hidden lg:block opacity-30"
-      >
-        📍
-      </motion.div>
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+      {/* Background effects - simplified for mobile */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
+      <div className="absolute top-1/4 right-0 w-[200px] h-[200px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-emerald-500/8 to-green-500/4 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 p-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl">
-            <ArrowLeft className="w-5 h-5" />
+      {/* Header - Mobile optimized */}
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="h-9 w-9 rounded-xl hover:bg-white/10 active:scale-95 transition-transform">
+            <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-              <Route className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-md shadow-primary/30">
+              <Route className="w-4 h-4 text-white" />
             </div>
-            <h1 className="font-display font-bold text-xl">Trip History</h1>
+            <h1 className="font-display font-bold text-base">Trip History</h1>
           </div>
         </div>
       </header>

@@ -159,54 +159,28 @@ const CustomerDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Enhanced Background effects */}
-      <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
-      <div className="fixed top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-eats/10 to-orange-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-violet-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-      {/* Floating Decorative Elements */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="fixed top-32 right-[10%] text-4xl pointer-events-none opacity-25 hidden lg:block"
-      >
-        🚗
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -20, 0], rotate: [0, -5, 0] }}
-        transition={{ duration: 7, repeat: Infinity, delay: 1 }}
-        className="fixed bottom-32 right-[15%] text-3xl pointer-events-none opacity-20 hidden lg:block"
-      >
-        ✈️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, delay: 2 }}
-        className="fixed top-1/2 right-[5%] text-2xl pointer-events-none opacity-15 hidden lg:block"
-      >
-        🏨
-      </motion.div>
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+      {/* Background effects - simplified for mobile */}
+      <div className="fixed inset-0 bg-gradient-radial from-primary/6 via-transparent to-transparent opacity-40 pointer-events-none" />
+      <div className="fixed top-1/4 right-0 w-[200px] h-[200px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-eats/8 to-orange-500/4 rounded-full blur-3xl pointer-events-none" />
       
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
-            <ZivoLogo size="sm" />
-          </motion.div>
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 border-b border-white/10 bg-card/80 backdrop-blur-xl">
+        <div className="flex items-center gap-2">
+          <ZivoLogo size="sm" />
           <div>
-            <span className="font-bold text-lg">ZIVO</span>
-            <span className="text-xs text-muted-foreground block">Dashboard</span>
+            <span className="font-bold text-sm">ZIVO</span>
+            <span className="text-[10px] text-muted-foreground block leading-tight">Dashboard</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl">
-                <Menu className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/10">
+                <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0 border-r-0">

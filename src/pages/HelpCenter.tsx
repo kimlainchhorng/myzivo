@@ -78,65 +78,41 @@ const HelpCenter = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Enhanced Background effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-sky-500/8 to-transparent rounded-full blur-3xl" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 right-[10%] text-4xl hidden lg:block opacity-30"
-      >
-        💬
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-40 left-[8%] text-4xl hidden lg:block opacity-25"
-      >
-        🤝
-      </motion.div>
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+      {/* Background effects - simplified for mobile */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
+      <div className="absolute top-1/4 right-0 w-[200px] h-[200px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-violet-500/10 to-purple-500/6 rounded-full blur-3xl" />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl hover:bg-primary/10">
-            <ChevronLeft className="h-5 w-5" />
+      {/* Header - Mobile optimized */}
+      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl hover:bg-white/10 active:scale-95 transition-transform">
+            <ChevronLeft className="h-4 h-4" />
           </Button>
-          <div className="flex items-center gap-3">
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30"
-            >
-              <HelpCircle className="h-6 w-6 text-white" />
-            </motion.div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-md shadow-primary/30">
+              <HelpCircle className="h-4 w-4 text-white" />
+            </div>
             <div>
-              <h1 className="font-display font-bold text-xl">Help Center</h1>
-              <p className="text-sm text-muted-foreground">How can we help you today?</p>
+              <h1 className="font-display font-bold text-base">Help Center</h1>
+              <p className="text-[10px] text-muted-foreground leading-tight">How can we help?</p>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
-        {/* Search */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative mb-10"
-        >
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <main className="px-4 py-4 max-w-5xl mx-auto relative z-10">
+        {/* Search - Mobile optimized */}
+        <div className="relative mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search for help articles..."
-            className="pl-14 h-16 text-lg rounded-2xl bg-gradient-to-br from-card/90 to-card border-border/50 shadow-xl focus:border-primary/50"
+            placeholder="Search for help..."
+            className="pl-11 h-12 text-sm rounded-xl bg-card/80 border-white/10 shadow-lg focus:border-primary/50"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </motion.div>
+        </div>
 
         {/* Quick Categories */}
         <motion.div
