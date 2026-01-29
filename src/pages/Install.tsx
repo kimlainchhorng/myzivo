@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Smartphone, Check, Share, Plus, MoreVertical, ArrowLeft, Sparkles, Zap, Shield, Wifi, Bell, Star } from "lucide-react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -108,38 +107,27 @@ const Install = () => {
           </div>
 
           {isInstalled ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
-            >
+            <div className="text-center animate-in fade-in zoom-in-95 duration-500">
               <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
-                <CardContent className="pt-10 pb-8 relative">
-                  <motion.div 
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-xl shadow-emerald-500/30"
-                  >
-                    <Check className="w-10 h-10 text-white" />
-                  </motion.div>
-                  <h2 className="text-2xl font-bold mb-3">Already Installed!</h2>
-                  <p className="text-muted-foreground mb-6">
+                <CardContent className="pt-8 sm:pt-10 pb-6 sm:pb-8 relative">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-xl shadow-emerald-500/30 animate-in zoom-in-50 duration-500 delay-200">
+                    <Check className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">Already Installed!</h2>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                     ZIVO is already installed on your device. Open it from your home screen.
                   </p>
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                    <Button 
-                      size="lg" 
-                      onClick={() => navigate("/")}
-                      className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30"
-                    >
-                      Open App
-                    </Button>
-                  </motion.div>
+                  <Button 
+                    size="lg" 
+                    onClick={() => navigate("/")}
+                    className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 touch-manipulation active:scale-95"
+                  >
+                    Open App
+                  </Button>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ) : (
             <>
               {/* Features Grid */}
