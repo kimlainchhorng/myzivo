@@ -169,9 +169,10 @@ const AdminDashboard = () => {
     "accounts": stats?.totalUsers,
     "directory": stats?.totalUsers,
     
-    // Analytics
+    // Loyalty & Growth
     "referrals": stats?.pendingReferrals,
     "ratings": stats?.pendingFeedback,
+    "loyalty": stats?.totalUsers,
   }), [stats]);
 
   const navSections = [
@@ -184,12 +185,12 @@ const AdminDashboard = () => {
       { value: "health", label: "Service Health", icon: Server, gradient: "from-emerald-500 to-green-500" },
       { value: "platform-health", label: "Platform Health", icon: Heart, gradient: "from-rose-500 to-pink-500" },
       { value: "growth", label: "Growth Metrics", icon: TrendingUp, gradient: "from-green-500 to-emerald-500" },
-      { value: "system-status", label: "System Status", icon: Activity, gradient: "from-blue-500 to-cyan-500" },
-      { value: "predictive", label: "Predictive", icon: LineChart, gradient: "from-violet-500 to-purple-500" },
-      { value: "comparison", label: "Comparison", icon: GitCompare, gradient: "from-amber-500 to-orange-500" },
-      { value: "geographic", label: "Geographic", icon: Globe, gradient: "from-blue-500 to-cyan-500" },
-      { value: "ai-insights", label: "AI Insights", icon: Brain, gradient: "from-violet-500 to-pink-500" },
-      { value: "global-search", label: "Global Search", icon: Search, gradient: "from-violet-500 to-purple-500" },
+      { value: "system-status", label: "System Status", icon: Gauge, gradient: "from-blue-500 to-cyan-500" },
+      { value: "predictive", label: "Predictive AI", icon: Brain, gradient: "from-violet-500 to-purple-500" },
+      { value: "comparison", label: "Benchmarks", icon: GitCompare, gradient: "from-amber-500 to-orange-500" },
+      { value: "geographic", label: "Geo Analytics", icon: Globe, gradient: "from-blue-500 to-cyan-500" },
+      { value: "ai-insights", label: "AI Insights", icon: Sparkles, gradient: "from-violet-500 to-pink-500" },
+      { value: "global-search", label: "Global Search", icon: Search, gradient: "from-slate-500 to-zinc-500" },
     ]},
     { title: "Accounts", items: [
       { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
@@ -198,7 +199,8 @@ const AdminDashboard = () => {
       { value: "insights", label: "Insights", icon: Heart, gradient: "from-rose-500 to-pink-500" },
       { value: "segments", label: "Segments", icon: PieChart, gradient: "from-violet-500 to-purple-500" },
       { value: "performers", label: "Top Performers", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
-      { value: "roles", label: "Roles", icon: Crown, gradient: "from-amber-500 to-orange-500" },
+      { value: "roles", label: "Roles & Perms", icon: Crown, gradient: "from-amber-500 to-orange-500" },
+      { value: "user-timeline", label: "User Timeline", icon: Clock, gradient: "from-cyan-500 to-blue-500" },
     ]},
     { title: "Driver Control", items: [
       { value: "drivers", label: "Driver Hub", icon: Car, gradient: "from-emerald-500 to-green-500" },
@@ -209,7 +211,7 @@ const AdminDashboard = () => {
       { value: "messaging", label: "Messaging", icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
       { value: "onboarding", label: "Onboarding", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
       { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
-      { value: "verification", label: "Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
+      { value: "verification", label: "Verification", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
       { value: "incentives", label: "Incentives", icon: Gift, gradient: "from-amber-500 to-orange-500" },
       { value: "scoring", label: "Performance", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
       { value: "earnings", label: "Earnings", icon: DollarSign, gradient: "from-green-500 to-emerald-500" },
@@ -217,10 +219,10 @@ const AdminDashboard = () => {
     ]},
     { title: "Rides", items: [
       { value: "rides", label: "Rides Control", icon: Navigation, gradient: "from-sky-500 to-blue-500" },
-      { value: "trips", label: "Trip Monitoring", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
-      { value: "assignment", label: "Trip Assignment", icon: Send, gradient: "from-violet-500 to-purple-500" },
-      { value: "heatmap", label: "Demand Heatmap", icon: MapPin, gradient: "from-orange-500 to-red-500" },
-      { value: "pricing", label: "Surge & Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+      { value: "trips", label: "Trip Monitor", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+      { value: "assignment", label: "Assignment", icon: Send, gradient: "from-violet-500 to-purple-500" },
+      { value: "heatmap", label: "Demand Map", icon: MapPin, gradient: "from-orange-500 to-red-500" },
+      { value: "pricing", label: "Surge Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
     ]},
     { title: "Eats", items: [
       { value: "eats", label: "Eats Control", icon: Utensils, gradient: "from-eats to-red-500" },
@@ -239,17 +241,19 @@ const AdminDashboard = () => {
       { value: "processing", label: "Processing", icon: Zap, gradient: "from-amber-500 to-orange-500" },
       { value: "commissions", label: "Commission", icon: Percent, gradient: "from-violet-500 to-purple-500" },
       { value: "reconciliation", label: "Reconcile", icon: Scale, gradient: "from-blue-500 to-cyan-500" },
-      { value: "goals", label: "Goals", icon: Target, gradient: "from-green-500 to-emerald-500" },
+      { value: "goals", label: "Revenue Goals", icon: Target, gradient: "from-green-500 to-emerald-500" },
+      { value: "payments", label: "Payments", icon: CreditCard, gradient: "from-blue-500 to-cyan-500" },
     ]},
     { title: "Engagement", items: [
       { value: "campaigns", label: "Campaigns", icon: Megaphone, gradient: "from-violet-500 to-purple-500" },
       { value: "promotions", label: "Promotions", icon: Ticket, gradient: "from-violet-500 to-purple-500" },
       { value: "notification-mgr", label: "Notifications", icon: Bell, gradient: "from-rose-500 to-pink-500" },
       { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
-      { value: "support", label: "Support Tickets", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
+      { value: "support", label: "Support", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
       { value: "ticket-queue", label: "Ticket Queue", icon: Ticket, gradient: "from-amber-500 to-orange-500" },
       { value: "escalations", label: "Escalations", icon: ArrowUp, gradient: "from-red-500 to-orange-500" },
       { value: "moderation", label: "Moderation", icon: Image, gradient: "from-rose-500 to-pink-500" },
+      { value: "templates", label: "Templates", icon: FileText, gradient: "from-slate-500 to-zinc-500" },
     ]},
     { title: "System", items: [
       { value: "automation", label: "Automation", icon: Workflow, gradient: "from-violet-500 to-purple-500" },
@@ -267,14 +271,12 @@ const AdminDashboard = () => {
       { value: "settings", label: "Settings", icon: Settings, gradient: "from-slate-500 to-zinc-500" },
       { value: "audit", label: "Audit Logs", icon: History, gradient: "from-indigo-500 to-purple-500" },
     ]},
-    { title: "Analytics", items: [
-      { value: "loyalty", label: "Loyalty Program", icon: Coins, gradient: "from-amber-500 to-yellow-500" },
+    { title: "Loyalty & Growth", items: [
+      { value: "loyalty", label: "Loyalty", icon: Coins, gradient: "from-amber-500 to-yellow-500" },
       { value: "onboarding-metrics", label: "Onboarding", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
       { value: "referrals", label: "Referrals", icon: Share2, gradient: "from-purple-500 to-pink-500" },
       { value: "cancellations", label: "Cancellations", icon: XCircle, gradient: "from-red-500 to-orange-500" },
-      { value: "payments", label: "Payment Methods", icon: CreditCard, gradient: "from-blue-500 to-cyan-500" },
       { value: "ratings", label: "Ratings", icon: Star, gradient: "from-amber-500 to-yellow-500" },
-      { value: "templates", label: "Templates", icon: Bell, gradient: "from-rose-500 to-pink-500" },
     ]},
   ];
 
