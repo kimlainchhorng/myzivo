@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { BookingStepIndicator, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
 
@@ -452,36 +452,29 @@ const FoodOrdering = () => {
             </div>
 
             {/* Search Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="max-w-3xl mx-auto"
-            >
+            <div className="max-w-3xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
               <div className="p-2 sm:p-3 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-2xl flex items-center gap-2 sm:gap-3">
-                <div className="flex items-center gap-2 px-3 sm:px-4 text-muted-foreground">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-eats" />
+                <div className="flex items-center gap-2 px-2 sm:px-4 text-muted-foreground">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-eats" />
                   </div>
                   <span className="text-sm font-medium hidden sm:inline">Current Location</span>
                 </div>
                 <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                   <Input
-                    placeholder="Search restaurants, cuisines..."
+                    placeholder="Search restaurants..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-12 bg-muted/30 border-border/50 h-14 text-base rounded-xl focus:border-eats/50"
+                    className="pl-10 sm:pl-12 bg-muted/30 border-border/50 h-12 sm:h-14 text-sm sm:text-base rounded-xl focus:border-eats/50"
                   />
                 </div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button size="lg" className="hidden sm:flex h-14 px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30 hover:opacity-90 gap-2">
-                    <Filter className="w-4 h-4" />
-                    Filters
-                  </Button>
-                </motion.div>
+                <Button size="lg" className="hidden sm:flex h-14 px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -506,71 +499,66 @@ const FoodOrdering = () => {
               </Button>
 
               {/* Restaurant Header */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card p-6 mb-8"
-              >
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="w-24 h-24 rounded-2xl bg-muted flex items-center justify-center text-5xl">
+              <div className="glass-card p-4 sm:p-6 mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center text-4xl sm:text-5xl flex-shrink-0">
                     {selectedRestaurant.image}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <h2 className="font-display text-2xl font-bold">{selectedRestaurant.name}</h2>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h2 className="font-display text-xl sm:text-2xl font-bold truncate">{selectedRestaurant.name}</h2>
                       {selectedRestaurant.discount && (
-                        <Badge className="gradient-eats">{selectedRestaurant.discount}</Badge>
+                        <Badge className="gradient-eats flex-shrink-0 text-xs">{selectedRestaurant.discount}</Badge>
                       )}
                     </div>
-                    <p className="text-muted-foreground mb-3">{selectedRestaurant.cuisine}</p>
-                    <div className="flex flex-wrap gap-4 text-sm">
+                    <p className="text-sm sm:text-base text-muted-foreground mb-2 sm:mb-3">{selectedRestaurant.cuisine}</p>
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-eats text-eats" />
+                        <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-eats text-eats" />
                         <span className="font-medium">{selectedRestaurant.rating}</span>
                         <span className="text-muted-foreground">({selectedRestaurant.reviews}+)</span>
                       </div>
                       <div className="flex items-center gap-1 text-muted-foreground">
-                        <Clock className="w-4 h-4" />
+                        <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         <span>{selectedRestaurant.deliveryTime} min</span>
                       </div>
                       <div className="text-muted-foreground">
                         {selectedRestaurant.deliveryFee} delivery
                       </div>
                       <div className="text-muted-foreground">
-                        ${selectedRestaurant.minOrder} min order
+                        ${selectedRestaurant.minOrder} min
                       </div>
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Menu */}
-              <h3 className="font-display text-xl font-bold mb-4">Menu</h3>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <h3 className="font-display text-lg sm:text-xl font-bold mb-3 sm:mb-4">Menu</h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {menuItems.map((item, index) => (
-                  <motion.div
+                  <div
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <Card className="glass-card hover:border-eats/50 transition-all h-full">
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          <div className="w-16 h-16 rounded-xl bg-muted flex items-center justify-center text-3xl shrink-0">
+                      <CardContent className="p-3 sm:p-4">
+                        <div className="flex gap-3 sm:gap-4">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-muted flex items-center justify-center text-2xl sm:text-3xl shrink-0">
                             {item.image}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <h4 className="font-medium truncate">{item.name}</h4>
+                              <div className="min-w-0">
+                                <h4 className="font-medium text-sm sm:text-base truncate">{item.name}</h4>
                                 {item.popular && (
                                   <Badge variant="secondary" className="text-xs mt-1">Popular</Badge>
                                 )}
                               </div>
-                              <span className="font-bold text-eats">${item.price}</span>
+                              <span className="font-bold text-eats text-sm sm:text-base flex-shrink-0">${item.price}</span>
                             </div>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
                               {item.description}
                             </p>
                           </div>
@@ -578,7 +566,7 @@ const FoodOrdering = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full mt-4 hover:border-eats hover:text-eats"
+                          className="w-full mt-3 sm:mt-4 hover:border-eats hover:text-eats touch-manipulation active:scale-[0.98]"
                           onClick={() => addToCart(item)}
                         >
                           <Plus className="w-4 h-4 mr-2" />
@@ -586,7 +574,7 @@ const FoodOrdering = () => {
                         </Button>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -602,50 +590,42 @@ const FoodOrdering = () => {
                     View all <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
                   {filteredRestaurants.filter(r => r.promoted).map((restaurant, index) => (
-                    <motion.div
+                    <div
                       key={restaurant.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ y: -8 }}
                       onClick={() => setSelectedRestaurant(restaurant)}
-                      className="cursor-pointer"
+                      className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 hover:-translate-y-2 transition-transform touch-manipulation active:scale-[0.98]"
+                      style={{ animationDelay: `${index * 75}ms` }}
                     >
-                      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group">
-                        <div className="relative h-36 bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
-                          <motion.span 
-                            className="text-6xl"
-                            whileHover={{ scale: 1.2, rotate: 5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
+                      <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group h-full">
+                        <div className="relative h-28 sm:h-36 bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
+                          <span className="text-4xl sm:text-6xl group-hover:scale-110 transition-transform">
                             {restaurant.image}
-                          </motion.span>
+                          </span>
                           {restaurant.discount && (
-                            <Badge className="absolute top-3 left-3 bg-gradient-to-r from-eats to-orange-500 text-white border-0 font-semibold shadow-lg">
+                            <Badge className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-gradient-to-r from-eats to-orange-500 text-white border-0 font-semibold shadow-lg text-xs">
                               {restaurant.discount}
                             </Badge>
                           )}
-                          {/* Corner glow */}
                           <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-eats to-orange-500 rounded-full blur-2xl opacity-0 group-hover:opacity-30 transition-opacity" />
                         </div>
-                        <CardContent className="p-5">
-                          <h3 className="font-display font-bold text-lg mb-1 group-hover:text-eats transition-colors">{restaurant.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-3">{restaurant.cuisine}</p>
-                          <div className="flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-eats/10">
-                              <Star className="w-4 h-4 fill-eats text-eats" />
+                        <CardContent className="p-3 sm:p-5">
+                          <h3 className="font-display font-bold text-sm sm:text-lg mb-1 group-hover:text-eats transition-colors truncate">{restaurant.name}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 truncate">{restaurant.cuisine}</p>
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
+                            <div className="flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 sm:py-1 rounded-full bg-eats/10">
+                              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-eats text-eats" />
                               <span className="font-semibold text-eats">{restaurant.rating}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
-                              <Clock className="w-4 h-4" />
-                              <span className="font-medium">{restaurant.deliveryTime} min</span>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                              <span className="font-medium">{restaurant.deliveryTime}m</span>
                             </div>
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -655,40 +635,38 @@ const FoodOrdering = () => {
             <section className="py-8">
               <div className="container mx-auto px-4">
                 <h2 className="font-display text-2xl font-bold mb-6">All Restaurants</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {filteredRestaurants.map((restaurant, index) => (
-                    <motion.div
+                    <div
                       key={restaurant.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
                       onClick={() => setSelectedRestaurant(restaurant)}
-                      className="cursor-pointer"
+                      className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 touch-manipulation active:scale-[0.98]"
+                      style={{ animationDelay: `${index * 40}ms` }}
                     >
-                      <Card className="glass-card overflow-hidden hover:border-eats/50 transition-all group">
-                        <div className="relative h-28 bg-muted flex items-center justify-center">
-                          <span className="text-4xl group-hover:scale-110 transition-transform">
+                      <Card className="glass-card overflow-hidden hover:border-eats/50 transition-all group h-full">
+                        <div className="relative h-24 sm:h-28 bg-muted flex items-center justify-center">
+                          <span className="text-3xl sm:text-4xl group-hover:scale-110 transition-transform">
                             {restaurant.image}
                           </span>
                           {restaurant.deliveryFee === "Free" && (
-                            <Badge className="absolute top-2 right-2 bg-success text-primary-foreground text-xs">
-                              Free Delivery
+                            <Badge className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-success text-primary-foreground text-[10px] sm:text-xs px-1.5 py-0.5">
+                              Free
                             </Badge>
                           )}
                         </div>
-                        <CardContent className="p-4">
-                          <h3 className="font-medium">{restaurant.name}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{restaurant.cuisine}</p>
-                          <div className="flex items-center justify-between text-sm">
+                        <CardContent className="p-3 sm:p-4">
+                          <h3 className="font-medium text-sm sm:text-base truncate">{restaurant.name}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 truncate">{restaurant.cuisine}</p>
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
                             <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 fill-eats text-eats" />
+                              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-eats text-eats" />
                               <span>{restaurant.rating}</span>
                             </div>
-                            <span className="text-muted-foreground">{restaurant.deliveryTime} min</span>
+                            <span className="text-muted-foreground">{restaurant.deliveryTime}m</span>
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>

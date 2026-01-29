@@ -6257,6 +6257,18 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: number
       }
+      get_user_security_summary: {
+        Args: { p_user_id: string }
+        Returns: {
+          active_sessions_count: number
+          blocked_events: number
+          failed_logins: number
+          last_login: string
+          successful_logins: number
+          total_events: number
+          trusted_devices_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
