@@ -5865,6 +5865,7 @@ export type Database = {
       }
       check_expiring_documents: { Args: never; Returns: number }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
+      create_available_test_orders: { Args: never; Returns: number }
       create_driver_on_signup: {
         Args: {
           p_email: string
