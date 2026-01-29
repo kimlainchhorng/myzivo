@@ -6,7 +6,8 @@ import {
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
-  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target
+  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target,
+  Brain, ShieldAlert, Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -67,6 +68,10 @@ import AdminCustomerDirectory from "@/components/admin/AdminCustomerDirectory";
 import AdminGoalsTracker from "@/components/admin/AdminGoalsTracker";
 import AdminProjectsOverview from "@/components/admin/AdminProjectsOverview";
 import AdminFeatureFlags from "@/components/admin/AdminFeatureFlags";
+import AdminAIInsights from "@/components/admin/AdminAIInsights";
+import AdminFraudDetection from "@/components/admin/AdminFraudDetection";
+import AdminLoyaltyProgram from "@/components/admin/AdminLoyaltyProgram";
+import AdminApiUsage from "@/components/admin/AdminApiUsage";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -84,6 +89,7 @@ const AdminDashboard = () => {
       { value: "realtime", label: "Real-time", icon: Radio, gradient: "from-violet-500 to-purple-500" },
       { value: "health", label: "Service Health", icon: Server, gradient: "from-emerald-500 to-green-500" },
       { value: "forecasting", label: "Forecasting", icon: Sparkles, gradient: "from-violet-500 to-purple-500" },
+      { value: "ai-insights", label: "AI Insights", icon: Brain, gradient: "from-violet-500 to-pink-500" },
     ]},
     { title: "Accounts", items: [
       { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
@@ -139,12 +145,17 @@ const AdminDashboard = () => {
     ]},
     { title: "System", items: [
       { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
+      { value: "api-usage", label: "API Usage", icon: Activity, gradient: "from-cyan-500 to-blue-500" },
       { value: "feature-flags", label: "Feature Flags", icon: Flag, gradient: "from-cyan-500 to-blue-500" },
+      { value: "fraud", label: "Fraud Detection", icon: ShieldAlert, gradient: "from-red-500 to-orange-500" },
       { value: "compliance", label: "Compliance", icon: ShieldCheck, gradient: "from-emerald-500 to-green-500" },
       { value: "export", label: "Data Export", icon: Download, gradient: "from-teal-500 to-cyan-500" },
       { value: "reports", label: "Reports", icon: FileText, gradient: "from-emerald-500 to-teal-500" },
       { value: "settings", label: "Settings", icon: Settings, gradient: "from-slate-500 to-zinc-500" },
       { value: "audit", label: "Audit Logs", icon: History, gradient: "from-indigo-500 to-purple-500" },
+    ]},
+    { title: "Loyalty", items: [
+      { value: "loyalty", label: "Loyalty Program", icon: Coins, gradient: "from-amber-500 to-yellow-500" },
     ]},
   ];
 
@@ -340,6 +351,10 @@ const AdminDashboard = () => {
             <TabsContent value="reports" className="mt-0"><AdminReports /></TabsContent>
             <TabsContent value="settings" className="mt-0"><AdminSystemSettings /></TabsContent>
             <TabsContent value="audit" className="mt-0"><AdminAuditLogs /></TabsContent>
+            <TabsContent value="ai-insights" className="mt-0"><AdminAIInsights /></TabsContent>
+            <TabsContent value="fraud" className="mt-0"><AdminFraudDetection /></TabsContent>
+            <TabsContent value="loyalty" className="mt-0"><AdminLoyaltyProgram /></TabsContent>
+            <TabsContent value="api-usage" className="mt-0"><AdminApiUsage /></TabsContent>
           </Tabs>
         </main>
       </div>
