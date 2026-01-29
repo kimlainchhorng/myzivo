@@ -1,12 +1,10 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
@@ -24,13 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -45,32 +36,28 @@ import {
   AlertCircle,
   Shield,
   Users,
-  Filter,
   Clock,
-  UserCheck,
   Bike,
   Truck,
   BadgeCheck,
-  TrendingUp
+  FileImage,
+  FileCheck,
+  FileX,
+  Send,
+  Download,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { useDrivers, useUpdateDriverStatus, Driver, DriverStatus } from "@/hooks/useDrivers";
-import { useQuery } from "@tanstack/react-query";
+import { useDriverDocuments, getDocumentUrl, getDocumentTypeLabel } from "@/hooks/useDriverDocuments";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDistanceToNow, subDays, startOfDay, endOfDay } from "date-fns";
+import { subDays, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+// Required document types for verification
+const REQUIRED_DOCUMENTS = ["license", "insurance", "registration"];
 
 const AdminDriverVerification = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,9 +67,62 @@ const AdminDriverVerification = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [vehicleFilter, setVehicleFilter] = useState("all");
+  const [documentUrls, setDocumentUrls] = useState<Record<string, string>>({});
+  const [loadingDocUrls, setLoadingDocUrls] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: drivers, isLoading, error } = useDrivers();
   const updateStatus = useUpdateDriverStatus();
+
+  // Fetch documents for selected driver
+  const { data: driverDocuments, isLoading: docsLoading } = useDriverDocuments(selectedDriver?.id);
+
+  // Load document URLs when dialog opens
+  useEffect(() => {
+    const loadDocumentUrls = async () => {
+      if (!driverDocuments || driverDocuments.length === 0) return;
+      
+      setLoadingDocUrls(true);
+      const urls: Record<string, string> = {};
+      
+      for (const doc of driverDocuments) {
+        const url = await getDocumentUrl(doc.file_path);
+        if (url) {
+          urls[doc.id] = url;
+        }
+      }
+      
+      setDocumentUrls(urls);
+      setLoadingDocUrls(false);
+    };
+
+    if (isViewDialogOpen && selectedDriver) {
+      loadDocumentUrls();
+    }
+  }, [isViewDialogOpen, selectedDriver, driverDocuments]);
+
+  // Request documents mutation
+  const requestDocumentsMutation = useMutation({
+    mutationFn: async (driverId: string) => {
+      const { error } = await supabase
+        .from("driver_notifications")
+        .insert({
+          driver_id: driverId,
+          title: "Documents Required",
+          description: "Please upload your missing documents (license, insurance, vehicle registration) to complete verification.",
+          type: "system",
+          icon: "file-text"
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Document request sent to driver");
+      queryClient.invalidateQueries({ queryKey: ["driver-notifications"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to send request");
+    },
+  });
 
   // Fetch verification stats
   const { data: verificationStats } = useQuery({
@@ -184,25 +224,42 @@ const AdminDriverVerification = () => {
     }
   };
 
+  const handleRequestDocuments = (driverId: string) => {
+    requestDocumentsMutation.mutate(driverId);
+  };
+
+  // Get document checklist for a driver
+  const getDocumentChecklist = () => {
+    if (!driverDocuments) return [];
+    
+    return REQUIRED_DOCUMENTS.map(docType => {
+      const doc = driverDocuments.find(d => d.document_type === docType);
+      return {
+        type: docType,
+        label: getDocumentTypeLabel(docType),
+        uploaded: !!doc,
+        status: doc?.status || null,
+        document: doc || null
+      };
+    });
+  };
+
   const pendingCount = drivers?.filter((d) => d.status === "pending").length || 0;
   const verifiedCount = drivers?.filter((d) => d.status === "verified").length || 0;
-  const rejectedCount = drivers?.filter((d) => d.status === "rejected").length || 0;
   const onlineCount = drivers?.filter((d) => d.is_online).length || 0;
 
   if (error) {
     return (
-      <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-        <motion.div variants={item}>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10">
-              <AlertCircle className="h-6 w-6 text-red-500" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold">Driver Verification</h1>
-              <p className="text-muted-foreground">Review and verify driver applications</p>
-            </div>
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/10">
+            <AlertCircle className="h-6 w-6 text-red-500" />
           </div>
-        </motion.div>
+          <div>
+            <h1 className="text-2xl font-bold">Driver Verification</h1>
+            <p className="text-muted-foreground">Review and verify driver applications</p>
+          </div>
+        </div>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-12 text-center">
             <AlertCircle className="h-12 w-12 mx-auto text-destructive mb-4" />
@@ -210,14 +267,14 @@ const AdminDriverVerification = () => {
             <p className="text-muted-foreground">{error.message}</p>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <motion.div variants={item}>
+      <div className="animate-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/10">
             <Shield className="h-6 w-6 text-green-500" />
@@ -227,10 +284,10 @@ const AdminDriverVerification = () => {
             <p className="text-muted-foreground">Review and verify driver applications</p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Stats Cards */}
-      <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-100">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -282,10 +339,10 @@ const AdminDriverVerification = () => {
             </div>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Driver Table */}
-      <motion.div variants={item}>
+      <div className="animate-in slide-in-from-bottom-4 duration-500 delay-200">
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -361,12 +418,10 @@ const AdminDriverVerification = () => {
                       </TableRow>
                     ) : (
                       filteredDrivers.map((driver, index) => (
-                        <motion.tr
+                        <TableRow
                           key={driver.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.03 }}
-                          className="group hover:bg-muted/30 transition-colors"
+                          className="group hover:bg-muted/30 transition-colors animate-in fade-in duration-300"
+                          style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <TableCell>
                             <div className="flex items-center gap-3">
@@ -443,7 +498,7 @@ const AdminDriverVerification = () => {
                               )}
                             </div>
                           </TableCell>
-                        </motion.tr>
+                        </TableRow>
                       ))
                     )}
                   </TableBody>
@@ -452,97 +507,200 @@ const AdminDriverVerification = () => {
             </Tabs>
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
 
-      {/* View Driver Dialog */}
+      {/* View Driver Dialog with Documents */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-lg border-0 bg-card/95 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-2xl border-0 bg-card/95 backdrop-blur-xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Car className="h-5 w-5 text-primary" />
-              Driver Details
+              Driver Details & Documents
             </DialogTitle>
-            <DialogDescription>Complete driver profile and verification status</DialogDescription>
+            <DialogDescription>Complete driver profile, documents, and verification status</DialogDescription>
           </DialogHeader>
           {selectedDriver && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
-                <Avatar className="h-16 w-16 border-2 border-primary/20">
-                  <AvatarImage src={selectedDriver.avatar_url || undefined} />
-                  <AvatarFallback className="text-lg bg-gradient-to-br from-primary/20 to-blue-500/20">
-                    {selectedDriver.full_name.split(" ").map(n => n[0]).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-semibold text-lg">{selectedDriver.full_name}</p>
-                  <p className="text-muted-foreground">{selectedDriver.email}</p>
-                  <div className="mt-1">{getStatusBadge(selectedDriver.status)}</div>
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="space-y-6">
+                {/* Driver Info */}
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
+                  <Avatar className="h-16 w-16 border-2 border-primary/20">
+                    <AvatarImage src={selectedDriver.avatar_url || undefined} />
+                    <AvatarFallback className="text-lg bg-gradient-to-br from-primary/20 to-blue-500/20">
+                      {selectedDriver.full_name.split(" ").map(n => n[0]).join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{selectedDriver.full_name}</p>
+                    <p className="text-muted-foreground">{selectedDriver.email}</p>
+                    <div className="mt-1">{getStatusBadge(selectedDriver.status)}</div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">Phone</p>
-                  <p className="font-medium">{selectedDriver.phone}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="text-xs text-muted-foreground mb-1">License Number</p>
-                  <p className="font-medium">{selectedDriver.license_number}</p>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-muted/30">
-                <div className="flex items-center gap-2 mb-3">
-                  <Car className="h-5 w-5 text-primary" />
-                  <p className="font-semibold">Vehicle Information</p>
-                </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Vehicle Type</p>
-                    {getVehicleTypeBadge(selectedDriver.vehicle_type)}
+                  <div className="p-3 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground mb-1">Phone</p>
+                    <p className="font-medium">{selectedDriver.phone}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Model</p>
-                    <p className="font-medium">{selectedDriver.vehicle_model || "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">License Plate</p>
-                    <p className="font-medium">{selectedDriver.vehicle_plate}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Documents</p>
-                    <p className="font-medium">
-                      {selectedDriver.documents_verified ? (
-                        <span className="text-green-500 flex items-center gap-1">
-                          <CheckCircle className="h-4 w-4" /> Verified
-                        </span>
-                      ) : (
-                        <span className="text-amber-500">Pending Review</span>
-                      )}
-                    </p>
+                  <div className="p-3 rounded-lg bg-muted/30">
+                    <p className="text-xs text-muted-foreground mb-1">License Number</p>
+                    <p className="font-medium">{selectedDriver.license_number}</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-3 rounded-xl bg-muted/30">
-                  <p className="text-2xl font-bold">{selectedDriver.total_trips || 0}</p>
-                  <p className="text-xs text-muted-foreground">Total Trips</p>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30">
-                  <p className="text-2xl font-bold">
-                    {selectedDriver.rating && selectedDriver.rating > 0 ? Number(selectedDriver.rating).toFixed(1) : "N/A"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Rating</p>
-                </div>
-                <div className="p-3 rounded-xl bg-muted/30">
-                  <div className={`text-2xl font-bold ${selectedDriver.is_online ? "text-green-500" : "text-muted-foreground"}`}>
-                    {selectedDriver.is_online ? "Online" : "Offline"}
+                {/* Vehicle Info */}
+                <div className="p-4 rounded-xl bg-muted/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Car className="h-5 w-5 text-primary" />
+                    <p className="font-semibold">Vehicle Information</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Status</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Vehicle Type</p>
+                      {getVehicleTypeBadge(selectedDriver.vehicle_type)}
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Model</p>
+                      <p className="font-medium">{selectedDriver.vehicle_model || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">License Plate</p>
+                      <p className="font-medium">{selectedDriver.vehicle_plate}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Documents</p>
+                      <p className="font-medium">
+                        {selectedDriver.documents_verified ? (
+                          <span className="text-green-500 flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4" /> Verified
+                          </span>
+                        ) : (
+                          <span className="text-amber-500">Pending Review</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Document Checklist */}
+                <div className="p-4 rounded-xl bg-muted/30">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      <p className="font-semibold">Document Checklist</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-2"
+                      onClick={() => handleRequestDocuments(selectedDriver.id)}
+                      disabled={requestDocumentsMutation.isPending}
+                    >
+                      {requestDocumentsMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      Request Documents
+                    </Button>
+                  </div>
+                  
+                  {docsLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-12 w-full" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {getDocumentChecklist().map((item) => (
+                        <div 
+                          key={item.type}
+                          className={cn(
+                            "flex items-center justify-between p-3 rounded-lg border",
+                            item.uploaded 
+                              ? item.status === "approved" 
+                                ? "bg-green-500/5 border-green-500/20"
+                                : item.status === "rejected"
+                                ? "bg-red-500/5 border-red-500/20"
+                                : "bg-amber-500/5 border-amber-500/20"
+                              : "bg-muted/50 border-dashed"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            {item.uploaded ? (
+                              item.status === "approved" ? (
+                                <FileCheck className="h-5 w-5 text-green-500" />
+                              ) : item.status === "rejected" ? (
+                                <FileX className="h-5 w-5 text-red-500" />
+                              ) : (
+                                <FileImage className="h-5 w-5 text-amber-500" />
+                              )
+                            ) : (
+                              <FileX className="h-5 w-5 text-muted-foreground" />
+                            )}
+                            <div>
+                              <p className="font-medium text-sm">{item.label}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.uploaded 
+                                  ? item.status === "approved" 
+                                    ? "Approved" 
+                                    : item.status === "rejected" 
+                                    ? "Rejected" 
+                                    : "Pending review"
+                                  : "Not uploaded"}
+                              </p>
+                            </div>
+                          </div>
+                          {item.uploaded && item.document && documentUrls[item.document.id] && (
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                onClick={() => window.open(documentUrls[item.document!.id], "_blank")}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8"
+                                asChild
+                              >
+                                <a href={documentUrls[item.document.id]} download>
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <p className="text-2xl font-bold">{selectedDriver.total_trips || 0}</p>
+                    <p className="text-xs text-muted-foreground">Total Trips</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <p className="text-2xl font-bold">
+                      {selectedDriver.rating && selectedDriver.rating > 0 ? Number(selectedDriver.rating).toFixed(1) : "N/A"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Rating</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-muted/30">
+                    <div className={`text-2xl font-bold ${selectedDriver.is_online ? "text-green-500" : "text-muted-foreground"}`}>
+                      {selectedDriver.is_online ? "Online" : "Offline"}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           )}
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {selectedDriver?.status === "pending" && (
@@ -628,7 +786,7 @@ const AdminDriverVerification = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </motion.div>
+    </div>
   );
 };
 
