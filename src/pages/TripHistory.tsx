@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +18,6 @@ import {
   TrendingUp,
   Route,
   Sparkles,
-  ChevronRight,
   RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -261,28 +259,23 @@ const TripHistory = () => {
             <Skeleton className="h-48 w-full rounded-2xl" />
           </div>
         ) : !trips?.length ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-              <CardContent className="p-10 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
-                  <MapPin className="w-10 h-10 text-primary" />
+              <CardContent className="p-8 sm:p-10 text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
+                  <MapPin className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
                 </div>
-                <h3 className="font-display font-bold text-xl mb-2">No trips yet</h3>
-                <p className="text-muted-foreground mb-6">
+                <h3 className="font-display font-bold text-lg sm:text-xl mb-2">No trips yet</h3>
+                <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                   Your completed trips will appear here
                 </p>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button onClick={() => navigate("/ride")} className="rounded-xl font-semibold bg-gradient-to-r from-primary to-teal-400 text-white gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    Book a Ride
-                  </Button>
-                </motion.div>
+                <Button onClick={() => navigate("/ride")} className="rounded-xl font-semibold bg-gradient-to-r from-primary to-teal-400 text-white gap-2 touch-manipulation active:scale-95">
+                  <Sparkles className="w-4 h-4" />
+                  Book a Ride
+                </Button>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ) : (
           <Tabs defaultValue="completed">
             <TabsList className="w-full mb-6 bg-muted/50 p-1.5 rounded-xl h-auto">

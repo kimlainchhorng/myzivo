@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowLeft, Gift, Ticket, Users, Star, Copy, Check, Share2, Clock, TrendingUp, Award, Sparkles, Zap, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -252,128 +251,118 @@ const Promotions = () => {
                   <Zap className="w-5 h-5 text-eats" />
                   Available Offers
                 </h3>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
                   {availableOffers.map((offer, i) => (
-                    <motion.div
+                    <div
                       key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      whileHover={{ y: -4 }}
+                      className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:-translate-y-1 transition-transform"
+                      style={{ animationDelay: `${i * 100}ms` }}
                     >
                       <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all overflow-hidden">
-                        <CardContent className="p-5">
-                          <div className="flex justify-between items-start mb-3">
-                            <h4 className="font-bold text-lg">{offer.title}</h4>
-                            <Badge className={`bg-gradient-to-r ${offer.gradient} text-white border-0 font-semibold px-3`}>
+                        <CardContent className="p-4 sm:p-5">
+                          <div className="flex justify-between items-start mb-2 sm:mb-3 gap-2">
+                            <h4 className="font-bold text-base sm:text-lg">{offer.title}</h4>
+                            <Badge className={`bg-gradient-to-r ${offer.gradient} text-white border-0 font-semibold px-2 sm:px-3 text-xs`}>
                               {offer.discount}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground mb-4">{offer.description}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">{offer.description}</p>
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">{offer.validUntil}</span>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => copyCode(offer.code)}
-                                className="rounded-xl font-semibold"
-                              >
-                                {copiedCode === offer.code ? (
-                                  <Check className="h-4 w-4 mr-1.5 text-emerald-500" />
-                                ) : (
-                                  <Copy className="h-4 w-4 mr-1.5" />
-                                )}
-                                Get Code
-                              </Button>
-                            </motion.div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => copyCode(offer.code)}
+                              className="rounded-xl font-semibold touch-manipulation active:scale-95"
+                            >
+                              {copiedCode === offer.code ? (
+                                <Check className="h-4 w-4 mr-1.5 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4 mr-1.5" />
+                              )}
+                              Get Code
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
             </TabsContent>
 
             {/* Referral Tab */}
-            <TabsContent value="referral" className="mt-6">
-              <div className="space-y-6">
+            <TabsContent value="referral" className="mt-5 sm:mt-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Referral Banner */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card className="border-0 bg-gradient-to-r from-primary/20 to-eats/20 shadow-xl overflow-hidden">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <Card className="border-0 bg-gradient-to-r from-primary/20 to-eats/20 shadow-xl overflow-hidden relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-eats/10" />
-                    <CardContent className="p-8 text-center relative">
-                      <h3 className="font-display font-bold text-3xl mb-3">
+                    <CardContent className="p-5 sm:p-8 text-center relative">
+                      <h3 className="font-display font-bold text-2xl sm:text-3xl mb-2 sm:mb-3">
                         Give ${referralStats.refereeDiscount}, Get ${referralStats.referrerReward}
                       </h3>
-                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                      <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6 max-w-md mx-auto">
                         Share your code with friends. They get ${referralStats.refereeDiscount} off their first ride, 
                         you get ${referralStats.referrerReward} credit when they complete it.
                       </p>
-                      <div className="flex items-center justify-center gap-3 p-4 bg-background/80 backdrop-blur-sm rounded-2xl max-w-sm mx-auto">
-                        <code className="text-xl font-mono font-bold">{referralStats.code}</code>
-                        <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                          <Button size="icon" onClick={() => copyCode(referralStats.code)} className="rounded-xl">
-                            {copiedCode === referralStats.code ? (
-                              <Check className="h-4 w-4" />
-                            ) : (
-                              <Copy className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </motion.div>
-                        <Button size="icon" variant="outline" className="rounded-xl">
+                      <div className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-background/80 backdrop-blur-sm rounded-xl sm:rounded-2xl max-w-sm mx-auto">
+                        <code className="text-base sm:text-xl font-mono font-bold">{referralStats.code}</code>
+                        <Button size="icon" onClick={() => copyCode(referralStats.code)} className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10">
+                          {copiedCode === referralStats.code ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button size="icon" variant="outline" className="rounded-xl touch-manipulation active:scale-95 h-9 w-9 sm:h-10 sm:w-10">
                           <Share2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
 
                 {/* Referral Stats */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
                   {[
-                    { value: referralStats.totalReferrals, label: "Total Referrals", gradient: "from-primary to-teal-400" },
-                    { value: `$${referralStats.pendingCredits}`, label: "Pending Credits", gradient: "from-amber-500 to-orange-500" },
-                    { value: `$${referralStats.earnedTotal}`, label: "Total Earned", gradient: "from-emerald-500 to-green-500" },
+                    { value: referralStats.totalReferrals, label: "Referrals", gradient: "from-primary to-teal-400" },
+                    { value: `$${referralStats.pendingCredits}`, label: "Pending", gradient: "from-amber-500 to-orange-500" },
+                    { value: `$${referralStats.earnedTotal}`, label: "Earned", gradient: "from-emerald-500 to-green-500" },
                   ].map((stat, index) => (
-                    <motion.div
+                    <div
                       key={stat.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      className="animate-in fade-in slide-in-from-bottom-4 duration-500"
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-                        <CardContent className="p-5 text-center">
-                          <p className={`text-3xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</p>
-                          <p className="text-sm text-muted-foreground">{stat.label}</p>
+                        <CardContent className="p-3 sm:p-5 text-center">
+                          <p className={`text-xl sm:text-3xl font-bold bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>{stat.value}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
                 {/* How It Works */}
                 <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                   <CardHeader>
-                    <CardTitle className="text-xl">How It Works</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl">How It Works</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-3 gap-4 sm:gap-6">
                       {[
                         { step: 1, title: "Share Your Code", desc: "Send your unique code to friends via text, email, or social media" },
                         { step: 2, title: "Friend Signs Up", desc: `They enter your code and get $${referralStats.refereeDiscount} off their first ride` },
                         { step: 3, title: "You Both Win", desc: `After their first ride, you get $${referralStats.referrerReward} credit` },
                       ].map((item) => (
                         <div key={item.step} className="text-center">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
-                            <span className="font-bold text-xl text-white">{item.step}</span>
+                          <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-primary/30">
+                            <span className="font-bold text-base sm:text-xl text-white">{item.step}</span>
                           </div>
-                          <h4 className="font-bold mb-2">{item.title}</h4>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                          <h4 className="font-bold text-sm sm:text-base mb-1 sm:mb-2">{item.title}</h4>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{item.desc}</p>
                         </div>
                       ))}
                     </div>
@@ -383,55 +372,52 @@ const Promotions = () => {
             </TabsContent>
 
             {/* Loyalty Tab */}
-            <TabsContent value="loyalty" className="mt-6">
-              <div className="space-y-6">
+            <TabsContent value="loyalty" className="mt-5 sm:mt-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Points Overview */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden relative">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5" />
-                    <CardContent className="p-6 relative">
-                      <div className="flex items-center justify-between mb-6">
+                    <CardContent className="p-4 sm:p-6 relative">
+                      <div className="flex items-center justify-between mb-4 sm:mb-6">
                         <div>
-                          <p className="text-sm text-muted-foreground mb-1">Your Points</p>
-                          <p className="text-5xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{loyaltyPoints.current.toLocaleString()}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-1">Your Points</p>
+                          <p className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">{loyaltyPoints.current.toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <Badge className="text-lg px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 font-bold shadow-lg shadow-amber-500/30">
-                            <Award className="h-4 w-4 mr-1.5" />
+                          <Badge className="text-sm sm:text-lg px-2 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 font-bold shadow-lg shadow-amber-500/30">
+                            <Award className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                             {loyaltyPoints.tier}
                           </Badge>
-                          <p className="text-sm text-muted-foreground mt-2">
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
                             {loyaltyPoints.multiplier}x points multiplier
                           </p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
+                        <div className="flex justify-between text-xs sm:text-sm">
                           <span className="font-medium">Progress to {loyaltyPoints.nextTier}</span>
-                          <span className="text-muted-foreground">{loyaltyPoints.pointsToNext} points to go</span>
+                          <span className="text-muted-foreground">{loyaltyPoints.pointsToNext} pts to go</span>
                         </div>
                         <Progress 
                           value={((3000 - loyaltyPoints.pointsToNext) / 3000) * 100} 
-                          className="h-3 rounded-full"
+                          className="h-2 sm:h-3 rounded-full"
                         />
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
 
                 {/* Tier Benefits */}
                 <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      <TrendingUp className="h-5 w-5 text-amber-500" />
+                    <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
                       Tier Benefits
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-4 gap-3 text-center">
+                    <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center">
                       {[
                         { name: "Silver", points: "1x", active: false },
                         { name: "Gold", points: "1.5x", active: true },
@@ -440,14 +426,14 @@ const Promotions = () => {
                       ].map((tier) => (
                         <div 
                           key={tier.name}
-                          className={`p-4 rounded-2xl transition-all ${
+                          className={`p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all ${
                             tier.active 
                               ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500" 
                               : "bg-muted/50"
                           }`}
                         >
-                          <p className={`font-bold ${tier.active ? "text-amber-500" : ""}`}>{tier.name}</p>
-                          <p className="text-sm text-muted-foreground">{tier.points} points</p>
+                          <p className={`font-bold text-xs sm:text-base ${tier.active ? "text-amber-500" : ""}`}>{tier.name}</p>
+                          <p className="text-[10px] sm:text-sm text-muted-foreground">{tier.points}</p>
                         </div>
                       ))}
                     </div>
@@ -457,48 +443,46 @@ const Promotions = () => {
                 {/* Redeem Rewards */}
                 <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                   <CardHeader>
-                    <CardTitle className="text-xl">Redeem Rewards</CardTitle>
-                    <CardDescription>Use your points for free rides, credits, and more</CardDescription>
+                    <CardTitle className="text-lg sm:text-xl">Redeem Rewards</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">Use your points for free rides, credits, and more</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {rewards.map((reward, index) => (
-                        <motion.div
+                        <div
                           key={reward.name}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className={`flex items-center justify-between p-4 rounded-2xl transition-all ${
+                          className={`flex items-center justify-between p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all animate-in fade-in slide-in-from-left-4 duration-300 ${
                             reward.available && loyaltyPoints.current >= reward.points
                               ? "bg-muted/50 hover:bg-muted cursor-pointer"
                               : "bg-muted/20 opacity-60"
                           }`}
+                          style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
                               reward.available && loyaltyPoints.current >= reward.points
                                 ? "bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30"
                                 : "bg-muted"
                             }`}>
-                              <Star className={`h-6 w-6 ${
+                              <Star className={`h-5 w-5 sm:h-6 sm:w-6 ${
                                 reward.available && loyaltyPoints.current >= reward.points
                                   ? "text-white"
                                   : "text-muted-foreground"
                               }`} />
                             </div>
                             <div>
-                              <p className="font-semibold">{reward.name}</p>
-                              <p className="text-sm text-muted-foreground">{reward.points.toLocaleString()} points</p>
+                              <p className="font-semibold text-sm sm:text-base">{reward.name}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">{reward.points.toLocaleString()} points</p>
                             </div>
                           </div>
                           <Button
                             size="sm"
                             disabled={!reward.available || loyaltyPoints.current < reward.points}
-                            className="rounded-xl font-semibold"
+                            className="rounded-xl font-semibold text-xs sm:text-sm touch-manipulation active:scale-95"
                           >
                             Redeem
                           </Button>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                   </CardContent>
