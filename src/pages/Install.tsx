@@ -65,75 +65,47 @@ const Install = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Enhanced Background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/15 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/4 w-[350px] h-[350px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-40"
-      >
-        📲
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-40 left-[8%] text-4xl hidden lg:block opacity-30"
-      >
-        ✨
-      </motion.div>
+      <div className="absolute top-1/4 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-bl from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="container mx-auto px-4">
-          <div className="flex items-center h-16">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl">
+          <div className="flex items-center h-14 sm:h-16">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <span className="font-display font-bold text-xl ml-3">Install ZIVO</span>
+            <span className="font-display font-bold text-lg sm:text-xl ml-3">Install ZIVO</span>
           </div>
         </div>
       </header>
 
-      <main className="pt-28 pb-16 px-4 relative z-10">
+      <main className="pt-20 sm:pt-28 pb-16 px-4 relative z-10">
         <div className="container mx-auto max-w-lg">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-10"
-          >
+          <div className="text-center mb-8 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Premium App Icon */}
-            <motion.div 
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.1, type: "spring" }}
-              whileHover={{ scale: 1.05 }}
-              className="mx-auto mb-8"
-            >
+            <div className="mx-auto mb-6 sm:mb-8">
               <ZivoLogo size="xl" />
-            </motion.div>
+            </div>
 
             <Badge className="mb-4 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 px-4 py-2 text-sm font-semibold">
               <Star className="w-4 h-4 mr-2 fill-primary" />
               Progressive Web App
             </Badge>
 
-            <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
               Get the{" "}
               <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
                 ZIVO App
               </span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base sm:text-lg text-muted-foreground">
               Install ZIVO on your device for the best experience
             </p>
-          </motion.div>
+          </div>
 
           {isInstalled ? (
             <motion.div
