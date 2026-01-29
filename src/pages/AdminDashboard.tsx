@@ -5,7 +5,8 @@ import {
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
-  Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database
+  Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
+  ArrowUp, Heart, PieChart, Server
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -46,6 +47,10 @@ import AdminRidesManagement from "@/components/admin/AdminRidesManagement";
 import AdminEatsManagement from "@/components/admin/AdminEatsManagement";
 import AdminAccountsManagement from "@/components/admin/AdminAccountsManagement";
 import AdminDeliveryManagement from "@/components/admin/AdminDeliveryManagement";
+import AdminCustomerInsights from "@/components/admin/AdminCustomerInsights";
+import AdminEscalationManager from "@/components/admin/AdminEscalationManager";
+import AdminServiceHealth from "@/components/admin/AdminServiceHealth";
+import AdminUserSegments from "@/components/admin/AdminUserSegments";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -61,10 +66,13 @@ const AdminDashboard = () => {
       { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
       { value: "activity", label: "Activity Feed", icon: Activity, gradient: "from-cyan-500 to-blue-500" },
       { value: "realtime", label: "Real-time", icon: Radio, gradient: "from-violet-500 to-purple-500" },
+      { value: "health", label: "Service Health", icon: Server, gradient: "from-emerald-500 to-green-500" },
     ]},
     { title: "Accounts", items: [
       { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
       { value: "users", label: "Customers", icon: User, gradient: "from-blue-500 to-cyan-500" },
+      { value: "insights", label: "Customer Insights", icon: Heart, gradient: "from-rose-500 to-pink-500" },
+      { value: "segments", label: "User Segments", icon: PieChart, gradient: "from-violet-500 to-purple-500" },
       { value: "roles", label: "Roles & Permissions", icon: Crown, gradient: "from-amber-500 to-orange-500" },
     ]},
     { title: "Driver Control", items: [
@@ -102,6 +110,7 @@ const AdminDashboard = () => {
       { value: "promotions", label: "Promotions", icon: Ticket, gradient: "from-violet-500 to-purple-500" },
       { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
       { value: "support", label: "Support Tickets", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
+      { value: "escalations", label: "Escalations", icon: ArrowUp, gradient: "from-red-500 to-orange-500" },
     ]},
     { title: "System", items: [
       { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
@@ -257,8 +266,11 @@ const AdminDashboard = () => {
             <TabsContent value="analytics" className="mt-0"><AdminAnalytics /></TabsContent>
             <TabsContent value="activity" className="mt-0"><AdminActivityFeed /></TabsContent>
             <TabsContent value="realtime" className="mt-0"><AdminRealtimeDashboard /></TabsContent>
+            <TabsContent value="health" className="mt-0"><AdminServiceHealth /></TabsContent>
             <TabsContent value="accounts" className="mt-0"><AdminAccountsManagement /></TabsContent>
             <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
+            <TabsContent value="insights" className="mt-0"><AdminCustomerInsights /></TabsContent>
+            <TabsContent value="segments" className="mt-0"><AdminUserSegments /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
             <TabsContent value="onboarding" className="mt-0"><AdminDriverOnboardingQueue /></TabsContent>
@@ -284,6 +296,7 @@ const AdminDashboard = () => {
             <TabsContent value="promotions" className="mt-0"><AdminPromotions /></TabsContent>
             <TabsContent value="announcements" className="mt-0"><AdminAnnouncements /></TabsContent>
             <TabsContent value="support" className="mt-0"><AdminSupportTickets /></TabsContent>
+            <TabsContent value="escalations" className="mt-0"><AdminEscalationManager /></TabsContent>
             <TabsContent value="integrations" className="mt-0"><AdminIntegrationManager /></TabsContent>
             <TabsContent value="reports" className="mt-0"><AdminReports /></TabsContent>
             <TabsContent value="settings" className="mt-0"><AdminSystemSettings /></TabsContent>
