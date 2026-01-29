@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { cn } from "@/lib/utils";
 
 interface GradientHeadingProps {
@@ -23,19 +23,16 @@ export const GradientHeading = ({
   animate = true 
 }: GradientHeadingProps) => {
   return (
-    <motion.h2
-      initial={animate ? { opacity: 0, y: 30 } : undefined}
-      whileInView={animate ? { opacity: 1, y: 0 } : undefined}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.1 }}
+    <h2
       className={cn(
         "font-display font-bold tracking-tight",
         sizeClasses[size],
+        animate && "animate-in fade-in slide-in-from-bottom-4 duration-500",
         className
       )}
     >
       {children}
-    </motion.h2>
+    </h2>
   );
 };
 
@@ -86,36 +83,28 @@ export const SectionHeading = ({
   className 
 }: SectionHeadingProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className={cn("text-center mb-12 sm:mb-16", className)}
+    <div
+      className={cn(
+        "text-center mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500",
+        className
+      )}
     >
       {badge && (
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          className="mb-6"
-        >
+        <div className="mb-6 animate-in zoom-in-95 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           {badge}
-        </motion.div>
+        </div>
       )}
       <GradientHeading size="lg">
         {title}
       </GradientHeading>
       {description && (
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed"
+        <p
+          className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto mt-4 leading-relaxed animate-in fade-in slide-in-from-bottom-2 duration-300"
+          style={{ animationDelay: '200ms', animationFillMode: 'both' }}
         >
           {description}
-        </motion.p>
+        </p>
       )}
-    </motion.div>
+    </div>
   );
 };

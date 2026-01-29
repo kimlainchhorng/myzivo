@@ -1,6 +1,6 @@
+// CSS animations used instead of framer-motion for performance
 import { Check, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 interface Step {
   id: string;
@@ -78,39 +78,33 @@ export const BookingStepIndicator = ({
           const isClickable = onStepClick && index <= currentStep;
 
           return (
-            <motion.div
+            <div
               key={step.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
               className={cn(
-                "flex items-start gap-4 p-3 rounded-xl transition-all",
+                "flex items-start gap-4 p-3 rounded-xl transition-all animate-in fade-in slide-in-from-left-4 duration-300",
                 isClickable && "cursor-pointer hover:bg-muted/50",
                 isActive && "bg-muted/30"
               )}
+              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
               onClick={() => isClickable && onStepClick(index)}
             >
               <div className="relative flex flex-col items-center">
-                <motion.div
-                  initial={false}
-                  animate={{
-                    scale: isActive ? 1.1 : 1,
-                  }}
+                <div
                   className={cn(
                     "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
                     isCompleted && colors.completed,
-                    isActive && colors.active,
+                    isActive && cn(colors.active, "scale-110"),
                     !isCompleted && !isActive && colors.upcoming
                   )}
                 >
                   {isCompleted ? (
-                    <Check className="w-5 h-5" />
+                    <Check className="w-5 h-5 animate-in zoom-in duration-200" />
                   ) : step.icon ? (
                     step.icon
                   ) : (
                     <span className="text-sm font-bold">{index + 1}</span>
                   )}
-                </motion.div>
+                </div>
                 {index < steps.length - 1 && (
                   <div className={cn(
                     "w-0.5 h-8 mt-2 rounded-full transition-colors duration-300",
@@ -134,7 +128,7 @@ export const BookingStepIndicator = ({
                   <Check className="w-3.5 h-3.5 text-emerald-500" />
                 </div>
               )}
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -149,19 +143,18 @@ export const BookingStepIndicator = ({
           const isActive = index === currentStep;
 
           return (
-            <motion.div
+            <div
               key={step.id}
-              initial={false}
-              animate={{ scale: isActive ? 1 : 0.95 }}
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-sm",
-                isActive && "bg-background shadow-md",
+                isActive && "bg-background shadow-md scale-100",
+                !isActive && "scale-95",
                 isCompleted && "text-foreground",
                 !isCompleted && !isActive && "text-muted-foreground"
               )}
             >
               <div className={cn(
-                "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold",
+                "w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200",
                 isCompleted && "bg-emerald-500 text-white",
                 isActive && colors.active.replace("shadow-lg", "").replace("shadow-md", ""),
                 !isCompleted && !isActive && "bg-muted"
@@ -174,7 +167,7 @@ export const BookingStepIndicator = ({
               {index < steps.length - 1 && (
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
               )}
-            </motion.div>
+            </div>
           );
         })}
       </div>
@@ -182,20 +175,18 @@ export const BookingStepIndicator = ({
   }
 
   // Default variant
+  const progressWidth = Math.min((currentStep / (steps.length - 1)) * 100, 100);
+  
   return (
     <div className="w-full">
       <div className="flex items-center justify-between relative">
         {/* Background line */}
         <div className="absolute left-6 right-6 top-6 h-1 bg-muted rounded-full" />
         
-        {/* Progress line */}
-        <motion.div
-          className={cn("absolute left-6 top-6 h-1 rounded-full", colors.line)}
-          initial={{ width: "0%" }}
-          animate={{
-            width: `calc(${Math.min((currentStep / (steps.length - 1)) * 100, 100)}% - 24px)`,
-          }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+        {/* Progress line - CSS transition instead of framer-motion */}
+        <div
+          className={cn("absolute left-6 top-6 h-1 rounded-full transition-all duration-500 ease-out", colors.line)}
+          style={{ width: `calc(${progressWidth}% - 24px)` }}
         />
 
         {steps.map((step, index) => {
@@ -212,35 +203,24 @@ export const BookingStepIndicator = ({
               )}
               onClick={() => isClickable && onStepClick(index)}
             >
-              <motion.div
-                initial={false}
-                animate={{
-                  scale: isActive ? 1.15 : 1,
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              <div
                 className={cn(
                   "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300",
                   isCompleted && colors.completed,
-                  isActive && colors.active,
-                  !isCompleted && !isActive && colors.upcoming,
-                  isActive && "ring-4 ring-offset-2 ring-offset-background",
-                  isActive && colors.glow
+                  isActive && cn(colors.active, "scale-115 ring-4 ring-offset-2 ring-offset-background", colors.glow),
+                  !isCompleted && !isActive && colors.upcoming
                 )}
               >
                 {isCompleted ? (
-                  <motion.div
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
+                  <div className="animate-in zoom-in spin-in-180 duration-300">
                     <Check className="w-6 h-6" />
-                  </motion.div>
+                  </div>
                 ) : step.icon ? (
                   step.icon
                 ) : (
                   <span className="text-base font-bold">{index + 1}</span>
                 )}
-              </motion.div>
+              </div>
               <div className="mt-3 text-center">
                 <span
                   className={cn(
