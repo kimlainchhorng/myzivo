@@ -165,9 +165,16 @@ export const useCreateTrip = () => {
       distanceKm: number;
       durationMinutes: number;
     }) => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw new Error("Authentication failed. Please sign in again.");
+      }
       
       if (!user) throw new Error("You must be logged in to book a trip");
+
+      console.log("Creating trip for user:", user.id);
 
       const { data, error } = await supabase
         .from("trips")
@@ -181,14 +188,17 @@ export const useCreateTrip = () => {
           dropoff_lng: dropoff.lng,
           fare_amount: fareAmount,
           distance_km: distanceKm,
-          duration_minutes: durationMinutes,
+          duration_minutes: Math.round(durationMinutes),
           status: "requested",
           payment_status: "pending",
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Trip creation error:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
