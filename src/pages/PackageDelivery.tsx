@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   Package, 
   MapPin, 
@@ -189,51 +188,44 @@ const PackageDelivery = () => {
         </section>
 
         {/* Booking Form */}
-        <section className="py-20 lg:py-28">
+        <section className="py-12 sm:py-20 lg:py-28">
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="overflow-hidden border-0 shadow-2xl bg-gradient-to-br from-card/95 to-card">
-                <CardHeader className="bg-gradient-to-r from-eats/10 to-orange-500/5 border-b border-border/50 p-6">
-                  <div className="flex items-center gap-4">
-                    <motion.div 
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      className="w-14 h-14 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30"
-                    >
-                      <Package className="h-7 w-7 text-white" />
-                    </motion.div>
+                <CardHeader className="bg-gradient-to-r from-eats/10 to-orange-500/5 border-b border-border/50 p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
+                      <Package className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                    </div>
                     <div>
-                      <CardTitle className="text-xl font-bold">Schedule a Pickup</CardTitle>
-                      <CardDescription>Enter pickup and delivery details</CardDescription>
+                      <CardTitle className="text-lg sm:text-xl font-bold">Schedule a Pickup</CardTitle>
+                      <CardDescription className="text-sm">Enter pickup and delivery details</CardDescription>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-8 space-y-8">
+                <CardContent className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
                   {/* Locations */}
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
                       <Label className="font-semibold text-sm">Pickup Address</Label>
                       <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input placeholder="Enter pickup location" className="pl-12 h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-eats/50" />
+                        <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                        <Input placeholder="Enter pickup location" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl text-sm sm:text-base bg-muted/30 border-border/50 focus:border-eats/50" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="font-semibold text-sm">Delivery Address</Label>
                       <div className="relative">
-                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-eats" />
-                        <Input placeholder="Enter delivery location" className="pl-12 h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-eats/50" />
+                        <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-eats" />
+                        <Input placeholder="Enter delivery location" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl text-sm sm:text-base bg-muted/30 border-border/50 focus:border-eats/50" />
                       </div>
                     </div>
                   </div>
 
                   {/* Package Type Selection */}
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <Label className="font-semibold text-sm">Delivery Speed</Label>
-                    <RadioGroup value={packageType} onValueChange={setPackageType} className="grid md:grid-cols-3 gap-4">
+                    <RadioGroup value={packageType} onValueChange={setPackageType} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       {packageOptions.map((option) => (
                         <Label
                           key={option.id}
@@ -241,10 +233,8 @@ const PackageDelivery = () => {
                           className="relative cursor-pointer"
                         >
                           <RadioGroupItem value={option.id} id={option.id} className="sr-only" />
-                          <motion.div
-                            whileHover={{ y: -4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all ${
+                          <div
+                            className={`flex flex-col items-center gap-2 sm:gap-3 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 transition-all hover:-translate-y-1 touch-manipulation active:scale-[0.98] ${
                               packageType === option.id 
                                 ? `border-eats ${option.bgColor} shadow-xl ${option.glow}` 
                                 : "border-border/50 hover:border-muted-foreground/50 bg-muted/20"
@@ -255,147 +245,133 @@ const PackageDelivery = () => {
                                 Popular
                               </Badge>
                             )}
-                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${option.gradient} flex items-center justify-center shadow-lg ${option.glow}`}>
-                              <option.icon className="h-7 w-7 text-white" />
+                            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${option.gradient} flex items-center justify-center shadow-lg ${option.glow}`}>
+                              <option.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                             </div>
-                            <span className="font-bold text-lg">{option.name}</span>
-                            <span className="text-sm text-muted-foreground">{option.time}</span>
-                            <span className="font-bold text-eats text-xl">{option.price}</span>
-                          </motion.div>
+                            <span className="font-bold text-base sm:text-lg">{option.name}</span>
+                            <span className="text-xs sm:text-sm text-muted-foreground">{option.time}</span>
+                            <span className="font-bold text-eats text-lg sm:text-xl">{option.price}</span>
+                          </div>
                         </Label>
                       ))}
                     </RadioGroup>
                   </div>
 
                   {/* Package Details */}
-                  <div className="grid md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <Label className="font-semibold text-sm">Package Size</Label>
-                      <Input placeholder="e.g., Small box" className="h-12 rounded-xl bg-muted/30 border-border/50" />
+                      <Input placeholder="e.g., Small box" className="h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50" />
                     </div>
                     <div className="space-y-2">
                       <Label className="font-semibold text-sm">Weight (kg)</Label>
-                      <Input type="number" placeholder="0.5" className="h-12 rounded-xl bg-muted/30 border-border/50" />
+                      <Input type="number" placeholder="0.5" className="h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50" />
                     </div>
                     <div className="space-y-2">
                       <Label className="font-semibold text-sm">Contents</Label>
-                      <Input placeholder="e.g., Documents" className="h-12 rounded-xl bg-muted/30 border-border/50" />
+                      <Input placeholder="e.g., Documents" className="h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50" />
                     </div>
                   </div>
 
                   {/* Special Instructions */}
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm">Special Instructions (Optional)</Label>
-                    <Textarea placeholder="Any special handling instructions..." className="min-h-[100px] rounded-xl bg-muted/30 border-border/50 resize-none" />
+                    <Textarea placeholder="Any special handling instructions..." className="min-h-[80px] sm:min-h-[100px] rounded-xl bg-muted/30 border-border/50 resize-none" />
                   </div>
 
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button className="w-full h-16 text-lg font-bold rounded-2xl bg-gradient-to-r from-eats to-orange-500 text-white shadow-xl shadow-eats/30 hover:opacity-90 gap-2">
-                      <Sparkles className="w-5 h-5" />
-                      Get Quote & Schedule
-                      <ChevronRight className="w-5 h-5" />
-                    </Button>
-                  </motion.div>
+                  <Button className="w-full h-14 sm:h-16 text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-eats to-orange-500 text-white shadow-xl shadow-eats/30 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Get Quote & Schedule
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </Button>
 
                   {/* Trust badges */}
-                  <div className="flex items-center justify-center gap-8 pt-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Shield className="w-4 h-4 text-emerald-500" />
+                  <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-2 sm:pt-4">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
                       <span>Insured</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
                       <span>Verified Drivers</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Phone className="w-4 h-4 text-emerald-500" />
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
+                      <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
                       <span>24/7 Support</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* FAQs */}
-        <section className="py-20 bg-gradient-to-b from-muted/30 to-transparent">
+        <section className="py-12 sm:py-20 bg-gradient-to-b from-muted/30 to-transparent">
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-              <p className="text-muted-foreground">Quick answers to common questions</p>
-            </motion.div>
+            <div className="text-center mb-8 sm:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Frequently Asked Questions</h2>
+              <p className="text-sm sm:text-base text-muted-foreground">Quick answers to common questions</p>
+            </div>
             
-            <div className="grid gap-4">
+            <div className="grid gap-3 sm:gap-4">
               {faqs.map((faq, index) => (
-                <motion.div
+                <div
                   key={faq.q}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -2 }}
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-300 hover:-translate-y-0.5 transition-transform"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
                   <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
-                    <CardContent className="p-6">
-                      <h3 className="font-bold text-lg mb-2 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
-                          <span className="text-eats font-bold text-sm">Q</span>
+                    <CardContent className="p-4 sm:p-6">
+                      <h3 className="font-bold text-base sm:text-lg mb-2 flex items-center gap-2 sm:gap-3">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-eats font-bold text-xs sm:text-sm">Q</span>
                         </div>
                         {faq.q}
                       </h3>
-                      <p className="text-muted-foreground leading-relaxed pl-11">{faq.a}</p>
+                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed pl-9 sm:pl-11">{faq.a}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
         {/* Policy Links */}
-        <section className="py-16">
+        <section className="py-10 sm:py-16">
           <div className="container mx-auto px-4 max-w-4xl">
-            <div className="grid md:grid-cols-2 gap-4">
-              <motion.div whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
-                <Card 
-                  className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all group" 
-                  onClick={() => navigate("/terms-of-service#delivery")}
-                >
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center group-hover:from-eats/20 group-hover:to-orange-500/10 transition-all">
-                      <FileText className="h-7 w-7 text-muted-foreground group-hover:text-eats transition-colors" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-base">Delivery Terms & Conditions</h4>
-                      <p className="text-sm text-muted-foreground">View our package delivery policies</p>
-                    </div>
-                    <ArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-eats transition-colors" />
-                  </CardContent>
-                </Card>
-              </motion.div>
-              <motion.div whileHover={{ y: -4 }} whileTap={{ scale: 0.98 }}>
-                <Card 
-                  className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all group" 
-                  onClick={() => navigate("/help#delivery")}
-                >
-                  <CardContent className="flex items-center gap-4 p-6">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center group-hover:from-eats/20 group-hover:to-orange-500/10 transition-all">
-                      <Gift className="h-7 w-7 text-muted-foreground group-hover:text-eats transition-colors" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-bold text-base">Prohibited Items Guide</h4>
-                      <p className="text-sm text-muted-foreground">What we can and can't deliver</p>
-                    </div>
-                    <ArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-eats transition-colors" />
-                  </CardContent>
-                </Card>
-              </motion.div>
+            <div className="grid md:grid-cols-2 gap-3 sm:gap-4">
+              <Card 
+                className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" 
+                onClick={() => navigate("/terms-of-service#delivery")}
+              >
+                <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center group-hover:from-eats/20 group-hover:to-orange-500/10 transition-all flex-shrink-0">
+                    <FileText className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground group-hover:text-eats transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm sm:text-base">Delivery Terms & Conditions</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">View our package delivery policies</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-eats transition-colors flex-shrink-0" />
+                </CardContent>
+              </Card>
+              <Card 
+                className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" 
+                onClick={() => navigate("/help#delivery")}
+              >
+                <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center group-hover:from-eats/20 group-hover:to-orange-500/10 transition-all flex-shrink-0">
+                    <Gift className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground group-hover:text-eats transition-colors" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-sm sm:text-base">Prohibited Items Guide</h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">What we can and can't deliver</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-eats transition-colors flex-shrink-0" />
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

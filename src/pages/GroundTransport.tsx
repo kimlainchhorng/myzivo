@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   Train, 
   Bus, 
@@ -138,125 +137,99 @@ const GroundTransport = () => {
               </Button>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center max-w-4xl mx-auto mb-14"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Badge className="mb-6 bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-500 border-violet-500/30 px-4 py-2 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Ground Transport
-                </Badge>
-              </motion.div>
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-500 border-violet-500/30 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold">
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Ground Transport
+              </Badge>
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
                 Bus & Train{" "}
                 <span className="bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">
                   Tickets
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Compare and book intercity buses and trains. Best prices, e-tickets, 
                 and flexible booking options.
               </p>
-            </motion.div>
+            </div>
 
             {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl mx-auto mb-14"
-            >
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 max-w-3xl mx-auto mb-10 sm:mb-14">
               {stats.map((stat, index) => (
-                <motion.div
+                <div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="text-center"
+                  className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-violet-500" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 flex items-center justify-center">
+                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-violet-500" />
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">
                     {stat.value}
                   </p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </motion.div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
             {/* Premium Search Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="max-w-5xl mx-auto"
-            >
-              <Card className="p-6 lg:p-8 border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-sm">
-                <div className="grid md:grid-cols-5 gap-4 items-end">
+            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+              <Card className="p-4 sm:p-6 lg:p-8 border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 items-end">
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm">From</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <Input placeholder="New York" className="pl-12 h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-violet-500/50" />
+                      <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                      <Input placeholder="New York" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl text-sm sm:text-base bg-muted/30 border-border/50 focus:border-violet-500/50" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-center md:mt-6">
-                    <motion.div whileHover={{ rotate: 180 }} transition={{ duration: 0.3 }}>
-                      <Button variant="ghost" size="icon" className="rounded-full bg-muted/50 hover:bg-violet-500/20">
-                        <RefreshCw className="h-5 w-5 text-violet-500" />
-                      </Button>
-                    </motion.div>
+                  <div className="flex items-center justify-center sm:hidden md:flex md:mt-6">
+                    <Button variant="ghost" size="icon" className="rounded-full bg-muted/50 hover:bg-violet-500/20 touch-manipulation active:scale-95">
+                      <RefreshCw className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
+                    </Button>
                   </div>
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm">To</Label>
                     <div className="relative">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-violet-500" />
-                      <Input placeholder="Boston" className="pl-12 h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-violet-500/50" />
+                      <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
+                      <Input placeholder="Boston" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl text-sm sm:text-base bg-muted/30 border-border/50 focus:border-violet-500/50" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm">Date</Label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                      <Input type="date" className="pl-12 h-14 rounded-xl bg-muted/30 border-border/50 focus:border-violet-500/50" />
+                      <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                      <Input type="date" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl bg-muted/30 border-border/50 focus:border-violet-500/50" />
                     </div>
                   </div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button className="h-14 w-full text-lg font-bold rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30 hover:opacity-90">
-                      Search
-                    </Button>
-                  </motion.div>
+                  <Button className="h-12 sm:h-14 w-full text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30 hover:opacity-90 touch-manipulation active:scale-[0.98]">
+                    Search
+                  </Button>
                 </div>
-                <div className="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-border/50">
-                  <div className="relative w-36">
-                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input type="number" min="1" defaultValue="1" className="pl-11 h-12 rounded-xl bg-muted/30 border-border/50" placeholder="Passengers" />
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50">
+                  <div className="relative w-full sm:w-36">
+                    <Users className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input type="number" min="1" defaultValue="1" className="pl-10 sm:pl-11 h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50" placeholder="Passengers" />
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2 rounded-xl h-12 px-5">
+                  <Button variant="outline" size="sm" className="gap-2 rounded-xl h-11 sm:h-12 px-4 sm:px-5 touch-manipulation">
                     <RefreshCw className="h-4 w-4" />
                     Round trip
                   </Button>
-                  <div className="flex items-center gap-4 ml-auto text-sm text-muted-foreground">
+                  <div className="flex items-center gap-3 sm:gap-4 ml-auto text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
-                      <Shield className="w-4 h-4 text-emerald-500" />
-                      <span>Free cancellation</span>
+                      <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+                      <span className="hidden sm:inline">Free cancellation</span>
+                      <span className="sm:hidden">Cancel free</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
                       <span>E-tickets</span>
                     </div>
                   </div>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -291,70 +264,66 @@ const GroundTransport = () => {
             </div>
 
             {/* Results List */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {filteredRoutes.map((route, index) => (
-                <motion.div
+                <div
                   key={route.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -4 }}
+                  className="animate-in fade-in slide-in-from-left-4 duration-300 hover:-translate-y-1 transition-transform"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:shadow-violet-500/5 transition-all duration-300 cursor-pointer group overflow-hidden">
-                    <CardContent className="p-6 lg:p-8">
-                      <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+                    <CardContent className="p-4 sm:p-6 lg:p-8">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-4 sm:gap-6">
                         {/* Icon & Operator */}
-                        <div className="flex items-center gap-4 lg:min-w-[140px]">
-                          <motion.div 
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                        <div className="flex items-center gap-3 sm:gap-4 lg:min-w-[140px]">
+                          <div 
+                            className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg ${
                               route.type === "train" 
                                 ? "bg-gradient-to-br from-violet-500 to-purple-500 shadow-violet-500/30" 
                                 : "bg-gradient-to-br from-primary to-teal-400 shadow-primary/30"
                             }`}
                           >
                             {route.type === "train" ? (
-                              <Train className="h-7 w-7 text-white" />
+                              <Train className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                             ) : (
-                              <Bus className="h-7 w-7 text-white" />
+                              <Bus className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                             )}
-                          </motion.div>
+                          </div>
                           <div>
-                            <p className="font-bold text-lg">{route.operator}</p>
+                            <p className="font-bold text-base sm:text-lg">{route.operator}</p>
                             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 w-fit">
-                              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
-                              <span className="text-sm font-semibold">{route.rating}</span>
+                              <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-500 fill-amber-500" />
+                              <span className="text-xs sm:text-sm font-semibold">{route.rating}</span>
                             </div>
                           </div>
                         </div>
 
                         {/* Times & Route */}
                         <div className="flex-1">
-                          <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2 sm:gap-4">
                             <div className="text-center">
-                              <p className="text-2xl lg:text-3xl font-bold">{route.departureTime}</p>
-                              <p className="text-sm text-muted-foreground">{route.departure}</p>
+                              <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{route.departureTime}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">{route.departure}</p>
                             </div>
-                            <div className="flex-1 flex items-center gap-3">
+                            <div className="flex-1 flex items-center gap-2 sm:gap-3">
                               <div className="h-px flex-1 bg-gradient-to-r from-border via-violet-500/50 to-border" />
-                              <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-violet-500/10 text-sm font-semibold text-violet-500">
-                                <Clock className="h-4 w-4" />
+                              <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-1.5 sm:py-2 rounded-full bg-violet-500/10 text-xs sm:text-sm font-semibold text-violet-500">
+                                <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                                 {route.duration}
                               </div>
                               <div className="h-px flex-1 bg-gradient-to-r from-border via-violet-500/50 to-border" />
                             </div>
                             <div className="text-center">
-                              <p className="text-2xl lg:text-3xl font-bold">{route.arrivalTime}</p>
-                              <p className="text-sm text-muted-foreground">{route.arrival}</p>
+                              <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{route.arrivalTime}</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground">{route.arrival}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 mt-4">
-                            <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3 sm:gap-4 mt-3 sm:mt-4">
+                            <div className="flex items-center gap-1.5 sm:gap-2">
                               {route.amenities.map((amenity) => (
                                 <span 
                                   key={amenity} 
-                                  className="p-2 rounded-lg bg-muted/50 text-muted-foreground hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
+                                  className="p-1.5 sm:p-2 rounded-lg bg-muted/50 text-muted-foreground hover:bg-violet-500/10 hover:text-violet-500 transition-colors"
                                   title={amenity}
                                 >
                                   {getAmenityIcon(amenity)}
@@ -362,7 +331,7 @@ const GroundTransport = () => {
                               ))}
                             </div>
                             {route.badge && (
-                              <Badge className={`font-semibold ${
+                              <Badge className={`font-semibold text-xs ${
                                 route.badge === "Fastest" 
                                   ? "bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-500 border-violet-500/30" 
                                   : "bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/30"
@@ -375,23 +344,21 @@ const GroundTransport = () => {
                         </div>
 
                         {/* Price & Action */}
-                        <div className="flex items-center justify-between lg:flex-col lg:items-end lg:min-w-[160px]">
+                        <div className="flex items-center justify-between lg:flex-col lg:items-end lg:min-w-[160px] pt-3 sm:pt-0 border-t sm:border-0 border-border/50">
                           <div className="lg:text-right">
-                            <p className="text-4xl font-bold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">
+                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent">
                               ${route.price}
                             </p>
                             <p className="text-xs text-muted-foreground">per person</p>
                           </div>
-                          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                            <Button className="gap-2 h-12 px-6 font-bold rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30 lg:mt-3">
-                              Select <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </motion.div>
+                          <Button className="gap-2 h-10 sm:h-12 px-4 sm:px-6 font-bold rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/30 lg:mt-3 touch-manipulation active:scale-[0.98] text-sm sm:text-base">
+                            Select <ArrowRight className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
