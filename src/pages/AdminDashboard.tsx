@@ -117,26 +117,61 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("analytics");
   const { data: stats } = useAdminStats();
 
-  // Map stats to nav items for badges
+  // Map stats to nav items for badges - comprehensive real-time data
   const statsBadges: Record<string, number | undefined> = useMemo(() => ({
+    // Driver Control
     "drivers": stats?.totalDrivers,
     "driver-map": stats?.onlineDrivers,
+    "fleet": stats?.totalDrivers,
+    "inspections": stats?.pendingVehicles,
     "documents": stats?.pendingDocuments,
+    "verification": stats?.pendingDocuments,
+    "onboarding": stats?.pendingDrivers,
+    "earnings": stats?.totalEarningsRecords,
+    "cash": stats?.pendingWithdrawals,
+    
+    // Rides
     "trips": stats?.totalTrips,
     "rides": stats?.activeTrips,
+    "assignment": stats?.pendingTrips,
+    
+    // Eats
     "eats": stats?.activeFoodOrders,
     "restaurants": stats?.totalRestaurants,
+    "delivery": stats?.activeFoodOrders,
+    
+    // Travel Services
     "car-rentals": stats?.totalCarRentals,
+    "inventory": stats?.totalRentalCars,
+    "flights": stats?.totalFlightBookings,
+    "hotels": stats?.totalHotelBookings,
+    
+    // Support & Engagement
     "support": stats?.openTickets,
     "ticket-queue": stats?.openTickets,
+    "moderation": stats?.pendingFeedback,
     "announcements": stats?.activeAnnouncements,
     "promotions": stats?.activePromotions,
+    "notification-mgr": stats?.unreadNotifications,
+    
+    // Financial
+    "payouts": stats?.pendingWithdrawals,
+    "processing": stats?.pendingWithdrawals,
+    
+    // System & Security
     "audit": stats?.totalAuditLogs,
-    "users": stats?.totalUsers,
-    "accounts": stats?.totalUsers,
-    "referrals": stats?.pendingReferrals,
     "security": stats?.unresolvedAlerts,
     "fraud": stats?.unresolvedAlerts,
+    "event-log": stats?.recentSecurityEvents,
+    
+    // Accounts & Users
+    "users": stats?.totalUsers,
+    "accounts": stats?.totalUsers,
+    "directory": stats?.totalUsers,
+    
+    // Analytics
+    "referrals": stats?.pendingReferrals,
+    "ratings": stats?.pendingFeedback,
   }), [stats]);
 
   const navSections = [
