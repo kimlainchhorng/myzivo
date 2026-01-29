@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Clock, Star, ChevronRight, Flame, Leaf, Pizza, Coffee } from "lucide-react";
 
@@ -60,39 +60,23 @@ const EatsSection = () => {
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-500/15 to-yellow-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-radial from-red-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating food emojis */}
-      <motion.div
-        animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-45"
-      >
+      {/* Static floating food emojis - CSS animated */}
+      <div className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-45 animate-float">
         🍕
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 15, 0], rotate: [0, -10, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-35"
-      >
+      </div>
+      <div className="absolute top-48 right-[10%] text-4xl hidden lg:block opacity-35 animate-float-delayed">
         🍜
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-35"
-      >
+      </div>
+      <div className="absolute bottom-32 right-[15%] text-4xl hidden lg:block opacity-35 animate-float">
         🍔
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 5.5, repeat: Infinity }}
-        className="absolute bottom-48 left-[12%] text-4xl hidden lg:block opacity-30"
-      >
+      </div>
+      <div className="absolute bottom-48 left-[12%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
         🍣
-      </motion.div>
+      </div>
       
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
-        <div className="text-center mb-14 animate-fade-in">
+        <div className="text-center mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-eats to-orange-500 text-white text-sm font-bold mb-6 shadow-xl shadow-eats/40">
             <UtensilsCrossed className="w-4 h-4" />
             ZIVO Eats
@@ -108,11 +92,14 @@ const EatsSection = () => {
         </div>
 
         {/* Categories */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+        <div 
+          className="flex flex-wrap justify-center gap-4 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+        >
           {categories.map((category) => (
             <button
               key={category.name}
-              className="flex items-center gap-3 px-5 py-3 glass-card hover:border-eats/50 transition-all group"
+              className="flex items-center gap-3 px-5 py-3 glass-card hover:border-eats/50 transition-all group active:scale-95"
             >
               <category.icon className="w-5 h-5 text-eats" />
               <span className="font-medium text-foreground">{category.name}</span>
@@ -128,12 +115,12 @@ const EatsSection = () => {
           {restaurants.map((restaurant, index) => (
             <div
               key={restaurant.id}
-              className="glass-card overflow-hidden hover:border-eats/50 transition-all duration-300 cursor-pointer group animate-fade-in"
-              style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+              className="glass-card overflow-hidden hover:border-eats/50 transition-all duration-300 cursor-pointer group animate-in fade-in slide-in-from-bottom-4 hover:-translate-y-1 active:scale-[0.98]"
+              style={{ animationDelay: `${200 + index * 100}ms`, animationFillMode: 'both' }}
             >
               {/* Image Area */}
               <div className="relative h-32 bg-muted flex items-center justify-center">
-                <span className="text-5xl group-hover:scale-110 transition-transform">
+                <span className="text-5xl group-hover:scale-110 transition-transform duration-200">
                   {restaurant.image}
                 </span>
                 {restaurant.promoted && (
@@ -168,8 +155,11 @@ const EatsSection = () => {
         </div>
 
         {/* CTA */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <Button variant="eats" size="lg">
+        <div 
+          className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500"
+          style={{ animationDelay: '600ms', animationFillMode: 'both' }}
+        >
+          <Button variant="eats" size="lg" className="transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]">
             View all restaurants
             <ChevronRight className="w-5 h-5" />
           </Button>
