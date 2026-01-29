@@ -24,7 +24,7 @@ import {
   Shield,
   Key
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -270,14 +270,9 @@ const CarRentalBooking = () => {
             </div>
 
             {/* Search Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="max-w-5xl mx-auto"
-            >
+            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="glass-card overflow-hidden">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {/* Pickup Location */}
                     <div className="lg:col-span-2">
@@ -368,7 +363,7 @@ const CarRentalBooking = () => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -393,15 +388,14 @@ const CarRentalBooking = () => {
                 </Select>
               </div>
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {searchResults.map((car, index) => (
-                  <motion.div
+                  <div
                     key={car.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <Card className="glass-card hover:border-rides/50 transition-all overflow-hidden h-full">
+                    <Card className="glass-card hover:border-rides/50 transition-all overflow-hidden h-full touch-manipulation active:scale-[0.98]">
                       <CardContent className="p-0">
                         {/* Image */}
                         <div className="relative h-48 bg-gradient-to-br from-rides/20 to-cyan-500/20 flex items-center justify-center">
@@ -508,7 +502,7 @@ const CarRentalBooking = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -522,13 +516,12 @@ const CarRentalBooking = () => {
               <h2 className="font-display text-2xl font-bold mb-6">Browse by Category</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {carCategories.map((category, index) => (
-                  <motion.div
+                  <div
                     key={category.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <Card className="glass-card hover:border-rides/50 transition-all cursor-pointer group">
+                    <Card className="glass-card hover:border-rides/50 transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
                       <CardContent className="p-4 text-center">
                         <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
                           {category.icon}
@@ -538,7 +531,7 @@ const CarRentalBooking = () => {
                         <p className="text-sm font-medium text-rides">From ${category.avgPrice}/day</p>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -557,15 +550,13 @@ const CarRentalBooking = () => {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {popularLocations.map((location, index) => (
-                  <motion.div
+                  <div
                     key={location.city}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     onClick={() => setPickupLocation(location.city)}
-                    className="cursor-pointer"
+                    className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
-                    <Card className="glass-card hover:border-rides/50 transition-all group overflow-hidden">
+                    <Card className="glass-card hover:border-rides/50 transition-all group overflow-hidden touch-manipulation active:scale-[0.98]">
                       <CardContent className="p-0">
                         <div className="relative h-32 bg-gradient-to-br from-rides/20 to-cyan-500/20 flex items-center justify-center">
                           <span className="text-5xl group-hover:scale-110 transition-transform">
@@ -582,7 +573,7 @@ const CarRentalBooking = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -601,17 +592,15 @@ const CarRentalBooking = () => {
                   { icon: "🛡️", title: "Full Insurance", desc: "Drive with peace of mind" },
                   { icon: "🎧", title: "24/7 Roadside Help", desc: "We're always here for you" },
                 ].map((item, index) => (
-                  <motion.div
+                  <div
                     key={item.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                    className="text-center"
+                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <div className="text-4xl mb-3">{item.icon}</div>
                     <h3 className="font-semibold mb-1">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -620,41 +609,34 @@ const CarRentalBooking = () => {
       </main>
 
       {/* Selected Car Summary */}
-      <AnimatePresence>
-        {selectedCar && bookingStep === "details" && (
-          <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50"
+      {selectedCar && bookingStep === "details" && (
+        <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <BookingSummaryCard
+            title={`${selectedCar.make} ${selectedCar.model}`}
+            subtitle={selectedCar.location}
+            icon={<Car className="w-5 h-5" />}
+            items={[
+              { label: `${days} day${days > 1 ? 's' : ''} rental`, amount: rentalCost },
+              { label: "Insurance", amount: insurance },
+              { label: "Total", amount: grandTotal, isTotal: true },
+            ]}
+            ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
+            onConfirm={() => setIsCheckoutOpen(true)}
+            accentColor="rides"
+            features={["Free Cancellation", selectedCar.mileage]}
+          />
+          <Button
+            variant="ghost"
+            className="w-full mt-2"
+            onClick={() => {
+              setSelectedCar(null);
+              setBookingStep("select");
+            }}
           >
-            <BookingSummaryCard
-              title={`${selectedCar.make} ${selectedCar.model}`}
-              subtitle={selectedCar.location}
-              icon={<Car className="w-5 h-5" />}
-              items={[
-                { label: `${days} day${days > 1 ? 's' : ''} rental`, amount: rentalCost },
-                { label: "Insurance", amount: insurance },
-                { label: "Total", amount: grandTotal, isTotal: true },
-              ]}
-              ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
-              onConfirm={() => setIsCheckoutOpen(true)}
-              accentColor="rides"
-              features={["Free Cancellation", selectedCar.mileage]}
-            />
-            <Button
-              variant="ghost"
-              className="w-full mt-2"
-              onClick={() => {
-                setSelectedCar(null);
-                setBookingStep("select");
-              }}
-            >
-              Choose Different Car
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Choose Different Car
+          </Button>
+        </div>
+      )}
 
       <CheckoutModal
         open={isCheckoutOpen}

@@ -25,7 +25,7 @@ import {
   ChevronRight,
   Bed
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -251,14 +251,9 @@ const HotelBooking = () => {
             </div>
 
             {/* Search Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="max-w-5xl mx-auto"
-            >
+            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="glass-card overflow-hidden">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {/* Destination */}
                     <div className="lg:col-span-2">
@@ -363,7 +358,7 @@ const HotelBooking = () => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -388,15 +383,14 @@ const HotelBooking = () => {
                 </Select>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {searchResults.map((hotel, index) => (
-                  <motion.div
+                  <div
                     key={hotel.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <Card className="glass-card hover:border-amber-500/50 transition-all overflow-hidden">
+                    <Card className="glass-card hover:border-amber-500/50 transition-all overflow-hidden touch-manipulation active:scale-[0.99]">
                       <CardContent className="p-0">
                         <div className="flex flex-col md:flex-row">
                           {/* Image */}
@@ -505,7 +499,7 @@ const HotelBooking = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -524,13 +518,11 @@ const HotelBooking = () => {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {popularCities.map((city, index) => (
-                  <motion.div
+                  <div
                     key={city.city}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     onClick={() => setDestination(city.city)}
-                    className="cursor-pointer"
+                    className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 touch-manipulation active:scale-[0.98]"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <Card className="glass-card hover:border-amber-500/50 transition-all group overflow-hidden">
                       <CardContent className="p-0">
@@ -549,7 +541,7 @@ const HotelBooking = () => {
                         </div>
                       </CardContent>
                     </Card>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -568,17 +560,15 @@ const HotelBooking = () => {
                   { icon: "⚡", title: "Instant Confirmation", desc: "Get confirmed in seconds" },
                   { icon: "🎧", title: "24/7 Support", desc: "We're here whenever you need" },
                 ].map((item, index) => (
-                  <motion.div
+                  <div
                     key={item.title}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                    className="text-center"
+                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
                     <div className="text-4xl mb-3">{item.icon}</div>
                     <h3 className="font-semibold mb-1">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -587,45 +577,38 @@ const HotelBooking = () => {
       </main>
 
       {/* Selected Hotel Summary Sidebar */}
-      <AnimatePresence>
-        {selectedHotel && bookingStep === "details" && (
-          <motion.div
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50"
+      {selectedHotel && bookingStep === "details" && (
+        <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
+          <BookingSummaryCard
+            title={selectedHotel.name}
+            subtitle={selectedHotel.location}
+            icon={<Hotel className="w-5 h-5" />}
+            items={[
+              { label: `${nights} night${nights > 1 ? 's' : ''} × ${roomCount} room${roomCount > 1 ? 's' : ''}`, amount: subtotal },
+              { label: "Taxes & Fees (15%)", amount: taxes },
+              { label: "Total", amount: grandTotal, isTotal: true },
+            ]}
+            ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
+            onConfirm={() => setIsCheckoutOpen(true)}
+            accentColor="amber"
+            features={[
+              selectedHotel.freeCancellation ? "Free Cancellation" : "",
+              selectedHotel.breakfast ? "Breakfast Included" : "",
+            ].filter(Boolean)}
+            estimatedTime={`Check-in: ${checkIn ? format(checkIn, "MMM d") : "Select date"}`}
+          />
+          <Button
+            variant="ghost"
+            className="w-full mt-2"
+            onClick={() => {
+              setSelectedHotel(null);
+              setBookingStep("select");
+            }}
           >
-            <BookingSummaryCard
-              title={selectedHotel.name}
-              subtitle={selectedHotel.location}
-              icon={<Hotel className="w-5 h-5" />}
-              items={[
-                { label: `${nights} night${nights > 1 ? 's' : ''} × ${roomCount} room${roomCount > 1 ? 's' : ''}`, amount: subtotal },
-                { label: "Taxes & Fees (15%)", amount: taxes },
-                { label: "Total", amount: grandTotal, isTotal: true },
-              ]}
-              ctaLabel={`Reserve for $${grandTotal.toFixed(0)}`}
-              onConfirm={() => setIsCheckoutOpen(true)}
-              accentColor="amber"
-              features={[
-                selectedHotel.freeCancellation ? "Free Cancellation" : "",
-                selectedHotel.breakfast ? "Breakfast Included" : "",
-              ].filter(Boolean)}
-              estimatedTime={`Check-in: ${checkIn ? format(checkIn, "MMM d") : "Select date"}`}
-            />
-            <Button
-              variant="ghost"
-              className="w-full mt-2"
-              onClick={() => {
-                setSelectedHotel(null);
-                setBookingStep("select");
-              }}
-            >
-              Choose Different Hotel
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            Choose Different Hotel
+          </Button>
+        </div>
+      )}
 
       {/* Checkout Modal */}
       <CheckoutModal
