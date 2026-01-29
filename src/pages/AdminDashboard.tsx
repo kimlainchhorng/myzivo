@@ -7,7 +7,8 @@ import {
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
   ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target,
-  Brain, ShieldAlert, Coins, Rocket, Search, Image, Gauge, Lock, Cpu, LayoutDashboard, Workflow, LineChart, GitCompare, ListFilter
+  Brain, ShieldAlert, Coins, Rocket, Search, Image, Gauge, Lock, Cpu, LayoutDashboard, Workflow, LineChart, GitCompare, ListFilter,
+  Share2, XCircle, CreditCard, Wrench
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -95,6 +96,14 @@ import AdminExecutiveDashboard from "@/components/admin/AdminExecutiveDashboard"
 import AdminAutomationCenter from "@/components/admin/AdminAutomationCenter";
 import AdminPredictiveAnalytics from "@/components/admin/AdminPredictiveAnalytics";
 import AdminDashboardHeader from "@/components/admin/AdminDashboardHeader";
+import AdminOnboardingMetrics from "@/components/admin/AdminOnboardingMetrics";
+import AdminReferralTracking from "@/components/admin/AdminReferralTracking";
+import AdminSLAMonitoring from "@/components/admin/AdminSLAMonitoring";
+import AdminCancellationAnalysis from "@/components/admin/AdminCancellationAnalysis";
+import AdminPaymentMethods from "@/components/admin/AdminPaymentMethods";
+import AdminRatingOverview from "@/components/admin/AdminRatingOverview";
+import AdminNotificationTemplates from "@/components/admin/AdminNotificationTemplates";
+import AdminMaintenanceMode from "@/components/admin/AdminMaintenanceMode";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -190,14 +199,22 @@ const AdminDashboard = () => {
       { value: "security", label: "Security", icon: Lock, gradient: "from-red-500 to-orange-500" },
       { value: "fraud", label: "Fraud Detection", icon: ShieldAlert, gradient: "from-red-500 to-orange-500" },
       { value: "compliance", label: "Compliance", icon: ShieldCheck, gradient: "from-emerald-500 to-green-500" },
+      { value: "sla", label: "SLA Monitor", icon: Target, gradient: "from-blue-500 to-cyan-500" },
+      { value: "maintenance", label: "Maintenance", icon: Wrench, gradient: "from-amber-500 to-orange-500" },
       { value: "event-log", label: "Event Log", icon: ListFilter, gradient: "from-slate-500 to-zinc-500" },
       { value: "export", label: "Data Export", icon: Download, gradient: "from-teal-500 to-cyan-500" },
       { value: "reports", label: "Reports", icon: FileText, gradient: "from-emerald-500 to-teal-500" },
       { value: "settings", label: "Settings", icon: Settings, gradient: "from-slate-500 to-zinc-500" },
       { value: "audit", label: "Audit Logs", icon: History, gradient: "from-indigo-500 to-purple-500" },
     ]},
-    { title: "Loyalty", items: [
+    { title: "Analytics", items: [
       { value: "loyalty", label: "Loyalty Program", icon: Coins, gradient: "from-amber-500 to-yellow-500" },
+      { value: "onboarding-metrics", label: "Onboarding", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
+      { value: "referrals", label: "Referrals", icon: Share2, gradient: "from-purple-500 to-pink-500" },
+      { value: "cancellations", label: "Cancellations", icon: XCircle, gradient: "from-red-500 to-orange-500" },
+      { value: "payments", label: "Payment Methods", icon: CreditCard, gradient: "from-blue-500 to-cyan-500" },
+      { value: "ratings", label: "Ratings", icon: Star, gradient: "from-amber-500 to-yellow-500" },
+      { value: "templates", label: "Templates", icon: Bell, gradient: "from-rose-500 to-pink-500" },
     ]},
   ];
 
@@ -421,6 +438,14 @@ const AdminDashboard = () => {
             <TabsContent value="directory" className="mt-0"><AdminCustomerDirectory /></TabsContent>
             <TabsContent value="ticket-queue" className="mt-0"><AdminTicketQueue /></TabsContent>
             <TabsContent value="moderation" className="mt-0"><AdminContentModeration /></TabsContent>
+            <TabsContent value="sla" className="mt-0"><AdminSLAMonitoring /></TabsContent>
+            <TabsContent value="maintenance" className="mt-0"><AdminMaintenanceMode /></TabsContent>
+            <TabsContent value="onboarding-metrics" className="mt-0"><AdminOnboardingMetrics /></TabsContent>
+            <TabsContent value="referrals" className="mt-0"><AdminReferralTracking /></TabsContent>
+            <TabsContent value="cancellations" className="mt-0"><AdminCancellationAnalysis /></TabsContent>
+            <TabsContent value="payments" className="mt-0"><AdminPaymentMethods /></TabsContent>
+            <TabsContent value="ratings" className="mt-0"><AdminRatingOverview /></TabsContent>
+            <TabsContent value="templates" className="mt-0"><AdminNotificationTemplates /></TabsContent>
           </Tabs>
         </main>
       </div>
