@@ -13,8 +13,7 @@ import {
   LayoutDashboard,
   Settings,
   HelpCircle,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -29,7 +28,6 @@ import CustomerHotels from "@/components/customer/CustomerHotels";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "@/components/ZivoLogo";
 
@@ -57,9 +55,9 @@ const CustomerDashboard = () => {
       {/* Header */}
       <div className="p-5 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
+          <div className="hover:scale-105 transition-transform">
             <ZivoLogo size="sm" />
-          </motion.div>
+          </div>
           <div>
             <span className="font-bold text-lg block">ZIVO</span>
             <span className="text-xs text-muted-foreground">My Dashboard</span>
@@ -70,8 +68,8 @@ const CustomerDashboard = () => {
       {/* User Info */}
       <div className="p-4">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-            <User className="h-5 w-5 text-muted-foreground" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
+            <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.email?.split('@')[0]}</p>
@@ -86,21 +84,19 @@ const CustomerDashboard = () => {
         {navItems.map((item, index) => {
           const isActive = activeTab === item.value;
           return (
-            <motion.button
+            <button
               key={item.value}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.03 }}
               onClick={() => setActiveTab(item.value)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] animate-in fade-in slide-in-from-left-2",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
               )}
+              style={{ animationDelay: `${index * 30}ms` }}
             >
               <div className={cn(
-                "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all",
                 isActive 
                   ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
                   : "bg-muted/50 group-hover:bg-muted"
@@ -110,11 +106,11 @@ const CustomerDashboard = () => {
                   isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
                 )} />
               </div>
-              <span className="font-medium flex-1">{item.label}</span>
+              <span className="font-medium flex-1 text-sm sm:text-base">{item.label}</span>
               {isActive && (
                 <ChevronRight className="w-4 h-4 text-primary" />
               )}
-            </motion.button>
+            </button>
           );
         })}
 
@@ -124,22 +120,22 @@ const CustomerDashboard = () => {
         
         <button
           onClick={() => navigate("/profile")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group touch-manipulation active:scale-[0.98]"
         >
-          <div className="w-9 h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
             <Settings className="h-4 w-4" />
           </div>
-          <span className="font-medium">Settings</span>
+          <span className="font-medium text-sm sm:text-base">Settings</span>
         </button>
         
         <button
           onClick={() => navigate("/help")}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/50 text-muted-foreground hover:text-foreground group touch-manipulation active:scale-[0.98]"
         >
-          <div className="w-9 h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-muted/50 group-hover:bg-muted flex items-center justify-center">
             <HelpCircle className="h-4 w-4" />
           </div>
-          <span className="font-medium">Help Center</span>
+          <span className="font-medium text-sm sm:text-base">Help Center</span>
         </button>
       </nav>
 
@@ -147,12 +143,12 @@ const CustomerDashboard = () => {
       <div className="p-4 border-t border-border/50">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group touch-manipulation active:scale-[0.98]"
         >
-          <div className="w-9 h-9 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
             <LogOut className="h-4 w-4" />
           </div>
-          <span className="font-medium">Sign Out</span>
+          <span className="font-medium text-sm sm:text-base">Sign Out</span>
         </button>
       </div>
     </div>
@@ -166,7 +162,7 @@ const CustomerDashboard = () => {
       <div className="fixed bottom-0 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-eats/8 to-orange-500/4 rounded-full blur-3xl pointer-events-none" />
       
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 border-b border-white/10 bg-card/80 backdrop-blur-xl">
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between px-3 py-2.5 border-b border-white/10 bg-card/80 backdrop-blur-xl safe-area-inset-top">
         <div className="flex items-center gap-2">
           <ZivoLogo size="sm" />
           <div>
@@ -174,16 +170,16 @@ const CustomerDashboard = () => {
             <span className="text-[10px] text-muted-foreground block leading-tight">Dashboard</span>
           </div>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/10">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-white/10 touch-manipulation">
                 <Menu className="h-4 w-4" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 border-r-0">
+            <SheetContent side="left" className="w-[280px] sm:w-72 p-0 border-r-0">
               <NavContent />
             </SheetContent>
           </Sheet>

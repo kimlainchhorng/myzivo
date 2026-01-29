@@ -175,17 +175,17 @@ const AdminDashboard = () => {
                     key={item.value}
                     onClick={() => setActiveTab(item.value)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group",
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98]",
                       isActive ? "bg-primary/10 text-primary" : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <div className={cn(
-                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                      "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all",
                       isActive ? `bg-gradient-to-br ${item.gradient} shadow-lg` : "bg-muted/50 group-hover:bg-muted"
                     )}>
-                      <item.icon className={cn("h-4 w-4 transition-colors", isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground")} />
+                      <item.icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors", isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground")} />
                     </div>
-                    <span className="font-medium text-sm flex-1">{item.label}</span>
+                    <span className="font-medium text-xs sm:text-sm flex-1">{item.label}</span>
                     {isActive && <ChevronRight className="w-4 h-4 text-primary" />}
                   </button>
                 );
@@ -196,11 +196,11 @@ const AdminDashboard = () => {
       </ScrollArea>
 
       <div className="p-4 border-t border-border/50">
-        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group">
-          <div className="w-8 h-8 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
-            <LogOut className="h-4 w-4" />
+        <button onClick={handleLogout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors text-left hover:bg-destructive/10 text-destructive group touch-manipulation active:scale-[0.98]">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-destructive/10 group-hover:bg-destructive/20 flex items-center justify-center">
+            <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
-          <span className="font-medium">Sign Out</span>
+          <span className="font-medium text-sm">Sign Out</span>
         </button>
       </div>
     </div>
@@ -212,24 +212,24 @@ const AdminDashboard = () => {
       <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-3 sm:p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl safe-area-inset-top">
+        <div className="flex items-center gap-2 sm:gap-3">
           <ZivoLogo size="sm" />
           <div>
-            <span className="font-bold text-lg">Admin</span>
-            <span className="text-xs text-muted-foreground block">Control Center</span>
+            <span className="font-bold text-base sm:text-lg">Admin</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground block">Control Center</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl">
+              <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 sm:h-10 sm:w-10 touch-manipulation">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 border-r-0">
+            <SheetContent side="left" className="w-[280px] sm:w-72 p-0 border-r-0">
               <NavContent />
             </SheetContent>
           </Sheet>
