@@ -85,6 +85,68 @@ export type Database = {
           },
         ]
       }
+      admin_security_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          description: string | null
+          event_id: string | null
+          id: string
+          is_read: boolean | null
+          is_resolved: boolean | null
+          metadata: Json | null
+          related_driver_id: string | null
+          related_user_id: string | null
+          resolution_action: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          related_driver_id?: string | null
+          related_user_id?: string | null
+          resolution_action?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          description?: string | null
+          event_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          related_driver_id?: string | null
+          related_user_id?: string | null
+          resolution_action?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_security_alerts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "security_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       airlines: {
         Row: {
           code: string
@@ -2791,6 +2853,74 @@ export type Database = {
           },
         ]
       }
+      login_sessions: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          device_type: string | null
+          driver_id: string | null
+          expires_at: string | null
+          id: string
+          ip_address: string | null
+          is_active: boolean | null
+          is_trusted: boolean | null
+          last_activity: string | null
+          location_city: string | null
+          location_country: string | null
+          session_token: string
+          terminated_at: string | null
+          terminated_reason: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          is_trusted?: boolean | null
+          last_activity?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          session_token: string
+          terminated_at?: string | null
+          terminated_reason?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          device_type?: string | null
+          driver_id?: string | null
+          expires_at?: string | null
+          id?: string
+          ip_address?: string | null
+          is_active?: boolean | null
+          is_trusted?: boolean | null
+          last_activity?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          session_token?: string
+          terminated_at?: string | null
+          terminated_reason?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_sessions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_members: {
         Row: {
           birthday: string | null
@@ -4384,6 +4514,68 @@ export type Database = {
           },
         ]
       }
+      security_events: {
+        Row: {
+          created_at: string
+          device_fingerprint: string | null
+          driver_id: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          is_blocked: boolean | null
+          location_data: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint?: string | null
+          driver_id?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          is_blocked?: boolean | null
+          location_data?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string | null
+          driver_id?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          is_blocked?: boolean | null
+          location_data?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "security_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -5329,6 +5521,39 @@ export type Database = {
           },
         ]
       }
+      trusted_devices: {
+        Row: {
+          created_at: string
+          device_fingerprint: string
+          device_name: string | null
+          device_type: string | null
+          id: string
+          is_active: boolean | null
+          last_used: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint: string
+          device_name?: string | null
+          device_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string
+          device_name?: string | null
+          device_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -5822,6 +6047,74 @@ export type Database = {
           },
         ]
       }
+      withdrawal_rate_limits: {
+        Row: {
+          created_at: string
+          daily_limit: number | null
+          daily_used: number | null
+          driver_id: string
+          id: string
+          is_locked: boolean | null
+          last_daily_reset: string | null
+          last_monthly_reset: string | null
+          last_weekly_reset: string | null
+          lock_reason: string | null
+          locked_at: string | null
+          locked_by: string | null
+          monthly_limit: number | null
+          monthly_used: number | null
+          updated_at: string
+          weekly_limit: number | null
+          weekly_used: number | null
+        }
+        Insert: {
+          created_at?: string
+          daily_limit?: number | null
+          daily_used?: number | null
+          driver_id: string
+          id?: string
+          is_locked?: boolean | null
+          last_daily_reset?: string | null
+          last_monthly_reset?: string | null
+          last_weekly_reset?: string | null
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          monthly_limit?: number | null
+          monthly_used?: number | null
+          updated_at?: string
+          weekly_limit?: number | null
+          weekly_used?: number | null
+        }
+        Update: {
+          created_at?: string
+          daily_limit?: number | null
+          daily_used?: number | null
+          driver_id?: string
+          id?: string
+          is_locked?: boolean | null
+          last_daily_reset?: string | null
+          last_monthly_reset?: string | null
+          last_weekly_reset?: string | null
+          lock_reason?: string | null
+          locked_at?: string | null
+          locked_by?: string | null
+          monthly_limit?: number | null
+          monthly_used?: number | null
+          updated_at?: string
+          weekly_limit?: number | null
+          weekly_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_rate_limits_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       withdrawals: {
         Row: {
           amount: number
@@ -5876,6 +6169,19 @@ export type Database = {
         Returns: boolean
       }
       check_expiring_documents: { Args: never; Returns: number }
+      check_login_anomaly: {
+        Args: {
+          p_device_fingerprint: string
+          p_ip_address: string
+          p_user_agent: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      check_withdrawal_allowed: {
+        Args: { p_amount: number; p_driver_id: string }
+        Returns: Json
+      }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       create_available_test_orders: { Args: never; Returns: number }
       create_driver_on_signup: {
@@ -5901,6 +6207,23 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          p_device_fingerprint?: string
+          p_driver_id?: string
+          p_event_data?: Json
+          p_event_type: string
+          p_ip_address?: string
+          p_severity?: string
+          p_user_agent?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
+      record_withdrawal_usage: {
+        Args: { p_amount: number; p_driver_id: string }
+        Returns: undefined
       }
     }
     Enums: {

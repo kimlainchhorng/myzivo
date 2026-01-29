@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { ArrowLeft, Mail, Loader2, CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().email({ message: "Please enter a valid email address" }),

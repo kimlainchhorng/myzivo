@@ -1,7 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
-import { motion } from "framer-motion";
-import { Home, ArrowLeft, Search, Compass, Sparkles } from "lucide-react";
+import { Home, Search, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
