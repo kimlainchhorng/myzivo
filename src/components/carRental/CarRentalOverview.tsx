@@ -1,12 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Car, DollarSign, Calendar, TrendingUp, Sparkles, ArrowUpRight, ChevronRight, Gauge, Clock, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { startOfDay, subDays, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const CarRentalOverview = () => {
   const { user } = useAuth();
@@ -152,50 +152,22 @@ const CarRentalOverview = () => {
     }
   };
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
-      <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      <div className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block animate-float-icon">
         🚗
-      </motion.div>
-      <motion.div
-        className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block"
-        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      >
+      </div>
+      <div className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
         ✨
-      </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-      >
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
+            <div className="animate-wiggle">
               <Sparkles className="h-6 w-6 text-primary" />
-            </motion.div>
+            </div>
             Car Rental Dashboard
           </h1>
           <p className="text-muted-foreground">Manage your fleet and bookings with ease</p>
@@ -207,71 +179,57 @@ const CarRentalOverview = () => {
           </span>
           <span className="text-sm font-medium text-primary">Live Data</span>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-      >
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
-          <motion.div key={stat.label} variants={item}>
-            <motion.div
-              whileHover={{ y: -4, scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer">
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
-                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                <CardContent className="p-4 relative">
-                  <div className="flex items-center justify-between mb-3">
-                    <motion.div 
-                      className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                    >
-                      <stat.icon className="h-4 w-4 text-white" />
-                    </motion.div>
-                    {isLoading ? (
-                      <Skeleton className="h-5 w-12" />
-                    ) : (
-                      <div className={`flex items-center gap-0.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                        stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
-                      }`}>
-                        <ArrowUpRight className="h-3 w-3" />
-                        {stat.trend}
-                      </div>
-                    )}
+          <div 
+            key={stat.label} 
+            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            style={{ animationDelay: `${index * 80}ms` }}
+          >
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer hover:-translate-y-1 hover:scale-[1.02]">
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
+              <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-5 group-hover:opacity-10 transition-opacity`} />
+              <CardContent className="p-4 relative">
+                <div className="flex items-center justify-between mb-3">
+                  <div 
+                    className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                  >
+                    <stat.icon className="h-4 w-4 text-white" />
                   </div>
                   {isLoading ? (
-                    <Skeleton className="h-8 w-16 mb-1" />
+                    <Skeleton className="h-5 w-12" />
                   ) : (
-                    <p className="text-2xl font-bold">{stat.value}</p>
+                    <div className={`flex items-center gap-0.5 text-xs font-medium px-2.5 py-1 rounded-full ${
+                      stat.trendUp ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'
+                    }`}>
+                      <ArrowUpRight className="h-3 w-3" />
+                      {stat.trend}
+                    </div>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
+                </div>
+                {isLoading ? (
+                  <Skeleton className="h-8 w-16 mb-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+              </CardContent>
+            </Card>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: "300ms" }}>
           <Card className="border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-xl h-full overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center gap-3">
-                <motion.div 
-                  className="p-2.5 rounded-xl bg-primary/10"
-                  whileHover={{ scale: 1.1 }}
-                >
+                <div className="p-2.5 rounded-xl bg-primary/10 transition-transform hover:scale-110">
                   <Calendar className="h-5 w-5 text-primary" />
-                </motion.div>
+                </div>
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     Recent Bookings
@@ -304,12 +262,10 @@ const CarRentalOverview = () => {
                     const car = booking.rental_cars;
                     
                     return (
-                      <motion.div 
+                      <div 
                         key={booking.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 + index * 0.08 }}
-                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group"
+                        className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors cursor-pointer group animate-in fade-in slide-in-from-left-2 duration-300"
+                        style={{ animationDelay: `${400 + index * 80}ms` }}
                       >
                         <div className="flex items-center gap-4">
                           <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-teal-400 shadow-lg group-hover:scale-110 transition-transform">
@@ -337,7 +293,7 @@ const CarRentalOverview = () => {
                           <span className="font-bold text-lg">${booking.total_amount?.toFixed(2) || "0.00"}</span>
                           <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
@@ -349,24 +305,17 @@ const CarRentalOverview = () => {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+        <div className="animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: "300ms" }}>
           <Card className="border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-xl h-full overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500" />
             <CardHeader className="border-b border-border/50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <motion.div 
-                    className="p-2.5 rounded-xl bg-emerald-500/10"
-                    whileHover={{ scale: 1.1 }}
-                  >
+                  <div className="p-2.5 rounded-xl bg-emerald-500/10 transition-transform hover:scale-110">
                     <Car className="h-5 w-5 text-emerald-500" />
-                  </motion.div>
+                  </div>
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       Available Fleet
@@ -396,62 +345,37 @@ const CarRentalOverview = () => {
               ) : availableCars && availableCars.length > 0 ? (
                 <div className="space-y-3">
                   {availableCars.map((car: any, index: number) => (
-                    <motion.div 
+                    <div 
                       key={car.id}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + index * 0.08 }}
-                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer"
+                      className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all duration-200 group cursor-pointer animate-in fade-in slide-in-from-right-2 duration-300"
+                      style={{ animationDelay: `${400 + index * 80}ms` }}
                     >
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-teal-400 shadow-lg group-hover:scale-110 transition-transform">
                           <Car className="h-4 w-4 text-white" />
                         </div>
                         <div>
-                          <p className="font-semibold">{car.make} {car.model}</p>
+                          <p className="font-semibold group-hover:text-primary transition-colors">
+                            {car.make} {car.model}
+                          </p>
                           <p className="text-xs text-muted-foreground">{car.year} • {car.category}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg text-primary">${car.daily_rate}/day</p>
-                      </div>
-                    </motion.div>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 border font-bold">
+                        ${car.daily_rate}/day
+                      </Badge>
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-12">
                   <Car className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
                   <p className="text-muted-foreground">No cars available</p>
                 </div>
               )}
-
-              <div className="mt-6 p-4 rounded-xl bg-gradient-to-br from-primary/10 to-teal-400/5 border border-primary/20">
-                <div className="flex items-center gap-3 mb-3">
-                  <Gauge className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">Fleet Status</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-2 rounded-lg bg-background/50">
-                    {isLoading ? (
-                      <Skeleton className="h-6 w-8 mx-auto mb-1" />
-                    ) : (
-                      <p className="text-xl font-bold text-primary">{rentalStats?.activeRentals || 0}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">Rented</p>
-                  </div>
-                  <div className="text-center p-2 rounded-lg bg-background/50">
-                    {isLoading ? (
-                      <Skeleton className="h-6 w-8 mx-auto mb-1" />
-                    ) : (
-                      <p className="text-xl font-bold text-emerald-500">{availableCars?.length || 0}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">Available</p>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

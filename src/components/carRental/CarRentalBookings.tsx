@@ -2,7 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Car, Calendar, Sparkles, Phone, MapPin, Download, MoreVertical, Eye, X, AlertCircle } from "lucide-react";
-import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,61 +63,33 @@ const CarRentalBookings = () => {
     }
   };
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
     <div className="space-y-6 relative">
       {/* Floating Decorations */}
-      <motion.div
-        className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block"
-        animate={{ y: [0, -10, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      <div className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block animate-float-icon">
         📋
-      </motion.div>
-      <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
-        animate={{ y: [0, 8, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-      >
+      </div>
+      <div className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
         ✨
-      </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-      >
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 5, -5, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
+            <div className="animate-wiggle">
               <Sparkles className="h-6 w-6 text-primary" />
-            </motion.div>
+            </div>
             My Rentals
           </h1>
           <p className="text-muted-foreground">View and manage your car rentals</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="gap-2 bg-card/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
+          <Button variant="outline" size="sm" className="gap-2 bg-card/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all touch-manipulation active:scale-95">
             <Download className="h-4 w-4" />
             Export
           </Button>
         </div>
-      </motion.div>
+      </div>
 
       {isLoading ? (
         <div className="space-y-4">
@@ -144,30 +115,28 @@ const CarRentalBookings = () => {
           ))}
         </div>
       ) : bookings && bookings.length > 0 ? (
-        <motion.div
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="space-y-4"
-        >
-          {bookings.map((booking: any) => {
+        <div className="space-y-4">
+          {bookings.map((booking: any, index: number) => {
             const statusConfig = getStatusConfig(booking.status);
             const car = booking.rental_cars;
             
             return (
-              <motion.div key={booking.id} variants={item}>
+              <div 
+                key={booking.id} 
+                className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
                 <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 group overflow-hidden">
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${statusConfig.gradient}`} />
                   <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${statusConfig.gradient}`} />
                   <CardContent className="p-5 pl-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex gap-4 flex-1">
-                        <motion.div 
-                          className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg`}
-                          whileHover={{ scale: 1.1, rotate: 5 }}
+                        <div 
+                          className={`p-4 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
                         >
                           <Car className="h-7 w-7 text-white" />
-                        </motion.div>
+                        </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <span className="font-bold text-xl">
@@ -199,7 +168,7 @@ const CarRentalBookings = () => {
                         <p className="font-bold text-2xl">${booking.total_amount?.toFixed(2) || "0.00"}</p>
                         <p className="text-sm text-muted-foreground">Deposit: ${booking.deposit_paid?.toFixed(2) || "0.00"}</p>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="gap-1.5">
+                          <Button size="sm" variant="outline" className="gap-1.5 touch-manipulation active:scale-95">
                             <Eye className="h-4 w-4" />
                             Details
                           </Button>
@@ -231,15 +200,12 @@ const CarRentalBookings = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-in fade-in zoom-in-95 duration-500">
           <Card className="border-0 bg-card/50 backdrop-blur-xl">
             <CardContent className="p-12 text-center">
               <div className="p-4 rounded-full bg-muted/50 w-fit mx-auto mb-4">
@@ -247,13 +213,13 @@ const CarRentalBookings = () => {
               </div>
               <p className="text-lg font-medium mb-1">No Rentals Yet</p>
               <p className="text-muted-foreground">Start exploring cars to rent your first vehicle.</p>
-              <Button className="mt-4 gap-2 bg-gradient-to-r from-primary to-teal-400">
+              <Button className="mt-4 gap-2 bg-gradient-to-r from-primary to-teal-400 touch-manipulation active:scale-95">
                 <Car className="h-4 w-4" />
                 Browse Cars
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
     </div>
   );

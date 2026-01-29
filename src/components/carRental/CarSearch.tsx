@@ -24,7 +24,6 @@ import {
   Zap,
   Leaf
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface CarResult {
@@ -207,7 +206,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                 key={key}
                 onClick={() => setSortBy(key as typeof sortBy)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all touch-manipulation active:scale-95",
                   sortBy === key 
                     ? "bg-primary text-primary-foreground shadow-sm" 
                     : "text-muted-foreground hover:text-foreground"
@@ -224,7 +223,10 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
               variant="outline" 
               size="sm"
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className={cn(filtersOpen && "border-primary bg-primary/10")}
+              className={cn(
+                "touch-manipulation active:scale-95 transition-all",
+                filtersOpen && "border-primary bg-primary/10"
+              )}
             >
               <SlidersHorizontal className="w-4 h-4 mr-2" />
               Filters
@@ -239,136 +241,131 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
       </div>
 
       {/* Collapsible Filters */}
-      <AnimatePresence>
-        {filtersOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="glass-card overflow-hidden">
-              <CardContent className="p-4 sm:p-6">
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Price Range */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Price per Day</Label>
-                    <Slider
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      max={200}
-                      step={5}
-                      className="mt-2"
-                    />
-                    <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}+</span>
-                    </div>
+      <div
+        className={cn(
+          "grid transition-all duration-300 ease-out",
+          filtersOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        )}
+      >
+        <div className="overflow-hidden">
+          <Card className="glass-card">
+            <CardContent className="p-4 sm:p-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Price Range */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Price per Day</Label>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    max={200}
+                    step={5}
+                    className="mt-2"
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>${priceRange[0]}</span>
+                    <span>${priceRange[1]}+</span>
                   </div>
+                </div>
 
-                  {/* Quick Filters */}
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium">Quick Filters</Label>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
-                        <span className="text-sm flex items-center gap-2">
-                          <Zap className="w-4 h-4 text-primary" />
-                          Instant Book
-                        </span>
-                        <Switch 
-                          checked={instantBookOnly} 
-                          onCheckedChange={setInstantBookOnly}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
-                        <span className="text-sm flex items-center gap-2">
-                          <Leaf className="w-4 h-4 text-green-500" />
-                          Electric Only
-                        </span>
-                        <Switch 
-                          checked={electricOnly} 
-                          onCheckedChange={setElectricOnly}
-                        />
-                      </div>
+                {/* Quick Filters */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Quick Filters</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                      <span className="text-sm flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-primary" />
+                        Instant Book
+                      </span>
+                      <Switch 
+                        checked={instantBookOnly} 
+                        onCheckedChange={setInstantBookOnly}
+                      />
                     </div>
-                  </div>
-
-                  {/* Categories */}
-                  <div className="space-y-3 sm:col-span-2">
-                    <Label className="text-sm font-medium">Vehicle Type</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {categories.map(category => (
-                        <button
-                          key={category}
-                          onClick={() => toggleCategory(category)}
-                          className={cn(
-                            "px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-                            selectedCategories.includes(category)
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                          )}
-                        >
-                          {category}
-                        </button>
-                      ))}
+                    <div className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg">
+                      <span className="text-sm flex items-center gap-2">
+                        <Leaf className="w-4 h-4 text-green-500" />
+                        Electric Only
+                      </span>
+                      <Switch 
+                        checked={electricOnly} 
+                        onCheckedChange={setElectricOnly}
+                      />
                     </div>
                   </div>
                 </div>
 
-                {/* Clear Filters */}
-                {(instantBookOnly || electricOnly || selectedCategories.length > 0 || priceRange[0] > 0 || priceRange[1] < 200) && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="mt-4 text-primary"
-                    onClick={() => {
-                      setInstantBookOnly(false);
-                      setElectricOnly(false);
-                      setSelectedCategories([]);
-                      setPriceRange([0, 200]);
-                    }}
-                  >
-                    Clear all filters
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {/* Categories */}
+                <div className="space-y-3 sm:col-span-2">
+                  <Label className="text-sm font-medium">Vehicle Type</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map(category => (
+                      <button
+                        key={category}
+                        onClick={() => toggleCategory(category)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-sm font-medium transition-all touch-manipulation active:scale-95",
+                          selectedCategories.includes(category)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                        )}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              {(instantBookOnly || electricOnly || selectedCategories.length > 0 || priceRange[0] > 0 || priceRange[1] < 200) && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-4 text-primary"
+                  onClick={() => {
+                    setInstantBookOnly(false);
+                    setElectricOnly(false);
+                    setSelectedCategories([]);
+                    setPriceRange([0, 200]);
+                  }}
+                >
+                  Clear all filters
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Car Results Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredResults.map((car, index) => (
-          <motion.div
+          <div
             key={car.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            style={{ animationDelay: `${index * 50}ms` }}
             onMouseEnter={() => setHoveredCar(car.id)}
             onMouseLeave={() => setHoveredCar(null)}
           >
             <Card className={cn(
-              "glass-card overflow-hidden transition-all duration-300 h-full",
+              "glass-card overflow-hidden transition-all duration-300 h-full touch-manipulation",
               hoveredCar === car.id && "border-primary/50 shadow-lg shadow-primary/10 -translate-y-1"
             )}>
               <CardContent className="p-0">
                 {/* Image */}
                 <div className="relative h-44 bg-gradient-to-br from-primary/20 to-cyan-500/20 flex items-center justify-center">
-                  <motion.span 
-                    className="text-7xl"
-                    animate={{ 
-                      scale: hoveredCar === car.id ? 1.1 : 1,
-                      x: hoveredCar === car.id ? [0, 5, 0] : 0
-                    }}
-                    transition={{ duration: 0.3 }}
+                  <span 
+                    className={cn(
+                      "text-7xl transition-transform duration-300",
+                      hoveredCar === car.id && "scale-110 translate-x-1"
+                    )}
                   >
                     {car.image}
-                  </motion.span>
+                  </span>
                   
                   <button
                     onClick={() => toggleFavorite(car.id)}
-                    className="absolute top-3 right-3 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
+                    className="absolute top-3 right-3 w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors active:scale-90"
                   >
                     <Heart className={cn(
                       "w-5 h-5 transition-colors",
@@ -470,7 +467,7 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                       <p className="text-xl font-bold text-primary">${car.pricePerDay}<span className="text-xs text-muted-foreground font-normal">/day</span></p>
                     </div>
                     <Button 
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground touch-manipulation active:scale-95"
                       onClick={() => onSelectCar?.(car)}
                     >
                       Select
@@ -479,20 +476,17 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
       </div>
 
+      {/* Empty State */}
       {filteredResults.length === 0 && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12"
-        >
-          <Car className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No cars found</h3>
+        <div className="text-center py-16 animate-in fade-in zoom-in-95 duration-300">
+          <div className="text-6xl mb-4 animate-bounce">🚗</div>
+          <h3 className="text-xl font-semibold mb-2">No vehicles found</h3>
           <p className="text-muted-foreground mb-4">Try adjusting your filters</p>
-          <Button 
+          <Button
             variant="outline"
             onClick={() => {
               setInstantBookOnly(false);
@@ -501,9 +495,9 @@ const CarSearch = ({ onSelectCar, showFilters = true }: CarSearchProps) => {
               setPriceRange([0, 200]);
             }}
           >
-            Clear all filters
+            Clear Filters
           </Button>
-        </motion.div>
+        </div>
       )}
     </div>
   );
