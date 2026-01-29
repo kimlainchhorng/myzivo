@@ -74,7 +74,7 @@ const AdminDriverVerification = () => {
   const [loadingDocUrls, setLoadingDocUrls] = useState(false);
   const [isDocRejectDialogOpen, setIsDocRejectDialogOpen] = useState(false);
   const [docRejectReason, setDocRejectReason] = useState("");
-  const [selectedDocForReject, setSelectedDocForReject] = useState<{ id: string; type: string; label: string } | null>(null);
+  const [selectedDocForReject, setSelectedDocForReject] = useState<{ id: string; type: string; label: string; driverId: string } | null>(null);
   const [requestingDocType, setRequestingDocType] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -801,7 +801,7 @@ const AdminDriverVerification = () => {
                                     variant="outline"
                                     className="h-7 gap-1.5 text-xs bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20"
                                     onClick={() => {
-                                      setSelectedDocForReject({ id: item.document!.id, type: item.type, label: item.label });
+                                      setSelectedDocForReject({ id: item.document!.id, type: item.type, label: item.label, driverId: selectedDriver.id });
                                       setIsDocRejectDialogOpen(true);
                                     }}
                                   >
@@ -1013,10 +1013,10 @@ const AdminDriverVerification = () => {
             <Button 
               variant="destructive" 
               onClick={() => {
-                if (selectedDocForReject && selectedDriver && docRejectReason.trim()) {
+                if (selectedDocForReject && docRejectReason.trim()) {
                   rejectDocumentMutation.mutate({
                     docId: selectedDocForReject.id,
-                    driverId: selectedDriver.id,
+                    driverId: selectedDocForReject.driverId,
                     docLabel: selectedDocForReject.label,
                     reason: docRejectReason.trim()
                   });
