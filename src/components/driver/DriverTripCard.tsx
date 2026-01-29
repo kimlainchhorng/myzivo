@@ -191,7 +191,7 @@ const DriverTripCard = ({ trip, onAccept, isAccepting, showAcceptButton = true }
             className="flex items-center gap-3 mb-5"
           >
             {[
-              { icon: Navigation, value: `${trip.distance_km?.toFixed(1)} km`, color: "primary", gradient: "from-primary/20 to-primary/5" },
+              { icon: Navigation, value: `${((trip.distance_km || 0) * 0.621371).toFixed(1)} mi`, color: "primary", gradient: "from-primary/20 to-primary/5" },
               { icon: Clock, value: `${trip.duration_minutes} min`, color: "amber-500", gradient: "from-amber-500/20 to-amber-500/5" },
               { icon: DollarSign, value: `$${hourlyRate.toFixed(0)}/hr`, color: "emerald-500", gradient: "from-emerald-500/20 to-emerald-500/5", highlight: true },
             ].map((stat, index) => (

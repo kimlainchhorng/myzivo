@@ -195,7 +195,7 @@ const CarRentalAnalytics = () => {
           { icon: Users, color: "blue", value: "86", label: "New Customers" },
           { icon: Calendar, color: "green", value: "24", label: "Active Rentals" },
           { icon: Fuel, color: "amber", value: "$2,340", label: "Fuel Costs" },
-          { icon: MapPin, color: "purple", value: "185 km", label: "Avg Distance" },
+          { icon: MapPin, color: "purple", value: "115 mi", label: "Avg Distance" },
         ].map((stat, index) => (
           <Card key={index} className="border-0 bg-card/50 backdrop-blur-xl hover:bg-card/70 transition-colors">
             <CardContent className="p-4 flex items-center gap-3">

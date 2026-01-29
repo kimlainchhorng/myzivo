@@ -525,7 +525,7 @@ const AdminTripMonitoring = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-xl bg-muted/30 text-center">
                   <MapPin className="h-4 w-4 mx-auto text-muted-foreground mb-1" />
-                  <p className="text-lg font-bold">{selectedTrip.distance_km || 0} km</p>
+                  <p className="text-lg font-bold">{((selectedTrip.distance_km || 0) * 0.621371).toFixed(1)} mi</p>
                   <p className="text-xs text-muted-foreground">Distance</p>
                 </div>
                 <div className="p-3 rounded-xl bg-muted/30 text-center">
