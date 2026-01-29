@@ -1,5 +1,6 @@
+// CSS animations used instead of framer-motion for performance
 import { useState } from "react";
-import { Bell, Check, CheckCheck, Trash2, Car, UtensilsCrossed, Truck, X, Sparkles } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, Car, UtensilsCrossed, Truck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,7 +12,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotificationCenter, Notification } from "@/hooks/useNotificationCenter";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 const NotificationIcon = ({ type }: { type: Notification["type"] }) => {
   switch (type) {
@@ -29,18 +29,19 @@ const NotificationIcon = ({ type }: { type: Notification["type"] }) => {
 const NotificationItem = ({
   notification,
   onMarkAsRead,
+  index,
 }: {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
+  index: number;
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -5 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
-        "flex items-start gap-3 p-4 border-b border-border/50 last:border-0 transition-all hover:bg-muted/30",
+        "flex items-start gap-3 p-4 border-b border-border/50 last:border-0 transition-all hover:bg-muted/30 animate-in fade-in slide-in-from-left-2",
         !notification.read && "bg-gradient-to-r from-primary/5 to-teal-400/5"
       )}
+      style={{ animationDelay: `${index * 30}ms`, animationFillMode: 'both' }}
     >
       <div className={cn(
         "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center",
@@ -55,16 +56,14 @@ const NotificationItem = ({
         <div className="flex items-center justify-between gap-2">
           <p className="font-semibold text-sm truncate">{notification.title}</p>
           {!notification.read && (
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-primary/10"
-                onClick={() => onMarkAsRead(notification.id)}
-              >
-                <Check className="h-3 w-3" />
-              </Button>
-            </motion.div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-primary/10 transition-transform duration-200 hover:scale-110 active:scale-90"
+              onClick={() => onMarkAsRead(notification.id)}
+            >
+              <Check className="h-3 w-3" />
+            </Button>
           )}
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{notification.message}</p>
@@ -72,7 +71,7 @@ const NotificationItem = ({
           {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
@@ -83,29 +82,22 @@ const NotificationCenter = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button variant="ghost" size="icon" className="relative rounded-xl hover:bg-primary/10">
-            <Bell className="h-5 w-5" />
-            <AnimatePresence>
-              {unreadCount > 0 && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  <Badge
-                    className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg shadow-primary/30"
-                  >
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </Badge>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Button>
-        </motion.div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="relative rounded-xl hover:bg-primary/10 transition-transform duration-200 hover:scale-105 active:scale-95"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <Badge
+              className="absolute -top-1.5 -right-1.5 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg shadow-primary/30 animate-in zoom-in duration-200"
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </Badge>
+          )}
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 border-0 bg-card/95 backdrop-blur-xl shadow-2xl" align="end">
+      <PopoverContent className="w-80 p-0 border-0 bg-card/95 backdrop-blur-xl shadow-2xl animate-in fade-in zoom-in-95 duration-150" align="end">
         <div className="flex items-center justify-between p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-teal-400/5">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -137,36 +129,24 @@ const NotificationCenter = () => {
         </div>
         <ScrollArea className="h-[320px]">
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mb-4"
-              >
+            <div className="flex flex-col items-center justify-center h-full py-12 text-muted-foreground animate-in fade-in zoom-in-95 duration-300">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center mb-4">
                 <Bell className="h-8 w-8 opacity-50" />
-              </motion.div>
+              </div>
               <p className="text-sm font-medium">No notifications yet</p>
               <p className="text-xs">Updates will appear here</p>
             </div>
           ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-            >
+            <div className="animate-in fade-in duration-200">
               {notifications.map((notification, index) => (
-                <motion.div
+                <NotificationItem
                   key={notification.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
-                  <NotificationItem
-                    notification={notification}
-                    onMarkAsRead={markAsRead}
-                  />
-                </motion.div>
+                  notification={notification}
+                  onMarkAsRead={markAsRead}
+                  index={index}
+                />
               ))}
-            </motion.div>
+            </div>
           )}
         </ScrollArea>
       </PopoverContent>
