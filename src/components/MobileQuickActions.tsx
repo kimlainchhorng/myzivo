@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for mobile performance
 import { useNavigate } from "react-router-dom";
 import { 
   Car, 
@@ -7,7 +7,6 @@ import {
   Hotel, 
   CarFront, 
   Package,
-  MapPin,
   Ticket,
   Shield,
   LucideIcon
@@ -42,14 +41,11 @@ const MobileQuickActions = () => {
       <h2 className="font-display font-bold text-lg mb-4">Services</h2>
       <div className="grid grid-cols-4 gap-3">
         {quickActions.map((action, index) => (
-          <motion.button
+          <button
             key={action.id}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
-            whileTap={{ scale: 0.9 }}
             onClick={() => navigate(action.href)}
-            className="flex flex-col items-center gap-2 touch-manipulation"
+            className="flex flex-col items-center gap-2 touch-manipulation active:scale-90 transition-transform animate-in fade-in zoom-in-95 duration-300"
+            style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className={cn(
               "w-14 h-14 rounded-2xl flex items-center justify-center transition-transform",
@@ -58,7 +54,7 @@ const MobileQuickActions = () => {
               <action.icon className={cn("w-6 h-6", action.color)} />
             </div>
             <span className="text-[11px] font-medium text-muted-foreground">{action.label}</span>
-          </motion.button>
+          </button>
         ))}
       </div>
     </div>

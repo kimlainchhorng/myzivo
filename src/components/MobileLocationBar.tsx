@@ -1,6 +1,5 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for mobile performance
 import { MapPin, ChevronDown, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface MobileLocationBarProps {
   address?: string;
@@ -17,11 +16,7 @@ const MobileLocationBar = ({
 }: MobileLocationBarProps) => {
   if (variant === "search") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-4 mb-4"
-      >
+      <div className="mx-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
         <button
           onClick={onSearchClick}
           className="w-full flex items-center gap-3 p-4 rounded-2xl bg-muted/50 border border-border/50 touch-manipulation active:bg-muted transition-colors"
@@ -29,16 +24,12 @@ const MobileLocationBar = ({
           <Search className="w-5 h-5 text-muted-foreground" />
           <span className="text-muted-foreground text-left flex-1">Where to?</span>
         </button>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mx-4 mb-4"
-    >
+    <div className="mx-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
       <button
         onClick={onLocationClick}
         className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border border-border/50 touch-manipulation active:bg-muted transition-colors"
@@ -47,7 +38,7 @@ const MobileLocationBar = ({
         <span className="text-sm font-medium truncate max-w-[200px]">{address}</span>
         <ChevronDown className="w-4 h-4 text-muted-foreground" />
       </button>
-    </motion.div>
+    </div>
   );
 };
 
