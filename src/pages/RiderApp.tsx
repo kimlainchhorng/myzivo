@@ -447,7 +447,7 @@ const RiderApp = () => {
                   
                   <div className="flex-shrink-0 text-right bg-muted/30 px-3 py-2 rounded-xl">
                     <p className="text-xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-                      {routeInfo?.duration}<span className="text-xs text-muted-foreground ml-0.5">min</span>
+                      {routeInfo?.duration ? Math.round(routeInfo.duration) : '--'}<span className="text-xs text-muted-foreground ml-0.5">min</span>
                     </p>
                     <p className="text-[11px] text-muted-foreground font-medium">{routeInfo && (routeInfo.distance * 0.621371).toFixed(1)} mi</p>
                   </div>
