@@ -283,60 +283,33 @@ const DriverApp = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Enhanced Background effects */}
       <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
-      <div className="fixed top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-emerald-500/10 to-green-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="fixed bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="fixed top-32 right-[8%] text-4xl hidden lg:block opacity-25 pointer-events-none"
-      >
-        🚗
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 10, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 7, repeat: Infinity }}
-        className="fixed bottom-40 left-[6%] text-4xl hidden lg:block opacity-20 pointer-events-none"
-      >
-        💰
-      </motion.div>
+      <div className="fixed top-1/4 right-0 w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-gradient-to-bl from-emerald-500/10 to-green-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 left-0 w-[200px] h-[200px] md:w-[300px] md:h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       
       {/* Premium Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50"
-      >
-        <div className="max-w-lg mx-auto p-4">
+      <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="max-w-lg mx-auto p-3 sm:p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10" onClick={() => navigate("/")}>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-primary/10 touch-manipulation active:scale-95" onClick={() => navigate("/")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="relative">
-                  <motion.div 
-                    whileHover={{ scale: 1.05 }}
-                    className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-lg"
-                  >
-                    <Car className="w-6 h-6 text-primary" />
-                  </motion.div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shadow-lg">
+                    <Car className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                  </div>
                   {driver.is_online && (
-                    <motion.div 
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-500 rounded-full border-2 border-card shadow-lg shadow-emerald-500/30" 
-                    />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 rounded-full border-2 border-card shadow-lg shadow-emerald-500/30 animate-pulse" />
                   )}
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg">{driver.full_name}</h1>
+                  <h1 className="font-bold text-base sm:text-lg truncate max-w-[120px] sm:max-w-none">{driver.full_name}</h1>
                   <div className="flex items-center gap-2">
-                    <p className="text-xs text-muted-foreground">{driver.vehicle_model}</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[80px] sm:max-w-none">{driver.vehicle_model}</p>
                     {driver.rating && (
                       <div className="flex items-center gap-0.5 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
                         <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
@@ -349,13 +322,13 @@ const DriverApp = () => {
             </div>
             
             {/* Right side controls */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <NotificationCenter />
               <CrossAppNavigation currentApp="driver" />
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Online/Offline Toggle Banner */}
       <motion.div 

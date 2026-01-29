@@ -114,42 +114,25 @@ const Promotions = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
       {/* Enhanced Background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-eats/12 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-primary/12 to-teal-500/8 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-amber-500/8 to-transparent rounded-full blur-3xl" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 left-[8%] text-5xl hidden lg:block opacity-40"
-      >
-        🎁
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-1/3 right-[10%] text-4xl hidden lg:block opacity-30"
-      >
-        💰
-      </motion.div>
+      <div className="absolute top-1/4 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-primary/12 to-teal-500/8 rounded-full blur-3xl" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl touch-manipulation active:scale-95">
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
-              <Gift className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg shadow-eats/30">
+              <Gift className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
             </div>
             <div>
-              <h1 className="font-display font-bold text-xl">Promotions & Rewards</h1>
-              <p className="text-sm text-muted-foreground">Save more, earn more</p>
+              <h1 className="font-display font-bold text-base sm:text-xl">Promotions & Rewards</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Save more, earn more</p>
             </div>
           </div>
         </div>
