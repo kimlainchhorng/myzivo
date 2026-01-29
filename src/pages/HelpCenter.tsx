@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -265,29 +264,25 @@ const HelpCenter = () => {
               </div>
 
               {/* Safety Hotline */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '200ms' }}>
                 <Card className="border-0 bg-gradient-to-br from-destructive/10 to-red-500/5 shadow-xl overflow-hidden">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-destructive to-red-600 flex items-center justify-center shrink-0 shadow-lg shadow-destructive/30">
-                        <AlertTriangle className="h-7 w-7 text-white" />
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-destructive to-red-600 flex items-center justify-center shrink-0 shadow-lg shadow-destructive/30">
+                        <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-destructive mb-2">Emergency & Safety</h3>
-                        <p className="text-sm text-muted-foreground mb-3">
+                        <h3 className="font-bold text-base sm:text-lg text-destructive mb-1 sm:mb-2">Emergency & Safety</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
                           For immediate safety concerns during a trip, use the in-app emergency button. 
                           For life-threatening emergencies, call 911.
                         </p>
-                        <p className="font-bold text-lg">Safety Hotline: 1-800-ZIVO-SOS</p>
+                        <p className="font-bold text-base sm:text-lg">Safety Hotline: 1-800-ZIVO-SOS</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             </TabsContent>
 
             {/* Ticket Tab */}
@@ -301,32 +296,26 @@ const HelpCenter = () => {
                 </CardHeader>
                 <CardContent>
                   {ticketSubmitted ? (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-10"
-                    >
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/30">
-                        <CheckCircle2 className="h-10 w-10 text-white" />
+                    <div className="text-center py-8 sm:py-10 animate-in fade-in zoom-in-95 duration-300">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl shadow-emerald-500/30">
+                        <CheckCircle2 className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
                       </div>
-                      <h3 className="font-bold text-2xl mb-2">Ticket Submitted!</h3>
-                      <p className="text-muted-foreground mb-6">
+                      <h3 className="font-bold text-xl sm:text-2xl mb-2">Ticket Submitted!</h3>
+                      <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
                         Your ticket #ZV-{Math.random().toString(36).substr(2, 9).toUpperCase()} has been created. 
                         You'll receive a confirmation email shortly.
                       </p>
-                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button onClick={() => setTicketSubmitted(false)} className="rounded-xl font-semibold">
-                          Submit Another Ticket
-                        </Button>
-                      </motion.div>
-                    </motion.div>
+                      <Button onClick={() => setTicketSubmitted(false)} className="rounded-xl font-semibold touch-manipulation active:scale-95">
+                        Submit Another Ticket
+                      </Button>
+                    </div>
                   ) : (
-                    <form onSubmit={handleTicketSubmit} className="space-y-5">
-                      <div className="grid md:grid-cols-2 gap-5">
+                    <form onSubmit={handleTicketSubmit} className="space-y-4 sm:space-y-5">
+                      <div className="grid md:grid-cols-2 gap-4 sm:gap-5">
                         <div className="space-y-2">
-                          <Label htmlFor="category" className="font-semibold">Category</Label>
+                          <Label htmlFor="category" className="font-semibold text-sm">Category</Label>
                           <Select required>
-                            <SelectTrigger className="h-12 rounded-xl">
+                            <SelectTrigger className="h-11 sm:h-12 rounded-xl">
                               <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
@@ -342,9 +331,9 @@ const HelpCenter = () => {
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="priority" className="font-semibold">Priority</Label>
+                          <Label htmlFor="priority" className="font-semibold text-sm">Priority</Label>
                           <Select defaultValue="normal">
-                            <SelectTrigger className="h-12 rounded-xl">
+                            <SelectTrigger className="h-11 sm:h-12 rounded-xl">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -357,24 +346,22 @@ const HelpCenter = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="subject" className="font-semibold">Subject</Label>
-                        <Input id="subject" placeholder="Brief description of your issue" required className="h-12 rounded-xl" />
+                        <Label htmlFor="subject" className="font-semibold text-sm">Subject</Label>
+                        <Input id="subject" placeholder="Brief description of your issue" required className="h-11 sm:h-12 rounded-xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="description" className="font-semibold">Description</Label>
+                        <Label htmlFor="description" className="font-semibold text-sm">Description</Label>
                         <Textarea 
                           id="description" 
                           placeholder="Please provide as much detail as possible..." 
                           required 
-                          className="min-h-[150px] rounded-xl resize-none"
+                          className="min-h-[120px] sm:min-h-[150px] rounded-xl resize-none"
                         />
                       </div>
-                      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                        <Button type="submit" className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 gap-2">
-                          <Send className="w-5 h-5" />
-                          Submit Ticket
-                        </Button>
-                      </motion.div>
+                      <Button type="submit" className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 gap-2 touch-manipulation active:scale-[0.98]">
+                        <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                        Submit Ticket
+                      </Button>
                     </form>
                   )}
                 </CardContent>
