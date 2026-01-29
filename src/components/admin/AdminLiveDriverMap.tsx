@@ -34,6 +34,8 @@ import { cn } from "@/lib/utils";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "pk.eyJ1Ijoia2ltbGFpbiIsImEiOiJjbWp4aXZydHc0NmQyM2hwdnVxODBvOHFiIn0.rl7sFlnNFKJpOMC4D3sPgA";
+
 interface AdminLiveDriverMapProps {
   onDriverSelect?: (driver: OnlineDriver) => void;
   onSendMessage?: (driver: OnlineDriver) => void;
@@ -71,7 +73,7 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = "pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNtOG9oYXNoYTAyamQya3EzMHhrMHJndHEifQ.x3FGTQ-IqMuZ6A8-XvlXcQ";
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
