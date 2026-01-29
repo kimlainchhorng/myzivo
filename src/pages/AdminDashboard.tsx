@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2, Clock,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
@@ -108,11 +109,35 @@ import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
+import { useAdminStats } from "@/hooks/useAdminStats";
 
 const AdminDashboard = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("analytics");
+  const { data: stats } = useAdminStats();
+
+  // Map stats to nav items for badges
+  const statsBadges: Record<string, number | undefined> = useMemo(() => ({
+    "drivers": stats?.totalDrivers,
+    "driver-map": stats?.onlineDrivers,
+    "documents": stats?.pendingDocuments,
+    "trips": stats?.totalTrips,
+    "rides": stats?.activeTrips,
+    "eats": stats?.activeFoodOrders,
+    "restaurants": stats?.totalRestaurants,
+    "car-rentals": stats?.totalCarRentals,
+    "support": stats?.openTickets,
+    "ticket-queue": stats?.openTickets,
+    "announcements": stats?.activeAnnouncements,
+    "promotions": stats?.activePromotions,
+    "audit": stats?.totalAuditLogs,
+    "users": stats?.totalUsers,
+    "accounts": stats?.totalUsers,
+    "referrals": stats?.pendingReferrals,
+    "security": stats?.unresolvedAlerts,
+    "fraud": stats?.unresolvedAlerts,
+  }), [stats]);
 
   const navSections = [
     { title: "Overview", items: [
@@ -286,6 +311,7 @@ const AdminDashboard = () => {
             <div className="space-y-1">
               {section.items.map((item) => {
                 const isActive = activeTab === item.value;
+                const badgeCount = statsBadges[item.value];
                 return (
                   <button
                     key={item.value}
@@ -302,6 +328,11 @@ const AdminDashboard = () => {
                       <item.icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4 transition-colors", isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground")} />
                     </div>
                     <span className="font-medium text-xs sm:text-sm flex-1">{item.label}</span>
+                    {badgeCount !== undefined && badgeCount > 0 && (
+                      <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[10px] font-semibold bg-primary/10 text-primary border-0">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </Badge>
+                    )}
                     {isActive && <ChevronRight className="w-4 h-4 text-primary" />}
                   </button>
                 );
