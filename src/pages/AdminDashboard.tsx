@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
-  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio
+  Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
+  Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -41,6 +42,9 @@ import AdminDriverOnboardingQueue from "@/components/admin/AdminDriverOnboarding
 import AdminDriverVerification from "@/components/admin/AdminDriverVerification";
 import AdminIntegrationManager from "@/components/admin/AdminIntegrationManager";
 import AdminRealtimeDashboard from "@/components/admin/AdminRealtimeDashboard";
+import AdminRidesManagement from "@/components/admin/AdminRidesManagement";
+import AdminEatsManagement from "@/components/admin/AdminEatsManagement";
+import AdminAccountsManagement from "@/components/admin/AdminAccountsManagement";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -57,25 +61,34 @@ const AdminDashboard = () => {
       { value: "activity", label: "Activity Feed", icon: Activity, gradient: "from-cyan-500 to-blue-500" },
       { value: "realtime", label: "Real-time", icon: Radio, gradient: "from-violet-500 to-purple-500" },
     ]},
-    { title: "Administration", items: [
-      { value: "users", label: "Users", icon: Users, gradient: "from-violet-500 to-purple-500" },
-      { value: "roles", label: "Roles", icon: Crown, gradient: "from-amber-500 to-orange-500" },
-      { value: "drivers", label: "Drivers", icon: Car, gradient: "from-emerald-500 to-green-500" },
+    { title: "Accounts", items: [
+      { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
+      { value: "users", label: "Customers", icon: User, gradient: "from-blue-500 to-cyan-500" },
+      { value: "roles", label: "Roles & Permissions", icon: Crown, gradient: "from-amber-500 to-orange-500" },
     ]},
-    { title: "Driver Onboarding", items: [
-      { value: "onboarding", label: "Application Queue", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
+    { title: "Driver Control", items: [
+      { value: "drivers", label: "Driver Hub", icon: Car, gradient: "from-emerald-500 to-green-500" },
+      { value: "onboarding", label: "Onboarding Queue", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
       { value: "documents", label: "Document Review", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
       { value: "verification", label: "Final Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
-    ]},
-    { title: "Driver Management", items: [
       { value: "scoring", label: "Performance", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
       { value: "earnings", label: "Earnings", icon: DollarSign, gradient: "from-green-500 to-emerald-500" },
       { value: "performance", label: "Analytics", icon: TrendingUp, gradient: "from-blue-500 to-cyan-500" },
     ]},
-    { title: "Operations", items: [
-      { value: "trips", label: "Trips", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
-      { value: "heatmap", label: "Geographic", icon: MapPin, gradient: "from-orange-500 to-red-500" },
-      { value: "pricing", label: "Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+    { title: "Rides", items: [
+      { value: "rides", label: "Rides Control", icon: Navigation, gradient: "from-sky-500 to-blue-500" },
+      { value: "trips", label: "Trip Monitoring", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+      { value: "heatmap", label: "Demand Heatmap", icon: MapPin, gradient: "from-orange-500 to-red-500" },
+      { value: "pricing", label: "Surge & Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
+    ]},
+    { title: "Eats", items: [
+      { value: "eats", label: "Eats Control", icon: Utensils, gradient: "from-eats to-red-500" },
+      { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
+    ]},
+    { title: "Travel Services", items: [
+      { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
+      { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
+      { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
     ]},
     { title: "Financial", items: [
       { value: "payouts", label: "Payouts", icon: Wallet, gradient: "from-green-500 to-emerald-500" },
@@ -83,16 +96,10 @@ const AdminDashboard = () => {
       { value: "commissions", label: "Commission", icon: Percent, gradient: "from-violet-500 to-purple-500" },
       { value: "reconciliation", label: "Reconcile", icon: Scale, gradient: "from-blue-500 to-cyan-500" },
     ]},
-    { title: "Services", items: [
-      { value: "restaurants", label: "Restaurants", icon: Store, gradient: "from-eats to-red-500" },
-      { value: "car-rentals", label: "Car Rentals", icon: Car, gradient: "from-indigo-500 to-violet-500" },
-      { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
-      { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
-    ]},
     { title: "Engagement", items: [
       { value: "promotions", label: "Promotions", icon: Ticket, gradient: "from-violet-500 to-purple-500" },
       { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
-      { value: "support", label: "Support", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
+      { value: "support", label: "Support Tickets", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
     ]},
     { title: "System", items: [
       { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
@@ -248,6 +255,7 @@ const AdminDashboard = () => {
             <TabsContent value="analytics" className="mt-0"><AdminAnalytics /></TabsContent>
             <TabsContent value="activity" className="mt-0"><AdminActivityFeed /></TabsContent>
             <TabsContent value="realtime" className="mt-0"><AdminRealtimeDashboard /></TabsContent>
+            <TabsContent value="accounts" className="mt-0"><AdminAccountsManagement /></TabsContent>
             <TabsContent value="users" className="mt-0"><AdminUserManagement /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
@@ -257,17 +265,19 @@ const AdminDashboard = () => {
             <TabsContent value="scoring" className="mt-0"><AdminDriverScoring /></TabsContent>
             <TabsContent value="earnings" className="mt-0"><AdminDriverEarnings /></TabsContent>
             <TabsContent value="performance" className="mt-0"><AdminDriverPerformance /></TabsContent>
+            <TabsContent value="rides" className="mt-0"><AdminRidesManagement /></TabsContent>
             <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
             <TabsContent value="heatmap" className="mt-0"><AdminHeatmapView /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
-            <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
-            <TabsContent value="processing" className="mt-0"><AdminPayoutProcessing /></TabsContent>
-            <TabsContent value="commissions" className="mt-0"><AdminCommissionAnalytics /></TabsContent>
-            <TabsContent value="reconciliation" className="mt-0"><AdminRevenueReconciliation /></TabsContent>
+            <TabsContent value="eats" className="mt-0"><AdminEatsManagement /></TabsContent>
             <TabsContent value="restaurants" className="mt-0"><AdminRestaurantManagement /></TabsContent>
             <TabsContent value="car-rentals" className="mt-0"><AdminCarRentalManagement /></TabsContent>
             <TabsContent value="flights" className="mt-0"><AdminFlightManagement /></TabsContent>
             <TabsContent value="hotels" className="mt-0"><AdminHotelManagement /></TabsContent>
+            <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
+            <TabsContent value="processing" className="mt-0"><AdminPayoutProcessing /></TabsContent>
+            <TabsContent value="commissions" className="mt-0"><AdminCommissionAnalytics /></TabsContent>
+            <TabsContent value="reconciliation" className="mt-0"><AdminRevenueReconciliation /></TabsContent>
             <TabsContent value="promotions" className="mt-0"><AdminPromotions /></TabsContent>
             <TabsContent value="announcements" className="mt-0"><AdminAnnouncements /></TabsContent>
             <TabsContent value="support" className="mt-0"><AdminSupportTickets /></TabsContent>
