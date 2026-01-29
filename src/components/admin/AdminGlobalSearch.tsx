@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
 
 interface SearchResult {
   id: string;
@@ -59,7 +58,7 @@ const typeConfig = {
   transaction: { icon: CreditCard, color: "text-green-500", bg: "bg-green-500/10", label: "Transaction" },
 };
 
-const AdminGlobalSearch = () => {
+const AdminGlobalSearch = forwardRef<HTMLDivElement>((props, ref) => {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isSearching, setIsSearching] = useState(false);
@@ -81,7 +80,7 @@ const AdminGlobalSearch = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={ref} className="space-y-6" {...props}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -272,6 +271,8 @@ const AdminGlobalSearch = () => {
       </div>
     </div>
   );
-};
+});
+
+AdminGlobalSearch.displayName = "AdminGlobalSearch";
 
 export default AdminGlobalSearch;
