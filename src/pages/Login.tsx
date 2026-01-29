@@ -62,28 +62,23 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 safe-area-inset relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-[400px] h-[400px] bg-gradient-to-br from-primary/20 to-teal-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-[300px] h-[300px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-br from-primary/20 to-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md relative z-10"
-      >
+      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <Card className="border-0 bg-card/95 shadow-2xl backdrop-blur-xl overflow-hidden rounded-3xl">
-          <CardHeader className="space-y-1 text-center pb-6 pt-8">
-            <div className="flex justify-center mb-4">
+          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 pt-6 sm:pt-8">
+            <div className="flex justify-center mb-3 sm:mb-4">
               <ZivoLogo size="lg" />
             </div>
-            <CardTitle className="text-2xl sm:text-3xl font-display font-bold">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-display font-bold">
               Welcome back
             </CardTitle>
-            <CardDescription className="text-muted-foreground text-sm sm:text-base mt-1">
+            <CardDescription className="text-muted-foreground text-sm mt-1">
               Sign in to continue with ZIVO
             </CardDescription>
           </CardHeader>
@@ -146,10 +141,10 @@ const Login = () => {
                 />
               </CardContent>
 
-              <CardFooter className="flex flex-col gap-4 pt-2 pb-8 px-6 sm:px-8">
+              <CardFooter className="flex flex-col gap-3 sm:gap-4 pt-2 pb-6 sm:pb-8 px-5 sm:px-8">
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 rounded-xl" 
+                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 rounded-xl touch-manipulation active:scale-[0.98]" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -172,13 +167,13 @@ const Login = () => {
                 </div>
 
                 {/* Social Login */}
-                <div className="grid grid-cols-3 gap-3 w-full">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleSocialLogin('google')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
+                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
                   >
                     {socialLoading === 'google' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -196,7 +191,7 @@ const Login = () => {
                     variant="outline"
                     onClick={() => handleSocialLogin('apple')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
+                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
                   >
                     {socialLoading === 'apple' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -211,7 +206,7 @@ const Login = () => {
                     variant="outline"
                     onClick={() => handleSocialLogin('facebook')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
+                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
                   >
                     {socialLoading === 'facebook' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -234,10 +229,10 @@ const Login = () => {
           </Form>
         </Card>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+        <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground/60">
           Protected by enterprise-grade security 🔒
         </p>
-      </motion.div>
+      </div>
     </div>
   );
 };
