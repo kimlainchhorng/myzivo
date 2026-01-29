@@ -8,7 +8,7 @@ import {
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
   ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target,
   Brain, ShieldAlert, Coins, Rocket, Search, Image, Gauge, Lock, Cpu, LayoutDashboard, Workflow, LineChart, GitCompare, ListFilter,
-  Share2, XCircle, CreditCard, Wrench
+  Share2, XCircle, Wrench, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
