@@ -143,154 +143,119 @@ const Install = () => {
           ) : (
             <>
               {/* Features Grid */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="grid grid-cols-2 gap-3 mb-10"
-              >
+              <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-8 sm:mb-10">
                 {features.map((feature, index) => (
-                  <motion.div
+                  <div
                     key={feature.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.05 }}
-                    className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-br from-card/80 to-card border border-border/50"
+                    className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-card/80 to-card border border-border/50 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <div className={`w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center ${feature.color}`}>
-                      <feature.icon className="w-5 h-5" />
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0 ${feature.color}`}>
+                      <feature.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <span className="text-sm font-medium">{feature.label}</span>
-                  </motion.div>
+                    <span className="text-xs sm:text-sm font-medium">{feature.label}</span>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
 
               {/* Install Instructions */}
               {deferredPrompt ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button 
-                      size="lg" 
-                      className="w-full h-16 text-lg font-bold rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 gap-3"
-                      onClick={handleInstallClick}
-                    >
-                      <Download className="w-6 h-6" />
-                      Install ZIVO
-                    </Button>
-                  </motion.div>
-                </motion.div>
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <Button 
+                    size="lg" 
+                    className="w-full h-14 sm:h-16 text-base sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 gap-3 touch-manipulation active:scale-[0.98]"
+                    onClick={handleInstallClick}
+                  >
+                    <Download className="w-5 h-5 sm:w-6 sm:h-6" />
+                    Install ZIVO
+                  </Button>
+                </div>
               ) : isIOS ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                          <Smartphone className="w-6 h-6 text-white" />
-                        </div>
-                        Install on iPhone/iPad
-                      </CardTitle>
-                      <CardDescription className="text-base">
-                        Follow these steps to add ZIVO to your home screen
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-5 pt-4">
-                      {[
-                        { step: 1, title: "Tap the Share button", desc: "at the bottom of Safari", icon: Share },
-                        { step: 2, title: 'Tap "Add to Home Screen"', desc: "from the share menu", icon: Plus },
-                        { step: 3, title: 'Tap "Add"', desc: "ZIVO will appear on your home screen", icon: Check },
-                      ].map((item) => (
-                        <motion.div 
-                          key={item.step}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 + item.step * 0.1 }}
-                          className="flex items-start gap-4"
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center flex-shrink-0">
-                            <span className="font-bold text-primary">{item.step}</span>
-                          </div>
-                          <div>
-                            <p className="font-semibold text-base">{item.title}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                              <item.icon className="w-4 h-4" /> {item.desc}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ) : isAndroid ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="flex items-center gap-3 text-xl">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                          <Smartphone className="w-6 h-6 text-white" />
-                        </div>
-                        Install on Android
-                      </CardTitle>
-                      <CardDescription className="text-base">
-                        Follow these steps to add ZIVO to your home screen
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-5 pt-4">
-                      {[
-                        { step: 1, title: "Tap the menu button", desc: "in your browser", icon: MoreVertical },
-                        { step: 2, title: 'Tap "Install app"', desc: "or Add to Home Screen", icon: Download },
-                        { step: 3, title: "Confirm the installation", desc: "ZIVO will appear on your home screen", icon: Check },
-                      ].map((item) => (
-                        <motion.div 
-                          key={item.step}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 + item.step * 0.1 }}
-                          className="flex items-start gap-4"
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center flex-shrink-0">
-                            <span className="font-bold text-primary">{item.step}</span>
-                          </div>
-                          <div>
-                            <p className="font-semibold text-base">{item.title}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                              <item.icon className="w-4 h-4" /> {item.desc}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl">
-                    <CardContent className="pt-10 pb-8 text-center">
-                      <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center">
-                        <Smartphone className="w-8 h-8 text-muted-foreground" />
+                <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <CardHeader className="pb-2 p-4 sm:p-6">
+                    <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                        <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <h3 className="font-bold text-xl mb-2">Open on Mobile</h3>
-                      <p className="text-muted-foreground">
-                        Visit this page on your mobile device to install ZIVO
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                      Install on iPhone/iPad
+                    </CardTitle>
+                    <CardDescription className="text-sm sm:text-base">
+                      Follow these steps to add ZIVO to your home screen
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 sm:space-y-5 pt-2 sm:pt-4 p-4 sm:p-6">
+                    {[
+                      { step: 1, title: "Tap the Share button", desc: "at the bottom of Safari", icon: Share },
+                      { step: 2, title: 'Tap "Add to Home Screen"', desc: "from the share menu", icon: Plus },
+                      { step: 3, title: 'Tap "Add"', desc: "ZIVO will appear on your home screen", icon: Check },
+                    ].map((item, index) => (
+                      <div 
+                        key={item.step}
+                        className="flex items-start gap-3 sm:gap-4 animate-in fade-in slide-in-from-left-2 duration-300"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center flex-shrink-0">
+                          <span className="font-bold text-primary text-sm">{item.step}</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm sm:text-base">{item.title}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <item.icon className="w-3.5 h-3.5" /> {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ) : isAndroid ? (
+                <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <CardHeader className="pb-2 p-4 sm:p-6">
+                    <CardTitle className="flex items-center gap-3 text-lg sm:text-xl">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                        <Smartphone className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      </div>
+                      Install on Android
+                    </CardTitle>
+                    <CardDescription className="text-sm sm:text-base">
+                      Follow these steps to add ZIVO to your home screen
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4 sm:space-y-5 pt-2 sm:pt-4 p-4 sm:p-6">
+                    {[
+                      { step: 1, title: "Tap the menu button", desc: "in your browser", icon: MoreVertical },
+                      { step: 2, title: 'Tap "Install app"', desc: "or Add to Home Screen", icon: Download },
+                      { step: 3, title: "Confirm the installation", desc: "ZIVO will appear on your home screen", icon: Check },
+                    ].map((item, index) => (
+                      <div 
+                        key={item.step}
+                        className="flex items-start gap-3 sm:gap-4 animate-in fade-in slide-in-from-left-2 duration-300"
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center flex-shrink-0">
+                          <span className="font-bold text-primary text-sm">{item.step}</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm sm:text-base">{item.title}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <item.icon className="w-3.5 h-3.5" /> {item.desc}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <CardContent className="pt-8 sm:pt-10 pb-6 sm:pb-8 text-center">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 sm:mb-5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center">
+                      <Smartphone className="w-7 h-7 sm:w-8 sm:h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-bold text-lg sm:text-xl mb-2">Open on Mobile</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Visit this page on your mobile device to install ZIVO
+                    </p>
+                  </CardContent>
+                </Card>
               )}
             </>
           )}
