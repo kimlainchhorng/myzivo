@@ -383,7 +383,7 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Distance</p>
-                  <p className="font-semibold">{trip.distance_km?.toFixed(1)} km</p>
+                  <p className="font-semibold">{((trip.distance_km || 0) * 0.621371).toFixed(1)} mi</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

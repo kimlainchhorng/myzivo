@@ -332,7 +332,7 @@ const AdminPricingControls = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="perKmRate" className="text-xs">Per KM Rate ($)</Label>
+                          <Label htmlFor="perKmRate" className="text-xs">Per Mile Rate ($)</Label>
                           <Input
                             id="perKmRate"
                             type="number"
@@ -402,7 +402,7 @@ const AdminPricingControls = () => {
                         <div className="p-3 rounded-xl bg-background/50 border border-border/50">
                           <div className="flex items-center gap-2 text-muted-foreground mb-1">
                             <Car className="h-3 w-3" />
-                            <span className="text-xs">Per KM</span>
+                            <span className="text-xs">Per Mile</span>
                           </div>
                           <p className="text-lg font-semibold">${pricing.per_km_rate.toFixed(2)}</p>
                         </div>
@@ -419,7 +419,7 @@ const AdminPricingControls = () => {
                       <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 mb-4">
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                           <Calculator className="h-3 w-3" />
-                          Estimated fare for 10km, 20min trip
+                          Estimated fare for 10mi, 20min trip
                         </div>
                         <p className="text-xl font-bold text-primary">
                           ${calculateEstimatedFare(pricing, 10, 20).toFixed(2)}
@@ -457,7 +457,7 @@ const AdminPricingControls = () => {
           <CardContent>
             <div className="p-4 rounded-xl bg-muted/30 font-mono text-sm border border-border/50">
               <p className="mb-2">
-                <span className="text-primary font-semibold">Total Fare</span> = (Base Fare + (Distance × Per KM Rate) + (Duration × Per Minute Rate)) × Surge Multiplier
+                <span className="text-primary font-semibold">Total Fare</span> = (Base Fare + (Distance × Per Mile Rate) + (Duration × Per Minute Rate)) × Surge Multiplier
               </p>
               <p className="text-muted-foreground text-xs">
                 * If calculated fare is less than Minimum Fare, the Minimum Fare is applied

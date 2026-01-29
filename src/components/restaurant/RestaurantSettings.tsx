@@ -262,7 +262,7 @@ const RestaurantSettings = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Delivery Radius (km)</Label>
+                  <Label className="text-sm font-medium">Delivery Radius (mi)</Label>
                   <Input 
                     type="number" 
                     defaultValue="5" 

@@ -633,7 +633,7 @@ const AdminTripAssignment = () => {
                           <span className="text-muted-foreground">•</span>
                           <span className="text-muted-foreground text-xs">{driver.vehicle_plate}</span>
                           <span className="text-muted-foreground">•</span>
-                          <span className="text-xs text-primary">{driver.distance_km.toFixed(1)} km away</span>
+                          <span className="text-xs text-primary">{(driver.distance_km * 0.621371).toFixed(1)} mi away</span>
                         </div>
                       </SelectItem>
                     ))}

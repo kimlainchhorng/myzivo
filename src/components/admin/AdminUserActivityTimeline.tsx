@@ -51,7 +51,7 @@ const mockActivities: ActivityItem[] = [
     user: { name: "Sarah Johnson", email: "sarah@example.com" },
     description: "Completed a ride from Downtown to Airport",
     timestamp: new Date(Date.now() - 5 * 60 * 1000),
-    metadata: { fare: 24.50, distance: "12.3 km" },
+    metadata: { fare: 24.50, distance: "7.6 mi" },
   },
   {
     id: "2",

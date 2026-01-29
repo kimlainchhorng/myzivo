@@ -163,8 +163,8 @@ export const TripDetailsDialog = ({
               <div className="w-9 h-9 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-2 group-hover:bg-primary/10 transition-colors">
                 <Navigation className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-              <p className="text-xl font-bold">{trip.distance_km || 0}</p>
-              <p className="text-xs text-muted-foreground">km</p>
+              <p className="text-xl font-bold">{((trip.distance_km || 0) * 0.621371).toFixed(1)}</p>
+              <p className="text-xs text-muted-foreground">mi</p>
             </div>
             <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 text-center group hover:border-amber-500/30 transition-colors">
               <div className="w-9 h-9 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-2 group-hover:bg-amber-500/10 transition-colors">

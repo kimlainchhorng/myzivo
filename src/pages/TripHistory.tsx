@@ -167,7 +167,7 @@ const TripHistory = () => {
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50">
               <Navigation className="w-3.5 h-3.5 text-primary" />
-              <span className="font-medium">{trip.distance_km?.toFixed(1)} km</span>
+              <span className="font-medium">{((trip.distance_km || 0) * 0.621371).toFixed(1)} mi</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/50">
               <Clock className="w-3.5 h-3.5 text-primary" />
@@ -272,7 +272,7 @@ const TripHistory = () => {
           {[
             { value: completedTrips.length, label: "Trips", icon: Car, gradient: "from-primary to-teal-400" },
             { value: `$${completedTrips.reduce((sum, t) => sum + (t.fare_amount || 0), 0).toFixed(0)}`, label: "Total Spent", icon: TrendingUp, gradient: "from-emerald-500 to-green-500" },
-            { value: `${completedTrips.reduce((sum, t) => sum + (t.distance_km || 0), 0).toFixed(0)}`, label: "km Traveled", icon: Navigation, gradient: "from-violet-500 to-purple-500" },
+            { value: `${(completedTrips.reduce((sum, t) => sum + (t.distance_km || 0), 0) * 0.621371).toFixed(0)}`, label: "mi Traveled", icon: Navigation, gradient: "from-violet-500 to-purple-500" },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
