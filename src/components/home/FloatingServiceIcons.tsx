@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { cn } from "@/lib/utils";
 
 interface FloatingIconProps {
@@ -23,27 +23,19 @@ export const FloatingIcon = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={{ 
-        opacity: [0.3, 0.6, 0.3], 
-        y: [0, -15, 0],
-        rotate: [0, 5, -5, 0],
-      }}
-      transition={{
-        delay,
-        duration,
-        repeat: Infinity,
-        repeatType: "reverse",
-      }}
+    <div
       className={cn(
-        "absolute pointer-events-none hidden md:block z-10 drop-shadow-lg",
+        "absolute pointer-events-none hidden md:block z-10 drop-shadow-lg animate-float-icon",
         sizes[size],
         position
       )}
+      style={{ 
+        animationDuration: `${duration}s`,
+        animationDelay: `${delay}s`
+      }}
     >
       {emoji}
-    </motion.div>
+    </div>
   );
 };
 
@@ -63,22 +55,17 @@ export const FloatingOrb = ({
   duration = 8,
 }: FloatingOrbProps) => {
   return (
-    <motion.div
-      animate={{ 
-        scale: [1, 1.2, 1], 
-        opacity: [0.2, 0.4, 0.2] 
-      }}
-      transition={{ 
-        duration, 
-        repeat: Infinity,
-        delay 
-      }}
+    <div
       className={cn(
-        "absolute rounded-full blur-3xl",
+        "absolute rounded-full blur-3xl animate-orb-pulse",
         `bg-gradient-to-br ${gradient}`,
         size,
         position
       )}
+      style={{ 
+        animationDuration: `${duration}s`,
+        animationDelay: `${delay}s`
+      }}
     />
   );
 };

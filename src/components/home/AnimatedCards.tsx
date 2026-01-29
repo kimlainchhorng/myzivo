@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,16 +26,13 @@ export const PremiumCard = ({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay }}
-      whileHover={hoverEffect ? { y: -8, scale: 1.02 } : undefined}
+    <div
       className={cn(
-        "relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden",
+        "relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden animate-in fade-in slide-in-from-bottom-4",
+        hoverEffect && "hover:-translate-y-2 hover:scale-[1.02]",
         className
       )}
+      style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       {/* Decorative glow */}
       <div className={cn(
@@ -43,7 +40,7 @@ export const PremiumCard = ({
         glowClasses[glowColor]
       )} />
       {children}
-    </motion.div>
+    </div>
   );
 };
 
@@ -69,45 +66,35 @@ export const ServiceCard = ({
   delay = 0
 }: ServiceCardProps) => {
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 20, scale: 0.95 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay, type: "spring", stiffness: 300, damping: 24 }}
+    <button
       onClick={onClick}
-      whileHover={{ y: -8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group text-left overflow-hidden"
+      className="relative p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group text-left overflow-hidden hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98] animate-in fade-in slide-in-from-bottom-4 zoom-in-95"
+      style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       {/* Decorative glow */}
       <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       {isNew && (
-        <motion.span 
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg"
-        >
+        <span className="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 text-white rounded-full shadow-lg animate-in zoom-in duration-300">
           New
-        </motion.span>
+        </span>
       )}
       
-      <motion.div 
-        whileHover={{ scale: 1.15, rotate: 8 }}
+      <div 
         className={cn(
-          "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xl group-hover:scale-110 transition-transform duration-300",
+          "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 shadow-xl transition-transform duration-200 group-hover:scale-115 group-hover:rotate-6",
           gradient,
           shadowColor
         )}
       >
         <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-      </motion.div>
+      </div>
       
       <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">
         {title}
       </h3>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
-    </motion.button>
+    </button>
   );
 };
 
@@ -131,13 +118,9 @@ export const FeatureCard = ({
   delay = 0
 }: FeatureCardProps) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay, type: "spring", stiffness: 300, damping: 24 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-default"
+    <div
+      className="relative p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card/95 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 group overflow-hidden cursor-default hover:-translate-y-2 hover:scale-[1.02] animate-in fade-in slide-in-from-bottom-6"
+      style={{ animationDelay: `${delay * 1000}ms`, animationFillMode: 'both' }}
     >
       {/* Corner glow */}
       <div className={cn(
@@ -157,17 +140,15 @@ export const FeatureCard = ({
         </div>
       )}
 
-      <motion.div 
-        whileHover={{ scale: 1.1, rotate: 5 }}
-        transition={{ type: "spring", stiffness: 400 }}
+      <div 
         className={cn(
-          "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg",
+          "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-5 shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3",
           `bg-gradient-to-br ${gradient}`,
           shadowColor
         )}
       >
         <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
-      </motion.div>
+      </div>
       
       <h3 className="font-display text-xl sm:text-2xl font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
         {title}
@@ -175,6 +156,6 @@ export const FeatureCard = ({
       <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
         {description}
       </p>
-    </motion.div>
+    </div>
   );
 };
