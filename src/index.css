@@ -485,10 +485,15 @@
 
   /* Airline logos carousel scroll */
   .animate-scroll-slow {
-    animation: scroll-x 30s linear infinite;
+    animation: scroll-x 40s linear infinite;
+  }
+
+  .animate-scroll-slow-reverse {
+    animation: scroll-x-reverse 40s linear infinite;
   }
 
   .animate-scroll-slow:hover,
+  .animate-scroll-slow-reverse:hover,
   .pause-animation {
     animation-play-state: paused;
   }
@@ -517,6 +522,15 @@
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes scroll-x-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
