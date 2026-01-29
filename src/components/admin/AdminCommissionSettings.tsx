@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,10 @@ import {
   Utensils,
   Package,
   Save,
-  AlertCircle
+  AlertCircle,
+  Check,
+  X,
+  Loader2
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,6 +75,9 @@ const AdminCommissionSettings = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSetting, setEditingSetting] = useState<CommissionSetting | null>(null);
   const [formData, setFormData] = useState(defaultFormData);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading } = useQuery({
@@ -129,6 +135,31 @@ const AdminCommissionSettings = () => {
     },
   });
 
+  // Inline field update mutation
+  const updateFieldMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: any }) => {
+      const { error } = await supabase
+        .from("commission_settings")
+        .update({ 
+          [field]: value,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["commission-settings"] });
+      toast.success("Updated successfully");
+      setEditingRowId(null);
+      setEditingField(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update");
+      setEditingRowId(null);
+      setEditingField(null);
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -156,6 +187,7 @@ const AdminCommissionSettings = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["commission-settings"] });
+      toast.success("Status updated");
     },
   });
 
@@ -192,6 +224,42 @@ const AdminCommissionSettings = () => {
     saveMutation.mutate(editingSetting ? { ...formData, id: editingSetting.id } : formData);
   };
 
+  // Handle inline edit start
+  const startInlineEdit = (rowId: string, field: string, currentValue: any) => {
+    setEditingRowId(rowId);
+    setEditingField(field);
+    setEditValue(String(currentValue ?? ""));
+  };
+
+  // Handle inline edit save
+  const saveInlineEdit = (id: string, field: string) => {
+    let value: any = editValue;
+    
+    // Convert to appropriate type based on field
+    if (field === "commission_percentage") {
+      value = parseFloat(editValue) || 0;
+      if (value < 0 || value > 100) {
+        toast.error("Commission must be between 0 and 100");
+        return;
+      }
+    } else if (field === "minimum_fee" || field === "maximum_fee") {
+      value = editValue ? parseFloat(editValue) : null;
+      if (value !== null && value < 0) {
+        toast.error("Fee cannot be negative");
+        return;
+      }
+    }
+    
+    updateFieldMutation.mutate({ id, field, value });
+  };
+
+  // Handle inline edit cancel
+  const cancelInlineEdit = () => {
+    setEditingRowId(null);
+    setEditingField(null);
+    setEditValue("");
+  };
+
   const getServiceIcon = (type: string) => {
     switch (type) {
       case "rides": return <Car className="h-4 w-4" />;
@@ -219,6 +287,68 @@ const AdminCommissionSettings = () => {
     rides: settings?.filter(s => s.service_type === "rides").length || 0,
     food_delivery: settings?.filter(s => s.service_type === "food_delivery").length || 0,
     package_delivery: settings?.filter(s => s.service_type === "package_delivery").length || 0,
+  };
+
+  // Render editable cell
+  const renderEditableCell = (
+    setting: CommissionSetting, 
+    field: string, 
+    value: any, 
+    prefix: string = "",
+    suffix: string = ""
+  ) => {
+    const isEditing = editingRowId === setting.id && editingField === field;
+    const isSaving = updateFieldMutation.isPending && editingRowId === setting.id && editingField === field;
+
+    if (isEditing) {
+      return (
+        <div className="flex items-center gap-1">
+          <Input
+            type="number"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            className="h-8 w-20 text-right"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveInlineEdit(setting.id, field);
+              if (e.key === "Escape") cancelInlineEdit();
+            }}
+          />
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-7 w-7 text-green-500"
+            onClick={() => saveInlineEdit(setting.id, field)}
+            disabled={isSaving}
+          >
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          </Button>
+          <Button 
+            size="icon" 
+            variant="ghost" 
+            className="h-7 w-7 text-red-500"
+            onClick={cancelInlineEdit}
+            disabled={isSaving}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+
+    const displayValue = value !== null && value !== undefined 
+      ? `${prefix}${typeof value === 'number' ? value.toFixed(field.includes('fee') ? 2 : 0) : value}${suffix}`
+      : "—";
+
+    return (
+      <span 
+        className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors inline-block"
+        onClick={() => startInlineEdit(setting.id, field, value)}
+        title="Click to edit"
+      >
+        {displayValue}
+      </span>
+    );
   };
 
   return (
@@ -291,7 +421,7 @@ const AdminCommissionSettings = () => {
               </div>
               <div>
                 <CardTitle>Commission Settings</CardTitle>
-                <CardDescription>Configure platform fees and driver commissions</CardDescription>
+                <CardDescription>Click on any value to edit inline • Toggle switch to activate/deactivate</CardDescription>
               </div>
             </div>
             <Button onClick={() => handleOpenDialog()} className="gap-2">
@@ -334,6 +464,15 @@ const AdminCommissionSettings = () => {
                   <TableCell colSpan={8} className="text-center py-12">
                     <AlertCircle className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
                     <p className="text-muted-foreground">No commission settings configured</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => handleOpenDialog()}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add First Rate
+                    </Button>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -350,13 +489,13 @@ const AdminCommissionSettings = () => {
                       {setting.vehicle_type || "—"}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      {setting.commission_percentage}%
+                      {renderEditableCell(setting, "commission_percentage", setting.commission_percentage, "", "%")}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                      {setting.minimum_fee ? `$${setting.minimum_fee.toFixed(2)}` : "—"}
+                      {renderEditableCell(setting, "minimum_fee", setting.minimum_fee, "$")}
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                      {setting.maximum_fee ? `$${setting.maximum_fee.toFixed(2)}` : "—"}
+                      {renderEditableCell(setting, "maximum_fee", setting.maximum_fee, "$")}
                     </TableCell>
                     <TableCell className="text-center">
                       <Switch
@@ -372,6 +511,7 @@ const AdminCommissionSettings = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenDialog(setting)}
+                          title="Edit all fields"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -379,7 +519,12 @@ const AdminCommissionSettings = () => {
                           variant="ghost"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => deleteMutation.mutate(setting.id)}
+                          onClick={() => {
+                            if (confirm("Are you sure you want to delete this commission setting?")) {
+                              deleteMutation.mutate(setting.id);
+                            }
+                          }}
+                          title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -458,58 +603,78 @@ const AdminCommissionSettings = () => {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium">Commission %</label>
-                <Input
-                  type="number"
-                  value={formData.commission_percentage}
-                  onChange={(e) => setFormData({ ...formData, commission_percentage: Number(e.target.value) })}
-                  min={0}
-                  max={100}
-                  step={0.5}
-                  className="mt-1.5"
-                />
+                <div className="relative mt-1.5">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={formData.commission_percentage}
+                    onChange={(e) => setFormData({ ...formData, commission_percentage: parseFloat(e.target.value) || 0 })}
+                    className="pr-8"
+                  />
+                  <Percent className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
               <div>
-                <label className="text-sm font-medium">Min Fee ($)</label>
-                <Input
-                  type="number"
-                  value={formData.minimum_fee || ""}
-                  onChange={(e) => setFormData({ ...formData, minimum_fee: Number(e.target.value) || 0 })}
-                  min={0}
-                  step={0.25}
-                  className="mt-1.5"
-                />
+                <label className="text-sm font-medium">Min Fee</label>
+                <div className="relative mt-1.5">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={formData.minimum_fee || ""}
+                    onChange={(e) => setFormData({ ...formData, minimum_fee: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                    className="pl-6"
+                  />
+                  <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
               <div>
-                <label className="text-sm font-medium">Max Fee ($)</label>
-                <Input
-                  type="number"
-                  value={formData.maximum_fee || ""}
-                  onChange={(e) => setFormData({ ...formData, maximum_fee: e.target.value ? Number(e.target.value) : null })}
-                  min={0}
-                  step={0.25}
-                  placeholder="No limit"
-                  className="mt-1.5"
-                />
+                <label className="text-sm font-medium">Max Fee (optional)</label>
+                <div className="relative mt-1.5">
+                  <Input
+                    type="number"
+                    min={0}
+                    step={0.5}
+                    value={formData.maximum_fee ?? ""}
+                    onChange={(e) => setFormData({ ...formData, maximum_fee: e.target.value ? parseFloat(e.target.value) : null })}
+                    placeholder="No limit"
+                    className="pl-6"
+                  />
+                  <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+              <div>
+                <p className="font-medium">Active</p>
+                <p className="text-sm text-muted-foreground">Enable this commission rate</p>
+              </div>
               <Switch
-                id="active"
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
-              <label htmlFor="active" className="text-sm">Active</label>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={handleCloseDialog}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
-              <Save className="h-4 w-4 mr-1" />
-              {editingSetting ? "Update" : "Create"}
+            <Button 
+              onClick={handleSubmit} 
+              disabled={saveMutation.isPending}
+              className="gap-2"
+            >
+              {saveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {editingSetting ? "Save Changes" : "Create Rate"}
             </Button>
           </DialogFooter>
         </DialogContent>
