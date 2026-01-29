@@ -202,121 +202,103 @@ const Events = () => {
         </section>
 
         {/* Featured Event */}
-        <section className="py-10">
+        <section className="py-8 sm:py-10">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -4 }}
-            >
-              <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl group cursor-pointer hover:shadow-pink-500/10 transition-all duration-500">
-                <div className="grid lg:grid-cols-2">
-                  <div className="relative aspect-video lg:aspect-auto lg:min-h-[400px] overflow-hidden">
-                    <img
-                      src={featuredEvent.image}
-                      alt={featuredEvent.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-                    <div className="absolute top-5 left-5 flex gap-2">
-                      <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 px-3 py-1.5 font-semibold shadow-lg">
-                        <Zap className="w-3.5 h-3.5 mr-1" />
-                        Featured
-                      </Badge>
-                      <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 px-3 py-1.5 font-semibold shadow-lg">
-                        <Flame className="w-3.5 h-3.5 mr-1" />
-                        Hot
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="p-8 lg:p-10 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-5">
-                      <Badge variant="outline" className="text-pink-500 border-pink-500/50 px-3 py-1.5 font-semibold bg-pink-500/10">
-                        <Music className="w-3.5 h-3.5 mr-1.5" />
-                        Concert
-                      </Badge>
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10">
-                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-                        <span className="font-bold text-sm">{featuredEvent.rating}</span>
-                      </div>
-                    </div>
-                    <h2 className="font-display text-3xl lg:text-4xl font-bold mb-4 group-hover:text-pink-500 transition-colors">
-                      {featuredEvent.title}
-                    </h2>
-                    <p className="text-lg text-muted-foreground mb-6 flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-pink-500" />
-                      {featuredEvent.venue} • {featuredEvent.city}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-5 mb-8">
-                      <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/50 text-sm font-medium">
-                        <Calendar className="w-4 h-4 text-pink-500" />
-                        {featuredEvent.date}
-                      </span>
-                      <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/50 text-sm font-medium">
-                        <Clock className="w-4 h-4 text-pink-500" />
-                        {featuredEvent.time}
-                      </span>
-                      <span className="flex items-center gap-2 px-4 py-2 rounded-xl bg-muted/50 text-sm font-medium">
-                        <Users className="w-4 h-4 text-pink-500" />
-                        {featuredEvent.attendees} interested
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-sm text-muted-foreground">Tickets from</span>
-                        <p className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
-                          ${featuredEvent.priceFrom}
-                        </p>
-                      </div>
-                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                        <Button size="lg" className="gap-2 h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30">
-                          Get Tickets
-                          <ArrowRight className="w-5 h-5" />
-                        </Button>
-                      </motion.div>
-                    </div>
+            <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl group cursor-pointer hover:shadow-pink-500/10 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="grid lg:grid-cols-2">
+                <div className="relative aspect-video lg:aspect-auto lg:min-h-[400px] overflow-hidden">
+                  <img
+                    src={featuredEvent.image}
+                    alt={featuredEvent.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+                  <div className="absolute top-3 sm:top-5 left-3 sm:left-5 flex gap-2">
+                    <Badge className="bg-gradient-to-r from-pink-500 to-rose-500 text-white border-0 px-2 sm:px-3 py-1 sm:py-1.5 font-semibold shadow-lg text-xs sm:text-sm">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Featured
+                    </Badge>
+                    <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 px-2 sm:px-3 py-1 sm:py-1.5 font-semibold shadow-lg text-xs sm:text-sm">
+                      <Flame className="w-3 h-3 mr-1" />
+                      Hot
+                    </Badge>
                   </div>
                 </div>
-              </Card>
-            </motion.div>
+                <div className="p-5 sm:p-8 lg:p-10 flex flex-col justify-center">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-5">
+                    <Badge variant="outline" className="text-pink-500 border-pink-500/50 px-2 sm:px-3 py-1 sm:py-1.5 font-semibold bg-pink-500/10 text-xs sm:text-sm">
+                      <Music className="w-3 h-3 mr-1" />
+                      Concert
+                    </Badge>
+                    <div className="flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-amber-500/10">
+                      <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span className="font-bold text-xs sm:text-sm">{featuredEvent.rating}</span>
+                    </div>
+                  </div>
+                  <h2 className="font-display text-xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 group-hover:text-pink-500 transition-colors">
+                    {featuredEvent.title}
+                  </h2>
+                  <p className="text-sm sm:text-lg text-muted-foreground mb-4 sm:mb-6 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500 flex-shrink-0" />
+                    <span className="truncate">{featuredEvent.venue} • {featuredEvent.city}</span>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-5 mb-5 sm:mb-8">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-muted/50 text-xs sm:text-sm font-medium">
+                      <Calendar className="w-3.5 h-3.5 text-pink-500" />
+                      {featuredEvent.date}
+                    </span>
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl bg-muted/50 text-xs sm:text-sm font-medium">
+                      <Clock className="w-3.5 h-3.5 text-pink-500" />
+                      {featuredEvent.time}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <span className="text-xs sm:text-sm text-muted-foreground">Tickets from</span>
+                      <p className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                        ${featuredEvent.priceFrom}
+                      </p>
+                    </div>
+                    <Button size="lg" className="gap-2 h-11 sm:h-14 px-4 sm:px-8 text-sm sm:text-lg font-bold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 touch-manipulation active:scale-[0.98]">
+                      Get Tickets
+                      <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </section>
 
         {/* Category Tabs & Events Grid */}
-        <section className="py-16 lg:py-20">
+        <section className="py-10 sm:py-16 lg:py-20">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10"
-            >
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 mb-6 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div>
-                <h2 className="font-display text-3xl font-bold mb-2">Upcoming Events</h2>
-                <p className="text-muted-foreground">Don't miss out on these experiences</p>
+                <h2 className="font-display text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Upcoming Events</h2>
+                <p className="text-sm sm:text-base text-muted-foreground">Don't miss out on these experiences</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
                 <Tabs value={category} onValueChange={setCategory}>
-                  <TabsList className="bg-muted/50 p-1.5 rounded-xl">
+                  <TabsList className="bg-muted/50 p-1 sm:p-1.5 rounded-xl">
                     {categories.map((cat) => (
                       <TabsTrigger 
                         key={cat.id} 
                         value={cat.id} 
-                        className="gap-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white"
+                        className="gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500 data-[state=active]:text-white touch-manipulation"
                       >
-                        <cat.icon className="h-4 w-4" />
-                        <span className="hidden sm:inline">{cat.label}</span>
+                        <cat.icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="hidden xs:inline">{cat.label}</span>
                       </TabsTrigger>
                     ))}
                   </TabsList>
                 </Tabs>
-                <Button variant="outline" size="sm" className="gap-2 rounded-xl">
+                <Button variant="outline" size="sm" className="gap-2 rounded-xl touch-manipulation flex-shrink-0">
                   <Filter className="h-4 w-4" />
                   <span className="hidden sm:inline">Filters</span>
                 </Button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Events Grid */}
             <motion.div

@@ -138,128 +138,107 @@ const Promotions = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-5xl relative z-10">
         {/* Apply Promo Code */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="mb-8 border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-eats/5 to-orange-500/5" />
-            <CardContent className="p-6 relative">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-eats" />
-                Have a promo code?
-              </h3>
-              <div className="flex gap-3">
-                <Input
-                  placeholder="Enter code (e.g., SAVE20)"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  className="flex-1 h-12 rounded-xl bg-muted/30 border-border/50"
-                />
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button className="h-12 px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30">
-                    Apply
-                  </Button>
-                </motion.div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Card className="mb-6 sm:mb-8 border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-eats/5 to-orange-500/5" />
+          <CardContent className="p-4 sm:p-6 relative">
+            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-eats" />
+              Have a promo code?
+            </h3>
+            <div className="flex gap-2 sm:gap-3">
+              <Input
+                placeholder="Enter code"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                className="flex-1 h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50"
+              />
+              <Button className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-white font-bold shadow-lg shadow-eats/30 touch-manipulation active:scale-95">
+                Apply
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Tabs defaultValue="coupons" className="mb-8">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1.5 rounded-xl h-auto">
-              <TabsTrigger value="coupons" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <Tabs defaultValue="coupons" className="mb-6 sm:mb-8">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 p-1 sm:p-1.5 rounded-xl h-auto">
+              <TabsTrigger value="coupons" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
                 <Ticket className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Coupons
               </TabsTrigger>
-              <TabsTrigger value="offers" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white">
+              <TabsTrigger value="offers" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
                 <Gift className="h-4 w-4 mr-1.5 hidden sm:inline" />
                 Offers
               </TabsTrigger>
-              <TabsTrigger value="referral" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white">
+              <TabsTrigger value="referral" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
                 <Users className="h-4 w-4 mr-1.5 hidden sm:inline" />
-                Referral
+                Refer
               </TabsTrigger>
-              <TabsTrigger value="loyalty" className="rounded-lg py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white">
+              <TabsTrigger value="loyalty" className="rounded-lg py-2.5 sm:py-3 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-eats data-[state=active]:to-orange-500 data-[state=active]:text-white touch-manipulation">
                 <Star className="h-4 w-4 mr-1.5 hidden sm:inline" />
-                Loyalty
+                Points
               </TabsTrigger>
             </TabsList>
 
             {/* Coupons Tab */}
-            <TabsContent value="coupons" className="mt-6">
+            <TabsContent value="coupons" className="mt-5 sm:mt-6">
               <div className="space-y-4">
-                <h3 className="font-display font-bold text-xl flex items-center gap-2">
-                  <Ticket className="w-5 h-5 text-eats" />
+                <h3 className="font-display font-bold text-lg sm:text-xl flex items-center gap-2">
+                  <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-eats" />
                   Your Active Coupons
                 </h3>
                 {activeCoupons.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {activeCoupons.map((coupon, index) => (
-                      <motion.div
-                        key={coupon.code}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        whileHover={{ y: -4 }}
-                      >
-                        <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-                          <div className={`h-1.5 ${
-                            coupon.service === 'rides' ? 'bg-gradient-to-r from-primary to-teal-400' :
-                            coupon.service === 'eats' ? 'bg-gradient-to-r from-eats to-orange-500' : 'bg-gradient-to-r from-violet-500 to-purple-500'
-                          }`} />
-                          <CardContent className="p-5">
-                            <div className="flex justify-between items-start mb-4">
-                              <div>
-                                <p className="text-3xl font-bold bg-gradient-to-r from-eats to-orange-500 bg-clip-text text-transparent">{coupon.discount}</p>
-                                <p className="text-muted-foreground">{coupon.description}</p>
-                              </div>
-                              <Badge variant="outline" className="shrink-0 font-semibold">
-                                {coupon.service === 'all' ? 'All Services' : coupon.service.toUpperCase()}
-                              </Badge>
+                  <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                    {activeCoupons.map((coupon) => (
+                      <Card key={coupon.code} className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
+                        <div className={`h-1.5 ${
+                          coupon.service === 'rides' ? 'bg-gradient-to-r from-primary to-teal-400' :
+                          coupon.service === 'eats' ? 'bg-gradient-to-r from-eats to-orange-500' : 'bg-gradient-to-r from-violet-500 to-purple-500'
+                        }`} />
+                        <CardContent className="p-4 sm:p-5">
+                          <div className="flex justify-between items-start mb-3 sm:mb-4">
+                            <div>
+                              <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-eats to-orange-500 bg-clip-text text-transparent">{coupon.discount}</p>
+                              <p className="text-sm sm:text-base text-muted-foreground">{coupon.description}</p>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">
-                                <p>Min: {coupon.minOrder}</p>
-                                <p className="flex items-center gap-1.5">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  Expires: {coupon.expires}
-                                </p>
-                              </div>
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => copyCode(coupon.code)}
-                                  className="rounded-xl font-semibold"
-                                >
-                                  {copiedCode === coupon.code ? (
-                                    <Check className="h-4 w-4 mr-1.5 text-emerald-500" />
-                                  ) : (
-                                    <Copy className="h-4 w-4 mr-1.5" />
-                                  )}
-                                  {coupon.code}
-                                </Button>
-                              </motion.div>
+                            <Badge variant="outline" className="shrink-0 font-semibold text-xs">
+                              {coupon.service === 'all' ? 'All' : coupon.service.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="text-xs sm:text-sm text-muted-foreground min-w-0">
+                              <p>Min: {coupon.minOrder}</p>
+                              <p className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {coupon.expires}
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyCode(coupon.code)}
+                              className="rounded-xl font-semibold touch-manipulation active:scale-95 flex-shrink-0"
+                            >
+                              {copiedCode === coupon.code ? (
+                                <Check className="h-4 w-4 mr-1 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4 mr-1" />
+                              )}
+                              {coupon.code}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 ) : (
                   <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-                    <CardContent className="p-10 text-center">
-                      <Ticket className="h-14 w-14 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-muted-foreground text-lg">No active coupons. Check out our offers!</p>
+                    <CardContent className="p-8 sm:p-10 text-center">
+                      <Ticket className="h-12 w-12 sm:h-14 sm:w-14 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground text-base sm:text-lg">No active coupons. Check out our offers!</p>
                     </CardContent>
                   </Card>
                 )}
@@ -527,7 +506,7 @@ const Promotions = () => {
               </div>
             </TabsContent>
           </Tabs>
-        </motion.div>
+        </div>
       </main>
     </div>
   );
