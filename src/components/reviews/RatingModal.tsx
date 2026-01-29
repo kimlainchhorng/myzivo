@@ -1,3 +1,4 @@
+// CSS animations used instead of framer-motion for performance
 import { useState } from "react";
 import { Star, X, Sparkles, Send, ThumbsUp, ThumbsDown, Heart, Gift, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -94,6 +94,8 @@ const RatingModal = ({
     flight: 'from-sky-500/20 to-sky-500/5',
   };
 
+  const confettiEmojis = ['🎉', '⭐', '✨', '🌟'];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md border-0 bg-gradient-to-br from-card/98 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
@@ -103,51 +105,33 @@ const RatingModal = ({
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-radial from-amber-500/10 to-transparent blur-2xl" />
         </div>
         
-        {/* Confetti animation for 5-star */}
-        <AnimatePresence>
-          {showConfetti && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 pointer-events-none z-50"
-            >
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ 
-                    y: -20, 
-                    x: Math.random() * 300 - 150,
-                    rotate: 0,
-                    opacity: 1 
-                  }}
-                  animate={{ 
-                    y: 400, 
-                    rotate: 360,
-                    opacity: 0 
-                  }}
-                  transition={{ duration: 1.5, delay: i * 0.1 }}
-                  className="absolute left-1/2 top-0"
-                >
-                  <span className="text-2xl">{['🎉', '⭐', '✨', '🌟'][i % 4]}</span>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Confetti animation for 5-star - CSS based */}
+        {showConfetti && (
+          <div className="absolute inset-0 pointer-events-none z-50 animate-in fade-in duration-200">
+            {confettiEmojis.map((emoji, i) => (
+              <span
+                key={i}
+                className="absolute left-1/2 top-0 text-2xl animate-confetti"
+                style={{ 
+                  animationDelay: `${i * 100}ms`,
+                  transform: `translateX(${(i - 2) * 60}px)`
+                }}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+        )}
         
         <DialogHeader className="relative text-center pb-2">
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          <div
             className={cn(
-              "w-20 h-20 rounded-3xl bg-gradient-to-br flex items-center justify-center mx-auto mb-4 shadow-xl",
+              "w-20 h-20 rounded-3xl bg-gradient-to-br flex items-center justify-center mx-auto mb-4 shadow-xl animate-in zoom-in-95 duration-300",
               serviceColors[serviceType]
             )}
           >
             <span className="text-4xl">{serviceIcons[serviceType]}</span>
-          </motion.div>
+          </div>
           <DialogTitle className="text-2xl font-display font-bold">Rate Your Experience</DialogTitle>
           <DialogDescription className="text-muted-foreground">{serviceName}</DialogDescription>
         </DialogHeader>
@@ -157,14 +141,12 @@ const RatingModal = ({
           <div className="text-center">
             <div className="flex justify-center gap-2 mb-4 p-3 rounded-2xl bg-muted/20">
               {[1, 2, 3, 4, 5].map((star) => (
-                <motion.button
+                <button
                   key={star}
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
-                  whileHover={{ scale: 1.2, y: -8 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="p-1 transition-transform focus:outline-none relative"
+                  className="p-1 transition-all duration-200 focus:outline-none relative hover:scale-125 hover:-translate-y-2 active:scale-90"
                 >
                   <Star
                     className={cn(
@@ -175,145 +157,109 @@ const RatingModal = ({
                     )}
                   />
                   {star <= (hoverRating || rating) && star === (hoverRating || rating) && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1 -right-1"
-                    >
+                    <div className="absolute -top-1 -right-1 animate-in zoom-in duration-200">
                       <Sparkles className="w-4 h-4 text-amber-400" />
-                    </motion.div>
+                    </div>
                   )}
-                </motion.button>
+                </button>
               ))}
             </div>
             
-            <AnimatePresence mode="wait">
-              {(hoverRating || rating) > 0 && (
-                <motion.div
-                  key={hoverRating || rating}
-                  initial={{ opacity: 0, y: 15, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -15, scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className="flex items-center justify-center gap-3"
-                >
-                  <motion.span 
-                    className="text-4xl"
-                    animate={{ rotate: [0, -10, 10, 0] }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {ratingEmojis[hoverRating || rating]}
-                  </motion.span>
-                  <span className={cn(
-                    "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                    ratingGradients[hoverRating || rating]
-                  )}>
-                    {ratingLabels[hoverRating || rating]}
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {(hoverRating || rating) > 0 && (
+              <div
+                key={hoverRating || rating}
+                className="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-200"
+              >
+                <span className="text-4xl animate-wiggle">
+                  {ratingEmojis[hoverRating || rating]}
+                </span>
+                <span className={cn(
+                  "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                  ratingGradients[hoverRating || rating]
+                )}>
+                  {ratingLabels[hoverRating || rating]}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Quick Tags - Enhanced */}
-          <AnimatePresence>
-            {rating > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center",
-                    rating >= 4 ? "bg-emerald-500/10" : "bg-orange-500/10"
-                  )}>
-                    {rating >= 4 ? (
-                      <ThumbsUp className="w-4 h-4 text-emerald-500" />
-                    ) : (
-                      <ThumbsDown className="w-4 h-4 text-orange-500" />
-                    )}
-                  </div>
-                  <p className="text-sm font-bold">
-                    {rating >= 4 ? 'What made it great?' : 'What could improve?'}
-                  </p>
+          {rating > 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center",
+                  rating >= 4 ? "bg-emerald-500/10" : "bg-orange-500/10"
+                )}>
+                  {rating >= 4 ? (
+                    <ThumbsUp className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <ThumbsDown className="w-4 h-4 text-orange-500" />
+                  )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag, index) => (
-                    <motion.div
-                      key={tag}
-                      initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      transition={{ delay: index * 0.04, type: "spring", stiffness: 300 }}
+                <p className="text-sm font-bold">
+                  {rating >= 4 ? 'What made it great?' : 'What could improve?'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag, index) => (
+                  <div
+                    key={tag}
+                    className="animate-in fade-in zoom-in-95 duration-200"
+                    style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'both' }}
+                  >
+                    <Badge
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      className={cn(
+                        "cursor-pointer px-3 py-2 text-sm transition-all font-medium hover:scale-105 active:scale-95",
+                        selectedTags.includes(tag)
+                          ? rating >= 4 
+                            ? "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 border-0 text-white shadow-lg shadow-emerald-500/30"
+                            : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 text-white shadow-lg shadow-orange-500/30"
+                          : "hover:bg-muted/80 border-border/50"
+                      )}
+                      onClick={() => toggleTag(tag)}
                     >
-                      <Badge
-                        variant={selectedTags.includes(tag) ? "default" : "outline"}
-                        className={cn(
-                          "cursor-pointer px-3 py-2 text-sm transition-all font-medium",
-                          selectedTags.includes(tag)
-                            ? rating >= 4 
-                              ? "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 border-0 text-white shadow-lg shadow-emerald-500/30"
-                              : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 border-0 text-white shadow-lg shadow-orange-500/30"
-                            : "hover:bg-muted/80 border-border/50"
-                        )}
-                        onClick={() => toggleTag(tag)}
-                      >
-                        {selectedTags.includes(tag) && <Heart className="w-3 h-3 mr-1.5 fill-current" />}
-                        {tag}
-                      </Badge>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      {selectedTags.includes(tag) && <Heart className="w-3 h-3 mr-1.5 fill-current" />}
+                      {tag}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Comment - Enhanced */}
-          <AnimatePresence>
-            {rating > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                  </div>
-                  <p className="text-sm font-bold">Additional comments</p>
-                  <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full">(optional)</span>
+          {rating > 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary" />
                 </div>
-                <Textarea
-                  placeholder="Share more details about your experience..."
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  rows={3}
-                  className="rounded-2xl border-border/50 bg-muted/20 resize-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+                <p className="text-sm font-bold">Additional comments</p>
+                <span className="text-xs text-muted-foreground bg-muted/30 px-2 py-0.5 rounded-full">(optional)</span>
+              </div>
+              <Textarea
+                placeholder="Share more details about your experience..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                className="rounded-2xl border-border/50 bg-muted/20 resize-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+              />
+            </div>
+          )}
 
           {/* Reward hint for 5-star */}
-          <AnimatePresence>
-            {rating === 5 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20"
-              >
-                <Trophy className="w-5 h-5 text-amber-500" />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Thanks for the 5-star rating!</p>
-                  <p className="text-xs text-muted-foreground">Your feedback helps us improve</p>
-                </div>
-                <Gift className="w-5 h-5 text-amber-500" />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {rating === 5 && (
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <Trophy className="w-5 h-5 text-amber-500" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">Thanks for the 5-star rating!</p>
+                <p className="text-xs text-muted-foreground">Your feedback helps us improve</p>
+              </div>
+              <Gift className="w-5 h-5 text-amber-500" />
+            </div>
+          )}
 
           {/* Service Details */}
           {serviceDetails && (
@@ -331,14 +277,10 @@ const RatingModal = ({
           >
             Skip for now
           </Button>
-          <motion.div 
-            className="flex-1"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <div className="flex-1">
             <Button 
               className={cn(
-                "w-full h-13 rounded-2xl font-bold text-white transition-all",
+                "w-full h-13 rounded-2xl font-bold text-white transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
                 rating >= 4 
                   ? "bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 shadow-lg shadow-emerald-500/30"
                   : rating > 0
@@ -351,7 +293,7 @@ const RatingModal = ({
               <Send className="w-4 h-4 mr-2" />
               Submit Rating
             </Button>
-          </motion.div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
