@@ -482,6 +482,16 @@
   .animate-spin-slow {
     animation: spin 8s linear infinite;
   }
+
+  /* Airline logos carousel scroll */
+  .animate-scroll-slow {
+    animation: scroll-x 30s linear infinite;
+  }
+
+  .animate-scroll-slow:hover,
+  .pause-animation {
+    animation-play-state: paused;
+  }
 }
 
 @keyframes confetti-fall {
@@ -499,6 +509,15 @@
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(-10deg); }
   75% { transform: rotate(10deg); }
+}
+
+@keyframes scroll-x {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* Mobile-specific overrides */

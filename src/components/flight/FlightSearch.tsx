@@ -21,7 +21,8 @@ import {
   Sparkles,
   TrendingUp,
   Shield,
-  Zap
+  Zap,
+  Crown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -30,6 +31,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { premiumAirlines, fullServiceAirlines, lowCostAirlines, type Airline } from "@/data/airlines";
 
 interface Flight {
   id: number;
@@ -62,41 +64,42 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [hoveredFlight, setHoveredFlight] = useState<number | null>(null);
 
+  // Use real airline data for search results
   const [searchResults] = useState<Flight[]>([
     { 
       id: 1, 
-      airline: "ZIVO Air", 
-      airlineLogo: "✈️",
-      flight: "ZV 1234", 
+      airline: "Singapore Airlines", 
+      airlineLogo: "🇸🇬",
+      flight: "SQ 1234", 
       departure: "08:00", 
       arrival: "11:30", 
       duration: "3h 30m", 
-      price: 299, 
+      price: 459, 
       stops: 0,
       amenities: ["wifi", "entertainment", "meals"],
       seatsLeft: 4,
       co2: "120kg",
-      isLowest: true
+      isLowest: false
     },
     { 
       id: 2, 
-      airline: "SkyWings", 
-      airlineLogo: "🛫",
-      flight: "SW 5678", 
+      airline: "Emirates", 
+      airlineLogo: "🇦🇪",
+      flight: "EK 205", 
       departure: "10:15", 
       arrival: "14:00", 
       duration: "3h 45m", 
-      price: 279, 
+      price: 549, 
       stops: 0,
-      amenities: ["wifi", "entertainment"],
-      seatsLeft: 12,
+      amenities: ["wifi", "entertainment", "meals", "lounge"],
+      seatsLeft: 3,
       co2: "135kg"
     },
     { 
       id: 3, 
-      airline: "Global Express", 
-      airlineLogo: "🌍",
-      flight: "GE 9012", 
+      airline: "Delta Airlines", 
+      airlineLogo: "🇺🇸",
+      flight: "DL 890", 
       departure: "14:30", 
       arrival: "19:15", 
       duration: "4h 45m", 
@@ -104,23 +107,52 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
       stops: 1,
       stopCity: "Denver",
       amenities: ["wifi"],
-      seatsLeft: 8,
-      co2: "180kg"
+      seatsLeft: 12,
+      co2: "180kg",
+      isLowest: true
     },
     { 
       id: 4, 
-      airline: "ZIVO Air", 
-      airlineLogo: "✈️",
-      flight: "ZV 3456", 
+      airline: "Qatar Airways", 
+      airlineLogo: "🇶🇦",
+      flight: "QR 1100", 
       departure: "18:00", 
       arrival: "21:30", 
       duration: "3h 30m", 
-      price: 319, 
+      price: 499, 
       stops: 0,
       amenities: ["wifi", "entertainment", "meals", "lounge"],
       seatsLeft: 2,
       co2: "118kg",
       isFastest: true
+    },
+    { 
+      id: 5, 
+      airline: "JetBlue", 
+      airlineLogo: "🇺🇸",
+      flight: "B6 422", 
+      departure: "06:30", 
+      arrival: "10:00", 
+      duration: "3h 30m", 
+      price: 189, 
+      stops: 0,
+      amenities: ["wifi", "entertainment"],
+      seatsLeft: 18,
+      co2: "125kg"
+    },
+    { 
+      id: 6, 
+      airline: "ANA", 
+      airlineLogo: "🇯🇵",
+      flight: "NH 1055", 
+      departure: "23:00", 
+      arrival: "06:30", 
+      duration: "4h 30m", 
+      price: 529, 
+      stops: 0,
+      amenities: ["wifi", "entertainment", "meals"],
+      seatsLeft: 6,
+      co2: "142kg"
     },
   ]);
 
