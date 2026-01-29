@@ -108,8 +108,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "active-users", 
       label: "Active Users", 
-      value: metricsData.activeUsers, 
-      previousValue: Math.max(0, metricsData.activeUsers - Math.floor(Math.random() * 50)), 
+      value: metricsData.activeUsers ?? 0, 
+      previousValue: Math.max(0, (metricsData.activeUsers ?? 0) - Math.floor(Math.random() * 50)), 
       icon: Users, 
       color: "text-primary", 
       category: "users" 
@@ -117,8 +117,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "online-drivers", 
       label: "Online Drivers", 
-      value: metricsData.onlineDrivers, 
-      previousValue: Math.max(0, metricsData.onlineDrivers - Math.floor(Math.random() * 5)), 
+      value: metricsData.onlineDrivers ?? 0, 
+      previousValue: Math.max(0, (metricsData.onlineDrivers ?? 0) - Math.floor(Math.random() * 5)), 
       icon: Car, 
       color: "text-emerald-500", 
       category: "drivers" 
@@ -126,8 +126,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "active-rides", 
       label: "Active Rides", 
-      value: metricsData.activeRides, 
-      previousValue: metricsData.prevActiveRides, 
+      value: metricsData.activeRides ?? 0, 
+      previousValue: metricsData.prevActiveRides ?? 0, 
       icon: Activity, 
       color: "text-cyan-500", 
       category: "rides" 
@@ -135,8 +135,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "pending-orders", 
       label: "Pending Orders", 
-      value: metricsData.pendingOrders, 
-      previousValue: metricsData.prevPendingOrders, 
+      value: metricsData.pendingOrders ?? 0, 
+      previousValue: metricsData.prevPendingOrders ?? 0, 
       icon: ShoppingBag, 
       color: "text-eats", 
       category: "food" 
@@ -144,8 +144,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "flight-bookings", 
       label: "Today's Flights", 
-      value: metricsData.flightBookings, 
-      previousValue: Math.max(0, metricsData.flightBookings - 2), 
+      value: metricsData.flightBookings ?? 0, 
+      previousValue: Math.max(0, (metricsData.flightBookings ?? 0) - 2), 
       icon: Plane, 
       color: "text-sky-500", 
       category: "flights" 
@@ -153,8 +153,8 @@ export default function LiveMetricsPanel() {
     { 
       id: "hotel-checkins", 
       label: "Hotel Check-ins", 
-      value: metricsData.hotelBookings, 
-      previousValue: Math.max(0, metricsData.hotelBookings - 1), 
+      value: metricsData.hotelBookings ?? 0, 
+      previousValue: Math.max(0, (metricsData.hotelBookings ?? 0) - 1), 
       icon: Hotel, 
       color: "text-amber-500", 
       category: "hotels" 
