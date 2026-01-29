@@ -46,7 +46,10 @@ import {
   Send,
   Download,
   ExternalLink,
-  Loader2
+  Loader2,
+  RotateCcw,
+  ThumbsUp,
+  ThumbsDown
 } from "lucide-react";
 import { useDrivers, useUpdateDriverStatus, Driver, DriverStatus } from "@/hooks/useDrivers";
 import { useDriverDocuments, getDocumentUrl, getDocumentTypeLabel } from "@/hooks/useDriverDocuments";
@@ -69,6 +72,10 @@ const AdminDriverVerification = () => {
   const [vehicleFilter, setVehicleFilter] = useState("all");
   const [documentUrls, setDocumentUrls] = useState<Record<string, string>>({});
   const [loadingDocUrls, setLoadingDocUrls] = useState(false);
+  const [isDocRejectDialogOpen, setIsDocRejectDialogOpen] = useState(false);
+  const [docRejectReason, setDocRejectReason] = useState("");
+  const [selectedDocForReject, setSelectedDocForReject] = useState<{ id: string; type: string; label: string } | null>(null);
+  const [requestingDocType, setRequestingDocType] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: drivers, isLoading, error } = useDrivers();
@@ -101,7 +108,7 @@ const AdminDriverVerification = () => {
     }
   }, [isViewDialogOpen, selectedDriver, driverDocuments]);
 
-  // Request documents mutation
+  // Request documents mutation (all missing)
   const requestDocumentsMutation = useMutation({
     mutationFn: async (driverId: string) => {
       const { error } = await supabase
@@ -121,6 +128,94 @@ const AdminDriverVerification = () => {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to send request");
+    },
+  });
+
+  // Request single document mutation
+  const requestSingleDocMutation = useMutation({
+    mutationFn: async ({ driverId, docType, docLabel }: { driverId: string; docType: string; docLabel: string }) => {
+      const { error } = await supabase
+        .from("driver_notifications")
+        .insert({
+          driver_id: driverId,
+          title: `${docLabel} Required`,
+          description: `Please upload your ${docLabel.toLowerCase()} to complete verification.`,
+          type: "system",
+          icon: "file-text"
+        });
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      toast.success(`Request for ${variables.docLabel} sent to driver`);
+      queryClient.invalidateQueries({ queryKey: ["driver-notifications"] });
+      setRequestingDocType(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to send request");
+      setRequestingDocType(null);
+    },
+  });
+
+  // Reject document and request resubmission
+  const rejectDocumentMutation = useMutation({
+    mutationFn: async ({ docId, driverId, docLabel, reason }: { docId: string; driverId: string; docLabel: string; reason: string }) => {
+      // Update document status to rejected
+      const { error: updateError } = await supabase
+        .from("driver_documents")
+        .update({
+          status: "rejected",
+          notes: reason,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq("id", docId);
+      
+      if (updateError) throw updateError;
+
+      // Send notification to driver
+      const { error: notifyError } = await supabase
+        .from("driver_notifications")
+        .insert({
+          driver_id: driverId,
+          title: `${docLabel} Rejected`,
+          description: `Your ${docLabel.toLowerCase()} was rejected. Reason: ${reason}. Please upload a new document.`,
+          type: "system",
+          icon: "alert-circle"
+        });
+      
+      if (notifyError) throw notifyError;
+    },
+    onSuccess: (_, variables) => {
+      toast.success(`${variables.docLabel} rejected and resubmission requested`);
+      queryClient.invalidateQueries({ queryKey: ["driver-documents"] });
+      queryClient.invalidateQueries({ queryKey: ["driver-notifications"] });
+      setIsDocRejectDialogOpen(false);
+      setDocRejectReason("");
+      setSelectedDocForReject(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to reject document");
+    },
+  });
+
+  // Approve single document
+  const approveDocumentMutation = useMutation({
+    mutationFn: async ({ docId }: { docId: string }) => {
+      const { error } = await supabase
+        .from("driver_documents")
+        .update({
+          status: "approved",
+          reviewed_at: new Date().toISOString()
+        })
+        .eq("id", docId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Document approved");
+      queryClient.invalidateQueries({ queryKey: ["driver-documents"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to approve document");
     },
   });
 
@@ -601,23 +696,23 @@ const AdminDriverVerification = () => {
                       ) : (
                         <Send className="h-4 w-4" />
                       )}
-                      Request Documents
+                      Request All
                     </Button>
                   </div>
                   
                   {docsLoading ? (
                     <div className="space-y-2">
                       {[1, 2, 3].map((i) => (
-                        <Skeleton key={i} className="h-12 w-full" />
+                        <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {getDocumentChecklist().map((item) => (
                         <div 
                           key={item.type}
                           className={cn(
-                            "flex items-center justify-between p-3 rounded-lg border",
+                            "p-3 rounded-lg border",
                             item.uploaded 
                               ? item.status === "approved" 
                                 ? "bg-green-500/5 border-green-500/20"
@@ -627,53 +722,141 @@ const AdminDriverVerification = () => {
                               : "bg-muted/50 border-dashed"
                           )}
                         >
-                          <div className="flex items-center gap-3">
-                            {item.uploaded ? (
-                              item.status === "approved" ? (
-                                <FileCheck className="h-5 w-5 text-green-500" />
-                              ) : item.status === "rejected" ? (
-                                <FileX className="h-5 w-5 text-red-500" />
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              {item.uploaded ? (
+                                item.status === "approved" ? (
+                                  <FileCheck className="h-5 w-5 text-green-500" />
+                                ) : item.status === "rejected" ? (
+                                  <FileX className="h-5 w-5 text-red-500" />
+                                ) : (
+                                  <FileImage className="h-5 w-5 text-amber-500" />
+                                )
                               ) : (
-                                <FileImage className="h-5 w-5 text-amber-500" />
-                              )
-                            ) : (
-                              <FileX className="h-5 w-5 text-muted-foreground" />
-                            )}
-                            <div>
-                              <p className="font-medium text-sm">{item.label}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.uploaded 
-                                  ? item.status === "approved" 
-                                    ? "Approved" 
-                                    : item.status === "rejected" 
-                                    ? "Rejected" 
-                                    : "Pending review"
-                                  : "Not uploaded"}
-                              </p>
+                                <FileX className="h-5 w-5 text-muted-foreground" />
+                              )}
+                              <div>
+                                <p className="font-medium text-sm">{item.label}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.uploaded 
+                                    ? item.status === "approved" 
+                                      ? "Approved" 
+                                      : item.status === "rejected" 
+                                      ? `Rejected${item.document?.notes ? `: ${item.document.notes}` : ""}`
+                                      : "Pending review"
+                                    : "Not uploaded"}
+                                </p>
+                              </div>
                             </div>
                           </div>
-                          {item.uploaded && item.document && documentUrls[item.document.id] && (
-                            <div className="flex items-center gap-1">
+                          
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50">
+                            {item.uploaded && item.document ? (
+                              <>
+                                {/* View & Download */}
+                                {documentUrls[item.document.id] && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 gap-1.5 text-xs"
+                                      onClick={() => window.open(documentUrls[item.document!.id], "_blank")}
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                      View
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 gap-1.5 text-xs"
+                                      asChild
+                                    >
+                                      <a href={documentUrls[item.document.id]} download>
+                                        <Download className="h-3 w-3" />
+                                        Download
+                                      </a>
+                                    </Button>
+                                  </>
+                                )}
+                                
+                                {/* Approve (only for pending) */}
+                                {item.status === "pending" && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 gap-1.5 text-xs bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20"
+                                    onClick={() => approveDocumentMutation.mutate({ docId: item.document!.id })}
+                                    disabled={approveDocumentMutation.isPending}
+                                  >
+                                    <ThumbsUp className="h-3 w-3" />
+                                    Approve
+                                  </Button>
+                                )}
+                                
+                                {/* Reject (for pending) or Request Again (for rejected) */}
+                                {item.status === "pending" ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 gap-1.5 text-xs bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20"
+                                    onClick={() => {
+                                      setSelectedDocForReject({ id: item.document!.id, type: item.type, label: item.label });
+                                      setIsDocRejectDialogOpen(true);
+                                    }}
+                                  >
+                                    <ThumbsDown className="h-3 w-3" />
+                                    Reject
+                                  </Button>
+                                ) : item.status === "rejected" ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 gap-1.5 text-xs bg-amber-500/10 text-amber-600 border-amber-500/20 hover:bg-amber-500/20"
+                                    onClick={() => {
+                                      setRequestingDocType(item.type);
+                                      requestSingleDocMutation.mutate({
+                                        driverId: selectedDriver.id,
+                                        docType: item.type,
+                                        docLabel: item.label
+                                      });
+                                    }}
+                                    disabled={requestSingleDocMutation.isPending && requestingDocType === item.type}
+                                  >
+                                    {requestSingleDocMutation.isPending && requestingDocType === item.type ? (
+                                      <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <RotateCcw className="h-3 w-3" />
+                                    )}
+                                    Ask Again
+                                  </Button>
+                                ) : null}
+                              </>
+                            ) : (
+                              /* Not uploaded - Request this document */
                               <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                onClick={() => window.open(documentUrls[item.document!.id], "_blank")}
+                                size="sm"
+                                variant="outline"
+                                className="h-7 gap-1.5 text-xs"
+                                onClick={() => {
+                                  setRequestingDocType(item.type);
+                                  requestSingleDocMutation.mutate({
+                                    driverId: selectedDriver.id,
+                                    docType: item.type,
+                                    docLabel: item.label
+                                  });
+                                }}
+                                disabled={requestSingleDocMutation.isPending && requestingDocType === item.type}
                               >
-                                <ExternalLink className="h-4 w-4" />
+                                {requestSingleDocMutation.isPending && requestingDocType === item.type ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Send className="h-3 w-3" />
+                                )}
+                                Request {item.label}
                               </Button>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-8 w-8"
-                                asChild
-                              >
-                                <a href={documentUrls[item.document.id]} download>
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -782,6 +965,73 @@ const AdminDriverVerification = () => {
               disabled={updateStatus.isPending}
             >
               {updateStatus.isPending ? "Rejecting..." : "Reject Application"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Document Rejection Dialog */}
+      <Dialog open={isDocRejectDialogOpen} onOpenChange={setIsDocRejectDialogOpen}>
+        <DialogContent className="border-0 bg-card/95 backdrop-blur-xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <ThumbsDown className="h-5 w-5" />
+              Reject Document
+            </DialogTitle>
+            <DialogDescription>
+              This will reject the document and notify the driver to upload a new one.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDocForReject && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+                <FileX className="h-8 w-8 text-red-500" />
+                <div>
+                  <p className="font-medium">{selectedDocForReject.label}</p>
+                  <p className="text-sm text-muted-foreground">Will be marked as rejected</p>
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Rejection Reason <span className="text-destructive">*</span></label>
+              <Textarea
+                value={docRejectReason}
+                onChange={(e) => setDocRejectReason(e.target.value)}
+                placeholder="e.g., Document is expired, image is blurry, wrong document type..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsDocRejectDialogOpen(false);
+              setDocRejectReason("");
+              setSelectedDocForReject(null);
+            }}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                if (selectedDocForReject && selectedDriver && docRejectReason.trim()) {
+                  rejectDocumentMutation.mutate({
+                    docId: selectedDocForReject.id,
+                    driverId: selectedDriver.id,
+                    docLabel: selectedDocForReject.label,
+                    reason: docRejectReason.trim()
+                  });
+                }
+              }}
+              disabled={rejectDocumentMutation.isPending || !docRejectReason.trim()}
+            >
+              {rejectDocumentMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Rejecting...
+                </>
+              ) : (
+                "Reject & Request Resubmission"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
