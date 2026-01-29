@@ -6,7 +6,7 @@ import {
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
-  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send
+  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -63,6 +63,10 @@ import AdminCashCollection from "@/components/admin/AdminCashCollection";
 import AdminDriverSchedules from "@/components/admin/AdminDriverSchedules";
 import AdminDriverMessaging from "@/components/admin/AdminDriverMessaging";
 import AdminTripAssignment from "@/components/admin/AdminTripAssignment";
+import AdminCustomerDirectory from "@/components/admin/AdminCustomerDirectory";
+import AdminGoalsTracker from "@/components/admin/AdminGoalsTracker";
+import AdminProjectsOverview from "@/components/admin/AdminProjectsOverview";
+import AdminFeatureFlags from "@/components/admin/AdminFeatureFlags";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -135,6 +139,7 @@ const AdminDashboard = () => {
     ]},
     { title: "System", items: [
       { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
+      { value: "feature-flags", label: "Feature Flags", icon: Flag, gradient: "from-cyan-500 to-blue-500" },
       { value: "compliance", label: "Compliance", icon: ShieldCheck, gradient: "from-emerald-500 to-green-500" },
       { value: "export", label: "Data Export", icon: Download, gradient: "from-teal-500 to-cyan-500" },
       { value: "reports", label: "Reports", icon: FileText, gradient: "from-emerald-500 to-teal-500" },
