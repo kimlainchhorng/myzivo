@@ -57,6 +57,7 @@ import AdminRevenueForecasting from "@/components/admin/AdminRevenueForecasting"
 import AdminNotificationHub from "@/components/admin/AdminNotificationHub";
 import AdminFleetManagement from "@/components/admin/AdminFleetManagement";
 import AdminDataExport from "@/components/admin/AdminDataExport";
+import AdminVehicleInspections from "@/components/admin/AdminVehicleInspections";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -85,6 +86,7 @@ const AdminDashboard = () => {
     { title: "Driver Control", items: [
       { value: "drivers", label: "Driver Hub", icon: Car, gradient: "from-emerald-500 to-green-500" },
       { value: "fleet", label: "Fleet", icon: Truck, gradient: "from-blue-500 to-cyan-500" },
+      { value: "inspections", label: "Inspections", icon: ClipboardCheck, gradient: "from-sky-500 to-blue-500" },
       { value: "onboarding", label: "Onboarding Queue", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
       { value: "documents", label: "Document Review", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
       { value: "verification", label: "Final Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
@@ -287,6 +289,7 @@ const AdminDashboard = () => {
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
             <TabsContent value="fleet" className="mt-0"><AdminFleetManagement /></TabsContent>
+            <TabsContent value="inspections" className="mt-0"><AdminVehicleInspections /></TabsContent>
             <TabsContent value="onboarding" className="mt-0"><AdminDriverOnboardingQueue /></TabsContent>
             <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
             <TabsContent value="verification" className="mt-0"><AdminDriverVerification /></TabsContent>
