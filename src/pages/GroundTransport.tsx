@@ -114,41 +114,20 @@ const GroundTransport = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
 
-      <main className="pt-20">
+      <main className="pt-16 sm:pt-20">
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-32 overflow-hidden">
+        <section className="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
           {/* Enhanced background effects */}
           <div className="absolute inset-0 bg-gradient-radial from-violet-500/18 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-violet-500/25 to-purple-500/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-indigo-500/15 to-violet-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/3 w-[350px] h-[350px] bg-gradient-radial from-fuchsia-500/10 to-transparent rounded-full blur-3xl" />
-          
-          {/* Floating emojis */}
-          <motion.div
-            animate={{ y: [0, -18, 0], rotate: [0, 10, 0] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-32 right-[10%] text-6xl hidden lg:block opacity-45"
-          >
-            🚆
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 14, 0], rotate: [0, -8, 0] }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-40 left-[8%] text-5xl hidden lg:block opacity-35"
-          >
-            🚌
-          </motion.div>
+          <div className="absolute top-1/3 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-gradient-to-bl from-violet-500/25 to-purple-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-gradient-to-tr from-indigo-500/15 to-violet-500/10 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Back Navigation */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="mb-8"
-            >
+            <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-left-2 duration-300">
               <Button
                 variant="ghost"
                 onClick={() => navigate(-1)}
@@ -157,7 +136,7 @@ const GroundTransport = () => {
                 <ChevronLeft className="w-4 h-4" />
                 Back
               </Button>
-            </motion.div>
+            </div>
 
             <motion.div
               initial={{ opacity: 0, y: 30 }}

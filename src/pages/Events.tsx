@@ -142,96 +142,62 @@ const Events = () => {
     : sampleEvents.filter(e => e.category === category);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
 
-      <main className="pt-20">
+      <main className="pt-16 sm:pt-20">
         {/* Hero Section */}
-        <section className="relative py-20 lg:py-32 overflow-hidden">
+        <section className="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
           {/* Enhanced background effects */}
           <div className="absolute inset-0 bg-gradient-radial from-pink-500/18 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/3 left-0 w-[600px] h-[600px] bg-gradient-to-br from-pink-500/25 to-rose-500/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-purple-500/15 to-violet-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-gradient-radial from-fuchsia-500/10 to-transparent rounded-full blur-3xl" />
-          
-          {/* Floating emojis */}
-          <motion.div
-            animate={{ y: [0, -18, 0], rotate: [0, 12, 0] }}
-            transition={{ duration: 5, repeat: Infinity }}
-            className="absolute top-32 right-[10%] text-6xl hidden lg:block opacity-45"
-          >
-            🎫
-          </motion.div>
-          <motion.div
-            animate={{ y: [0, 14, 0], rotate: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity }}
-            className="absolute bottom-40 left-[8%] text-5xl hidden lg:block opacity-35"
-          >
-            🎵
-          </motion.div>
+          <div className="absolute top-1/3 left-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-gradient-to-br from-pink-500/25 to-rose-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-gradient-to-tl from-purple-500/15 to-violet-500/10 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center max-w-4xl mx-auto mb-14"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                <Badge className="mb-6 bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-500 border-pink-500/30 px-4 py-2 text-sm font-semibold">
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Live Events
-                </Badge>
-              </motion.div>
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+            <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-500 border-pink-500/30 px-4 py-2 text-sm font-semibold">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Live Events
+              </Badge>
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight">
                 Unforgettable{" "}
                 <span className="bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
                   Experiences
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Get tickets to the hottest concerts, sports events, and theater shows. 
-                Best seats, secure tickets, instant delivery.
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Get tickets to the hottest concerts, sports events, and theater shows.
               </p>
-            </motion.div>
+            </div>
 
             {/* Premium Search Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="max-w-5xl mx-auto"
-            >
-              <Card className="p-6 lg:p-8 border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-sm">
-                <div className="flex flex-col lg:flex-row gap-4">
+            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 delay-150">
+              <Card className="p-4 sm:p-6 lg:p-8 border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-sm">
+                <div className="flex flex-col gap-3 sm:gap-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                     <Input 
-                      placeholder="Search events, artists, or venues..." 
-                      className="pl-12 h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-pink-500/50" 
+                      placeholder="Search events..." 
+                      className="pl-12 h-12 sm:h-14 rounded-xl text-base bg-muted/30 border-border/50 focus:border-pink-500/50" 
                     />
                   </div>
-                  <div className="relative w-full lg:w-52">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input placeholder="Location" className="pl-12 h-14 rounded-xl bg-muted/30 border-border/50 focus:border-pink-500/50" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground" />
+                      <Input placeholder="Location" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl bg-muted/30 border-border/50 focus:border-pink-500/50" />
+                    </div>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground" />
+                      <Input type="date" className="pl-10 sm:pl-12 h-12 sm:h-14 rounded-xl bg-muted/30 border-border/50 focus:border-pink-500/50" />
+                    </div>
                   </div>
-                  <div className="relative w-full lg:w-52">
-                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input type="date" className="pl-12 h-14 rounded-xl bg-muted/30 border-border/50 focus:border-pink-500/50" />
-                  </div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 hover:opacity-90">
-                      <Search className="w-5 h-5 mr-2" />
-                      Search
-                    </Button>
-                  </motion.div>
+                  <Button className="h-12 sm:h-14 w-full text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30 hover:opacity-90 touch-manipulation active:scale-[0.98]">
+                    <Search className="w-5 h-5 mr-2" />
+                    Search
+                  </Button>
                 </div>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
