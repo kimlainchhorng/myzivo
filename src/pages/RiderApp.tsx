@@ -148,16 +148,26 @@ const RiderApp = () => {
     }
   }, [activeTrip]);
   const handleConfirmBooking = async () => {
+    if (!user) {
+      toast.error("Please sign in to book a ride");
+      navigate("/login");
+      return;
+    }
     if (!pickup || !dropoff || !selectedVehicle || !routeInfo) return;
     const selectedFare = fareEstimates.find(f => f.vehicleType === selectedVehicle);
     if (!selectedFare) return;
-    await createTrip.mutateAsync({
-      pickup,
-      dropoff,
-      fareAmount: selectedFare.totalFare,
-      distanceKm: routeInfo.distance,
-      durationMinutes: routeInfo.duration
-    });
+    try {
+      await createTrip.mutateAsync({
+        pickup,
+        dropoff,
+        fareAmount: selectedFare.totalFare,
+        distanceKm: routeInfo.distance,
+        durationMinutes: routeInfo.duration
+      });
+    } catch (error) {
+      // Error is handled in the mutation's onError callback
+      console.error("Trip booking failed:", error);
+    }
   };
   const handleCancelTrip = async () => {
     if (!activeTrip) return;
