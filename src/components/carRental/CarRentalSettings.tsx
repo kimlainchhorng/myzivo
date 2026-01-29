@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,62 +24,31 @@ import {
   Check
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+import { cn } from "@/lib/utils";
 
 const CarRentalSettings = () => {
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-6 relative"
-    >
+    <div className="space-y-6 relative">
       {/* Floating Decorations */}
-      <motion.div
-        className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block"
-        animate={{ y: [0, -10, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      <div className="absolute -top-2 right-12 text-3xl pointer-events-none hidden md:block animate-float-icon">
         ⚙️
-      </motion.div>
-      <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
-        animate={{ y: [0, 8, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-      >
+      </div>
+      <div className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
         ✨
-      </motion.div>
+      </div>
 
       {/* Header */}
-      <motion.div variants={item} className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3">
-          <motion.div 
-            className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-          >
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform hover:scale-105 hover:rotate-3">
             <Settings className="h-6 w-6 text-primary" />
-          </motion.div>
+          </div>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               Settings
-              <motion.div
-                animate={{ rotate: [0, 180, 360] }}
-                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-              >
+              <div className="animate-spin-slow">
                 <Sparkles className="h-5 w-5 text-primary" />
-              </motion.div>
+              </div>
             </h1>
             <p className="text-muted-foreground">Configure your car rental business</p>
           </div>
@@ -89,11 +57,11 @@ const CarRentalSettings = () => {
           <Check className="h-3 w-3 mr-1.5" />
           All Saved
         </Badge>
-      </motion.div>
+      </div>
 
       <div className="grid gap-6">
         {/* Business Profile */}
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "80ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden shadow-lg">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="border-b border-border/50">
@@ -108,14 +76,13 @@ const CarRentalSettings = () => {
             <CardContent className="p-6 space-y-6">
               {/* Logo Upload */}
               <div className="flex items-center gap-6">
-                <motion.div 
-                  className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/50 transition-colors"
-                  whileHover={{ scale: 1.05 }}
+                <div 
+                  className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/10 flex items-center justify-center border-2 border-dashed border-primary/30 cursor-pointer hover:border-primary/50 transition-all hover:scale-105"
                 >
                   <Car className="h-10 w-10 text-primary/60" />
-                </motion.div>
+                </div>
                 <div className="space-y-2">
-                  <Button variant="outline" className="gap-2 bg-card/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all">
+                  <Button variant="outline" className="gap-2 bg-card/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all touch-manipulation active:scale-95">
                     <Upload className="h-4 w-4" />
                     Upload Logo
                   </Button>
@@ -183,10 +150,10 @@ const CarRentalSettings = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Rental Policies */}
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "160ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden shadow-lg">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader className="border-b border-border/50">
@@ -256,10 +223,10 @@ const CarRentalSettings = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Insurance & Protection */}
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "240ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden shadow-lg">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500" />
             <CardHeader className="border-b border-border/50">
@@ -277,13 +244,22 @@ const CarRentalSettings = () => {
                 { title: "Premium Protection", desc: "Full coverage with zero deductible", icon: Shield, color: "blue", checked: true, emoji: "💎" },
                 { title: "Roadside Assistance", desc: "24/7 emergency support", icon: Shield, color: "purple", checked: true, emoji: "🚗" },
               ].map((insurance, index) => (
-                <motion.div
+                <div
                   key={index}
-                  whileHover={{ x: 4 }}
-                  className={`flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-${insurance.color}-500/30 transition-all duration-200 group`}
+                  className={cn(
+                    "flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 transition-all duration-200 group hover:translate-x-1",
+                    insurance.color === "emerald" && "hover:border-emerald-500/30",
+                    insurance.color === "blue" && "hover:border-blue-500/30",
+                    insurance.color === "purple" && "hover:border-purple-500/30"
+                  )}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-xl bg-${insurance.color}-500/10 group-hover:scale-110 transition-transform`}>
+                    <div className={cn(
+                      "p-2.5 rounded-xl transition-transform group-hover:scale-110",
+                      insurance.color === "emerald" && "bg-emerald-500/10",
+                      insurance.color === "blue" && "bg-blue-500/10",
+                      insurance.color === "purple" && "bg-purple-500/10"
+                    )}>
                       <span className="text-xl">{insurance.emoji}</span>
                     </div>
                     <div>
@@ -292,14 +268,14 @@ const CarRentalSettings = () => {
                     </div>
                   </div>
                   <Switch defaultChecked={insurance.checked} />
-                </motion.div>
+                </div>
               ))}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Notifications */}
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "320ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden shadow-lg">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
             <CardHeader className="border-b border-border/50">
@@ -319,10 +295,9 @@ const CarRentalSettings = () => {
                 { title: "Late Return Alerts", desc: "Alert when vehicles are overdue", checked: true, emoji: "⚠️" },
                 { title: "Maintenance Due", desc: "Vehicle maintenance reminders", checked: false, emoji: "🔧" },
               ].map((notification, index) => (
-                <motion.div 
+                <div 
                   key={index}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-purple-500/30 transition-all duration-200 group"
+                  className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-purple-500/30 transition-all duration-200 group hover:translate-x-1"
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-xl group-hover:scale-110 transition-transform">{notification.emoji}</span>
@@ -332,14 +307,14 @@ const CarRentalSettings = () => {
                     </div>
                   </div>
                   <Switch defaultChecked={notification.checked} />
-                </motion.div>
+                </div>
               ))}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Payment Settings */}
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "400ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden shadow-lg">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
             <CardHeader className="border-b border-border/50">
@@ -357,10 +332,9 @@ const CarRentalSettings = () => {
                 { title: "Digital Wallets", desc: "Apple Pay, Google Pay", checked: true, emoji: "📱" },
                 { title: "Pay Later Options", desc: "Split payments available", checked: false, emoji: "🔄" },
               ].map((payment, index) => (
-                <motion.div 
+                <div 
                   key={index}
-                  whileHover={{ x: 4 }}
-                  className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-blue-500/30 transition-all duration-200 group"
+                  className="flex items-center justify-between p-4 rounded-xl bg-background/50 border border-border/50 hover:border-blue-500/30 transition-all duration-200 group hover:translate-x-1"
                 >
                   <div className="flex items-center gap-4">
                     <span className="text-xl group-hover:scale-110 transition-transform">{payment.emoji}</span>
@@ -370,7 +344,7 @@ const CarRentalSettings = () => {
                     </div>
                   </div>
                   <Switch defaultChecked={payment.checked} />
-                </motion.div>
+                </div>
               ))}
 
               <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-border/50">
@@ -392,18 +366,17 @@ const CarRentalSettings = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Save Button */}
-        <motion.div variants={item} className="flex justify-end gap-4">
-          <Button variant="outline" className="bg-card/50">Cancel</Button>
-          <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
+        <div className="flex justify-end animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "480ms" }}>
+          <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 touch-manipulation active:scale-95">
             <Save className="h-4 w-4" />
             Save Changes
           </Button>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

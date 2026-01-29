@@ -477,6 +477,11 @@
   .animate-wiggle {
     animation: wiggle 0.5s ease-in-out;
   }
+
+  /* Slow spin animation */
+  .animate-spin-slow {
+    animation: spin 8s linear infinite;
+  }
 }
 
 @keyframes confetti-fall {

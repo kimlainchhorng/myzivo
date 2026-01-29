@@ -1,21 +1,8 @@
-import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from "recharts";
 import { TrendingUp, DollarSign, Car, Clock, Users, Calendar, Fuel, MapPin, Sparkles, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+import { cn } from "@/lib/utils";
 
 const CarRentalAnalytics = () => {
   const monthlyData = [
@@ -97,46 +84,27 @@ const CarRentalAnalytics = () => {
   ];
 
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-6 relative"
-    >
+    <div className="space-y-6 relative">
       {/* Floating Decorations */}
-      <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      <div className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block animate-float-icon">
         📊
-      </motion.div>
-      <motion.div
-        className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block"
-        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      >
+      </div>
+      <div className="absolute top-24 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
         ✨
-      </motion.div>
+      </div>
 
       {/* Header */}
-      <motion.div variants={item} className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center gap-3">
-          <motion.div 
-            className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20"
-            whileHover={{ scale: 1.05, rotate: 5 }}
-          >
+          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 transition-transform hover:scale-105 hover:rotate-3">
             <TrendingUp className="h-6 w-6 text-primary" />
-          </motion.div>
+          </div>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               Analytics Dashboard
-              <motion.div
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-              >
+              <div className="animate-wiggle">
                 <Sparkles className="h-5 w-5 text-primary" />
-              </motion.div>
+              </div>
             </h1>
             <p className="text-muted-foreground">Track your rental business performance</p>
           </div>
@@ -148,22 +116,22 @@ const CarRentalAnalytics = () => {
           </span>
           Real-time Data
         </Badge>
-      </motion.div>
+      </div>
 
       {/* Main Stats */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, index) => (
-          <motion.div
+          <div
             key={index}
-            whileHover={{ y: -4, scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 300 }}
+            className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+            style={{ animationDelay: `${index * 80}ms` }}
           >
-            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300">
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] group">
               <div className={`absolute inset-0 bg-gradient-to-br ${stat.bgGradient} opacity-50`} />
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
               <CardContent className="relative p-5">
                 <div className="flex items-start justify-between mb-3">
-                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
+                  <div className={`p-2.5 rounded-xl bg-gradient-to-br ${stat.gradient} shadow-lg transition-transform group-hover:scale-110 group-hover:rotate-3`}>
                     <stat.icon className="h-5 w-5 text-white" />
                   </div>
                   <div className={`flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${
@@ -185,12 +153,12 @@ const CarRentalAnalytics = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       {/* Quick Stats */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: "400ms" }}>
         {[
           { icon: Users, color: "blue", value: "86", label: "New Customers" },
           { icon: Calendar, color: "green", value: "24", label: "Active Rentals" },
@@ -199,8 +167,20 @@ const CarRentalAnalytics = () => {
         ].map((stat, index) => (
           <Card key={index} className="border-0 bg-card/50 backdrop-blur-xl hover:bg-card/70 transition-colors">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl bg-${stat.color}-500/10`}>
-                <stat.icon className={`h-5 w-5 text-${stat.color}-500`} />
+              <div className={cn(
+                "p-2.5 rounded-xl",
+                stat.color === "blue" && "bg-blue-500/10",
+                stat.color === "green" && "bg-emerald-500/10",
+                stat.color === "amber" && "bg-amber-500/10",
+                stat.color === "purple" && "bg-purple-500/10"
+              )}>
+                <stat.icon className={cn(
+                  "h-5 w-5",
+                  stat.color === "blue" && "text-blue-500",
+                  stat.color === "green" && "text-emerald-500",
+                  stat.color === "amber" && "text-amber-500",
+                  stat.color === "purple" && "text-purple-500"
+                )} />
               </div>
               <div>
                 <p className="text-lg font-bold">{stat.value}</p>
@@ -209,11 +189,11 @@ const CarRentalAnalytics = () => {
             </CardContent>
           </Card>
         ))}
-      </motion.div>
+      </div>
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: "500ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-teal-500" />
             <CardHeader className="pb-2">
@@ -246,9 +226,9 @@ const CarRentalAnalytics = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: "500ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
             <CardHeader className="pb-2">
@@ -291,12 +271,12 @@ const CarRentalAnalytics = () => {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
 
       {/* Category Breakdown & Top Vehicles */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: "600ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
             <CardHeader>
@@ -342,9 +322,9 @@ const CarRentalAnalytics = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div variants={item}>
+        <div className="animate-in fade-in slide-in-from-right-4 duration-500" style={{ animationDelay: "600ms" }}>
           <Card className="border-0 bg-card/50 backdrop-blur-xl overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
             <CardHeader>
@@ -357,12 +337,10 @@ const CarRentalAnalytics = () => {
             <CardContent>
               <div className="space-y-3">
                 {topVehicles.map((vehicle, index) => (
-                  <motion.div 
+                  <div 
                     key={vehicle.name}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.08 }}
-                    className="p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-all duration-200 border border-border/50 hover:border-primary/20 group"
+                    className="p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-all duration-200 border border-border/50 hover:border-primary/20 group animate-in fade-in slide-in-from-right-2 duration-300"
+                    style={{ animationDelay: `${700 + index * 80}ms` }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
@@ -388,23 +366,24 @@ const CarRentalAnalytics = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
-                        <motion.div 
-                          initial={{ width: 0 }}
-                          animate={{ width: `${vehicle.utilization}%` }}
-                          transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
-                          className="h-full bg-gradient-to-r from-primary to-teal-500"
+                        <div 
+                          className="h-full bg-gradient-to-r from-primary to-teal-500 animate-in slide-in-from-left duration-1000"
+                          style={{ 
+                            width: `${vehicle.utilization}%`,
+                            animationDelay: `${800 + index * 100}ms`
+                          }}
                         />
                       </div>
                       <span className="text-xs font-medium text-muted-foreground w-12 text-right">{vehicle.utilization}%</span>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
