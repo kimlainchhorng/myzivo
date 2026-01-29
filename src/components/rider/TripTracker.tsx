@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shield, MapPin } from "lucide-react";
+import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shield, MapPin, UserCheck } from "lucide-react";
 import { Trip } from "@/hooks/useTrips";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import { useUnreadMessageCount } from "@/hooks/useTripChat";
@@ -21,12 +21,12 @@ interface TripTrackerProps {
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const statusSteps = [
-  { status: "requested", label: "Finding driver", icon: "🔍" },
-  { status: "accepted", label: "Driver assigned", icon: "✅" },
-  { status: "en_route", label: "Driver en route", icon: "🚗" },
-  { status: "arrived", label: "Driver arrived", icon: "📍" },
-  { status: "in_progress", label: "Trip in progress", icon: "🛣️" },
-  { status: "completed", label: "Trip completed", icon: "🎉" },
+  { status: "requested", label: "Finding driver", icon: "🔍", lucideIcon: null },
+  { status: "accepted", label: "Driver assigned", icon: null, lucideIcon: UserCheck },
+  { status: "en_route", label: "Driver en route", icon: "🚗", lucideIcon: null },
+  { status: "arrived", label: "Driver arrived", icon: "📍", lucideIcon: null },
+  { status: "in_progress", label: "Trip in progress", icon: "🛣️", lucideIcon: null },
+  { status: "completed", label: "Trip completed", icon: "🎉", lucideIcon: null },
 ];
 
 const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
@@ -284,7 +284,11 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
                     {index < currentStepIndex ? (
                       <span className="text-sm">✓</span>
                     ) : index === currentStepIndex ? (
-                      <span className="text-sm animate-pulse">{step.icon}</span>
+                      step.lucideIcon ? (
+                        <step.lucideIcon className="w-4 h-4 animate-pulse" />
+                      ) : (
+                        <span className="text-sm animate-pulse">{step.icon}</span>
+                      )
                     ) : (
                       <span className="text-xs">{index + 1}</span>
                     )}
