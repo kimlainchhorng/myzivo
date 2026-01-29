@@ -155,19 +155,20 @@ const ResetPassword = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New password</FormLabel>
+                    <FormLabel className="text-sm">New password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
+                          className="h-11 sm:h-12 rounded-xl pr-12"
                           {...field}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute right-0 top-0 h-full px-3"
+                          className="absolute right-0 top-0 h-full px-3 touch-manipulation"
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
@@ -188,19 +189,20 @@ const ResetPassword = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm password</FormLabel>
+                    <FormLabel className="text-sm">Confirm password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="••••••••"
+                          className="h-11 sm:h-12 rounded-xl pr-12"
                           {...field}
                         />
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="absolute right-0 top-0 h-full px-3"
+                          className="absolute right-0 top-0 h-full px-3 touch-manipulation"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         >
                           {showConfirmPassword ? (
@@ -216,17 +218,16 @@ const ResetPassword = () => {
                 )}
               />
 
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p>Password must:</p>
-                <ul className="list-disc list-inside space-y-0.5">
+              <div className="text-xs text-muted-foreground space-y-1 p-3 rounded-lg bg-muted/30">
+                <p className="font-medium">Password must:</p>
+                <ul className="list-disc list-inside space-y-0.5 text-xs">
                   <li>Be at least 8 characters long</li>
-                  <li>Contain at least one uppercase letter</li>
-                  <li>Contain at least one lowercase letter</li>
+                  <li>Contain uppercase & lowercase letters</li>
                   <li>Contain at least one number</li>
                 </ul>
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full h-11 sm:h-12 rounded-xl font-semibold touch-manipulation active:scale-[0.98]" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />

@@ -150,160 +150,115 @@ const TravelInsurance = () => {
               </Button>
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center max-w-4xl mx-auto mb-16"
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1, type: "spring" }}
-              >
-                <Badge className="mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-5 py-2.5 text-sm font-bold shadow-xl shadow-cyan-500/40">
-                  <motion.div animate={{ rotate: [0, 360] }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                  </motion.div>
-                  New Service
-                </Badge>
-              </motion.div>
-              <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold mb-8 leading-tight">
+            <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xl shadow-cyan-500/40">
+                <Sparkles className="w-4 h-4 mr-2" />
+                New Service
+              </Badge>
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-8 leading-tight">
                 Travel with{" "}
-                <span className="bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 bg-clip-text text-transparent">
                   Confidence
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-12">
-                Comprehensive travel insurance that covers <span className="text-foreground font-medium">trip cancellations</span>, medical emergencies, 
-                lost luggage, and more. Peace of mind for every journey.
+              <p className="text-base sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8 sm:mb-12 px-2">
+                Comprehensive travel insurance that covers trip cancellations, medical emergencies, 
+                lost luggage, and more.
               </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2">
-                    Get Protected Now
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                  <Button variant="outline" size="lg" className="h-16 px-10 text-lg font-bold rounded-2xl border-2 gap-2">
-                    Compare Plans
-                  </Button>
-                </motion.div>
+              <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
+                <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+                  Get Protected
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
+                <Button variant="outline" size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl border-2 gap-2 touch-manipulation active:scale-[0.98]">
+                  Compare Plans
+                </Button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto"
-            >
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-4xl mx-auto">
               {stats.map((stat, index) => (
-                <motion.div
+                <div
                   key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="text-center"
+                  className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                    <stat.icon className="w-7 h-7 text-white" />
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <stat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                   </div>
-                  <p className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                </motion.div>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
+                </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* Coverage Types */}
-        <section className="py-16 lg:py-24 bg-muted/20">
+        <section className="py-10 sm:py-16 lg:py-24 bg-muted/20">
           <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-14"
-            >
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            <div className="text-center mb-8 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
                 What We <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Cover</span>
               </h2>
-              <p className="text-lg text-muted-foreground">Comprehensive protection for all aspects of your trip</p>
-            </motion.div>
+              <p className="text-sm sm:text-lg text-muted-foreground">Comprehensive protection for all aspects of your trip</p>
+            </div>
             
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto">
               {coverageTypes.map((type, index) => (
-                <motion.div
+                <Card 
                   key={type.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  className="text-center h-full border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <Card className="text-center h-full border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <CardContent className="pt-8 pb-6 relative">
-                      <motion.div 
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className={`w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}
-                      >
-                        <type.icon className="h-8 w-8 text-white" />
-                      </motion.div>
-                      <h3 className="font-bold text-xl mb-2">{type.label}</h3>
-                      <p className="text-sm text-muted-foreground">{type.description}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <CardContent className="p-4 sm:pt-8 sm:pb-6 relative">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}>
+                      <type.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-sm sm:text-xl mb-1 sm:mb-2">{type.label}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{type.description}</p>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           </div>
         </section>
 
         {/* Plans */}
-        <section className="py-16 lg:py-24">
+        <section className="py-10 sm:py-16 lg:py-24">
           <div className="container mx-auto px-4 max-w-6xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-14"
-            >
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            <div className="text-center mb-8 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
                 Choose Your <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Plan</span>
               </h2>
-              <p className="text-lg text-muted-foreground">Select the coverage that fits your travel needs</p>
-            </motion.div>
+              <p className="text-sm sm:text-lg text-muted-foreground">Select the coverage that fits your travel needs</p>
+            </div>
             
-            <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="grid lg:grid-cols-3 gap-6">
+            <RadioGroup value={selectedPlan} onValueChange={setSelectedPlan} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {plans.map((plan, index) => (
-                <motion.div
+                <div
                   key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <Label htmlFor={plan.id} className="cursor-pointer block h-full">
+                  <Label htmlFor={plan.id} className="cursor-pointer block h-full touch-manipulation">
                     <Card className={`relative h-full transition-all overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card ${
                       selectedPlan === plan.id 
                         ? "ring-2 ring-primary shadow-2xl shadow-primary/20" 
                         : "shadow-xl hover:shadow-2xl"
                     }`}>
                       {plan.recommended && (
-                        <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-teal-400 text-white border-0 px-4 py-1.5 font-semibold shadow-lg">
+                        <Badge className="absolute -top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-primary to-teal-400 text-white border-0 px-3 sm:px-4 py-1 sm:py-1.5 font-semibold shadow-lg text-xs sm:text-sm">
                           <Zap className="w-3 h-3 mr-1" />
-                          Most Popular
+                          Popular
                         </Badge>
                       )}
-                      <CardHeader className="text-center pb-4 pt-8">
+                      <CardHeader className="text-center pb-3 sm:pb-4 pt-6 sm:pt-8">
                         <RadioGroupItem value={plan.id} id={plan.id} className="sr-only" />
-                        <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg ${plan.glow}`}>
-                          <Shield className="w-8 h-8 text-white" />
+                        <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center shadow-lg ${plan.glow}`}>
+                          <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                         </div>
                         <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
                         <div className="mt-4">
@@ -330,27 +285,25 @@ const TravelInsurance = () => {
                           </div>
                         ))}
                       </CardContent>
-                      <CardFooter className="pt-4 pb-6">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
-                          <Button 
-                            className={`w-full h-12 font-bold rounded-xl ${
-                              selectedPlan === plan.id 
-                                ? "bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30" 
-                                : "bg-muted hover:bg-muted/80"
-                            }`}
-                          >
-                            {selectedPlan === plan.id ? (
-                              <>
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Selected
-                              </>
-                            ) : "Select Plan"}
-                          </Button>
-                        </motion.div>
+                      <CardFooter className="pt-3 sm:pt-4 pb-4 sm:pb-6">
+                        <Button 
+                          className={`w-full h-11 sm:h-12 font-bold rounded-xl touch-manipulation active:scale-[0.98] ${
+                            selectedPlan === plan.id 
+                              ? "bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30" 
+                              : "bg-muted hover:bg-muted/80"
+                          }`}
+                        >
+                          {selectedPlan === plan.id ? (
+                            <>
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Selected
+                            </>
+                          ) : "Select Plan"}
+                        </Button>
                       </CardFooter>
                     </Card>
                   </Label>
-                </motion.div>
+                </div>
               ))}
             </RadioGroup>
           </div>
