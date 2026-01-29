@@ -7,38 +7,66 @@ import { Input } from "@/components/ui/input";
 import { 
   MapPin, Navigation, Clock, DollarSign, Users, Car, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
-  Search, Filter, RefreshCw, Eye, Phone, MessageSquare
+  Search, Filter, RefreshCw, Eye, Phone, MessageSquare,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const mockActiveRides = [
-  { id: "R001", rider: "John D.", driver: "Mike S.", status: "in_progress", pickup: "Downtown", dropoff: "Airport", fare: 45.00, eta: "12 min" },
-  { id: "R002", rider: "Sarah M.", driver: "Alex K.", status: "accepted", pickup: "Mall", dropoff: "Office Park", fare: 22.50, eta: "5 min" },
-  { id: "R003", rider: "Tom H.", driver: null, status: "requested", pickup: "Central Station", dropoff: "Hospital", fare: 18.00, eta: "Pending" },
-];
-
-const mockRideStats = {
-  activeRides: 156,
-  completedToday: 1847,
-  cancelledToday: 89,
-  avgWaitTime: "4.2 min",
-  avgFare: 24.50,
-  peakHour: "5-6 PM",
-};
+import { useTrips, useTripStats, type Trip } from "@/hooks/useTrips";
 
 export default function AdminRidesManagement() {
   const [activeTab, setActiveTab] = useState("live");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const getStatusBadge = (status: string) => {
+  const { data: trips, isLoading: tripsLoading, refetch: refetchTrips } = useTrips();
+  const { data: tripStats, isLoading: statsLoading, refetch: refetchStats } = useTripStats();
+
+  const isLoading = tripsLoading || statsLoading;
+
+  const handleRefresh = () => {
+    refetchTrips();
+    refetchStats();
+  };
+
+  // Filter active rides (not completed or cancelled)
+  const activeRides = trips?.filter(t => 
+    ["requested", "accepted", "en_route", "arrived", "in_progress"].includes(t.status || "")
+  ) || [];
+
+  // Filter pending requests
+  const pendingRequests = trips?.filter(t => t.status === "requested") || [];
+
+  // Filter by search query
+  const filteredActiveRides = activeRides.filter(ride => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      ride.id.toLowerCase().includes(query) ||
+      ride.pickup_address.toLowerCase().includes(query) ||
+      ride.dropoff_address.toLowerCase().includes(query) ||
+      ride.driver?.full_name?.toLowerCase().includes(query) ||
+      ride.rider?.full_name?.toLowerCase().includes(query)
+    );
+  });
+
+  const getStatusBadge = (status: string | null) => {
     const styles = {
       requested: "bg-amber-500/10 text-amber-500 border-amber-500/20",
       accepted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      en_route: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+      arrived: "bg-purple-500/10 text-purple-500 border-purple-500/20",
       in_progress: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
       completed: "bg-green-500/10 text-green-500 border-green-500/20",
       cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
     };
     return styles[status as keyof typeof styles] || styles.requested;
+  };
+
+  const formatAddress = (address: string) => {
+    // Shorten long addresses for display
+    if (address.length > 25) {
+      return address.substring(0, 22) + "...";
+    }
+    return address;
   };
 
   return (
@@ -54,8 +82,14 @@ export default function AdminRidesManagement() {
             <p className="text-muted-foreground">Monitor and manage all ride operations</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2"
+          onClick={handleRefresh}
+          disabled={isLoading}
+        >
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           Refresh
         </Button>
       </div>
@@ -63,12 +97,48 @@ export default function AdminRidesManagement() {
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-6">
         {[
-          { label: "Active Rides", value: mockRideStats.activeRides, icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-          { label: "Completed Today", value: mockRideStats.completedToday, icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
-          { label: "Cancelled", value: mockRideStats.cancelledToday, icon: XCircle, color: "text-red-500", bg: "bg-red-500/10" },
-          { label: "Avg Wait Time", value: mockRideStats.avgWaitTime, icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { label: "Avg Fare", value: `$${mockRideStats.avgFare}`, icon: DollarSign, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { label: "Peak Hour", value: mockRideStats.peakHour, icon: TrendingUp, color: "text-violet-500", bg: "bg-violet-500/10" },
+          { 
+            label: "Active Rides", 
+            value: statsLoading ? "..." : (tripStats?.activeTrips ?? 0), 
+            icon: Car, 
+            color: "text-emerald-500", 
+            bg: "bg-emerald-500/10" 
+          },
+          { 
+            label: "Completed Today", 
+            value: statsLoading ? "..." : (tripStats?.completedToday ?? 0), 
+            icon: CheckCircle, 
+            color: "text-green-500", 
+            bg: "bg-green-500/10" 
+          },
+          { 
+            label: "Cancelled", 
+            value: statsLoading ? "..." : (tripStats?.cancelledToday ?? 0), 
+            icon: XCircle, 
+            color: "text-red-500", 
+            bg: "bg-red-500/10" 
+          },
+          { 
+            label: "Avg Wait Time", 
+            value: "-- min", 
+            icon: Clock, 
+            color: "text-amber-500", 
+            bg: "bg-amber-500/10" 
+          },
+          { 
+            label: "Avg Fare", 
+            value: statsLoading ? "..." : `$${((tripStats?.revenueToday ?? 0) / Math.max(tripStats?.completedToday ?? 1, 1)).toFixed(2)}`, 
+            icon: DollarSign, 
+            color: "text-blue-500", 
+            bg: "bg-blue-500/10" 
+          },
+          { 
+            label: "Total Revenue", 
+            value: statsLoading ? "..." : `$${(tripStats?.revenueToday ?? 0).toLocaleString()}`, 
+            icon: TrendingUp, 
+            color: "text-violet-500", 
+            bg: "bg-violet-500/10" 
+          },
         ].map((stat, i) => (
           <Card key={i} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
             <CardContent className="p-4">
@@ -96,6 +166,11 @@ export default function AdminRidesManagement() {
           <TabsTrigger value="requests" className="gap-2">
             <Clock className="h-4 w-4" />
             Pending Requests
+            {pendingRequests.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                {pendingRequests.length}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="dispatch" className="gap-2">
             <Users className="h-4 w-4" />
@@ -132,74 +207,71 @@ export default function AdminRidesManagement() {
                 <Navigation className="h-5 w-5 text-sky-500" />
                 Live Rides
                 <Badge variant="outline" className="ml-2 text-emerald-500 border-emerald-500/30">
-                  {mockActiveRides.length} Active
+                  {filteredActiveRides.length} Active
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {mockActiveRides.map((ride, i) => (
-                  <div 
-                    key={ride.id}
-                    className="p-4 rounded-xl border bg-card/50 hover:bg-muted/30 transition-all animate-in fade-in slide-in-from-bottom-2"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <p className="font-mono text-sm font-bold">{ride.id}</p>
-                          <Badge variant="outline" className={cn("text-[10px] mt-1", getStatusBadge(ride.status))}>
-                            {ride.status.replace("_", " ")}
-                          </Badge>
-                        </div>
-                        <div className="h-12 w-px bg-border" />
-                        <div>
-                          <p className="font-medium">{ride.rider}</p>
-                          <p className="text-xs text-muted-foreground">Rider</p>
-                        </div>
-                        <div>
-                          <p className="font-medium">{ride.driver || "Unassigned"}</p>
-                          <p className="text-xs text-muted-foreground">Driver</p>
-                        </div>
-                        <div className="h-12 w-px bg-border" />
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-emerald-500" />
-                          <span className="text-sm">{ride.pickup}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <MapPin className="h-4 w-4 text-red-500" />
-                          <span className="text-sm">{ride.dropoff}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="font-bold text-lg">${ride.fare.toFixed(2)}</p>
-                          <p className="text-xs text-muted-foreground">ETA: {ride.eta}</p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <Phone className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {tripsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredActiveRides.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Car className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No active rides at the moment</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredActiveRides.map((ride, i) => (
+                    <RideCard 
+                      key={ride.id} 
+                      ride={ride} 
+                      index={i} 
+                      getStatusBadge={getStatusBadge}
+                      formatAddress={formatAddress}
+                    />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="requests" className="mt-6">
           <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Pending ride requests will appear here</p>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-amber-500" />
+                Pending Requests
+                <Badge variant="outline" className="ml-2 text-amber-500 border-amber-500/30">
+                  {pendingRequests.length} Pending
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {tripsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : pendingRequests.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No pending ride requests</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pendingRequests.map((ride, i) => (
+                    <RideCard 
+                      key={ride.id} 
+                      ride={ride} 
+                      index={i} 
+                      getStatusBadge={getStatusBadge}
+                      formatAddress={formatAddress}
+                    />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -222,6 +294,73 @@ export default function AdminRidesManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// Separate component for ride cards
+function RideCard({ 
+  ride, 
+  index, 
+  getStatusBadge, 
+  formatAddress 
+}: { 
+  ride: Trip; 
+  index: number; 
+  getStatusBadge: (status: string | null) => string;
+  formatAddress: (address: string) => string;
+}) {
+  return (
+    <div 
+      className="p-4 rounded-xl border bg-card/50 hover:bg-muted/30 transition-all animate-in fade-in slide-in-from-bottom-2"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="text-center min-w-[70px]">
+            <p className="font-mono text-sm font-bold">{ride.id.slice(0, 8)}</p>
+            <Badge variant="outline" className={cn("text-[10px] mt-1", getStatusBadge(ride.status))}>
+              {(ride.status || "unknown").replace("_", " ")}
+            </Badge>
+          </div>
+          <div className="h-12 w-px bg-border hidden sm:block" />
+          <div className="min-w-[80px]">
+            <p className="font-medium">{ride.rider?.full_name || "Unknown Rider"}</p>
+            <p className="text-xs text-muted-foreground">Rider</p>
+          </div>
+          <div className="min-w-[80px]">
+            <p className="font-medium">{ride.driver?.full_name || "Unassigned"}</p>
+            <p className="text-xs text-muted-foreground">Driver</p>
+          </div>
+          <div className="h-12 w-px bg-border hidden sm:block" />
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+            <span className="text-sm" title={ride.pickup_address}>{formatAddress(ride.pickup_address)}</span>
+            <span className="text-muted-foreground">→</span>
+            <MapPin className="h-4 w-4 text-red-500 shrink-0" />
+            <span className="text-sm" title={ride.dropoff_address}>{formatAddress(ride.dropoff_address)}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <p className="font-bold text-lg">${(ride.fare_amount ?? 0).toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">
+              {ride.distance_km ? `${ride.distance_km.toFixed(1)} km` : "-- km"}
+            </p>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" className="h-8 w-8">
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8">
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8">
+              <MessageSquare className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
