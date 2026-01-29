@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -42,19 +41,6 @@ const CustomerCarRentals = () => {
     }
   };
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.08 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -70,42 +56,21 @@ const CustomerCarRentals = () => {
 
   return (
     <div className="space-y-6 relative">
-      {/* Floating Decorations */}
-      <motion.div
-        className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block"
-        animate={{ y: [0, -12, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      {/* Floating Decorations - CSS only */}
+      <div className="absolute -top-2 right-16 text-3xl pointer-events-none hidden md:block animate-float-delayed">
         🚙
-      </motion.div>
-      <motion.div
-        className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block"
-        animate={{ y: [0, 10, 0], scale: [1, 1.15, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      >
+      </div>
+      <div className="absolute top-20 right-4 text-2xl pointer-events-none hidden md:block animate-pulse-slow">
         ✨
-      </motion.div>
-      <motion.div
-        className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block"
-        animate={{ y: [0, 8, 0], rotate: [0, -5, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-      >
+      </div>
+      <div className="absolute top-40 right-8 text-xl pointer-events-none hidden lg:block animate-float-icon">
         🔑
-      </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
-      >
+      <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <motion.div
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-            >
-              <Sparkles className="h-6 w-6 text-primary" />
-            </motion.div>
+            <Sparkles className="h-6 w-6 text-primary animate-pulse-slow" />
             Car Rentals
           </h1>
           <p className="text-muted-foreground">Your rental history and active bookings</p>
@@ -117,21 +82,15 @@ const CustomerCarRentals = () => {
             </Badge>
           )}
           <Link to="/rent-car">
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all">
-                <Car className="h-4 w-4" />
-                Rent a Car
-              </Button>
-            </motion.div>
+            <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:scale-[1.03] active:scale-[0.97]">
+              <Car className="h-4 w-4" />
+              Rent a Car
+            </Button>
           </Link>
         </div>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-500" style={{ animationDelay: '100ms' }}>
         <Card className="border-0 bg-gradient-to-br from-card/80 to-card backdrop-blur-xl shadow-xl">
           <CardHeader className="border-b border-border/50">
             <div className="flex items-center gap-3">
@@ -146,19 +105,14 @@ const CustomerCarRentals = () => {
           </CardHeader>
           <CardContent className="p-0">
             {rentals && rentals.length > 0 ? (
-              <motion.div 
-                variants={container}
-                initial="hidden"
-                animate="show"
-                className="divide-y divide-border/50"
-              >
-                {rentals.map((rental: any) => {
+              <div className="divide-y divide-border/50">
+                {rentals.map((rental: any, index: number) => {
                   const statusConfig = getStatusConfig(rental.status);
                   return (
-                    <motion.div 
+                    <div 
                       key={rental.id}
-                      variants={item}
-                      className="flex items-start gap-4 p-5 hover:bg-muted/30 transition-colors cursor-pointer group"
+                      className="flex items-start gap-4 p-5 hover:bg-muted/30 transition-all cursor-pointer group animate-in fade-in slide-in-from-bottom-2 duration-300"
+                      style={{ animationDelay: `${index * 80}ms` }}
                     >
                       <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-teal-400 shadow-lg group-hover:scale-110 transition-transform">
                         <Car className="h-5 w-5 text-white" />
@@ -194,32 +148,28 @@ const CustomerCarRentals = () => {
                           </span>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
-              </motion.div>
+              </div>
             ) : (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-16"
-              >
+              <div className="text-center py-16 animate-in fade-in zoom-in-95 duration-500">
                 <div className="p-4 rounded-2xl bg-muted/30 w-fit mx-auto mb-4">
                   <Car className="h-12 w-12 text-muted-foreground" />
                 </div>
                 <p className="text-lg font-medium">No car rentals yet</p>
                 <p className="text-sm text-muted-foreground mb-6">Rent a car for your next trip!</p>
                 <Link to="/rent-car">
-                  <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400">
+                  <Button className="gap-2 bg-gradient-to-r from-primary to-teal-400 hover:scale-[1.03] active:scale-[0.97] transition-transform">
                     <Car className="h-4 w-4" />
                     Browse Cars
                   </Button>
                 </Link>
-              </motion.div>
+              </div>
             )}
           </CardContent>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 };
