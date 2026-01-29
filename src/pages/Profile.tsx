@@ -104,77 +104,62 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden pb-20">
+    <div className="min-h-screen bg-background relative overflow-hidden pb-20 safe-area-top safe-area-bottom">
       {/* Background effects - simplified for mobile */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[150px] sm:w-[200px] h-[150px] sm:h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
-      <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8 safe-area-inset">
+      <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 mb-6"
-        >
+        <div className="flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="rounded-xl hover:bg-muted/50 -ml-2"
+            className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold">Profile Settings</h1>
-            <p className="text-muted-foreground text-sm">Manage your account information</p>
+            <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold">Profile Settings</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm">Manage your account information</p>
           </div>
-        </motion.div>
+        </div>
 
         {profileLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-6"
-          >
+          <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Profile Card */}
             <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
               <CardHeader className="text-center pb-2 relative">
                 <div className="flex justify-center mb-4">
                   <div className="relative group">
-                    <motion.div
-                      className="absolute -inset-2 bg-gradient-to-r from-primary to-teal-400 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                    />
-                    <Avatar className="relative h-28 w-28 ring-4 ring-background shadow-2xl">
+                    <div className="absolute -inset-2 bg-gradient-to-r from-primary to-teal-400 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
+                    <Avatar className="relative h-24 w-24 sm:h-28 sm:w-28 ring-4 ring-background shadow-2xl">
                       <AvatarImage 
                         src={avatarPreview || profile?.avatar_url || undefined} 
                         alt="Profile"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-primary to-teal-400 text-white text-3xl font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-teal-400 text-white text-2xl sm:text-3xl font-bold">
                         {getInitials()}
                       </AvatarFallback>
                     </Avatar>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={handleAvatarClick}
                       disabled={uploadAvatar.isPending}
-                      className="absolute bottom-0 right-0 p-2.5 bg-gradient-to-br from-primary to-teal-400 text-white rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                      className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-gradient-to-br from-primary to-teal-400 text-white rounded-full shadow-lg hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation active:scale-95"
                     >
                       {uploadAvatar.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Camera className="h-4 w-4" />
                       )}
-                    </motion.button>
+                    </button>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -184,11 +169,11 @@ const Profile = () => {
                     />
                   </div>
                 </div>
-                <CardTitle className="flex items-center justify-center gap-2 text-2xl">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                <CardTitle className="flex items-center justify-center gap-2 text-xl sm:text-2xl">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   {profile?.full_name || "Set your name"}
                 </CardTitle>
-                <CardDescription className="text-base">{user?.email}</CardDescription>
+                <CardDescription className="text-sm sm:text-base">{user?.email}</CardDescription>
                 <Badge className="mt-3 bg-gradient-to-r from-primary/20 to-teal-400/20 text-primary border-primary/30 font-semibold">
                   <Star className="w-3 h-3 mr-1 fill-primary" />
                   {profile?.status || "Active"} Member
@@ -256,95 +241,75 @@ const Profile = () => {
                       )}
                     />
 
-                    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                      <Button
-                        type="submit"
-                        className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90"
-                        disabled={updateProfile.isPending || !form.formState.isDirty}
-                      >
-                        {updateProfile.isPending ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-5 w-5 mr-2" />
-                            Save Changes
-                          </>
-                        )}
-                      </Button>
-                    </motion.div>
+                    <Button
+                      type="submit"
+                      className="w-full h-12 sm:h-14 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 touch-manipulation active:scale-[0.98]"
+                      disabled={updateProfile.isPending || !form.formState.isDirty}
+                    >
+                      {updateProfile.isPending ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-5 w-5 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
                   </form>
                 </Form>
               </CardContent>
             </Card>
 
             {/* Quick Links */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h3 className="font-display font-bold text-lg mb-4">Quick Access</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {quickLinks.map((link, index) => (
-                  <motion.div
-                    key={link.label}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
-                    whileHover={{ y: -4 }}
-                  >
-                    <Link to={link.href}>
-                      <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden">
-                        <CardContent className="p-4 flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <link.icon className="w-6 h-6 text-primary" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="font-semibold">{link.label}</p>
-                            <p className="text-xs text-muted-foreground">{link.description}</p>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  </motion.div>
+            <div>
+              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4">Quick Access</h3>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                {quickLinks.map((link) => (
+                  <Link key={link.label} to={link.href}>
+                    <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden touch-manipulation active:scale-[0.98]">
+                      <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <link.icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm sm:text-base truncate">{link.label}</p>
+                          <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
             {/* Account Status */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
-                <CardContent className="p-5 relative">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                        <Shield className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">Account Status</p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5" />
-                          Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
-                        </p>
-                      </div>
+            <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
+              <CardContent className="p-4 sm:p-5 relative">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/30 font-semibold px-4 py-1.5">
-                      Active
-                    </Badge>
+                    <div>
+                      <p className="font-semibold text-sm sm:text-base">Account Status</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground flex items-center gap-1.5">
+                        <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                        Member since {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
+                      </p>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
+                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/30 font-semibold px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
+                    Active
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </div>
