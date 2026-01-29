@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { 
   Plane,
   Search,
@@ -21,10 +20,12 @@ import {
   Coffee,
   Tv,
   ArrowLeftRight,
-  MapPin,
-  CheckCircle
+  Shield,
+  Star,
+  Sparkles,
+  Globe,
+  Zap
 } from "lucide-react";
-// CSS animations used instead of framer-motion for performance
 import { format } from "date-fns";
 import {
   Select,
@@ -35,8 +36,12 @@ import {
 } from "@/components/ui/select";
 import { BookingStepIndicator, BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
+import FlightTicketCard from "@/components/flight/FlightTicketCard";
+import flightHeroImage from "@/assets/flight-hero.jpg";
+import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
+import businessClassImage from "@/assets/flight-business-class.jpg";
 
-// Popular destinations
+// Popular destinations with real images
 const popularDestinations = [
   { city: "New York", code: "JFK", country: "USA", image: "🗽", price: 299 },
   { city: "London", code: "LHR", country: "UK", image: "🇬🇧", price: 449 },
@@ -46,12 +51,13 @@ const popularDestinations = [
   { city: "Sydney", code: "SYD", country: "Australia", image: "🦘", price: 899 },
 ];
 
-// Airlines
+// Partner airlines with ratings
 const airlines = [
-  { id: 1, name: "ZIVO Air", logo: "✈️", rating: 4.8 },
-  { id: 2, name: "SkyWings", logo: "🛫", rating: 4.6 },
-  { id: 3, name: "Global Express", logo: "🌍", rating: 4.7 },
-  { id: 4, name: "Pacific Airlines", logo: "🌊", rating: 4.5 },
+  { id: 1, name: "Emirates", logo: "🇦🇪", rating: 4.9 },
+  { id: 2, name: "Singapore Airlines", logo: "🇸🇬", rating: 4.9 },
+  { id: 3, name: "Qatar Airways", logo: "🇶🇦", rating: 4.8 },
+  { id: 4, name: "Lufthansa", logo: "🇩🇪", rating: 4.7 },
+  { id: 5, name: "British Airways", logo: "🇬🇧", rating: 4.6 },
 ];
 
 // Sample flights
@@ -223,32 +229,69 @@ const FlightBooking = () => {
       <Header />
       
       <main className="pt-16 pb-20">
-        {/* Hero Section - Mobile optimized */}
-        <section className="relative py-8 sm:py-16 lg:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-sky-500/12 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[200px] sm:w-[400px] h-[200px] sm:h-[400px] bg-gradient-to-bl from-sky-500/18 to-blue-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[150px] sm:w-[300px] h-[150px] sm:h-[300px] bg-gradient-to-tr from-primary/12 to-teal-500/8 rounded-full blur-3xl" />
+        {/* Hero Section with Professional Image */}
+        <section className="relative min-h-[85vh] overflow-hidden">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img 
+              src={flightHeroImage} 
+              alt="Airplane window view at sunset" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+            <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/60" />
+          </div>
           
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-8 sm:mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-500 text-white text-xs sm:text-sm font-bold mb-4 sm:mb-6 shadow-lg shadow-sky-500/30">
-                <Plane className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                ZIVO Flights
-              </div>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6">
-                Fly anywhere,
+          {/* Floating Decorative Elements */}
+          <div className="absolute top-24 right-10 hidden lg:block animate-float">
+            <div className="w-16 h-16 rounded-2xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center">
+              <Plane className="w-8 h-8 text-sky-400" />
+            </div>
+          </div>
+          <div className="absolute top-40 right-32 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
+            <div className="w-12 h-12 rounded-xl bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center">
+              <Globe className="w-6 h-6 text-blue-400" />
+            </div>
+          </div>
+          
+          <div className="container mx-auto px-4 relative z-10 pt-24 pb-12">
+            <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white border-0 shadow-lg shadow-sky-500/30">
+                <Sparkles className="w-4 h-4 mr-2" />
+                ZIVO Flights — Premium Air Travel
+              </Badge>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
+                Your journey to
                 <br />
-                <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-sky-400 bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">save everywhere</span>
+                <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                  anywhere starts here
+                </span>
               </h1>
-              <p className="text-sm sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed px-4">
-                Compare prices from hundreds of airlines. Book in minutes.
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
+                Compare prices from 500+ airlines worldwide. Book premium flights at the best prices with our exclusive deals.
               </p>
+              
+              {/* Trust Badges */}
+              <div className="flex flex-wrap justify-center gap-4 mb-10">
+                {[
+                  { icon: Shield, text: "Free Cancellation" },
+                  { icon: Star, text: "Best Price Guarantee" },
+                  { icon: Clock, text: "24/7 Support" },
+                ].map((item) => (
+                  <div key={item.text} className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50">
+                    <item.icon className="w-4 h-4 text-sky-500" />
+                    <span className="text-sm font-medium">{item.text}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Search Card */}
-            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Card className="glass-card overflow-hidden">
-                <CardContent className="p-4 sm:p-6">
+            <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.2s" }}>
+              <Card className="overflow-hidden border-0 bg-card/80 backdrop-blur-2xl shadow-2xl shadow-black/20">
+                {/* Top accent line */}
+                <div className="h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
+                <CardContent className="p-6 sm:p-8">
                   {/* Trip Type Toggle */}
                   <div className="flex gap-4 mb-6">
                     <button
@@ -418,85 +461,24 @@ const FlightBooking = () => {
                 </Select>
               </div>
 
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 {searchResults.map((flight, index) => (
                   <div
                     key={flight.id}
                     className="animate-in fade-in slide-in-from-bottom-4 duration-300"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    style={{ animationDelay: `${index * 75}ms` }}
                   >
-                    <Card className="glass-card hover:border-sky-500/50 transition-all">
-                      <CardContent className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-                          {/* Airline */}
-                          <div className="flex items-center gap-3 lg:w-40">
-                            <span className="text-3xl">{flight.airlineLogo}</span>
-                            <div>
-                              <p className="font-medium">{flight.airline}</p>
-                              <p className="text-sm text-muted-foreground">{flight.flightNumber}</p>
-                            </div>
-                          </div>
-
-                          {/* Flight Times */}
-                          <div className="flex-1 flex items-center gap-4">
-                            <div className="text-center">
-                              <p className="text-2xl font-bold">{flight.departure.time}</p>
-                              <p className="text-sm text-muted-foreground">{flight.departure.code}</p>
-                            </div>
-
-                            <div className="flex-1 flex flex-col items-center">
-                              <p className="text-sm text-muted-foreground mb-1">{flight.duration}</p>
-                              <div className="w-full flex items-center">
-                                <div className="h-0.5 flex-1 bg-sky-500/30" />
-                                <Plane className="w-5 h-5 text-sky-500 mx-2" />
-                                <div className="h-0.5 flex-1 bg-sky-500/30" />
-                              </div>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
-                                {flight.stopCity && ` (${flight.stopCity})`}
-                              </p>
-                            </div>
-
-                            <div className="text-center">
-                              <p className="text-2xl font-bold">{flight.arrival.time}</p>
-                              <p className="text-sm text-muted-foreground">{flight.arrival.code}</p>
-                            </div>
-                          </div>
-
-                          {/* Amenities */}
-                          <div className="flex items-center gap-2 lg:w-32">
-                            {flight.amenities.map((amenity) => (
-                              <div
-                                key={amenity}
-                                className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground"
-                                title={amenity}
-                              >
-                                {getAmenityIcon(amenity)}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Price & Book */}
-                          <div className="lg:w-40 text-right">
-                            <div className="flex items-baseline justify-end gap-1 mb-1">
-                              <span className="text-3xl font-bold text-sky-400">${flight.price}</span>
-                              <span className="text-sm text-muted-foreground">/person</span>
-                            </div>
-                            {flight.seatsLeft <= 5 && (
-                              <p className="text-sm text-orange-500 mb-2">
-                                Only {flight.seatsLeft} seats left
-                              </p>
-                            )}
-                            <Button
-                              className="w-full bg-sky-500 hover:bg-sky-600 text-white"
-                              onClick={() => handleSelectFlight(flight)}
-                            >
-                              Select
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <FlightTicketCard
+                      flight={{
+                        ...flight,
+                        flightNumber: flight.flightNumber,
+                        isLowest: index === 0,
+                        isFastest: flight.stops === 0 && flight.duration === "5h 15m",
+                        co2: `${120 + index * 15}kg`,
+                      }}
+                      onSelect={() => handleSelectFlight(flight)}
+                      isSelected={selectedFlight?.id === flight.id}
+                    />
                   </div>
                 ))}
               </div>
