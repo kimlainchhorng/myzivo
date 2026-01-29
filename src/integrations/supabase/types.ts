@@ -423,10 +423,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "batch_stops_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "batch_stops_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "batch_stops_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -639,10 +653,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "chat_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chat_messages_trip_id_fkey"
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -921,6 +949,13 @@ export type Database = {
             referencedRelation: "customer_orders"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customer_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_masked"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_orders: {
@@ -984,6 +1019,13 @@ export type Database = {
             columns: ["assigned_chef"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_assigned_chef_fkey"
+            columns: ["assigned_chef"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
             referencedColumns: ["id"]
           },
           {
@@ -1275,6 +1317,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -2074,6 +2123,13 @@ export type Database = {
             columns: ["approved_by"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
             referencedColumns: ["id"]
           },
           {
@@ -3294,6 +3350,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "loyalty_transactions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_members_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "loyalty_transactions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -3756,6 +3819,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "promotion_usage_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "promotion_usage_promotion_id_fkey"
             columns: ["promotion_id"]
             isOneToOne: false
@@ -3767,6 +3837,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_usage_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -5026,6 +5103,13 @@ export type Database = {
             referencedRelation: "staff_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "staff_performance_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
+            referencedColumns: ["id"]
+          },
         ]
       }
       staff_schedules: {
@@ -5081,6 +5165,13 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_schedules_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -5370,6 +5461,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "time_entries_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "time_entries_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -5381,6 +5479,13 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "time_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -5428,6 +5533,13 @@ export type Database = {
             referencedRelation: "staff_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tip_allocations_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tip_distributions: {
@@ -5467,6 +5579,13 @@ export type Database = {
             columns: ["distributed_by"]
             isOneToOne: false
             referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tip_distributions_distributed_by_fkey"
+            columns: ["distributed_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
             referencedColumns: ["id"]
           },
           {
@@ -5648,6 +5767,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "transactions_food_order_id_fkey"
+            columns: ["food_order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -5659,6 +5785,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -5697,6 +5830,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_messages_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -5977,6 +6117,13 @@ export type Database = {
             referencedRelation: "vehicles_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vehicle_documents_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       vehicle_maintenance_reminders: {
@@ -6054,6 +6201,13 @@ export type Database = {
             referencedRelation: "vehicles_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vehicle_maintenance_reminders_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       vehicle_service_logs: {
@@ -6123,6 +6277,13 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_service_logs_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -6403,6 +6564,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "waste_logs_logged_by_fkey"
+            columns: ["logged_by"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "waste_logs_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
@@ -6539,6 +6707,151 @@ export type Database = {
       }
     }
     Views: {
+      car_rentals_masked: {
+        Row: {
+          actual_return_date: string | null
+          additional_fees: number | null
+          car_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          daily_rate: number | null
+          deposit_paid: number | null
+          driver_license_masked: string | null
+          id: string | null
+          insurance_fee: number | null
+          notes: string | null
+          pickup_date: string | null
+          pickup_location: string | null
+          rating: number | null
+          return_date: string | null
+          return_location: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number | null
+          total_amount: number | null
+          total_days: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_return_date?: string | null
+          additional_fees?: number | null
+          car_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          daily_rate?: number | null
+          deposit_paid?: number | null
+          driver_license_masked?: never
+          id?: string | null
+          insurance_fee?: number | null
+          notes?: string | null
+          pickup_date?: string | null
+          pickup_location?: string | null
+          rating?: number | null
+          return_date?: string | null
+          return_location?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_days?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_return_date?: string | null
+          additional_fees?: number | null
+          car_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          daily_rate?: number | null
+          deposit_paid?: number | null
+          driver_license_masked?: never
+          id?: string | null
+          insurance_fee?: number | null
+          notes?: string | null
+          pickup_date?: string | null
+          pickup_location?: string | null
+          rating?: number | null
+          return_date?: string | null
+          return_location?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          total_amount?: number | null
+          total_days?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_rentals_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "rental_cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customer_feedback_masked: {
+        Row: {
+          ambiance_rating: number | null
+          comment: string | null
+          created_at: string | null
+          customer_email_masked: string | null
+          customer_name: string | null
+          food_rating: number | null
+          id: string | null
+          is_public: boolean | null
+          order_id: string | null
+          rating: number | null
+          responded_at: string | null
+          response: string | null
+          restaurant_id: string | null
+          sentiment: string | null
+          service_rating: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ambiance_rating?: number | null
+          comment?: string | null
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          food_rating?: number | null
+          id?: string | null
+          is_public?: boolean | null
+          order_id?: string | null
+          rating?: number | null
+          responded_at?: string | null
+          response?: string | null
+          restaurant_id?: string | null
+          sentiment?: string | null
+          service_rating?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ambiance_rating?: number | null
+          comment?: string | null
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          food_rating?: number | null
+          id?: string | null
+          is_public?: boolean | null
+          order_id?: string | null
+          rating?: number | null
+          responded_at?: string | null
+          response?: string | null
+          restaurant_id?: string | null
+          sentiment?: string | null
+          service_rating?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customer_feedback_public: {
         Row: {
           ambiance_rating: number | null
@@ -6589,6 +6902,92 @@ export type Database = {
           },
         ]
       }
+      customer_orders_masked: {
+        Row: {
+          assigned_chef: string | null
+          created_at: string | null
+          customer_email_masked: string | null
+          customer_name: string | null
+          customer_phone_masked: string | null
+          estimated_prep_minutes: number | null
+          id: string | null
+          notes: string | null
+          prep_started_at: string | null
+          priority: string | null
+          restaurant_id: string | null
+          status: string | null
+          table_id: string | null
+          table_number: string | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_chef?: string | null
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          customer_phone_masked?: never
+          estimated_prep_minutes?: number | null
+          id?: string | null
+          notes?: string | null
+          prep_started_at?: string | null
+          priority?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          table_id?: string | null
+          table_number?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_chef?: string | null
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          customer_phone_masked?: never
+          estimated_prep_minutes?: number | null
+          id?: string | null
+          notes?: string | null
+          prep_started_at?: string | null
+          priority?: string | null
+          restaurant_id?: string | null
+          status?: string | null
+          table_id?: string | null
+          table_number?: string | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_orders_assigned_chef_fkey"
+            columns: ["assigned_chef"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_assigned_chef_fkey"
+            columns: ["assigned_chef"]
+            isOneToOne: false
+            referencedRelation: "staff_members_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers_public: {
         Row: {
           avatar_url: string | null
@@ -6628,6 +7027,389 @@ export type Database = {
         }
         Relationships: []
       }
+      food_orders_masked: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          delivered_at: string | null
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_lat: number | null
+          delivery_lng: number | null
+          driver_id: string | null
+          estimated_delivery_time: number | null
+          estimated_prep_time: number | null
+          id: string | null
+          items: Json | null
+          picked_up_at: string | null
+          placed_at: string | null
+          prepared_at: string | null
+          rating: number | null
+          restaurant_id: string | null
+          special_instructions: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number | null
+          tax: number | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_id?: string | null
+          estimated_delivery_time?: number | null
+          estimated_prep_time?: number | null
+          id?: string | null
+          items?: Json | null
+          picked_up_at?: string | null
+          placed_at?: string | null
+          prepared_at?: string | null
+          rating?: number | null
+          restaurant_id?: string | null
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          tax?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          driver_id?: string | null
+          estimated_delivery_time?: number | null
+          estimated_prep_time?: number | null
+          id?: string | null
+          items?: Json | null
+          picked_up_at?: string | null
+          placed_at?: string | null
+          prepared_at?: string | null
+          rating?: number | null
+          restaurant_id?: string | null
+          special_instructions?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          tax?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hotel_bookings_masked: {
+        Row: {
+          booking_reference: string | null
+          check_in_date: string | null
+          check_out_date: string | null
+          created_at: string | null
+          customer_id: string | null
+          guest_email_masked: string | null
+          guest_name: string | null
+          guest_phone_masked: string | null
+          guests: number | null
+          hotel_id: string | null
+          id: string | null
+          nights: number | null
+          payment_status: string | null
+          price_per_night: number | null
+          rating: number | null
+          room_count: number | null
+          room_id: string | null
+          special_requests: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          subtotal: number | null
+          taxes_fees: number | null
+          total_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_reference?: string | null
+          check_in_date?: string | null
+          check_out_date?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          guest_email_masked?: never
+          guest_name?: string | null
+          guest_phone_masked?: never
+          guests?: number | null
+          hotel_id?: string | null
+          id?: string | null
+          nights?: number | null
+          payment_status?: string | null
+          price_per_night?: number | null
+          rating?: number | null
+          room_count?: number | null
+          room_id?: string | null
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          taxes_fees?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_reference?: string | null
+          check_in_date?: string | null
+          check_out_date?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          guest_email_masked?: never
+          guest_name?: string | null
+          guest_phone_masked?: never
+          guests?: number | null
+          hotel_id?: string | null
+          id?: string | null
+          nights?: number | null
+          payment_status?: string | null
+          price_per_night?: number | null
+          rating?: number | null
+          room_count?: number | null
+          room_id?: string | null
+          special_requests?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          subtotal?: number | null
+          taxes_fees?: number | null
+          total_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hotel_bookings_hotel_id_fkey"
+            columns: ["hotel_id"]
+            isOneToOne: false
+            referencedRelation: "hotels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hotel_bookings_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "hotel_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_members_masked: {
+        Row: {
+          birthday: string | null
+          created_at: string | null
+          id: string | null
+          join_date: string | null
+          last_visit: string | null
+          lifetime_points: number | null
+          name_masked: string | null
+          phone_masked: string | null
+          points_balance: number | null
+          preferences: Json | null
+          restaurant_id: string | null
+          tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          birthday?: never
+          created_at?: string | null
+          id?: string | null
+          join_date?: string | null
+          last_visit?: string | null
+          lifetime_points?: number | null
+          name_masked?: never
+          phone_masked?: never
+          points_balance?: number | null
+          preferences?: Json | null
+          restaurant_id?: string | null
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          birthday?: never
+          created_at?: string | null
+          id?: string | null
+          join_date?: string | null
+          last_visit?: string | null
+          lifetime_points?: number | null
+          name_masked?: never
+          phone_masked?: never
+          points_balance?: number | null
+          preferences?: Json | null
+          restaurant_id?: string | null
+          tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservations_masked: {
+        Row: {
+          created_at: string | null
+          customer_email_masked: string | null
+          customer_name: string | null
+          customer_phone_masked: string | null
+          duration_minutes: number | null
+          id: string | null
+          party_size: number | null
+          reminder_sent: boolean | null
+          reservation_date: string | null
+          reservation_time: string | null
+          restaurant_id: string | null
+          source: string | null
+          special_requests: string | null
+          status: string | null
+          table_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          customer_phone_masked?: never
+          duration_minutes?: number | null
+          id?: string | null
+          party_size?: number | null
+          reminder_sent?: boolean | null
+          reservation_date?: string | null
+          reservation_time?: string | null
+          restaurant_id?: string | null
+          source?: string | null
+          special_requests?: string | null
+          status?: string | null
+          table_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_email_masked?: never
+          customer_name?: string | null
+          customer_phone_masked?: never
+          duration_minutes?: number | null
+          id?: string | null
+          party_size?: number | null
+          reminder_sent?: boolean | null
+          reservation_date?: string | null
+          reservation_time?: string | null
+          restaurant_id?: string | null
+          source?: string | null
+          special_requests?: string | null
+          status?: string | null
+          table_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_members_masked: {
+        Row: {
+          created_at: string | null
+          email_masked: string | null
+          emergency_contact: string | null
+          emergency_phone: string | null
+          full_name: string | null
+          hire_date: string | null
+          hourly_rate: number | null
+          id: string | null
+          permissions: Json | null
+          phone_masked: string | null
+          restaurant_id: string | null
+          role: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email_masked?: never
+          emergency_contact?: never
+          emergency_phone?: never
+          full_name?: string | null
+          hire_date?: string | null
+          hourly_rate?: number | null
+          id?: string | null
+          permissions?: Json | null
+          phone_masked?: never
+          restaurant_id?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email_masked?: never
+          emergency_contact?: never
+          emergency_phone?: never
+          full_name?: string | null
+          hire_date?: string | null
+          hourly_rate?: number | null
+          id?: string | null
+          permissions?: Json | null
+          phone_masked?: never
+          restaurant_id?: string | null
+          role?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings_public: {
         Row: {
           key: string | null
@@ -6642,6 +7424,96 @@ export type Database = {
           value?: Json | null
         }
         Relationships: []
+      }
+      trips_masked: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          customer_lat: number | null
+          customer_lng: number | null
+          customer_name: string | null
+          customer_phone_masked: string | null
+          distance_km: number | null
+          driver_id: string | null
+          dropoff_address: string | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          fare_amount: number | null
+          id: string | null
+          payment_status: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          rating: number | null
+          rider_id: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["trip_status"] | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_name?: string | null
+          customer_phone_masked?: never
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          fare_amount?: number | null
+          id?: string | null
+          payment_status?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          rating?: number | null
+          rider_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["trip_status"] | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          customer_lat?: number | null
+          customer_lng?: number | null
+          customer_name?: string | null
+          customer_phone_masked?: never
+          distance_km?: number | null
+          driver_id?: string | null
+          dropoff_address?: string | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          fare_amount?: number | null
+          id?: string | null
+          payment_status?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          rating?: number | null
+          rider_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["trip_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicles_public: {
         Row: {
@@ -6710,6 +7582,138 @@ export type Database = {
           },
         ]
       }
+      vehicles_safe: {
+        Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          color: string | null
+          created_at: string | null
+          driver_id: string | null
+          fuel_type: string | null
+          health_score: number | null
+          id: string | null
+          is_primary: boolean | null
+          last_oil_change: string | null
+          last_tire_rotation: string | null
+          license_plate_masked: string | null
+          make: string | null
+          mileage: number | null
+          model: string | null
+          next_service_miles: number | null
+          updated_at: string | null
+          vin: string | null
+          year: number | null
+        }
+        Insert: {
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          color?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          fuel_type?: string | null
+          health_score?: number | null
+          id?: string | null
+          is_primary?: boolean | null
+          last_oil_change?: string | null
+          last_tire_rotation?: string | null
+          license_plate_masked?: never
+          make?: string | null
+          mileage?: number | null
+          model?: string | null
+          next_service_miles?: number | null
+          updated_at?: string | null
+          vin?: never
+          year?: number | null
+        }
+        Update: {
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          color?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          fuel_type?: string | null
+          health_score?: number | null
+          id?: string | null
+          is_primary?: boolean | null
+          last_oil_change?: string | null
+          last_tire_rotation?: string | null
+          license_plate_masked?: never
+          make?: string | null
+          mileage?: number | null
+          model?: string | null
+          next_service_miles?: number | null
+          updated_at?: string | null
+          vin?: never
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicles_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_masked: {
+        Row: {
+          check_in_time: string | null
+          created_at: string | null
+          customer_name: string | null
+          customer_phone_masked: string | null
+          id: string | null
+          notes: string | null
+          party_size: number | null
+          quoted_wait_minutes: number | null
+          restaurant_id: string | null
+          seated_time: string | null
+          status: string | null
+        }
+        Insert: {
+          check_in_time?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone_masked?: never
+          id?: string | null
+          notes?: string | null
+          party_size?: number | null
+          quoted_wait_minutes?: number | null
+          restaurant_id?: string | null
+          seated_time?: string | null
+          status?: string | null
+        }
+        Update: {
+          check_in_time?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          customer_phone_masked?: never
+          id?: string | null
+          notes?: string | null
+          party_size?: number | null
+          quoted_wait_minutes?: number | null
+          restaurant_id?: string | null
+          seated_time?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       can_customer_view_driver: {
@@ -6735,6 +7739,9 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
+      cleanup_old_location_history: { Args: never; Returns: undefined }
+      cleanup_old_login_sessions: { Args: never; Returns: undefined }
+      cleanup_old_security_events: { Args: never; Returns: undefined }
       create_available_test_orders: { Args: never; Returns: number }
       create_driver_on_signup: {
         Args: {
