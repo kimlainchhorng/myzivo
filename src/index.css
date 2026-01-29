@@ -289,6 +289,16 @@
   .animate-marquee-right {
     animation: marquee-right 45s linear infinite;
   }
+
+  /* Floating icon animation for decorative elements */
+  .animate-float-icon {
+    animation: float-icon 5s ease-in-out infinite;
+  }
+
+  /* Orb pulse animation for background orbs */
+  .animate-orb-pulse {
+    animation: orb-pulse 8s ease-in-out infinite;
+  }
 }
 
 @keyframes float {
@@ -383,6 +393,28 @@
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes float-icon {
+  0%, 100% { 
+    opacity: 0.3;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: translateY(-15px) rotate(5deg);
+  }
+}
+
+@keyframes orb-pulse {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% { 
+    transform: scale(1.2);
+    opacity: 0.4;
   }
 }
 
