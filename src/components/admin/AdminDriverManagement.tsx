@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { motion } from "framer-motion";
 import { 
   Car, 
   MapPin, 
@@ -14,7 +13,11 @@ import {
   Wallet,
   Navigation,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Star,
+  Shield,
+  BarChart3,
+  CreditCard
 } from "lucide-react";
 import AdminLiveDriverMap from "./AdminLiveDriverMap";
 import AdminDriverOnboardingQueue from "./AdminDriverOnboardingQueue";
@@ -28,19 +31,10 @@ import AdminPayouts from "./AdminPayouts";
 import AdminTripAssignment from "./AdminTripAssignment";
 import AdminDocumentReview from "./AdminDocumentReview";
 import AdminDriverMessaging from "./AdminDriverMessaging";
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
-
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-};
+import AdminDriverScoring from "./AdminDriverScoring";
+import AdminDriverVerification from "./AdminDriverVerification";
+import AdminCommissionAnalytics from "./AdminCommissionAnalytics";
+import AdminPayoutProcessing from "./AdminPayoutProcessing";
 
 const AdminDriverManagement = () => {
   const [activeTab, setActiveTab] = useState("tracking");
@@ -50,42 +44,46 @@ const AdminDriverManagement = () => {
     { value: "trips", label: "Trip Assignment", icon: Navigation },
     { value: "onboarding", label: "Onboarding", icon: UserPlus },
     { value: "documents", label: "Documents", icon: FileText },
+    { value: "verification", label: "Verification", icon: Shield },
     { value: "performance", label: "Performance", icon: TrendingUp },
+    { value: "scoring", label: "Scoring", icon: Star },
     { value: "control", label: "Control Panel", icon: Settings2 },
     { value: "messaging", label: "Messaging", icon: MessageSquare },
+    { value: "payout-processing", label: "Payout Queue", icon: CreditCard },
     { value: "payouts", label: "Payouts", icon: Wallet },
     { value: "earnings", label: "Earnings", icon: DollarSign },
     { value: "schedules", label: "Schedules", icon: Calendar },
-    { value: "commissions", label: "Commissions", icon: Percent },
+    { value: "commission-analytics", label: "Commission Stats", icon: BarChart3 },
+    { value: "commissions", label: "Commission Config", icon: Percent },
     { value: "cash", label: "Cash Collection", icon: Banknote },
   ];
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <motion.div variants={item}>
+      <div className="animate-in fade-in zoom-in-95 duration-300">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/10">
             <Car className="h-6 w-6 text-emerald-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Driver Management</h1>
+            <h1 className="text-2xl font-bold">Driver Management Hub</h1>
             <p className="text-muted-foreground">
-              Complete driver operations hub with tracking, payments, and controls
+              Complete driver operations with tracking, verification, payments, and controls
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Tabs */}
-      <motion.div variants={item}>
+      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: "100ms" }}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-card/50 p-1 h-auto flex-wrap gap-1">
             {tabs.map((tab) => (
               <TabsTrigger 
                 key={tab.value} 
                 value={tab.value}
-                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-200"
               >
                 <tab.icon className="h-4 w-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -109,8 +107,16 @@ const AdminDriverManagement = () => {
             <AdminDocumentReview />
           </TabsContent>
 
+          <TabsContent value="verification" className="mt-0">
+            <AdminDriverVerification />
+          </TabsContent>
+
           <TabsContent value="performance" className="mt-0">
             <AdminDriverPerformance />
+          </TabsContent>
+
+          <TabsContent value="scoring" className="mt-0">
+            <AdminDriverScoring />
           </TabsContent>
 
           <TabsContent value="control" className="mt-0">
@@ -119,6 +125,10 @@ const AdminDriverManagement = () => {
 
           <TabsContent value="messaging" className="mt-0">
             <AdminDriverMessaging />
+          </TabsContent>
+
+          <TabsContent value="payout-processing" className="mt-0">
+            <AdminPayoutProcessing />
           </TabsContent>
 
           <TabsContent value="payouts" className="mt-0">
@@ -133,6 +143,10 @@ const AdminDriverManagement = () => {
             <AdminDriverSchedules />
           </TabsContent>
 
+          <TabsContent value="commission-analytics" className="mt-0">
+            <AdminCommissionAnalytics />
+          </TabsContent>
+
           <TabsContent value="commissions" className="mt-0">
             <AdminCommissionSettings />
           </TabsContent>
@@ -141,8 +155,8 @@ const AdminDriverManagement = () => {
             <AdminCashCollection />
           </TabsContent>
         </Tabs>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
