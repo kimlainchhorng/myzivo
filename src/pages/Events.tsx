@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   Ticket, 
   Calendar, 
@@ -301,19 +300,12 @@ const Events = () => {
             </div>
 
             {/* Events Grid */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredEvents.map((event, index) => (
-                <motion.div
+                <div
                   key={event.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ y: -6 }}
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:-translate-y-1.5 transition-transform"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <Card className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl group cursor-pointer hover:shadow-2xl hover:shadow-pink-500/5 transition-all duration-300 h-full">
                     <div className="relative aspect-video overflow-hidden">
@@ -325,29 +317,27 @@ const Events = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute top-3 left-3 flex gap-2">
                         {event.hot && (
-                          <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 shadow-lg">
+                          <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 text-white border-0 shadow-lg text-xs">
                             <Flame className="w-3 h-3 mr-1" />
                             Hot
                           </Badge>
                         )}
                         {event.soldOut && (
-                          <Badge variant="destructive" className="shadow-lg">Sold Out</Badge>
+                          <Badge variant="destructive" className="shadow-lg text-xs">Sold Out</Badge>
                         )}
                       </div>
-                      <motion.button 
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        className="absolute top-3 right-3 p-2.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all group/heart"
+                      <button 
+                        className="absolute top-3 right-3 p-2 sm:p-2.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-pink-500/80 transition-all group/heart touch-manipulation active:scale-90"
                       >
                         <Heart className="h-4 w-4 text-white group-hover/heart:fill-white transition-all" />
-                      </motion.button>
+                      </button>
                       <div className="absolute bottom-3 left-3 right-3">
-                        <h3 className="font-bold text-white text-lg line-clamp-1 drop-shadow-lg">{event.title}</h3>
+                        <h3 className="font-bold text-white text-base sm:text-lg line-clamp-1 drop-shadow-lg">{event.title}</h3>
                       </div>
                     </div>
 
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between mb-4">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start justify-between mb-3 sm:mb-4">
                         <div>
                           <p className="text-sm font-semibold">{event.venue}</p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
@@ -355,17 +345,17 @@ const Events = () => {
                             {event.city}
                           </p>
                         </div>
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10">
+                        <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-amber-500/10">
                           <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                           <span className="text-xs font-bold">{event.rating}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-5">
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50">
+                      <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground mb-4 sm:mb-5">
+                        <span className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-muted/50 text-xs">
                           <Calendar className="h-3.5 w-3.5 text-pink-500" />
                           {event.date}
                         </span>
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted/50">
+                        <span className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-lg bg-muted/50 text-xs">
                           <Clock className="h-3.5 w-3.5 text-pink-500" />
                           {event.time}
                         </span>
@@ -373,43 +363,34 @@ const Events = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <span className="text-xs text-muted-foreground">From</span>
-                          <p className="text-2xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+                          <p className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
                             ${event.priceFrom}
                           </p>
                         </div>
-                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                          <Button 
-                            size="sm" 
-                            disabled={event.soldOut} 
-                            className={`rounded-xl h-10 px-5 font-bold ${
-                              !event.soldOut 
-                                ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/20" 
-                                : ""
-                            }`}
-                          >
-                            {event.soldOut ? "Sold Out" : "Get Tickets"}
-                          </Button>
-                        </motion.div>
+                        <Button 
+                          size="sm" 
+                          disabled={event.soldOut} 
+                          className={`rounded-xl h-9 sm:h-10 px-3 sm:px-5 font-bold text-xs sm:text-sm touch-manipulation active:scale-95 ${
+                            !event.soldOut 
+                              ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/20" 
+                              : ""
+                          }`}
+                        >
+                          {event.soldOut ? "Sold Out" : "Get Tickets"}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
 
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mt-14"
-            >
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
-                <Button variant="outline" size="lg" className="gap-2 h-14 px-8 text-lg font-bold rounded-xl border-2">
-                  View All Events
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </motion.div>
-            </motion.div>
+            <div className="text-center mt-10 sm:mt-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Button variant="outline" size="lg" className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl border-2 touch-manipulation active:scale-95">
+                View All Events
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+              </Button>
+            </div>
           </div>
         </section>
       </main>

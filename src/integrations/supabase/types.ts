@@ -1633,6 +1633,62 @@ export type Database = {
           },
         ]
       }
+      driver_withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          device_fingerprint: string | null
+          driver_id: string
+          failed_reason: string | null
+          id: string
+          ip_address: unknown
+          metadata: Json | null
+          method: string
+          processed_at: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          device_fingerprint?: string | null
+          driver_id: string
+          failed_reason?: string | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          method: string
+          processed_at?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          device_fingerprint?: string | null
+          driver_id?: string
+          failed_reason?: string | null
+          id?: string
+          ip_address?: unknown
+          metadata?: Json | null
+          method?: string
+          processed_at?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_withdrawals_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           avatar_url: string | null
@@ -6224,6 +6280,10 @@ export type Database = {
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: undefined
+      }
+      validate_withdrawal: {
+        Args: { p_amount: number; p_driver_id: string }
+        Returns: Json
       }
     }
     Enums: {
