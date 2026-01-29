@@ -1,6 +1,6 @@
+// CSS animations used instead of framer-motion for performance
 import { Button } from "@/components/ui/button";
 import { Car, Users, Sparkles, Briefcase, ChevronRight, Shield, Clock, Star, Zap, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -61,29 +61,6 @@ const features = [
   { icon: Star, label: "Top Rated", description: "4.9★ average rating" },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, x: 20 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      type: "spring" as const,
-      stiffness: 300,
-      damping: 24,
-    },
-  },
-};
-
 const RideOptionsSection = () => {
   const navigate = useNavigate();
 
@@ -95,40 +72,25 @@ const RideOptionsSection = () => {
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tl from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 right-1/4 w-[350px] h-[350px] bg-gradient-radial from-sky-500/10 to-transparent rounded-full blur-3xl" />
       
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 10, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-40"
-      >
+      {/* Static floating emojis - CSS animated */}
+      <div className="absolute top-32 right-[10%] text-5xl hidden lg:block opacity-40 animate-float">
         🚙
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-40 left-[6%] text-4xl hidden lg:block opacity-30"
-      >
+      </div>
+      <div className="absolute bottom-40 left-[6%] text-4xl hidden lg:block opacity-30 animate-float-delayed">
         ⚡
-      </motion.div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           {/* Left Content */}
-          <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-teal-400 text-white text-sm font-semibold mb-6 shadow-lg shadow-primary/30"
+          <div className="animate-in fade-in slide-in-from-left-6 duration-500">
+            <div 
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-teal-400 text-white text-sm font-semibold mb-6 shadow-lg shadow-primary/30 animate-in zoom-in-95 duration-300"
+              style={{ animationDelay: '100ms', animationFillMode: 'both' }}
             >
               <Car className="w-4 h-4" />
               ZIVO Rides
-            </motion.div>
+            </div>
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6">
               A ride for every
               <br />
@@ -143,13 +105,10 @@ const RideOptionsSection = () => {
             {/* Feature Pills */}
             <div className="flex flex-wrap gap-3 mb-8">
               {features.map((feature, index) => (
-                <motion.div
+                <div
                   key={feature.label}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-lg"
+                  className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-lg animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${300 + index * 100}ms`, animationFillMode: 'both' }}
                 >
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
                     <feature.icon className="w-4 h-4 text-primary" />
@@ -158,38 +117,29 @@ const RideOptionsSection = () => {
                     <p className="text-sm font-semibold">{feature.label}</p>
                     <p className="text-xs text-muted-foreground">{feature.description}</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button 
-                size="lg" 
-                onClick={() => navigate("/ride")}
-                className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 gap-2"
-              >
-                <Zap className="w-5 h-5" />
-                Request a ride
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </motion.div>
-          </motion.div>
+            <Button 
+              size="lg" 
+              onClick={() => navigate("/ride")}
+              className="h-14 px-8 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white shadow-xl shadow-primary/30 gap-2 transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Zap className="w-5 h-5" />
+              Request a ride
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </div>
 
           {/* Right - Ride Options */}
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             {rideOptions.map((option, index) => (
-              <motion.div
+              <div
                 key={option.id}
-                variants={itemVariants}
-                whileHover={{ x: 8, scale: 1.01 }}
                 onClick={() => navigate("/ride")}
-                className="relative p-5 lg:p-6 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden"
+                className="relative p-5 lg:p-6 rounded-2xl bg-gradient-to-br from-card/90 to-card border border-border/50 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group overflow-hidden hover:translate-x-2 hover:scale-[1.01] active:scale-[0.99] animate-in fade-in slide-in-from-right-4"
+                style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
               >
                 {/* Corner glow on hover */}
                 <div className={cn(
@@ -207,16 +157,15 @@ const RideOptionsSection = () => {
                 )}
 
                 <div className="flex items-center gap-4 relative">
-                  <motion.div 
-                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  <div 
                     className={cn(
-                      "w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                      "w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3",
                       option.gradient,
                       option.glow
                     )}
                   >
                     <option.icon className="w-7 h-7 lg:w-8 lg:h-8 text-white" />
-                  </motion.div>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-display font-bold text-lg lg:text-xl text-foreground group-hover:text-primary transition-colors">
@@ -237,9 +186,9 @@ const RideOptionsSection = () => {
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>
