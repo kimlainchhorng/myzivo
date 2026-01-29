@@ -145,7 +145,11 @@ export const useDriverTripRealtime = (driverId: string | undefined) => {
             }
           }
 
-          queryClient.invalidateQueries({ queryKey: ["driver-trips"] });
+          // Invalidate driver-specific queries to refresh active trip and history
+          queryClient.invalidateQueries({ queryKey: ["driver-active-trip", driverId] });
+          queryClient.invalidateQueries({ queryKey: ["driver-trip-history", driverId] });
+          queryClient.invalidateQueries({ queryKey: ["driver-earnings", driverId] });
+          queryClient.invalidateQueries({ queryKey: ["available-trip-requests"] });
           queryClient.invalidateQueries({ queryKey: ["trips"] });
         }
       )
