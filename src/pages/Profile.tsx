@@ -104,41 +104,24 @@ const Profile = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Enhanced background effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/12 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-primary/20 to-teal-500/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/15 to-purple-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-gradient-radial from-emerald-500/8 to-transparent rounded-full blur-3xl" />
-      
-      {/* Floating emojis */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 8, 0] }}
-        transition={{ duration: 5, repeat: Infinity }}
-        className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-30"
-      >
-        👤
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, 12, 0], rotate: [0, -6, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="absolute bottom-32 left-[8%] text-4xl hidden lg:block opacity-25"
-      >
-        ⚙️
-      </motion.div>
+    <div className="min-h-screen bg-background relative overflow-hidden pb-20">
+      {/* Background effects - simplified for mobile */}
+      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
+      <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
-      <div className="relative z-10 container max-w-2xl mx-auto px-4 py-8">
+      <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8 safe-area-inset">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-8"
+          className="flex items-center gap-3 mb-6"
         >
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="rounded-xl hover:bg-primary/10"
+            className="rounded-xl hover:bg-muted/50 -ml-2"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>

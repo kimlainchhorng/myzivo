@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Sparkles, Shield } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Provider } from "@supabase/supabase-js";
@@ -52,7 +52,7 @@ const Signup = () => {
       return;
     }
 
-    toast.success("Account created! Please check your email to verify your account.");
+    toast.success("Account created! Please check your email to verify.");
     navigate("/login");
   };
 
@@ -66,276 +66,160 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 relative overflow-hidden">
-      {/* Animated background effects */}
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 safe-area-inset relative overflow-hidden">
+      {/* Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-          className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-eats/30 to-orange-500/20 rounded-full blur-3xl" 
-        />
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
-          className="absolute -bottom-40 -right-40 w-[500px] h-[500px] bg-gradient-to-tr from-primary/25 to-teal-500/15 rounded-full blur-3xl" 
-        />
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ duration: 2, delay: 0.5 }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-radial from-eats/8 to-transparent rounded-full" 
-        />
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.3 }}
-          transition={{ duration: 2, delay: 0.8 }}
-          className="absolute top-1/4 right-1/4 w-[400px] h-[400px] bg-gradient-radial from-violet-500/10 to-transparent rounded-full blur-3xl" 
-        />
-        
-        {/* Floating emojis */}
-        <motion.div
-          animate={{ y: [0, -20, 0], rotate: [0, 10, 0] }}
-          transition={{ duration: 6, repeat: Infinity }}
-          className="absolute top-[20%] right-[12%] text-4xl opacity-30"
-        >
-          ✨
-        </motion.div>
-        <motion.div
-          animate={{ y: [0, 15, 0], rotate: [0, -8, 0] }}
-          transition={{ duration: 7, repeat: Infinity }}
-          className="absolute bottom-[25%] left-[10%] text-4xl opacity-25"
-        >
-          🚀
-        </motion.div>
-        
-        {/* Floating particles */}
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ 
-              opacity: [0.3, 0.6, 0.3],
-              y: [-100, -400],
-              x: [0, Math.random() * 100 - 50]
-            }}
-            transition={{ 
-              duration: 12 + i * 2, 
-              repeat: Infinity, 
-              delay: i * 1.5,
-              ease: "linear"
-            }}
-            className="absolute bottom-0 w-2 h-2 rounded-full bg-gradient-to-r from-eats/40 to-orange-500/40"
-            style={{ left: `${15 + i * 12}%` }}
-          />
-        ))}
+        <div className="absolute -top-40 -left-40 w-[400px] h-[400px] bg-gradient-to-br from-eats/20 to-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-[300px] h-[300px] bg-gradient-to-tr from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.4 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="border-0 bg-gradient-to-br from-card/95 to-card shadow-2xl backdrop-blur-xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-eats/5 via-transparent to-primary/5 pointer-events-none" />
-          <CardHeader className="space-y-1 text-center pb-6 pt-8 relative">
-            {/* Logo */}
-            <motion.div 
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-              className="flex justify-center mb-6"
-            >
+        <Card className="border-0 bg-card/95 shadow-2xl backdrop-blur-xl overflow-hidden rounded-3xl">
+          <CardHeader className="space-y-1 text-center pb-4 pt-8">
+            <div className="flex justify-center mb-4">
               <ZivoLogo size="lg" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <CardTitle className="text-3xl font-display font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                Create an account
-              </CardTitle>
-              <CardDescription className="text-muted-foreground text-base mt-2">
-                Join ZIVO and unlock endless possibilities
-              </CardDescription>
-            </motion.div>
+            </div>
+            <CardTitle className="text-2xl sm:text-3xl font-display font-bold">
+              Create account
+            </CardTitle>
+            <CardDescription className="text-muted-foreground text-sm sm:text-base mt-1">
+              Join ZIVO and start your journey
+            </CardDescription>
           </CardHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-4 px-8">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.35 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/90 font-medium">Full Name</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              placeholder="John Doe"
-                              autoComplete="name"
-                              className="h-13 pl-12 bg-background/50 border-white/10 focus:border-eats/50 focus:ring-2 focus:ring-eats/20 transition-all rounded-xl"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+              <CardContent className="space-y-3 px-6 sm:px-8">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/90 font-medium text-sm">Full Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            placeholder="John Doe"
+                            autoComplete="name"
+                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-eats/50 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/90 font-medium">Email address</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              type="email"
-                              placeholder="you@example.com"
-                              autoComplete="email"
-                              className="h-13 pl-12 bg-background/50 border-white/10 focus:border-eats/50 focus:ring-2 focus:ring-eats/20 transition-all rounded-xl"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/90 font-medium text-sm">Email</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-eats/50 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.45 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/90 font-medium">Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              type="password"
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                              className="h-13 pl-12 bg-background/50 border-white/10 focus:border-eats/50 focus:ring-2 focus:ring-eats/20 transition-all rounded-xl"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/90 font-medium text-sm">Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-eats/50 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <FormField
-                    control={form.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/90 font-medium">Confirm Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                            <Input
-                              type="password"
-                              placeholder="••••••••"
-                              autoComplete="new-password"
-                              className="h-13 pl-12 bg-background/50 border-white/10 focus:border-eats/50 focus:ring-2 focus:ring-eats/20 transition-all rounded-xl"
-                              {...field}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </motion.div>
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-foreground/90 font-medium text-sm">Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-eats/50 rounded-xl"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
 
-              <CardFooter className="flex flex-col gap-5 pt-4 pb-8 px-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.55 }}
-                  className="w-full"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+              <CardFooter className="flex flex-col gap-4 pt-2 pb-8 px-6 sm:px-8">
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-eats to-orange-500 text-white shadow-lg shadow-eats/30 hover:opacity-90 rounded-xl" 
+                  disabled={isLoading}
                 >
-                  <Button 
-                    type="submit" 
-                    className="w-full h-14 text-base font-bold bg-gradient-to-r from-eats to-orange-500 text-white shadow-xl shadow-eats/30 hover:opacity-90 transition-all duration-200 rounded-xl group" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    ) : (
-                      <>
-                        Create Account
-                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
 
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                  className="relative w-full"
-                >
+                <div className="relative w-full">
                   <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-white/10" />
+                    <span className="w-full border-t border-border/50" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-4 text-muted-foreground font-medium">or continue with</span>
+                    <span className="bg-card px-4 text-muted-foreground">or</span>
                   </div>
-                </motion.div>
+                </div>
 
-                {/* Social Login Buttons */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.65 }}
-                  className="grid grid-cols-3 gap-3 w-full"
-                >
+                {/* Social Login */}
+                <div className="grid grid-cols-3 gap-3 w-full">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleSocialLogin('google')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-background/50 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all rounded-xl group"
+                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
                   >
                     {socialLoading === 'google' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -353,7 +237,7 @@ const Signup = () => {
                     variant="outline"
                     onClick={() => handleSocialLogin('apple')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-background/50 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all rounded-xl group"
+                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
                   >
                     {socialLoading === 'apple' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -368,7 +252,7 @@ const Signup = () => {
                     variant="outline"
                     onClick={() => handleSocialLogin('facebook')}
                     disabled={socialLoading !== null}
-                    className="h-12 bg-background/50 border-white/10 hover:bg-white/10 hover:border-white/20 transition-all rounded-xl group"
+                    className="h-12 bg-muted/30 border-border/50 rounded-xl"
                   >
                     {socialLoading === 'facebook' ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
@@ -378,35 +262,22 @@ const Signup = () => {
                       </svg>
                     )}
                   </Button>
-                </motion.div>
+                </div>
 
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.75 }}
-                  className="text-sm text-muted-foreground text-center"
-                >
+                <p className="text-sm text-muted-foreground text-center">
                   Already have an account?{" "}
-                  <Link to="/login" className="text-eats hover:text-eats/80 font-semibold transition-colors hover:underline">
+                  <Link to="/login" className="text-eats font-semibold hover:underline">
                     Sign in
                   </Link>
-                </motion.p>
+                </p>
               </CardFooter>
             </form>
           </Form>
         </Card>
 
-        {/* Bottom decoration */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-8 text-center"
-        >
-          <p className="text-xs text-muted-foreground/60">
-            By signing up, you agree to our Terms & Privacy Policy 📋
-          </p>
-        </motion.div>
+        <p className="mt-6 text-center text-xs text-muted-foreground/60">
+          By signing up, you agree to our Terms of Service 📋
+        </p>
       </motion.div>
     </div>
   );
