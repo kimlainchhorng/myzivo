@@ -9,7 +9,7 @@ import {
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
   ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target,
   Brain, ShieldAlert, Coins, Rocket, Search, Image, Gauge, Lock, Cpu, LayoutDashboard, Workflow, LineChart, GitCompare, ListFilter,
-  Share2, XCircle, Wrench, Star
+  Share2, XCircle, Wrench, Star, MessageCircle, AlertTriangle, Map, Building, Handshake
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -105,6 +105,19 @@ import AdminPaymentMethods from "@/components/admin/AdminPaymentMethods";
 import AdminRatingOverview from "@/components/admin/AdminRatingOverview";
 import AdminNotificationTemplates from "@/components/admin/AdminNotificationTemplates";
 import AdminMaintenanceMode from "@/components/admin/AdminMaintenanceMode";
+// New modules
+import AdminCustomerWallet from "@/components/admin/AdminCustomerWallet";
+import AdminSubscriptionManager from "@/components/admin/AdminSubscriptionManager";
+import AdminVIPPanel from "@/components/admin/AdminVIPPanel";
+import AdminFeedbackAnalytics from "@/components/admin/AdminFeedbackAnalytics";
+import AdminLiveChat from "@/components/admin/AdminLiveChat";
+import AdminDisputeResolution from "@/components/admin/AdminDisputeResolution";
+import AdminEmergencyResponse from "@/components/admin/AdminEmergencyResponse";
+import AdminZoneManagement from "@/components/admin/AdminZoneManagement";
+import AdminCompetitorAnalysis from "@/components/admin/AdminCompetitorAnalysis";
+import AdminReportBuilder from "@/components/admin/AdminReportBuilder";
+import AdminRevenueAttribution from "@/components/admin/AdminRevenueAttribution";
+import AdminCohortAnalysis from "@/components/admin/AdminCohortAnalysis";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -196,6 +209,9 @@ const AdminDashboard = () => {
       { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
       { value: "users", label: "Customers", icon: User, gradient: "from-blue-500 to-cyan-500" },
       { value: "directory", label: "Directory", icon: Users, gradient: "from-blue-500 to-cyan-500" },
+      { value: "vip-panel", label: "VIP Panel", icon: Crown, gradient: "from-amber-500 to-yellow-500" },
+      { value: "wallet", label: "Wallet/Credits", icon: Wallet, gradient: "from-green-500 to-emerald-500" },
+      { value: "subscriptions", label: "Subscriptions", icon: CreditCard, gradient: "from-violet-500 to-purple-500" },
       { value: "insights", label: "Insights", icon: Heart, gradient: "from-rose-500 to-pink-500" },
       { value: "segments", label: "Segments", icon: PieChart, gradient: "from-violet-500 to-purple-500" },
       { value: "performers", label: "Top Performers", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
@@ -249,11 +265,24 @@ const AdminDashboard = () => {
       { value: "promotions", label: "Promotions", icon: Ticket, gradient: "from-violet-500 to-purple-500" },
       { value: "notification-mgr", label: "Notifications", icon: Bell, gradient: "from-rose-500 to-pink-500" },
       { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
+      { value: "live-chat", label: "Live Chat", icon: MessageCircle, gradient: "from-blue-500 to-cyan-500" },
       { value: "support", label: "Support", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
       { value: "ticket-queue", label: "Ticket Queue", icon: Ticket, gradient: "from-amber-500 to-orange-500" },
+      { value: "disputes", label: "Disputes", icon: Scale, gradient: "from-red-500 to-orange-500" },
       { value: "escalations", label: "Escalations", icon: ArrowUp, gradient: "from-red-500 to-orange-500" },
       { value: "moderation", label: "Moderation", icon: Image, gradient: "from-rose-500 to-pink-500" },
       { value: "templates", label: "Templates", icon: FileText, gradient: "from-slate-500 to-zinc-500" },
+    ]},
+    { title: "Operations", items: [
+      { value: "zones", label: "Zone Mgmt", icon: Map, gradient: "from-blue-500 to-cyan-500" },
+      { value: "emergency", label: "Emergency", icon: AlertTriangle, gradient: "from-red-500 to-orange-500" },
+      { value: "feedback-analytics", label: "Feedback", icon: MessageSquare, gradient: "from-violet-500 to-purple-500" },
+    ]},
+    { title: "Business Intelligence", items: [
+      { value: "cohort", label: "Cohort Analysis", icon: Users, gradient: "from-violet-500 to-purple-500" },
+      { value: "attribution", label: "Attribution", icon: Target, gradient: "from-green-500 to-emerald-500" },
+      { value: "report-builder", label: "Report Builder", icon: FileText, gradient: "from-blue-500 to-cyan-500" },
+      { value: "competitor", label: "Competitors", icon: GitCompare, gradient: "from-amber-500 to-orange-500" },
     ]},
     { title: "System", items: [
       { value: "automation", label: "Automation", icon: Workflow, gradient: "from-violet-500 to-purple-500" },
@@ -514,6 +543,20 @@ const AdminDashboard = () => {
             <TabsContent value="payments" className="mt-0"><AdminPaymentMethods /></TabsContent>
             <TabsContent value="ratings" className="mt-0"><AdminRatingOverview /></TabsContent>
             <TabsContent value="templates" className="mt-0"><AdminNotificationTemplates /></TabsContent>
+            <TabsContent value="user-timeline" className="mt-0"><AdminUserActivityTimeline /></TabsContent>
+            {/* New modules */}
+            <TabsContent value="wallet" className="mt-0"><AdminCustomerWallet /></TabsContent>
+            <TabsContent value="subscriptions" className="mt-0"><AdminSubscriptionManager /></TabsContent>
+            <TabsContent value="vip-panel" className="mt-0"><AdminVIPPanel /></TabsContent>
+            <TabsContent value="feedback-analytics" className="mt-0"><AdminFeedbackAnalytics /></TabsContent>
+            <TabsContent value="live-chat" className="mt-0"><AdminLiveChat /></TabsContent>
+            <TabsContent value="disputes" className="mt-0"><AdminDisputeResolution /></TabsContent>
+            <TabsContent value="emergency" className="mt-0"><AdminEmergencyResponse /></TabsContent>
+            <TabsContent value="zones" className="mt-0"><AdminZoneManagement /></TabsContent>
+            <TabsContent value="competitor" className="mt-0"><AdminCompetitorAnalysis /></TabsContent>
+            <TabsContent value="report-builder" className="mt-0"><AdminReportBuilder /></TabsContent>
+            <TabsContent value="attribution" className="mt-0"><AdminRevenueAttribution /></TabsContent>
+            <TabsContent value="cohort" className="mt-0"><AdminCohortAnalysis /></TabsContent>
           </Tabs>
         </main>
       </div>
