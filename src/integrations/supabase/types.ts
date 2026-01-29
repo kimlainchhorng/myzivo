@@ -6276,6 +6276,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chat_participant: {
+        Args: { p_order_id: string; p_trip_id: string }
+        Returns: boolean
+      }
+      is_restaurant_owner: {
+        Args: { p_restaurant_id: string }
+        Returns: boolean
+      }
+      is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_device_fingerprint?: string
