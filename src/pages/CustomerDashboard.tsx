@@ -200,26 +200,17 @@ const CustomerDashboard = () => {
         <main className="flex-1 p-4 lg:p-8">
           <div className="max-w-6xl mx-auto">
             {/* Welcome Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <motion.div 
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                >
-                  <span className="text-3xl">👋</span>
-                </motion.div>
-                <h1 className="font-display text-2xl sm:text-3xl font-bold">
+            <div className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                <span className="text-2xl sm:text-3xl">👋</span>
+                <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold">
                   Welcome back{user?.email?.split('@')[0] ? `, ${user.email.split('@')[0]}` : ''}!
                 </h1>
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-sm sm:text-base text-muted-foreground">
                 Here's an overview of your bookings and activity
               </p>
-            </motion.div>
+            </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="hidden">
@@ -230,39 +221,31 @@ const CustomerDashboard = () => {
                 ))}
               </TabsList>
 
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <TabsContent value="overview" className="mt-0">
-                    <CustomerOverview />
-                  </TabsContent>
+              <div className="animate-in fade-in duration-200">
+                <TabsContent value="overview" className="mt-0">
+                  <CustomerOverview />
+                </TabsContent>
 
-                  <TabsContent value="rides" className="mt-0">
-                    <CustomerRides />
-                  </TabsContent>
+                <TabsContent value="rides" className="mt-0">
+                  <CustomerRides />
+                </TabsContent>
 
-                  <TabsContent value="food" className="mt-0">
-                    <CustomerFoodOrders />
-                  </TabsContent>
+                <TabsContent value="food" className="mt-0">
+                  <CustomerFoodOrders />
+                </TabsContent>
 
-                  <TabsContent value="cars" className="mt-0">
-                    <CustomerCarRentals />
-                  </TabsContent>
+                <TabsContent value="cars" className="mt-0">
+                  <CustomerCarRentals />
+                </TabsContent>
 
-                  <TabsContent value="flights" className="mt-0">
-                    <CustomerFlights />
-                  </TabsContent>
+                <TabsContent value="flights" className="mt-0">
+                  <CustomerFlights />
+                </TabsContent>
 
-                  <TabsContent value="hotels" className="mt-0">
-                    <CustomerHotels />
-                  </TabsContent>
-                </motion.div>
-              </AnimatePresence>
+                <TabsContent value="hotels" className="mt-0">
+                  <CustomerHotels />
+                </TabsContent>
+              </div>
             </Tabs>
           </div>
         </main>

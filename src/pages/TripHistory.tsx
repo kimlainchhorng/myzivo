@@ -72,36 +72,28 @@ const TripHistory = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden safe-area-top safe-area-bottom">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
-            <CardContent className="p-8 text-center relative">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="mx-auto mb-6"
-              >
-                <ZivoLogo size="lg" />
-              </motion.div>
-              <h2 className="text-2xl font-bold mb-2">Sign in to view history</h2>
-              <p className="text-muted-foreground mb-6">
-                You need to be logged in to see your trip history
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl">
-                  Home
-                </Button>
-                <Button onClick={() => navigate("/login")} className="rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white">
-                  Sign In
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
+          <CardContent className="p-6 sm:p-8 text-center relative">
+            <div className="mx-auto mb-5 sm:mb-6">
+              <ZivoLogo size="lg" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2">Sign in to view history</h2>
+            <p className="text-sm sm:text-base text-muted-foreground mb-5 sm:mb-6">
+              You need to be logged in to see your trip history
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
+                Home
+              </Button>
+              <Button onClick={() => navigate("/login")} className="rounded-xl bg-gradient-to-r from-primary to-teal-400 text-white touch-manipulation active:scale-95">
+                Sign In
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -175,43 +167,39 @@ const TripHistory = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {trip.status === "completed" && (
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
-                <Button
-                  variant="outline"
-                  className="w-full rounded-xl font-semibold gap-2"
-                  onClick={() => handleViewReceipt(trip)}
-                >
-                  <Receipt className="w-4 h-4" />
-                  Receipt
-                </Button>
-              </motion.div>
-            )}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
-                className="w-full rounded-xl font-semibold bg-gradient-to-r from-primary to-teal-400 text-white gap-2"
-                onClick={() => {
-                  navigate("/ride", {
-                    state: {
-                      pickup: {
-                        address: trip.pickup_address,
-                        lat: trip.pickup_lat,
-                        lng: trip.pickup_lng,
-                      },
-                      dropoff: {
-                        address: trip.dropoff_address,
-                        lat: trip.dropoff_lat,
-                        lng: trip.dropoff_lng,
-                      },
-                    },
-                  });
-                }}
+                variant="outline"
+                className="flex-1 rounded-xl font-semibold gap-2 touch-manipulation active:scale-[0.98]"
+                onClick={() => handleViewReceipt(trip)}
               >
-                <RefreshCw className="w-4 h-4" />
-                Book Again
+                <Receipt className="w-4 h-4" />
+                Receipt
               </Button>
-            </motion.div>
+            )}
+            <Button
+              className="flex-1 rounded-xl font-semibold bg-gradient-to-r from-primary to-teal-400 text-white gap-2 touch-manipulation active:scale-[0.98]"
+              onClick={() => {
+                navigate("/ride", {
+                  state: {
+                    pickup: {
+                      address: trip.pickup_address,
+                      lat: trip.pickup_lat,
+                      lng: trip.pickup_lng,
+                    },
+                    dropoff: {
+                      address: trip.dropoff_address,
+                      lat: trip.dropoff_lat,
+                      lng: trip.dropoff_lng,
+                    },
+                  },
+                });
+              }}
+            >
+              <RefreshCw className="w-4 h-4" />
+              Book Again
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -242,40 +230,29 @@ const TripHistory = () => {
 
       <div className="p-4 relative z-10">
         {/* Stats Summary */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-3 gap-3 mb-6"
-        >
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5 sm:mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {[
             { value: completedTrips.length, label: "Trips", icon: Car, gradient: "from-primary to-teal-400" },
-            { value: `$${completedTrips.reduce((sum, t) => sum + (t.fare_amount || 0), 0).toFixed(0)}`, label: "Total Spent", icon: TrendingUp, gradient: "from-emerald-500 to-green-500" },
-            { value: `${(completedTrips.reduce((sum, t) => sum + (t.distance_km || 0), 0) * 0.621371).toFixed(0)}`, label: "mi Traveled", icon: Navigation, gradient: "from-violet-500 to-purple-500" },
-          ].map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-                <CardContent className="p-4 text-center">
-                  <div className={cn(
-                    "w-10 h-10 mx-auto mb-2 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
-                    stat.gradient
-                  )}>
-                    <stat.icon className="w-5 h-5 text-white" />
-                  </div>
-                  <p className={cn(
-                    "text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
-                    stat.gradient
-                  )}>{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.label}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
+            { value: `$${completedTrips.reduce((sum, t) => sum + (t.fare_amount || 0), 0).toFixed(0)}`, label: "Spent", icon: TrendingUp, gradient: "from-emerald-500 to-green-500" },
+            { value: `${(completedTrips.reduce((sum, t) => sum + (t.distance_km || 0), 0) * 0.621371).toFixed(0)}`, label: "Miles", icon: Navigation, gradient: "from-violet-500 to-purple-500" },
+          ].map((stat) => (
+            <Card key={stat.label} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+              <CardContent className="p-3 sm:p-4 text-center">
+                <div className={cn(
+                  "w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-1.5 sm:mb-2 rounded-lg sm:rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                  stat.gradient
+                )}>
+                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
+                <p className={cn(
+                  "text-xl sm:text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent",
+                  stat.gradient
+                )}>{stat.value}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">{stat.label}</p>
+              </CardContent>
+            </Card>
           ))}
-        </motion.div>
+        </div>
 
         {isLoading ? (
           <div className="space-y-4">
