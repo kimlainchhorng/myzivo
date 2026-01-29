@@ -45,7 +45,7 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-import { motion, AnimatePresence } from "framer-motion";
+// CSS animations used instead of framer-motion for performance
 import { cn } from "@/lib/utils";
 
 const DriverApp = () => {
@@ -112,10 +112,7 @@ const DriverApp = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
+        <div className="animate-in fade-in zoom-in-95 duration-300">
           <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-5">
@@ -129,7 +126,7 @@ const DriverApp = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -157,20 +154,13 @@ const DriverApp = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
         <div className="absolute top-1/4 right-0 w-[300px] h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
           <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-teal-500/5 pointer-events-none" />
             <CardContent className="p-8 text-center relative">
-              <motion.div 
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-                className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/30"
-              >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/30 animate-pulse">
                 <Car className="w-10 h-10 text-white" />
-              </motion.div>
+              </div>
               <h2 className="text-2xl font-bold mb-2">Become a Driver</h2>
               <p className="text-muted-foreground mb-6">Register as a driver to start accepting trips and earning money</p>
               <div className="flex gap-3 justify-center">
@@ -182,7 +172,7 @@ const DriverApp = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -222,20 +212,13 @@ const DriverApp = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
         <div className={`absolute inset-0 bg-gradient-radial ${config.bg} opacity-30`} />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
+        <div className="animate-in fade-in zoom-in-95 duration-300">
           <Card className="w-full max-w-md border-0 bg-gradient-to-br from-card/95 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
             <div className={`absolute inset-0 bg-gradient-to-br ${config.bg} pointer-events-none`} />
             <CardContent className="p-8 text-center relative">
-              <motion.div 
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center mx-auto mb-5 shadow-lg`}
-              >
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${config.gradient} flex items-center justify-center mx-auto mb-5 shadow-lg animate-pulse`}>
                 <StatusIcon className="w-8 h-8 text-white" />
-              </motion.div>
+              </div>
               <h2 className="text-xl font-bold mb-2">{config.title}</h2>
               <p className="text-muted-foreground mb-5">{config.description}</p>
               <Badge variant={driver.status === "pending" ? "secondary" : "destructive"} className="text-sm px-4 py-1.5">
@@ -243,7 +226,7 @@ const DriverApp = () => {
               </Badge>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -252,11 +235,7 @@ const DriverApp = () => {
   if (activeTrip) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4"
-        >
+        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between max-w-lg mx-auto">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
@@ -271,7 +250,7 @@ const DriverApp = () => {
               {activeTrip.status?.replace("_", " ")}
             </Badge>
           </div>
-        </motion.div>
+        </div>
         <ActiveTripPanel 
           trip={activeTrip} 
           driverId={driver.id}
@@ -331,12 +310,9 @@ const DriverApp = () => {
       </div>
 
       {/* Online/Offline Toggle Banner */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+      <div 
         className={cn(
-          "py-5 px-4 transition-all duration-500",
+          "py-5 px-4 transition-all duration-500 animate-in fade-in slide-in-from-top-2 duration-300",
           driver.is_online 
             ? "bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border-b border-emerald-500/20" 
             : "bg-gradient-to-r from-muted via-muted/50 to-transparent border-b border-border/50"
@@ -344,13 +320,11 @@ const DriverApp = () => {
       >
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <motion.div 
-              animate={driver.is_online ? { scale: [1, 1.05, 1] } : {}}
-              transition={{ duration: 2, repeat: Infinity }}
+            <div 
               className={cn(
                 "w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-lg",
                 driver.is_online 
-                  ? "bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/30" 
+                  ? "bg-gradient-to-br from-emerald-500 to-green-500 shadow-emerald-500/30 animate-pulse" 
                   : "bg-muted shadow-none"
               )}
             >
@@ -358,7 +332,7 @@ const DriverApp = () => {
                 "w-7 h-7 transition-colors",
                 driver.is_online ? "text-white" : "text-muted-foreground"
               )} />
-            </motion.div>
+            </div>
             <div>
               <p className="font-bold text-lg">{driver.is_online ? "You're Online" : "You're Offline"}</p>
               <p className="text-sm text-muted-foreground">
@@ -373,28 +347,21 @@ const DriverApp = () => {
             className="scale-125"
           />
         </div>
-      </motion.div>
+      </div>
 
       {/* Content */}
       <div className="max-w-lg mx-auto p-4 space-y-5 relative z-10">
         {/* Earnings Summary - Premium Design */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid grid-cols-3 gap-3"
-        >
+        <div className="grid grid-cols-3 gap-3">
           {[
             { icon: DollarSign, value: `$${earnings?.today.toFixed(0) || 0}`, label: "Today", gradient: "from-emerald-500 to-green-500", glow: "shadow-emerald-500/20" },
             { icon: Navigation, value: `${earnings?.trips_today || 0}`, label: "Trips", gradient: "from-primary to-teal-400", glow: "shadow-primary/20" },
             { icon: TrendingUp, value: `$${earnings?.week.toFixed(0) || 0}`, label: "This Week", gradient: "from-sky-500 to-blue-500", glow: "shadow-sky-500/20" },
           ].map((stat, index) => (
-            <motion.div
+            <div
               key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-              whileHover={{ y: -4, scale: 1.02 }}
+              className="animate-in fade-in slide-in-from-bottom-4 duration-300 hover:-translate-y-1 hover:scale-[1.02] transition-transform"
+              style={{ animationDelay: `${index * 75}ms` }}
             >
               <Card className={cn(
                 "border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl overflow-hidden group hover:shadow-2xl transition-all",
@@ -412,16 +379,12 @@ const DriverApp = () => {
                   <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
 
         {/* Goals Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: '150ms' }}>
           <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-xl overflow-hidden">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -437,61 +400,42 @@ const DriverApp = () => {
                 <span className="text-2xl font-bold text-amber-500">{earnings?.trips_today || 0}/10</span>
               </div>
               <div className="h-2.5 rounded-full bg-muted/50 overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min((earnings?.trips_today || 0) / 10 * 100, 100)}%` }}
-                  transition={{ duration: 1, delay: 0.5 }}
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500 transition-all duration-1000"
+                  style={{ width: `${Math.min((earnings?.trips_today || 0) / 10 * 100, 100)}%` }}
                 />
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Main Content */}
         {!driver.is_online ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-          >
+          <div className="animate-in fade-in zoom-in-95 duration-300" style={{ animationDelay: '200ms' }}>
             <Card className="border-0 bg-gradient-to-br from-card/90 to-card backdrop-blur-xl shadow-2xl overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent pointer-events-none" />
               <CardContent className="p-10 text-center relative">
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.05, 1],
-                    opacity: [0.5, 1, 0.5]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto mb-5"
-                >
+                <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto mb-5 animate-pulse">
                   <Power className="w-10 h-10 text-muted-foreground" />
-                </motion.div>
+                </div>
                 <h2 className="text-xl font-bold mb-2">Ready to Earn?</h2>
                 <p className="text-muted-foreground mb-6 max-w-xs mx-auto">
                   Go online to start receiving trip requests and earn money
                 </p>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button 
-                    onClick={handleToggleOnline} 
-                    disabled={toggleOnline.isPending}
-                    size="lg"
-                    className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30 font-bold gap-2"
-                  >
-                    <Zap className="w-5 h-5" />
-                    Go Online
-                  </Button>
-                </motion.div>
+                <Button 
+                  onClick={handleToggleOnline} 
+                  disabled={toggleOnline.isPending}
+                  size="lg"
+                  className="rounded-xl bg-gradient-to-r from-primary to-teal-400 shadow-lg shadow-primary/30 font-bold gap-2 touch-manipulation active:scale-[0.98]"
+                >
+                  <Zap className="w-5 h-5" />
+                  Go Online
+                </Button>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: '200ms' }}>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full grid grid-cols-2 h-14 p-1.5 rounded-2xl bg-muted/50 mb-5">
                 <TabsTrigger 
@@ -515,8 +459,7 @@ const DriverApp = () => {
                 </TabsTrigger>
               </TabsList>
 
-              <AnimatePresence mode="wait">
-                <TabsContent value="requests" className="mt-0 space-y-4">
+              <TabsContent value="requests" className="mt-0 space-y-4">
                   {tripsLoading ? (
                     <>
                       <Skeleton className="h-32 w-full rounded-2xl" />
@@ -524,56 +467,42 @@ const DriverApp = () => {
                     </>
                   ) : availableTrips && availableTrips.length > 0 ? (
                     availableTrips.map((trip, index) => (
-                      <motion.div
+                      <div
                         key={trip.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        className="animate-in fade-in slide-in-from-left-4 duration-300"
+                        style={{ animationDelay: `${index * 75}ms` }}
                       >
                         <DriverTripCard
                           trip={trip}
                           onAccept={() => handleAcceptTrip(trip.id)}
                           isAccepting={acceptTrip.isPending}
                         />
-                        <DriverTripCard
-                          trip={trip}
-                          onAccept={() => handleAcceptTrip(trip.id)}
-                          isAccepting={acceptTrip.isPending}
-                        />
-                      </motion.div>
+                      </div>
                     ))
                   ) : (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                    >
+                    <div className="animate-in fade-in zoom-in-95 duration-300">
                       <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                         <CardContent className="p-10 text-center">
-                          <motion.div
-                            animate={{ y: [0, -5, 0] }}
-                            transition={{ duration: 2, repeat: Infinity }}
-                            className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-4"
-                          >
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '3s' }}>
                             <MapPin className="w-8 h-8 text-primary" />
-                          </motion.div>
+                          </div>
                           <h3 className="font-bold text-lg mb-2">Waiting for trips...</h3>
                           <p className="text-muted-foreground text-sm">
                             Stay online to receive trip requests from nearby riders
                           </p>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </div>
                   )}
                 </TabsContent>
 
                 <TabsContent value="history" className="mt-0 space-y-4">
                   {tripHistory && tripHistory.length > 0 ? (
                     tripHistory.slice(0, 10).map((trip, index) => (
-                      <motion.div
+                      <div
                         key={trip.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
+                        className="animate-in fade-in slide-in-from-left-4 duration-300"
+                        style={{ animationDelay: `${index * 50}ms` }}
                       >
                         <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
                           <CardContent className="p-5">
@@ -595,7 +524,7 @@ const DriverApp = () => {
                             </div>
                           </CardContent>
                         </Card>
-                      </motion.div>
+                      </div>
                     ))
                   ) : (
                     <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
@@ -611,9 +540,8 @@ const DriverApp = () => {
                     </Card>
                   )}
                 </TabsContent>
-              </AnimatePresence>
             </Tabs>
-          </motion.div>
+          </div>
         )}
       </div>
       <AdminFloatingButton />
