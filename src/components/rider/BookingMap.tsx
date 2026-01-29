@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Location } from "@/hooks/useRiderBooking";
+import { OnlineDriver } from "@/hooks/useOnlineDrivers";
 import { MapPin, Navigation, Locate, ZoomIn, ZoomOut, Layers, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,15 +13,17 @@ interface BookingMapProps {
   routeGeometry?: any;
   className?: string;
   showControls?: boolean;
+  onlineDrivers?: OnlineDriver[];
 }
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
-const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = true }: BookingMapProps) => {
+const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = true, onlineDrivers = [] }: BookingMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const pickupMarker = useRef<mapboxgl.Marker | null>(null);
   const dropoffMarker = useRef<mapboxgl.Marker | null>(null);
+  const driverMarkers = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const bearingRaf = useRef<number | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -252,6 +255,52 @@ const BookingMap = ({ pickup, dropoff, routeGeometry, className, showControls = 
     source.setData(emptyData);
     glowSource.setData(emptyData);
   }, [routeGeometry, mapLoaded]);
+
+  // Update driver markers
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const currentDriverIds = new Set(onlineDrivers.map(d => d.id));
+    
+    // Remove markers for drivers no longer online
+    driverMarkers.current.forEach((marker, driverId) => {
+      if (!currentDriverIds.has(driverId)) {
+        marker.remove();
+        driverMarkers.current.delete(driverId);
+      }
+    });
+
+    // Add or update driver markers
+    onlineDrivers.forEach((driver) => {
+      if (driver.current_lat == null || driver.current_lng == null) return;
+
+      const existingMarker = driverMarkers.current.get(driver.id);
+      
+      if (existingMarker) {
+        // Update position smoothly
+        existingMarker.setLngLat([driver.current_lng, driver.current_lat]);
+      } else {
+        // Create new marker
+        const el = document.createElement("div");
+        el.innerHTML = `
+          <div class="relative group cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary via-primary to-teal-400 border-2 border-white shadow-lg flex items-center justify-center transform transition-transform hover:scale-110">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+            </div>
+            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+          </div>
+        `;
+
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([driver.current_lng, driver.current_lat])
+          .addTo(map.current!);
+
+        driverMarkers.current.set(driver.id, marker);
+      }
+    });
+  }, [onlineDrivers, mapLoaded]);
 
   // Viewport updates only when pickup/dropoff changes (not on every route update)
   useEffect(() => {

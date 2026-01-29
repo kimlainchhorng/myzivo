@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Trip } from "@/hooks/useTrips";
 import { useRiderTripRealtime } from "@/hooks/useTripRealtime";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useOnlineDrivers } from "@/hooks/useOnlineDrivers";
 import { toast } from "sonner";
 import ZivoLogo from "@/components/ZivoLogo";
 type BookingStep = "location" | "vehicle" | "confirm" | "tracking";
@@ -63,6 +64,9 @@ const RiderApp = () => {
     reverseGeocode,
     isGettingLocation
   } = useCurrentLocation();
+
+  // Fetch online drivers for map display
+  const { data: onlineDrivers = [] } = useOnlineDrivers();
 
   // Auto-set pickup from GPS
   const handleUseMyLocation = async () => {
@@ -343,7 +347,7 @@ const RiderApp = () => {
 
       {/* Map Section */}
       <div className="flex-1 relative">
-        <BookingMap pickup={pickup} dropoff={dropoff} routeGeometry={routeGeometry} className="absolute inset-0" />
+        <BookingMap pickup={pickup} dropoff={dropoff} routeGeometry={routeGeometry} onlineDrivers={onlineDrivers} className="absolute inset-0" />
 
         {/* Loading Overlay - CSS based */}
         {isCalculating && <div className="absolute inset-0 bg-background/60 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-200">
