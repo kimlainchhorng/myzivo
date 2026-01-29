@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2,
+  Users, Car, MapPin, DollarSign, BarChart3, Shield, Menu, LogOut, FileCheck, Store, Plane, Building2, Clock,
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
   ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send, Flag, Briefcase, Target,
-  Brain, ShieldAlert, Coins
+  Brain, ShieldAlert, Coins, Rocket, Search, Image, Gauge
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -72,6 +72,10 @@ import AdminAIInsights from "@/components/admin/AdminAIInsights";
 import AdminFraudDetection from "@/components/admin/AdminFraudDetection";
 import AdminLoyaltyProgram from "@/components/admin/AdminLoyaltyProgram";
 import AdminApiUsage from "@/components/admin/AdminApiUsage";
+import AdminUserActivityTimeline from "@/components/admin/AdminUserActivityTimeline";
+import AdminTicketQueue from "@/components/admin/AdminTicketQueue";
+import AdminContentModeration from "@/components/admin/AdminContentModeration";
+import AdminGlobalSearch from "@/components/admin/AdminGlobalSearch";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -86,14 +90,17 @@ const AdminDashboard = () => {
     { title: "Overview", items: [
       { value: "analytics", label: "Analytics", icon: BarChart3, gradient: "from-primary to-teal-400" },
       { value: "activity", label: "Activity Feed", icon: Activity, gradient: "from-cyan-500 to-blue-500" },
+      { value: "activity-timeline", label: "Live Timeline", icon: Clock, gradient: "from-violet-500 to-purple-500" },
       { value: "realtime", label: "Real-time", icon: Radio, gradient: "from-violet-500 to-purple-500" },
       { value: "health", label: "Service Health", icon: Server, gradient: "from-emerald-500 to-green-500" },
       { value: "forecasting", label: "Forecasting", icon: Sparkles, gradient: "from-violet-500 to-purple-500" },
       { value: "ai-insights", label: "AI Insights", icon: Brain, gradient: "from-violet-500 to-pink-500" },
+      { value: "global-search", label: "Global Search", icon: Search, gradient: "from-violet-500 to-purple-500" },
     ]},
     { title: "Accounts", items: [
       { value: "accounts", label: "All Accounts", icon: Users, gradient: "from-violet-500 to-purple-500" },
       { value: "users", label: "Customers", icon: User, gradient: "from-blue-500 to-cyan-500" },
+      { value: "directory", label: "Customer Directory", icon: Users, gradient: "from-blue-500 to-cyan-500" },
       { value: "insights", label: "Customer Insights", icon: Heart, gradient: "from-rose-500 to-pink-500" },
       { value: "segments", label: "User Segments", icon: PieChart, gradient: "from-violet-500 to-purple-500" },
       { value: "roles", label: "Roles & Permissions", icon: Crown, gradient: "from-amber-500 to-orange-500" },
@@ -141,7 +148,9 @@ const AdminDashboard = () => {
       { value: "notifications", label: "Notifications", icon: Bell, gradient: "from-rose-500 to-pink-500" },
       { value: "announcements", label: "Announcements", icon: Megaphone, gradient: "from-rose-500 to-pink-500" },
       { value: "support", label: "Support Tickets", icon: Headphones, gradient: "from-cyan-500 to-teal-500" },
+      { value: "ticket-queue", label: "Ticket Queue", icon: Ticket, gradient: "from-amber-500 to-orange-500" },
       { value: "escalations", label: "Escalations", icon: ArrowUp, gradient: "from-red-500 to-orange-500" },
+      { value: "moderation", label: "Content Moderation", icon: Image, gradient: "from-rose-500 to-pink-500" },
     ]},
     { title: "System", items: [
       { value: "integrations", label: "Integrations", icon: Plug, gradient: "from-cyan-500 to-blue-500" },
@@ -355,6 +364,11 @@ const AdminDashboard = () => {
             <TabsContent value="fraud" className="mt-0"><AdminFraudDetection /></TabsContent>
             <TabsContent value="loyalty" className="mt-0"><AdminLoyaltyProgram /></TabsContent>
             <TabsContent value="api-usage" className="mt-0"><AdminApiUsage /></TabsContent>
+            <TabsContent value="activity-timeline" className="mt-0"><AdminUserActivityTimeline /></TabsContent>
+            <TabsContent value="global-search" className="mt-0"><AdminGlobalSearch /></TabsContent>
+            <TabsContent value="directory" className="mt-0"><AdminCustomerDirectory /></TabsContent>
+            <TabsContent value="ticket-queue" className="mt-0"><AdminTicketQueue /></TabsContent>
+            <TabsContent value="moderation" className="mt-0"><AdminContentModeration /></TabsContent>
           </Tabs>
         </main>
       </div>
