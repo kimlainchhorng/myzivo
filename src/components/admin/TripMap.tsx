@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, MapPin, Car, Navigation, Maximize2, Layers, Activity } from "lucide-react";
+import { RefreshCw, MapPin, Car, Navigation, Maximize2, Layers, Activity, AlertCircle } from "lucide-react";
 import { useOnlineDrivers, useActiveTripsWithLocations } from "@/hooks/useOnlineDrivers";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const TripMap = () => {
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeLayer, setActiveLayer] = useState<"all" | "drivers" | "trips">("all");
 
@@ -27,20 +28,36 @@ const TripMap = () => {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    if (!MAPBOX_TOKEN) {
+      setMapError("Mapbox token not configured");
+      return;
+    }
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [-74.006, 40.7128], // Default to NYC
-      zoom: 11,
-    });
+    try {
+      mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-74.006, 40.7128], // Default to NYC
+        zoom: 11,
+      });
 
-    map.current.on("load", () => {
-      setMapLoaded(true);
-    });
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+      map.current.on("load", () => {
+        setMapLoaded(true);
+        setMapError(null);
+      });
+
+      map.current.on("error", (e) => {
+        console.error("Mapbox error:", e);
+        setMapError("Failed to load map");
+      });
+    } catch (error) {
+      console.error("Map initialization error:", error);
+      setMapError("Failed to initialize map");
+    }
 
     return () => {
       map.current?.remove();
@@ -303,7 +320,26 @@ const TripMap = () => {
       </CardHeader>
       
       <CardContent className="p-0">
-        {(driversLoading || tripsLoading) && !mapLoaded ? (
+        {mapError ? (
+          <div className="h-[450px] flex items-center justify-center bg-muted/20">
+            <div className="text-center p-8">
+              <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+              </div>
+              <p className="font-bold text-lg mb-1">Map Unavailable</p>
+              <p className="text-sm text-muted-foreground">{mapError}</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.location.reload()}
+                className="mt-4"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          </div>
+        ) : (driversLoading || tripsLoading) && !mapLoaded ? (
           <Skeleton className="h-[450px] w-full" />
         ) : (
           <div className="relative">
@@ -344,7 +380,7 @@ const TripMap = () => {
               </div>
             </motion.div>
 
-            {/* Empty state overlay */}
+            {/* Empty state overlay - only show when no data AND map is loaded */}
             <AnimatePresence>
               {onlineCount === 0 && activeTripsCount === 0 && mapLoaded && (
                 <motion.div 
