@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   Shield, 
   Check, 
@@ -310,95 +309,76 @@ const TravelInsurance = () => {
         </section>
 
         {/* Why Choose Us */}
-        <section className="py-16 lg:py-24 bg-muted/20">
+        <section className="py-10 sm:py-16 lg:py-24 bg-muted/20">
           <div className="container mx-auto px-4 max-w-5xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5" />
-                <CardContent className="p-8 lg:p-12 relative">
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <CardContent className="p-5 sm:p-8 lg:p-12 relative">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                     {benefits.map((benefit, index) => (
-                      <motion.div
+                      <div
                         key={benefit.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.1 }}
-                        className="text-center"
+                        className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
+                        style={{ animationDelay: `${index * 75}ms` }}
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30"
-                        >
-                          <benefit.icon className="h-8 w-8 text-white" />
-                        </motion.div>
-                        <h4 className="font-bold text-lg mb-1">{benefit.title}</h4>
-                        <p className="text-sm text-muted-foreground">{benefit.description}</p>
-                      </motion.div>
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                          <benefit.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+                        </div>
+                        <h4 className="font-bold text-sm sm:text-lg mb-1">{benefit.title}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{benefit.description}</p>
+                      </div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="py-16 lg:py-24">
+        <section className="py-10 sm:py-16 lg:py-24">
           <div className="container mx-auto px-4 max-w-4xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+            <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-3 sm:mb-4">
                 Ready to Travel <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Worry-Free?</span>
               </h2>
-              <p className="text-lg text-muted-foreground mb-10">Get instant coverage and peace of mind for your next trip</p>
+              <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-10">Get instant coverage and peace of mind for your next trip</p>
               
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="inline-block mb-10">
-                <Button size="lg" className="h-16 px-10 text-xl font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-3">
+              <div className="inline-block mb-6 sm:mb-10">
+                <Button size="lg" className="h-12 sm:h-16 px-6 sm:px-10 text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-2 sm:gap-3 touch-manipulation active:scale-[0.98]">
                   Get Insured Now
-                  <ArrowRight className="w-6 h-6" />
+                  <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </Button>
-              </motion.div>
-              
-              <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                <motion.div whileHover={{ y: -4 }}>
-                  <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group" onClick={() => navigate("/insurance")}>
-                    <CardContent className="flex items-center gap-4 p-6">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FileText className="h-7 w-7 text-cyan-500" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="font-bold text-lg">Full Policy Details</h4>
-                        <p className="text-sm text-muted-foreground">Read complete terms</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
-                    </CardContent>
-                  </Card>
-                </motion.div>
-                <motion.div whileHover={{ y: -4 }}>
-                  <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all group" onClick={() => navigate("/help#insurance")}>
-                    <CardContent className="flex items-center gap-4 p-6">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Heart className="h-7 w-7 text-cyan-500" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h4 className="font-bold text-lg">Claims & Support</h4>
-                        <p className="text-sm text-muted-foreground">How to file a claim</p>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors" />
-                    </CardContent>
-                  </Card>
-                </motion.div>
               </div>
-            </motion.div>
+              
+              <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
+                <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" onClick={() => navigate("/insurance")}>
+                  <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                      <FileText className="h-5 w-5 sm:h-7 sm:w-7 text-cyan-500" />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <h4 className="font-bold text-sm sm:text-lg">Full Policy Details</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Read complete terms</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors flex-shrink-0" />
+                  </CardContent>
+                </Card>
+                <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" onClick={() => navigate("/help#insurance")}>
+                  <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                      <Heart className="h-5 w-5 sm:h-7 sm:w-7 text-cyan-500" />
+                    </div>
+                    <div className="flex-1 text-left min-w-0">
+                      <h4 className="font-bold text-sm sm:text-lg">Claims & Support</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">How to file a claim</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors flex-shrink-0" />
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
         </section>
       </main>
