@@ -31,7 +31,25 @@ export const useOnlineDrivers = () => {
       if (error) throw error;
       return data as OnlineDriver[];
     },
-    refetchInterval: 10000, // Refresh every 10 seconds for live updates
+    refetchInterval: 10000,
+  });
+};
+
+// Fetch all drivers with location for admin map view (regardless of online status)
+export const useAllDriversWithLocation = () => {
+  return useQuery({
+    queryKey: ["all-drivers-location"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers")
+        .select("id, full_name, vehicle_type, vehicle_model, vehicle_plate, current_lat, current_lng, is_online, status, avatar_url, rating, phone")
+        .not("current_lat", "is", null)
+        .not("current_lng", "is", null);
+
+      if (error) throw error;
+      return data as OnlineDriver[];
+    },
+    refetchInterval: 15000,
   });
 };
 
