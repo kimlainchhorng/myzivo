@@ -5,14 +5,12 @@ import {
   Hotel, 
   Menu,
   ClipboardList,
-  BarChart3,
   Settings,
   LogOut,
   Search,
   BedDouble,
   User,
-  ChevronRight,
-  Sparkles
+  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -28,7 +26,6 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-import { motion } from "framer-motion";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 
@@ -56,9 +53,9 @@ const HotelDashboard = () => {
       {/* Header with Logo */}
       <div className="p-5 border-b border-border/50">
         <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
+          <div className="hover:scale-105 transition-transform">
             <ZivoLogo size="sm" />
-          </motion.div>
+          </div>
           <div>
             <span className="font-bold text-lg block">Hotels</span>
             <span className="text-xs text-muted-foreground">Travel Hub</span>
@@ -69,8 +66,8 @@ const HotelDashboard = () => {
       {/* User Info */}
       <div className="p-4">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-            <User className="h-5 w-5 text-amber-500" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+            <User className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{user?.email?.split('@')[0]}</p>
@@ -82,12 +79,12 @@ const HotelDashboard = () => {
       {/* Quick Stats */}
       <div className="px-4 mb-4">
         <div className="grid grid-cols-2 gap-2">
-          <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
-            <p className="text-lg font-bold text-amber-500">8</p>
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 border border-amber-500/20">
+            <p className="text-base sm:text-lg font-bold text-amber-500">8</p>
             <p className="text-[10px] text-muted-foreground">Today's Bookings</p>
           </div>
-          <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20">
-            <p className="text-lg font-bold text-emerald-500">72%</p>
+          <div className="p-2.5 sm:p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-green-500/5 border border-emerald-500/20">
+            <p className="text-base sm:text-lg font-bold text-emerald-500">72%</p>
             <p className="text-[10px] text-muted-foreground">Occupancy</p>
           </div>
         </div>
@@ -99,21 +96,19 @@ const HotelDashboard = () => {
         {navItems.map((item, index) => {
           const isActive = activeTab === item.value;
           return (
-            <motion.button
+            <button
               key={item.value}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.03 }}
               onClick={() => setActiveTab(item.value)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] animate-in fade-in slide-in-from-left-2",
                 isActive
                   ? "bg-amber-500/10 text-amber-500"
                   : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
               )}
+              style={{ animationDelay: `${index * 30}ms` }}
             >
               <div className={cn(
-                "w-9 h-9 rounded-lg flex items-center justify-center transition-all",
+                "w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center transition-all",
                 isActive 
                   ? `bg-gradient-to-br ${item.gradient} shadow-lg` 
                   : "bg-muted/50 group-hover:bg-muted"
@@ -123,11 +118,11 @@ const HotelDashboard = () => {
                   isActive ? "text-white" : "text-muted-foreground group-hover:text-foreground"
                 )} />
               </div>
-              <span className="font-medium flex-1">{item.label}</span>
+              <span className="font-medium flex-1 text-sm sm:text-base">{item.label}</span>
               {isActive && (
                 <ChevronRight className="w-4 h-4 text-amber-500" />
               )}
-            </motion.button>
+            </button>
           );
         })}
       </nav>
@@ -176,50 +171,35 @@ const HotelDashboard = () => {
       <div className="fixed bottom-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed top-1/2 left-1/3 w-[300px] h-[300px] bg-gradient-radial from-yellow-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      {/* Floating Decorative Elements */}
-      <motion.div
-        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 6, repeat: Infinity }}
-        className="fixed top-32 right-[10%] text-4xl pointer-events-none opacity-25 hidden lg:block"
-      >
+      {/* Floating Decorative Elements - CSS only */}
+      <div className="fixed top-32 right-[10%] text-4xl pointer-events-none opacity-25 hidden lg:block animate-float-delayed">
         🏨
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -20, 0], rotate: [0, -5, 0] }}
-        transition={{ duration: 7, repeat: Infinity, delay: 1 }}
-        className="fixed bottom-32 right-[15%] text-3xl pointer-events-none opacity-20 hidden lg:block"
-      >
+      </div>
+      <div className="fixed bottom-32 right-[15%] text-3xl pointer-events-none opacity-20 hidden lg:block animate-pulse-slow">
         🛏️
-      </motion.div>
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 5, repeat: Infinity, delay: 2 }}
-        className="fixed top-1/2 right-[5%] text-2xl pointer-events-none opacity-15 hidden lg:block"
-      >
-        ✨
-      </motion.div>
+      </div>
 
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
+      <header className="lg:hidden sticky top-0 z-50 flex items-center justify-between p-3 sm:p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl safe-area-inset-top">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hover:scale-105 transition-transform">
             <ZivoLogo size="sm" />
-          </motion.div>
+          </div>
           <div>
-            <span className="font-bold text-lg">Hotels</span>
-            <span className="text-xs text-muted-foreground block">Travel Hub</span>
+            <span className="font-bold text-base sm:text-lg">Hotels</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground block">Travel Hub</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-xl">
+              <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 sm:h-10 sm:w-10 touch-manipulation">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 border-r-0">
+            <SheetContent side="left" className="w-[280px] sm:w-72 p-0 border-r-0">
               <NavContent />
             </SheetContent>
           </Sheet>

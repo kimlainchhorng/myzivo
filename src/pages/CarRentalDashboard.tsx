@@ -8,8 +8,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
-  Warehouse,
-  Sparkles
+  Warehouse
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -25,8 +24,8 @@ import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-import { motion } from "framer-motion";
 import ZivoLogo from "@/components/ZivoLogo";
+import { cn } from "@/lib/utils";
 
 const CarRentalDashboard = () => {
   const { signOut, user } = useAuth();
@@ -50,56 +49,45 @@ const CarRentalDashboard = () => {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border/50">
-        <motion.div 
-          whileHover={{ scale: 1.05 }}
-          className="relative"
-        >
+        <div className="relative hover:scale-105 transition-transform">
           <ZivoLogo size="sm" />
-          <motion.div
-            className="absolute -top-1 -right-1"
-            animate={{ rotate: [0, 15, -15, 0] }}
-            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-          >
-            <Sparkles className="h-3 w-3 text-primary" />
-          </motion.div>
-        </motion.div>
+        </div>
         <div>
           <span className="font-bold text-lg block">Car Rental</span>
           <span className="text-xs text-muted-foreground">Fleet Management</span>
         </div>
       </div>
       <nav className="px-3 py-4 space-y-1.5 flex-1">
-        {navItems.map((item, index) => (
-          <motion.button
-            key={item.value}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-            onClick={() => setActiveTab(item.value)}
-            className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 text-left group ${
-              activeTab === item.value
-                ? "bg-gradient-to-r from-primary to-teal-500 text-white shadow-lg shadow-primary/25"
-                : "hover:bg-muted/80 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <div className={`p-1.5 rounded-lg transition-colors ${
-              activeTab === item.value 
-                ? "bg-white/20" 
-                : "bg-muted/50 group-hover:bg-primary/10"
-            }`}>
-              <item.icon className={`h-4 w-4 ${
-                activeTab === item.value ? "text-white" : "group-hover:text-primary"
-              }`} />
-            </div>
-            <span className="font-medium">{item.label}</span>
-            {activeTab === item.value && (
-              <motion.div
-                layoutId="activeIndicator"
-                className="ml-auto w-1.5 h-1.5 rounded-full bg-white"
-              />
-            )}
-          </motion.button>
-        ))}
+        {navItems.map((item, index) => {
+          const isActive = activeTab === item.value;
+          return (
+            <button
+              key={item.value}
+              onClick={() => setActiveTab(item.value)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 sm:py-3 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] animate-in fade-in slide-in-from-left-2",
+                isActive
+                  ? "bg-gradient-to-r from-primary to-teal-500 text-white shadow-lg shadow-primary/25"
+                  : "hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+              )}
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <div className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                isActive ? "bg-white/20" : "bg-muted/50 group-hover:bg-primary/10"
+              )}>
+                <item.icon className={cn(
+                  "h-4 w-4",
+                  isActive ? "text-white" : "group-hover:text-primary"
+                )} />
+              </div>
+              <span className="font-medium text-sm sm:text-base">{item.label}</span>
+              {isActive && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+              )}
+            </button>
+          );
+        })}
       </nav>
       
       {/* Quick Stats in Sidebar */}
@@ -174,50 +162,35 @@ const CarRentalDashboard = () => {
       <div className="fixed bottom-1/3 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed top-3/4 right-1/4 w-[300px] h-[300px] bg-gradient-to-tl from-emerald-500/8 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Floating Decorative Elements */}
-      <motion.div
-        className="fixed top-20 right-20 text-4xl pointer-events-none hidden lg:block"
-        animate={{ y: [0, -15, 0], rotate: [0, 5, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-      >
+      {/* Floating Decorative Elements - CSS only */}
+      <div className="fixed top-20 right-20 text-4xl pointer-events-none hidden lg:block animate-float-delayed">
         🚗
-      </motion.div>
-      <motion.div
-        className="fixed bottom-40 right-40 text-3xl pointer-events-none hidden lg:block"
-        animate={{ y: [0, 12, 0], rotate: [0, -8, 0] }}
-        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-      >
+      </div>
+      <div className="fixed bottom-40 right-40 text-3xl pointer-events-none hidden lg:block animate-pulse-slow">
         ✨
-      </motion.div>
-      <motion.div
-        className="fixed top-1/2 right-10 text-2xl pointer-events-none hidden lg:block"
-        animate={{ y: [0, -10, 0], scale: [1, 1.1, 1] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-      >
-        🔑
-      </motion.div>
+      </div>
 
       {/* Mobile Header */}
-      <header className="lg:hidden flex items-center justify-between p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl relative z-10">
-        <div className="flex items-center gap-3">
-          <motion.div whileHover={{ scale: 1.05 }}>
+      <header className="lg:hidden sticky top-0 flex items-center justify-between p-3 sm:p-4 border-b border-border/50 bg-card/80 backdrop-blur-xl z-50 safe-area-inset-top">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hover:scale-105 transition-transform">
             <ZivoLogo size="sm" />
-          </motion.div>
+          </div>
           <div>
-            <span className="font-bold text-lg block">Car Rental</span>
-            <span className="text-xs text-muted-foreground">Fleet Hub</span>
+            <span className="font-bold text-base sm:text-lg block">Car Rental</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground">Fleet Hub</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <NotificationCenter />
           <CrossAppNavigation currentApp="main" />
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl touch-manipulation">
+                <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 border-r border-border/50">
+            <SheetContent side="left" className="w-[280px] sm:w-72 p-0 border-r border-border/50">
               <NavContent />
             </SheetContent>
           </Sheet>
