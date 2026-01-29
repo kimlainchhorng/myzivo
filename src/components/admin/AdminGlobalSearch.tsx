@@ -1,4 +1,4 @@
-import { useState, forwardRef } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +58,7 @@ const typeConfig = {
   transaction: { icon: CreditCard, color: "text-green-500", bg: "bg-green-500/10", label: "Transaction" },
 };
 
-const AdminGlobalSearch = forwardRef<HTMLDivElement>((props, ref) => {
+const AdminGlobalSearch = () => {
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [isSearching, setIsSearching] = useState(false);
@@ -80,7 +80,7 @@ const AdminGlobalSearch = forwardRef<HTMLDivElement>((props, ref) => {
   };
 
   return (
-    <div ref={ref} className="space-y-6" {...props}>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -271,8 +271,6 @@ const AdminGlobalSearch = forwardRef<HTMLDivElement>((props, ref) => {
       </div>
     </div>
   );
-});
-
-AdminGlobalSearch.displayName = "AdminGlobalSearch";
+};
 
 export default AdminGlobalSearch;
