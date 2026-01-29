@@ -6,7 +6,7 @@ import {
   ExternalLink, User, Utensils, Hotel, ChevronRight, Wallet, Settings, History, Megaphone, Headphones, Ticket, Crown,
   Activity, FileText, Zap, TrendingUp, Trophy, Scale, Percent, UserPlus, ClipboardCheck, Plug, Radio,
   Navigation, Bike, UserCog, ShieldCheck, Package, CreditCard, Key, Bell, Globe, Database, 
-  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck
+  ArrowUp, Heart, PieChart, Server, Gift, Sparkles, Download, Truck, Banknote, Calendar, MessageSquare, Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -58,6 +58,11 @@ import AdminNotificationHub from "@/components/admin/AdminNotificationHub";
 import AdminFleetManagement from "@/components/admin/AdminFleetManagement";
 import AdminDataExport from "@/components/admin/AdminDataExport";
 import AdminVehicleInspections from "@/components/admin/AdminVehicleInspections";
+import AdminLiveDriverMap from "@/components/admin/AdminLiveDriverMap";
+import AdminCashCollection from "@/components/admin/AdminCashCollection";
+import AdminDriverSchedules from "@/components/admin/AdminDriverSchedules";
+import AdminDriverMessaging from "@/components/admin/AdminDriverMessaging";
+import AdminTripAssignment from "@/components/admin/AdminTripAssignment";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -85,19 +90,23 @@ const AdminDashboard = () => {
     ]},
     { title: "Driver Control", items: [
       { value: "drivers", label: "Driver Hub", icon: Car, gradient: "from-emerald-500 to-green-500" },
+      { value: "driver-map", label: "Live Map", icon: MapPin, gradient: "from-green-500 to-teal-500" },
       { value: "fleet", label: "Fleet", icon: Truck, gradient: "from-blue-500 to-cyan-500" },
       { value: "inspections", label: "Inspections", icon: ClipboardCheck, gradient: "from-sky-500 to-blue-500" },
-      { value: "onboarding", label: "Onboarding Queue", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
-      { value: "documents", label: "Document Review", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
-      { value: "verification", label: "Final Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
+      { value: "schedules", label: "Schedules", icon: Calendar, gradient: "from-indigo-500 to-violet-500" },
+      { value: "messaging", label: "Messaging", icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
+      { value: "onboarding", label: "Onboarding", icon: UserPlus, gradient: "from-cyan-500 to-blue-500" },
+      { value: "documents", label: "Documents", icon: FileCheck, gradient: "from-amber-500 to-orange-500" },
+      { value: "verification", label: "Approval", icon: ClipboardCheck, gradient: "from-green-500 to-emerald-500" },
       { value: "incentives", label: "Incentives", icon: Gift, gradient: "from-amber-500 to-orange-500" },
       { value: "scoring", label: "Performance", icon: Trophy, gradient: "from-amber-500 to-yellow-500" },
       { value: "earnings", label: "Earnings", icon: DollarSign, gradient: "from-green-500 to-emerald-500" },
-      { value: "performance", label: "Analytics", icon: TrendingUp, gradient: "from-blue-500 to-cyan-500" },
+      { value: "cash", label: "Cash Collection", icon: Banknote, gradient: "from-green-500 to-emerald-500" },
     ]},
     { title: "Rides", items: [
       { value: "rides", label: "Rides Control", icon: Navigation, gradient: "from-sky-500 to-blue-500" },
       { value: "trips", label: "Trip Monitoring", icon: MapPin, gradient: "from-sky-500 to-blue-500" },
+      { value: "assignment", label: "Trip Assignment", icon: Send, gradient: "from-violet-500 to-purple-500" },
       { value: "heatmap", label: "Demand Heatmap", icon: MapPin, gradient: "from-orange-500 to-red-500" },
       { value: "pricing", label: "Surge & Pricing", icon: DollarSign, gradient: "from-rose-500 to-pink-500" },
     ]},
@@ -288,17 +297,21 @@ const AdminDashboard = () => {
             <TabsContent value="segments" className="mt-0"><AdminUserSegments /></TabsContent>
             <TabsContent value="roles" className="mt-0"><AdminRoleManagement /></TabsContent>
             <TabsContent value="drivers" className="mt-0"><AdminDriverManagement /></TabsContent>
+            <TabsContent value="driver-map" className="mt-0"><AdminLiveDriverMap /></TabsContent>
             <TabsContent value="fleet" className="mt-0"><AdminFleetManagement /></TabsContent>
             <TabsContent value="inspections" className="mt-0"><AdminVehicleInspections /></TabsContent>
+            <TabsContent value="schedules" className="mt-0"><AdminDriverSchedules /></TabsContent>
+            <TabsContent value="messaging" className="mt-0"><AdminDriverMessaging /></TabsContent>
             <TabsContent value="onboarding" className="mt-0"><AdminDriverOnboardingQueue /></TabsContent>
             <TabsContent value="documents" className="mt-0"><AdminDocumentReview /></TabsContent>
             <TabsContent value="verification" className="mt-0"><AdminDriverVerification /></TabsContent>
             <TabsContent value="incentives" className="mt-0"><AdminDriverIncentives /></TabsContent>
             <TabsContent value="scoring" className="mt-0"><AdminDriverScoring /></TabsContent>
             <TabsContent value="earnings" className="mt-0"><AdminDriverEarnings /></TabsContent>
-            <TabsContent value="performance" className="mt-0"><AdminDriverPerformance /></TabsContent>
+            <TabsContent value="cash" className="mt-0"><AdminCashCollection /></TabsContent>
             <TabsContent value="rides" className="mt-0"><AdminRidesManagement /></TabsContent>
             <TabsContent value="trips" className="mt-0"><AdminTripMonitoring /></TabsContent>
+            <TabsContent value="assignment" className="mt-0"><AdminTripAssignment /></TabsContent>
             <TabsContent value="heatmap" className="mt-0"><AdminHeatmapView /></TabsContent>
             <TabsContent value="pricing" className="mt-0"><AdminPricingControls /></TabsContent>
             <TabsContent value="eats" className="mt-0"><AdminEatsManagement /></TabsContent>
