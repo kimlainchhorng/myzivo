@@ -2,12 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Plane, Hotel, Car, ChevronRight, Star, Shield, 
-  Wifi, Globe, Clock, Sparkles, ArrowRight 
+  Wifi, Globe, Clock, Sparkles, ArrowRight, Crown 
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
+import { premiumAirlines, fullServiceAirlines, lowCostAirlines } from "@/data/airlines";
 
 const services = [
   {
@@ -52,11 +53,10 @@ const services = [
   },
 ];
 
-const airlines = [
-  { name: "Emirates", flag: "🇦🇪", rating: 4.9 },
-  { name: "Singapore Airlines", flag: "🇸🇬", rating: 4.9 },
-  { name: "Qatar Airways", flag: "🇶🇦", rating: 4.8 },
-  { name: "Lufthansa", flag: "🇩🇪", rating: 4.7 },
+// Use real airline data - Premium, Full-Service, and budget options
+const featuredAirlines = [
+  ...premiumAirlines.slice(0, 6),  // Emirates, Singapore, Qatar, Cathay, ANA, JAL
+  ...fullServiceAirlines.slice(0, 4), // Delta, United, American, British Airways
 ];
 
 const TravelServicesSection = () => {
@@ -140,14 +140,13 @@ const TravelServicesSection = () => {
               <div className="mt-auto">
                 <p className="text-xs text-muted-foreground mb-3">Trusted airline partners</p>
                 <div className="flex flex-wrap gap-3">
-                  {airlines.map((airline) => (
-                    <div key={airline.name} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/30 backdrop-blur-xl border border-border/30">
-                      <span>{airline.flag}</span>
+                  {featuredAirlines.slice(0, 6).map((airline) => (
+                    <div key={airline.code} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/30 backdrop-blur-xl border border-border/30">
+                      <span>{airline.logo}</span>
                       <span className="text-sm font-medium hidden sm:inline">{airline.name}</span>
-                      <div className="flex items-center gap-0.5 text-amber-400">
-                        <Star className="w-3 h-3 fill-current" />
-                        <span className="text-xs">{airline.rating}</span>
-                      </div>
+                      {airline.category === 'premium' && (
+                        <Crown className="w-3 h-3 text-amber-400" />
+                      )}
                     </div>
                   ))}
                 </div>

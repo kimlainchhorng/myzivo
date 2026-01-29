@@ -11,7 +11,8 @@ import {
   Shield,
   Sparkles,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ interface FlightTicketCardProps {
     id: number;
     airline: string;
     airlineLogo?: string;
+    airlineCode?: string;
     flightNumber: string;
     departure: { time: string; city: string; code: string };
     arrival: { time: string; city: string; code: string };
@@ -33,12 +35,23 @@ interface FlightTicketCardProps {
     isLowest?: boolean;
     isFastest?: boolean;
     co2?: string;
+    category?: 'premium' | 'full-service' | 'low-cost';
+    alliance?: string;
   };
   onSelect?: () => void;
   isSelected?: boolean;
 }
 
+// Premium airlines that get the crown badge
+const premiumAirlineNames = [
+  'Singapore Airlines', 'Emirates', 'Qatar Airways', 'Cathay Pacific', 
+  'ANA', 'Japan Airlines', 'Etihad Airways', 'Air New Zealand', 
+  'Qantas', 'Korean Air', 'Turkish Airlines', 'EVA Air', 'Virgin Atlantic'
+];
+
 const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProps) => {
+  const isPremiumAirline = flight.category === 'premium' || premiumAirlineNames.includes(flight.airline);
+  
   const getAmenityIcon = (amenity: string) => {
     switch (amenity) {
       case "wifi": return <Wifi className="w-3.5 h-3.5" />;
@@ -68,12 +81,22 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
       <div className="pl-6 pr-4 py-5">
         <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
           {/* Airline Info */}
-          <div className="flex items-center gap-4 lg:w-44">
+          <div className="flex items-center gap-4 lg:w-48">
             <div className="relative">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/30 flex items-center justify-center text-2xl ring-2 ring-sky-500/20">
+              <div className={cn(
+                "w-14 h-14 rounded-xl flex items-center justify-center text-2xl ring-2",
+                isPremiumAirline 
+                  ? "bg-gradient-to-br from-amber-500/20 to-yellow-600/30 ring-amber-500/30" 
+                  : "bg-gradient-to-br from-sky-500/20 to-blue-600/30 ring-sky-500/20"
+              )}>
                 {flight.airlineLogo || "✈️"}
               </div>
-              {flight.isLowest && (
+              {isPremiumAirline && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
+                  <Crown className="w-3 h-3 text-white" />
+                </div>
+              )}
+              {flight.isLowest && !isPremiumAirline && (
                 <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
                   <Sparkles className="w-3 h-3 text-white" />
                 </div>
@@ -82,9 +105,16 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
             <div>
               <p className="font-bold text-base">{flight.airline}</p>
               <p className="text-xs text-muted-foreground font-mono">{flight.flightNumber}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                <span className="text-xs text-muted-foreground">4.8</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex items-center gap-0.5">
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <span className="text-xs text-muted-foreground">{isPremiumAirline ? '4.9' : '4.5'}</span>
+                </div>
+                {flight.alliance && flight.alliance !== 'Independent' && (
+                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                    {flight.alliance}
+                  </Badge>
+                )}
               </div>
             </div>
           </div>

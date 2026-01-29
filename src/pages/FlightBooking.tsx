@@ -37,9 +37,11 @@ import {
 import { BookingStepIndicator, BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
 import FlightTicketCard from "@/components/flight/FlightTicketCard";
+import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
+import { premiumAirlines, fullServiceAirlines, lowCostAirlines } from "@/data/airlines";
 
 // Popular destinations with real images
 const popularDestinations = [
@@ -51,73 +53,115 @@ const popularDestinations = [
   { city: "Sydney", code: "SYD", country: "Australia", image: "🦘", price: 899 },
 ];
 
-// Partner airlines with ratings
-const airlines = [
-  { id: 1, name: "Emirates", logo: "🇦🇪", rating: 4.9 },
-  { id: 2, name: "Singapore Airlines", logo: "🇸🇬", rating: 4.9 },
-  { id: 3, name: "Qatar Airways", logo: "🇶🇦", rating: 4.8 },
-  { id: 4, name: "Lufthansa", logo: "🇩🇪", rating: 4.7 },
-  { id: 5, name: "British Airways", logo: "🇬🇧", rating: 4.6 },
+// Use real airline data
+const featuredAirlines = [
+  ...premiumAirlines.slice(0, 5),
+  ...fullServiceAirlines.slice(0, 5),
 ];
 
-// Sample flights
+// Sample flights with REAL airlines
 const sampleFlights = [
   {
     id: 1,
-    airline: "ZIVO Air",
-    airlineLogo: "✈️",
-    flightNumber: "ZV-1234",
+    airline: "Singapore Airlines",
+    airlineCode: "SQ",
+    airlineLogo: "🇸🇬",
+    flightNumber: "SQ-1234",
     departure: { time: "08:00", city: "Los Angeles", code: "LAX" },
     arrival: { time: "16:30", city: "New York", code: "JFK" },
     duration: "5h 30m",
     stops: 0,
-    price: 299,
+    price: 459,
     class: "Economy",
     amenities: ["wifi", "entertainment", "meals"],
     seatsLeft: 5,
+    category: "premium" as const,
+    alliance: "Star Alliance",
   },
   {
     id: 2,
-    airline: "SkyWings",
-    airlineLogo: "🛫",
-    flightNumber: "SW-567",
+    airline: "Emirates",
+    airlineCode: "EK",
+    airlineLogo: "🇦🇪",
+    flightNumber: "EK-205",
     departure: { time: "10:15", city: "Los Angeles", code: "LAX" },
     arrival: { time: "19:00", city: "New York", code: "JFK" },
     duration: "5h 45m",
-    stops: 1,
-    stopCity: "Denver",
-    price: 249,
-    class: "Economy",
-    amenities: ["wifi", "entertainment"],
-    seatsLeft: 12,
+    stops: 0,
+    price: 549,
+    class: "Business",
+    amenities: ["wifi", "entertainment", "meals", "lounge"],
+    seatsLeft: 3,
+    category: "premium" as const,
+    alliance: "Independent",
   },
   {
     id: 3,
-    airline: "Global Express",
-    airlineLogo: "🌍",
-    flightNumber: "GE-890",
+    airline: "Delta Airlines",
+    airlineCode: "DL",
+    airlineLogo: "🇺🇸",
+    flightNumber: "DL-890",
     departure: { time: "14:30", city: "Los Angeles", code: "LAX" },
     arrival: { time: "22:45", city: "New York", code: "JFK" },
     duration: "5h 15m",
     stops: 0,
-    price: 349,
-    class: "Business",
-    amenities: ["wifi", "entertainment", "meals", "lounge"],
-    seatsLeft: 3,
+    price: 299,
+    class: "Economy",
+    amenities: ["wifi", "entertainment"],
+    seatsLeft: 12,
+    category: "full-service" as const,
+    alliance: "SkyTeam",
   },
   {
     id: 4,
-    airline: "ZIVO Air",
-    airlineLogo: "✈️",
-    flightNumber: "ZV-5678",
+    airline: "Qatar Airways",
+    airlineCode: "QR",
+    airlineLogo: "🇶🇦",
+    flightNumber: "QR-1100",
     departure: { time: "18:00", city: "Los Angeles", code: "LAX" },
     arrival: { time: "02:30", city: "New York", code: "JFK" },
     duration: "5h 30m",
     stops: 0,
-    price: 279,
+    price: 499,
+    class: "Business",
+    amenities: ["wifi", "entertainment", "meals", "lounge"],
+    seatsLeft: 4,
+    category: "premium" as const,
+    alliance: "Oneworld",
+  },
+  {
+    id: 5,
+    airline: "JetBlue",
+    airlineCode: "B6",
+    airlineLogo: "🇺🇸",
+    flightNumber: "B6-422",
+    departure: { time: "06:30", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "14:45", city: "New York", code: "JFK" },
+    duration: "5h 15m",
+    stops: 0,
+    price: 189,
     class: "Economy",
+    amenities: ["wifi", "entertainment"],
+    seatsLeft: 18,
+    category: "full-service" as const,
+    alliance: "Independent",
+  },
+  {
+    id: 6,
+    airline: "ANA",
+    airlineCode: "NH",
+    airlineLogo: "🇯🇵",
+    flightNumber: "NH-1055",
+    departure: { time: "23:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "06:30", city: "New York", code: "JFK" },
+    duration: "5h 30m",
+    stops: 0,
+    price: 529,
+    class: "Premium Economy",
     amenities: ["wifi", "entertainment", "meals"],
-    seatsLeft: 8,
+    seatsLeft: 6,
+    category: "premium" as const,
+    alliance: "Star Alliance",
   },
 ];
 
@@ -521,22 +565,11 @@ const FlightBooking = () => {
           </section>
         )}
 
-        {/* Partner Airlines */}
+        {/* Airline Partners Carousel */}
         {!searchResults && (
           <section className="py-12 border-t border-border/50">
             <div className="container mx-auto px-4">
-              <h2 className="font-display text-xl font-bold mb-6 text-center">Trusted Airline Partners</h2>
-              <div className="flex flex-wrap justify-center gap-8">
-                {airlines.map((airline) => (
-                  <div key={airline.id} className="flex items-center gap-3 px-6 py-3 glass-card rounded-lg">
-                    <span className="text-2xl">{airline.logo}</span>
-                    <div>
-                      <p className="font-medium">{airline.name}</p>
-                      <p className="text-sm text-muted-foreground">⭐ {airline.rating}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <AirlineLogosCarousel />
             </div>
           </section>
         )}
