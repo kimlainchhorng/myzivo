@@ -8,6 +8,7 @@ import { Phone, MessageCircle, X, Navigation, Clock, DollarSign, Star, Car, Shie
 import { Trip } from "@/hooks/useTrips";
 import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import { useUnreadMessageCount } from "@/hooks/useTripChat";
+import { useDriverProximityAlert } from "@/hooks/useDriverProximityAlert";
 import { supabase } from "@/integrations/supabase/client";
 import TripChatModal from "@/components/chat/TripChatModal";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,15 @@ const TripTracker = ({ trip, onCancel }: TripTrackerProps) => {
   }, [trip.status, trip.pickup_lat, trip.pickup_lng, trip.dropoff_lat, trip.dropoff_lng]);
 
   useDriverLocationRealtime(trip.driver_id || undefined, handleDriverLocationUpdate);
+
+  // Proximity alert when driver is ~3 minutes away
+  useDriverProximityAlert({
+    driverLocation,
+    targetLocation: { lat: trip.pickup_lat, lng: trip.pickup_lng },
+    tripStatus: trip.status,
+    etaMinutes: eta,
+    alertThresholdMinutes: 3,
+  });
 
   useEffect(() => {
     if (!trip.driver_id) return;
