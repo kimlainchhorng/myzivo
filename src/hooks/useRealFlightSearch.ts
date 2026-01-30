@@ -26,14 +26,47 @@ interface FlightSearchParams {
   enabled?: boolean;
 }
 
-// Map airline code to full airline info
+interface FlightPricesResponse {
+  success: boolean;
+  prices: TravelpayoutsPrice[];
+  currency: string;
+  origin: string;
+  destination: string;
+  note?: string;
+  error?: string;
+}
+
+// Map airline code to full airline info with fallback
 const getAirlineInfo = (code: string) => {
   const airline = allAirlines.find(a => a.code === code);
-  return airline || {
+  if (airline) return airline;
+  
+  // Common airline codes not in our database
+  const fallbackAirlines: Record<string, { name: string; category: 'premium' | 'full-service' | 'low-cost'; alliance: string }> = {
+    'SU': { name: 'Aeroflot', category: 'full-service', alliance: 'SkyTeam' },
+    'S7': { name: 'S7 Airlines', category: 'full-service', alliance: 'oneworld' },
+    'DP': { name: 'Pobeda', category: 'low-cost', alliance: 'Independent' },
+    'U6': { name: 'Ural Airlines', category: 'full-service', alliance: 'Independent' },
+    'FV': { name: 'Rossiya Airlines', category: 'full-service', alliance: 'Independent' },
+    'UT': { name: 'UTair', category: 'full-service', alliance: 'Independent' },
+    'N4': { name: 'Nordwind Airlines', category: 'full-service', alliance: 'Independent' },
+    'AY': { name: 'Finnair', category: 'full-service', alliance: 'oneworld' },
+    'SK': { name: 'SAS', category: 'full-service', alliance: 'Star Alliance' },
+    'LO': { name: 'LOT Polish Airlines', category: 'full-service', alliance: 'Star Alliance' },
+    'OS': { name: 'Austrian Airlines', category: 'full-service', alliance: 'Star Alliance' },
+    'LX': { name: 'Swiss', category: 'premium', alliance: 'Star Alliance' },
+    'TK': { name: 'Turkish Airlines', category: 'full-service', alliance: 'Star Alliance' },
+    'EY': { name: 'Etihad Airways', category: 'premium', alliance: 'Independent' },
+    'WY': { name: 'Oman Air', category: 'full-service', alliance: 'Independent' },
+    'GF': { name: 'Gulf Air', category: 'full-service', alliance: 'Independent' },
+  };
+  
+  const fallback = fallbackAirlines[code];
+  return {
     code,
-    name: code,
-    category: 'full-service' as const,
-    alliance: 'Independent'
+    name: fallback?.name || code,
+    category: fallback?.category || ('full-service' as const),
+    alliance: fallback?.alliance || 'Independent'
   };
 };
 
@@ -69,10 +102,12 @@ const transformToGeneratedFlight = (
   const minutes = apiPrice.duration % 60;
   const durationStr = `${hours}h ${minutes}m`;
   
-  // Calculate prices for other classes
+  // Calculate prices for other classes based on category
   const economyPrice = apiPrice.price;
-  const businessPrice = Math.round(economyPrice * 3.5);
-  const firstPrice = airlineInfo.category === 'premium' ? Math.round(economyPrice * 8) : undefined;
+  const category = airlineInfo.category || 'full-service';
+  const businessMultiplier = category === 'premium' ? 4 : category === 'low-cost' ? 2.5 : 3.5;
+  const businessPrice = Math.round(economyPrice * businessMultiplier);
+  const firstPrice = category === 'premium' ? Math.round(economyPrice * 8) : undefined;
   
   // Amenities based on category
   const amenitiesByCategory = {
@@ -88,25 +123,29 @@ const transformToGeneratedFlight = (
     'low-cost': ['Boeing 737 MAX 8', 'Airbus A320neo', 'Airbus A321neo']
   };
   
-  const category = airlineInfo.category || 'full-service';
   const aircraftList = aircraftByCategory[category];
   
+  // Generate consistent but varied data based on index
+  const terminalOptions = ['1', '2', '3', 'A', 'B', 'C'];
+  const depTerminal = terminalOptions[index % terminalOptions.length];
+  const arrTerminal = terminalOptions[(index + 3) % terminalOptions.length];
+  
   return {
-    id: `${apiPrice.airline}-${Date.now()}-${index}`,
+    id: `${apiPrice.airline}-${apiPrice.flightNumber}-${departureTime.getTime()}-${index}`,
     airline: airlineInfo.name,
     airlineCode: apiPrice.airline,
-    flightNumber: `${apiPrice.airline}-${apiPrice.flightNumber}`,
+    flightNumber: `${apiPrice.airline}${apiPrice.flightNumber || (1000 + index)}`,
     departure: {
       time: depTimeStr,
       city: fromAirport?.city || fromCode,
       code: fromCode,
-      terminal: ['1', '2', '3', 'A', 'B', 'C'][Math.floor(Math.random() * 6)]
+      terminal: depTerminal
     },
     arrival: {
       time: arrTimeStr,
       city: toAirport?.city || toCode,
       code: toCode,
-      terminal: ['1', '2', '3', 'A', 'B', 'C'][Math.floor(Math.random() * 6)]
+      terminal: arrTerminal
     },
     duration: durationStr,
     stops: apiPrice.transfers,
@@ -131,7 +170,7 @@ const transformToGeneratedFlight = (
     meals: category !== 'low-cost',
     legroom: category === 'premium' ? '34"' : category === 'low-cost' ? '28"' : '31"',
     logo: getAirlineLogo(apiPrice.airline),
-    bookingLink: `https://www.aviasales.com${apiPrice.link}`,
+    bookingLink: apiPrice.link,
     isRealPrice: true
   };
 };
@@ -147,32 +186,48 @@ export function useRealFlightSearch({
   return useQuery({
     queryKey: ['real-flights', origin, destination, departureDate, returnDate, currency],
     queryFn: async (): Promise<GeneratedFlight[]> => {
+      console.log(`[FlightSearch] Fetching prices for ${origin} → ${destination}`);
+      
       const { data, error } = await supabase.functions.invoke('get-flight-prices', {
         body: { origin, destination, departureDate, returnDate, currency },
       });
 
       if (error) {
-        console.error('Error fetching real flights:', error);
+        console.error('[FlightSearch] Edge function error:', error);
         throw error;
       }
 
-      if (!data?.success || !data?.prices?.length) {
-        console.log('No real prices available, will use generated flights');
+      const response = data as FlightPricesResponse;
+      
+      // Handle graceful fallback for unsupported routes
+      if (!response?.success) {
+        console.warn('[FlightSearch] API returned unsuccessful:', response?.error);
+        return [];
+      }
+      
+      // Log if route is not in pricing database
+      if (response.note) {
+        console.log('[FlightSearch]', response.note);
+      }
+
+      if (!response?.prices?.length) {
+        console.log('[FlightSearch] No real prices available, will use generated flights');
         return [];
       }
 
       // Transform API data to GeneratedFlight format
-      const flights = data.prices.map((price: TravelpayoutsPrice, index: number) => 
+      const flights = response.prices.map((price: TravelpayoutsPrice, index: number) => 
         transformToGeneratedFlight(price, index, origin, destination)
       );
 
-      console.log(`Loaded ${flights.length} real flights from API`);
+      console.log(`[FlightSearch] Loaded ${flights.length} real flights from API`);
       return flights;
     },
     enabled: enabled && !!origin && !!destination && origin.length === 3 && destination.length === 3,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 1,
+    retryDelay: 1000,
   });
 }
 
@@ -187,7 +242,8 @@ export function useCombinedFlights({
   const { 
     data: realFlights, 
     isLoading: isLoadingReal,
-    isError: isRealError 
+    isError: isRealError,
+    error: realError
   } = useRealFlightSearch({
     origin,
     destination,
@@ -200,6 +256,7 @@ export function useCombinedFlights({
     flights: realFlights || [],
     isLoading: isLoadingReal,
     isError: isRealError,
+    error: realError,
     hasRealPrices: (realFlights?.length || 0) > 0,
   };
 }
