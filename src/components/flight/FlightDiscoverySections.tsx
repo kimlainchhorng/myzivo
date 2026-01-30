@@ -10,7 +10,7 @@ import CalendarHeatmap from "./CalendarHeatmap";
 import NearbyAirports from "./NearbyAirports";
 import PricePrediction from "./PricePrediction";
 import PriceLock from "./PriceLock";
-import PayLater from "./PayLater";
+
 import ZivoMilesProgram from "./ZivoMilesProgram";
 import TravelAlerts from "./TravelAlerts";
 import MultiCityPlanner from "./MultiCityPlanner";
@@ -262,12 +262,6 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-      {/* Pay Later Options */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <PayLater totalAmount={599} className="max-w-2xl mx-auto" />
-        </div>
-      </section>
 
       {/* ZIVO Miles Program */}
       <section className="py-12 border-t border-border/50">

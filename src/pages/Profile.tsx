@@ -21,12 +21,14 @@ import {
   Bell,
   Lock,
   Plane,
-  Gift
+  Gift,
+  Wallet
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import ReferralCenter from "@/components/flight/ReferralCenter";
 import GiftCardsCredits from "@/components/flight/GiftCardsCredits";
 import FlightLoyaltyIntegration from "@/components/flight/FlightLoyaltyIntegration";
+import PayLater from "@/components/flight/PayLater";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -349,6 +351,15 @@ const Profile = () => {
                 Frequent Flyer Programs
               </h3>
               <FlightLoyaltyIntegration />
+            </div>
+
+            {/* Pay Later */}
+            <div>
+              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+                <Wallet className="w-4 h-4 text-primary" />
+                Pay Later Options
+              </h3>
+              <PayLater totalAmount={599} />
             </div>
           </div>
         )}
