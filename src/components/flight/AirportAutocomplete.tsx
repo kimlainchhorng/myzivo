@@ -170,7 +170,7 @@ const AirportAutocomplete = ({
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-mono font-bold text-sky-500 border-sky-500/40">
                         {airport.code}
                       </Badge>
-                      {airport.popularity && airport.popularity >= 95 && (
+                      {airport.popularity && airport.popularity >= 9 && (
                         <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/40 text-[9px] px-1.5 py-0">
                           <Star className="w-2.5 h-2.5 mr-0.5 fill-current" />
                           Hub
