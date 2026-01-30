@@ -12,7 +12,7 @@ import PricePrediction from "./PricePrediction";
 import PriceLock from "./PriceLock";
 
 
-import TravelAlerts from "./TravelAlerts";
+
 import MultiCityPlanner from "./MultiCityPlanner";
 import CorporateTravel from "./CorporateTravel";
 import GroupBooking from "./GroupBooking";
@@ -258,12 +258,6 @@ export default function FlightDiscoverySections({
 
 
 
-      {/* Travel Alerts */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <TravelAlerts className="max-w-4xl mx-auto" />
-        </div>
-      </section>
 
       {/* Multi-City Planner */}
       <section className="py-12 border-t border-border/50">
