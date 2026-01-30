@@ -20,25 +20,39 @@ import { useState } from "react";
 
 interface FlightTicketCardProps {
   flight: {
-    id: number;
+    id: string | number;
     airline: string;
     airlineLogo?: string;
     airlineCode?: string;
     flightNumber: string;
-    departure: { time: string; city: string; code: string };
-    arrival: { time: string; city: string; code: string };
+    departure: { time: string; city: string; code: string; terminal?: string };
+    arrival: { time: string; city: string; code: string; terminal?: string };
     duration: string;
     stops: number;
     stopCity?: string;
+    stopCities?: string[];
     price: number;
+    premiumEconomyPrice?: number;
+    businessPrice?: number;
+    firstPrice?: number;
     class: string;
     amenities: string[];
     seatsLeft?: number;
     isLowest?: boolean;
     isFastest?: boolean;
     co2?: string;
+    carbonOffset?: number;
     category?: 'premium' | 'full-service' | 'low-cost';
     alliance?: string;
+    aircraft?: string;
+    onTimePerformance?: number;
+    baggageIncluded?: string;
+    refundable?: boolean;
+    wifi?: boolean;
+    entertainment?: boolean;
+    meals?: boolean;
+    legroom?: string;
+    logo?: string;
   };
   onSelect?: () => void;
   isSelected?: boolean;
@@ -210,10 +224,16 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                 ) : (
                   <span className="text-amber-500">
                     {flight.stops} stop{flight.stops > 1 ? "s" : ""} 
-                    {flight.stopCity && <span className="text-muted-foreground"> • {flight.stopCity}</span>}
+                    {flight.stopCities && flight.stopCities.length > 0 
+                      ? <span className="text-muted-foreground"> • {flight.stopCities.join(', ')}</span>
+                      : flight.stopCity && <span className="text-muted-foreground"> • {flight.stopCity}</span>
+                    }
                   </span>
                 )}
               </p>
+              {flight.aircraft && (
+                <p className="text-[10px] text-muted-foreground/70 mt-0.5">{flight.aircraft}</p>
+              )}
             </div>
 
             {/* Arrival */}
@@ -242,9 +262,23 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Free cancellation</span>
+            <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                <span>{flight.refundable ? 'Free cancellation' : 'Non-refundable'}</span>
+              </div>
+              {flight.onTimePerformance && (
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-sky-400" />
+                  <span>{flight.onTimePerformance}% on-time</span>
+                </div>
+              )}
+              {flight.baggageIncluded && (
+                <div className="flex items-center gap-1.5">
+                  <Luggage className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{flight.baggageIncluded}</span>
+                </div>
+              )}
             </div>
           </div>
 
