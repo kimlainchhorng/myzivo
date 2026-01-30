@@ -43,21 +43,43 @@ export function useFlightPrices({
   return useQuery({
     queryKey: ['flight-prices', origin, destination, departureDate, returnDate, currency],
     queryFn: async (): Promise<FlightPricesResponse> => {
-      const { data, error } = await supabase.functions.invoke('get-flight-prices', {
-        body: { origin, destination, departureDate, returnDate, currency },
-      });
+      try {
+        const { data, error } = await supabase.functions.invoke('get-flight-prices', {
+          body: { origin, destination, departureDate, returnDate, currency },
+        });
 
-      if (error) {
-        console.error('Error fetching flight prices:', error);
-        throw error;
+        if (error) {
+          console.error('Error fetching flight prices:', error);
+          // Return empty response instead of throwing to allow graceful fallback
+          return {
+            success: false,
+            prices: [],
+            currency,
+            origin,
+            destination,
+            error: error.message,
+          };
+        }
+
+        return data as FlightPricesResponse;
+      } catch (err) {
+        console.error('Flight prices fetch failed:', err);
+        // Return empty response for network errors
+        return {
+          success: false,
+          prices: [],
+          currency,
+          origin,
+          destination,
+          error: err instanceof Error ? err.message : 'Network error',
+        };
       }
-
-      return data as FlightPricesResponse;
     },
     enabled: enabled && !!origin && !!destination && origin.length === 3 && destination.length === 3,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
+    retry: 2,
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 }
 
