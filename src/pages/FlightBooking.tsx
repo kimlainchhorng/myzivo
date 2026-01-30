@@ -224,13 +224,6 @@ const FlightBooking = () => {
             {/* Stats Bar */}
             <FlightStatsBar />
 
-            {/* Quick Actions */}
-            <FlightQuickActions 
-              onActionClick={(action) => {
-                toast.info(`Opening ${action} feature...`);
-              }}
-            />
-
             {/* Featured Destinations */}
             <FlightFeaturedDestinations
               onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
