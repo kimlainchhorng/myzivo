@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Slider } from "@/components/ui/slider";
+import { toast } from "sonner";
 import {
   Sparkles,
   Plane,
@@ -23,7 +25,20 @@ import {
   Music,
   Clock,
   ChevronRight,
-  Zap
+  Zap,
+  Snowflake,
+  Umbrella,
+  Leaf,
+  Waves,
+  TreeDeciduous,
+  Baby,
+  Dog,
+  Accessibility,
+  Wifi,
+  History,
+  Flame,
+  TrendingUp,
+  Compass
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAITripSuggestions, type AIDestination } from "@/hooks/useAITripSuggestions";
@@ -39,7 +54,6 @@ interface AITripSuggestionsProps {
   className?: string;
 }
 
-// Fallback mock data when AI is unavailable
 const FALLBACK_DESTINATIONS: AIDestination[] = [
   {
     id: '1',
@@ -98,14 +112,50 @@ const FALLBACK_DESTINATIONS: AIDestination[] = [
     description: 'Stunning Table Mountain, world-class wineries, and diverse wildlife.',
   },
 ];
+
 const PREFERENCE_TAGS = [
-  { id: 'beach', label: 'Beach', icon: Palmtree },
+  { id: 'beach', label: 'Beach', icon: Waves },
   { id: 'city', label: 'City', icon: Building2 },
-  { id: 'nature', label: 'Nature', icon: Mountain },
+  { id: 'nature', label: 'Nature', icon: TreeDeciduous },
   { id: 'culture', label: 'Culture', icon: Camera },
   { id: 'food', label: 'Food', icon: Utensils },
   { id: 'nightlife', label: 'Nightlife', icon: Music },
+  { id: 'adventure', label: 'Adventure', icon: Compass },
+  { id: 'relaxation', label: 'Relaxation', icon: Palmtree },
 ];
+
+const CLIMATE_OPTIONS = [
+  { id: 'tropical', label: 'Tropical', icon: Sun, temp: '25-35°C' },
+  { id: 'temperate', label: 'Temperate', icon: Leaf, temp: '15-25°C' },
+  { id: 'cold', label: 'Cold', icon: Snowflake, temp: '-5-15°C' },
+];
+
+const TRAVEL_STYLE = [
+  { id: 'family', label: 'Family', icon: Baby },
+  { id: 'pet-friendly', label: 'Pet Friendly', icon: Dog },
+  { id: 'accessible', label: 'Accessible', icon: Accessibility },
+  { id: 'digital-nomad', label: 'Digital Nomad', icon: Wifi },
+];
+
+const SEASON_INFO: Record<string, { best: string; avoid: string; icon: typeof Sun }> = {
+  'Portugal': { best: 'Apr-Oct', avoid: 'Dec-Feb', icon: Sun },
+  'Japan': { best: 'Mar-May, Sep-Nov', avoid: 'Jun-Aug', icon: Leaf },
+  'Colombia': { best: 'Dec-Mar', avoid: 'Apr-May', icon: Umbrella },
+  'South Africa': { best: 'Sep-Apr', avoid: 'Jun-Aug', icon: Sun },
+  'Thailand': { best: 'Nov-Feb', avoid: 'Apr-Oct', icon: Umbrella },
+  'Italy': { best: 'Apr-Jun, Sep-Oct', avoid: 'Jul-Aug', icon: Sun },
+};
+
+const DESTINATION_IMAGES: Record<string, string> = {
+  'Lisbon': 'https://images.unsplash.com/photo-1585208798174-6cedd86e019a?w=400&h=250&fit=crop',
+  'Kyoto': 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=400&h=250&fit=crop',
+  'Cartagena': 'https://images.unsplash.com/photo-1583531352515-8884af319dc1?w=400&h=250&fit=crop',
+  'Cape Town': 'https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=400&h=250&fit=crop',
+  'Tokyo': 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=250&fit=crop',
+  'Paris': 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=250&fit=crop',
+  'Bali': 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&h=250&fit=crop',
+  'Barcelona': 'https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=250&fit=crop',
+};
 
 const getCountryEmoji = (country: string): string => {
   const emojiMap: Record<string, string> = {
@@ -114,6 +164,8 @@ const getCountryEmoji = (country: string): string => {
     'Spain': '🇪🇸', 'Greece': '🇬🇷', 'Mexico': '🇲🇽', 'Brazil': '🇧🇷',
     'Australia': '🇦🇺', 'New Zealand': '🇳🇿', 'United Kingdom': '🇬🇧',
     'Germany': '🇩🇪', 'Netherlands': '🇳🇱', 'Switzerland': '🇨🇭',
+    'United States': '🇺🇸', 'Canada': '🇨🇦', 'Morocco': '🇲🇦',
+    'Egypt': '🇪🇬', 'Kenya': '🇰🇪', 'India': '🇮🇳', 'Vietnam': '🇻🇳',
   };
   return emojiMap[country] || '🌍';
 };
@@ -126,13 +178,18 @@ export const AITripSuggestions = ({
   const { destinations: aiDestinations, isLoading, fetchSuggestions } = useAITripSuggestions();
   const [displayDestinations, setDisplayDestinations] = useState<AIDestination[]>(FALLBACK_DESTINATIONS);
   const [selectedTags, setSelectedTags] = useState<string[]>(['culture', 'food']);
+  const [selectedClimate, setSelectedClimate] = useState<string>('temperate');
+  const [selectedStyle, setSelectedStyle] = useState<string[]>([]);
   const [budget, setBudget] = useState<'budget' | 'mid' | 'luxury'>('mid');
+  const [maxPrice, setMaxPrice] = useState([1500]);
+  const [tripLength, setTripLength] = useState([7]);
   const [travelers, setTravelers] = useState(2);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [dislikedIds, setDislikedIds] = useState<Set<string>>(new Set());
   const [hasLoadedAI, setHasLoadedAI] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [hoveredDest, setHoveredDest] = useState<string | null>(null);
 
-  // Update display when AI results come in
   useEffect(() => {
     if (aiDestinations.length > 0) {
       setDisplayDestinations(aiDestinations);
@@ -142,9 +199,13 @@ export const AITripSuggestions = ({
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
-      prev.includes(tagId) 
-        ? prev.filter(t => t !== tagId) 
-        : [...prev, tagId]
+      prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const toggleStyle = (styleId: string) => {
+    setSelectedStyle(prev =>
+      prev.includes(styleId) ? prev.filter(s => s !== styleId) : [...prev, styleId]
     );
   };
 
@@ -158,7 +219,7 @@ export const AITripSuggestions = ({
 
     await fetchSuggestions({
       budget,
-      activities: selectedTags,
+      activities: [...selectedTags, selectedClimate, ...selectedStyle],
       travelers,
       origin,
       likedDestinations: likedCities,
@@ -166,22 +227,25 @@ export const AITripSuggestions = ({
     });
   };
 
-  const likeDestination = (id: string) => {
-    setLikedIds(prev => new Set(prev).add(id));
-    setDislikedIds(prev => {
+  const likeDestination = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    setLikedIds(prev => {
       const next = new Set(prev);
-      next.delete(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        setDislikedIds(p => { const n = new Set(p); n.delete(id); return n; });
+      }
       return next;
     });
   };
 
-  const dislikeDestination = (id: string) => {
+  const dislikeDestination = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     setDislikedIds(prev => new Set(prev).add(id));
-    setLikedIds(prev => {
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
+    setLikedIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    toast.info("We'll improve your suggestions based on this feedback");
   };
 
   const handleSelectDestination = (dest: AIDestination) => {
@@ -189,6 +253,8 @@ export const AITripSuggestions = ({
       onSelectDestination(dest.airportCode, dest.city);
     }
   };
+
+  const seasonInfo = (country: string) => SEASON_INFO[country] || { best: 'Year-round', avoid: 'None', icon: Sun };
 
   return (
     <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
@@ -203,11 +269,12 @@ export const AITripSuggestions = ({
               <CardTitle className="text-lg flex items-center gap-2">
                 AI Trip Suggestions
                 <Badge className="bg-violet-500/20 text-violet-400 border-violet-500/40">
-                  Powered by AI
+                  <Zap className="w-3 h-3 mr-1" />
+                  Gemini
                 </Badge>
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Personalized destinations based on your preferences
+                Personalized destinations powered by AI
               </p>
             </div>
           </div>
@@ -220,15 +287,18 @@ export const AITripSuggestions = ({
             className="gap-2"
           >
             <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-            {isLoading ? "Finding..." : "Refresh"}
+            {isLoading ? "Thinking..." : "Refresh"}
           </Button>
         </div>
       </CardHeader>
 
       <CardContent className="p-4 space-y-6">
-        {/* Preferences */}
+        {/* Activity Preferences */}
         <div className="space-y-3">
-          <label className="text-sm font-medium">What are you looking for?</label>
+          <label className="text-sm font-medium flex items-center gap-2">
+            <Compass className="w-4 h-4 text-violet-400" />
+            What experiences are you looking for?
+          </label>
           <div className="flex flex-wrap gap-2">
             {PREFERENCE_TAGS.map(tag => (
               <button
@@ -248,15 +318,38 @@ export const AITripSuggestions = ({
           </div>
         </div>
 
-        {/* Budget & Travelers */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
+        {/* Climate Selection */}
+        <div className="space-y-3">
+          <label className="text-sm font-medium">Preferred Climate</label>
+          <div className="grid grid-cols-3 gap-2">
+            {CLIMATE_OPTIONS.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => setSelectedClimate(opt.id)}
+                className={cn(
+                  "flex flex-col items-center gap-1 p-3 rounded-lg border transition-all",
+                  selectedClimate === opt.id
+                    ? "bg-violet-500/20 border-violet-500/40 text-violet-400"
+                    : "bg-muted/30 border-border/50 text-muted-foreground hover:border-border"
+                )}
+              >
+                <opt.icon className="w-5 h-5" />
+                <span className="text-sm font-medium">{opt.label}</span>
+                <span className="text-xs opacity-60">{opt.temp}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Budget, Travelers & Trip Length */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
             <label className="text-xs text-muted-foreground mb-1 block">Budget</label>
             <div className="flex items-center gap-1 p-1 rounded-lg bg-muted/50">
               {[
-                { value: 'budget', label: '$', tooltip: 'Budget-friendly' },
-                { value: 'mid', label: '$$', tooltip: 'Mid-range' },
-                { value: 'luxury', label: '$$$', tooltip: 'Luxury' },
+                { value: 'budget', label: '$' },
+                { value: 'mid', label: '$$' },
+                { value: 'luxury', label: '$$$' },
               ].map(option => (
                 <button
                   key={option.value}
@@ -288,32 +381,116 @@ export const AITripSuggestions = ({
               />
             </div>
           </div>
+
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Days</label>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium">{tripLength[0]}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Suggestions */}
+        {/* Advanced Filters Toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="flex items-center gap-2 text-sm text-violet-400 hover:text-violet-300 transition-colors"
+        >
+          <History className="w-4 h-4" />
+          {showAdvanced ? 'Hide' : 'Show'} advanced filters
+          <ChevronRight className={cn("w-4 h-4 transition-transform", showAdvanced && "rotate-90")} />
+        </button>
+
+        <AnimatePresence>
+          {showAdvanced && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden space-y-4"
+            >
+              {/* Max Price Slider */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Max flight price</span>
+                  <span className="font-medium">${maxPrice[0]}</span>
+                </div>
+                <Slider
+                  value={maxPrice}
+                  onValueChange={setMaxPrice}
+                  min={200}
+                  max={5000}
+                  step={100}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Trip Length Slider */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Trip length</span>
+                  <span className="font-medium">{tripLength[0]} days</span>
+                </div>
+                <Slider
+                  value={tripLength}
+                  onValueChange={setTripLength}
+                  min={2}
+                  max={30}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Travel Style */}
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Travel Style</label>
+                <div className="flex flex-wrap gap-2">
+                  {TRAVEL_STYLE.map(style => (
+                    <button
+                      key={style.id}
+                      onClick={() => toggleStyle(style.id)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all text-sm",
+                        selectedStyle.includes(style.id)
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
+                          : "bg-muted/30 border-border/50 text-muted-foreground hover:border-border"
+                      )}
+                    >
+                      <style.icon className="w-4 h-4" />
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Destination Cards */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium flex items-center gap-2">
-              Recommended for you
+              <Flame className="w-4 h-4 text-orange-400" />
+              Top picks for you
               {hasLoadedAI && (
                 <Badge className="bg-violet-500/20 text-violet-400 text-[10px]">
                   <Zap className="w-2.5 h-2.5 mr-0.5" />
-                  AI
+                  AI Generated
                 </Badge>
               )}
             </label>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
               From {origin}
             </span>
           </div>
 
-          <div className="grid gap-3">
+          <div className="grid gap-4">
             {isLoading ? (
-              // Loading skeletons
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="rounded-xl border border-border/50 p-4 animate-pulse">
                   <div className="flex items-start gap-4">
-                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <Skeleton className="w-24 h-24 rounded-lg" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-5 w-32" />
                       <Skeleton className="h-4 w-24" />
@@ -329,112 +506,169 @@ export const AITripSuggestions = ({
             ) : (
               displayDestinations
                 .filter(d => !dislikedIds.has(d.id))
-                .map((dest, i) => (
-                  <motion.div
-                    key={dest.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className={cn(
-                      "relative rounded-xl border p-4 transition-all cursor-pointer",
-                      likedIds.has(dest.id)
-                        ? "border-pink-500/40 bg-pink-500/5"
-                        : "border-border/50 hover:border-border bg-card/30"
-                    )}
-                    onClick={() => handleSelectDestination(dest)}
-                  >
-                    {/* Match Score */}
-                    <div className="absolute -top-2 -right-2">
-                      <Badge className="bg-violet-500 text-white font-bold">
-                        {dest.matchScore}% match
-                      </Badge>
-                    </div>
+                .map((dest, i) => {
+                  const season = seasonInfo(dest.country);
+                  const destImage = DESTINATION_IMAGES[dest.city];
+                  const isHovered = hoveredDest === dest.id;
+                  
+                  return (
+                    <motion.div
+                      key={dest.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      onMouseEnter={() => setHoveredDest(dest.id)}
+                      onMouseLeave={() => setHoveredDest(null)}
+                      onClick={() => handleSelectDestination(dest)}
+                      className={cn(
+                        "relative rounded-xl border overflow-hidden transition-all cursor-pointer group",
+                        likedIds.has(dest.id)
+                          ? "border-pink-500/40 bg-pink-500/5 ring-2 ring-pink-500/20"
+                          : "border-border/50 hover:border-primary/50 bg-card/30"
+                      )}
+                    >
+                      {/* Match Score Badge */}
+                      <div className="absolute top-3 right-3 z-10">
+                        <Badge className="bg-violet-500 text-white font-bold shadow-lg">
+                          {dest.matchScore}% match
+                        </Badge>
+                      </div>
 
-                    <div className="flex items-start gap-4">
-                      {/* Destination Emoji */}
-                      <div className="text-5xl">{getCountryEmoji(dest.country)}</div>
-
-                    {/* Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="font-semibold text-lg">{dest.city}</h4>
-                          <p className="text-sm text-muted-foreground">{dest.country}</p>
+                      <div className="flex">
+                        {/* Image */}
+                        <div className="w-32 h-36 shrink-0 relative overflow-hidden">
+                          {destImage ? (
+                            <motion.img
+                              src={destImage}
+                              alt={dest.city}
+                              className="w-full h-full object-cover"
+                              animate={{ scale: isHovered ? 1.1 : 1 }}
+                              transition={{ duration: 0.3 }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-violet-500/30 to-purple-500/20 flex items-center justify-center">
+                              <span className="text-5xl">{getCountryEmoji(dest.country)}</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                          <div className="absolute bottom-2 left-2 text-white text-sm font-bold">
+                            {dest.airportCode}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-bold text-primary">
-                            ${dest.price}
-                          </p>
-                          <p className="text-xs text-muted-foreground">per person</p>
+
+                        {/* Content */}
+                        <div className="flex-1 p-4 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h4 className="font-semibold text-lg flex items-center gap-2">
+                                {dest.city}
+                                <span className="text-lg">{getCountryEmoji(dest.country)}</span>
+                              </h4>
+                              <p className="text-sm text-muted-foreground">{dest.country}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xl font-bold text-primary">${dest.price}</p>
+                              <p className="text-xs text-muted-foreground">per person</p>
+                            </div>
+                          </div>
+
+                          {/* Tags */}
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {dest.tags.slice(0, 4).map(tag => (
+                              <Badge key={tag} variant="outline" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+
+                          {/* Stats Row */}
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Sun className="w-3.5 h-3.5" />
+                              {dest.weather}
+                            </span>
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="w-3.5 h-3.5" />
+                              {dest.flightTime}
+                            </span>
+                            <span className="flex items-center gap-1 text-amber-400">
+                              ★ {dest.rating}
+                            </span>
+                          </div>
+
+                          {/* Best Season */}
+                          <div className="mt-2 flex items-center gap-2 text-xs">
+                            <season.icon className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-muted-foreground">Best:</span>
+                            <span className="text-emerald-400">{season.best}</span>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col justify-center gap-2 p-3 border-l border-border/30">
+                          <Button
+                            variant={likedIds.has(dest.id) ? "default" : "ghost"}
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 transition-transform hover:scale-110",
+                              likedIds.has(dest.id) && "bg-pink-500 hover:bg-pink-600"
+                            )}
+                            onClick={(e) => likeDestination(e, dest.id)}
+                          >
+                            <Heart className={cn("w-4 h-4", likedIds.has(dest.id) && "fill-current")} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 hover:bg-red-500/20 hover:text-red-400"
+                            onClick={(e) => dislikeDestination(e, dest.id)}
+                          >
+                            <ThumbsDown className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 group-hover:text-primary"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
-
-                      {/* Tags */}
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {dest.tags.map(tag => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 mt-3 text-sm">
-                        <span className="flex items-center gap-1 text-muted-foreground">
-                          <Sun className="w-4 h-4" />
-                          {dest.weather}
-                        </span>
-                        <span className="flex items-center gap-1 text-muted-foreground">
-                          <Clock className="w-4 h-4" />
-                          {dest.flightTime}
-                        </span>
-                        <span className="flex items-center gap-1 text-amber-400">
-                          ★ {dest.rating}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant={likedIds.has(dest.id) ? "default" : "outline"}
-                        size="icon"
-                        className={cn(
-                          "h-9 w-9",
-                          likedIds.has(dest.id) && "bg-pink-500 hover:bg-pink-600"
-                        )}
-                        onClick={() => likeDestination(dest.id)}
-                      >
-                        <Heart className={cn(
-                          "w-4 h-4",
-                          likedIds.has(dest.id) && "fill-current"
-                        )} />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => dislikeDestination(dest.id)}
-                      >
-                        <ThumbsDown className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <ChevronRight className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
+                    </motion.div>
+                  );
+                })
             )}
           </div>
         </div>
 
+        {/* Trending Destinations */}
+        <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/30">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp className="w-4 h-4 text-orange-400" />
+            <span className="text-sm font-medium text-orange-400">Trending Now</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {['Tokyo 🇯🇵', 'Bali 🇮🇩', 'Barcelona 🇪🇸', 'Marrakech 🇲🇦'].map(dest => (
+              <Badge 
+                key={dest} 
+                variant="outline" 
+                className="cursor-pointer hover:bg-orange-500/20 border-orange-500/30 text-orange-300 transition-colors"
+              >
+                {dest}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
         {/* AI Learning Note */}
-        <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/30 text-center">
-          <p className="text-sm text-violet-300">
-            <Sparkles className="w-4 h-4 inline mr-1" />
-            AI learns from your likes to improve suggestions
-          </p>
+        <div className="p-3 rounded-xl bg-violet-500/10 border border-violet-500/30">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-violet-400" />
+            <div className="text-sm">
+              <span className="text-violet-300">AI learns from your preferences.</span>
+              <span className="text-muted-foreground ml-1">Like or dislike destinations to improve suggestions.</span>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
