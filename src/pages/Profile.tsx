@@ -32,6 +32,11 @@ import PayLater from "@/components/flight/PayLater";
 import FlightBookings from "@/components/flight/FlightBookings";
 import ZivoMilesProgram from "@/components/flight/ZivoMilesProgram";
 import TravelAlerts from "@/components/flight/TravelAlerts";
+import MyTripsDashboard from "@/components/flight/MyTripsDashboard";
+import PriceAlertsDashboard from "@/components/flight/PriceAlertsDashboard";
+import ItineraryBuilder from "@/components/flight/ItineraryBuilder";
+import TravelDocuments from "@/components/flight/TravelDocuments";
+import AirlinePartnersHub from "@/components/flight/AirlinePartnersHub";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -378,6 +383,31 @@ const Profile = () => {
             {/* Travel Alerts */}
             <div>
               <TravelAlerts />
+            </div>
+
+            {/* My Trips */}
+            <div>
+              <MyTripsDashboard />
+            </div>
+
+            {/* Price Alerts */}
+            <div>
+              <PriceAlertsDashboard />
+            </div>
+
+            {/* Itinerary Builder */}
+            <div>
+              <ItineraryBuilder tripName="My Trip" />
+            </div>
+
+            {/* Travel Documents */}
+            <div>
+              <TravelDocuments />
+            </div>
+
+            {/* Airline Partners */}
+            <div>
+              <AirlinePartnersHub />
             </div>
           </div>
         )}

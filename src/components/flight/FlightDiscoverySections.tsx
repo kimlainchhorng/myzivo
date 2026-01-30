@@ -19,18 +19,14 @@ import GroupBooking from "./GroupBooking";
 
 
 
-import AirlinePartnersHub from "./AirlinePartnersHub";
 
-import ItineraryBuilder from "./ItineraryBuilder";
-import TravelDocuments from "./TravelDocuments";
 import FlightPriceAlert from "./FlightPriceAlert";
-import PriceAlertsDashboard from "./PriceAlertsDashboard";
 import AirportGuide from "./AirportGuide";
 import FlightTracker from "./FlightTracker";
 import TravelPackages from "./TravelPackages";
 import TripSharing from "./TripSharing";
 import AirlineLogosCarousel from "./AirlineLogosCarousel";
-import MyTripsDashboard from "./MyTripsDashboard";
+
 import CodeshareFlights from "./CodeshareFlights";
 import TravelCompanionFinder from "./TravelCompanionFinder";
 import GroundTransportBooking from "./GroundTransportBooking";
@@ -69,12 +65,6 @@ export default function FlightDiscoverySections({
   return (
     <>
 
-      {/* My Trips Dashboard */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <MyTripsDashboard className="max-w-5xl mx-auto" />
-        </div>
-      </section>
 
       {/* Codeshare Flights */}
       {toCity && (
@@ -310,35 +300,6 @@ export default function FlightDiscoverySections({
 
 
 
-      {/* Airline Partners Hub */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <AirlinePartnersHub className="max-w-4xl mx-auto" />
-        </div>
-      </section>
-
-
-      {/* Itinerary Builder */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <ItineraryBuilder
-              tripName={`${toCity.split(" (")[0]} Adventure`}
-              startDate={departDate}
-              className="max-w-4xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Travel Documents */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <TravelDocuments className="max-w-4xl mx-auto" />
-          </div>
-        </section>
-      )}
 
       {/* Flight Price Alert */}
       {toCity && (
@@ -363,14 +324,6 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-      {/* Price Alerts Dashboard */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <PriceAlertsDashboard className="max-w-4xl mx-auto" />
-          </div>
-        </section>
-      )}
 
       {/* Airport Guide */}
       {toCity && (
