@@ -30,6 +30,7 @@ import GiftCardsCredits from "@/components/flight/GiftCardsCredits";
 import FlightLoyaltyIntegration from "@/components/flight/FlightLoyaltyIntegration";
 import PayLater from "@/components/flight/PayLater";
 import FlightBookings from "@/components/flight/FlightBookings";
+import ZivoMilesProgram from "@/components/flight/ZivoMilesProgram";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -366,6 +367,11 @@ const Profile = () => {
             {/* My Bookings */}
             <div>
               <FlightBookings />
+            </div>
+
+            {/* ZIVO Miles Program */}
+            <div>
+              <ZivoMilesProgram />
             </div>
           </div>
         )}

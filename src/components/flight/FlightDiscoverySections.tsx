@@ -11,7 +11,7 @@ import NearbyAirports from "./NearbyAirports";
 import PricePrediction from "./PricePrediction";
 import PriceLock from "./PriceLock";
 
-import ZivoMilesProgram from "./ZivoMilesProgram";
+
 import TravelAlerts from "./TravelAlerts";
 import MultiCityPlanner from "./MultiCityPlanner";
 import CorporateTravel from "./CorporateTravel";
@@ -257,12 +257,6 @@ export default function FlightDiscoverySections({
       )}
 
 
-      {/* ZIVO Miles Program */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <ZivoMilesProgram className="max-w-4xl mx-auto" />
-        </div>
-      </section>
 
       {/* Travel Alerts */}
       <section className="py-12 border-t border-border/50">
