@@ -84,66 +84,76 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
           alt="Airplane window view at sunset" 
           className="w-full h-full object-cover scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-background/70" />
-        {/* Animated gradient overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/60" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.2),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(200_80%_50%/0.1),transparent_50%)]" />
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute top-24 right-8 hidden lg:block animate-float" style={{ animationDelay: "0s" }}>
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500/30 to-blue-600/20 backdrop-blur-xl border border-sky-500/40 flex items-center justify-center shadow-2xl shadow-sky-500/20">
-          <Plane className="w-10 h-10 text-sky-400" />
+      <div className="absolute top-20 right-10 hidden lg:block animate-float" style={{ animationDelay: "0s" }}>
+        <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-sky-500/40 to-blue-600/30 backdrop-blur-2xl border border-sky-400/50 flex items-center justify-center shadow-2xl shadow-sky-500/30">
+          <Plane className="w-12 h-12 text-sky-300" />
         </div>
       </div>
-      <div className="absolute top-44 right-36 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-600/20 backdrop-blur-xl border border-amber-500/40 flex items-center justify-center shadow-xl shadow-amber-500/20">
-          <Crown className="w-7 h-7 text-amber-400" />
+      <div className="absolute top-48 right-40 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/40 to-yellow-600/30 backdrop-blur-2xl border border-amber-400/50 flex items-center justify-center shadow-xl shadow-amber-500/25">
+          <Crown className="w-8 h-8 text-amber-300" />
         </div>
       </div>
-      <div className="absolute top-32 left-8 hidden lg:block animate-float" style={{ animationDelay: "1s" }}>
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-600/20 backdrop-blur-xl border border-emerald-500/40 flex items-center justify-center shadow-xl shadow-emerald-500/20">
-          <Globe className="w-6 h-6 text-emerald-400" />
+      <div className="absolute top-36 left-10 hidden lg:block animate-float" style={{ animationDelay: "1s" }}>
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/40 to-teal-600/30 backdrop-blur-2xl border border-emerald-400/50 flex items-center justify-center shadow-xl shadow-emerald-500/25">
+          <Globe className="w-7 h-7 text-emerald-300" />
+        </div>
+      </div>
+      <div className="absolute bottom-40 left-20 hidden lg:block animate-float" style={{ animationDelay: "1.5s" }}>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/40 to-sky-600/30 backdrop-blur-2xl border border-cyan-400/50 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <Sparkles className="w-6 h-6 text-cyan-300" />
         </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 pt-28 pb-16">
+      <div className="container mx-auto px-4 relative z-10 pt-24 pb-16">
         {/* Hero Content */}
-        <div className="max-w-4xl mx-auto text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Badge className="mb-6 px-5 py-2.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-white border-0 shadow-xl shadow-sky-500/40 text-sm font-semibold">
+        <div className="max-w-4xl mx-auto text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Badge className="mb-6 px-6 py-3 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-white border-0 shadow-xl shadow-sky-500/50 text-sm font-bold tracking-wide">
             <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
             ZIVO Flights — World-Class Air Travel
           </Badge>
           
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight tracking-tight">
-            Discover the World
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black mb-6 leading-tight tracking-tight">
+            <span className="text-foreground">Discover the World</span>
             <br />
-            <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent animate-pulse-slow">
+            <span className="bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
               in Premium Style
             </span>
           </h1>
           
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
+          <p className="text-lg sm:text-xl text-foreground/80 max-w-2xl mx-auto leading-relaxed mb-8 font-medium">
             Compare 500+ airlines instantly. Find the best deals on business class, 
             first class, and economy flights worldwide.
           </p>
 
           {/* Stats Row */}
-          <div className="flex flex-wrap justify-center gap-6 sm:gap-10 mb-10">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-400 to-cyan-400 bg-clip-text text-transparent">{stat.value}</p>
-                <p className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
+          <div className="flex flex-wrap justify-center gap-8 sm:gap-12 mb-10">
+            {stats.map((stat, index) => (
+              <div key={stat.label} className="text-center group" style={{ animationDelay: `${index * 100}ms` }}>
+                <p className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent group-hover:scale-110 transition-transform">{stat.value}</p>
+                <p className="text-sm text-foreground/70 font-semibold mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center gap-3 mb-12">
+          <div className="flex flex-wrap justify-center gap-4 mb-10">
             {features.map((feature) => (
-              <div key={feature.label} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card/60 backdrop-blur-xl border border-border/50 shadow-lg">
-                <feature.icon className="w-4 h-4 text-sky-500" />
-                <span className="text-sm font-medium">{feature.label}</span>
+              <div key={feature.label} className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card/80 backdrop-blur-xl border border-border shadow-lg hover:shadow-xl hover:border-sky-500/40 transition-all duration-300 group">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/25 to-cyan-500/25 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <feature.icon className="w-5 h-5 text-sky-400" />
+                </div>
+                <div className="text-left">
+                  <span className="text-sm font-bold text-foreground block">{feature.label}</span>
+                  <span className="text-xs text-muted-foreground">{feature.desc}</span>
+                </div>
               </div>
             ))}
           </div>
@@ -151,90 +161,88 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
 
         {/* Search Card */}
         <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.2s" }}>
-          <Card className="overflow-hidden border-0 bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/30 ring-1 ring-white/10">
-            {/* Top accent line */}
-            <div className="h-1.5 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
+          <Card className="overflow-hidden border border-border/50 bg-card shadow-2xl shadow-black/40 ring-1 ring-white/5">
+            <div className="h-2 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
             
-            <CardContent className="p-6 sm:p-8">
+            <CardContent className="p-6 sm:p-8 lg:p-10">
               {/* Trip Type Toggle */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-3 mb-8">
                 <button
                   onClick={() => setTripType("roundtrip")}
-                  className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 ${
+                  className={`px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${
                     tripType === "roundtrip"
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/40 scale-105"
+                      : "bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground"
                   }`}
                 >
-                  ↩️ Round Trip
+                  <ArrowLeftRight className="w-4 h-4" />
+                  Round Trip
                 </button>
                 <button
                   onClick={() => setTripType("oneway")}
-                  className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all duration-300 ${
+                  className={`px-6 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${
                     tripType === "oneway"
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/40 scale-105"
+                      : "bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground"
                   }`}
                 >
-                  ➡️ One Way
+                  <Plane className="w-4 h-4 -rotate-45" />
+                  One Way
                 </button>
               </div>
 
               {/* Search Fields */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 relative">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8 relative">
                 {/* From */}
                 <div className="relative group">
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">From</label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500" />
-                    <Input
-                      value={fromCity}
-                      onChange={(e) => setFromCity(e.target.value)}
-                      placeholder="City or airport"
-                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base font-medium"
-                    />
-                  </div>
+                  <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-sky-400" />
+                    From
+                  </label>
+                  <Input
+                    value={fromCity}
+                    onChange={(e) => setFromCity(e.target.value)}
+                    placeholder="City or airport"
+                    className="h-14 bg-muted border border-border focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 text-base font-medium rounded-xl"
+                  />
                 </div>
 
-                {/* Swap Button - Desktop */}
+                {/* Swap Button */}
                 <button
                   onClick={swapCities}
-                  className="hidden lg:flex absolute left-[calc(25%-20px)] top-[calc(50%+12px)] -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:scale-110 active:scale-95 transition-transform z-10 shadow-lg shadow-sky-500/40"
+                  className="hidden lg:flex absolute left-[calc(25%-22px)] top-[calc(50%+8px)] -translate-y-1/2 w-11 h-11 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:scale-110 active:scale-95 transition-all duration-200 z-10 shadow-xl shadow-sky-500/50 border-2 border-white/20"
                 >
-                  <ArrowLeftRight className="w-4 h-4" />
+                  <ArrowLeftRight className="w-5 h-5" />
                 </button>
 
                 {/* To */}
                 <div className="relative group">
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">To</label>
-                  <div className="relative">
-                    <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500 rotate-45" />
-                    <Input
-                      value={toCity}
-                      onChange={(e) => setToCity(e.target.value)}
-                      placeholder="City or airport"
-                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base font-medium"
-                    />
-                  </div>
+                  <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                    <Plane className="w-4 h-4 text-sky-400 -rotate-45" />
+                    To
+                  </label>
+                  <Input
+                    value={toCity}
+                    onChange={(e) => setToCity(e.target.value)}
+                    placeholder="City or airport"
+                    className="h-14 bg-muted border border-border focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30 text-base font-medium rounded-xl"
+                  />
                 </div>
 
                 {/* Departure Date */}
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Departure</label>
+                  <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-sky-400" />
+                    Departure
+                  </label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base font-medium">
-                        <CalendarIcon className="mr-3 h-4 w-4 text-sky-500" />
+                      <Button variant="outline" className="w-full h-14 justify-start bg-muted border border-border hover:border-sky-500 hover:bg-muted text-base font-medium rounded-xl">
                         {departDate ? format(departDate, "MMM d, yyyy") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={departDate}
-                        onSelect={setDepartDate}
-                        initialFocus
-                      />
+                    <PopoverContent className="w-auto p-0 bg-card border border-border shadow-xl" align="start">
+                      <Calendar mode="single" selected={departDate} onSelect={setDepartDate} initialFocus />
                     </PopoverContent>
                   </Popover>
                 </div>
@@ -242,21 +250,18 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                 {/* Return Date */}
                 {tripType === "roundtrip" && (
                   <div>
-                    <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Return</label>
+                    <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                      <CalendarIcon className="w-4 h-4 text-sky-400" />
+                      Return
+                    </label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base font-medium">
-                          <CalendarIcon className="mr-3 h-4 w-4 text-sky-500" />
+                        <Button variant="outline" className="w-full h-14 justify-start bg-muted border border-border hover:border-sky-500 hover:bg-muted text-base font-medium rounded-xl">
                           {returnDate ? format(returnDate, "MMM d, yyyy") : "Select date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={returnDate}
-                          onSelect={setReturnDate}
-                          initialFocus
-                        />
+                      <PopoverContent className="w-auto p-0 bg-card border border-border shadow-xl" align="start">
+                        <Calendar mode="single" selected={returnDate} onSelect={setReturnDate} initialFocus />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -264,15 +269,17 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
               </div>
 
               {/* Bottom Row */}
-              <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 min-w-[140px]">
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Travelers</label>
+              <div className="flex flex-wrap gap-5 items-end">
+                <div className="flex-1 min-w-[160px]">
+                  <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                    <Users className="w-4 h-4 text-sky-400" />
+                    Travelers
+                  </label>
                   <Select value={passengers} onValueChange={setPassengers}>
-                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base font-medium">
-                      <Users className="w-4 h-4 mr-2 text-sky-500" />
+                    <SelectTrigger className="h-14 bg-muted border border-border text-base font-medium rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card border border-border shadow-xl">
                       <SelectItem value="1">1 Passenger</SelectItem>
                       <SelectItem value="2">2 Passengers</SelectItem>
                       <SelectItem value="3">3 Passengers</SelectItem>
@@ -282,13 +289,16 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                   </Select>
                 </div>
 
-                <div className="flex-1 min-w-[140px]">
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Class</label>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
+                    <Crown className="w-4 h-4 text-sky-400" />
+                    Class
+                  </label>
                   <Select value={cabinClass} onValueChange={setCabinClass}>
-                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base font-medium">
+                    <SelectTrigger className="h-14 bg-muted border border-border text-base font-medium rounded-xl">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-card border border-border shadow-xl">
                       <SelectItem value="economy">✈️ Economy</SelectItem>
                       <SelectItem value="premium">💎 Premium Economy</SelectItem>
                       <SelectItem value="business">👔 Business Class</SelectItem>
@@ -299,7 +309,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
 
                 <Button
                   onClick={onSearch}
-                  className="h-14 px-10 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold shadow-xl shadow-sky-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98]"
+                  className="h-14 px-12 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold text-lg shadow-xl shadow-sky-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/60 hover:scale-105 active:scale-[0.98] rounded-xl"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Flights
@@ -310,17 +320,21 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
         </div>
 
         {/* Partner Airlines */}
-        <div className="max-w-4xl mx-auto mt-14 text-center animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.4s" }}>
-          <p className="text-sm text-muted-foreground mb-5 flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            Trusted by 10M+ travelers • Partnered with world's best airlines
-          </p>
+        <div className="max-w-5xl mx-auto mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.4s" }}>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="h-px flex-1 max-w-24 bg-gradient-to-r from-transparent to-border" />
+            <p className="text-sm font-semibold text-foreground/80 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              Trusted by 10M+ travelers • Partnered with world's best airlines
+            </p>
+            <div className="h-px flex-1 max-w-24 bg-gradient-to-l from-transparent to-border" />
+          </div>
           <div className="flex flex-wrap justify-center gap-4">
             {airlines.map((airline) => (
-              <div key={airline.name} className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-card/50 backdrop-blur-xl border border-border/40 hover:border-sky-500/50 hover:bg-card/70 transition-all duration-300 shadow-lg group cursor-default">
+              <div key={airline.name} className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-card border border-border hover:border-sky-500/50 hover:bg-sky-500/5 transition-all duration-300 shadow-lg hover:shadow-xl group cursor-default">
                 <span className="text-2xl group-hover:scale-110 transition-transform">{airline.logo}</span>
-                <span className="text-sm font-semibold hidden sm:inline">{airline.name}</span>
-                <div className="flex items-center gap-0.5 text-amber-500">
+                <span className="text-sm font-bold text-foreground hidden sm:inline">{airline.name}</span>
+                <div className="flex items-center gap-1 text-amber-400 bg-amber-500/15 px-2 py-1 rounded-lg">
                   <Star className="w-3.5 h-3.5 fill-current" />
                   <span className="text-xs font-bold">{airline.rating}</span>
                 </div>
