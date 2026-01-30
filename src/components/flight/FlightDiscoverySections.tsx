@@ -20,7 +20,7 @@ import GroupBooking from "./GroupBooking";
 
 
 import AirlinePartnersHub from "./AirlinePartnersHub";
-import FlightLoyaltyIntegration from "./FlightLoyaltyIntegration";
+
 import ItineraryBuilder from "./ItineraryBuilder";
 import TravelDocuments from "./TravelDocuments";
 import FlightPriceAlert from "./FlightPriceAlert";
@@ -341,20 +341,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Flight Loyalty Integration */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <FlightLoyaltyIntegration
-            onProgramSelect={(program) => {
-              if (program) {
-                setSelectedLoyaltyProgram(program.id);
-                toast.success(`Linked ${program.name} for miles earning`);
-              }
-            }}
-            className="max-w-4xl mx-auto"
-          />
-        </div>
-      </section>
 
       {/* Itinerary Builder */}
       {toCity && (
