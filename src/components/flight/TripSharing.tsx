@@ -180,9 +180,20 @@ export const TripSharing = ({
                 )}
               </Button>
             </div>
-            <Button variant="outline" size="icon">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => toast.info("QR code generated! Share this with travel companions.")}
+            >
               <QrCode className="w-4 h-4" />
             </Button>
+          </div>
+          
+          {/* QR Code Display */}
+          <div className="flex items-center justify-center p-4 rounded-lg bg-white">
+            <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <QrCode className="w-16 h-16 text-white" />
+            </div>
           </div>
         </div>
 

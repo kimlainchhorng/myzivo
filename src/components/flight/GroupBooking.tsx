@@ -63,10 +63,19 @@ const SPECIAL_REQUESTS = [
   { id: 'bassinet', label: 'Bassinet (infants)' },
   { id: 'unaccompanied', label: 'Unaccompanied minor' },
   { id: 'pet', label: 'Traveling with pet' },
+  { id: 'medical', label: 'Medical equipment' },
+  { id: 'oxygen', label: 'Portable oxygen' },
+];
+
+const GROUP_DISCOUNTS = [
+  { minPassengers: 5, discount: 0.05, label: '5% off' },
+  { minPassengers: 8, discount: 0.10, label: '10% off' },
+  { minPassengers: 15, discount: 0.15, label: '15% off' },
+  { minPassengers: 25, discount: 0.20, label: '20% off' },
 ];
 
 export const GroupBooking = ({
-  maxPassengers = 9,
+  maxPassengers = 50,
   basePrice = 450,
   onPassengersChange,
   className
@@ -117,12 +126,19 @@ export const GroupBooking = ({
   const childCount = passengers.filter(p => p.type === 'child').length;
   const infantCount = passengers.filter(p => p.type === 'infant').length;
 
-  // Calculate pricing
+  // Calculate pricing with tiered discounts
   const adultPrice = basePrice;
   const childPrice = Math.round(basePrice * 0.75);
   const infantPrice = Math.round(basePrice * 0.1);
   const totalPrice = (adultCount * adultPrice) + (childCount * childPrice) + (infantCount * infantPrice);
-  const groupDiscount = passengers.length >= 5 ? 0.05 : passengers.length >= 8 ? 0.1 : 0;
+  
+  // Find applicable discount tier
+  const applicableDiscount = GROUP_DISCOUNTS.reduce((acc, tier) => 
+    passengers.length >= tier.minPassengers ? tier : acc
+  , { minPassengers: 0, discount: 0, label: '' });
+  
+  const groupDiscount = applicableDiscount.discount;
+  const nextDiscountTier = GROUP_DISCOUNTS.find(t => t.minPassengers > passengers.length);
   const finalPrice = Math.round(totalPrice * (1 - groupDiscount));
 
   const getPassengerIcon = (type: string) => {

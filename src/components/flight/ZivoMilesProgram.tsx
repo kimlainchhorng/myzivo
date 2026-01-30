@@ -1,17 +1,18 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Coins,
   Plane,
   Gift,
   TrendingUp,
   Calendar,
-  ArrowRight,
   Sparkles,
   CreditCard,
   ShoppingBag,
@@ -20,7 +21,14 @@ import {
   Hotel,
   Star,
   History,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Award,
+  Zap,
+  ArrowUpRight,
+  CheckCircle2,
+  Timer,
+  Target
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,14 +51,70 @@ interface RedemptionOption {
   category: string;
   icon: typeof Gift;
   popular?: boolean;
+  limited?: boolean;
+  stock?: number;
 }
 
+interface TierInfo {
+  name: string;
+  icon: typeof Star;
+  color: string;
+  bgGradient: string;
+  minMiles: number;
+  nextTier?: string;
+  benefits: string[];
+  multiplier: string;
+}
+
+const TIERS: TierInfo[] = [
+  { 
+    name: 'Bronze', 
+    icon: Award, 
+    color: 'text-orange-400',
+    bgGradient: 'from-orange-500/20 to-amber-500/10',
+    minMiles: 0, 
+    nextTier: 'Silver',
+    benefits: ['1x base miles', 'Standard support'],
+    multiplier: '1x'
+  },
+  { 
+    name: 'Silver', 
+    icon: Star, 
+    color: 'text-slate-300',
+    bgGradient: 'from-slate-300/20 to-slate-500/10',
+    minMiles: 25000, 
+    nextTier: 'Gold',
+    benefits: ['1.25x miles', 'Priority booking', 'Free seat selection'],
+    multiplier: '1.25x'
+  },
+  { 
+    name: 'Gold', 
+    icon: Crown, 
+    color: 'text-amber-400',
+    bgGradient: 'from-amber-400/20 to-yellow-500/10',
+    minMiles: 75000, 
+    nextTier: 'Platinum',
+    benefits: ['1.5x miles', 'Lounge access', 'Free upgrades', 'Priority support'],
+    multiplier: '1.5x'
+  },
+  { 
+    name: 'Platinum', 
+    icon: Zap, 
+    color: 'text-cyan-400',
+    bgGradient: 'from-cyan-400/20 to-blue-500/10',
+    minMiles: 150000, 
+    benefits: ['2x miles', 'Unlimited upgrades', 'Concierge service', 'Partner status match'],
+    multiplier: '2x'
+  },
+];
+
 const MOCK_TRANSACTIONS: MilesTransaction[] = [
-  { id: '1', type: 'earn', amount: 2450, description: 'JFK → LHR Flight', category: 'flights', date: '2024-01-15', icon: Plane },
-  { id: '2', type: 'earn', amount: 150, description: 'Hotel Booking - Paris', category: 'hotels', date: '2024-01-14', icon: Hotel },
-  { id: '3', type: 'redeem', amount: -5000, description: 'Lounge Access Voucher', category: 'rewards', date: '2024-01-10', icon: Gift },
-  { id: '4', type: 'earn', amount: 320, description: 'Car Rental - Nice', category: 'cars', date: '2024-01-08', icon: Car },
-  { id: '5', type: 'earn', amount: 85, description: 'Restaurant - Airport', category: 'dining', date: '2024-01-05', icon: Utensils },
+  { id: '1', type: 'earn', amount: 2450, description: 'JFK → LHR Flight', category: 'flights', date: '2025-01-15', icon: Plane },
+  { id: '2', type: 'earn', amount: 150, description: 'Hotel Booking - Paris', category: 'hotels', date: '2025-01-14', icon: Hotel },
+  { id: '3', type: 'redeem', amount: -5000, description: 'Lounge Access Voucher', category: 'rewards', date: '2025-01-10', icon: Gift },
+  { id: '4', type: 'earn', amount: 320, description: 'Car Rental - Nice', category: 'cars', date: '2025-01-08', icon: Car },
+  { id: '5', type: 'earn', amount: 85, description: 'Restaurant - Airport', category: 'dining', date: '2025-01-05', icon: Utensils },
+  { id: '6', type: 'earn', amount: 1200, description: 'SFO → NRT Flight', category: 'flights', date: '2025-01-02', icon: Plane },
 ];
 
 const REDEMPTION_OPTIONS: RedemptionOption[] = [
@@ -60,6 +124,7 @@ const REDEMPTION_OPTIONS: RedemptionOption[] = [
   { id: '4', title: 'Shopping Credit', description: 'Duty-Free Voucher', milesRequired: 10000, value: '$100', category: 'shopping', icon: ShoppingBag },
   { id: '5', title: 'Car Rental Day', description: 'Free Rental Day', milesRequired: 8000, value: '$75', category: 'cars', icon: Car },
   { id: '6', title: 'Gift Card', description: '$50 ZIVO Credit', milesRequired: 5000, value: '$50', category: 'credit', icon: CreditCard },
+  { id: '7', title: 'Double Miles Week', description: '2x earnings for 7 days', milesRequired: 15000, value: 'Boost', category: 'boosts', icon: Zap, limited: true, stock: 50 },
 ];
 
 const EARN_RATES = [
@@ -75,59 +140,139 @@ interface ZivoMilesProgramProps {
 
 export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [transferAmount, setTransferAmount] = useState('');
+  
+  // User's miles data
   const currentMiles = 45680;
   const lifetimeMiles = 125400;
   const pendingMiles = 2340;
   const expiringMiles = 5000;
   const expiryDate = 'Mar 31, 2025';
+  const yearlyMiles = 78500;
+  
+  // Calculate tier
+  const currentTier = TIERS.reduce((acc, tier) => 
+    yearlyMiles >= tier.minMiles ? tier : acc
+  , TIERS[0]);
+  
+  const nextTier = TIERS.find(t => t.minMiles > yearlyMiles);
+  const progressToNext = nextTier 
+    ? ((yearlyMiles - currentTier.minMiles) / (nextTier.minMiles - currentTier.minMiles)) * 100
+    : 100;
+  const milesToNext = nextTier ? nextTier.minMiles - yearlyMiles : 0;
+
+  const handleRedeem = (option: RedemptionOption) => {
+    if (currentMiles >= option.milesRequired) {
+      toast.success(`Redeemed ${option.title} for ${option.milesRequired.toLocaleString()} miles!`);
+    } else {
+      toast.error(`Not enough miles. You need ${(option.milesRequired - currentMiles).toLocaleString()} more miles.`);
+    }
+  };
+
+  const handleTransfer = () => {
+    const amount = parseInt(transferAmount);
+    if (amount && amount <= currentMiles && amount >= 1000) {
+      toast.success(`${amount.toLocaleString()} miles transferred to partner program`);
+      setTransferAmount('');
+    } else if (amount < 1000) {
+      toast.error('Minimum transfer is 1,000 miles');
+    }
+  };
 
   return (
     <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/40 flex items-center justify-center">
-              <Coins className="w-6 h-6 text-amber-400" />
+            <div className={cn(
+              "w-12 h-12 rounded-xl bg-gradient-to-br border flex items-center justify-center",
+              currentTier.bgGradient,
+              currentTier.color === 'text-amber-400' ? 'border-amber-500/40' : 'border-primary/40'
+            )}>
+              <currentTier.icon className={cn("w-6 h-6", currentTier.color)} />
             </div>
             <div>
               <CardTitle className="text-xl flex items-center gap-2">
                 ZIVO Miles
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
-                  Gold Member
+                <Badge className={cn(
+                  "border-0",
+                  currentTier.name === 'Gold' && "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
+                  currentTier.name === 'Silver' && "bg-gradient-to-r from-slate-400 to-slate-500 text-white",
+                  currentTier.name === 'Platinum' && "bg-gradient-to-r from-cyan-400 to-blue-500 text-white",
+                  currentTier.name === 'Bronze' && "bg-gradient-to-r from-orange-400 to-amber-500 text-white"
+                )}>
+                  <currentTier.icon className="w-3 h-3 mr-1" />
+                  {currentTier.name} Member
                 </Badge>
               </CardTitle>
-              <p className="text-sm text-muted-foreground">Earn & redeem across all ZIVO services</p>
+              <p className="text-sm text-muted-foreground">
+                {currentTier.multiplier} earning rate • Earn & redeem across all ZIVO services
+              </p>
             </div>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-0">
+        {/* Tier Progress Banner */}
+        {nextTier && (
+          <div className="px-6 py-4 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 border-b border-border/50">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">
+                  {milesToNext.toLocaleString()} miles to {nextTier.name}
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {yearlyMiles.toLocaleString()} / {nextTier.minMiles.toLocaleString()} yearly miles
+              </span>
+            </div>
+            <Progress value={progressToNext} className="h-2" />
+          </div>
+        )}
+
         {/* Miles Summary */}
         <div className="p-6 bg-gradient-to-br from-amber-500/10 via-transparent to-orange-500/5">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
+            <motion.div 
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              whileHover={{ scale: 1.02 }}
+            >
               <p className="text-3xl font-bold text-amber-400">{currentMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Available Miles</p>
-            </div>
-            <div className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
+            </motion.div>
+            <motion.div 
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              whileHover={{ scale: 1.02 }}
+            >
               <p className="text-2xl font-semibold text-emerald-400">+{pendingMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Pending</p>
-            </div>
-            <div className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
+            </motion.div>
+            <motion.div 
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50 relative overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="absolute top-0 right-0 w-8 h-8 bg-rose-500/20 rounded-bl-xl flex items-center justify-center">
+                <Timer className="w-3 h-3 text-rose-400" />
+              </div>
               <p className="text-2xl font-semibold text-rose-400">{expiringMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Expiring {expiryDate}</p>
-            </div>
-            <div className="text-center p-4 rounded-xl bg-card/50 border border-border/50">
+            </motion.div>
+            <motion.div 
+              className="text-center p-4 rounded-xl bg-card/50 border border-border/50"
+              whileHover={{ scale: 1.02 }}
+            >
               <p className="text-2xl font-semibold">{lifetimeMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Lifetime Earned</p>
-            </div>
+            </motion.div>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
-          <TabsList className="grid grid-cols-4 mb-4">
+          <TabsList className="grid grid-cols-5 mb-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="tiers">Tiers</TabsTrigger>
             <TabsTrigger value="earn">Earn</TabsTrigger>
             <TabsTrigger value="redeem">Redeem</TabsTrigger>
             <TabsTrigger value="history">History</TabsTrigger>
@@ -143,7 +288,7 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
                 <Calendar className="w-5 h-5 mx-auto mb-1 text-sky-400" />
-                <p className="text-lg font-semibold">8</p>
+                <p className="text-lg font-semibold">{MOCK_TRANSACTIONS.length}</p>
                 <p className="text-xs text-muted-foreground">Transactions</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
@@ -161,9 +306,88 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
               </div>
               <Progress value={(currentMiles / 25000) * 100} className="h-2" />
               <p className="text-xs text-muted-foreground mt-2">
-                {(25000 - currentMiles).toLocaleString()} miles to go • Earn with your next booking!
+                <CheckCircle2 className="w-3 h-3 inline mr-1 text-emerald-400" />
+                You can redeem this reward now!
               </p>
             </div>
+
+            {/* Transfer Miles */}
+            <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
+              <div className="flex items-center gap-2 mb-3">
+                <ArrowUpRight className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Transfer to Partner Programs</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  placeholder="Enter miles (min 1,000)"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  className="flex-1"
+                />
+                <Button onClick={handleTransfer} disabled={!transferAmount}>
+                  Transfer
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                1:1 ratio with 15+ airline partners
+              </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="tiers" className="space-y-4 mt-0">
+            <p className="text-sm text-muted-foreground mb-4">
+              Your status is based on miles earned in the calendar year
+            </p>
+            {TIERS.map((tier, i) => {
+              const isCurrentTier = tier.name === currentTier.name;
+              const isAchieved = yearlyMiles >= tier.minMiles;
+              
+              return (
+                <motion.div
+                  key={tier.name}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={cn(
+                    "p-4 rounded-xl border transition-all",
+                    isCurrentTier ? "border-primary bg-primary/5 ring-2 ring-primary/30" : "border-border/50 bg-card/30",
+                    !isAchieved && "opacity-50"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center",
+                      tier.bgGradient
+                    )}>
+                      <tier.icon className={cn("w-6 h-6", tier.color)} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">{tier.name}</h4>
+                        {isCurrentTier && (
+                          <Badge variant="outline" className="text-xs">Current</Badge>
+                        )}
+                        <Badge variant="secondary" className="text-xs">{tier.multiplier}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {tier.minMiles.toLocaleString()}+ yearly miles
+                      </p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {tier.benefits.map(benefit => (
+                          <Badge key={benefit} variant="outline" className="text-[10px]">
+                            {benefit}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    {isAchieved && (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </TabsContent>
 
           <TabsContent value="earn" className="space-y-3 mt-0">
@@ -200,16 +424,22 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
+                  onClick={() => handleRedeem(option)}
                   className={cn(
-                    "relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:border-primary/50",
+                    "relative flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer",
                     currentMiles >= option.milesRequired 
-                      ? "bg-muted/30 border-border/50" 
+                      ? "bg-muted/30 border-border/50 hover:border-primary/50" 
                       : "bg-muted/10 border-border/30 opacity-60"
                   )}
                 >
                   {option.popular && (
                     <Badge className="absolute -top-2 -right-2 bg-amber-500 text-white">
                       Popular
+                    </Badge>
+                  )}
+                  {option.limited && (
+                    <Badge className="absolute -top-2 -right-2 bg-rose-500 text-white animate-pulse">
+                      Limited: {option.stock} left
                     </Badge>
                   )}
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
