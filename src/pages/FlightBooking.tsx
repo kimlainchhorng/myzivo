@@ -272,45 +272,6 @@ const FlightBooking = () => {
         )}
       </main>
 
-      {/* Selected Flight Summary Sidebar */}
-      {selectedFlight && bookingStep === "details" && (
-        <div className="fixed bottom-0 left-0 right-0 md:bottom-auto md:top-24 md:right-6 md:left-auto md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-300">
-          <BookingSummaryCard
-            title={`${selectedFlight.departure.code} → ${selectedFlight.arrival.code}`}
-            subtitle={`${selectedFlight.airline} • ${selectedFlight.flightNumber}`}
-            icon={<Plane className="w-5 h-5" />}
-            items={[
-              { label: `${passengers} × Flight Ticket`, amount: totalPrice },
-              { label: "Taxes & Fees", amount: taxes },
-              { label: "Total", amount: grandTotal, isTotal: true },
-            ]}
-            ctaLabel={`Book for $${grandTotal.toFixed(0)}`}
-            onConfirm={() => setIsCheckoutOpen(true)}
-            accentColor="sky"
-            features={["Free Cancellation", "Seat Selection"]}
-            estimatedTime={`${selectedFlight.duration} flight`}
-          />
-          <TravelBundleCard
-            flightPrice={selectedFlight.price}
-            origin={selectedFlight.departure.code}
-            destination={selectedFlight.arrival.code}
-            departDate={departDate}
-            returnDate={returnDate}
-            passengers={parseInt(passengers)}
-            className="mt-4"
-          />
-          <Button
-            variant="ghost"
-            className="w-full mt-2"
-            onClick={() => {
-              setSelectedFlight(null);
-              setBookingStep("select");
-            }}
-          >
-            Choose Different Flight
-          </Button>
-        </div>
-      )}
 
       {/* Checkout Modal */}
       <CheckoutModal
