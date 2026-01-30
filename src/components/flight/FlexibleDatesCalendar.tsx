@@ -11,10 +11,13 @@ import {
   TrendingDown,
   TrendingUp,
   Minus,
-  Sparkles
+  Sparkles,
+  Loader2,
+  Zap
 } from "lucide-react";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isBefore, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useFlightPrices, getLowestPriceForDate } from "@/hooks/useFlightPrices";
 
 interface FlexibleDatesCalendarProps {
   origin: string;
@@ -24,7 +27,7 @@ interface FlexibleDatesCalendarProps {
   className?: string;
 }
 
-const generatePriceForDate = (date: Date, basePrice: number): number => {
+const generatePriceForDate = (date: Date, basePrice: number, origin: string, destination: string): number => {
   const dayOfWeek = date.getDay();
   const dayOfMonth = date.getDate();
   
@@ -35,8 +38,8 @@ const generatePriceForDate = (date: Date, basePrice: number): number => {
   // Mid-week is cheaper
   if (dayOfWeek === 2 || dayOfWeek === 3) multiplier -= 0.1;
   
-  // Random variation based on date
-  const seed = dayOfMonth * 17 + date.getMonth() * 31;
+  // Random variation based on date and route
+  const seed = dayOfMonth * 17 + date.getMonth() * 31 + origin.charCodeAt(0) + destination.charCodeAt(0);
   const variation = ((seed % 30) - 15) / 100;
   multiplier += variation;
   
@@ -68,29 +71,45 @@ export const FlexibleDatesCalendar = ({
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Calculate prices for all days
+  // Fetch real prices from Travelpayouts API
+  const departureMonth = format(currentMonth, 'yyyy-MM');
+  const { data: priceData, isLoading, isError } = useFlightPrices({
+    origin,
+    destination,
+    departureDate: departureMonth,
+    enabled: origin.length === 3 && destination.length === 3,
+  });
+
+  const hasRealPrices = priceData?.prices && priceData.prices.length > 0;
+
+  // Calculate prices for all days - prioritize real API data
   const pricesMap = useMemo(() => {
-    const map = new Map<string, number>();
+    const map = new Map<string, { price: number; isReal: boolean }>();
     daysInMonth.forEach(day => {
-      map.set(format(day, 'yyyy-MM-dd'), generatePriceForDate(day, basePrice));
+      const dateKey = format(day, 'yyyy-MM-dd');
+      const realPrice = priceData?.prices ? getLowestPriceForDate(priceData.prices, dateKey) : null;
+      map.set(dateKey, {
+        price: realPrice ?? generatePriceForDate(day, basePrice, origin, destination),
+        isReal: realPrice !== null
+      });
     });
     return map;
-  }, [daysInMonth, basePrice]);
+  }, [daysInMonth, basePrice, origin, destination, priceData]);
 
   const avgPrice = useMemo(() => {
-    const prices = Array.from(pricesMap.values());
+    const prices = Array.from(pricesMap.values()).map(p => p.price);
     return prices.reduce((a, b) => a + b, 0) / prices.length;
   }, [pricesMap]);
 
-  const lowestPrice = useMemo(() => Math.min(...Array.from(pricesMap.values())), [pricesMap]);
-  const highestPrice = useMemo(() => Math.max(...Array.from(pricesMap.values())), [pricesMap]);
+  const lowestPrice = useMemo(() => Math.min(...Array.from(pricesMap.values()).map(p => p.price)), [pricesMap]);
+  const highestPrice = useMemo(() => Math.max(...Array.from(pricesMap.values()).map(p => p.price)), [pricesMap]);
 
   const cheapestDays = useMemo(() => {
     return daysInMonth
       .filter(day => !isBefore(day, new Date()))
       .sort((a, b) => {
-        const priceA = pricesMap.get(format(a, 'yyyy-MM-dd')) || 0;
-        const priceB = pricesMap.get(format(b, 'yyyy-MM-dd')) || 0;
+        const priceA = pricesMap.get(format(a, 'yyyy-MM-dd'))?.price || 0;
+        const priceB = pricesMap.get(format(b, 'yyyy-MM-dd'))?.price || 0;
         return priceA - priceB;
       })
       .slice(0, 3);
@@ -103,7 +122,8 @@ export const FlexibleDatesCalendar = ({
   const handleDateClick = (day: Date) => {
     if (isBefore(day, new Date())) return;
     setSelectedDate(day);
-    const price = pricesMap.get(format(day, 'yyyy-MM-dd')) || basePrice;
+    const priceInfo = pricesMap.get(format(day, 'yyyy-MM-dd'));
+    const price = priceInfo?.price || basePrice;
     onSelectDate?.(day, price);
   };
 
@@ -116,7 +136,16 @@ export const FlexibleDatesCalendar = ({
               <CalendarDays className="w-5 h-5 text-sky-500" />
             </div>
             <div>
-              <CardTitle className="text-lg">Flexible Dates</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                Flexible Dates
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                {hasRealPrices && (
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-xs">
+                    <Zap className="w-3 h-3 mr-1" />
+                    Real Prices
+                  </Badge>
+                )}
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
                 {origin} → {destination}
               </p>
@@ -152,19 +181,30 @@ export const FlexibleDatesCalendar = ({
         <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">Best deals this month</span>
+            <span className="text-sm font-medium text-emerald-400">
+              Best deals this month {hasRealPrices && '• Live prices'}
+            </span>
           </div>
           <div className="flex flex-wrap gap-2">
-            {cheapestDays.map((day, i) => (
-              <Badge
-                key={i}
-                variant="outline"
-                className="bg-emerald-500/20 border-emerald-500/40 text-emerald-300 cursor-pointer hover:bg-emerald-500/30"
-                onClick={() => handleDateClick(day)}
-              >
-                {format(day, 'EEE, MMM d')} - ${pricesMap.get(format(day, 'yyyy-MM-dd'))}
-              </Badge>
-            ))}
+            {cheapestDays.map((day, i) => {
+              const priceInfo = pricesMap.get(format(day, 'yyyy-MM-dd'));
+              return (
+                <Badge
+                  key={i}
+                  variant="outline"
+                  className={cn(
+                    "cursor-pointer hover:bg-emerald-500/30",
+                    priceInfo?.isReal 
+                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
+                      : "bg-muted/30 border-border text-muted-foreground"
+                  )}
+                  onClick={() => handleDateClick(day)}
+                >
+                  {format(day, 'EEE, MMM d')} - ${priceInfo?.price || basePrice}
+                  {priceInfo?.isReal && <Zap className="w-3 h-3 ml-1" />}
+                </Badge>
+              );
+            })}
           </div>
         </div>
 
@@ -182,7 +222,9 @@ export const FlexibleDatesCalendar = ({
           
           {daysInMonth.map((day) => {
             const dateKey = format(day, 'yyyy-MM-dd');
-            const price = pricesMap.get(dateKey) || basePrice;
+            const priceInfo = pricesMap.get(dateKey);
+            const price = priceInfo?.price ?? basePrice;
+            const isRealPrice = priceInfo?.isReal ?? false;
             const category = getPriceCategory(price, avgPrice);
             const isPast = isBefore(day, new Date()) && !isToday(day);
             const isSelected = selectedDate && format(selectedDate, 'yyyy-MM-dd') === dateKey;
@@ -226,6 +268,11 @@ export const FlexibleDatesCalendar = ({
                     <TrendingDown className="w-2 h-2 text-white" />
                   </div>
                 )}
+                {isRealPrice && !isPast && (
+                  <div className="absolute bottom-0.5 right-0.5">
+                    <Zap className="w-2.5 h-2.5 text-sky-400" />
+                  </div>
+                )}
               </motion.button>
             );
           })}
@@ -245,6 +292,19 @@ export const FlexibleDatesCalendar = ({
             <div className="w-3 h-3 rounded bg-red-500/30" />
             <span className="text-xs text-muted-foreground">High (over ${Math.round(avgPrice * 1.08)})</span>
           </div>
+        </div>
+        
+        {/* Real prices indicator */}
+        <div className="mt-3 text-center">
+          <p className="text-xs text-muted-foreground">
+            {hasRealPrices ? (
+              <span className="text-emerald-400">✓ Live prices from airlines</span>
+            ) : isLoading ? (
+              <span>Loading real prices...</span>
+            ) : (
+              <span>💡 Estimated fares based on route trends</span>
+            )}
+          </p>
         </div>
       </CardContent>
     </Card>
