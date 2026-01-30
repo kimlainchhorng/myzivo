@@ -71,6 +71,12 @@ export { default as PriceAlertsDashboard } from './PriceAlertsDashboard';
 export { default as BookingCancellation } from './BookingCancellation';
 export { default as ItineraryExportMenu } from './ItineraryExportMenu';
 
+// New Features
+export { default as TravelInsuranceSelector } from './TravelInsuranceSelector';
+export { default as MultiCityPlanner } from './MultiCityPlanner';
+export { default as LoyaltyRedemption } from './LoyaltyRedemption';
+export { default as InFlightServices } from './InFlightServices';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
@@ -79,3 +85,5 @@ export type { Seat } from './SeatSelector';
 export type { BaggageOption } from './BaggageSelector';
 export type { Passenger } from './PassengerForm';
 export type { BookingData } from './FlightBookingFlow';
+export type { InsurancePlan } from './TravelInsuranceSelector';
+export type { FlightLeg } from './MultiCityPlanner';
