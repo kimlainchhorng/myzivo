@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   ChevronLeft, 
@@ -7,10 +6,12 @@ import {
   TrendingDown,
   TrendingUp,
   CalendarDays,
-  Sparkles
+  Sparkles,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, isBefore, addDays } from "date-fns";
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isToday, isBefore } from "date-fns";
+import { useFlightPrices, getLowestPriceForDate } from "@/hooks/useFlightPrices";
 
 interface PriceCalendarProps {
   basePrice: number;
@@ -31,46 +32,46 @@ const PriceCalendar = ({
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Generate pseudo-random but consistent prices for each day
-  const getPriceForDate = (date: Date): number => {
+  // Fetch real prices from Travelpayouts API
+  const departureMonth = format(currentMonth, 'yyyy-MM');
+  const { data: priceData, isLoading, isError } = useFlightPrices({
+    origin: fromCode,
+    destination: toCode,
+    departureDate: departureMonth,
+    enabled: fromCode.length === 3 && toCode.length === 3,
+  });
+
+  // Fallback price generator for when API doesn't have data
+  const getFallbackPrice = (date: Date): number => {
     const seed = date.getDate() + date.getMonth() * 31 + fromCode.charCodeAt(0) + toCode.charCodeAt(0);
     const dayOfWeek = date.getDay();
-    
-    // Base variation
     let variation = ((seed * 9301 + 49297) % 233280) / 233280;
-    variation = (variation - 0.5) * 0.4; // -20% to +20%
-    
-    // Weekend premium
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      variation += 0.15;
-    }
-    
-    // Mid-week discount
-    if (dayOfWeek === 2 || dayOfWeek === 3) {
-      variation -= 0.1;
-    }
-    
-    // Holiday season premium (simplified)
+    variation = (variation - 0.5) * 0.4;
+    if (dayOfWeek === 0 || dayOfWeek === 6) variation += 0.15;
+    if (dayOfWeek === 2 || dayOfWeek === 3) variation -= 0.1;
     const month = date.getMonth();
-    if (month === 11 || month === 6 || month === 7) {
-      variation += 0.2;
-    }
-    
+    if (month === 11 || month === 6 || month === 7) variation += 0.2;
     return Math.round(basePrice * (1 + variation));
   };
 
-  // Calculate prices for the month
+  // Calculate prices for the month - use real data when available
   const monthDays = useMemo(() => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
     const days = eachDayOfInterval({ start, end });
     
-    return days.map(date => ({
-      date,
-      price: getPriceForDate(date),
-      isPast: isBefore(date, today)
-    }));
-  }, [currentMonth, basePrice, fromCode, toCode]);
+    return days.map(date => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const realPrice = priceData?.prices ? getLowestPriceForDate(priceData.prices, dateStr) : null;
+      
+      return {
+        date,
+        price: realPrice ?? getFallbackPrice(date),
+        isRealPrice: realPrice !== null,
+        isPast: isBefore(date, today)
+      };
+    });
+  }, [currentMonth, basePrice, fromCode, toCode, priceData]);
 
   // Find lowest and highest prices
   const futureDays = monthDays.filter(d => !d.isPast);
@@ -107,9 +108,10 @@ const PriceCalendar = ({
           <h3 className="font-bold text-lg flex items-center gap-2">
             <CalendarDays className="w-5 h-5 text-sky-500" />
             Price Calendar
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {fromCode} → {toCode} • Lowest fares highlighted
+            {fromCode} → {toCode} • {priceData?.prices?.length ? 'Real prices' : 'Estimated fares'}
           </p>
         </div>
         
@@ -169,7 +171,7 @@ const PriceCalendar = ({
         ))}
         
         {/* Day cells */}
-        {monthDays.map(({ date, price, isPast }) => {
+        {monthDays.map(({ date, price, isPast, isRealPrice }) => {
           const isSelected = selectedDate && format(date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
           const category = getPriceCategory(price);
           const isLowest = price === lowestPrice && !isPast;
@@ -236,7 +238,7 @@ const PriceCalendar = ({
         </div>
         
         <p className="text-xs text-muted-foreground text-center mt-4">
-          💡 Tip: Fly on Tuesdays & Wednesdays for the best deals
+          💡 {priceData?.prices?.length ? 'Prices updated in real-time from airlines' : 'Tip: Fly on Tuesdays & Wednesdays for the best deals'}
         </p>
       </div>
     </div>
