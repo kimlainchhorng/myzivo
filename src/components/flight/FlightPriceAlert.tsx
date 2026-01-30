@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,11 @@ import {
   ChevronUp,
   Calendar,
   X,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { usePriceAlerts } from "@/hooks/usePriceAlerts";
+import { useFlightPrices } from "@/hooks/useFlightPrices";
 
 interface PriceAlertProps {
   route: {
@@ -33,47 +35,84 @@ interface PriceAlertProps {
   };
   currentPrice: number;
   historicalLow?: number;
+  departureDate?: string;
+  returnDate?: string;
   className?: string;
 }
 
 export const FlightPriceAlert = ({
   route,
   currentPrice,
-  historicalLow = currentPrice * 0.8,
+  historicalLow: initialHistoricalLow,
+  departureDate,
+  returnDate,
   className,
 }: PriceAlertProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isCreated, setIsCreated] = useState(false);
   const [email, setEmail] = useState("");
-  const [targetPrice, setTargetPrice] = useState(Math.round(currentPrice * 0.9));
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
     sms: false,
   });
   const [flexibleDates, setFlexibleDates] = useState(true);
+  
+  const { createAlert, removeAlert, getAlertForRoute, hasAlertForRoute } = usePriceAlerts();
+  
+  // Fetch real prices for this route
+  const { data: priceData, isLoading: isPriceLoading } = useFlightPrices({
+    origin: route.fromCode,
+    destination: route.toCode,
+    departureDate,
+    enabled: !!route.fromCode && !!route.toCode,
+  });
+  
+  // Use real data if available
+  const hasRealPrices = priceData?.success && priceData.prices?.length > 0;
+  const lowestRealPrice = hasRealPrices 
+    ? Math.min(...priceData.prices.map(p => p.price)) 
+    : currentPrice;
+  const actualCurrentPrice = hasRealPrices ? lowestRealPrice : currentPrice;
+  const historicalLow = initialHistoricalLow || Math.round(actualCurrentPrice * 0.8);
+  
+  const [targetPrice, setTargetPrice] = useState(Math.round(actualCurrentPrice * 0.9));
+  
+  // Update target price when real prices load
+  useEffect(() => {
+    if (hasRealPrices) {
+      setTargetPrice(Math.round(lowestRealPrice * 0.9));
+    }
+  }, [hasRealPrices, lowestRealPrice]);
+  
+  const existingAlert = getAlertForRoute(route.fromCode, route.toCode);
+  const isCreated = !!existingAlert;
 
-  const priceDiff = currentPrice - historicalLow;
-  const priceDiffPercent = Math.round((priceDiff / currentPrice) * 100);
+  const priceDiff = actualCurrentPrice - historicalLow;
+  const priceDiffPercent = Math.round((priceDiff / actualCurrentPrice) * 100);
 
   const handleCreateAlert = () => {
     if (!email) {
-      toast.error("Please enter your email address");
+      // Show inline error instead of toast
       return;
     }
     
-    setIsCreated(true);
-    toast.success(
-      <div className="flex items-center gap-2">
-        <BellRing className="w-4 h-4 text-sky-500" />
-        <span>Price alert created! We'll notify you when prices drop.</span>
-      </div>
+    createAlert(
+      route,
+      targetPrice,
+      actualCurrentPrice,
+      historicalLow,
+      email,
+      notifications,
+      flexibleDates,
+      departureDate,
+      returnDate
     );
   };
 
   const handleRemoveAlert = () => {
-    setIsCreated(false);
-    toast.info("Price alert removed");
+    if (existingAlert) {
+      removeAlert(existingAlert.id);
+    }
   };
 
   return (
@@ -136,6 +175,15 @@ export const FlightPriceAlert = ({
             </Button>
           ) : (
             <>
+              {hasRealPrices && (
+                <Badge
+                  variant="outline"
+                  className="bg-sky-500/10 text-sky-500 border-sky-500/30"
+                >
+                  <Zap className="w-3 h-3 mr-1" />
+                  Live Prices
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className="bg-amber-500/10 text-amber-500 border-amber-500/30"
@@ -154,29 +202,38 @@ export const FlightPriceAlert = ({
       </button>
 
       {/* Created State Summary */}
-      {isCreated && (
+      {isCreated && existingAlert && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="px-5 pb-4"
         >
-          <div className="flex items-center gap-4 p-3 rounded-xl bg-background/50 border border-border/50">
+          <div className="flex flex-wrap items-center gap-4 p-3 rounded-xl bg-background/50 border border-border/50">
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm">Target: <strong>${targetPrice}</strong></span>
+              <span className="text-sm">Target: <strong>${existingAlert.targetPrice}</strong></span>
             </div>
-            <div className="w-px h-4 bg-border" />
+            <div className="w-px h-4 bg-border hidden sm:block" />
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-sky-500" />
-              <span className="text-sm text-muted-foreground">{email}</span>
+              <span className="text-sm text-muted-foreground truncate max-w-32">{existingAlert.email}</span>
             </div>
-            <div className="w-px h-4 bg-border" />
+            <div className="w-px h-4 bg-border hidden sm:block" />
             <div className="flex items-center gap-1.5">
               <Check className="w-4 h-4 text-emerald-500" />
               <span className="text-xs text-muted-foreground">
-                {flexibleDates ? "±3 days" : "Exact date"}
+                {existingAlert.flexibleDates ? "±3 days" : "Exact date"}
               </span>
             </div>
+            {existingAlert.triggered && (
+              <>
+                <div className="w-px h-4 bg-border hidden sm:block" />
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-0">
+                  <Zap className="w-3 h-3 mr-1" />
+                  Price dropped to ${existingAlert.triggeredPrice}!
+                </Badge>
+              </>
+            )}
           </div>
         </motion.div>
       )}
@@ -194,8 +251,16 @@ export const FlightPriceAlert = ({
               {/* Price Context */}
               <div className="flex items-center gap-4 p-4 rounded-xl bg-background/50 border border-border/50">
                 <div className="flex-1">
-                  <p className="text-xs text-muted-foreground mb-1">Current Price</p>
-                  <p className="text-2xl font-bold">${currentPrice}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-xs text-muted-foreground">Current Price</p>
+                    {hasRealPrices && (
+                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-sky-500/10 text-sky-500 border-sky-500/30">
+                        <Zap className="w-2 h-2 mr-0.5" />
+                        Live
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-2xl font-bold">${actualCurrentPrice}</p>
                 </div>
                 <div className="w-px h-12 bg-border" />
                 <div className="flex-1">
@@ -213,7 +278,7 @@ export const FlightPriceAlert = ({
                 <input
                   type="range"
                   min={historicalLow}
-                  max={currentPrice}
+                  max={actualCurrentPrice}
                   step={5}
                   value={targetPrice}
                   onChange={(e) => setTargetPrice(Number(e.target.value))}
@@ -221,7 +286,7 @@ export const FlightPriceAlert = ({
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>Historical low: ${historicalLow}</span>
-                  <span>Current: ${currentPrice}</span>
+                  <span>Current: ${actualCurrentPrice}</span>
                 </div>
               </div>
 
