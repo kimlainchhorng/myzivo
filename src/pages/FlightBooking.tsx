@@ -48,18 +48,22 @@ import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
 import { premiumAirlines, fullServiceAirlines, lowCostAirlines, getAirlineLogo } from "@/data/airlines";
 import { airports, searchAirports, getPopularAirports, formatAirportDisplay, popularRoutes, type Airport } from "@/data/airports";
+import { generateFlights, getTrendingDestinations, fareClasses, type GeneratedFlight } from "@/data/flightGenerator";
 
 // Enhanced popular destinations with real airport data
 const popularDestinations = [
-  { city: "New York", code: "JFK", country: "USA", region: "North America", price: 299, trending: true },
-  { city: "London", code: "LHR", country: "United Kingdom", region: "Europe", price: 449, trending: true },
-  { city: "Tokyo", code: "NRT", country: "Japan", region: "Asia", price: 699, trending: false },
-  { city: "Paris", code: "CDG", country: "France", region: "Europe", price: 399, trending: true },
-  { city: "Dubai", code: "DXB", country: "UAE", region: "Middle East", price: 549, trending: true },
-  { city: "Sydney", code: "SYD", country: "Australia", region: "Oceania", price: 899, trending: false },
-  { city: "Singapore", code: "SIN", country: "Singapore", region: "Asia", price: 749, trending: true },
-  { city: "Barcelona", code: "BCN", country: "Spain", region: "Europe", price: 379, trending: false },
-  { city: "Bali", code: "DPS", country: "Indonesia", region: "Asia", price: 649, trending: true },
+  { city: "New York", code: "JFK", country: "USA", region: "North America", price: 299, trending: true, image: "🗽" },
+  { city: "London", code: "LHR", country: "United Kingdom", region: "Europe", price: 449, trending: true, image: "🇬🇧" },
+  { city: "Tokyo", code: "NRT", country: "Japan", region: "Asia", price: 699, trending: true, image: "🗼" },
+  { city: "Paris", code: "CDG", country: "France", region: "Europe", price: 399, trending: true, image: "🗼" },
+  { city: "Dubai", code: "DXB", country: "UAE", region: "Middle East", price: 549, trending: true, image: "🏙️" },
+  { city: "Sydney", code: "SYD", country: "Australia", region: "Oceania", price: 899, trending: false, image: "🌉" },
+  { city: "Singapore", code: "SIN", country: "Singapore", region: "Asia", price: 749, trending: true, image: "🏛️" },
+  { city: "Barcelona", code: "BCN", country: "Spain", region: "Europe", price: 379, trending: false, image: "⛪" },
+  { city: "Bali", code: "DPS", country: "Indonesia", region: "Asia", price: 649, trending: true, image: "🏝️" },
+  { city: "Seoul", code: "ICN", country: "South Korea", region: "Asia", price: 599, trending: true, image: "🏯" },
+  { city: "Miami", code: "MIA", country: "USA", region: "North America", price: 199, trending: false, image: "🌴" },
+  { city: "Rome", code: "FCO", country: "Italy", region: "Europe", price: 429, trending: true, image: "🏛️" },
 ];
 
 // Use real airline data
@@ -67,6 +71,9 @@ const featuredAirlines = [
   ...premiumAirlines.slice(0, 5),
   ...fullServiceAirlines.slice(0, 5),
 ];
+
+// Trending destinations from generator
+const trendingDestinations = getTrendingDestinations();
 
 // Extended sample flights with comprehensive real data
 const sampleFlights = [
@@ -318,6 +325,7 @@ const sampleFlights = [
 
 type BookingStep = "search" | "select" | "details" | "confirmation";
 
+type Flight = GeneratedFlight | typeof sampleFlights[0];
 const FlightBooking = () => {
   const navigate = useNavigate();
   const [tripType, setTripType] = useState<"roundtrip" | "oneway">("roundtrip");
@@ -327,8 +335,8 @@ const FlightBooking = () => {
   const [returnDate, setReturnDate] = useState<Date>();
   const [passengers, setPassengers] = useState("1");
   const [cabinClass, setCabinClass] = useState("economy");
-  const [searchResults, setSearchResults] = useState<typeof sampleFlights | null>(null);
-  const [selectedFlight, setSelectedFlight] = useState<typeof sampleFlights[0] | null>(null);
+  const [searchResults, setSearchResults] = useState<GeneratedFlight[] | null>(null);
+  const [selectedFlight, setSelectedFlight] = useState<GeneratedFlight | null>(null);
   const [bookingStep, setBookingStep] = useState<BookingStep>("search");
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -350,11 +358,37 @@ const FlightBooking = () => {
   };
 
   const handleSearch = () => {
-    setSearchResults(sampleFlights);
-    setBookingStep("select");
+    // Extract airport codes from input
+    const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
+    const toMatch = toCity.match(/\(([A-Z]{3})\)/);
+    
+    const fromCode = fromMatch ? fromMatch[1] : 'LAX';
+    const toCode = toMatch ? toMatch[1] : 'JFK';
+    
+    // Generate dynamic flights based on route
+    const flights = generateFlights(fromCode, toCode, departDate, 18);
+    
+    if (flights.length > 0) {
+      setSearchResults(flights);
+      setBookingStep("select");
+    } else {
+      // Fallback to sample flights
+      setSearchResults(sampleFlights.map(f => ({
+        ...f,
+        id: String(f.id),
+        logo: getAirlineLogo(f.airlineCode),
+        baggageIncluded: '1 × 23kg checked',
+        refundable: false,
+        wifi: f.amenities.includes('wifi'),
+        entertainment: f.amenities.includes('entertainment'),
+        meals: f.amenities.includes('meals'),
+        legroom: '31"'
+      })) as GeneratedFlight[]);
+      setBookingStep("select");
+    }
   };
 
-  const handleSelectFlight = (flight: typeof sampleFlights[0]) => {
+  const handleSelectFlight = (flight: GeneratedFlight) => {
     setSelectedFlight(flight);
     setBookingStep("details");
   };
@@ -666,10 +700,11 @@ const FlightBooking = () => {
                     <FlightTicketCard
                       flight={{
                         ...flight,
+                        id: String(flight.id),
                         flightNumber: flight.flightNumber,
                         isLowest: index === 0,
-                        isFastest: flight.stops === 0 && flight.duration === "5h 15m",
-                        co2: `${120 + index * 15}kg`,
+                        isFastest: flight.stops === 0 && parseFloat(flight.duration) < 5.5,
+                        co2: flight.carbonOffset ? `${flight.carbonOffset}kg` : `${120 + index * 15}kg`,
                       }}
                       onSelect={() => handleSelectFlight(flight)}
                       isSelected={selectedFlight?.id === flight.id}
