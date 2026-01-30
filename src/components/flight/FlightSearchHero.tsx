@@ -220,20 +220,21 @@ export default function FlightSearchHero({
           className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700"
           style={{ animationDelay: "0.2s" }}
         >
-          <Card className="overflow-hidden border border-border/30 bg-card shadow-2xl shadow-black/50 ring-1 ring-white/5 relative">
-            {/* Glow effect behind card */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/20 via-blue-500/10 to-cyan-500/20 rounded-2xl blur-xl opacity-60" />
+          <Card className="overflow-hidden border-0 bg-transparent shadow-none relative">
+            {/* Premium glow effect */}
+            <div className="absolute -inset-2 bg-gradient-to-r from-sky-500/30 via-blue-600/20 to-cyan-500/30 rounded-3xl blur-2xl opacity-50" />
+            <div className="absolute -inset-1 bg-gradient-to-br from-sky-400/10 via-transparent to-cyan-400/10 rounded-2xl" />
             
             {/* Card content wrapper */}
-            <div className="relative bg-card rounded-xl overflow-hidden">
-              {/* Top accent line with shimmer effect */}
-              <div className="h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
+            <div className="relative bg-gradient-to-br from-card via-card to-card/95 rounded-2xl overflow-hidden border border-border/40 shadow-2xl shadow-black/60 ring-1 ring-white/10">
+              {/* Top accent line with animated gradient */}
+              <div className="h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-shimmer" />
               </div>
               
               <CardContent className="p-6 sm:p-8 lg:p-10">
-                {/* Trip Type Toggle - Premium Design */}
-                <div className="flex flex-wrap gap-3 mb-8">
+                {/* Trip Type Toggle - Ultra Premium Design */}
+                <div className="flex flex-wrap gap-2 sm:gap-3 mb-10">
                   {[
                     { type: "roundtrip" as const, label: "Round Trip", icon: RefreshCw },
                     { type: "oneway" as const, label: "One Way", icon: Plane },
@@ -242,21 +243,21 @@ export default function FlightSearchHero({
                       key={item.type}
                       onClick={() => setTripType(item.type)}
                       className={cn(
-                        "px-6 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2.5 relative overflow-hidden",
+                        "px-5 sm:px-7 py-3.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2.5 relative overflow-hidden",
                         tripType === item.type
-                          ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xl shadow-sky-500/40 scale-[1.02]"
-                          : "bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground border border-border/50"
+                          ? "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-600 text-white shadow-lg shadow-sky-500/40 scale-[1.02] ring-2 ring-sky-400/30"
+                          : "bg-muted/80 text-foreground/70 hover:bg-muted hover:text-foreground border border-border/60 hover:border-sky-500/40"
                       )}
                     >
                       {tripType === item.type && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full animate-shimmer" />
                       )}
                       <item.icon className={cn("w-4 h-4", tripType === item.type && "drop-shadow-sm")} />
                       <span className="relative">{item.label}</span>
                     </button>
                   ))}
                   <button
-                    className="px-6 py-3.5 rounded-xl font-bold text-sm bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground transition-all duration-300 flex items-center gap-2.5 border border-border/50"
+                    className="px-5 sm:px-7 py-3.5 rounded-xl font-bold text-sm bg-muted/80 text-foreground/70 hover:bg-muted hover:text-foreground transition-all duration-300 flex items-center gap-2.5 border border-border/60 hover:border-sky-500/40"
                   >
                     <MapPin className="w-4 h-4" />
                     Multi-City
@@ -264,13 +265,13 @@ export default function FlightSearchHero({
                 </div>
 
                 {/* Search Fields - Premium 2x2 Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8 relative">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 relative">
                   {/* Left Column: From + Departure */}
-                  <div className="space-y-4">
-                    {/* From */}
+                  <div className="space-y-5">
+                    {/* From Field */}
                     <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
-                      <div className="relative">
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-sky-500/40 to-blue-500/40 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-500 blur-xl" />
+                      <div className="relative bg-muted/50 rounded-xl p-1 border border-border/40 group-focus-within:border-sky-500/50 transition-colors">
                         <AirportAutocomplete
                           value={fromCity}
                           onChange={setFromCity}
@@ -284,10 +285,10 @@ export default function FlightSearchHero({
 
                     {/* Departure Date */}
                     <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-500 blur-xl" />
                       <div className="relative">
-                        <label className="text-sm font-bold text-foreground mb-2.5 block flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                        <label className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center border border-sky-500/20">
                             <CalendarIcon className="w-3.5 h-3.5 text-sky-400" />
                           </div>
                           Departure Date
@@ -297,26 +298,29 @@ export default function FlightSearchHero({
                             <Button
                               variant="outline"
                               className={cn(
-                                "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 transition-all duration-300 rounded-xl text-base font-medium group",
+                                "w-full h-16 justify-start bg-muted/60 hover:bg-muted border border-border/50 hover:border-sky-500/50 transition-all duration-300 rounded-xl text-base font-medium group shadow-sm hover:shadow-md",
                                 !departDate && "text-muted-foreground"
                               )}
                             >
-                              <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center mr-3 group-hover:bg-sky-500/25 transition-colors">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center mr-4 group-hover:from-sky-500/30 group-hover:to-blue-500/25 transition-all border border-sky-500/20">
                                 <CalendarIcon className="h-5 w-5 text-sky-500" />
                               </div>
-                              <div className="text-left">
+                              <div className="text-left flex-1">
                                 {departDate ? (
                                   <>
-                                    <span className="block font-bold text-foreground">{format(departDate, "EEE, MMM d")}</span>
-                                    <span className="block text-xs text-muted-foreground">{format(departDate, "yyyy")}</span>
+                                    <span className="block font-bold text-foreground text-lg">{format(departDate, "EEE, MMM d")}</span>
+                                    <span className="block text-xs text-muted-foreground font-medium">{format(departDate, "yyyy")}</span>
                                   </>
                                 ) : (
-                                  <span className="text-muted-foreground">Select departure date</span>
+                                  <>
+                                    <span className="text-muted-foreground font-medium">Select departure date</span>
+                                    <span className="block text-xs text-muted-foreground/70">Choose your travel date</span>
+                                  </>
                                 )}
                               </div>
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl rounded-xl" align="start">
+                          <PopoverContent className="w-auto p-0 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
                             <Calendar
                               mode="single"
                               selected={departDate}
@@ -334,17 +338,17 @@ export default function FlightSearchHero({
                   {/* Swap Button - Center */}
                   <button
                     onClick={swapCities}
-                    className="hidden md:flex absolute left-1/2 top-[42px] -translate-x-1/2 w-12 h-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 transition-all z-20 shadow-xl shadow-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-110 active:scale-95 border-2 border-white/20"
+                    className="hidden md:flex absolute left-1/2 top-[52px] -translate-x-1/2 w-14 h-14 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600 text-white hover:from-sky-400 hover:via-blue-500 hover:to-cyan-500 transition-all z-20 shadow-xl shadow-sky-500/50 hover:shadow-2xl hover:shadow-sky-500/60 hover:scale-110 active:scale-95 border-2 border-white/30 ring-4 ring-background"
                   >
                     <ArrowLeftRight className="w-5 h-5" />
                   </button>
 
                   {/* Right Column: To + Return */}
-                  <div className="space-y-4">
-                    {/* To */}
+                  <div className="space-y-5">
+                    {/* To Field */}
                     <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
-                      <div className="relative">
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-500/40 to-blue-500/40 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-500 blur-xl" />
+                      <div className="relative bg-muted/50 rounded-xl p-1 border border-border/40 group-focus-within:border-cyan-500/50 transition-colors">
                         <AirportAutocomplete
                           value={toCity}
                           onChange={setToCity}
@@ -358,13 +362,13 @@ export default function FlightSearchHero({
 
                     {/* Return Date */}
                     <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-500 blur-xl" />
                       <div className="relative">
-                        <label className="text-sm font-bold text-foreground mb-2.5 block flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                        <label className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-500/20">
                             <CalendarIcon className="w-3.5 h-3.5 text-cyan-400" />
                           </div>
-                          {tripType === "roundtrip" ? "Return Date" : "One Way"}
+                          {tripType === "roundtrip" ? "Return Date" : "One Way Trip"}
                         </label>
                         {tripType === "roundtrip" ? (
                           <Popover>
@@ -372,26 +376,29 @@ export default function FlightSearchHero({
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-cyan-500/50 transition-all duration-300 rounded-xl text-base font-medium group",
+                                  "w-full h-16 justify-start bg-muted/60 hover:bg-muted border border-border/50 hover:border-cyan-500/50 transition-all duration-300 rounded-xl text-base font-medium group shadow-sm hover:shadow-md",
                                   !returnDate && "text-muted-foreground"
                                 )}
                               >
-                                <div className="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center mr-3 group-hover:bg-cyan-500/25 transition-colors">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/15 flex items-center justify-center mr-4 group-hover:from-cyan-500/30 group-hover:to-blue-500/25 transition-all border border-cyan-500/20">
                                   <CalendarIcon className="h-5 w-5 text-cyan-500" />
                                 </div>
-                                <div className="text-left">
+                                <div className="text-left flex-1">
                                   {returnDate ? (
                                     <>
-                                      <span className="block font-bold text-foreground">{format(returnDate, "EEE, MMM d")}</span>
-                                      <span className="block text-xs text-muted-foreground">{format(returnDate, "yyyy")}</span>
+                                      <span className="block font-bold text-foreground text-lg">{format(returnDate, "EEE, MMM d")}</span>
+                                      <span className="block text-xs text-muted-foreground font-medium">{format(returnDate, "yyyy")}</span>
                                     </>
                                   ) : (
-                                    <span className="text-muted-foreground">Select return date</span>
+                                    <>
+                                      <span className="text-muted-foreground font-medium">Select return date</span>
+                                      <span className="block text-xs text-muted-foreground/70">Choose your return date</span>
+                                    </>
                                   )}
                                 </div>
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl rounded-xl" align="start">
+                            <PopoverContent className="w-auto p-0 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
                               <Calendar
                                 mode="single"
                                 selected={returnDate}
@@ -403,9 +410,14 @@ export default function FlightSearchHero({
                             </PopoverContent>
                           </Popover>
                         ) : (
-                          <div className="h-14 rounded-xl bg-muted/50 border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
-                            <Plane className="w-4 h-4 mr-2 -rotate-45" />
-                            No return flight needed
+                          <div className="h-16 rounded-xl bg-gradient-to-br from-muted/40 to-muted/20 border border-dashed border-border/60 flex items-center justify-center text-muted-foreground text-sm gap-3">
+                            <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center">
+                              <Plane className="w-5 h-5 -rotate-45 text-muted-foreground/70" />
+                            </div>
+                            <div className="text-left">
+                              <span className="block font-medium">No return flight</span>
+                              <span className="block text-xs text-muted-foreground/70">One-way trip selected</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -413,35 +425,44 @@ export default function FlightSearchHero({
                   </div>
                 </div>
 
-                {/* Passengers, Class & Search - Premium Row */}
-                <div className="flex flex-wrap gap-4 sm:gap-5 items-end mb-8">
+                {/* Passengers, Class & Search - Ultra Premium Row */}
+                <div className="flex flex-wrap gap-4 sm:gap-5 items-end mb-10">
                   {/* Passengers Dropdown - Premium */}
                   <div className="flex-1 min-w-[200px]">
-                    <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
-                      <Users className="w-4 h-4 text-sky-400" />
+                    <label className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center border border-sky-500/20">
+                        <Users className="w-3.5 h-3.5 text-sky-400" />
+                      </div>
                       Travelers
                     </label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full h-14 justify-between bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 rounded-xl text-base font-medium"
+                          className="w-full h-16 justify-between bg-muted/60 hover:bg-muted border border-border/50 hover:border-sky-500/50 rounded-xl text-base font-medium shadow-sm hover:shadow-md transition-all"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center border border-sky-500/20">
                               <Users className="w-5 h-5 text-sky-500" />
                             </div>
-                            <span className="font-semibold">{totalPassengers} Traveler{totalPassengers > 1 ? "s" : ""}</span>
+                            <div className="text-left">
+                              <span className="font-bold text-foreground text-lg block">{totalPassengers}</span>
+                              <span className="text-xs text-muted-foreground">Traveler{totalPassengers > 1 ? "s" : ""}</span>
+                            </div>
                           </div>
                           <ChevronDown className="w-5 h-5 text-muted-foreground" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-5 bg-card border border-border shadow-2xl" align="start">
-                        <div className="space-y-5">
+                      <PopoverContent className="w-80 p-5 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
+                        <div className="space-y-4">
+                          <h4 className="font-bold text-foreground flex items-center gap-2 mb-4">
+                            <Users className="w-4 h-4 text-sky-500" />
+                            Select Travelers
+                          </h4>
                           {/* Adults */}
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 transition-all border border-border/30">
                             <div className="flex items-center gap-4">
-                              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center border border-sky-500/20">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/25 to-blue-500/25 flex items-center justify-center border border-sky-500/30">
                                 <User className="w-5 h-5 text-sky-500" />
                               </div>
                               <div>
@@ -449,21 +470,21 @@ export default function FlightSearchHero({
                                 <p className="text-xs text-muted-foreground">12+ years</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-sky-500/50 hover:bg-sky-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-sky-500/50 hover:bg-sky-500/10"
                                 onClick={() => setAdults(Math.max(1, adults - 1))}
                                 disabled={adults <= 1}
                               >
                                 <Minus className="w-4 h-4" />
                               </Button>
-                              <span className="w-8 text-center font-bold text-lg">{adults}</span>
+                              <span className="w-10 text-center font-bold text-lg">{adults}</span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-sky-500/50 hover:bg-sky-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-sky-500/50 hover:bg-sky-500/10"
                                 onClick={() => setAdults(Math.min(9, adults + 1))}
                                 disabled={adults >= 9}
                               >
@@ -473,9 +494,9 @@ export default function FlightSearchHero({
                           </div>
                           
                           {/* Children */}
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 transition-all border border-border/30">
                             <div className="flex items-center gap-4">
-                              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center border border-amber-500/20">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center border border-amber-500/30">
                                 <User className="w-5 h-5 text-amber-500" />
                               </div>
                               <div>
@@ -483,21 +504,21 @@ export default function FlightSearchHero({
                                 <p className="text-xs text-muted-foreground">2-11 years</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-amber-500/50 hover:bg-amber-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-amber-500/50 hover:bg-amber-500/10"
                                 onClick={() => setChildren(Math.max(0, children - 1))}
                                 disabled={children <= 0}
                               >
                                 <Minus className="w-4 h-4" />
                               </Button>
-                              <span className="w-8 text-center font-bold text-lg">{children}</span>
+                              <span className="w-10 text-center font-bold text-lg">{children}</span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-amber-500/50 hover:bg-amber-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-amber-500/50 hover:bg-amber-500/10"
                                 onClick={() => setChildren(Math.min(6, children + 1))}
                                 disabled={children >= 6}
                               >
@@ -507,9 +528,9 @@ export default function FlightSearchHero({
                           </div>
                           
                           {/* Infants */}
-                          <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                          <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-br from-muted/60 to-muted/40 hover:from-muted/80 hover:to-muted/60 transition-all border border-border/30">
                             <div className="flex items-center gap-4">
-                              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/20 flex items-center justify-center border border-pink-500/20">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/25 to-rose-500/25 flex items-center justify-center border border-pink-500/30">
                                 <Baby className="w-5 h-5 text-pink-500" />
                               </div>
                               <div>
@@ -517,21 +538,21 @@ export default function FlightSearchHero({
                                 <p className="text-xs text-muted-foreground">Under 2 years</p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-pink-500/50 hover:bg-pink-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-pink-500/50 hover:bg-pink-500/10"
                                 onClick={() => setInfants(Math.max(0, infants - 1))}
                                 disabled={infants <= 0}
                               >
                                 <Minus className="w-4 h-4" />
                               </Button>
-                              <span className="w-8 text-center font-bold text-lg">{infants}</span>
+                              <span className="w-10 text-center font-bold text-lg">{infants}</span>
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-9 w-9 rounded-xl border-border hover:border-pink-500/50 hover:bg-pink-500/10"
+                                className="h-10 w-10 rounded-xl border-border hover:border-pink-500/50 hover:bg-pink-500/10"
                                 onClick={() => setInfants(Math.min(adults, infants + 1))}
                                 disabled={infants >= adults}
                               >
@@ -541,7 +562,7 @@ export default function FlightSearchHero({
                           </div>
 
                           <Button
-                            className="w-full h-12 mt-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 font-bold rounded-xl shadow-lg shadow-sky-500/30"
+                            className="w-full h-12 mt-2 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 font-bold rounded-xl shadow-lg shadow-sky-500/30"
                             onClick={updatePassengers}
                           >
                             Confirm Travelers
@@ -552,58 +573,60 @@ export default function FlightSearchHero({
                   </div>
 
                   {/* Cabin Class - Premium */}
-                  <div className="flex-1 min-w-[180px]">
-                    <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
-                      <Star className="w-4 h-4 text-sky-400" />
+                  <div className="flex-1 min-w-[200px]">
+                    <label className="text-sm font-bold text-foreground mb-3 flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20">
+                        <Star className="w-3.5 h-3.5 text-amber-400" />
+                      </div>
                       Cabin Class
                     </label>
                     <Select value={cabinClass} onValueChange={setCabinClass}>
-                      <SelectTrigger className="h-14 bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 rounded-xl text-base font-medium">
+                      <SelectTrigger className="h-16 bg-muted/60 hover:bg-muted border border-border/50 hover:border-sky-500/50 rounded-xl text-base font-medium shadow-sm hover:shadow-md">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-card border border-border shadow-2xl">
-                        <SelectItem value="economy" className="py-3">
+                      <SelectContent className="bg-card border border-border/50 shadow-2xl rounded-xl">
+                        <SelectItem value="economy" className="py-3.5 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold">Economy</span>
-                            <Badge className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold">Most Popular</Badge>
+                            <span className="font-bold">Economy</span>
+                            <Badge className="text-[10px] px-2.5 py-1 bg-emerald-500/20 text-emerald-400 border-emerald-500/30 font-bold">Most Popular</Badge>
                           </div>
                         </SelectItem>
-                        <SelectItem value="premium" className="py-3">
-                          <span className="font-semibold">Premium Economy</span>
+                        <SelectItem value="premium" className="py-3.5 rounded-lg">
+                          <span className="font-bold">Premium Economy</span>
                         </SelectItem>
-                        <SelectItem value="business" className="py-3">
+                        <SelectItem value="business" className="py-3.5 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold">Business Class</span>
-                            <Badge className="text-[10px] px-2 py-0.5 bg-blue-500/20 text-blue-400 border-blue-500/30 font-bold">Popular</Badge>
+                            <span className="font-bold">Business Class</span>
+                            <Badge className="text-[10px] px-2.5 py-1 bg-blue-500/20 text-blue-400 border-blue-500/30 font-bold">Popular</Badge>
                           </div>
                         </SelectItem>
-                        <SelectItem value="first" className="py-3">
+                        <SelectItem value="first" className="py-3.5 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <span className="font-semibold">First Class</span>
-                            <Badge className="text-[10px] px-2 py-0.5 bg-amber-500/20 text-amber-400 border-amber-500/30 font-bold">Luxury</Badge>
+                            <span className="font-bold">First Class</span>
+                            <Badge className="text-[10px] px-2.5 py-1 bg-amber-500/20 text-amber-400 border-amber-500/30 font-bold">Luxury</Badge>
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  {/* Search Button - Premium */}
+                  {/* Search Button - Ultra Premium */}
                   <Button
                     onClick={onSearch}
                     disabled={!fromCity || !toCity || !departDate || isSearching}
                     size="lg"
-                    className="h-14 px-10 sm:px-14 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold text-lg shadow-2xl shadow-sky-500/50 transition-all duration-300 hover:shadow-[0_20px_60px_-10px_hsl(var(--primary)/0.6)] hover:scale-[1.03] active:scale-[0.98] rounded-xl relative overflow-hidden group disabled:opacity-60 disabled:shadow-none disabled:hover:scale-100"
+                    className="h-16 px-10 sm:px-16 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-400 hover:via-blue-500 hover:to-cyan-400 text-white font-bold text-lg shadow-2xl shadow-sky-500/50 transition-all duration-300 hover:shadow-[0_25px_70px_-15px_hsl(var(--primary)/0.7)] hover:scale-[1.03] active:scale-[0.98] rounded-xl relative overflow-hidden group disabled:opacity-60 disabled:shadow-none disabled:hover:scale-100 ring-2 ring-sky-400/20"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     {isSearching ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                        <span className="relative">Searching...</span>
+                        <span className="relative font-extrabold">Searching...</span>
                       </>
                     ) : (
                       <>
                         <Search className="w-5 h-5 mr-3" />
-                        <span className="relative">Search Flights</span>
+                        <span className="relative font-extrabold tracking-wide">Search Flights</span>
                       </>
                     )}
                   </Button>
