@@ -17,7 +17,7 @@ import MultiCityPlanner from "./MultiCityPlanner";
 import CorporateTravel from "./CorporateTravel";
 import GroupBooking from "./GroupBooking";
 import GiftCardsCredits from "./GiftCardsCredits";
-import ReferralCenter from "./ReferralCenter";
+
 
 import AirlinePartnersHub from "./AirlinePartnersHub";
 import FlightLoyaltyIntegration from "./FlightLoyaltyIntegration";
@@ -338,12 +338,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Referral Center */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <ReferralCenter className="max-w-4xl mx-auto" />
-        </div>
-      </section>
 
 
       {/* Airline Partners Hub */}

@@ -20,9 +20,11 @@ import {
   CreditCard,
   Bell,
   Lock,
-  Plane
+  Plane,
+  Gift
 } from "lucide-react";
 import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
+import ReferralCenter from "@/components/flight/ReferralCenter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -318,6 +320,15 @@ const Profile = () => {
                 ZIVO Miles Status
               </h3>
               <StatusTiersDashboard />
+            </div>
+
+            {/* Referral Center */}
+            <div>
+              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+                <Gift className="w-4 h-4 text-primary" />
+                Refer & Earn
+              </h3>
+              <ReferralCenter />
             </div>
           </div>
         )}
