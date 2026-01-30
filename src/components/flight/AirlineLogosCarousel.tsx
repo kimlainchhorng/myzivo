@@ -1,11 +1,10 @@
 import { premiumAirlines, fullServiceAirlines, lowCostAirlines, type Airline } from "@/data/airlines";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Plane, Sparkles, Star } from "lucide-react";
+import { Crown, Plane, Sparkles, Star, Loader2 } from "lucide-react";
 import { useState } from "react";
 
-// Logo.clearbit CDN for airline logos (reliable, free)
+// pics.avs.io - reliable airline logo API
 const getAirlineLogo = (code: string) => {
-  // Use pics.avs.io which is a free airline logo API
   return `https://pics.avs.io/200/80/${code}.png`;
 };
 
@@ -17,24 +16,25 @@ interface AirlineLogoProps {
 
 const AirlineLogo = ({ airline, size = 'md', isPremium = false }: AirlineLogoProps) => {
   const [imgError, setImgError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const sizeClasses = {
-    sm: 'w-16 h-16',
-    md: 'w-24 h-24',
-    lg: 'w-28 h-28'
+    sm: 'w-20 h-20',
+    md: 'w-28 h-28',
+    lg: 'w-32 h-32'
   };
 
   const getBgStyles = () => {
     if (isPremium) {
-      return 'from-amber-500/30 via-yellow-500/20 to-amber-600/10 border-amber-400/50 hover:border-amber-300 shadow-amber-500/25';
+      return 'from-amber-500/40 via-yellow-500/30 to-amber-600/20 border-amber-400/60 hover:border-amber-300 shadow-amber-500/30';
     }
     switch (airline.category) {
       case 'full-service':
-        return 'from-sky-500/20 via-blue-500/15 to-indigo-600/10 border-sky-400/40 hover:border-sky-300 shadow-sky-500/20';
+        return 'from-sky-500/30 via-blue-500/20 to-indigo-600/15 border-sky-400/50 hover:border-sky-300 shadow-sky-500/25';
       case 'low-cost':
-        return 'from-emerald-500/20 via-green-500/15 to-teal-600/10 border-emerald-400/40 hover:border-emerald-300 shadow-emerald-500/20';
+        return 'from-emerald-500/30 via-green-500/20 to-teal-600/15 border-emerald-400/50 hover:border-emerald-300 shadow-emerald-500/25';
       default:
-        return 'from-slate-500/20 to-slate-600/10 border-slate-400/30 hover:border-slate-300 shadow-slate-500/15';
+        return 'from-slate-500/25 to-slate-600/15 border-slate-400/40 hover:border-slate-300 shadow-slate-500/20';
     }
   };
 
@@ -48,56 +48,87 @@ const AirlineLogo = ({ airline, size = 'md', isPremium = false }: AirlineLogoPro
   };
 
   const getGlowColor = () => {
-    if (isPremium) return 'hover:shadow-amber-500/40';
+    if (isPremium) return 'hover:shadow-amber-500/50 hover:shadow-2xl';
     switch (airline.category) {
-      case 'full-service': return 'hover:shadow-sky-500/30';
-      case 'low-cost': return 'hover:shadow-emerald-500/30';
-      default: return 'hover:shadow-slate-500/20';
+      case 'full-service': return 'hover:shadow-sky-500/40 hover:shadow-xl';
+      case 'low-cost': return 'hover:shadow-emerald-500/40 hover:shadow-xl';
+      default: return 'hover:shadow-slate-500/30 hover:shadow-lg';
+    }
+  };
+
+  const getRingColor = () => {
+    if (isPremium) return 'ring-amber-400/30';
+    switch (airline.category) {
+      case 'full-service': return 'ring-sky-400/20';
+      case 'low-cost': return 'ring-emerald-400/20';
+      default: return 'ring-slate-400/15';
     }
   };
 
   return (
-    <div className="group flex flex-col items-center gap-3 transition-all duration-500 hover:scale-110 flex-shrink-0">
-      <div className={`relative ${sizeClasses[size]} rounded-2xl bg-gradient-to-br ${getBgStyles()} border-2 backdrop-blur-xl flex items-center justify-center shadow-xl ${getGlowColor()} group-hover:shadow-2xl transition-all duration-500 overflow-hidden p-3`}>
-        {/* Ambient glow ring */}
-        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isPremium ? 'bg-gradient-to-br from-amber-400/10 via-transparent to-yellow-400/10' : airline.category === 'full-service' ? 'bg-gradient-to-br from-sky-400/10 via-transparent to-blue-400/10' : 'bg-gradient-to-br from-emerald-400/10 via-transparent to-teal-400/10'}`} />
+    <div className="group flex flex-col items-center gap-3 transition-all duration-500 hover:scale-110 hover:-translate-y-1 flex-shrink-0">
+      <div className={`relative ${sizeClasses[size]} rounded-2xl bg-gradient-to-br ${getBgStyles()} border-2 backdrop-blur-xl flex items-center justify-center shadow-xl ${getGlowColor()} ring-1 ${getRingColor()} transition-all duration-500 overflow-hidden p-4`}>
+        {/* Outer glow pulse */}
+        <div className={`absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 ${isPremium ? 'bg-gradient-to-br from-amber-400/20 via-transparent to-yellow-400/20 blur-xl' : airline.category === 'full-service' ? 'bg-gradient-to-br from-sky-400/15 via-transparent to-blue-400/15 blur-xl' : 'bg-gradient-to-br from-emerald-400/15 via-transparent to-teal-400/15 blur-xl'}`} />
+        
+        {/* Inner ambient glow */}
+        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isPremium ? 'bg-gradient-to-t from-amber-400/10 via-transparent to-yellow-400/5' : airline.category === 'full-service' ? 'bg-gradient-to-t from-sky-400/10 via-transparent to-blue-400/5' : 'bg-gradient-to-t from-emerald-400/10 via-transparent to-teal-400/5'}`} />
         
         {/* Shine sweep effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
         
-        {/* Inner glow */}
-        <div className="absolute inset-1 rounded-xl bg-gradient-to-t from-black/20 to-transparent opacity-50" />
+        {/* Top highlight */}
+        <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+        
+        {/* Inner glow shadow */}
+        <div className="absolute inset-1 rounded-xl bg-gradient-to-t from-black/30 via-transparent to-white/5 opacity-60" />
+        
+        {/* Loading state */}
+        {isLoading && !imgError && (
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <Loader2 className={`w-6 h-6 animate-spin ${getAccentColor()}`} />
+          </div>
+        )}
         
         {!imgError ? (
           <img 
             src={getAirlineLogo(airline.code)}
             alt={`${airline.name} logo`}
-            className="w-full h-full object-contain relative z-10 drop-shadow-lg"
+            className={`w-full h-full object-contain relative z-10 drop-shadow-lg transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             loading="lazy"
-            onError={() => setImgError(true)}
+            onLoad={() => setIsLoading(false)}
+            onError={() => {
+              setImgError(true);
+              setIsLoading(false);
+            }}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center gap-1 relative z-10">
-            <span className="text-2xl drop-shadow-lg">{airline.logo}</span>
-            <span className={`text-sm font-bold ${getAccentColor()} tracking-wide`}>{airline.code}</span>
+          <div className="flex flex-col items-center justify-center gap-1.5 relative z-10">
+            <span className="text-3xl drop-shadow-lg">{airline.logo}</span>
+            <span className={`text-sm font-bold ${getAccentColor()} tracking-wider`}>{airline.code}</span>
           </div>
         )}
         
-        {/* Premium badge indicator */}
+        {/* Premium crown badge */}
         {isPremium && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
-            <Crown className="w-3 h-3 text-white" />
+          <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/40 ring-2 ring-amber-300/30">
+            <Crown className="w-3.5 h-3.5 text-white drop-shadow" />
           </div>
+        )}
+        
+        {/* Category indicator dot */}
+        {!isPremium && (
+          <div className={`absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full ${airline.category === 'full-service' ? 'bg-sky-400' : 'bg-emerald-400'} shadow-lg`} />
         )}
       </div>
       
       {/* Airline name with enhanced styling */}
       <div className="text-center opacity-90 group-hover:opacity-100 transition-all duration-300 group-hover:translate-y-0.5">
-        <p className={`text-sm font-semibold ${isPremium ? 'text-amber-200' : 'text-foreground'} truncate max-w-[100px] drop-shadow-sm`}>
+        <p className={`text-sm font-semibold ${isPremium ? 'text-amber-200' : 'text-foreground'} truncate max-w-[110px] drop-shadow-sm`}>
           {airline.name}
         </p>
         {airline.alliance && airline.alliance !== 'Independent' && (
-          <p className={`text-xs ${isPremium ? 'text-amber-400/70' : 'text-muted-foreground'} font-medium`}>
+          <p className={`text-xs ${isPremium ? 'text-amber-400/80' : 'text-muted-foreground'} font-medium mt-0.5`}>
             {airline.alliance}
           </p>
         )}
