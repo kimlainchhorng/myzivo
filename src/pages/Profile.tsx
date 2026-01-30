@@ -19,8 +19,10 @@ import {
   Settings,
   CreditCard,
   Bell,
-  Lock
+  Lock,
+  Plane
 } from "lucide-react";
+import { StatusTiersDashboard } from "@/components/flight/StatusTiersDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -308,6 +310,15 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Flight Status Tiers */}
+            <div>
+              <h3 className="font-display font-bold text-base sm:text-lg mb-3 sm:mb-4 flex items-center gap-2">
+                <Plane className="w-4 h-4 text-primary" />
+                ZIVO Miles Status
+              </h3>
+              <StatusTiersDashboard />
+            </div>
           </div>
         )}
       </div>

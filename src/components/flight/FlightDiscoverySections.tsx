@@ -18,7 +18,7 @@ import CorporateTravel from "./CorporateTravel";
 import GroupBooking from "./GroupBooking";
 import GiftCardsCredits from "./GiftCardsCredits";
 import ReferralCenter from "./ReferralCenter";
-import StatusTiersDashboard from "./StatusTiersDashboard";
+
 import AirlinePartnersHub from "./AirlinePartnersHub";
 import FlightLoyaltyIntegration from "./FlightLoyaltyIntegration";
 import ItineraryBuilder from "./ItineraryBuilder";
@@ -345,12 +345,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Status Tiers Dashboard */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <StatusTiersDashboard className="max-w-4xl mx-auto" />
-        </div>
-      </section>
 
       {/* Airline Partners Hub */}
       <section className="py-12 border-t border-border/50">
