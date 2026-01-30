@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { 
   Plane, Users, Armchair, Luggage, Shield, CreditCard, 
   Check, ChevronRight, ChevronLeft, Sparkles, Crown,
-  ArrowRight, Clock, Calendar, Info
+  ArrowRight, Clock, Calendar, Info, Zap, ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import SeatSelector, { type Seat } from './SeatSelector';
@@ -185,6 +185,12 @@ export default function FlightBookingFlow({
                       <ArrowRight className="w-4 h-4 text-muted-foreground" />
                       <span>{returnFlight.arrival.code}</span>
                     </>
+                  )}
+                  {outboundFlight.isRealPrice && (
+                    <Badge variant="outline" className="ml-2 bg-sky-500/10 text-sky-500 border-sky-500/30">
+                      <Zap className="w-3 h-3 mr-1" />
+                      Live Price
+                    </Badge>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -393,6 +399,12 @@ export default function FlightBookingFlow({
                             <span className="font-semibold">{outboundFlight.departure.code}</span>
                             <ArrowRight className="w-4 h-4 text-muted-foreground" />
                             <span className="font-semibold">{outboundFlight.arrival.code}</span>
+                            {outboundFlight.isRealPrice && (
+                              <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-500 border-sky-500/30">
+                                <Zap className="w-3 h-3 mr-1" />
+                                Real Price
+                              </Badge>
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {outboundFlight.airline} {outboundFlight.flightNumber} • {outboundFlight.duration}
@@ -526,13 +538,25 @@ export default function FlightBookingFlow({
             </div>
 
             {currentStep === 'review' ? (
-              <Button
-                onClick={handleComplete}
-                className="gap-2 bg-sky-500 hover:bg-sky-600"
-              >
-                <CreditCard className="w-4 h-4" />
-                Proceed to Payment
-              </Button>
+              outboundFlight.bookingLink ? (
+                <a
+                  href={outboundFlight.bookingLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-600 text-white font-medium transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Book on {outboundFlight.airline}
+                </a>
+              ) : (
+                <Button
+                  onClick={handleComplete}
+                  className="gap-2 bg-sky-500 hover:bg-sky-600"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Proceed to Payment
+                </Button>
+              )
             ) : (
               <Button
                 onClick={handleNextStep}

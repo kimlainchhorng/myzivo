@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,18 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { 
   Plane, Clock, MapPin, AlertTriangle, CheckCircle2, 
   RefreshCw, Bell, BellOff, ChevronRight, Luggage,
-  CloudRain, Wind, Thermometer, Navigation
+  CloudRain, Wind, Thermometer, Navigation, Zap
 } from 'lucide-react';
 import { format } from 'date-fns';
-
-interface FlightStatus {
-  status: 'on-time' | 'delayed' | 'boarding' | 'departed' | 'in-flight' | 'landed' | 'cancelled';
-  delayMinutes?: number;
-  gate?: string;
-  terminal?: string;
-  baggageClaim?: string;
-  updatedAt: Date;
-}
+import { useFlightStatus, type FlightStatusData } from '@/hooks/useFlightStatus';
 
 interface FlightTrackerProps {
   flightNumber: string;
@@ -42,10 +33,12 @@ interface FlightTrackerProps {
   };
   aircraft?: string;
   duration: string;
+  isRealPrice?: boolean;
   onNotificationToggle?: (enabled: boolean) => void;
 }
 
-const statusConfig = {
+const statusConfig: Record<FlightStatusData['status'], { label: string; color: string; icon: typeof CheckCircle2; textColor: string }> = {
+  'scheduled': { label: 'Scheduled', color: 'bg-slate-500', icon: Clock, textColor: 'text-slate-400' },
   'on-time': { label: 'On Time', color: 'bg-emerald-500', icon: CheckCircle2, textColor: 'text-emerald-400' },
   'delayed': { label: 'Delayed', color: 'bg-amber-500', icon: AlertTriangle, textColor: 'text-amber-400' },
   'boarding': { label: 'Boarding', color: 'bg-sky-500', icon: Plane, textColor: 'text-sky-400' },
@@ -53,9 +46,10 @@ const statusConfig = {
   'in-flight': { label: 'In Flight', color: 'bg-violet-500', icon: Plane, textColor: 'text-violet-400' },
   'landed': { label: 'Landed', color: 'bg-emerald-500', icon: CheckCircle2, textColor: 'text-emerald-400' },
   'cancelled': { label: 'Cancelled', color: 'bg-red-500', icon: AlertTriangle, textColor: 'text-red-400' },
+  'diverted': { label: 'Diverted', color: 'bg-orange-500', icon: AlertTriangle, textColor: 'text-orange-400' },
 };
 
-// Simulated weather data
+// Simulated weather data (in production, this would come from a weather API)
 const weatherData = {
   departure: { temp: 72, condition: 'Sunny', wind: '8 mph' },
   arrival: { temp: 65, condition: 'Partly Cloudy', wind: '12 mph' },
@@ -69,47 +63,31 @@ export default function FlightTracker({
   arrival,
   aircraft,
   duration,
+  isRealPrice,
   onNotificationToggle,
 }: FlightTrackerProps) {
-  const [status, setStatus] = useState<FlightStatus>({
-    status: 'on-time',
-    gate: departure.gate || 'B42',
-    terminal: departure.terminal || '2',
-    updatedAt: new Date(),
+  const {
+    status,
+    isLoading,
+    refresh,
+    notificationsEnabled,
+    toggleNotifications,
+  } = useFlightStatus({
+    flightNumber,
+    departureDate: departure.date,
+    enabled: true,
+    pollInterval: 60000, // 1 minute
   });
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [flightProgress, setFlightProgress] = useState(0);
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate random status changes
-      const statuses: FlightStatus['status'][] = ['on-time', 'boarding', 'departed', 'in-flight'];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      
-      if (status.status === 'in-flight') {
-        setFlightProgress(prev => Math.min(prev + 5, 100));
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [status.status]);
-
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setStatus(prev => ({ ...prev, updatedAt: new Date() }));
-    setIsRefreshing(false);
-  };
-
-  const toggleNotifications = () => {
+  const handleNotificationToggle = () => {
     const newState = !notificationsEnabled;
-    setNotificationsEnabled(newState);
+    toggleNotifications(newState);
     onNotificationToggle?.(newState);
   };
 
-  const StatusIcon = statusConfig[status.status].icon;
+  const currentStatus = status?.status || 'scheduled';
+  const StatusIcon = statusConfig[currentStatus].icon;
+  const flightProgress = status?.flightProgress || 0;
 
   return (
     <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-card to-muted/20">
@@ -125,16 +103,24 @@ export default function FlightTracker({
               </div>
             )}
             <div>
-              <CardTitle className="text-lg">{flightNumber}</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">{flightNumber}</CardTitle>
+                {isRealPrice && (
+                  <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-500 border-sky-500/30">
+                    <Zap className="w-3 h-3 mr-1" />
+                    Live
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground">{airline}</p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={cn("gap-1", statusConfig[status.status].color, "text-white border-0")}>
+            <Badge className={cn("gap-1", statusConfig[currentStatus].color, "text-white border-0")}>
               <StatusIcon className="w-3 h-3" />
-              {statusConfig[status.status].label}
-              {status.status === 'delayed' && status.delayMinutes && (
+              {statusConfig[currentStatus].label}
+              {currentStatus === 'delayed' && status?.delayMinutes && (
                 <span className="ml-1">+{status.delayMinutes}m</span>
               )}
             </Badge>
@@ -143,16 +129,17 @@ export default function FlightTracker({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
-              onClick={handleRefresh}
+              onClick={refresh}
+              disabled={isLoading}
             >
-              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
             </Button>
             
             <Button 
               variant="ghost" 
               size="icon" 
               className="h-8 w-8"
-              onClick={toggleNotifications}
+              onClick={handleNotificationToggle}
             >
               {notificationsEnabled ? (
                 <Bell className="w-4 h-4 text-sky-400" />
@@ -179,7 +166,7 @@ export default function FlightTracker({
             <div className="flex-1 mx-6 relative">
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2">
                 <div className="h-0.5 bg-muted w-full" />
-                {status.status === 'in-flight' && (
+                {currentStatus === 'in-flight' && (
                   <div 
                     className="absolute top-0 left-0 h-0.5 bg-gradient-to-r from-sky-500 to-blue-500 transition-all duration-1000"
                     style={{ width: `${flightProgress}%` }}
@@ -191,13 +178,13 @@ export default function FlightTracker({
               <div 
                 className={cn(
                   "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-1000",
-                  status.status === 'in-flight' ? 'text-sky-400' : 'text-muted-foreground'
+                  currentStatus === 'in-flight' ? 'text-sky-400' : 'text-muted-foreground'
                 )}
-                style={{ left: status.status === 'in-flight' ? `${flightProgress}%` : '50%' }}
+                style={{ left: currentStatus === 'in-flight' ? `${flightProgress}%` : '50%' }}
               >
                 <div className="relative">
                   <Plane className="w-6 h-6 rotate-90" />
-                  {status.status === 'in-flight' && (
+                  {currentStatus === 'in-flight' && (
                     <div className="absolute -inset-2 rounded-full bg-sky-500/20 animate-ping" />
                   )}
                 </div>
@@ -222,12 +209,15 @@ export default function FlightTracker({
         </div>
 
         {/* Progress Bar for In-Flight */}
-        {status.status === 'in-flight' && (
+        {currentStatus === 'in-flight' && (
           <div className="pt-4">
             <div className="flex justify-between text-xs text-muted-foreground mb-2">
               <span>Departed</span>
+              <span className="flex items-center gap-1">
+                {status?.altitude && <span>Alt: {status.altitude.toLocaleString()}ft</span>}
+                {status?.speed && <span className="ml-2">Speed: {status.speed}mph</span>}
+              </span>
               <span>{flightProgress}% Complete</span>
-              <span>Arriving</span>
             </div>
             <Progress value={flightProgress} className="h-2" />
           </div>
@@ -240,7 +230,7 @@ export default function FlightTracker({
               <Navigation className="w-4 h-4" />
               <span className="text-xs">Terminal</span>
             </div>
-            <p className="text-lg font-bold">{status.terminal || departure.terminal || 'TBD'}</p>
+            <p className="text-lg font-bold">{status?.terminal || departure.terminal || 'TBD'}</p>
           </div>
           
           <div className="p-3 rounded-xl bg-muted/50">
@@ -248,7 +238,7 @@ export default function FlightTracker({
               <MapPin className="w-4 h-4" />
               <span className="text-xs">Gate</span>
             </div>
-            <p className="text-lg font-bold">{status.gate || 'TBD'}</p>
+            <p className="text-lg font-bold">{status?.gate || 'TBD'}</p>
           </div>
           
           <div className="p-3 rounded-xl bg-muted/50">
@@ -264,7 +254,7 @@ export default function FlightTracker({
               <Luggage className="w-4 h-4" />
               <span className="text-xs">Baggage</span>
             </div>
-            <p className="text-lg font-bold">{status.baggageClaim || 'TBD'}</p>
+            <p className="text-lg font-bold">{status?.baggageClaim || 'TBD'}</p>
           </div>
         </div>
 
@@ -303,7 +293,7 @@ export default function FlightTracker({
 
         {/* Last Updated */}
         <p className="text-xs text-center text-muted-foreground">
-          Last updated: {format(status.updatedAt, 'h:mm a')}
+          Last updated: {status?.updatedAt ? format(status.updatedAt, 'h:mm a') : 'Loading...'}
         </p>
       </CardContent>
     </Card>
