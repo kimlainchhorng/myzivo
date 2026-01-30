@@ -55,7 +55,7 @@ const footerLinks = {
     { name: "Add Your Restaurant", href: "/restaurant-registration" },
     { name: "List Your Hotel", href: "#" },
     { name: "Business Solutions", href: "/partner-agreement" },
-    { name: "Affiliate Program", href: "#" },
+    { name: "Affiliate Program", href: "/affiliate-disclosure" },
   ],
   support: [
     { name: "Help Center", href: "/help" },
@@ -72,6 +72,7 @@ const footerLinks = {
     { name: "Cookie Settings", href: "#" },
     { name: "Partner Agreement", href: "/partner-agreement" },
     { name: "Insurance Policy", href: "/insurance" },
+    { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
 
