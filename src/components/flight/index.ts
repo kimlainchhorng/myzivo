@@ -14,6 +14,13 @@ export { default as BaggageSelector } from './BaggageSelector';
 export { default as PassengerForm, createPassengers } from './PassengerForm';
 export { default as FlightDetailsModal } from './FlightDetailsModal';
 export { default as TripSummaryCard } from './TripSummaryCard';
+export { default as FlightRouteMap } from './FlightRouteMap';
+export { default as FlightAmenityComparison } from './FlightAmenityComparison';
+export { default as FlightPriceAlert } from './FlightPriceAlert';
+export { default as FlightLoyaltyIntegration } from './FlightLoyaltyIntegration';
+export { default as FlightMultiCity } from './FlightMultiCity';
+
+// Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
 export type { CodeshareInfo } from './CodeshareFlights';
