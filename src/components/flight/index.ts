@@ -22,12 +22,30 @@ export { default as FlightMultiCity } from './FlightMultiCity';
 export { default as FlightBookingFlow } from './FlightBookingFlow';
 export { default as FlightCardWithModal } from './FlightCardWithModal';
 
-// New enhanced components
+// Enhanced components
 export { default as FlightTracker } from './FlightTracker';
 export { default as FlightComparison } from './FlightComparison';
 export { default as BoardingPass } from './BoardingPass';
 export { default as FlightRouteMapAnimated } from './FlightRouteMapAnimated';
 export { default as FlightResultCard } from './FlightResultCard';
+
+// Booking enhancements
+export { default as FlexibleDatesCalendar } from './FlexibleDatesCalendar';
+export { default as GroupBooking } from './GroupBooking';
+export { default as CorporateTravel } from './CorporateTravel';
+export { default as TravelPackages } from './TravelPackages';
+
+// Trip management
+export { default as MyTripsDashboard } from './MyTripsDashboard';
+export { default as ItineraryBuilder } from './ItineraryBuilder';
+export { default as TripSharing } from './TripSharing';
+export { default as TravelDocuments } from './TravelDocuments';
+
+// Smart features
+export { default as AITripSuggestions } from './AITripSuggestions';
+export { default as PricePrediction } from './PricePrediction';
+export { default as AirportGuide } from './AirportGuide';
+export { default as TravelAlerts } from './TravelAlerts';
 
 // Types
 export type { FlightFilters } from './FlightFilters';
