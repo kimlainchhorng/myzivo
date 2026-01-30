@@ -106,11 +106,15 @@ const FlightSearch = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <ServiceQuickNav />
 
-      <main className="pt-8 pb-20">
+      <main className="pt-16 pb-20">
+        {/* Service Quick Nav - Inside Page */}
+        <div className="relative z-20">
+          <ServiceQuickNav />
+        </div>
+
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <section className="relative min-h-[85vh] flex items-center overflow-hidden -mt-2">
           {/* Enhanced Background */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-sky-950 to-blue-950" />
