@@ -236,12 +236,6 @@ const FlightBooking = () => {
               }}
             />
 
-            {/* Airline Partners Carousel */}
-            <section className="py-8 border-t border-border/50">
-              <div className="container mx-auto px-4">
-                <AirlineLogosCarousel />
-              </div>
-            </section>
 
             <FlightDiscoverySections
               fromCity={fromCity}
