@@ -131,7 +131,8 @@ const transformToGeneratedFlight = (
     meals: category !== 'low-cost',
     legroom: category === 'premium' ? '34"' : category === 'low-cost' ? '28"' : '31"',
     logo: getAirlineLogo(apiPrice.airline),
-    bookingLink: apiPrice.link
+    bookingLink: `https://www.aviasales.com${apiPrice.link}`,
+    isRealPrice: true
   };
 };
 

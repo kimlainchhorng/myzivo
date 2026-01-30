@@ -6,10 +6,12 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Plane, Clock, Calendar, MapPin, Wifi, Tv, Utensils, 
   Plug, Luggage, ArrowRight, Shield, Leaf, Timer,
-  Crown, Star, AlertCircle, Check
+  Crown, Star, AlertCircle, Check, ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getAirlineLogo } from '@/data/airlines';
 import type { GeneratedFlight } from '@/data/flightGenerator';
+import { useState } from 'react';
 
 interface FlightDetailsModalProps {
   flight: GeneratedFlight | null;
@@ -32,7 +34,12 @@ export default function FlightDetailsModal({
   onOpenChange,
   onSelectFlight 
 }: FlightDetailsModalProps) {
+  const [logoError, setLogoError] = useState(false);
+  
   if (!flight) return null;
+  
+  // Get airline logo from CDN
+  const airlineLogo = flight.logo || (flight.airlineCode ? getAirlineLogo(flight.airlineCode) : null);
 
   const isPremium = flight.category === 'premium';
   const isFullService = flight.category === 'full-service';
@@ -42,11 +49,18 @@ export default function FlightDetailsModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <img 
-              src={flight.logo} 
-              alt={flight.airline}
-              className="w-10 h-10 rounded-lg object-contain bg-white p-1"
-            />
+            <div className="w-12 h-12 rounded-xl bg-white/90 dark:bg-muted/60 flex items-center justify-center overflow-hidden border border-border/50">
+              {airlineLogo && !logoError ? (
+                <img 
+                  src={airlineLogo} 
+                  alt={flight.airline}
+                  className="w-10 h-10 object-contain"
+                  onError={() => setLogoError(true)}
+                />
+              ) : (
+                <span className="text-lg font-bold text-muted-foreground">{flight.airlineCode || '✈️'}</span>
+              )}
+            </div>
             <div>
               <div className="flex items-center gap-2">
                 <span>{flight.airline}</span>
@@ -54,6 +68,12 @@ export default function FlightDetailsModal({
                   <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
                     <Crown className="w-3 h-3 mr-1" />
                     Premium
+                  </Badge>
+                )}
+                {flight.bookingLink && (
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                    <Check className="w-3 h-3 mr-1" />
+                    Real Price
                   </Badge>
                 )}
               </div>
@@ -337,16 +357,41 @@ export default function FlightDetailsModal({
           <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button 
-            className="flex-1 bg-primary"
-            onClick={() => {
-              onSelectFlight?.(flight);
-              onOpenChange(false);
-            }}
-          >
-            Select This Flight
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          
+          {flight.bookingLink ? (
+            <div className="flex-1 flex gap-2">
+              <Button 
+                className="flex-1 bg-primary"
+                onClick={() => {
+                  onSelectFlight?.(flight);
+                  onOpenChange(false);
+                }}
+              >
+                Select
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+              <a 
+                href={flight.bookingLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Book Now
+              </a>
+            </div>
+          ) : (
+            <Button 
+              className="flex-1 bg-primary"
+              onClick={() => {
+                onSelectFlight?.(flight);
+                onOpenChange(false);
+              }}
+            >
+              Select This Flight
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
