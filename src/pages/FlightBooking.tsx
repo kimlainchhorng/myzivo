@@ -54,6 +54,19 @@ import PopularRoutes from "@/components/flight/PopularRoutes";
 import FlexibleDatesCalendar from "@/components/flight/FlexibleDatesCalendar";
 import AITripSuggestions from "@/components/flight/AITripSuggestions";
 import TravelBundleCard from "@/components/flight/TravelBundleCard";
+import PriceLock from "@/components/flight/PriceLock";
+import PayLater from "@/components/flight/PayLater";
+import DealFinder from "@/components/flight/DealFinder";
+import CalendarHeatmap from "@/components/flight/CalendarHeatmap";
+import ExploreMap from "@/components/flight/ExploreMap";
+import NearbyAirports from "@/components/flight/NearbyAirports";
+import ZivoMilesProgram from "@/components/flight/ZivoMilesProgram";
+import TravelInsuranceSelector from "@/components/flight/TravelInsuranceSelector";
+import SeatUpgradeBidding from "@/components/flight/SeatUpgradeBidding";
+import AirportLoungeAccess from "@/components/flight/AirportLoungeAccess";
+import PricePrediction from "@/components/flight/PricePrediction";
+import FlightTracker from "@/components/flight/FlightTracker";
+import TravelAlerts from "@/components/flight/TravelAlerts";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -1004,6 +1017,115 @@ const FlightBooking = () => {
                 }}
                 className="max-w-4xl mx-auto"
               />
+            </div>
+          </section>
+        )}
+
+        {/* Deal Finder Section */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+                <Zap className="w-6 h-6 text-amber-500" />
+                Flash Deals & Exclusive Offers
+              </h2>
+              <DealFinder className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Explore Map Section */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <ExploreMap 
+                origin={fromCode}
+                className="max-w-5xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Calendar Heatmap */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <CalendarHeatmap
+                origin={fromCode}
+                destination={toCode}
+                onMonthSelect={(month, year) => {
+                  toast.success(`Viewing prices for ${month} ${year}`);
+                }}
+                className="max-w-3xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Nearby Airports Comparison */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <NearbyAirports
+                mainAirport={toCode}
+                destination={toCode}
+                mainPrice={299}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Price Prediction & Lock */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <div className="grid lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <PricePrediction
+                  route={{
+                    origin: fromCity.split(' (')[0] || 'Los Angeles',
+                    originCode: fromCode,
+                    destination: toCity.split(' (')[0] || 'New York',
+                    destCode: toCode
+                  }}
+                  departureDate={departDate}
+                  currentPrice={299}
+                />
+                <PriceLock
+                  flightPrice={299}
+                  route={{ from: fromCode, to: toCode }}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Pay Later Options */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <PayLater
+                totalAmount={599}
+                className="max-w-2xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* ZIVO Miles Program */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <ZivoMilesProgram className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Travel Alerts */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <TravelAlerts className="max-w-4xl mx-auto" />
             </div>
           </section>
         )}
