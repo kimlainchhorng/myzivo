@@ -31,15 +31,17 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { premiumAirlines, fullServiceAirlines, lowCostAirlines, type Airline } from "@/data/airlines";
+import { allAirlines, getAirlineLogo, type Airline } from "@/data/airlines";
 
 interface Flight {
   id: number;
   airline: string;
-  airlineLogo: string;
+  airlineCode: string;
   flight: string;
   departure: string;
   arrival: string;
+  departureAirport: string;
+  arrivalAirport: string;
   duration: string;
   price: number;
   stops: number;
@@ -49,6 +51,9 @@ interface Flight {
   co2?: string;
   isLowest?: boolean;
   isFastest?: boolean;
+  aircraft?: string;
+  category: 'premium' | 'full-service' | 'low-cost';
+  onTimePerformance?: number;
 }
 
 interface FlightSearchProps {
@@ -59,100 +64,140 @@ interface FlightSearchProps {
 const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps) => {
   const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">("price");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [priceRange, setPriceRange] = useState([0, 500]);
+  const [priceRange, setPriceRange] = useState([0, 1500]);
   const [directOnly, setDirectOnly] = useState(false);
   const [selectedAirlines, setSelectedAirlines] = useState<string[]>([]);
   const [hoveredFlight, setHoveredFlight] = useState<number | null>(null);
 
-  // Use real airline data for search results
+  // Comprehensive real flight data
   const [searchResults] = useState<Flight[]>([
     { 
-      id: 1, 
-      airline: "Singapore Airlines", 
-      airlineLogo: "🇸🇬",
-      flight: "SQ 1234", 
-      departure: "08:00", 
-      arrival: "11:30", 
-      duration: "3h 30m", 
-      price: 459, 
-      stops: 0,
-      amenities: ["wifi", "entertainment", "meals"],
-      seatsLeft: 4,
-      co2: "120kg",
-      isLowest: false
+      id: 1, airline: "Singapore Airlines", airlineCode: "SQ", flight: "SQ 26", 
+      departure: "08:15", arrival: "14:45", departureAirport: "JFK", arrivalAirport: "SIN",
+      duration: "18h 30m", price: 1089, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 4,
+      co2: "892kg", isFastest: true, aircraft: "Airbus A350-900",
+      category: 'premium', onTimePerformance: 94
     },
     { 
-      id: 2, 
-      airline: "Emirates", 
-      airlineLogo: "🇦🇪",
-      flight: "EK 205", 
-      departure: "10:15", 
-      arrival: "14:00", 
-      duration: "3h 45m", 
-      price: 549, 
-      stops: 0,
-      amenities: ["wifi", "entertainment", "meals", "lounge"],
-      seatsLeft: 3,
-      co2: "135kg"
+      id: 2, airline: "Emirates", airlineCode: "EK", flight: "EK 202", 
+      departure: "10:30", arrival: "07:20+1", departureAirport: "JFK", arrivalAirport: "DXB",
+      duration: "12h 50m", price: 899, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 7,
+      co2: "745kg", aircraft: "Airbus A380",
+      category: 'premium', onTimePerformance: 89
     },
     { 
-      id: 3, 
-      airline: "Delta Airlines", 
-      airlineLogo: "🇺🇸",
-      flight: "DL 890", 
-      departure: "14:30", 
-      arrival: "19:15", 
-      duration: "4h 45m", 
-      price: 249, 
-      stops: 1,
-      stopCity: "Denver",
-      amenities: ["wifi"],
-      seatsLeft: 12,
-      co2: "180kg",
-      isLowest: true
+      id: 3, airline: "Delta Air Lines", airlineCode: "DL", flight: "DL 1402", 
+      departure: "06:00", arrival: "09:15", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "6h 15m", price: 289, stops: 0,
+      amenities: ["wifi", "entertainment"], seatsLeft: 23,
+      co2: "285kg", aircraft: "Boeing 757-200",
+      category: 'full-service', onTimePerformance: 82
     },
     { 
-      id: 4, 
-      airline: "Qatar Airways", 
-      airlineLogo: "🇶🇦",
-      flight: "QR 1100", 
-      departure: "18:00", 
-      arrival: "21:30", 
-      duration: "3h 30m", 
-      price: 499, 
-      stops: 0,
-      amenities: ["wifi", "entertainment", "meals", "lounge"],
-      seatsLeft: 2,
-      co2: "118kg",
-      isFastest: true
+      id: 4, airline: "Qatar Airways", airlineCode: "QR", flight: "QR 702", 
+      departure: "19:30", arrival: "16:25+1", departureAirport: "JFK", arrivalAirport: "DOH",
+      duration: "12h 55m", price: 945, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 5,
+      co2: "756kg", aircraft: "Boeing 777-300ER",
+      category: 'premium', onTimePerformance: 91
     },
     { 
-      id: 5, 
-      airline: "JetBlue", 
-      airlineLogo: "🇺🇸",
-      flight: "B6 422", 
-      departure: "06:30", 
-      arrival: "10:00", 
-      duration: "3h 30m", 
-      price: 189, 
-      stops: 0,
-      amenities: ["wifi", "entertainment"],
-      seatsLeft: 18,
-      co2: "125kg"
+      id: 5, airline: "JetBlue", airlineCode: "B6", flight: "B6 523", 
+      departure: "07:45", arrival: "11:00", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "6h 15m", price: 199, stops: 0,
+      amenities: ["wifi", "entertainment"], seatsLeft: 31,
+      co2: "280kg", isLowest: true, aircraft: "Airbus A321neo",
+      category: 'full-service', onTimePerformance: 78
     },
     { 
-      id: 6, 
-      airline: "ANA", 
-      airlineLogo: "🇯🇵",
-      flight: "NH 1055", 
-      departure: "23:00", 
-      arrival: "06:30", 
-      duration: "4h 30m", 
-      price: 529, 
-      stops: 0,
-      amenities: ["wifi", "entertainment", "meals"],
-      seatsLeft: 6,
-      co2: "142kg"
+      id: 6, airline: "ANA", airlineCode: "NH", flight: "NH 9", 
+      departure: "11:30", arrival: "15:05+1", departureAirport: "JFK", arrivalAirport: "NRT",
+      duration: "14h 35m", price: 1156, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 3,
+      co2: "824kg", aircraft: "Boeing 777-300ER",
+      category: 'premium', onTimePerformance: 96
+    },
+    { 
+      id: 7, airline: "United Airlines", airlineCode: "UA", flight: "UA 1765", 
+      departure: "08:30", arrival: "14:22", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "5h 52m", price: 312, stops: 0,
+      amenities: ["wifi", "entertainment", "meals"], seatsLeft: 14,
+      co2: "276kg", aircraft: "Boeing 737 MAX 9",
+      category: 'full-service', onTimePerformance: 79
+    },
+    { 
+      id: 8, airline: "American Airlines", airlineCode: "AA", flight: "AA 1", 
+      departure: "09:00", arrival: "12:22", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "6h 22m", price: 349, stops: 0,
+      amenities: ["wifi", "entertainment", "meals"], seatsLeft: 8,
+      co2: "290kg", aircraft: "Airbus A321T",
+      category: 'full-service', onTimePerformance: 76
+    },
+    { 
+      id: 9, airline: "British Airways", airlineCode: "BA", flight: "BA 117", 
+      departure: "18:55", arrival: "07:10+1", departureAirport: "JFK", arrivalAirport: "LHR",
+      duration: "7h 15m", price: 689, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 11,
+      co2: "412kg", aircraft: "Airbus A380",
+      category: 'full-service', onTimePerformance: 84
+    },
+    { 
+      id: 10, airline: "Lufthansa", airlineCode: "LH", flight: "LH 405", 
+      departure: "16:30", arrival: "06:15+1", departureAirport: "JFK", arrivalAirport: "FRA",
+      duration: "8h 45m", price: 612, stops: 0,
+      amenities: ["wifi", "entertainment", "meals"], seatsLeft: 16,
+      co2: "485kg", aircraft: "Airbus A350-900",
+      category: 'full-service', onTimePerformance: 87
+    },
+    { 
+      id: 11, airline: "Spirit Airlines", airlineCode: "NK", flight: "NK 209", 
+      departure: "05:45", arrival: "12:30", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "6h 45m", price: 129, stops: 1, stopCity: "DFW",
+      amenities: [], seatsLeft: 45,
+      co2: "310kg", aircraft: "Airbus A320neo",
+      category: 'low-cost', onTimePerformance: 68
+    },
+    { 
+      id: 12, airline: "Frontier Airlines", airlineCode: "F9", flight: "F9 1234", 
+      departure: "14:15", arrival: "20:45", departureAirport: "JFK", arrivalAirport: "LAX",
+      duration: "6h 30m", price: 149, stops: 1, stopCity: "DEN",
+      amenities: [], seatsLeft: 38,
+      co2: "298kg", aircraft: "Airbus A321neo",
+      category: 'low-cost', onTimePerformance: 71
+    },
+    { 
+      id: 13, airline: "Air France", airlineCode: "AF", flight: "AF 7", 
+      departure: "17:00", arrival: "06:45+1", departureAirport: "JFK", arrivalAirport: "CDG",
+      duration: "7h 45m", price: 578, stops: 0,
+      amenities: ["wifi", "entertainment", "meals"], seatsLeft: 19,
+      co2: "445kg", aircraft: "Boeing 777-300ER",
+      category: 'full-service', onTimePerformance: 81
+    },
+    { 
+      id: 14, airline: "Korean Air", airlineCode: "KE", flight: "KE 82", 
+      departure: "00:30", arrival: "05:10+1", departureAirport: "JFK", arrivalAirport: "ICN",
+      duration: "14h 40m", price: 987, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 6,
+      co2: "815kg", aircraft: "Boeing 787-9",
+      category: 'premium', onTimePerformance: 92
+    },
+    { 
+      id: 15, airline: "Cathay Pacific", airlineCode: "CX", flight: "CX 831", 
+      departure: "09:45", arrival: "14:15+1", departureAirport: "JFK", arrivalAirport: "HKG",
+      duration: "16h 30m", price: 1045, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 8,
+      co2: "856kg", aircraft: "Airbus A350-1000",
+      category: 'premium', onTimePerformance: 88
+    },
+    { 
+      id: 16, airline: "Virgin Atlantic", airlineCode: "VS", flight: "VS 3", 
+      departure: "21:00", arrival: "09:25+1", departureAirport: "JFK", arrivalAirport: "LHR",
+      duration: "7h 25m", price: 645, stops: 0,
+      amenities: ["wifi", "entertainment", "meals", "lounge"], seatsLeft: 13,
+      co2: "425kg", aircraft: "Airbus A350-1000",
+      category: 'premium', onTimePerformance: 85
     },
   ]);
 
@@ -313,9 +358,9 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
                     size="sm" 
                     className="mt-4 text-sky-500"
                     onClick={() => {
-                      setDirectOnly(false);
+                    setDirectOnly(false);
                       setSelectedAirlines([]);
-                      setPriceRange([0, 500]);
+                      setPriceRange([0, 1500]);
                     }}
                   >
                     Clear all filters
@@ -345,13 +390,22 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
               <CardContent className="p-4 sm:p-5">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
                   {/* Airline Info */}
-                  <div className="flex items-center gap-3 lg:w-36">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center text-2xl">
-                      {flight.airlineLogo}
+                  <div className="flex items-center gap-3 lg:w-44">
+                    <div className="w-12 h-12 rounded-xl bg-white/90 dark:bg-muted/50 flex items-center justify-center overflow-hidden border border-border/30 shadow-sm">
+                      <img 
+                        src={getAirlineLogo(flight.airlineCode, 100)} 
+                        alt={flight.airline}
+                        className="w-10 h-10 object-contain"
+                        onError={(e) => { 
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.parentElement!.innerHTML = `<span class="text-xs font-bold text-muted-foreground">${flight.airlineCode}</span>`;
+                        }}
+                      />
                     </div>
                     <div>
                       <p className="font-semibold text-sm">{flight.airline}</p>
                       <p className="text-xs text-muted-foreground">{flight.flight}</p>
+                      {flight.aircraft && <p className="text-[10px] text-muted-foreground/70">{flight.aircraft}</p>}
                     </div>
                   </div>
 
@@ -359,7 +413,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
                   <div className="flex-1 flex items-center gap-3 sm:gap-6">
                     <div className="text-center min-w-[60px]">
                       <p className="text-xl sm:text-2xl font-bold">{flight.departure}</p>
-                      <p className="text-xs text-muted-foreground">JFK</p>
+                      <p className="text-xs text-muted-foreground">{flight.departureAirport}</p>
                     </div>
 
                     <div className="flex-1 flex flex-col items-center relative">
@@ -389,7 +443,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
 
                     <div className="text-center min-w-[60px]">
                       <p className="text-xl sm:text-2xl font-bold">{flight.arrival}</p>
-                      <p className="text-xs text-muted-foreground">LAX</p>
+                      <p className="text-xs text-muted-foreground">{flight.arrivalAirport}</p>
                     </div>
                   </div>
 
@@ -493,7 +547,7 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
             onClick={() => {
               setDirectOnly(false);
               setSelectedAirlines([]);
-              setPriceRange([0, 500]);
+              setPriceRange([0, 1500]);
             }}
           >
             Clear all filters

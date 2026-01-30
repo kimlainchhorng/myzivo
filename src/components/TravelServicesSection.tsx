@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
-import { premiumAirlines, fullServiceAirlines, lowCostAirlines } from "@/data/airlines";
+import { premiumAirlines, fullServiceAirlines, lowCostAirlines, getAirlineLogo } from "@/data/airlines";
 
 const services = [
   {
@@ -142,7 +142,12 @@ const TravelServicesSection = () => {
                 <div className="flex flex-wrap gap-3">
                   {featuredAirlines.slice(0, 6).map((airline) => (
                     <div key={airline.code} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card/30 backdrop-blur-xl border border-border/30">
-                      <span>{airline.logo}</span>
+                      <img 
+                        src={getAirlineLogo(airline.code, 24)} 
+                        alt={airline.name}
+                        className="w-6 h-6 object-contain"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
                       <span className="text-sm font-medium hidden sm:inline">{airline.name}</span>
                       {airline.category === 'premium' && (
                         <Crown className="w-3 h-3 text-amber-400" />
