@@ -25,12 +25,15 @@ import {
   Globe,
   Wifi,
   Coffee,
-  Tv
+  Tv,
+  Crown,
+  MapPin,
+  CheckCircle2
 } from "lucide-react";
 import { format } from "date-fns";
-import flightHeroImage from "@/assets/flight-hero.jpg";
-import businessClassImage from "@/assets/flight-business-class.jpg";
-import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
+import flightHeroPremium from "@/assets/flight-hero-premium.jpg";
+import flightFirstClass from "@/assets/flight-first-class.jpg";
+import flightDestinations from "@/assets/flight-destinations.jpg";
 
 interface FlightHeroSectionProps {
   onSearch?: () => void;
@@ -50,6 +53,13 @@ const features = [
   { icon: Clock, label: "24/7 Support", desc: "Round the clock assistance" },
 ];
 
+const stats = [
+  { value: "500+", label: "Airlines" },
+  { value: "10M+", label: "Travelers" },
+  { value: "1000+", label: "Routes" },
+  { value: "4.9★", label: "Rating" },
+];
+
 const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
   const [tripType, setTripType] = useState<"roundtrip" | "oneway">("roundtrip");
   const [fromCity, setFromCity] = useState("");
@@ -66,54 +76,72 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-[90vh] overflow-hidden">
+    <section className="relative min-h-[95vh] overflow-hidden">
       {/* Hero Background Image */}
       <div className="absolute inset-0">
         <img 
-          src={flightHeroImage} 
+          src={flightHeroPremium} 
           alt="Airplane window view at sunset" 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-105"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/95 via-background/80 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-transparent to-background/70" />
+        {/* Animated gradient overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.15),transparent_50%)]" />
       </div>
 
       {/* Floating Elements */}
-      <div className="absolute top-20 right-10 hidden lg:block animate-float" style={{ animationDelay: "0s" }}>
-        <div className="w-16 h-16 rounded-2xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center">
-          <Plane className="w-8 h-8 text-sky-400" />
+      <div className="absolute top-24 right-8 hidden lg:block animate-float" style={{ animationDelay: "0s" }}>
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500/30 to-blue-600/20 backdrop-blur-xl border border-sky-500/40 flex items-center justify-center shadow-2xl shadow-sky-500/20">
+          <Plane className="w-10 h-10 text-sky-400" />
         </div>
       </div>
-      <div className="absolute top-40 right-32 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
-        <div className="w-12 h-12 rounded-xl bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center">
-          <Globe className="w-6 h-6 text-blue-400" />
+      <div className="absolute top-44 right-36 hidden lg:block animate-float" style={{ animationDelay: "0.5s" }}>
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500/30 to-yellow-600/20 backdrop-blur-xl border border-amber-500/40 flex items-center justify-center shadow-xl shadow-amber-500/20">
+          <Crown className="w-7 h-7 text-amber-400" />
+        </div>
+      </div>
+      <div className="absolute top-32 left-8 hidden lg:block animate-float" style={{ animationDelay: "1s" }}>
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-teal-600/20 backdrop-blur-xl border border-emerald-500/40 flex items-center justify-center shadow-xl shadow-emerald-500/20">
+          <Globe className="w-6 h-6 text-emerald-400" />
         </div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 pt-24 pb-12">
+      <div className="container mx-auto px-4 relative z-10 pt-28 pb-16">
         {/* Hero Content */}
-        <div className="max-w-4xl mx-auto text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white border-0 shadow-lg shadow-sky-500/30">
-            <Sparkles className="w-4 h-4 mr-2" />
-            ZIVO Flights — Premium Air Travel
+        <div className="max-w-4xl mx-auto text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Badge className="mb-6 px-5 py-2.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-white border-0 shadow-xl shadow-sky-500/40 text-sm font-semibold">
+            <Sparkles className="w-4 h-4 mr-2 animate-pulse" />
+            ZIVO Flights — World-Class Air Travel
           </Badge>
           
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
-            Your journey to
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight tracking-tight">
+            Discover the World
             <br />
-            <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
-              anywhere starts here
+            <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent animate-pulse-slow">
+              in Premium Style
             </span>
           </h1>
           
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
-            Compare prices from 500+ airlines worldwide. Book premium flights at the best prices with our exclusive deals.
+            Compare 500+ airlines instantly. Find the best deals on business class, 
+            first class, and economy flights worldwide.
           </p>
 
+          {/* Stats Row */}
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-10 mb-10">
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <p className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-sky-400 to-cyan-400 bg-clip-text text-transparent">{stat.value}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground font-medium">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
           {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center gap-4 mb-10">
+          <div className="flex flex-wrap justify-center gap-3 mb-12">
             {features.map((feature) => (
-              <div key={feature.label} className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50">
+              <div key={feature.label} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card/60 backdrop-blur-xl border border-border/50 shadow-lg">
                 <feature.icon className="w-4 h-4 text-sky-500" />
                 <span className="text-sm font-medium">{feature.label}</span>
               </div>
@@ -123,9 +151,9 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
 
         {/* Search Card */}
         <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.2s" }}>
-          <Card className="overflow-hidden border-0 bg-card/80 backdrop-blur-2xl shadow-2xl shadow-black/20">
+          <Card className="overflow-hidden border-0 bg-card/90 backdrop-blur-2xl shadow-2xl shadow-black/30 ring-1 ring-white/10">
             {/* Top accent line */}
-            <div className="h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
+            <div className="h-1.5 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
             
             <CardContent className="p-6 sm:p-8">
               {/* Trip Type Toggle */}
@@ -138,7 +166,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}
                 >
-                  Round Trip
+                  ↩️ Round Trip
                 </button>
                 <button
                   onClick={() => setTripType("oneway")}
@@ -148,22 +176,22 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}
                 >
-                  One Way
+                  ➡️ One Way
                 </button>
               </div>
 
               {/* Search Fields */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 relative">
                 {/* From */}
                 <div className="relative group">
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">From</label>
                   <div className="relative">
-                    <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-sky-500 transition-colors" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500" />
                     <Input
                       value={fromCity}
                       onChange={(e) => setFromCity(e.target.value)}
                       placeholder="City or airport"
-                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base"
+                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base font-medium"
                     />
                   </div>
                 </div>
@@ -171,7 +199,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                 {/* Swap Button - Desktop */}
                 <button
                   onClick={swapCities}
-                  className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 translate-y-8 w-10 h-10 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:scale-110 transition-transform z-10 shadow-lg shadow-sky-500/30"
+                  className="hidden lg:flex absolute left-[calc(25%-20px)] top-[calc(50%+12px)] -translate-y-1/2 w-10 h-10 items-center justify-center rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:scale-110 active:scale-95 transition-transform z-10 shadow-lg shadow-sky-500/40"
                 >
                   <ArrowLeftRight className="w-4 h-4" />
                 </button>
@@ -180,12 +208,12 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                 <div className="relative group">
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">To</label>
                   <div className="relative">
-                    <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground rotate-90 group-focus-within:text-sky-500 transition-colors" />
+                    <Plane className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500 rotate-45" />
                     <Input
                       value={toCity}
                       onChange={(e) => setToCity(e.target.value)}
                       placeholder="City or airport"
-                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base"
+                      className="h-14 pl-10 bg-muted/50 border-0 focus:ring-2 focus:ring-sky-500/50 text-base font-medium"
                     />
                   </div>
                 </div>
@@ -195,7 +223,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Departure</label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base">
+                      <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base font-medium">
                         <CalendarIcon className="mr-3 h-4 w-4 text-sky-500" />
                         {departDate ? format(departDate, "MMM d, yyyy") : "Select date"}
                       </Button>
@@ -217,7 +245,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                     <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Return</label>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base">
+                        <Button variant="outline" className="w-full h-14 justify-start bg-muted/50 border-0 hover:bg-muted text-base font-medium">
                           <CalendarIcon className="mr-3 h-4 w-4 text-sky-500" />
                           {returnDate ? format(returnDate, "MMM d, yyyy") : "Select date"}
                         </Button>
@@ -240,7 +268,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                 <div className="flex-1 min-w-[140px]">
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Travelers</label>
                   <Select value={passengers} onValueChange={setPassengers}>
-                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base">
+                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base font-medium">
                       <Users className="w-4 h-4 mr-2 text-sky-500" />
                       <SelectValue />
                     </SelectTrigger>
@@ -257,21 +285,21 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
                 <div className="flex-1 min-w-[140px]">
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block uppercase tracking-wide">Class</label>
                   <Select value={cabinClass} onValueChange={setCabinClass}>
-                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base">
+                    <SelectTrigger className="h-14 bg-muted/50 border-0 text-base font-medium">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="economy">Economy</SelectItem>
-                      <SelectItem value="premium">Premium Economy</SelectItem>
-                      <SelectItem value="business">Business Class</SelectItem>
-                      <SelectItem value="first">First Class</SelectItem>
+                      <SelectItem value="economy">✈️ Economy</SelectItem>
+                      <SelectItem value="premium">💎 Premium Economy</SelectItem>
+                      <SelectItem value="business">👔 Business Class</SelectItem>
+                      <SelectItem value="first">👑 First Class</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <Button
                   onClick={onSearch}
-                  className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02]"
+                  className="h-14 px-10 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 hover:from-sky-600 hover:via-blue-700 hover:to-cyan-600 text-white font-bold shadow-xl shadow-sky-500/40 transition-all duration-300 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Flights
@@ -282,16 +310,19 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
         </div>
 
         {/* Partner Airlines */}
-        <div className="max-w-4xl mx-auto mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.4s" }}>
-          <p className="text-sm text-muted-foreground mb-4">Trusted by millions • Partnered with world's best airlines</p>
-          <div className="flex flex-wrap justify-center gap-6">
+        <div className="max-w-4xl mx-auto mt-14 text-center animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.4s" }}>
+          <p className="text-sm text-muted-foreground mb-5 flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            Trusted by 10M+ travelers • Partnered with world's best airlines
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
             {airlines.map((airline) => (
-              <div key={airline.name} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card/30 backdrop-blur-xl border border-border/30">
-                <span className="text-xl">{airline.logo}</span>
-                <span className="text-sm font-medium hidden sm:inline">{airline.name}</span>
+              <div key={airline.name} className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-card/50 backdrop-blur-xl border border-border/40 hover:border-sky-500/50 hover:bg-card/70 transition-all duration-300 shadow-lg group cursor-default">
+                <span className="text-2xl group-hover:scale-110 transition-transform">{airline.logo}</span>
+                <span className="text-sm font-semibold hidden sm:inline">{airline.name}</span>
                 <div className="flex items-center gap-0.5 text-amber-500">
-                  <Star className="w-3 h-3 fill-current" />
-                  <span className="text-xs">{airline.rating}</span>
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  <span className="text-xs font-bold">{airline.rating}</span>
                 </div>
               </div>
             ))}
@@ -300,53 +331,76 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
       </div>
 
       {/* Premium Experience Cards */}
-      <div className="container mx-auto px-4 pb-20 relative z-10">
+      <div className="container mx-auto px-4 pb-24 relative z-10">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold font-display mb-3">
+            Experience <span className="bg-gradient-to-r from-amber-400 to-yellow-500 bg-clip-text text-transparent">Premium</span> Travel
+          </h2>
+          <p className="text-muted-foreground">Fly in comfort with world-class amenities</p>
+        </div>
+        
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {/* Business Class */}
-          <div className="group relative overflow-hidden rounded-2xl h-64 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.5s" }}>
+          {/* First Class */}
+          <div className="group relative overflow-hidden rounded-2xl h-72 animate-in fade-in slide-in-from-bottom-4 duration-700 ring-1 ring-white/10 shadow-2xl" style={{ animationDelay: "0.5s" }}>
             <img 
-              src={businessClassImage} 
-              alt="Business class experience" 
+              src={flightFirstClass} 
+              alt="First class luxury cabin" 
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 mb-2">Premium</Badge>
-              <h3 className="text-white font-bold text-lg">Business Class</h3>
-              <p className="text-white/70 text-sm">Luxury travel experience</p>
+              <Badge className="bg-gradient-to-r from-amber-500/30 to-yellow-500/30 text-amber-400 border-amber-500/40 mb-3 shadow-lg">
+                <Crown className="w-3 h-3 mr-1" />
+                First Class
+              </Badge>
+              <h3 className="text-white font-bold text-xl mb-1">Luxury Experience</h3>
+              <p className="text-white/70 text-sm">Private suites & 5-star dining</p>
             </div>
           </div>
 
           {/* Global Network */}
-          <div className="group relative overflow-hidden rounded-2xl h-64 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.6s" }}>
+          <div className="group relative overflow-hidden rounded-2xl h-72 animate-in fade-in slide-in-from-bottom-4 duration-700 ring-1 ring-white/10 shadow-2xl" style={{ animationDelay: "0.6s" }}>
             <img 
-              src={airplaneCloudsImage} 
-              alt="Airplane above clouds" 
+              src={flightDestinations} 
+              alt="Airplane over tropical islands" 
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 mb-2">Worldwide</Badge>
-              <h3 className="text-white font-bold text-lg">1000+ Routes</h3>
+              <Badge className="bg-gradient-to-r from-sky-500/30 to-cyan-500/30 text-sky-400 border-sky-500/40 mb-3 shadow-lg">
+                <Globe className="w-3 h-3 mr-1" />
+                Worldwide
+              </Badge>
+              <h3 className="text-white font-bold text-xl mb-1">1000+ Destinations</h3>
               <p className="text-white/70 text-sm">Fly anywhere in the world</p>
             </div>
           </div>
 
           {/* Amenities */}
-          <div className="group relative overflow-hidden rounded-2xl h-64 bg-gradient-to-br from-sky-500/20 to-blue-600/20 border border-sky-500/20 animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: "0.7s" }}>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,theme(colors.sky.500/0.15),transparent)]" />
+          <div className="group relative overflow-hidden rounded-2xl h-72 bg-gradient-to-br from-sky-500/20 via-blue-600/10 to-cyan-500/20 border border-sky-500/30 animate-in fade-in slide-in-from-bottom-4 duration-700 shadow-2xl" style={{ animationDelay: "0.7s" }}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.2),transparent_70%)]" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-t from-sky-500/10 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 h-full flex flex-col justify-between">
               <div className="flex gap-3">
-                {[Wifi, Tv, Coffee].map((Icon, i) => (
-                  <div key={i} className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-sky-400" />
+                {[
+                  { icon: Wifi, label: "WiFi" },
+                  { icon: Tv, label: "Entertainment" },
+                  { icon: Coffee, label: "Meals" }
+                ].map((item, i) => (
+                  <div key={i} className="w-12 h-12 rounded-xl bg-sky-500/20 backdrop-blur-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300" style={{ transitionDelay: `${i * 100}ms` }}>
+                    <item.icon className="w-6 h-6 text-sky-400" />
                   </div>
                 ))}
               </div>
               <div>
-                <Badge className="bg-primary/20 text-primary border-primary/30 mb-2">Comfort</Badge>
-                <h3 className="text-foreground font-bold text-lg">Premium Amenities</h3>
-                <p className="text-muted-foreground text-sm">WiFi, entertainment & more</p>
+                <Badge className="bg-gradient-to-r from-primary/30 to-cyan-500/30 text-primary border-primary/40 mb-3 shadow-lg">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Comfort
+                </Badge>
+                <h3 className="text-foreground font-bold text-xl mb-1">Premium Amenities</h3>
+                <p className="text-muted-foreground text-sm">WiFi, entertainment & gourmet meals</p>
               </div>
             </div>
           </div>

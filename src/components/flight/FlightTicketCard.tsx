@@ -12,9 +12,11 @@ import {
   Sparkles,
   Zap,
   ChevronRight,
-  Crown
+  Crown,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface FlightTicketCardProps {
   flight: {
@@ -49,7 +51,13 @@ const premiumAirlineNames = [
   'Qantas', 'Korean Air', 'Turkish Airlines', 'EVA Air', 'Virgin Atlantic'
 ];
 
+// Reliable airline logo API
+const getAirlineLogo = (code: string) => {
+  return `https://pics.avs.io/100/50/${code}.png`;
+};
+
 const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProps) => {
+  const [logoError, setLogoError] = useState(false);
   const isPremiumAirline = flight.category === 'premium' || premiumAirlineNames.includes(flight.airline);
   
   const getAmenityIcon = (amenity: string) => {
@@ -65,53 +73,72 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
   return (
     <div 
       className={cn(
-        "group relative overflow-hidden rounded-2xl border transition-all duration-500",
+        "group relative overflow-hidden rounded-2xl border-2 transition-all duration-500",
         isSelected 
-          ? "border-sky-500 bg-sky-500/5 shadow-lg shadow-sky-500/20" 
-          : "border-border/50 bg-card/50 backdrop-blur-xl hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10"
+          ? "border-sky-500 bg-gradient-to-r from-sky-500/10 to-blue-500/5 shadow-2xl shadow-sky-500/30 ring-2 ring-sky-500/20" 
+          : isPremiumAirline
+            ? "border-amber-500/30 bg-gradient-to-r from-amber-500/5 to-yellow-500/5 hover:border-amber-500/60 hover:shadow-2xl hover:shadow-amber-500/20"
+            : "border-border/50 bg-card/80 backdrop-blur-xl hover:border-sky-500/50 hover:shadow-2xl hover:shadow-sky-500/15"
       )}
     >
+      {/* Premium glow effect */}
+      {isPremiumAirline && !isSelected && (
+        <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-amber-500/20 via-transparent to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      )}
+      
       {/* Ticket perforated edge effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-4 flex flex-col justify-around py-4">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="w-2 h-2 rounded-full bg-background" />
+      <div className="absolute left-0 top-0 bottom-0 w-5 flex flex-col justify-around py-6">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className={cn(
+            "w-2.5 h-2.5 rounded-full",
+            isSelected ? "bg-sky-500/20" : "bg-background"
+          )} />
         ))}
       </div>
 
-      <div className="pl-6 pr-4 py-5">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+      <div className="pl-8 pr-5 py-6">
+        <div className="flex flex-col lg:flex-row lg:items-center gap-5 lg:gap-8">
           {/* Airline Info */}
-          <div className="flex items-center gap-4 lg:w-48">
+          <div className="flex items-center gap-4 lg:w-52">
             <div className="relative">
               <div className={cn(
-                "w-14 h-14 rounded-xl flex items-center justify-center text-2xl ring-2",
+                "w-16 h-16 rounded-2xl flex items-center justify-center ring-2 overflow-hidden bg-gradient-to-br",
                 isPremiumAirline 
-                  ? "bg-gradient-to-br from-amber-500/20 to-yellow-600/30 ring-amber-500/30" 
-                  : "bg-gradient-to-br from-sky-500/20 to-blue-600/30 ring-sky-500/20"
+                  ? "from-amber-500/30 to-yellow-600/20 ring-amber-500/40 shadow-lg shadow-amber-500/20" 
+                  : "from-sky-500/20 to-blue-600/20 ring-sky-500/30 shadow-lg shadow-sky-500/10"
               )}>
-                {flight.airlineLogo || "✈️"}
+                {flight.airlineCode && !logoError ? (
+                  <img 
+                    src={getAirlineLogo(flight.airlineCode)}
+                    alt={flight.airline}
+                    className="w-full h-full object-contain p-2"
+                    onError={() => setLogoError(true)}
+                  />
+                ) : (
+                  <span className="text-3xl">{flight.airlineLogo || "✈️"}</span>
+                )}
               </div>
               {isPremiumAirline && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center">
-                  <Crown className="w-3 h-3 text-white" />
+                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center shadow-lg shadow-amber-500/40 ring-2 ring-background">
+                  <Crown className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
               {flight.isLowest && !isPremiumAirline && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-                  <Sparkles className="w-3 h-3 text-white" />
+                <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/40 ring-2 ring-background">
+                  <Sparkles className="w-3.5 h-3.5 text-white" />
                 </div>
               )}
             </div>
             <div>
               <p className="font-bold text-base">{flight.airline}</p>
-              <p className="text-xs text-muted-foreground font-mono">{flight.flightNumber}</p>
-              <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-muted-foreground font-mono tracking-wider">{flight.flightNumber}</p>
+              <div className="flex items-center gap-2 mt-1">
                 <div className="flex items-center gap-0.5">
                   <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  <span className="text-xs text-muted-foreground">{isPremiumAirline ? '4.9' : '4.5'}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{isPremiumAirline ? '4.9' : '4.5'}</span>
                 </div>
                 {flight.alliance && flight.alliance !== 'Independent' && (
-                  <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                  <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-semibold">
                     {flight.alliance}
                   </Badge>
                 )}
@@ -120,41 +147,68 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
           </div>
 
           {/* Flight Route */}
-          <div className="flex-1 flex items-center gap-4 sm:gap-6">
+          <div className="flex-1 flex items-center gap-4 sm:gap-8">
             {/* Departure */}
-            <div className="text-center min-w-[70px]">
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight">{flight.departure.time}</p>
-              <p className="text-xs font-semibold text-sky-500">{flight.departure.code}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-[80px]">{flight.departure.city}</p>
+            <div className="text-center min-w-[80px]">
+              <p className="text-3xl sm:text-4xl font-bold tracking-tight">{flight.departure.time}</p>
+              <p className="text-sm font-bold text-sky-500">{flight.departure.code}</p>
+              <p className="text-xs text-muted-foreground truncate max-w-[90px]">{flight.departure.city}</p>
             </div>
 
             {/* Flight Path Visual */}
             <div className="flex-1 flex flex-col items-center relative px-2">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mb-1.5">
-                <Clock className="w-3 h-3" />
-                <span className="font-medium">{flight.duration}</span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="font-semibold">{flight.duration}</span>
               </div>
               
-              <div className="w-full flex items-center">
-                <div className="w-2 h-2 rounded-full bg-sky-500" />
-                <div className="flex-1 h-[2px] bg-gradient-to-r from-sky-500 via-sky-400 to-sky-500 relative">
+              <div className="w-full flex items-center relative">
+                <div className={cn(
+                  "w-3 h-3 rounded-full shadow-lg",
+                  isSelected ? "bg-sky-500 shadow-sky-500/50" : "bg-sky-400"
+                )} />
+                <div className={cn(
+                  "flex-1 h-0.5 relative",
+                  isSelected 
+                    ? "bg-gradient-to-r from-sky-500 via-blue-400 to-sky-500" 
+                    : "bg-gradient-to-r from-sky-400/80 via-sky-500 to-sky-400/80"
+                )}>
+                  {/* Dashed line effect */}
+                  <div className="absolute inset-0 bg-[repeating-linear-gradient(90deg,transparent,transparent_8px,hsl(var(--background))_8px,hsl(var(--background))_12px)] opacity-30" />
+                  
                   {/* Animated plane */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:animate-pulse">
-                    <Plane className="w-4 h-4 text-sky-500 transform" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center",
+                      isSelected 
+                        ? "bg-sky-500 shadow-lg shadow-sky-500/50" 
+                        : "bg-gradient-to-r from-sky-500 to-blue-500 shadow-lg shadow-sky-500/30 group-hover:scale-110 transition-transform"
+                    )}>
+                      <Plane className="w-4 h-4 text-white" />
+                    </div>
                   </div>
+                  
                   {/* Stop indicator */}
                   {flight.stops > 0 && (
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-amber-500 border-2 border-background" />
+                    <div className="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-amber-500 border-2 border-background flex items-center justify-center">
+                      <span className="text-[8px] text-white font-bold">{flight.stops}</span>
+                    </div>
                   )}
                 </div>
-                <div className="w-2 h-2 rounded-full bg-sky-500" />
+                <div className={cn(
+                  "w-3 h-3 rounded-full shadow-lg",
+                  isSelected ? "bg-sky-500 shadow-sky-500/50" : "bg-sky-400"
+                )} />
               </div>
               
-              <p className="text-xs mt-1.5">
+              <p className="text-xs mt-2 font-medium">
                 {flight.stops === 0 ? (
-                  <span className="text-green-500 font-semibold">Direct Flight</span>
+                  <span className="text-emerald-500 flex items-center gap-1">
+                    <Check className="w-3 h-3" />
+                    Direct Flight
+                  </span>
                 ) : (
-                  <span className="text-amber-500 font-medium">
+                  <span className="text-amber-500">
                     {flight.stops} stop{flight.stops > 1 ? "s" : ""} 
                     {flight.stopCity && <span className="text-muted-foreground"> • {flight.stopCity}</span>}
                   </span>
@@ -163,59 +217,66 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
             </div>
 
             {/* Arrival */}
-            <div className="text-center min-w-[70px]">
-              <p className="text-2xl sm:text-3xl font-bold tracking-tight">{flight.arrival.time}</p>
-              <p className="text-xs font-semibold text-sky-500">{flight.arrival.code}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-[80px]">{flight.arrival.city}</p>
+            <div className="text-center min-w-[80px]">
+              <p className="text-3xl sm:text-4xl font-bold tracking-tight">{flight.arrival.time}</p>
+              <p className="text-sm font-bold text-sky-500">{flight.arrival.code}</p>
+              <p className="text-xs text-muted-foreground truncate max-w-[90px]">{flight.arrival.city}</p>
             </div>
           </div>
 
           {/* Amenities */}
-          <div className="hidden lg:flex flex-col gap-2">
-            <div className="flex items-center gap-1.5">
+          <div className="hidden lg:flex flex-col gap-3">
+            <div className="flex items-center gap-2">
               {flight.amenities.slice(0, 4).map((amenity, i) => (
                 <div
                   key={i}
-                  className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-sky-500 hover:bg-sky-500/10 transition-colors cursor-default"
+                  className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 cursor-default",
+                    isSelected 
+                      ? "bg-sky-500/20 text-sky-400"
+                      : "bg-muted/60 text-muted-foreground hover:text-sky-500 hover:bg-sky-500/10"
+                  )}
                   title={amenity.charAt(0).toUpperCase() + amenity.slice(1)}
                 >
                   {getAmenityIcon(amenity)}
                 </div>
               ))}
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Shield className="w-3 h-3 text-green-500" />
-              <span>Free cancel</span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Free cancellation</span>
             </div>
           </div>
 
           {/* Price & CTA */}
-          <div className="lg:w-40 flex flex-row lg:flex-col items-center lg:items-end justify-between gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l border-dashed border-border/50 lg:pl-6">
-            <div>
+          <div className="lg:w-44 flex flex-row lg:flex-col items-center lg:items-end justify-between gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l-2 border-dashed border-border/50 lg:pl-6">
+            <div className="text-right">
               {/* Badges */}
-              <div className="flex items-center gap-1.5 mb-1">
+              <div className="flex items-center justify-end gap-1.5 mb-2">
                 {flight.isLowest && (
-                  <Badge className="bg-green-500/20 text-green-500 border-green-500/30 text-[10px] px-1.5">
-                    Best Price
+                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
+                    <Sparkles className="w-2.5 h-2.5 mr-1" />
+                    Best Deal
                   </Badge>
                 )}
                 {flight.isFastest && (
-                  <Badge className="bg-sky-500/20 text-sky-500 border-sky-500/30 text-[10px] px-1.5">
-                    <Zap className="w-2.5 h-2.5 mr-0.5" />
+                  <Badge className="bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-500 border-sky-500/40 text-[10px] px-2 font-semibold shadow-sm">
+                    <Zap className="w-2.5 h-2.5 mr-1" />
                     Fastest
                   </Badge>
                 )}
               </div>
               
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold text-sky-400">${flight.price}</span>
-                <span className="text-xs text-muted-foreground">/person</span>
+              <div className="flex items-baseline gap-1 justify-end">
+                <span className={cn(
+                  "text-4xl font-bold",
+                  isSelected ? "text-sky-400" : isPremiumAirline ? "text-amber-400" : "text-sky-400"
+                )}>${flight.price}</span>
               </div>
-              
-              <p className="text-xs text-muted-foreground">{flight.class}</p>
+              <p className="text-xs text-muted-foreground">per person • {flight.class}</p>
               
               {flight.seatsLeft && flight.seatsLeft <= 5 && (
-                <p className="text-xs text-orange-500 font-medium mt-0.5 animate-pulse">
+                <p className="text-xs text-orange-500 font-semibold mt-1 animate-pulse flex items-center justify-end gap-1">
                   🔥 Only {flight.seatsLeft} seats left
                 </p>
               )}
@@ -224,30 +285,41 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
             <Button 
               onClick={onSelect}
               className={cn(
-                "w-full lg:w-auto px-6 font-semibold transition-all duration-300",
+                "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl",
                 isSelected
-                  ? "bg-sky-500 text-white"
-                  : "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 hover:scale-[1.02]"
+                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/40"
+                  : isPremiumAirline
+                    ? "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 text-white shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98]"
+                    : "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98]"
               )}
             >
-              {isSelected ? "Selected" : "Select"}
-              <ChevronRight className="w-4 h-4 ml-1" />
+              {isSelected ? (
+                <>
+                  <Check className="w-4 h-4 mr-1.5" />
+                  Selected
+                </>
+              ) : (
+                <>
+                  Select
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </>
+              )}
             </Button>
           </div>
         </div>
 
         {/* Bottom info row - Mobile amenities + CO2 */}
-        <div className="flex flex-wrap items-center gap-3 mt-4 pt-3 border-t border-dashed border-border/30 text-xs text-muted-foreground lg:hidden">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-dashed border-border/40 text-xs text-muted-foreground lg:hidden">
+          <div className="flex items-center gap-3">
             {flight.amenities.map((amenity, i) => (
-              <span key={i} className="capitalize flex items-center gap-1">
+              <span key={i} className="capitalize flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-lg">
                 {getAmenityIcon(amenity)}
                 {amenity}
               </span>
             ))}
           </div>
           {flight.co2 && (
-            <span className="flex items-center gap-1 text-green-500">
+            <span className="flex items-center gap-1.5 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
               🌱 {flight.co2} CO₂
             </span>
           )}
