@@ -197,11 +197,11 @@ const AirlineCarouselSection = ({
       <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
       
       <div 
-        className="flex gap-8 py-2 overflow-x-auto scrollbar-hide"
+        className={`flex gap-8 py-2 ${direction === 'left' ? 'animate-marquee-left' : 'animate-marquee-right'}`}
         style={{ width: 'max-content' }}
       >
-        {airlines.map((airline) => (
-          <AirlineLogo key={airline.code} airline={airline} size={isPremium ? 'lg' : 'md'} isPremium={isPremium} />
+        {[...airlines, ...airlines].map((airline, index) => (
+          <AirlineLogo key={`${airline.code}-${index}`} airline={airline} size={isPremium ? 'lg' : 'md'} isPremium={isPremium} />
         ))}
       </div>
     </div>
