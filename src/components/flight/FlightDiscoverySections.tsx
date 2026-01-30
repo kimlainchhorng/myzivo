@@ -16,7 +16,7 @@ import TravelAlerts from "./TravelAlerts";
 import MultiCityPlanner from "./MultiCityPlanner";
 import CorporateTravel from "./CorporateTravel";
 import GroupBooking from "./GroupBooking";
-import GiftCardsCredits from "./GiftCardsCredits";
+
 
 
 import AirlinePartnersHub from "./AirlinePartnersHub";
@@ -331,12 +331,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Gift Cards & Credits */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <GiftCardsCredits className="max-w-4xl mx-auto" />
-        </div>
-      </section>
 
 
 
