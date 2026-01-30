@@ -50,6 +50,8 @@ import PriceCalendar from "@/components/flight/PriceCalendar";
 import FareClassSelector from "@/components/flight/FareClassSelector";
 import PopularRoutes from "@/components/flight/PopularRoutes";
 import FlexibleDatesCalendar from "@/components/flight/FlexibleDatesCalendar";
+import AITripSuggestions from "@/components/flight/AITripSuggestions";
+import TravelBundleCard from "@/components/flight/TravelBundleCard";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -872,6 +874,27 @@ const FlightBooking = () => {
           </section>
         )}
 
+        {/* AI Trip Suggestions */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <AITripSuggestions
+                origin={fromCity.split(' (')[0] || 'New York'}
+                onSelectDestination={(airportCode, city) => {
+                  const airport = airports.find(a => a.code === airportCode);
+                  if (airport) {
+                    setToCity(`${airport.city} (${airport.code})`);
+                    toast.success(`Selected ${city} as your destination`);
+                  } else {
+                    setToCity(`${city} (${airportCode})`);
+                  }
+                }}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
         {/* Popular Destinations */}
         {!searchResults && (
           <section className="py-12 border-t border-border/50">
@@ -950,6 +973,16 @@ const FlightBooking = () => {
             accentColor="sky"
             features={["Free Cancellation", "Seat Selection"]}
             estimatedTime={`${selectedFlight.duration} flight`}
+          />
+          {/* Bundle Offer */}
+          <TravelBundleCard
+            flightPrice={selectedFlight.price}
+            origin={selectedFlight.departure.code}
+            destination={selectedFlight.arrival.code}
+            departDate={departDate}
+            returnDate={returnDate}
+            passengers={parseInt(passengers)}
+            className="mt-4"
           />
           <Button
             variant="ghost"

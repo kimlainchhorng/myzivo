@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sparkles,
   Plane,
@@ -11,37 +12,21 @@ import {
   Calendar,
   Users,
   Heart,
-  ThumbsUp,
   ThumbsDown,
   RefreshCw,
   Sun,
-  Umbrella,
   Mountain,
   Palmtree,
   Building2,
   Camera,
   Utensils,
   Music,
-  TrendingUp,
   Clock,
-  DollarSign,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface Destination {
-  id: string;
-  city: string;
-  country: string;
-  image: string;
-  price: number;
-  rating: number;
-  tags: string[];
-  weather: string;
-  bestFor: string[];
-  matchScore: number;
-  flightTime: string;
-}
+import { useAITripSuggestions, type AIDestination } from "@/hooks/useAITripSuggestions";
 
 interface AITripSuggestionsProps {
   userPreferences?: {
@@ -50,64 +35,69 @@ interface AITripSuggestionsProps {
     activities?: string[];
   };
   origin?: string;
+  onSelectDestination?: (airportCode: string, city: string) => void;
   className?: string;
 }
 
-const MOCK_DESTINATIONS: Destination[] = [
+// Fallback mock data when AI is unavailable
+const FALLBACK_DESTINATIONS: AIDestination[] = [
   {
     id: '1',
     city: 'Lisbon',
     country: 'Portugal',
-    image: '🇵🇹',
+    airportCode: 'LIS',
     price: 650,
     rating: 4.8,
     tags: ['Culture', 'Food', 'History'],
     weather: '22°C Sunny',
     bestFor: ['Solo travelers', 'Couples'],
     matchScore: 95,
-    flightTime: '7h 30m'
+    flightTime: '7h 30m',
+    description: 'A vibrant city with rich history, amazing food, and stunning coastal views.',
   },
   {
     id: '2',
     city: 'Kyoto',
     country: 'Japan',
-    image: '🇯🇵',
+    airportCode: 'KIX',
     price: 1200,
     rating: 4.9,
     tags: ['Culture', 'Nature', 'Temples'],
     weather: '18°C Clear',
     bestFor: ['Photography', 'History buffs'],
     matchScore: 92,
-    flightTime: '14h 15m'
+    flightTime: '14h 15m',
+    description: 'Ancient temples, serene gardens, and traditional Japanese culture.',
   },
   {
     id: '3',
     city: 'Cartagena',
     country: 'Colombia',
-    image: '🇨🇴',
+    airportCode: 'CTG',
     price: 580,
     rating: 4.7,
     tags: ['Beach', 'Nightlife', 'History'],
     weather: '30°C Tropical',
     bestFor: ['Adventure', 'Party'],
     matchScore: 88,
-    flightTime: '5h 45m'
+    flightTime: '5h 45m',
+    description: 'Colorful colonial streets, Caribbean beaches, and vibrant nightlife.',
   },
   {
     id: '4',
     city: 'Cape Town',
     country: 'South Africa',
-    image: '🇿🇦',
+    airportCode: 'CPT',
     price: 890,
     rating: 4.8,
     tags: ['Nature', 'Adventure', 'Wine'],
     weather: '25°C Sunny',
     bestFor: ['Outdoor lovers', 'Foodies'],
     matchScore: 85,
-    flightTime: '16h 30m'
+    flightTime: '16h 30m',
+    description: 'Stunning Table Mountain, world-class wineries, and diverse wildlife.',
   },
 ];
-
 const PREFERENCE_TAGS = [
   { id: 'beach', label: 'Beach', icon: Palmtree },
   { id: 'city', label: 'City', icon: Building2 },
@@ -117,17 +107,38 @@ const PREFERENCE_TAGS = [
   { id: 'nightlife', label: 'Nightlife', icon: Music },
 ];
 
+const getCountryEmoji = (country: string): string => {
+  const emojiMap: Record<string, string> = {
+    'Portugal': '🇵🇹', 'Japan': '🇯🇵', 'Colombia': '🇨🇴', 'South Africa': '🇿🇦',
+    'Indonesia': '🇮🇩', 'Thailand': '🇹🇭', 'Italy': '🇮🇹', 'France': '🇫🇷',
+    'Spain': '🇪🇸', 'Greece': '🇬🇷', 'Mexico': '🇲🇽', 'Brazil': '🇧🇷',
+    'Australia': '🇦🇺', 'New Zealand': '🇳🇿', 'United Kingdom': '🇬🇧',
+    'Germany': '🇩🇪', 'Netherlands': '🇳🇱', 'Switzerland': '🇨🇭',
+  };
+  return emojiMap[country] || '🌍';
+};
+
 export const AITripSuggestions = ({
   origin = "New York",
+  onSelectDestination,
   className
 }: AITripSuggestionsProps) => {
-  const [destinations, setDestinations] = useState(MOCK_DESTINATIONS);
+  const { destinations: aiDestinations, isLoading, fetchSuggestions } = useAITripSuggestions();
+  const [displayDestinations, setDisplayDestinations] = useState<AIDestination[]>(FALLBACK_DESTINATIONS);
   const [selectedTags, setSelectedTags] = useState<string[]>(['culture', 'food']);
   const [budget, setBudget] = useState<'budget' | 'mid' | 'luxury'>('mid');
   const [travelers, setTravelers] = useState(2);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [dislikedIds, setDislikedIds] = useState<Set<string>>(new Set());
+  const [hasLoadedAI, setHasLoadedAI] = useState(false);
+
+  // Update display when AI results come in
+  useEffect(() => {
+    if (aiDestinations.length > 0) {
+      setDisplayDestinations(aiDestinations);
+      setHasLoadedAI(true);
+    }
+  }, [aiDestinations]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
@@ -137,13 +148,22 @@ export const AITripSuggestions = ({
     );
   };
 
-  const refreshSuggestions = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      // Shuffle destinations to simulate new suggestions
-      setDestinations([...destinations].sort(() => Math.random() - 0.5));
-      setIsRefreshing(false);
-    }, 1000);
+  const refreshSuggestions = async () => {
+    const likedCities = displayDestinations
+      .filter(d => likedIds.has(d.id))
+      .map(d => d.city);
+    const dislikedCities = displayDestinations
+      .filter(d => dislikedIds.has(d.id))
+      .map(d => d.city);
+
+    await fetchSuggestions({
+      budget,
+      activities: selectedTags,
+      travelers,
+      origin,
+      likedDestinations: likedCities,
+      dislikedDestinations: dislikedCities,
+    });
   };
 
   const likeDestination = (id: string) => {
@@ -162,6 +182,12 @@ export const AITripSuggestions = ({
       next.delete(id);
       return next;
     });
+  };
+
+  const handleSelectDestination = (dest: AIDestination) => {
+    if (onSelectDestination) {
+      onSelectDestination(dest.airportCode, dest.city);
+    }
   };
 
   return (
@@ -190,11 +216,11 @@ export const AITripSuggestions = ({
             variant="outline"
             size="sm"
             onClick={refreshSuggestions}
-            disabled={isRefreshing}
+            disabled={isLoading}
             className="gap-2"
           >
-            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-            {isRefreshing ? "Finding..." : "Refresh"}
+            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            {isLoading ? "Finding..." : "Refresh"}
           </Button>
         </div>
       </CardHeader>
@@ -267,38 +293,66 @@ export const AITripSuggestions = ({
         {/* Suggestions */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Recommended for you</label>
+            <label className="text-sm font-medium flex items-center gap-2">
+              Recommended for you
+              {hasLoadedAI && (
+                <Badge className="bg-violet-500/20 text-violet-400 text-[10px]">
+                  <Zap className="w-2.5 h-2.5 mr-0.5" />
+                  AI
+                </Badge>
+              )}
+            </label>
             <span className="text-xs text-muted-foreground">
               From {origin}
             </span>
           </div>
 
           <div className="grid gap-3">
-            {destinations
-              .filter(d => !dislikedIds.has(d.id))
-              .map((dest, i) => (
-                <motion.div
-                  key={dest.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className={cn(
-                    "relative rounded-xl border p-4 transition-all",
-                    likedIds.has(dest.id)
-                      ? "border-pink-500/40 bg-pink-500/5"
-                      : "border-border/50 hover:border-border bg-card/30"
-                  )}
-                >
-                  {/* Match Score */}
-                  <div className="absolute -top-2 -right-2">
-                    <Badge className="bg-violet-500 text-white font-bold">
-                      {dest.matchScore}% match
-                    </Badge>
-                  </div>
-
+            {isLoading ? (
+              // Loading skeletons
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border/50 p-4 animate-pulse">
                   <div className="flex items-start gap-4">
-                    {/* Destination Image */}
-                    <div className="text-5xl">{dest.image}</div>
+                    <Skeleton className="w-12 h-12 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                      <div className="flex gap-2">
+                        <Skeleton className="h-5 w-16" />
+                        <Skeleton className="h-5 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-8 w-20" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              displayDestinations
+                .filter(d => !dislikedIds.has(d.id))
+                .map((dest, i) => (
+                  <motion.div
+                    key={dest.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className={cn(
+                      "relative rounded-xl border p-4 transition-all cursor-pointer",
+                      likedIds.has(dest.id)
+                        ? "border-pink-500/40 bg-pink-500/5"
+                        : "border-border/50 hover:border-border bg-card/30"
+                    )}
+                    onClick={() => handleSelectDestination(dest)}
+                  >
+                    {/* Match Score */}
+                    <div className="absolute -top-2 -right-2">
+                      <Badge className="bg-violet-500 text-white font-bold">
+                        {dest.matchScore}% match
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      {/* Destination Emoji */}
+                      <div className="text-5xl">{getCountryEmoji(dest.country)}</div>
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
@@ -370,7 +424,8 @@ export const AITripSuggestions = ({
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              ))
+            )}
           </div>
         </div>
 
