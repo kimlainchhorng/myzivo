@@ -263,115 +263,154 @@ export default function FlightSearchHero({
                   </button>
                 </div>
 
-                {/* Search Fields - Premium Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8 relative">
-                  {/* From */}
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
-                    <div className="relative">
-                      <AirportAutocomplete
-                        value={fromCity}
-                        onChange={setFromCity}
-                        label="From"
-                        placeholder="City or airport"
-                        recentSearches={recentSearches}
-                        excludeCode={toCode}
-                      />
+                {/* Search Fields - Premium 2x2 Grid Layout */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8 relative">
+                  {/* Left Column: From + Departure */}
+                  <div className="space-y-4">
+                    {/* From */}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="relative">
+                        <AirportAutocomplete
+                          value={fromCity}
+                          onChange={setFromCity}
+                          label="From"
+                          placeholder="Departure city or airport"
+                          recentSearches={recentSearches}
+                          excludeCode={toCode}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Departure Date */}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="relative">
+                        <label className="text-sm font-bold text-foreground mb-2.5 block flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                            <CalendarIcon className="w-3.5 h-3.5 text-sky-400" />
+                          </div>
+                          Departure Date
+                        </label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 transition-all duration-300 rounded-xl text-base font-medium group",
+                                !departDate && "text-muted-foreground"
+                              )}
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-sky-500/15 flex items-center justify-center mr-3 group-hover:bg-sky-500/25 transition-colors">
+                                <CalendarIcon className="h-5 w-5 text-sky-500" />
+                              </div>
+                              <div className="text-left">
+                                {departDate ? (
+                                  <>
+                                    <span className="block font-bold text-foreground">{format(departDate, "EEE, MMM d")}</span>
+                                    <span className="block text-xs text-muted-foreground">{format(departDate, "yyyy")}</span>
+                                  </>
+                                ) : (
+                                  <span className="text-muted-foreground">Select departure date</span>
+                                )}
+                              </div>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl rounded-xl" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={departDate}
+                              onSelect={setDepartDate}
+                              initialFocus
+                              className="p-3 pointer-events-auto"
+                              disabled={(date) => date < new Date()}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Swap Button - Premium */}
+                  {/* Swap Button - Center */}
                   <button
                     onClick={swapCities}
-                    className="hidden lg:flex absolute left-[calc(25%-14px)] top-[42px] w-11 h-11 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 transition-all z-20 shadow-xl shadow-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-110 active:scale-95 border-2 border-white/20"
+                    className="hidden md:flex absolute left-1/2 top-[42px] -translate-x-1/2 w-12 h-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 transition-all z-20 shadow-xl shadow-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-110 active:scale-95 border-2 border-white/20"
                   >
                     <ArrowLeftRight className="w-5 h-5" />
                   </button>
 
-                  {/* To */}
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
-                    <div className="relative">
-                      <AirportAutocomplete
-                        value={toCity}
-                        onChange={setToCity}
-                        label="To"
-                        placeholder="Where to?"
-                        recentSearches={recentSearches}
-                        excludeCode={fromCode}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Departure Date - Premium */}
-                  <div>
-                    <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
-                      <CalendarIcon className="w-4 h-4 text-sky-400" />
-                      Departure
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 transition-all duration-300 rounded-xl text-base font-medium",
-                            !departDate && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-3 h-5 w-5 text-sky-500" />
-                          {departDate
-                            ? format(departDate, "EEE, MMM d")
-                            : "Select date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={departDate}
-                          onSelect={setDepartDate}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                          disabled={(date) => date < new Date()}
+                  {/* Right Column: To + Return */}
+                  <div className="space-y-4">
+                    {/* To */}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-sky-500/30 to-blue-500/30 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="relative">
+                        <AirportAutocomplete
+                          value={toCity}
+                          onChange={setToCity}
+                          label="To"
+                          placeholder="Arrival city or airport"
+                          recentSearches={recentSearches}
+                          excludeCode={fromCode}
                         />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Return Date - Premium */}
-                  {tripType === "roundtrip" && (
-                    <div>
-                      <label className="text-sm font-bold text-foreground mb-2 block flex items-center gap-2">
-                        <CalendarIcon className="w-4 h-4 text-sky-400" />
-                        Return
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-sky-500/50 transition-all duration-300 rounded-xl text-base font-medium",
-                              !returnDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-3 h-5 w-5 text-sky-500" />
-                            {returnDate
-                              ? format(returnDate, "EEE, MMM d")
-                              : "Select date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={returnDate}
-                            onSelect={setReturnDate}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                            disabled={(date) => date < (departDate || new Date())}
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      </div>
                     </div>
-                  )}
+
+                    {/* Return Date */}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-2xl opacity-0 group-focus-within:opacity-100 transition-all duration-300 blur-lg" />
+                      <div className="relative">
+                        <label className="text-sm font-bold text-foreground mb-2.5 block flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-cyan-500/15 flex items-center justify-center">
+                            <CalendarIcon className="w-3.5 h-3.5 text-cyan-400" />
+                          </div>
+                          {tripType === "roundtrip" ? "Return Date" : "One Way"}
+                        </label>
+                        {tripType === "roundtrip" ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full h-14 justify-start bg-muted hover:bg-muted/80 border border-border hover:border-cyan-500/50 transition-all duration-300 rounded-xl text-base font-medium group",
+                                  !returnDate && "text-muted-foreground"
+                                )}
+                              >
+                                <div className="w-10 h-10 rounded-xl bg-cyan-500/15 flex items-center justify-center mr-3 group-hover:bg-cyan-500/25 transition-colors">
+                                  <CalendarIcon className="h-5 w-5 text-cyan-500" />
+                                </div>
+                                <div className="text-left">
+                                  {returnDate ? (
+                                    <>
+                                      <span className="block font-bold text-foreground">{format(returnDate, "EEE, MMM d")}</span>
+                                      <span className="block text-xs text-muted-foreground">{format(returnDate, "yyyy")}</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-muted-foreground">Select return date</span>
+                                  )}
+                                </div>
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-card border border-border shadow-2xl rounded-xl" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={returnDate}
+                                onSelect={setReturnDate}
+                                initialFocus
+                                className="p-3 pointer-events-auto"
+                                disabled={(date) => date < (departDate || new Date())}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <div className="h-14 rounded-xl bg-muted/50 border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
+                            <Plane className="w-4 h-4 mr-2 -rotate-45" />
+                            No return flight needed
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Passengers, Class & Search - Premium Row */}
