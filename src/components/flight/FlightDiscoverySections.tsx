@@ -1,27 +1,14 @@
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { Globe, Zap, Plane } from "lucide-react";
+import { Plane } from "lucide-react";
 import PopularRoutes from "./PopularRoutes";
 import FlexibleDatesCalendar from "./FlexibleDatesCalendar";
 import AITripSuggestions from "./AITripSuggestions";
-import DealFinder from "./DealFinder";
-import ExploreMap from "./ExploreMap";
 import CalendarHeatmap from "./CalendarHeatmap";
 import NearbyAirports from "./NearbyAirports";
 import PricePrediction from "./PricePrediction";
 import PriceLock from "./PriceLock";
-
-
-
-import MultiCityPlanner from "./MultiCityPlanner";
-import CorporateTravel from "./CorporateTravel";
-import GroupBooking from "./GroupBooking";
-
-
-
-
 import AirportGuide from "./AirportGuide";
-import TravelPackages from "./TravelPackages";
 import AirlineLogosCarousel from "./AirlineLogosCarousel";
 import CodeshareFlights from "./CodeshareFlights";
 
@@ -89,7 +76,6 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-
       {/* Popular Routes with Live Pricing */}
       <section className="py-12">
         <div className="container mx-auto px-4">
@@ -148,24 +134,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Deal Finder Section */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-            <Zap className="w-6 h-6 text-amber-500" />
-            Flash Deals & Exclusive Offers
-          </h2>
-          <DealFinder className="max-w-4xl mx-auto" />
-        </div>
-      </section>
-
-      {/* Explore Map Section */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <ExploreMap origin={fromCode} className="max-w-5xl mx-auto" />
-        </div>
-      </section>
-
       {/* Calendar Heatmap */}
       {toCity && (
         <section className="py-12 border-t border-border/50">
@@ -217,63 +185,6 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-
-
-
-      {/* Multi-City Planner */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-            <Globe className="w-6 h-6 text-sky-500" />
-            Multi-City Trip Planner
-          </h2>
-          <div className="max-w-4xl mx-auto">
-            <MultiCityPlanner
-              onSearch={(legs, pax) => {
-                if (legs.length > 0) {
-                  const first = legs[0];
-                  if (first.from && first.to) {
-                    setFromCity(`${first.from.city} (${first.from.code})`);
-                    setToCity(`${first.to.city} (${first.to.code})`);
-                    toast.success(
-                      `Planning ${legs.length}-city trip for ${pax} passengers`
-                    );
-                  }
-                }
-              }}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Corporate Travel */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <CorporateTravel className="max-w-4xl mx-auto" />
-        </div>
-      </section>
-
-      {/* Group Booking */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <GroupBooking
-              basePrice={299}
-              onPassengersChange={(pax) => {
-                setPassengers(String(pax.length));
-              }}
-              className="w-full"
-            />
-          </div>
-        </div>
-      </section>
-
-
-
-
-
-
-
       {/* Airport Guide */}
       {toCity && (
         <section className="py-12 border-t border-border/50">
@@ -282,14 +193,6 @@ export default function FlightDiscoverySections({
           </div>
         </section>
       )}
-
-      {/* Travel Packages */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <TravelPackages className="max-w-4xl mx-auto" />
-        </div>
-      </section>
-
     </>
   );
 }
