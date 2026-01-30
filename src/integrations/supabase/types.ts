@@ -7759,6 +7759,8 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string | null
+          customer_lat: number | null
+          customer_lng: number | null
           customer_name: string | null
           customer_phone: string | null
           distance_km: number | null
@@ -7774,12 +7776,15 @@ export type Database = {
           pickup_lat: number | null
           pickup_lng: number | null
           rating: number | null
+          rider_id: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["trip_status"] | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string | null
+          customer_lat?: never
+          customer_lng?: never
           customer_name?: never
           customer_phone?: never
           distance_km?: number | null
@@ -7795,12 +7800,15 @@ export type Database = {
           pickup_lat?: number | null
           pickup_lng?: number | null
           rating?: number | null
+          rider_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string | null
+          customer_lat?: never
+          customer_lng?: never
           customer_name?: never
           customer_phone?: never
           distance_km?: number | null
@@ -7816,6 +7824,7 @@ export type Database = {
           pickup_lat?: number | null
           pickup_lng?: number | null
           rating?: number | null
+          rider_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
         }
