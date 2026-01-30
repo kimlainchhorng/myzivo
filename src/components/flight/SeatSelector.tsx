@@ -1,13 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { 
   User, Crown, Sparkles, Plane, Info, Check, X,
   Wifi, Monitor, Power, Coffee, Utensils, Wine,
-  Baby, Accessibility, ArrowUpDown, ChevronDown
+  Baby, Accessibility, ArrowUpDown, ChevronDown,
+  Eye, EyeOff, RotateCcw, Volume2, VolumeX
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Tooltip,
   TooltipContent,
@@ -152,8 +155,43 @@ export default function SeatSelector({
   const [passengerSeats, setPassengerSeats] = useState<Record<number, Seat>>({});
   const [showLegend, setShowLegend] = useState(true);
   
-  const handleSeatSelect = (seat: Seat) => {
-    if (!seat.isAvailable) return;
+  // Accessibility settings
+  const [highContrast, setHighContrast] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showUnavailable, setShowUnavailable] = useState(true);
+  
+  // Play seat selection sound
+  const playSound = useCallback((type: 'select' | 'deselect' | 'error') => {
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (type === 'select') {
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+    } else if (type === 'deselect') {
+      oscillator.frequency.setValueAtTime(392, audioContext.currentTime); // G4
+    } else {
+      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+    }
+    
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+    
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.2);
+  }, [soundEnabled]);
+  
+  const handleSeatSelect = useCallback((seat: Seat) => {
+    if (!seat.isAvailable) {
+      playSound('error');
+      return;
+    }
     
     const isAlreadySelected = Object.values(passengerSeats).some(s => s.id === seat.id);
     
@@ -163,36 +201,56 @@ export default function SeatSelector({
         const newSeats = { ...passengerSeats };
         delete newSeats[Number(passenger)];
         setPassengerSeats(newSeats);
+        playSound('deselect');
       }
     } else {
       setPassengerSeats({ ...passengerSeats, [selectedPassenger]: seat });
+      playSound('select');
       if (selectedPassenger < passengerCount) {
         setSelectedPassenger(selectedPassenger + 1);
       }
     }
     
     onSeatSelect(seat);
-  };
+  }, [passengerSeats, selectedPassenger, passengerCount, onSeatSelect, playSound]);
 
-  const getSeatColor = (seat: Seat) => {
+  const getSeatColor = useCallback((seat: Seat) => {
     const isSelectedByAny = Object.values(passengerSeats).some(s => s.id === seat.id);
     
-    if (!seat.isAvailable) return 'bg-muted/40 cursor-not-allowed opacity-50';
-    if (isSelectedByAny) return 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg shadow-primary/30';
+    if (!seat.isAvailable) {
+      return highContrast 
+        ? 'bg-zinc-800 cursor-not-allowed border-zinc-700' 
+        : 'bg-muted/40 cursor-not-allowed opacity-50';
+    }
+    if (isSelectedByAny) {
+      return highContrast
+        ? 'bg-yellow-500 text-black ring-4 ring-yellow-300 shadow-lg'
+        : 'bg-primary text-primary-foreground ring-2 ring-primary shadow-lg shadow-primary/30';
+    }
     
     switch (seat.type) {
       case 'first':
-        return 'bg-gradient-to-br from-amber-500/30 to-yellow-500/20 border-amber-500/60 hover:from-amber-500/50 hover:to-yellow-500/30';
+        return highContrast
+          ? 'bg-orange-600 border-orange-400 hover:bg-orange-500'
+          : 'bg-gradient-to-br from-amber-500/30 to-yellow-500/20 border-amber-500/60 hover:from-amber-500/50 hover:to-yellow-500/30';
       case 'premium':
-        return 'bg-gradient-to-br from-purple-500/30 to-violet-500/20 border-purple-500/60 hover:from-purple-500/50 hover:to-violet-500/30';
+        return highContrast
+          ? 'bg-purple-600 border-purple-400 hover:bg-purple-500'
+          : 'bg-gradient-to-br from-purple-500/30 to-violet-500/20 border-purple-500/60 hover:from-purple-500/50 hover:to-violet-500/30';
       case 'exit-row':
-        return 'bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border-emerald-500/60 hover:from-emerald-500/50 hover:to-teal-500/30';
+        return highContrast
+          ? 'bg-green-600 border-green-400 hover:bg-green-500'
+          : 'bg-gradient-to-br from-emerald-500/30 to-teal-500/20 border-emerald-500/60 hover:from-emerald-500/50 hover:to-teal-500/30';
       case 'extra-legroom':
-        return 'bg-gradient-to-br from-sky-500/30 to-blue-500/20 border-sky-500/60 hover:from-sky-500/50 hover:to-blue-500/30';
+        return highContrast
+          ? 'bg-blue-600 border-blue-400 hover:bg-blue-500'
+          : 'bg-gradient-to-br from-sky-500/30 to-blue-500/20 border-sky-500/60 hover:from-sky-500/50 hover:to-blue-500/30';
       default:
-        return 'bg-card/60 border-border/60 hover:bg-card hover:border-border';
+        return highContrast
+          ? 'bg-zinc-600 border-zinc-400 hover:bg-zinc-500'
+          : 'bg-card/60 border-border/60 hover:bg-card hover:border-border';
     }
-  };
+  }, [passengerSeats, highContrast]);
 
   const getPassengerForSeat = (seatId: string): number | null => {
     const entry = Object.entries(passengerSeats).find(([, s]) => s.id === seatId);
@@ -224,15 +282,57 @@ export default function SeatSelector({
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowLegend(!showLegend)}
-            className="text-xs"
-          >
-            {showLegend ? 'Hide' : 'Show'} Legend
-            <ChevronDown className={cn("w-4 h-4 ml-1 transition-transform", showLegend && "rotate-180")} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowLegend(!showLegend)}
+              className="text-xs"
+            >
+              {showLegend ? 'Hide' : 'Show'} Legend
+              <ChevronDown className={cn("w-4 h-4 ml-1 transition-transform", showLegend && "rotate-180")} />
+            </Button>
+          </div>
+        </div>
+
+        {/* Accessibility Controls */}
+        <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-muted/20 border border-border/30">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="high-contrast"
+              checked={highContrast}
+              onCheckedChange={setHighContrast}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label htmlFor="high-contrast" className="text-xs flex items-center gap-1 cursor-pointer">
+              <Accessibility className="w-3.5 h-3.5" />
+              High Contrast
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="sound-enabled"
+              checked={soundEnabled}
+              onCheckedChange={setSoundEnabled}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label htmlFor="sound-enabled" className="text-xs flex items-center gap-1 cursor-pointer">
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              Sound
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="show-unavailable"
+              checked={showUnavailable}
+              onCheckedChange={setShowUnavailable}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label htmlFor="show-unavailable" className="text-xs flex items-center gap-1 cursor-pointer">
+              {showUnavailable ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              Show Taken
+            </Label>
+          </div>
         </div>
 
         {/* Multi-Passenger Selection */}
@@ -366,6 +466,16 @@ export default function SeatSelector({
                                        seatIndex === 2;
                       const passengerNum = getPassengerForSeat(seat.id);
                       
+                      // Skip unavailable seats if option is toggled off
+                      if (!showUnavailable && !seat.isAvailable) {
+                        return (
+                          <div key={seat.id} className="contents">
+                            {needsGap && <div className="w-6" />}
+                            <div className="w-9 h-9" />
+                          </div>
+                        );
+                      }
+                      
                       return (
                         <div key={seat.id} className="contents">
                           {needsGap && <div className="w-6" />}
@@ -381,8 +491,10 @@ export default function SeatSelector({
                                 className={cn(
                                   "w-9 h-9 rounded-t-lg border text-xs font-medium transition-all",
                                   "flex items-center justify-center relative",
+                                  "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background",
                                   getSeatColor(seat)
                                 )}
+                                aria-label={`Seat ${seat.id}, ${seat.type.replace('-', ' ')}, ${seat.isWindow ? 'window' : seat.isAisle ? 'aisle' : 'middle'} seat${seat.price > 0 ? `, plus $${seat.price}` : ', included'}${!seat.isAvailable ? ', unavailable' : ''}`}
                               >
                                 {seat.type === 'first' && !passengerNum && <Crown className="w-4 h-4 text-amber-400" />}
                                 {seat.type === 'premium' && !passengerNum && <Sparkles className="w-4 h-4 text-purple-400" />}

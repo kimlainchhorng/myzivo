@@ -97,14 +97,72 @@ export function usePriceAlerts() {
     ));
   }, []);
 
+  // Check price alerts using real flight prices
   const checkAlerts = useCallback(async () => {
-    // In production, this would call the API to check current prices
-    // For now, we'll simulate price changes
-    const updatedAlerts = alerts.map(alert => {
-      // Simulate price fluctuation
+    if (alerts.length === 0) return;
+    
+    const updatedAlerts = await Promise.all(alerts.map(async (alert) => {
+      // Skip already triggered alerts
+      if (alert.triggered) return alert;
+      
+      try {
+        // Try to fetch real prices via Supabase edge function
+        const response = await fetch('/api/get-flight-prices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            origin: alert.route.fromCode,
+            destination: alert.route.toCode,
+            departureDate: alert.departureDate,
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.prices?.length > 0) {
+            const lowestPrice = Math.min(...data.prices.map((p: any) => p.price));
+            const isTriggered = lowestPrice <= alert.targetPrice;
+            
+            if (isTriggered && !alert.triggered) {
+              // Send browser notification if enabled
+              if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🎉 Price Alert Triggered!', {
+                  body: `${alert.route.fromCode} → ${alert.route.toCode} dropped to $${Math.round(lowestPrice)}`,
+                  icon: '/favicon.ico',
+                  tag: alert.id,
+                });
+              }
+              
+              toast.success(
+                `🎉 Price dropped! ${alert.route.fromCode} → ${alert.route.toCode} is now $${Math.round(lowestPrice)}`,
+                {
+                  action: {
+                    label: 'Book Now',
+                    onClick: () => {
+                      window.location.href = `/book-flight?from=${alert.route.fromCode}&to=${alert.route.toCode}`;
+                    },
+                  },
+                  duration: 10000,
+                }
+              );
+            }
+
+            return {
+              ...alert,
+              currentPrice: Math.round(lowestPrice),
+              lastCheckedAt: new Date(),
+              triggered: isTriggered,
+              triggeredPrice: isTriggered ? Math.round(lowestPrice) : undefined,
+            };
+          }
+        }
+      } catch (error) {
+        console.error('Error checking price for alert:', error);
+      }
+      
+      // Fallback: simulate price fluctuation for demo
       const priceChange = (Math.random() - 0.5) * 50;
       const newPrice = Math.max(alert.historicalLow, alert.currentPrice + priceChange);
-      
       const isTriggered = newPrice <= alert.targetPrice;
       
       if (isTriggered && !alert.triggered) {
@@ -114,8 +172,7 @@ export function usePriceAlerts() {
             action: {
               label: 'Book Now',
               onClick: () => {
-                // Navigate to booking
-                window.location.href = `/flight-booking?from=${alert.route.fromCode}&to=${alert.route.toCode}`;
+                window.location.href = `/book-flight?from=${alert.route.fromCode}&to=${alert.route.toCode}`;
               },
             },
             duration: 10000,
@@ -130,7 +187,7 @@ export function usePriceAlerts() {
         triggered: isTriggered,
         triggeredPrice: isTriggered ? Math.round(newPrice) : undefined,
       };
-    });
+    }));
 
     setAlerts(updatedAlerts);
   }, [alerts]);

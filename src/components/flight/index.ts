@@ -64,6 +64,8 @@ export { default as PayLater } from './PayLater';
 export { default as PriceLock } from './PriceLock';
 export { default as MultiCurrency } from './MultiCurrency';
 export { default as GiftCardsCredits } from './GiftCardsCredits';
+export { default as FlightPaymentModal } from './FlightPaymentModal';
+export { default as PriceAlertsDashboard } from './PriceAlertsDashboard';
 
 // Types
 export type { FlightFilters } from './FlightFilters';
