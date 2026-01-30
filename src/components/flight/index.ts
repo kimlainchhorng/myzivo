@@ -70,6 +70,7 @@ export { default as PriceAlertsDashboard } from './PriceAlertsDashboard';
 // Booking Management
 export { default as BookingCancellation } from './BookingCancellation';
 export { default as ItineraryExportMenu } from './ItineraryExportMenu';
+export { default as FlightBookings } from './FlightBookings';
 
 // New Features
 export { default as TravelInsuranceSelector } from './TravelInsuranceSelector';
@@ -82,6 +83,11 @@ export { default as SeatUpgradeBidding } from './SeatUpgradeBidding';
 export { default as AirportLoungeAccess } from './AirportLoungeAccess';
 export { default as GroundTransportBooking } from './GroundTransportBooking';
 export { default as TravelCompanionFinder } from './TravelCompanionFinder';
+
+// Refactored Components
+export { default as FlightSearchHero } from './FlightSearchHero';
+export { default as FlightResultsSection } from './FlightResultsSection';
+export { default as FlightDiscoverySections } from './FlightDiscoverySections';
 
 // Types
 export type { FlightFilters } from './FlightFilters';
