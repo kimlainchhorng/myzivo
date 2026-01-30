@@ -22,6 +22,13 @@ export { default as FlightMultiCity } from './FlightMultiCity';
 export { default as FlightBookingFlow } from './FlightBookingFlow';
 export { default as FlightCardWithModal } from './FlightCardWithModal';
 
+// New enhanced components
+export { default as FlightTracker } from './FlightTracker';
+export { default as FlightComparison } from './FlightComparison';
+export { default as BoardingPass } from './BoardingPass';
+export { default as FlightRouteMapAnimated } from './FlightRouteMapAnimated';
+export { default as FlightResultCard } from './FlightResultCard';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
