@@ -42,6 +42,7 @@ export interface GeneratedFlight {
   meals: boolean;
   legroom: string;
   logo: string;
+  bookingLink?: string;
 }
 
 // Aircraft types by category
