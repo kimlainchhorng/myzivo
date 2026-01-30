@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -30,7 +30,8 @@ import {
   Leaf,
   Crown,
   Award,
-  CalendarDays
+  CalendarDays,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -53,6 +54,7 @@ import businessClassImage from "@/assets/flight-business-class.jpg";
 import { premiumAirlines, fullServiceAirlines, lowCostAirlines, getAirlineLogo } from "@/data/airlines";
 import { airports, searchAirports, getPopularAirports, formatAirportDisplay, popularRoutes, type Airport } from "@/data/airports";
 import { generateFlights, getTrendingDestinations, fareClasses, type GeneratedFlight } from "@/data/flightGenerator";
+import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 
 // Enhanced popular destinations with real airport data
 const popularDestinations = [
@@ -347,12 +349,26 @@ const FlightBooking = () => {
   const [confirmationNumber, setConfirmationNumber] = useState("");
   const [showPriceCalendar, setShowPriceCalendar] = useState(false);
   const [recentSearches] = useState<string[]>(["New York (JFK)", "London (LHR)", "Tokyo (NRT)"]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // Extract airport codes for price calendar
   const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
   const toMatch = toCity.match(/\(([A-Z]{3})\)/);
   const fromCode = fromMatch ? fromMatch[1] : 'LAX';
   const toCode = toMatch ? toMatch[1] : 'JFK';
+
+  // Real flight search hook
+  const { 
+    data: realFlights, 
+    isLoading: isLoadingRealFlights,
+    refetch: refetchRealFlights 
+  } = useRealFlightSearch({
+    origin: fromCode,
+    destination: toCode,
+    departureDate: departDate ? format(departDate, 'yyyy-MM-dd') : undefined,
+    returnDate: returnDate ? format(returnDate, 'yyyy-MM-dd') : undefined,
+    enabled: false, // Manual trigger
+  });
 
   const bookingSteps = [
     { id: "search", label: "Search" },
@@ -369,34 +385,56 @@ const FlightBooking = () => {
     }
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    setIsSearching(true);
+    
     // Extract airport codes from input
-    const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
-    const toMatch = toCity.match(/\(([A-Z]{3})\)/);
+    const fromMatchLocal = fromCity.match(/\(([A-Z]{3})\)/);
+    const toMatchLocal = toCity.match(/\(([A-Z]{3})\)/);
     
-    const fromCode = fromMatch ? fromMatch[1] : 'LAX';
-    const toCode = toMatch ? toMatch[1] : 'JFK';
+    const searchFromCode = fromMatchLocal ? fromMatchLocal[1] : 'LAX';
+    const searchToCode = toMatchLocal ? toMatchLocal[1] : 'JFK';
     
-    // Generate dynamic flights based on route
-    const flights = generateFlights(fromCode, toCode, departDate, 18);
-    
-    if (flights.length > 0) {
-      setSearchResults(flights);
+    try {
+      // Try to fetch real flights first
+      const result = await refetchRealFlights();
+      
+      if (result.data && result.data.length > 0) {
+        // Use real flight data from API
+        setSearchResults(result.data);
+        toast.success(`Found ${result.data.length} flights with real prices`);
+      } else {
+        // Fallback to generated flights
+        const flights = generateFlights(searchFromCode, searchToCode, departDate, 18);
+        
+        if (flights.length > 0) {
+          setSearchResults(flights);
+          toast.info('Showing estimated prices for this route');
+        } else {
+          // Fallback to sample flights
+          setSearchResults(sampleFlights.map(f => ({
+            ...f,
+            id: String(f.id),
+            logo: getAirlineLogo(f.airlineCode),
+            baggageIncluded: '1 × 23kg checked',
+            refundable: false,
+            wifi: f.amenities.includes('wifi'),
+            entertainment: f.amenities.includes('entertainment'),
+            meals: f.amenities.includes('meals'),
+            legroom: '31"'
+          })) as GeneratedFlight[]);
+        }
+      }
+      
       setBookingStep("select");
-    } else {
-      // Fallback to sample flights
-      setSearchResults(sampleFlights.map(f => ({
-        ...f,
-        id: String(f.id),
-        logo: getAirlineLogo(f.airlineCode),
-        baggageIncluded: '1 × 23kg checked',
-        refundable: false,
-        wifi: f.amenities.includes('wifi'),
-        entertainment: f.amenities.includes('entertainment'),
-        meals: f.amenities.includes('meals'),
-        legroom: '31"'
-      })) as GeneratedFlight[]);
+    } catch (error) {
+      console.error('Search error:', error);
+      // Fallback to generated flights on error
+      const flights = generateFlights(searchFromCode, searchToCode, departDate, 18);
+      setSearchResults(flights.length > 0 ? flights : null);
       setBookingStep("select");
+    } finally {
+      setIsSearching(false);
     }
   };
 
@@ -672,10 +710,20 @@ const FlightBooking = () => {
 
                     <Button
                       onClick={handleSearch}
+                      disabled={isSearching}
                       className="h-12 px-8 bg-sky-500 hover:bg-sky-600 text-white"
                     >
-                      <Search className="w-5 h-5 mr-2" />
-                      Search Flights
+                      {isSearching ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          <Search className="w-5 h-5 mr-2" />
+                          Search Flights
+                        </>
+                      )}
                     </Button>
                   </div>
 
@@ -723,8 +771,14 @@ const FlightBooking = () => {
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="font-display text-2xl font-bold">
+                  <h2 className="font-display text-2xl font-bold flex items-center gap-2">
                     {searchResults.length} flights found
+                    {searchResults[0]?.bookingLink && (
+                      <Badge className="bg-emerald-500/20 text-emerald-500 text-xs">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Real Prices
+                      </Badge>
+                    )}
                   </h2>
                   <p className="text-sm text-muted-foreground">
                     {fromCity.split(' (')[0]} → {toCity.split(' (')[0]} • {departDate ? format(departDate, 'MMM d, yyyy') : 'Select date'}
