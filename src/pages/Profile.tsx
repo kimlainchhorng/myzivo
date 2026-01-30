@@ -37,6 +37,11 @@ import PriceAlertsDashboard from "@/components/flight/PriceAlertsDashboard";
 import ItineraryBuilder from "@/components/flight/ItineraryBuilder";
 import TravelDocuments from "@/components/flight/TravelDocuments";
 import AirlinePartnersHub from "@/components/flight/AirlinePartnersHub";
+import TripSharing from "@/components/flight/TripSharing";
+import TravelCompanionFinder from "@/components/flight/TravelCompanionFinder";
+import FlightTracker from "@/components/flight/FlightTracker";
+import FlightPriceAlert from "@/components/flight/FlightPriceAlert";
+import GroundTransportBooking from "@/components/flight/GroundTransportBooking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -408,6 +413,63 @@ const Profile = () => {
             {/* Airline Partners */}
             <div>
               <AirlinePartnersHub />
+            </div>
+
+            {/* Trip Sharing */}
+            <div>
+              <TripSharing tripId="my-trips" tripName="My Trip" />
+            </div>
+
+            {/* Travel Companion Finder */}
+            <div>
+              <TravelCompanionFinder
+                flightNumber="ZV-1234"
+                currentSeat="15A"
+                departureDate={new Date()}
+                route={{ from: "LAX", to: "JFK" }}
+              />
+            </div>
+
+            {/* Flight Tracker */}
+            <div>
+              <FlightTracker
+                flightNumber="ZV-1234"
+                airline="ZIVO Airways"
+                departure={{
+                  code: "LAX",
+                  city: "Los Angeles",
+                  time: "08:00",
+                  date: new Date(),
+                  terminal: "T4",
+                  gate: "B12",
+                }}
+                arrival={{
+                  code: "JFK",
+                  city: "New York",
+                  time: "16:30",
+                  date: new Date(),
+                }}
+                duration="5h 30m"
+                aircraft="Boeing 787-9 Dreamliner"
+              />
+            </div>
+
+            {/* Flight Price Alerts */}
+            <div>
+              <FlightPriceAlert
+                route={{ from: "Los Angeles", fromCode: "LAX", to: "New York", toCode: "JFK" }}
+                currentPrice={299}
+                historicalLow={249}
+              />
+            </div>
+
+            {/* Ground Transport */}
+            <div>
+              <GroundTransportBooking
+                arrivalAirport="JFK"
+                arrivalTime={new Date()}
+                destination="New York"
+              />
             </div>
           </div>
         )}
