@@ -55,6 +55,22 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Travelpayouts API error:', response.status, errorText);
+      
+      // Return empty results for unsupported routes (400 errors) instead of throwing
+      if (response.status === 400) {
+        console.log('Route not supported by API, returning empty results');
+        return new Response(JSON.stringify({ 
+          success: true, 
+          prices: [],
+          currency,
+          origin,
+          destination,
+          note: 'Route not available in pricing database'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       throw new Error(`Travelpayouts API error: ${response.status}`);
     }
 
