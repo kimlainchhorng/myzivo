@@ -32,6 +32,8 @@ const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const FoodOrdering = lazy(() => import("./pages/FoodOrdering"));
 const FlightBooking = lazy(() => import("./pages/FlightBooking"));
+const FlightResults = lazy(() => import("./pages/FlightResults"));
+const FlightDetails = lazy(() => import("./pages/FlightDetails"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -95,6 +97,8 @@ const App = () => (
                 <Route path="/food" element={<FoodOrdering />} />
                 <Route path="/ride" element={<RiderApp />} />
                 <Route path="/book-flight" element={<FlightBooking />} />
+                <Route path="/flights/results" element={<FlightResults />} />
+                <Route path="/flights/details/:id" element={<FlightDetails />} />
                 <Route path="/book-hotel" element={<HotelBooking />} />
                 <Route path="/rent-car" element={<CarRentalBooking />} />
                 <Route path="/profile" element={<Profile />} />
