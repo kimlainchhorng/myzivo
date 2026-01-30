@@ -331,12 +331,16 @@ export default function FlightSearchHero({
                     </div>
                   </div>
 
-                  {/* Swap Button - Center */}
+                  {/* Swap Button - Center between From/To */}
                   <button
                     onClick={swapCities}
-                    className="hidden md:flex absolute left-1/2 top-[42px] -translate-x-1/2 w-12 h-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 transition-all z-20 shadow-xl shadow-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-110 active:scale-95 border-2 border-white/20"
+                    className="hidden md:flex absolute left-1/2 top-[38px] -translate-x-1/2 w-14 h-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-500 text-white hover:from-sky-400 hover:via-blue-500 hover:to-cyan-400 transition-all z-20 shadow-xl shadow-sky-500/50 hover:shadow-2xl hover:shadow-sky-500/60 hover:scale-110 active:scale-95 border-2 border-white/30 group"
                   >
-                    <ArrowLeftRight className="w-5 h-5" />
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="flex items-center gap-0.5">
+                      <span className="text-white/90 text-xs font-bold">←</span>
+                      <span className="text-white/90 text-xs font-bold">→</span>
+                    </div>
                   </button>
 
                   {/* Right Column: To + Return */}
