@@ -29,7 +29,8 @@ import {
   TrendingUp,
   Leaf,
   Crown,
-  Award
+  Award,
+  CalendarDays
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -43,6 +44,9 @@ import { BookingStepIndicator, BookingSummaryCard, CheckoutModal, BookingConfirm
 import { toast } from "sonner";
 import FlightTicketCard from "@/components/flight/FlightTicketCard";
 import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
+import AirportAutocomplete from "@/components/flight/AirportAutocomplete";
+import PriceCalendar from "@/components/flight/PriceCalendar";
+import FareClassSelector from "@/components/flight/FareClassSelector";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -341,6 +345,14 @@ const FlightBooking = () => {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [confirmationNumber, setConfirmationNumber] = useState("");
+  const [showPriceCalendar, setShowPriceCalendar] = useState(false);
+  const [recentSearches] = useState<string[]>(["New York (JFK)", "London (LHR)", "Tokyo (NRT)"]);
+
+  // Extract airport codes for price calendar
+  const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
+  const toMatch = toCity.match(/\(([A-Z]{3})\)/);
+  const fromCode = fromMatch ? fromMatch[1] : 'LAX';
+  const toCode = toMatch ? toMatch[1] : 'JFK';
 
   const bookingSteps = [
     { id: "search", label: "Search" },
@@ -549,12 +561,13 @@ const FlightBooking = () => {
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     {/* From */}
                     <div className="relative">
-                      <label className="text-sm text-muted-foreground mb-1 block">From</label>
-                      <Input
+                      <AirportAutocomplete
                         value={fromCity}
-                        onChange={(e) => setFromCity(e.target.value)}
+                        onChange={setFromCity}
+                        label="From"
                         placeholder="City or airport"
-                        className="h-12 bg-background/50"
+                        recentSearches={recentSearches}
+                        excludeCode={toCode}
                       />
                     </div>
 
@@ -568,12 +581,13 @@ const FlightBooking = () => {
 
                     {/* To */}
                     <div>
-                      <label className="text-sm text-muted-foreground mb-1 block">To</label>
-                      <Input
+                      <AirportAutocomplete
                         value={toCity}
-                        onChange={(e) => setToCity(e.target.value)}
-                        placeholder="City or airport"
-                        className="h-12 bg-background/50"
+                        onChange={setToCity}
+                        label="To"
+                        placeholder="Where to?"
+                        recentSearches={recentSearches}
+                        excludeCode={fromCode}
                       />
                     </div>
 
@@ -664,8 +678,41 @@ const FlightBooking = () => {
                       Search Flights
                     </Button>
                   </div>
+
+                  {/* Price Calendar Toggle */}
+                  {toCity && (
+                    <div className="pt-4 border-t border-border/30">
+                      <button
+                        onClick={() => setShowPriceCalendar(!showPriceCalendar)}
+                        className="flex items-center gap-2 text-sm text-sky-500 hover:text-sky-400 transition-colors"
+                      >
+                        <CalendarDays className="w-4 h-4" />
+                        {showPriceCalendar ? 'Hide' : 'View'} Price Calendar
+                        <Badge variant="outline" className="text-[10px] border-sky-500/40 text-sky-400">
+                          <Sparkles className="w-2.5 h-2.5 mr-1" />
+                          Find lowest fares
+                        </Badge>
+                      </button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Price Calendar */}
+              {showPriceCalendar && toCity && (
+                <div className="mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <PriceCalendar
+                    basePrice={299}
+                    selectedDate={departDate}
+                    onSelectDate={(date) => {
+                      setDepartDate(date);
+                      setShowPriceCalendar(false);
+                    }}
+                    fromCode={fromCode}
+                    toCode={toCode}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -675,9 +722,14 @@ const FlightBooking = () => {
           <section className="py-8">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-2xl font-bold">
-                  {searchResults.length} flights found
-                </h2>
+                <div>
+                  <h2 className="font-display text-2xl font-bold">
+                    {searchResults.length} flights found
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {fromCity.split(' (')[0]} → {toCity.split(' (')[0]} • {departDate ? format(departDate, 'MMM d, yyyy') : 'Select date'}
+                  </p>
+                </div>
                 <Select defaultValue="price">
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort by" />
@@ -686,8 +738,19 @@ const FlightBooking = () => {
                     <SelectItem value="price">Lowest Price</SelectItem>
                     <SelectItem value="duration">Shortest Duration</SelectItem>
                     <SelectItem value="departure">Departure Time</SelectItem>
+                    <SelectItem value="rating">Best Rated</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Fare Class Quick Filter */}
+              <div className="mb-6">
+                <FareClassSelector
+                  selectedFare={cabinClass}
+                  onSelectFare={setCabinClass}
+                  basePrice={searchResults[0]?.price || 299}
+                  compact
+                />
               </div>
 
               <div className="space-y-4">
@@ -824,5 +887,6 @@ const FlightBooking = () => {
     </div>
   );
 };
+
 
 export default FlightBooking;
