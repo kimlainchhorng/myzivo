@@ -70,12 +70,33 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const hasRightContent = !!rightContent;
 
     return (
-      <div className="w-full space-y-1">
-        <div className="relative">
+      <div className="w-full space-y-1.5">
+        <div className="relative group">
+          {/* Premium Glow Effect on Focus */}
+          <div className={cn(
+            "absolute -inset-0.5 rounded-2xl opacity-0 blur-md transition-all duration-500",
+            "group-focus-within:opacity-100",
+            validationState === "default" && "bg-gradient-to-r from-sky-500/30 via-primary/20 to-cyan-500/30",
+            validationState === "error" && "bg-gradient-to-r from-destructive/30 to-red-500/30",
+            validationState === "success" && "bg-gradient-to-r from-emerald-500/30 to-green-500/30"
+          )} />
+          
           {/* Left Icon */}
           {LeftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              <LeftIcon className="w-4 h-4 text-muted-foreground" />
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+              <div className={cn(
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300",
+                "bg-gradient-to-br from-sky-500/20 to-cyan-500/15 group-focus-within:from-sky-500/30 group-focus-within:to-cyan-500/25",
+                validationState === "error" && "from-destructive/20 to-red-500/15",
+                validationState === "success" && "from-emerald-500/20 to-green-500/15"
+              )}>
+                <LeftIcon className={cn(
+                  "w-4.5 h-4.5 transition-colors duration-300",
+                  validationState === "default" && "text-sky-400 group-focus-within:text-sky-300",
+                  validationState === "error" && "text-destructive",
+                  validationState === "success" && "text-emerald-400"
+                )} />
+              </div>
             </div>
           )}
 
@@ -84,25 +105,26 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             value={value}
             className={cn(
-              // Base styles
-              "flex h-10 md:h-11 w-full rounded-xl border bg-background/50 backdrop-blur-sm text-sm transition-all duration-200",
+              // Base styles - Premium
+              "relative flex h-14 w-full rounded-xl border-2 text-base font-medium transition-all duration-300",
+              "bg-muted/40 backdrop-blur-xl",
               "ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-              "placeholder:text-muted-foreground/70",
-              // Focus styles
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 focus-visible:border-primary/50",
+              "placeholder:text-muted-foreground/60 placeholder:font-normal",
+              // Focus styles - Premium glow
+              "focus-visible:outline-none focus-visible:ring-0 focus-visible:border-sky-500/60 focus-visible:bg-muted/60",
               // Hover styles
-              "hover:border-border/80",
+              "hover:border-border/80 hover:bg-muted/50",
               // Disabled styles
-              "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/30",
+              "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/20",
               // Validation states
-              validationState === "default" && "border-input",
+              validationState === "default" && "border-border/50",
               validationState === "error" &&
-                "border-destructive/50 focus-visible:ring-destructive/30 focus-visible:border-destructive",
+                "border-destructive/60 focus-visible:border-destructive bg-destructive/5",
               validationState === "success" &&
-                "border-emerald-500/50 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500",
-              // Padding based on icons
-              hasLeftIcon ? "pl-10" : "px-3.5",
-              hasRightContent ? "pr-10" : "px-3.5",
+                "border-emerald-500/60 focus-visible:border-emerald-500 bg-emerald-500/5",
+              // Padding based on icons - increased for larger icons
+              hasLeftIcon ? "pl-16" : "px-4",
+              hasRightContent ? "pr-12" : "px-4",
               className
             )}
             ref={ref}
@@ -111,22 +133,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
           {/* Right Content */}
           {rightContent && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center z-10">
               {rightContent}
             </div>
           )}
         </div>
 
-        {/* Validation Messages */}
+        {/* Validation Messages - Enhanced */}
         {validationState === "error" && errorMessage && (
-          <p className="text-xs text-destructive flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
+          <p className="text-sm text-destructive flex items-center gap-1.5 pl-1 animate-in fade-in slide-in-from-top-1 duration-200">
+            <AlertCircle className="w-3.5 h-3.5" />
             {errorMessage}
           </p>
         )}
         {validationState === "success" && successMessage && (
-          <p className="text-xs text-emerald-500 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" />
+          <p className="text-sm text-emerald-400 flex items-center gap-1.5 pl-1 animate-in fade-in slide-in-from-top-1 duration-200">
+            <CheckCircle2 className="w-3.5 h-3.5" />
             {successMessage}
           </p>
         )}
