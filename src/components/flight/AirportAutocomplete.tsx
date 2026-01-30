@@ -156,41 +156,50 @@ const AirportAutocomplete = ({
           {/* Results */}
           <div className="max-h-80 overflow-y-auto">
             {results.length > 0 ? (
-              results.map((airport) => (
+              results.map((airport, index) => (
                 <button
                   key={airport.code}
                   onClick={() => handleSelect(airport)}
-                  className="w-full px-4 py-3 flex items-center gap-4 hover:bg-sky-500/10 transition-colors text-left group"
+                  className="w-full px-4 py-4 flex items-center gap-4 hover:bg-gradient-to-r hover:from-sky-500/10 hover:via-cyan-500/5 hover:to-transparent transition-all duration-300 text-left group border-b border-border/20 last:border-0 relative overflow-hidden"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
+                  {/* Hover glow effect */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-sky-500/5 via-transparent to-transparent" />
+                  
                   {/* Airport icon with region */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center flex-shrink-0 group-hover:from-sky-500/30 group-hover:to-blue-600/30 transition-colors">
-                    <span className="text-xl">{getRegionIcon(airport.region)}</span>
+                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/20 via-blue-500/15 to-cyan-500/20 flex items-center justify-center flex-shrink-0 group-hover:from-sky-500/30 group-hover:via-blue-500/25 group-hover:to-cyan-500/30 transition-all duration-300 shadow-lg shadow-sky-500/10 group-hover:shadow-sky-500/20 group-hover:scale-105 border border-sky-500/20 group-hover:border-sky-500/40">
+                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{getRegionIcon(airport.region)}</span>
                   </div>
 
                   {/* Airport details */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm truncate">{airport.city}</span>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-mono font-bold text-sky-500 border-sky-500/40">
+                  <div className="flex-1 min-w-0 relative z-10">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-base truncate group-hover:text-sky-400 transition-colors">{airport.city}</span>
+                      <Badge variant="outline" className="text-[11px] px-2 py-0.5 h-5 font-mono font-bold text-sky-400 border-sky-500/50 bg-sky-500/10 group-hover:bg-sky-500/20 transition-colors shadow-sm">
                         {airport.code}
                       </Badge>
                       {airport.popularity && airport.popularity >= 9 && (
-                        <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/40 text-[9px] px-1.5 py-0">
-                          <Star className="w-2.5 h-2.5 mr-0.5 fill-current" />
-                          Hub
+                        <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/40 text-[10px] px-2 py-0.5 shadow-sm shadow-amber-500/10">
+                          <Star className="w-3 h-3 mr-1 fill-current" />
+                          Major Hub
                         </Badge>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-sm text-muted-foreground truncate mt-1 group-hover:text-foreground/70 transition-colors">
                       {airport.name}
                     </p>
-                    <p className="text-xs text-muted-foreground/70">
-                      {airport.country} • {airport.region}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Globe className="w-3 h-3 text-muted-foreground/50" />
+                      <p className="text-xs text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+                        {airport.country} • {airport.region}
+                      </p>
+                    </div>
                   </div>
 
                   {/* Arrow indicator */}
-                  <Plane className="w-4 h-4 text-muted-foreground/50 group-hover:text-sky-500 transition-colors -rotate-45" />
+                  <div className="relative z-10 w-10 h-10 rounded-xl bg-muted/30 group-hover:bg-sky-500/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                    <Plane className="w-5 h-5 text-muted-foreground/40 group-hover:text-sky-400 transition-all duration-300 -rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  </div>
                 </button>
               ))
             ) : (
