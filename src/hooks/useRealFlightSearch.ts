@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { allAirlines, getAirlineLogo } from "@/data/airlines";
+import { allAirlines, getAirlineLogo, getAirlineByCode, type Airline } from "@/data/airlines";
 import { airports } from "@/data/airports";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 
@@ -36,37 +36,89 @@ interface FlightPricesResponse {
   error?: string;
 }
 
-// Map airline code to full airline info with fallback
-const getAirlineInfo = (code: string) => {
-  const airline = allAirlines.find(a => a.code === code);
-  if (airline) return airline;
+// Extended airline fallback for codes not in main database
+const extendedAirlineInfo: Record<string, { name: string; category: Airline['category']; alliance: string }> = {
+  // Russian/CIS
+  'SU': { name: 'Aeroflot', category: 'full-service', alliance: 'SkyTeam' },
+  'S7': { name: 'S7 Airlines', category: 'full-service', alliance: 'Oneworld' },
+  'DP': { name: 'Pobeda', category: 'low-cost', alliance: 'Independent' },
+  'U6': { name: 'Ural Airlines', category: 'full-service', alliance: 'Independent' },
+  'FV': { name: 'Rossiya Airlines', category: 'full-service', alliance: 'Independent' },
+  'UT': { name: 'UTair', category: 'full-service', alliance: 'Independent' },
+  'N4': { name: 'Nordwind Airlines', category: 'full-service', alliance: 'Independent' },
+  // Middle East & Africa
+  'WY': { name: 'Oman Air', category: 'full-service', alliance: 'Independent' },
+  'GF': { name: 'Gulf Air', category: 'full-service', alliance: 'Independent' },
+  'SV': { name: 'Saudia', category: 'full-service', alliance: 'SkyTeam' },
+  'MS': { name: 'EgyptAir', category: 'full-service', alliance: 'Star Alliance' },
+  'ET': { name: 'Ethiopian Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'SA': { name: 'South African Airways', category: 'full-service', alliance: 'Star Alliance' },
+  // Asia
+  'PG': { name: 'Bangkok Airways', category: 'full-service', alliance: 'Independent' },
+  'PR': { name: 'Philippine Airlines', category: 'full-service', alliance: 'Independent' },
+  'HU': { name: 'Hainan Airlines', category: 'premium', alliance: 'Independent' },
+  'CZ': { name: 'China Southern', category: 'full-service', alliance: 'SkyTeam' },
+  'CA': { name: 'Air China', category: 'full-service', alliance: 'Star Alliance' },
+  'MU': { name: 'China Eastern', category: 'full-service', alliance: 'SkyTeam' },
+  '3U': { name: 'Sichuan Airlines', category: 'full-service', alliance: 'Independent' },
+  'HO': { name: 'Juneyao Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  '5J': { name: 'Cebu Pacific', category: 'low-cost', alliance: 'Independent' },
+  'Z2': { name: 'AirAsia Philippines', category: 'low-cost', alliance: 'Independent' },
+  'ZG': { name: 'Zipair Tokyo', category: 'low-cost', alliance: 'Independent' },
+  'MM': { name: 'Peach Aviation', category: 'low-cost', alliance: 'Independent' },
+  '7C': { name: 'Jeju Air', category: 'low-cost', alliance: 'Independent' },
+  'LJ': { name: 'Jin Air', category: 'low-cost', alliance: 'Independent' },
+  'TW': { name: 'T\'way Air', category: 'low-cost', alliance: 'Independent' },
+  // Oceania
+  'SB': { name: 'Aircalin', category: 'full-service', alliance: 'Independent' },
+  // South Asia
+  'PK': { name: 'Pakistan International', category: 'full-service', alliance: 'Independent' },
+  'BG': { name: 'Biman Bangladesh', category: 'full-service', alliance: 'Independent' },
+  'WB': { name: 'RwandAir', category: 'full-service', alliance: 'Independent' },
+  // Americas
+  'G3': { name: 'GOL Linhas Aéreas', category: 'low-cost', alliance: 'Independent' },
+  'AD': { name: 'Azul Brazilian Airlines', category: 'full-service', alliance: 'Independent' },
+  'H2': { name: 'Sky Airline', category: 'low-cost', alliance: 'Independent' },
+  'JA': { name: 'JetSMART', category: 'low-cost', alliance: 'Independent' },
+  // Europe
+  'VY': { name: 'Vueling', category: 'low-cost', alliance: 'Independent' },
+  'HV': { name: 'Transavia', category: 'low-cost', alliance: 'Independent' },
+  'DE': { name: 'Condor', category: 'full-service', alliance: 'Independent' },
+  'DY': { name: 'Norwegian', category: 'low-cost', alliance: 'Independent' },
+  'EI': { name: 'Aer Lingus', category: 'full-service', alliance: 'Independent' },
+  'BT': { name: 'airBaltic', category: 'full-service', alliance: 'Independent' },
+};
+
+// Map airline code to full airline info from our database with fallback
+const getAirlineInfo = (code: string): { name: string; category: Airline['category']; alliance: string; code: string } => {
+  // First try our main airline database
+  const airline = getAirlineByCode(code);
+  if (airline) {
+    return {
+      code: airline.code,
+      name: airline.name,
+      category: airline.category,
+      alliance: airline.alliance || 'Independent'
+    };
+  }
   
-  // Common airline codes not in our database
-  const fallbackAirlines: Record<string, { name: string; category: 'premium' | 'full-service' | 'low-cost'; alliance: string }> = {
-    'SU': { name: 'Aeroflot', category: 'full-service', alliance: 'SkyTeam' },
-    'S7': { name: 'S7 Airlines', category: 'full-service', alliance: 'oneworld' },
-    'DP': { name: 'Pobeda', category: 'low-cost', alliance: 'Independent' },
-    'U6': { name: 'Ural Airlines', category: 'full-service', alliance: 'Independent' },
-    'FV': { name: 'Rossiya Airlines', category: 'full-service', alliance: 'Independent' },
-    'UT': { name: 'UTair', category: 'full-service', alliance: 'Independent' },
-    'N4': { name: 'Nordwind Airlines', category: 'full-service', alliance: 'Independent' },
-    'AY': { name: 'Finnair', category: 'full-service', alliance: 'oneworld' },
-    'SK': { name: 'SAS', category: 'full-service', alliance: 'Star Alliance' },
-    'LO': { name: 'LOT Polish Airlines', category: 'full-service', alliance: 'Star Alliance' },
-    'OS': { name: 'Austrian Airlines', category: 'full-service', alliance: 'Star Alliance' },
-    'LX': { name: 'Swiss', category: 'premium', alliance: 'Star Alliance' },
-    'TK': { name: 'Turkish Airlines', category: 'full-service', alliance: 'Star Alliance' },
-    'EY': { name: 'Etihad Airways', category: 'premium', alliance: 'Independent' },
-    'WY': { name: 'Oman Air', category: 'full-service', alliance: 'Independent' },
-    'GF': { name: 'Gulf Air', category: 'full-service', alliance: 'Independent' },
-  };
+  // Then try extended fallback database
+  const extended = extendedAirlineInfo[code];
+  if (extended) {
+    return {
+      code,
+      name: extended.name,
+      category: extended.category,
+      alliance: extended.alliance
+    };
+  }
   
-  const fallback = fallbackAirlines[code];
+  // Default fallback - use code as name
   return {
     code,
-    name: fallback?.name || code,
-    category: fallback?.category || ('full-service' as const),
-    alliance: fallback?.alliance || 'Independent'
+    name: code,
+    category: 'full-service',
+    alliance: 'Independent'
   };
 };
 

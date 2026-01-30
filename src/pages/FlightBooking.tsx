@@ -490,32 +490,55 @@ const FlightBooking = () => {
     try {
       // Try to fetch real flights first
       const result = await refetchRealFlights();
+      const realFlightsData = result.data || [];
       
-      if (result.data && result.data.length > 0) {
-        // Use real flight data from API
-        setSearchResults(result.data);
-        toast.success(`Found ${result.data.length} flights with real prices`);
-      } else {
-        // Fallback to generated flights
-        const flights = generateFlights(searchFromCode, searchToCode, departDate, 18);
-        
-        if (flights.length > 0) {
-          setSearchResults(flights);
-          toast.info('Showing estimated prices for this route');
+      // Always generate supplementary flights for better coverage
+      const generatedFlights = generateFlights(searchFromCode, searchToCode, departDate, 12);
+      
+      // Combine real API flights with generated flights
+      // Real flights appear first (marked with isRealPrice), then generated
+      const combinedFlights: GeneratedFlight[] = [];
+      
+      // Add real flights (they already have isRealPrice: true)
+      if (realFlightsData.length > 0) {
+        combinedFlights.push(...realFlightsData);
+        console.log(`[Search] Added ${realFlightsData.length} real flights`);
+      }
+      
+      // Add generated flights that don't duplicate airlines from real data
+      const realAirlineCodes = new Set(realFlightsData.map((f: GeneratedFlight) => f.airlineCode));
+      const uniqueGenerated = generatedFlights.filter(f => !realAirlineCodes.has(f.airlineCode));
+      
+      if (uniqueGenerated.length > 0) {
+        combinedFlights.push(...uniqueGenerated);
+        console.log(`[Search] Added ${uniqueGenerated.length} generated flights`);
+      }
+      
+      // Sort by price
+      combinedFlights.sort((a, b) => a.price - b.price);
+      
+      if (combinedFlights.length > 0) {
+        setSearchResults(combinedFlights);
+        const realCount = realFlightsData.length;
+        if (realCount > 0) {
+          toast.success(`Found ${combinedFlights.length} flights (${realCount} with live prices)`);
         } else {
-          // Fallback to sample flights
-          setSearchResults(sampleFlights.map(f => ({
-            ...f,
-            id: String(f.id),
-            logo: getAirlineLogo(f.airlineCode),
-            baggageIncluded: '1 × 23kg checked',
-            refundable: false,
-            wifi: f.amenities.includes('wifi'),
-            entertainment: f.amenities.includes('entertainment'),
-            meals: f.amenities.includes('meals'),
-            legroom: '31"'
-          })) as GeneratedFlight[]);
+          toast.info(`Showing ${combinedFlights.length} estimated flights for this route`);
         }
+      } else {
+        // Ultimate fallback to sample flights if nothing found
+        setSearchResults(sampleFlights.map(f => ({
+          ...f,
+          id: String(f.id),
+          logo: getAirlineLogo(f.airlineCode),
+          baggageIncluded: '1 × 23kg checked',
+          refundable: false,
+          wifi: f.amenities.includes('wifi'),
+          entertainment: f.amenities.includes('entertainment'),
+          meals: f.amenities.includes('meals'),
+          legroom: '31"'
+        })) as GeneratedFlight[]);
+        toast.info('Showing sample flights for this route');
       }
       
       setBookingStep("select");
@@ -525,6 +548,7 @@ const FlightBooking = () => {
       const flights = generateFlights(searchFromCode, searchToCode, departDate, 18);
       setSearchResults(flights.length > 0 ? flights : null);
       setBookingStep("select");
+      toast.error('Could not fetch live prices. Showing estimated flights.');
     } finally {
       setIsSearching(false);
     }
@@ -865,10 +889,10 @@ const FlightBooking = () => {
                 <div>
                   <h2 className="font-display text-2xl font-bold flex items-center gap-2">
                     {searchResults.length} flights found
-                    {searchResults[0]?.bookingLink && (
+                    {searchResults.some(f => f.isRealPrice) && (
                       <Badge className="bg-emerald-500/20 text-emerald-500 text-xs">
                         <Sparkles className="w-3 h-3 mr-1" />
-                        Real Prices
+                        Live Prices
                       </Badge>
                     )}
                   </h2>
@@ -914,6 +938,7 @@ const FlightBooking = () => {
                         isLowest: index === 0,
                         isFastest: flight.stops === 0 && parseFloat(flight.duration) < 5.5,
                         co2: flight.carbonOffset ? `${flight.carbonOffset}kg` : `${120 + index * 15}kg`,
+                        isRealPrice: flight.isRealPrice || false,
                       }}
                       onSelect={() => handleSelectFlight(flight)}
                       isSelected={selectedFlight?.id === flight.id}
