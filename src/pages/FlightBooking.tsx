@@ -18,7 +18,7 @@ import FlightTestimonialsSection from "@/components/flight/FlightTestimonialsSec
 import FlightFeaturedDestinations from "@/components/flight/FlightFeaturedDestinations";
 import FlightQuickActions from "@/components/flight/FlightQuickActions";
 import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
-import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
+
 import { getAirlineLogo } from "@/data/airlines";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
