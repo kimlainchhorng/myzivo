@@ -13,10 +13,12 @@ import {
   Zap,
   ChevronRight,
   Crown,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { getAirlineLogo as getCDNLogo } from "@/data/airlines";
 
 interface FlightTicketCardProps {
   flight: {
@@ -53,6 +55,8 @@ interface FlightTicketCardProps {
     meals?: boolean;
     legroom?: string;
     logo?: string;
+    bookingLink?: string;
+    isRealPrice?: boolean;
   };
   onSelect?: () => void;
   isSelected?: boolean;
@@ -65,9 +69,9 @@ const premiumAirlineNames = [
   'Qantas', 'Korean Air', 'Turkish Airlines', 'EVA Air', 'Virgin Atlantic'
 ];
 
-// Reliable airline logo API
-const getAirlineLogo = (code: string) => {
-  return `https://pics.avs.io/100/50/${code}.png`;
+// Get airline logo from CDN with multiple size options
+const getAirlineLogo = (code: string, size: number = 100) => {
+  return getCDNLogo(code, size);
 };
 
 const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProps) => {
@@ -287,6 +291,12 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
             <div className="text-right">
               {/* Badges */}
               <div className="flex items-center justify-end gap-1.5 mb-2">
+                {flight.isRealPrice && (
+                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
+                    <Check className="w-2.5 h-2.5 mr-1" />
+                    Real Price
+                  </Badge>
+                )}
                 {flight.isLowest && (
                   <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
                     <Sparkles className="w-2.5 h-2.5 mr-1" />
@@ -316,29 +326,44 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
               )}
             </div>
 
-            <Button 
-              onClick={onSelect}
-              className={cn(
-                "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl",
-                isSelected
-                  ? "bg-sky-500 text-white shadow-lg shadow-sky-500/40"
-                  : isPremiumAirline
-                    ? "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 text-white shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98]"
-                    : "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98]"
+            <div className="flex flex-col gap-2 w-full lg:w-auto">
+              <Button 
+                onClick={onSelect}
+                className={cn(
+                  "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl",
+                  isSelected
+                    ? "bg-sky-500 text-white shadow-lg shadow-sky-500/40"
+                    : isPremiumAirline
+                      ? "bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 hover:from-amber-600 hover:via-yellow-600 hover:to-amber-600 text-white shadow-xl shadow-amber-500/30 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white shadow-xl shadow-sky-500/30 hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98]"
+                )}
+              >
+                {isSelected ? (
+                  <>
+                    <Check className="w-4 h-4 mr-1.5" />
+                    Selected
+                  </>
+                ) : (
+                  <>
+                    Select
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </Button>
+              
+              {flight.bookingLink && (
+                <a 
+                  href={flight.bookingLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-sky-400 flex items-center justify-center gap-1 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Book direct
+                </a>
               )}
-            >
-              {isSelected ? (
-                <>
-                  <Check className="w-4 h-4 mr-1.5" />
-                  Selected
-                </>
-              ) : (
-                <>
-                  Select
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </>
-              )}
-            </Button>
+            </div>
           </div>
         </div>
 

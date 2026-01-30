@@ -43,6 +43,7 @@ export interface GeneratedFlight {
   legroom: string;
   logo: string;
   bookingLink?: string;
+  isRealPrice?: boolean;
 }
 
 // Aircraft types by category
