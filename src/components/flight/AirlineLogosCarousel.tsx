@@ -19,52 +19,87 @@ const AirlineLogo = ({ airline, size = 'md', isPremium = false }: AirlineLogoPro
   const [imgError, setImgError] = useState(false);
   
   const sizeClasses = {
-    sm: 'w-14 h-14',
-    md: 'w-20 h-20',
-    lg: 'w-24 h-24'
+    sm: 'w-16 h-16',
+    md: 'w-24 h-24',
+    lg: 'w-28 h-28'
   };
 
-  const bgColor = airline.category === 'premium' 
-    ? 'from-amber-500/20 via-yellow-500/10 to-amber-600/5 border-amber-400/40 hover:border-amber-400/70' 
-    : airline.category === 'full-service'
-    ? 'from-sky-500/10 to-blue-600/5 border-sky-500/20 hover:border-sky-500/40'
-    : 'from-emerald-500/10 to-green-600/5 border-emerald-500/20 hover:border-emerald-500/40';
+  const getBgStyles = () => {
+    if (isPremium) {
+      return 'from-amber-500/30 via-yellow-500/20 to-amber-600/10 border-amber-400/50 hover:border-amber-300 shadow-amber-500/25';
+    }
+    switch (airline.category) {
+      case 'full-service':
+        return 'from-sky-500/20 via-blue-500/15 to-indigo-600/10 border-sky-400/40 hover:border-sky-300 shadow-sky-500/20';
+      case 'low-cost':
+        return 'from-emerald-500/20 via-green-500/15 to-teal-600/10 border-emerald-400/40 hover:border-emerald-300 shadow-emerald-500/20';
+      default:
+        return 'from-slate-500/20 to-slate-600/10 border-slate-400/30 hover:border-slate-300 shadow-slate-500/15';
+    }
+  };
 
-  const accentColor = airline.category === 'premium' 
-    ? 'text-amber-400' 
-    : airline.category === 'full-service'
-    ? 'text-sky-400'
-    : 'text-emerald-400';
+  const getAccentColor = () => {
+    if (isPremium) return 'text-amber-300';
+    switch (airline.category) {
+      case 'full-service': return 'text-sky-300';
+      case 'low-cost': return 'text-emerald-300';
+      default: return 'text-slate-300';
+    }
+  };
 
-  const premiumGlow = isPremium ? 'shadow-amber-500/20 hover:shadow-amber-500/40 hover:shadow-xl' : '';
+  const getGlowColor = () => {
+    if (isPremium) return 'hover:shadow-amber-500/40';
+    switch (airline.category) {
+      case 'full-service': return 'hover:shadow-sky-500/30';
+      case 'low-cost': return 'hover:shadow-emerald-500/30';
+      default: return 'hover:shadow-slate-500/20';
+    }
+  };
 
   return (
-    <div className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 flex-shrink-0">
-      <div className={`relative ${sizeClasses[size]} rounded-2xl bg-gradient-to-br ${bgColor} border backdrop-blur-sm flex items-center justify-center shadow-lg ${premiumGlow} group-hover:shadow-xl transition-all overflow-hidden p-2`}>
-        {/* Premium shine effect */}
-        {isPremium && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
-        )}
+    <div className="group flex flex-col items-center gap-3 transition-all duration-500 hover:scale-110 flex-shrink-0">
+      <div className={`relative ${sizeClasses[size]} rounded-2xl bg-gradient-to-br ${getBgStyles()} border-2 backdrop-blur-xl flex items-center justify-center shadow-xl ${getGlowColor()} group-hover:shadow-2xl transition-all duration-500 overflow-hidden p-3`}>
+        {/* Ambient glow ring */}
+        <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isPremium ? 'bg-gradient-to-br from-amber-400/10 via-transparent to-yellow-400/10' : airline.category === 'full-service' ? 'bg-gradient-to-br from-sky-400/10 via-transparent to-blue-400/10' : 'bg-gradient-to-br from-emerald-400/10 via-transparent to-teal-400/10'}`} />
+        
+        {/* Shine sweep effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+        
+        {/* Inner glow */}
+        <div className="absolute inset-1 rounded-xl bg-gradient-to-t from-black/20 to-transparent opacity-50" />
+        
         {!imgError ? (
           <img 
             src={getAirlineLogo(airline.code)}
             alt={`${airline.name} logo`}
-            className="w-full h-full object-contain relative z-10"
+            className="w-full h-full object-contain relative z-10 drop-shadow-lg"
             loading="lazy"
             onError={() => setImgError(true)}
           />
         ) : (
-          // Fallback: Show styled airline code with emoji flag
-          <div className="flex flex-col items-center justify-center gap-0.5 relative z-10">
-            <span className="text-lg">{airline.logo}</span>
-            <span className={`text-xs font-bold ${accentColor}`}>{airline.code}</span>
+          <div className="flex flex-col items-center justify-center gap-1 relative z-10">
+            <span className="text-2xl drop-shadow-lg">{airline.logo}</span>
+            <span className={`text-sm font-bold ${getAccentColor()} tracking-wide`}>{airline.code}</span>
+          </div>
+        )}
+        
+        {/* Premium badge indicator */}
+        {isPremium && (
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg">
+            <Crown className="w-3 h-3 text-white" />
           </div>
         )}
       </div>
-      <div className="text-center opacity-80 group-hover:opacity-100 transition-opacity">
-        <p className={`text-xs font-medium ${isPremium ? 'text-amber-200' : 'text-foreground'} truncate max-w-[90px]`}>{airline.name}</p>
+      
+      {/* Airline name with enhanced styling */}
+      <div className="text-center opacity-90 group-hover:opacity-100 transition-all duration-300 group-hover:translate-y-0.5">
+        <p className={`text-sm font-semibold ${isPremium ? 'text-amber-200' : 'text-foreground'} truncate max-w-[100px] drop-shadow-sm`}>
+          {airline.name}
+        </p>
         {airline.alliance && airline.alliance !== 'Independent' && (
-          <p className="text-[10px] text-muted-foreground">{airline.alliance}</p>
+          <p className={`text-xs ${isPremium ? 'text-amber-400/70' : 'text-muted-foreground'} font-medium`}>
+            {airline.alliance}
+          </p>
         )}
       </div>
     </div>
