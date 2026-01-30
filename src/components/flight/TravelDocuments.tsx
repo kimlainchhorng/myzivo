@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +42,16 @@ interface Document {
   fileUrl?: string;
 }
 
+interface VisaRequirement {
+  country: string;
+  type: 'visa-free' | 'visa-on-arrival' | 'e-visa' | 'visa-required';
+  maxDays?: number;
+  notes?: string;
+}
+
 interface TravelDocumentsProps {
   className?: string;
+  destinationCode?: string;
 }
 
 const MOCK_DOCUMENTS: Document[] = [
@@ -81,6 +89,15 @@ const MOCK_DOCUMENTS: Document[] = [
     name: 'COVID-19 Vaccination Card',
     status: 'valid'
   },
+];
+
+const VISA_REQUIREMENTS: VisaRequirement[] = [
+  { country: 'United Kingdom', type: 'visa-free', maxDays: 180, notes: 'Electronic Travel Authorization (ETA) required' },
+  { country: 'Japan', type: 'visa-free', maxDays: 90 },
+  { country: 'Australia', type: 'e-visa', notes: 'ETA application online' },
+  { country: 'China', type: 'visa-required', notes: 'Apply at embassy' },
+  { country: 'Brazil', type: 'visa-free', maxDays: 90 },
+  { country: 'Thailand', type: 'visa-on-arrival', maxDays: 30 },
 ];
 
 const getDocTypeIcon = (type: string) => {
@@ -142,11 +159,21 @@ const getStatusBadge = (status: string, expiryDate?: Date) => {
   }
 };
 
-export const TravelDocuments = ({ className }: TravelDocumentsProps) => {
+const getVisaStatusColor = (type: VisaRequirement['type']) => {
+  switch (type) {
+    case 'visa-free': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+    case 'visa-on-arrival': return 'bg-sky-500/20 text-sky-400 border-sky-500/40';
+    case 'e-visa': return 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+    case 'visa-required': return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+  }
+};
+
+export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsProps) => {
   const [documents, setDocuments] = useState<Document[]>(MOCK_DOCUMENTS);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showVisaInfo, setShowVisaInfo] = useState(false);
 
   const validCount = documents.filter(d => d.status === 'valid').length;
   const expiringCount = documents.filter(d => d.status === 'expiring').length;
@@ -217,6 +244,56 @@ export const TravelDocuments = ({ className }: TravelDocumentsProps) => {
             <Lock className="w-4 h-4" />
             Encrypted & Secure
           </div>
+        </div>
+
+        {/* Visa Requirements Section */}
+        <div className="p-4 border-b border-border/50">
+          <button
+            onClick={() => setShowVisaInfo(!showVisaInfo)}
+            className="w-full flex items-center justify-between p-3 rounded-lg bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/15 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-violet-400" />
+              <span className="font-medium text-sm">Entry Requirements by Country</span>
+            </div>
+            <Badge variant="outline" className="text-xs">
+              {showVisaInfo ? 'Hide' : 'Show'}
+            </Badge>
+          </button>
+          
+          <AnimatePresence>
+            {showVisaInfo && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="grid gap-2 mt-3">
+                  {VISA_REQUIREMENTS.map((req) => (
+                    <div
+                      key={req.country}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/30"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-sm">{req.country}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {req.maxDays && (
+                          <span className="text-xs text-muted-foreground">
+                            {req.maxDays} days
+                          </span>
+                        )}
+                        <Badge className={cn("text-xs", getVisaStatusColor(req.type))}>
+                          {req.type.replace('-', ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
