@@ -104,8 +104,8 @@ const AirlineLogo = ({ airline, size = 'md', isPremium = false }: AirlineLogoPro
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-1.5 relative z-10">
-            <span className="text-3xl drop-shadow-lg">{airline.logo}</span>
-            <span className={`text-sm font-bold ${getAccentColor()} tracking-wider`}>{airline.code}</span>
+            <span className={`text-lg font-bold ${getAccentColor()} tracking-wider`}>{airline.code}</span>
+            <span className="text-xs text-muted-foreground">{airline.name.split(' ')[0]}</span>
           </div>
         )}
         

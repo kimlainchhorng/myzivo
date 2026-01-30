@@ -1,4 +1,4 @@
-import { premiumAirlines, fullServiceAirlines, type Airline } from "@/data/airlines";
+import { premiumAirlines, fullServiceAirlines, getAirlineLogo, type Airline } from "@/data/airlines";
 import { Badge } from "@/components/ui/badge";
 import { Star, Shield, Award } from "lucide-react";
 
@@ -21,10 +21,14 @@ export default function AirlinePartnersBadges({ variant = 'full', showAlliance =
           {topAirlines.slice(0, 8).map((airline) => (
             <div
               key={airline.code}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-muted to-muted/50 border-2 border-background flex items-center justify-center text-sm"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-muted to-muted/50 border-2 border-background flex items-center justify-center overflow-hidden"
               title={airline.name}
             >
-              {airline.logo}
+              <img 
+                src={getAirlineLogo(airline.code, 32)} 
+                alt={airline.name}
+                className="w-6 h-6 object-contain"
+              />
             </div>
           ))}
         </div>
@@ -56,7 +60,11 @@ export default function AirlinePartnersBadges({ variant = 'full', showAlliance =
             key={airline.code}
             className="group flex items-center gap-2 px-3 py-2 rounded-xl bg-card/50 border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
           >
-            <span className="text-xl">{airline.logo}</span>
+            <img 
+              src={getAirlineLogo(airline.code, 40)} 
+              alt={airline.name}
+              className="w-8 h-8 object-contain"
+            />
             <div className="flex flex-col">
               <span className="text-xs font-medium">{airline.name}</span>
               {showAlliance && airline.alliance && airline.alliance !== 'Independent' && (
