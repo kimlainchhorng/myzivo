@@ -106,13 +106,13 @@ const AirportAutocomplete = ({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-2xl shadow-black/20 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl border border-border shadow-2xl shadow-black/40 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Recent searches */}
           {recentSearches.length > 0 && query.length < 2 && (
-            <div className="p-4 border-b border-border/30 bg-gradient-to-r from-sky-500/5 via-transparent to-cyan-500/5">
-              <p className="text-xs font-semibold text-foreground/80 mb-3 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-sky-500/20 to-cyan-500/20 flex items-center justify-center">
-                  <History className="w-3.5 h-3.5 text-sky-500" />
+            <div className="p-4 border-b border-border bg-muted/50">
+              <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-sky-500/30 to-cyan-500/30 flex items-center justify-center">
+                  <History className="w-4 h-4 text-sky-400" />
                 </div>
                 Recent Searches
               </p>
@@ -125,11 +125,11 @@ const AirportAutocomplete = ({
                       onChange(search);
                       setIsOpen(false);
                     }}
-                    className="group flex items-center gap-2 px-4 py-2.5 bg-card/80 hover:bg-sky-500/15 border border-border/50 hover:border-sky-500/40 text-sm font-medium rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-sky-500/10"
+                    className="group flex items-center gap-2 px-4 py-2.5 bg-background hover:bg-sky-500/15 border border-border hover:border-sky-500/50 text-sm font-medium rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-sky-500/10"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-muted-foreground group-hover:text-sky-500 transition-colors" />
-                    <span className="group-hover:text-sky-500 transition-colors">{search}</span>
-                    <Plane className="w-3 h-3 text-muted-foreground/50 group-hover:text-sky-400 -rotate-45 opacity-0 group-hover:opacity-100 transition-all" />
+                    <MapPin className="w-4 h-4 text-muted-foreground group-hover:text-sky-400 transition-colors" />
+                    <span className="text-foreground group-hover:text-sky-400 transition-colors">{search}</span>
+                    <Plane className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-sky-400 -rotate-45 opacity-0 group-hover:opacity-100 transition-all" />
                   </button>
                 ))}
               </div>
@@ -137,16 +137,16 @@ const AirportAutocomplete = ({
           )}
 
           {/* Section header */}
-          <div className="px-4 py-2 bg-muted/30 border-b border-border/30">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          <div className="px-4 py-3 bg-muted/60 border-b border-border">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
               {query.length >= 2 ? (
                 <>
-                  <Globe className="w-3.5 h-3.5" />
+                  <Globe className="w-4 h-4 text-sky-400" />
                   Search Results
                 </>
               ) : (
                 <>
-                  <TrendingUp className="w-3.5 h-3.5" />
+                  <TrendingUp className="w-4 h-4 text-sky-400" />
                   Popular Airports
                 </>
               )}
@@ -154,66 +154,63 @@ const AirportAutocomplete = ({
           </div>
 
           {/* Results */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-[400px] md:max-h-[450px] overflow-y-auto bg-card">
             {results.length > 0 ? (
               results.map((airport, index) => (
                 <button
                   key={airport.code}
                   onClick={() => handleSelect(airport)}
-                  className="w-full px-4 py-4 flex items-center gap-4 hover:bg-gradient-to-r hover:from-sky-500/10 hover:via-cyan-500/5 hover:to-transparent transition-all duration-300 text-left group border-b border-border/20 last:border-0 relative overflow-hidden"
+                  className="w-full px-4 py-4 md:py-5 flex items-center gap-4 hover:bg-sky-500/10 transition-all duration-200 text-left group border-b border-border/50 last:border-0"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  {/* Hover glow effect */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-sky-500/5 via-transparent to-transparent" />
-                  
                   {/* Airport icon with region */}
-                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/20 via-blue-500/15 to-cyan-500/20 flex items-center justify-center flex-shrink-0 group-hover:from-sky-500/30 group-hover:via-blue-500/25 group-hover:to-cyan-500/30 transition-all duration-300 shadow-lg shadow-sky-500/10 group-hover:shadow-sky-500/20 group-hover:scale-105 border border-sky-500/20 group-hover:border-sky-500/40">
-                    <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{getRegionIcon(airport.region)}</span>
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-gradient-to-br from-sky-500/25 via-blue-500/20 to-cyan-500/25 flex items-center justify-center flex-shrink-0 group-hover:from-sky-500/35 group-hover:via-blue-500/30 group-hover:to-cyan-500/35 transition-all duration-300 shadow-lg shadow-sky-500/10 group-hover:shadow-sky-500/25 group-hover:scale-105 border border-sky-500/30 group-hover:border-sky-500/50">
+                    <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform duration-300">{getRegionIcon(airport.region)}</span>
                   </div>
 
                   {/* Airport details */}
-                  <div className="flex-1 min-w-0 relative z-10">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-base truncate group-hover:text-sky-400 transition-colors">{airport.city}</span>
-                      <Badge variant="outline" className="text-[11px] px-2 py-0.5 h-5 font-mono font-bold text-sky-400 border-sky-500/50 bg-sky-500/10 group-hover:bg-sky-500/20 transition-colors shadow-sm">
+                      <span className="font-bold text-base md:text-lg text-foreground group-hover:text-sky-400 transition-colors">{airport.city}</span>
+                      <Badge variant="outline" className="text-xs md:text-sm px-2.5 py-0.5 h-6 font-mono font-bold text-sky-400 border-sky-500/60 bg-sky-500/15 group-hover:bg-sky-500/25 transition-colors">
                         {airport.code}
                       </Badge>
                       {airport.popularity && airport.popularity >= 9 && (
-                        <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-400 border-amber-500/40 text-[10px] px-2 py-0.5 shadow-sm shadow-amber-500/10">
-                          <Star className="w-3 h-3 mr-1 fill-current" />
+                        <Badge className="bg-gradient-to-r from-amber-500/25 to-yellow-500/25 text-amber-400 border-amber-500/50 text-xs px-2.5 py-0.5">
+                          <Star className="w-3.5 h-3.5 mr-1 fill-current" />
                           Major Hub
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground truncate mt-1 group-hover:text-foreground/70 transition-colors">
+                    <p className="text-sm md:text-base text-foreground/80 truncate mt-1.5 group-hover:text-foreground transition-colors">
                       {airport.name}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Globe className="w-3 h-3 text-muted-foreground/50" />
-                      <p className="text-xs text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                      <p className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground/70 transition-colors">
                         {airport.country} • {airport.region}
                       </p>
                     </div>
                   </div>
 
                   {/* Arrow indicator */}
-                  <div className="relative z-10 w-10 h-10 rounded-xl bg-muted/30 group-hover:bg-sky-500/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
-                    <Plane className="w-5 h-5 text-muted-foreground/40 group-hover:text-sky-400 transition-all duration-300 -rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                  <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-muted group-hover:bg-sky-500/20 flex items-center justify-center transition-all duration-300 group-hover:scale-110">
+                    <Plane className="w-5 h-5 md:w-6 md:h-6 text-muted-foreground group-hover:text-sky-400 transition-all duration-300 -rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                   </div>
                 </button>
               ))
             ) : (
-              <div className="px-4 py-8 text-center text-muted-foreground">
-                <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">No airports found</p>
-                <p className="text-xs">Try a different search term</p>
+              <div className="px-4 py-10 text-center bg-card">
+                <Globe className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-base font-medium text-foreground">No airports found</p>
+                <p className="text-sm text-muted-foreground mt-1">Try a different search term</p>
               </div>
             )}
           </div>
 
           {/* Footer tip */}
-          <div className="px-4 py-2 bg-muted/30 border-t border-border/30">
-            <p className="text-[10px] text-muted-foreground text-center">
+          <div className="px-4 py-3 bg-muted/60 border-t border-border">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               Search by city name, airport name, or IATA code
             </p>
           </div>
