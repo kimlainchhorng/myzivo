@@ -58,7 +58,12 @@ export default function FlightDiscoverySections({
 }: FlightDiscoverySectionsProps) {
   return (
     <>
-
+      {/* Airline Partners Carousel */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <AirlineLogosCarousel />
+        </div>
+      </section>
 
       {/* Codeshare Flights */}
       {toCity && (
@@ -285,12 +290,6 @@ export default function FlightDiscoverySections({
         </div>
       </section>
 
-      {/* Airline Partners Carousel */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <AirlineLogosCarousel />
-        </div>
-      </section>
     </>
   );
 }
