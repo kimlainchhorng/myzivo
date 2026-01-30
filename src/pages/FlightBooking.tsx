@@ -48,6 +48,8 @@ import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
 import AirportAutocomplete from "@/components/flight/AirportAutocomplete";
 import PriceCalendar from "@/components/flight/PriceCalendar";
 import FareClassSelector from "@/components/flight/FareClassSelector";
+import PopularRoutes from "@/components/flight/PopularRoutes";
+import FlexibleDatesCalendar from "@/components/flight/FlexibleDatesCalendar";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -833,9 +835,46 @@ const FlightBooking = () => {
           </section>
         )}
 
-        {/* Popular Destinations */}
+        {/* Popular Routes with Live Pricing */}
         {!searchResults && (
           <section className="py-12">
+            <div className="container mx-auto px-4">
+              <PopularRoutes
+                onSelectRoute={(from, to, price) => {
+                  const fromAirport = airports.find(a => a.code === from);
+                  const toAirport = airports.find(a => a.code === to);
+                  setFromCity(fromAirport ? `${fromAirport.city} (${fromAirport.code})` : `${from}`);
+                  setToCity(toAirport ? `${toAirport.city} (${toAirport.code})` : `${to}`);
+                  if (price) {
+                    toast.success(`Selected route with live price: $${price}`);
+                  }
+                }}
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Flexible Dates Calendar */}
+        {!searchResults && fromCity && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <FlexibleDatesCalendar
+                origin={fromCode}
+                destination={toCode}
+                basePrice={299}
+                onSelectDate={(date, price) => {
+                  setDepartDate(date);
+                  toast.success(`Selected ${format(date, 'MMM d')} - $${price} fare`);
+                }}
+                className="max-w-3xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Popular Destinations */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-display text-2xl font-bold">Popular Destinations</h2>
