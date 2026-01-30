@@ -47,6 +47,24 @@ export { default as PricePrediction } from './PricePrediction';
 export { default as AirportGuide } from './AirportGuide';
 export { default as TravelAlerts } from './TravelAlerts';
 
+// Loyalty & Rewards
+export { default as ZivoMilesProgram } from './ZivoMilesProgram';
+export { default as StatusTiersDashboard } from './StatusTiersDashboard';
+export { default as AirlinePartnersHub } from './AirlinePartnersHub';
+export { default as ReferralCenter } from './ReferralCenter';
+
+// Search & Discovery
+export { default as ExploreMap } from './ExploreMap';
+export { default as DealFinder } from './DealFinder';
+export { default as NearbyAirports } from './NearbyAirports';
+export { default as CalendarHeatmap } from './CalendarHeatmap';
+
+// Payment & Checkout
+export { default as PayLater } from './PayLater';
+export { default as PriceLock } from './PriceLock';
+export { default as MultiCurrency } from './MultiCurrency';
+export { default as GiftCardsCredits } from './GiftCardsCredits';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
