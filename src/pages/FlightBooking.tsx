@@ -81,6 +81,16 @@ import FlightRouteMapAnimated from "@/components/flight/FlightRouteMapAnimated";
 import TripSharing from "@/components/flight/TripSharing";
 import PriceAlertsDashboard from "@/components/flight/PriceAlertsDashboard";
 import StatusTiersDashboard from "@/components/flight/StatusTiersDashboard";
+import BoardingPass from "@/components/flight/BoardingPass";
+import { FlightLoyaltyIntegration } from "@/components/flight/FlightLoyaltyIntegration";
+import InFlightServices from "@/components/flight/InFlightServices";
+import TravelCompanionFinder from "@/components/flight/TravelCompanionFinder";
+import ItineraryBuilder from "@/components/flight/ItineraryBuilder";
+import { AirlinePartnersHub } from "@/components/flight/AirlinePartnersHub";
+import LoyaltyRedemption from "@/components/flight/LoyaltyRedemption";
+import CodeshareFlights from "@/components/flight/CodeshareFlights";
+import TravelDocuments from "@/components/flight/TravelDocuments";
+import FlightPriceAlert from "@/components/flight/FlightPriceAlert";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -471,6 +481,15 @@ const FlightBooking = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [compareFlights, setCompareFlights] = useState<GeneratedFlight[]>([]);
   const [showComparison, setShowComparison] = useState(false);
+  const [showBoardingPass, setShowBoardingPass] = useState(false);
+  const [selectedLoyaltyProgram, setSelectedLoyaltyProgram] = useState<string | null>(null);
+  const [milesUsed, setMilesUsed] = useState(0);
+  const [inFlightServices, setInFlightServices] = useState<{
+    meals: { passengerId: number; mealId: string }[];
+    wifi: string | null;
+    entertainment: string | null;
+    extras: string[];
+  }>({ meals: [], wifi: null, entertainment: null, extras: [] });
   const [filters, setFilters] = useState({
     stops: 'any' as 'any' | 'nonstop' | '1stop' | '2plus',
     airlines: [] as string[],
@@ -1120,8 +1139,73 @@ const FlightBooking = () => {
                   />
                 </div>
               )}
+
+              {/* In-Flight Services Pre-order */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <InFlightServices
+                  flightDuration={searchResults[0]?.duration || '5h 30m'}
+                  passengers={parseInt(passengers)}
+                  cabinClass={cabinClass}
+                  onServicesChange={(services) => setInFlightServices(services)}
+                />
+              </div>
+
+              {/* Loyalty Redemption */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <LoyaltyRedemption
+                  totalPrice={searchResults[0]?.price * parseInt(passengers) || 599}
+                  availableMiles={45680}
+                  tierStatus="gold"
+                  onRedemptionChange={(miles, discount) => {
+                    setMilesUsed(miles);
+                    if (miles > 0) {
+                      toast.success(`Applied ${miles.toLocaleString()} miles for $${discount.toFixed(0)} off`);
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Seat Upgrade Bidding */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <SeatUpgradeBidding
+                  flightNumber={searchResults[0]?.flightNumber || 'ZV-1234'}
+                  departureDate={departDate || new Date()}
+                  currentCabinClass={cabinClass}
+                  onBidPlaced={(optionId, amount) => toast.success(`Bid of $${amount} placed for upgrade!`)}
+                />
+              </div>
+
+              {/* Airport Lounge Access */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <AirportLoungeAccess
+                  airport={fromCode}
+                  terminal="Terminal 1"
+                  flightTime={departDate || new Date()}
+                  onLoungeBooked={(loungeId, guests) => toast.success(`Lounge access booked for ${guests} guests!`)}
+                />
+              </div>
             </div>
           </section>
+        )}
+
+        {/* Flight Comparison Modal */}
+        {showComparison && compareFlights.length >= 2 && (
+          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-6xl max-h-[90vh] overflow-auto">
+              <FlightComparison
+                flights={compareFlights}
+                onSelect={(flight) => {
+                  handleSelectFlight(flight);
+                  setShowComparison(false);
+                  setCompareFlights([]);
+                }}
+                onRemove={(flightId) => {
+                  setCompareFlights(prev => prev.filter(f => f.id !== flightId));
+                }}
+                onClose={() => setShowComparison(false)}
+              />
+            </div>
+          </div>
         )}
 
         {/* Popular Routes with Live Pricing */}
@@ -1370,6 +1454,75 @@ const FlightBooking = () => {
           </section>
         )}
 
+        {/* Airline Partners Hub */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <AirlinePartnersHub className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Flight Loyalty Integration */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <FlightLoyaltyIntegration
+                onProgramSelect={(program) => {
+                  if (program) {
+                    setSelectedLoyaltyProgram(program.id);
+                    toast.success(`Linked ${program.name} for miles earning`);
+                  }
+                }}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Itinerary Builder */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <ItineraryBuilder
+                tripName={`${toCity.split(' (')[0]} Adventure`}
+                startDate={departDate}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Travel Documents */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <TravelDocuments className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Flight Price Alert */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <FlightPriceAlert
+                route={{
+                  from: fromCity.split(' (')[0] || 'Los Angeles',
+                  fromCode: fromCode,
+                  to: toCity.split(' (')[0] || 'New York',
+                  toCode: toCode
+                }}
+                currentPrice={299}
+                historicalLow={249}
+                departureDate={departDate ? format(departDate, 'yyyy-MM-dd') : undefined}
+                returnDate={returnDate ? format(returnDate, 'yyyy-MM-dd') : undefined}
+                className="max-w-2xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
         {/* Price Alerts Dashboard */}
         {!searchResults && toCity && (
           <section className="py-12 border-t border-border/50">
@@ -1386,6 +1539,38 @@ const FlightBooking = () => {
               <AirportGuide
                 airportCode={toCode}
                 className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Flight Tracker Demo */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+                <Plane className="w-6 h-6 text-sky-500" />
+                Track Your Flight
+              </h2>
+              <FlightTracker
+                flightNumber="ZV-1234"
+                airline="ZIVO Airways"
+                departure={{
+                  code: fromCode,
+                  city: fromCity.split(' (')[0] || 'Los Angeles',
+                  time: '08:00',
+                  date: departDate || new Date(),
+                  terminal: 'T4',
+                  gate: 'B12'
+                }}
+                arrival={{
+                  code: toCode,
+                  city: toCity.split(' (')[0] || 'New York',
+                  time: '16:30',
+                  date: departDate || new Date()
+                }}
+                duration="5h 30m"
+                aircraft="Boeing 787-9 Dreamliner"
               />
             </div>
           </section>
