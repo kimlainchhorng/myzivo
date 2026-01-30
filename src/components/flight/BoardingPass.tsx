@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,11 +10,13 @@ import {
   Crown, Star, Wifi, Utensils, Monitor,
   CloudSun, ThermometerSun, Wind, Droplets,
   CheckCircle2, AlertCircle, RotateCcw, Sparkles,
-  Navigation
+  Navigation, Bell, BellRing, WifiOff, Smartphone,
+  Apple, CreditCard, Calendar, FileText
 } from 'lucide-react';
 import { format, addHours, differenceInMinutes } from 'date-fns';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
+import { useItineraryExport, type FlightData } from '@/hooks/useItineraryExport';
 
 interface BoardingPassProps {
   confirmationNumber: string;
@@ -43,7 +45,7 @@ interface BoardingPassProps {
     };
     duration: string;
     aircraft?: string;
-    status?: 'on-time' | 'delayed' | 'boarding' | 'departed';
+    status?: 'on-time' | 'delayed' | 'boarding' | 'departed' | 'gate-change';
   };
   seat: {
     number: string;
@@ -110,6 +112,7 @@ const statusConfig = {
   'delayed': { color: 'bg-amber-500', text: 'Delayed', icon: AlertCircle },
   'boarding': { color: 'bg-violet-500 animate-pulse', text: 'Boarding', icon: Plane },
   'departed': { color: 'bg-sky-500', text: 'Departed', icon: Navigation },
+  'gate-change': { color: 'bg-red-500 animate-pulse', text: 'Gate Change!', icon: BellRing },
 };
 
 const mockWeather: WeatherInfo = {
@@ -119,6 +122,9 @@ const mockWeather: WeatherInfo = {
   wind: '12 km/h',
   icon: CloudSun,
 };
+
+// Check if the browser supports service workers for offline mode
+const supportsOffline = 'serviceWorker' in navigator && 'caches' in window;
 
 export default function BoardingPass({
   confirmationNumber,
@@ -136,9 +142,28 @@ export default function BoardingPass({
 }: BoardingPassProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [countdown, setCountdown] = useState('');
+  const [isOfflineReady, setIsOfflineReady] = useState(false);
+  const [gateAlertEnabled, setGateAlertEnabled] = useState(false);
+  const [showWalletOptions, setShowWalletOptions] = useState(false);
+  
   const ClassIcon = classConfig[seat.class].icon;
   const flightStatus = flight.status || 'on-time';
   const StatusIcon = statusConfig[flightStatus].icon;
+
+  const { exportToICS, exportToPDF, shareItinerary } = useItineraryExport();
+
+  // Prepare flight data for export
+  const flightExportData: FlightData = {
+    confirmationNumber,
+    airline: flight.airline,
+    flightNumber: flight.flightNumber,
+    departure: flight.departure,
+    arrival: flight.arrival,
+    duration: flight.duration,
+    passengers: [{ firstName: passenger.firstName, lastName: passenger.lastName }],
+    seat: seat.number,
+    fareClass: seat.class,
+  };
 
   // Countdown timer to boarding
   useEffect(() => {
@@ -166,6 +191,66 @@ export default function BoardingPass({
     return () => clearInterval(interval);
   }, [flight.departure.date, boardingTime]);
 
+  // Cache boarding pass for offline access
+  const enableOfflineMode = useCallback(async () => {
+    if (!supportsOffline) {
+      toast.error('Offline mode not supported in this browser');
+      return;
+    }
+
+    try {
+      const cache = await caches.open('boarding-passes-v1');
+      const boardingPassData = {
+        confirmationNumber,
+        passenger,
+        flight,
+        seat,
+        baggage,
+        boardingTime,
+        boardingGroup,
+        cachedAt: new Date().toISOString(),
+      };
+      
+      const response = new Response(JSON.stringify(boardingPassData), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      await cache.put(`/boarding-pass/${confirmationNumber}`, response);
+      setIsOfflineReady(true);
+      toast.success('Boarding pass saved for offline access!', {
+        description: 'Available even without internet',
+        icon: <WifiOff className="w-4 h-4" />,
+      });
+    } catch (error) {
+      toast.error('Failed to save for offline');
+    }
+  }, [confirmationNumber, passenger, flight, seat, baggage, boardingTime, boardingGroup]);
+
+  // Enable gate change alerts
+  const toggleGateAlerts = useCallback(async () => {
+    if (!('Notification' in window)) {
+      toast.error('Notifications not supported in this browser');
+      return;
+    }
+
+    if (gateAlertEnabled) {
+      setGateAlertEnabled(false);
+      toast.info('Gate change alerts disabled');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setGateAlertEnabled(true);
+      toast.success('Gate change alerts enabled!', {
+        description: `We'll notify you of any changes to ${flight.flightNumber}`,
+        icon: <BellRing className="w-4 h-4" />,
+      });
+    } else {
+      toast.error('Please enable notifications in your browser settings');
+    }
+  }, [gateAlertEnabled, flight.flightNumber]);
+
   const qrData = JSON.stringify({
     pnr: confirmationNumber,
     flight: flight.flightNumber,
@@ -176,17 +261,26 @@ export default function BoardingPass({
 
   const handleDownload = () => {
     onDownload?.();
-    toast.success('Boarding pass downloaded!');
+    exportToPDF(flightExportData);
   };
 
   const handleShare = () => {
     onShare?.();
-    toast.success('Share link copied!');
+    shareItinerary(flightExportData);
   };
 
-  const handleWallet = () => {
+  const handleWallet = (type: 'apple' | 'google' | 'calendar') => {
     onAddToWallet?.();
-    toast.success('Added to Apple Wallet!');
+    if (type === 'apple') {
+      toast.success('Added to Apple Wallet!');
+      // In production, this would generate a .pkpass file
+    } else if (type === 'google') {
+      toast.success('Added to Google Wallet!');
+      // In production, this would use Google Wallet API
+    } else {
+      exportToICS(flightExportData);
+    }
+    setShowWalletOptions(false);
   };
 
   return (
@@ -387,28 +481,98 @@ export default function BoardingPass({
             </div>
 
             {/* Action Buttons */}
-            <div className="p-6 pt-0 flex gap-3">
-              <Button 
-                className={cn("flex-1 gap-2 text-white", classConfig[seat.class].color)}
-                onClick={(e) => { e.stopPropagation(); handleWallet(); }}
-              >
-                <Wallet className="w-4 h-4" />
-                Add to Wallet
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-slate-700 text-white hover:bg-slate-800"
-                onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                className="border-slate-700 text-white hover:bg-slate-800"
-                onClick={(e) => { e.stopPropagation(); handleShare(); }}
-              >
-                <Share2 className="w-4 h-4" />
-              </Button>
+            <div className="p-6 pt-0 space-y-3">
+              {/* Wallet Options */}
+              <AnimatePresence>
+                {showWalletOptions && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex gap-2 overflow-hidden"
+                  >
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-slate-700 text-white hover:bg-slate-800 gap-2"
+                      onClick={(e) => { e.stopPropagation(); handleWallet('apple'); }}
+                    >
+                      <Apple className="w-4 h-4" />
+                      Apple
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-slate-700 text-white hover:bg-slate-800 gap-2"
+                      onClick={(e) => { e.stopPropagation(); handleWallet('google'); }}
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      Google
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-slate-700 text-white hover:bg-slate-800 gap-2"
+                      onClick={(e) => { e.stopPropagation(); handleWallet('calendar'); }}
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Calendar
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex gap-3">
+                <Button 
+                  className={cn("flex-1 gap-2 text-white", classConfig[seat.class].color)}
+                  onClick={(e) => { e.stopPropagation(); setShowWalletOptions(!showWalletOptions); }}
+                >
+                  <Wallet className="w-4 h-4" />
+                  Add to Wallet
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-700 text-white hover:bg-slate-800"
+                  onClick={(e) => { e.stopPropagation(); handleDownload(); }}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="border-slate-700 text-white hover:bg-slate-800"
+                  onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                >
+                  <Share2 className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Offline & Alerts Row */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex-1 border-slate-700 text-white hover:bg-slate-800 gap-2",
+                    isOfflineReady && "border-emerald-500/50 text-emerald-400"
+                  )}
+                  onClick={(e) => { e.stopPropagation(); enableOfflineMode(); }}
+                >
+                  <WifiOff className="w-4 h-4" />
+                  {isOfflineReady ? 'Saved Offline' : 'Save Offline'}
+                </Button>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex-1 border-slate-700 text-white hover:bg-slate-800 gap-2",
+                    gateAlertEnabled && "border-sky-500/50 text-sky-400"
+                  )}
+                  onClick={(e) => { e.stopPropagation(); toggleGateAlerts(); }}
+                >
+                  {gateAlertEnabled ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+                  {gateAlertEnabled ? 'Alerts On' : 'Gate Alerts'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>

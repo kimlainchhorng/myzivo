@@ -67,6 +67,10 @@ export { default as GiftCardsCredits } from './GiftCardsCredits';
 export { default as FlightPaymentModal } from './FlightPaymentModal';
 export { default as PriceAlertsDashboard } from './PriceAlertsDashboard';
 
+// Booking Management
+export { default as BookingCancellation } from './BookingCancellation';
+export { default as ItineraryExportMenu } from './ItineraryExportMenu';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
