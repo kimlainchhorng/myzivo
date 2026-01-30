@@ -171,52 +171,52 @@ export default function FlightBookingFlow({
         <div className="container mx-auto px-4 py-4">
           {/* Flight Summary */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
-                <Plane className="w-5 h-5 text-sky-400" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
+                <Plane className="w-4 h-4 sm:w-5 sm:h-5 text-sky-400" />
               </div>
               <div>
-                <div className="flex items-center gap-2 font-semibold">
+                <div className="flex items-center gap-2 font-semibold text-sm sm:text-base">
                   <span>{outboundFlight.departure.code}</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground" />
                   <span>{outboundFlight.arrival.code}</span>
                   {returnFlight && (
                     <>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                      <span>{returnFlight.arrival.code}</span>
+                      <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 text-muted-foreground hidden sm:block" />
+                      <span className="hidden sm:inline">{returnFlight.arrival.code}</span>
                     </>
                   )}
                   {outboundFlight.isRealPrice && (
-                    <Badge variant="outline" className="ml-2 bg-sky-500/10 text-sky-500 border-sky-500/30">
-                      <Zap className="w-3 h-3 mr-1" />
-                      Live Price
+                    <Badge variant="outline" className="ml-1 sm:ml-2 bg-sky-500/10 text-sky-500 border-sky-500/30 text-xs">
+                      <Zap className="w-3 h-3 mr-0.5 sm:mr-1" />
+                      <span className="hidden sm:inline">Live Price</span>
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {outboundFlight.airline} • {fareClass.replace('-', ' ')}
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  {outboundFlight.airline} • <span className="capitalize">{fareClass.replace('-', ' ')}</span>
                 </p>
               </div>
             </div>
-            <Button variant="ghost" onClick={onCancel}>
+            <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs sm:text-sm">
               Cancel
             </Button>
           </div>
 
-          {/* Step Indicator */}
-          <div className="flex items-center gap-2">
+          {/* Step Indicator - Mobile Optimized */}
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
             {steps.map((step, idx) => {
               const Icon = step.icon;
               const isActive = step.id === currentStep;
               const isComplete = idx < currentStepIndex;
 
               return (
-                <div key={step.id} className="flex items-center flex-1">
+                <div key={step.id} className="flex items-center flex-shrink-0">
                   <button
                     onClick={() => idx <= currentStepIndex && setCurrentStep(step.id)}
                     disabled={idx > currentStepIndex}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-lg transition-all flex-1",
+                      "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95",
                       isActive && "bg-sky-500/20 text-sky-400",
                       isComplete && "text-emerald-400",
                       !isActive && !isComplete && "text-muted-foreground",
@@ -224,18 +224,18 @@ export default function FlightBookingFlow({
                     )}
                   >
                     <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                      "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium",
                       isActive && "bg-sky-500 text-white",
                       isComplete && "bg-emerald-500 text-white",
                       !isActive && !isComplete && "bg-muted text-muted-foreground"
                     )}>
-                      {isComplete ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                      {isComplete ? <Check className="w-3 h-3 sm:w-4 sm:h-4" /> : <Icon className="w-3 h-3 sm:w-4 sm:h-4" />}
                     </div>
                     <span className="hidden sm:block text-sm font-medium">{step.label}</span>
                   </button>
                   {idx < steps.length - 1 && (
                     <div className={cn(
-                      "h-0.5 w-8 mx-2",
+                      "h-0.5 w-4 sm:w-8 mx-1 sm:mx-2 flex-shrink-0",
                       idx < currentStepIndex ? "bg-emerald-500" : "bg-muted"
                     )} />
                   )}
