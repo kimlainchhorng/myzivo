@@ -118,6 +118,7 @@ import AdminCompetitorAnalysis from "@/components/admin/AdminCompetitorAnalysis"
 import AdminReportBuilder from "@/components/admin/AdminReportBuilder";
 import AdminRevenueAttribution from "@/components/admin/AdminRevenueAttribution";
 import AdminCohortAnalysis from "@/components/admin/AdminCohortAnalysis";
+import AdminAffiliateAnalytics from "@/components/admin/AdminAffiliateAnalytics";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -250,6 +251,7 @@ const AdminDashboard = () => {
       { value: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-cyan-500" },
       { value: "hotels", label: "Hotels", icon: Building2, gradient: "from-amber-500 to-yellow-500" },
       { value: "inventory", label: "Inventory", icon: Package, gradient: "from-violet-500 to-purple-500" },
+      { value: "affiliate", label: "Affiliate Analytics", icon: LineChart, gradient: "from-emerald-500 to-green-500" },
     ]},
     { title: "Financial", items: [
       { value: "revenue", label: "Revenue", icon: DollarSign, gradient: "from-green-500 to-emerald-500" },
@@ -503,6 +505,7 @@ const AdminDashboard = () => {
             <TabsContent value="flights" className="mt-0"><AdminFlightManagement /></TabsContent>
             <TabsContent value="hotels" className="mt-0"><AdminHotelManagement /></TabsContent>
             <TabsContent value="inventory" className="mt-0"><AdminInventoryManagement /></TabsContent>
+            <TabsContent value="affiliate" className="mt-0"><AdminAffiliateAnalytics /></TabsContent>
             <TabsContent value="revenue" className="mt-0"><AdminRevenueDashboard /></TabsContent>
             <TabsContent value="payouts" className="mt-0"><AdminPayouts /></TabsContent>
             <TabsContent value="processing" className="mt-0"><AdminPayoutProcessing /></TabsContent>

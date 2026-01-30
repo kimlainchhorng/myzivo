@@ -29,6 +29,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getAirlineLogo } from "@/data/airlines";
 import type { GeneratedFlight } from "@/data/flightGenerator";
+import { trackAffiliateClick, buildAffiliateUrl } from "@/lib/affiliateTracking";
 
 const FlightDetails = () => {
   const navigate = useNavigate();
@@ -65,17 +66,35 @@ const FlightDetails = () => {
     );
   }
 
-  // Build affiliate booking URL (example: Skyscanner, Kayak, or airline direct)
-  const buildAffiliateUrl = () => {
-    const baseUrl = "https://www.skyscanner.com/transport/flights";
-    const origin = flight.departure.code.toLowerCase();
-    const dest = flight.arrival.code.toLowerCase();
-    const date = searchParams?.departDate || format(new Date(), "yyMMdd");
-    return `${baseUrl}/${origin}/${dest}/${date.replace(/-/g, "")}/?adultsv2=${searchParams?.passengers || 1}&cabinclass=${searchParams?.cabinClass || "economy"}`;
-  };
-
+  // Build affiliate URL and track click
   const handleBookNow = () => {
-    window.open(buildAffiliateUrl(), "_blank", "noopener,noreferrer");
+    // Track affiliate click
+    trackAffiliateClick({
+      userId: undefined, // Would come from auth context
+      flightId: flight.id,
+      airline: flight.airline,
+      airlineCode: flight.airlineCode,
+      origin: flight.departure.code,
+      destination: flight.arrival.code,
+      price: flight.price,
+      passengers: parseInt(searchParams?.passengers || "1"),
+      cabinClass: searchParams?.cabinClass || "economy",
+      affiliatePartner: "skyscanner",
+      referralUrl: window.location.href,
+      source: "flight_details",
+    });
+
+    // Build and open affiliate URL
+    const url = buildAffiliateUrl({
+      origin: flight.departure.code,
+      destination: flight.arrival.code,
+      departDate: searchParams?.departDate || format(new Date(), "yyyy-MM-dd"),
+      returnDate: searchParams?.returnDate,
+      passengers: parseInt(searchParams?.passengers || "1"),
+      cabinClass: searchParams?.cabinClass || "economy",
+    });
+    
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   const amenityList = flight.amenities || [];
@@ -371,6 +390,15 @@ const FlightDetails = () => {
                   <p className="text-xs text-center text-muted-foreground">
                     Secure booking • Best price guaranteed
                   </p>
+
+                  {/* Affiliate Disclosure */}
+                  <div className="pt-3 border-t border-border/50">
+                    <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+                      <a href="/affiliate-disclosure" className="underline hover:text-foreground">
+                        Affiliate Disclosure
+                      </a>: We may earn a commission when you book through our partner links at no extra cost to you.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             </div>
