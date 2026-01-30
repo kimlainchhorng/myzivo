@@ -20,16 +20,10 @@ import GroupBooking from "./GroupBooking";
 
 
 
-import FlightPriceAlert from "./FlightPriceAlert";
 import AirportGuide from "./AirportGuide";
-import FlightTracker from "./FlightTracker";
 import TravelPackages from "./TravelPackages";
-import TripSharing from "./TripSharing";
 import AirlineLogosCarousel from "./AirlineLogosCarousel";
-
 import CodeshareFlights from "./CodeshareFlights";
-import TravelCompanionFinder from "./TravelCompanionFinder";
-import GroundTransportBooking from "./GroundTransportBooking";
 
 import { airports } from "@/data/airports";
 
@@ -90,34 +84,6 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-      {/* Travel Companion Finder */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <TravelCompanionFinder
-              flightNumber="ZV-1234"
-              currentSeat="15A"
-              departureDate={departDate || new Date()}
-              route={{ from: fromCode, to: toCode }}
-              onConnectionMade={(id, type) => toast.success(`Connected with traveler for ${type}!`)}
-            />
-          </div>
-        </section>
-      )}
-
-      {/* Ground Transport Booking */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <GroundTransportBooking
-              arrivalAirport={toCode}
-              arrivalTime={departDate || new Date()}
-              destination={toCity.split(" (")[0]}
-              onTransportBooked={(id, details) => toast.success(`Transport booked: ${details.pickup} → ${details.dropoff}`)}
-            />
-          </div>
-        </section>
-      )}
 
       {/* Popular Routes with Live Pricing */}
       <section className="py-12">
@@ -301,28 +267,6 @@ export default function FlightDiscoverySections({
 
 
 
-      {/* Flight Price Alert */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <FlightPriceAlert
-              route={{
-                from: fromCity.split(" (")[0] || "Los Angeles",
-                fromCode: fromCode,
-                to: toCity.split(" (")[0] || "New York",
-                toCode: toCode,
-              }}
-              currentPrice={299}
-              historicalLow={249}
-              departureDate={
-                departDate ? format(departDate, "yyyy-MM-dd") : undefined
-              }
-              returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
-              className="max-w-2xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
 
 
       {/* Airport Guide */}
@@ -334,57 +278,12 @@ export default function FlightDiscoverySections({
         </section>
       )}
 
-      {/* Flight Tracker Demo */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
-              <Plane className="w-6 h-6 text-sky-500" />
-              Track Your Flight
-            </h2>
-            <FlightTracker
-              flightNumber="ZV-1234"
-              airline="ZIVO Airways"
-              departure={{
-                code: fromCode,
-                city: fromCity.split(" (")[0] || "Los Angeles",
-                time: "08:00",
-                date: departDate || new Date(),
-                terminal: "T4",
-                gate: "B12",
-              }}
-              arrival={{
-                code: toCode,
-                city: toCity.split(" (")[0] || "New York",
-                time: "16:30",
-                date: departDate || new Date(),
-              }}
-              duration="5h 30m"
-              aircraft="Boeing 787-9 Dreamliner"
-            />
-          </div>
-        </section>
-      )}
-
       {/* Travel Packages */}
       <section className="py-12 border-t border-border/50">
         <div className="container mx-auto px-4">
           <TravelPackages className="max-w-4xl mx-auto" />
         </div>
       </section>
-
-      {/* Trip Sharing */}
-      {toCity && (
-        <section className="py-12 border-t border-border/50">
-          <div className="container mx-auto px-4">
-            <TripSharing
-              tripId={`trip-${fromCode}-${toCode}`}
-              tripName={`${fromCity.split(" (")[0]} to ${toCity.split(" (")[0]}`}
-              className="max-w-2xl mx-auto"
-            />
-          </div>
-        </section>
-      )}
 
       {/* Airline Partners Carousel */}
       <section className="py-12 border-t border-border/50">
