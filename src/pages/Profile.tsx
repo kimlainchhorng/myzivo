@@ -29,6 +29,7 @@ import ReferralCenter from "@/components/flight/ReferralCenter";
 import GiftCardsCredits from "@/components/flight/GiftCardsCredits";
 import FlightLoyaltyIntegration from "@/components/flight/FlightLoyaltyIntegration";
 import PayLater from "@/components/flight/PayLater";
+import FlightBookings from "@/components/flight/FlightBookings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -360,6 +361,11 @@ const Profile = () => {
                 Pay Later Options
               </h3>
               <PayLater totalAmount={599} />
+            </div>
+
+            {/* My Bookings */}
+            <div>
+              <FlightBookings />
             </div>
           </div>
         )}

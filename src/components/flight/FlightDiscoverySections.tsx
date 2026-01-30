@@ -34,7 +34,7 @@ import MyTripsDashboard from "./MyTripsDashboard";
 import CodeshareFlights from "./CodeshareFlights";
 import TravelCompanionFinder from "./TravelCompanionFinder";
 import GroundTransportBooking from "./GroundTransportBooking";
-import FlightBookings from "./FlightBookings";
+
 import { airports } from "@/data/airports";
 
 interface FlightDiscoverySectionsProps {
@@ -68,12 +68,6 @@ export default function FlightDiscoverySections({
 }: FlightDiscoverySectionsProps) {
   return (
     <>
-      {/* My Bookings Dashboard */}
-      <section className="py-12 border-t border-border/50">
-        <div className="container mx-auto px-4">
-          <FlightBookings />
-        </div>
-      </section>
 
       {/* My Trips Dashboard */}
       <section className="py-12 border-t border-border/50">
