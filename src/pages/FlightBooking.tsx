@@ -67,6 +67,20 @@ import AirportLoungeAccess from "@/components/flight/AirportLoungeAccess";
 import PricePrediction from "@/components/flight/PricePrediction";
 import FlightTracker from "@/components/flight/FlightTracker";
 import TravelAlerts from "@/components/flight/TravelAlerts";
+import FlightFilters from "@/components/flight/FlightFilters";
+import FlightComparison from "@/components/flight/FlightComparison";
+import MultiCityPlanner from "@/components/flight/MultiCityPlanner";
+import GiftCardsCredits from "@/components/flight/GiftCardsCredits";
+import ReferralCenter from "@/components/flight/ReferralCenter";
+import CorporateTravel from "@/components/flight/CorporateTravel";
+import GroupBooking from "@/components/flight/GroupBooking";
+import AirportGuide from "@/components/flight/AirportGuide";
+import FlightAmenityComparison from "@/components/flight/FlightAmenityComparison";
+import TravelPackages from "@/components/flight/TravelPackages";
+import FlightRouteMapAnimated from "@/components/flight/FlightRouteMapAnimated";
+import TripSharing from "@/components/flight/TripSharing";
+import PriceAlertsDashboard from "@/components/flight/PriceAlertsDashboard";
+import StatusTiersDashboard from "@/components/flight/StatusTiersDashboard";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
@@ -455,6 +469,16 @@ const FlightBooking = () => {
   const [showPriceCalendar, setShowPriceCalendar] = useState(false);
   const [recentSearches] = useState<string[]>(["New York (JFK)", "London (LHR)", "Tokyo (NRT)"]);
   const [isSearching, setIsSearching] = useState(false);
+  const [compareFlights, setCompareFlights] = useState<GeneratedFlight[]>([]);
+  const [showComparison, setShowComparison] = useState(false);
+  const [filters, setFilters] = useState({
+    stops: 'any' as 'any' | 'nonstop' | '1stop' | '2plus',
+    airlines: [] as string[],
+    alliances: [] as string[],
+    priceRange: [0, 5000] as [number, number],
+    departureTime: 'any' as 'any' | 'morning' | 'afternoon' | 'evening' | 'night',
+    duration: 'any' as 'any' | 'short' | 'medium' | 'long',
+  });
 
   // Extract airport codes for price calendar
   const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
@@ -936,6 +960,76 @@ const FlightBooking = () => {
                 />
               </div>
 
+              {/* Advanced Filters */}
+              <div className="mb-6">
+                <FlightFilters
+                  filters={{
+                    priceRange: filters.priceRange,
+                    durationMax: 24,
+                    directOnly: filters.stops === 'nonstop',
+                    refundableOnly: false,
+                    airlines: filters.airlines,
+                    categories: [],
+                    alliances: filters.alliances,
+                    departureTime: { start: 0, end: 24 },
+                    amenities: []
+                  }}
+                  onFiltersChange={(newFilters) => setFilters(prev => ({
+                    ...prev,
+                    priceRange: newFilters.priceRange,
+                    airlines: newFilters.airlines,
+                    alliances: newFilters.alliances,
+                    stops: newFilters.directOnly ? 'nonstop' : 'any'
+                  }))}
+                  maxPrice={Math.max(...searchResults.map(f => f.price), 5000)}
+                  maxDuration={24}
+                  availableAirlines={[...new Set(searchResults.map(f => f.airlineCode))]}
+                />
+              </div>
+
+              {/* Compare Button */}
+              {compareFlights.length > 0 && (
+                <div className="mb-4 flex items-center gap-3">
+                  <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30">
+                    {compareFlights.length} selected for comparison
+                  </Badge>
+                  <Button 
+                    size="sm" 
+                    onClick={() => setShowComparison(true)}
+                    disabled={compareFlights.length < 2}
+                  >
+                    Compare Flights
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => setCompareFlights([])}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
+
+              {/* Animated Route Map */}
+              {searchResults.length > 0 && (
+                <div className="mb-6">
+                  <FlightRouteMapAnimated
+                    departure={{
+                      code: fromCode,
+                      city: fromCity.split(' (')[0],
+                    }}
+                    arrival={{
+                      code: toCode,
+                      city: toCity.split(' (')[0],
+                    }}
+                    duration={searchResults[0]?.duration || '5h 30m'}
+                    flightNumber={searchResults[0]?.flightNumber}
+                    airline={searchResults[0]?.airline}
+                    className="h-48 rounded-xl overflow-hidden"
+                  />
+                </div>
+              )}
+
               <div className="space-y-4">
                 {searchResults.map((flight, index) => (
                   <div
@@ -943,22 +1037,89 @@ const FlightBooking = () => {
                     className="animate-in fade-in slide-in-from-bottom-4 duration-300"
                     style={{ animationDelay: `${index * 75}ms` }}
                   >
-                    <FlightTicketCard
-                      flight={{
-                        ...flight,
-                        id: String(flight.id),
-                        flightNumber: flight.flightNumber,
-                        isLowest: index === 0,
-                        isFastest: flight.stops === 0 && parseFloat(flight.duration) < 5.5,
-                        co2: flight.carbonOffset ? `${flight.carbonOffset}kg` : `${120 + index * 15}kg`,
-                        isRealPrice: flight.isRealPrice || false,
-                      }}
-                      onSelect={() => handleSelectFlight(flight)}
-                      isSelected={selectedFlight?.id === flight.id}
-                    />
+                    <div className="relative">
+                      <FlightTicketCard
+                        flight={{
+                          ...flight,
+                          id: String(flight.id),
+                          flightNumber: flight.flightNumber,
+                          isLowest: index === 0,
+                          isFastest: flight.stops === 0 && parseFloat(flight.duration) < 5.5,
+                          co2: flight.carbonOffset ? `${flight.carbonOffset}kg` : `${120 + index * 15}kg`,
+                          isRealPrice: flight.isRealPrice || false,
+                        }}
+                        onSelect={() => handleSelectFlight(flight)}
+                        isSelected={selectedFlight?.id === flight.id}
+                      />
+                      {/* Compare checkbox */}
+                      <button
+                        className={`absolute top-3 right-3 w-6 h-6 rounded border-2 flex items-center justify-center transition-all ${
+                          compareFlights.some(f => f.id === flight.id) 
+                            ? 'bg-sky-500 border-sky-500 text-white' 
+                            : 'border-muted-foreground/30 hover:border-sky-500'
+                        }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCompareFlights(prev => 
+                            prev.some(f => f.id === flight.id)
+                              ? prev.filter(f => f.id !== flight.id)
+                              : prev.length < 3 ? [...prev, flight] : prev
+                          );
+                        }}
+                      >
+                        {compareFlights.some(f => f.id === flight.id) && (
+                          <span className="text-xs font-bold">✓</span>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* Travel Insurance Upsell */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <TravelInsuranceSelector
+                  tripDuration={7}
+                  tripCost={searchResults[0]?.price * parseInt(passengers) || 299}
+                  passengers={parseInt(passengers)}
+                  onSelect={(plan, addons) => {
+                    if (plan) toast.success(`Added ${plan.name} insurance`);
+                  }}
+                />
+              </div>
+
+              {/* Amenity Comparison */}
+              {searchResults.length >= 2 && (
+                <div className="mt-8">
+                  <FlightAmenityComparison
+                    flights={searchResults.slice(0, 4).map(f => ({
+                      airline: f.airline,
+                      airlineCode: f.airlineCode,
+                      category: f.category || 'full-service',
+                      fareClass: cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1),
+                      price: f.price,
+                      amenities: {
+                        wifi: f.wifi || f.amenities?.includes('wifi') || false,
+                        entertainment: f.entertainment || f.amenities?.includes('entertainment') || false,
+                        meals: f.meals || f.amenities?.includes('meals') || false,
+                        drinks: f.amenities?.includes('meals') || false,
+                        power: f.amenities?.includes('power') || false,
+                        seatPitch: f.legroom || '31"',
+                        seatWidth: '18"',
+                        recline: '3"',
+                        loungeAccess: f.amenities?.includes('lounge') || false,
+                        priorityBoarding: f.category === 'premium',
+                        checkedBaggage: f.baggageIncluded || '1 × 23kg',
+                        carryOn: '1 carry-on',
+                        seatSelection: true,
+                        changePolicy: f.refundable ? 'free' : 'fee',
+                        refundPolicy: f.refundable ? 'full' : 'partial'
+                      }
+                    }))}
+                    className="max-w-4xl mx-auto"
+                  />
+                </div>
+              )}
             </div>
           </section>
         )}
@@ -1126,6 +1287,128 @@ const FlightBooking = () => {
           <section className="py-12 border-t border-border/50">
             <div className="container mx-auto px-4">
               <TravelAlerts className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Multi-City Planner */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <h2 className="font-display text-2xl font-bold mb-6 flex items-center gap-2">
+                <Globe className="w-6 h-6 text-sky-500" />
+                Multi-City Trip Planner
+              </h2>
+              <div className="max-w-4xl mx-auto">
+                <MultiCityPlanner
+                  onSearch={(legs, pax) => {
+                    if (legs.length > 0) {
+                      const first = legs[0];
+                      if (first.from && first.to) {
+                        setFromCity(`${first.from.city} (${first.from.code})`);
+                        setToCity(`${first.to.city} (${first.to.code})`);
+                        toast.success(`Planning ${legs.length}-city trip for ${pax} passengers`);
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Corporate Travel */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <CorporateTravel className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Group Booking */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <div className="max-w-4xl mx-auto">
+                <GroupBooking
+                  basePrice={299}
+                  onPassengersChange={(pax) => {
+                    setPassengers(String(pax.length));
+                  }}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Gift Cards & Credits */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <GiftCardsCredits className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Referral Center */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <ReferralCenter className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Status Tiers Dashboard */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <StatusTiersDashboard className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Price Alerts Dashboard */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <PriceAlertsDashboard className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Airport Guide */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <AirportGuide
+                airportCode={toCode}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Travel Packages */}
+        {!searchResults && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <TravelPackages className="max-w-4xl mx-auto" />
+            </div>
+          </section>
+        )}
+
+        {/* Trip Sharing */}
+        {!searchResults && toCity && (
+          <section className="py-12 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <TripSharing
+                tripId={`trip-${fromCode}-${toCode}`}
+                tripName={`${fromCity.split(' (')[0]} to ${toCity.split(' (')[0]}`}
+                className="max-w-2xl mx-auto"
+              />
             </div>
           </section>
         )}
