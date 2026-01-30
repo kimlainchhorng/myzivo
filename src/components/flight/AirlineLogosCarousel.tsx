@@ -1,10 +1,11 @@
 import { premiumAirlines, fullServiceAirlines, lowCostAirlines, type Airline } from "@/data/airlines";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Plane, Sparkles } from "lucide-react";
+import { useState } from "react";
 
-// AirHex CDN for real airline logos
-const getAirlineLogo = (code: string, size: number = 100) => {
-  return `https://content.airhex.com/content/logos/airlines_${code}_${size}_${size}_s.png`;
+// GitHub CDN for airline logos (free, no auth required)
+const getAirlineLogo = (code: string) => {
+  return `https://raw.githubusercontent.com/Jxck-S/airline-logos/main/logos/${code}.png`;
 };
 
 interface AirlineLogoProps {
@@ -13,16 +14,12 @@ interface AirlineLogoProps {
 }
 
 const AirlineLogo = ({ airline, size = 'md' }: AirlineLogoProps) => {
+  const [imgError, setImgError] = useState(false);
+  
   const sizeClasses = {
     sm: 'w-14 h-14',
     md: 'w-20 h-20',
     lg: 'w-24 h-24'
-  };
-
-  const imgSizes = {
-    sm: 56,
-    md: 80,
-    lg: 100
   };
 
   const bgColor = airline.category === 'premium' 
@@ -31,21 +28,30 @@ const AirlineLogo = ({ airline, size = 'md' }: AirlineLogoProps) => {
     ? 'from-sky-500/10 to-blue-600/5 border-sky-500/20 hover:border-sky-500/40'
     : 'from-emerald-500/10 to-green-600/5 border-emerald-500/20 hover:border-emerald-500/40';
 
+  const accentColor = airline.category === 'premium' 
+    ? 'text-amber-400' 
+    : airline.category === 'full-service'
+    ? 'text-sky-400'
+    : 'text-emerald-400';
+
   return (
     <div className="group flex flex-col items-center gap-2 transition-all duration-300 hover:scale-105 flex-shrink-0">
       <div className={`${sizeClasses[size]} rounded-2xl bg-gradient-to-br ${bgColor} border backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all overflow-hidden p-2`}>
-        <img 
-          src={getAirlineLogo(airline.code, imgSizes[size])}
-          alt={`${airline.name} logo`}
-          className="w-full h-full object-contain"
-          loading="lazy"
-          onError={(e) => {
-            // Fallback to emoji if logo fails to load
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            target.parentElement!.innerHTML = `<span class="text-2xl">${airline.logo}</span>`;
-          }}
-        />
+        {!imgError ? (
+          <img 
+            src={getAirlineLogo(airline.code)}
+            alt={`${airline.name} logo`}
+            className="w-full h-full object-contain"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          // Fallback: Show styled airline code with emoji flag
+          <div className="flex flex-col items-center justify-center gap-0.5">
+            <span className="text-lg">{airline.logo}</span>
+            <span className={`text-xs font-bold ${accentColor}`}>{airline.code}</span>
+          </div>
+        )}
       </div>
       <div className="text-center opacity-80 group-hover:opacity-100 transition-opacity">
         <p className="text-xs font-medium text-foreground truncate max-w-[90px]">{airline.name}</p>
