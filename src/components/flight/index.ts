@@ -89,6 +89,14 @@ export { default as FlightSearchHero } from './FlightSearchHero';
 export { default as FlightResultsSection } from './FlightResultsSection';
 export { default as FlightDiscoverySections } from './FlightDiscoverySections';
 
+// Professional Enhancement Components
+export { default as FlightStatsBar } from './FlightStatsBar';
+export { default as FlightPromoSection } from './FlightPromoSection';
+export { default as FlightTestimonialsSection } from './FlightTestimonialsSection';
+export { default as FlightFeaturedDestinations } from './FlightFeaturedDestinations';
+export { default as FlightQuickActions } from './FlightQuickActions';
+export { default as FlightTrustIndicators } from './FlightTrustIndicators';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';

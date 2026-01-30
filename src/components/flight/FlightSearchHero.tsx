@@ -24,11 +24,17 @@ import {
   Globe,
   CalendarDays,
   Loader2,
+  TrendingUp,
+  Zap,
+  Award,
+  RefreshCw,
+  MapPin,
 } from "lucide-react";
 import { format } from "date-fns";
 import AirportAutocomplete from "./AirportAutocomplete";
 import PriceCalendar from "./PriceCalendar";
 import flightHeroImage from "@/assets/flight-hero.jpg";
+import { cn } from "@/lib/utils";
 
 interface FlightSearchHeroProps {
   tripType: "roundtrip" | "oneway";
@@ -83,6 +89,20 @@ export default function FlightSearchHero({
     setToCity(temp);
   };
 
+  const trustBadges = [
+    { icon: Shield, text: "Free Cancellation", color: "text-emerald-500" },
+    { icon: Award, text: "Best Price Guarantee", color: "text-amber-500" },
+    { icon: Clock, text: "24/7 Support", color: "text-sky-500" },
+    { icon: Zap, text: "Instant Confirmation", color: "text-purple-500" },
+  ];
+
+  const quickDestinations = [
+    { city: "New York", code: "JFK", price: 299, trend: "+5%" },
+    { city: "London", code: "LHR", price: 449, trend: "-12%" },
+    { city: "Tokyo", code: "NRT", price: 699, trend: "-8%" },
+    { city: "Paris", code: "CDG", price: 399, trend: "+2%" },
+  ];
+
   return (
     <section className="relative min-h-[85vh] overflow-hidden">
       {/* Background Image */}
@@ -98,7 +118,7 @@ export default function FlightSearchHero({
 
       {/* Floating Decorative Elements */}
       <div className="absolute top-24 right-10 hidden lg:block animate-float">
-        <div className="w-16 h-16 rounded-2xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-2xl bg-sky-500/20 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-lg shadow-sky-500/20">
           <Plane className="w-8 h-8 text-sky-400" />
         </div>
       </div>
@@ -110,9 +130,28 @@ export default function FlightSearchHero({
           <Globe className="w-6 h-6 text-blue-400" />
         </div>
       </div>
+      <div
+        className="absolute bottom-40 left-10 hidden lg:block animate-float"
+        style={{ animationDelay: "0.8s" }}
+      >
+        <div className="w-14 h-14 rounded-xl bg-amber-500/20 backdrop-blur-xl border border-amber-500/30 flex items-center justify-center">
+          <Star className="w-7 h-7 text-amber-400" />
+        </div>
+      </div>
 
       <div className="container mx-auto px-4 relative z-10 pt-24 pb-12">
         <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          {/* Live Indicator */}
+          <div className="flex justify-center mb-4">
+            <Badge className="px-3 py-1.5 bg-emerald-500/20 text-emerald-500 border-emerald-500/30 gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Live Prices from 500+ Airlines
+            </Badge>
+          </div>
+          
           <Badge className="mb-6 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white border-0 shadow-lg shadow-sky-500/30">
             <Sparkles className="w-4 h-4 mr-2" />
             ZIVO Flights — Premium Air Travel
@@ -126,21 +165,18 @@ export default function FlightSearchHero({
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-8">
             Compare prices from 500+ airlines worldwide. Book premium flights at
-            the best prices with our exclusive deals.
+            the best prices with our exclusive deals and real-time pricing.
           </p>
 
           {/* Trust Badges */}
-          <div className="flex flex-wrap justify-center gap-4 mb-10">
-            {[
-              { icon: Shield, text: "Free Cancellation" },
-              { icon: Star, text: "Best Price Guarantee" },
-              { icon: Clock, text: "24/7 Support" },
-            ].map((item) => (
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {trustBadges.map((item, index) => (
               <div
                 key={item.text}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 hover:border-sky-500/30 transition-all duration-300 animate-in fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
               >
-                <item.icon className="w-4 h-4 text-sky-500" />
+                <item.icon className={cn("w-4 h-4", item.color)} />
                 <span className="text-sm font-medium">{item.text}</span>
               </div>
             ))}
@@ -152,31 +188,41 @@ export default function FlightSearchHero({
           className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700"
           style={{ animationDelay: "0.2s" }}
         >
-          <Card className="overflow-hidden border-0 bg-card/80 backdrop-blur-2xl shadow-2xl shadow-black/20">
+        <Card className="overflow-hidden border-0 bg-card/80 backdrop-blur-2xl shadow-2xl shadow-black/20 ring-1 ring-white/10">
             {/* Top accent line */}
-            <div className="h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
+            <div className="h-1.5 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
             <CardContent className="p-6 sm:p-8">
               {/* Trip Type Toggle */}
-              <div className="flex gap-4 mb-6">
+              <div className="flex gap-2 mb-6">
                 <button
                   onClick={() => setTripType("roundtrip")}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl font-semibold transition-all duration-300",
                     tripType === "roundtrip"
-                      ? "bg-sky-500 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                  )}
                 >
+                  <RefreshCw className="w-4 h-4 inline-block mr-2" />
                   Round Trip
                 </button>
                 <button
                   onClick={() => setTripType("oneway")}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  className={cn(
+                    "px-5 py-2.5 rounded-xl font-semibold transition-all duration-300",
                     tripType === "oneway"
-                      ? "bg-sky-500 text-white"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+                  )}
                 >
+                  <Plane className="w-4 h-4 inline-block mr-2" />
                   One Way
+                </button>
+                <button
+                  className="px-5 py-2.5 rounded-xl font-semibold bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all duration-300"
+                >
+                  <MapPin className="w-4 h-4 inline-block mr-2" />
+                  Multi-City
                 </button>
               </div>
 
@@ -315,12 +361,13 @@ export default function FlightSearchHero({
                 <Button
                   onClick={onSearch}
                   disabled={!fromCity || !toCity || !departDate || isSearching}
-                  className="h-12 px-8 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/30 transition-all hover:shadow-xl hover:shadow-sky-500/40"
+                  size="lg"
+                  className="h-14 px-10 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white font-bold text-base shadow-xl shadow-sky-500/30 transition-all hover:shadow-2xl hover:shadow-sky-500/50 hover:scale-[1.02] active:scale-[0.98] rounded-xl"
                 >
                   {isSearching ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Searching...
+                      Searching 500+ Airlines...
                     </>
                   ) : (
                     <>
@@ -329,6 +376,42 @@ export default function FlightSearchHero({
                     </>
                   )}
                 </Button>
+              </div>
+
+              {/* Quick Destinations */}
+              <div className="pt-4 border-t border-border/30 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-muted-foreground flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                    Popular from your location
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {quickDestinations.map((dest) => (
+                    <button
+                      key={dest.code}
+                      onClick={() => setToCity(`${dest.city} (${dest.code})`)}
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-300",
+                        toCity.includes(dest.code)
+                          ? "border-sky-500 bg-sky-500/10 text-sky-400"
+                          : "border-border/50 bg-muted/30 hover:border-sky-500/50 hover:bg-sky-500/5"
+                      )}
+                    >
+                      <span className="font-medium">{dest.city}</span>
+                      <span className="text-xs text-muted-foreground">({dest.code})</span>
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        ${dest.price}
+                      </Badge>
+                      <span className={cn(
+                        "text-xs font-semibold",
+                        dest.trend.startsWith("-") ? "text-emerald-500" : "text-orange-500"
+                      )}>
+                        {dest.trend}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Price Calendar Toggle */}

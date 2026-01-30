@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -8,7 +9,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles } from "lucide-react";
+import { 
+  Sparkles, 
+  SlidersHorizontal, 
+  ArrowUpDown, 
+  Zap, 
+  TrendingDown,
+  Clock,
+  Plane,
+  Filter,
+  X,
+  CheckCircle
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import FlightTicketCard from "./FlightTicketCard";
@@ -23,6 +35,7 @@ import LoyaltyRedemption from "./LoyaltyRedemption";
 import SeatUpgradeBidding from "./SeatUpgradeBidding";
 import AirportLoungeAccess from "./AirportLoungeAccess";
 import type { GeneratedFlight } from "@/data/flightGenerator";
+import { cn } from "@/lib/utils";
 
 interface FlightResultsSectionProps {
   searchResults: GeneratedFlight[];
@@ -54,6 +67,8 @@ export default function FlightResultsSection({
   const [compareFlights, setCompareFlights] = useState<GeneratedFlight[]>([]);
   const [showComparison, setShowComparison] = useState(false);
   const [milesUsed, setMilesUsed] = useState(0);
+  const [sortBy, setSortBy] = useState<"price" | "duration" | "departure" | "rating">("price");
+  const [showFilters, setShowFilters] = useState(false);
   const [inFlightServices, setInFlightServices] = useState<{
     meals: { passengerId: number; mealId: string }[];
     wifi: string | null;
@@ -69,36 +84,136 @@ export default function FlightResultsSection({
     duration: "any" as "any" | "short" | "medium" | "long",
   });
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    const prices = searchResults.map(f => f.price);
+    const durations = searchResults.map(f => {
+      const match = f.duration.match(/(\d+)h/);
+      return match ? parseInt(match[1]) : 0;
+    });
+    return {
+      lowestPrice: Math.min(...prices),
+      fastestDuration: Math.min(...durations),
+      directFlights: searchResults.filter(f => f.stops === 0).length,
+      realPrices: searchResults.filter(f => f.isRealPrice).length,
+    };
+  }, [searchResults]);
+
+  // Sort flights
+  const sortedResults = useMemo(() => {
+    return [...searchResults].sort((a, b) => {
+      switch (sortBy) {
+        case "price":
+          return a.price - b.price;
+        case "duration":
+          const durationA = parseInt(a.duration.match(/(\d+)h/)?.[1] || "0");
+          const durationB = parseInt(b.duration.match(/(\d+)h/)?.[1] || "0");
+          return durationA - durationB;
+        case "departure":
+          return a.departure.time.localeCompare(b.departure.time);
+        case "rating":
+          return (b.onTimePerformance || 0) - (a.onTimePerformance || 0);
+        default:
+          return 0;
+      }
+    });
+  }, [searchResults, sortBy]);
+
   return (
     <section className="py-8">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-6">
+        {/* Results Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="font-display text-2xl font-bold flex items-center gap-2">
-              {searchResults.length} flights found
-              {searchResults.some((f) => f.isRealPrice) && (
+            <h2 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-3">
+              <span className="text-sky-500">{searchResults.length}</span> flights found
+              {stats.realPrices > 0 && (
                 <Badge className="bg-emerald-500/20 text-emerald-500 text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Live Prices
+                  <Zap className="w-3 h-3 mr-1" />
+                  {stats.realPrices} Live Prices
                 </Badge>
               )}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mt-1">
               {fromCity.split(" (")[0]} → {toCity.split(" (")[0]} •{" "}
-              {departDate ? format(departDate, "MMM d, yyyy") : "Select date"}
+              {departDate ? format(departDate, "MMM d, yyyy") : "Select date"} • {passengers} passenger{parseInt(passengers) > 1 ? "s" : ""}
             </p>
           </div>
-          <Select defaultValue="price">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="price">Lowest Price</SelectItem>
-              <SelectItem value="duration">Shortest Duration</SelectItem>
-              <SelectItem value="departure">Departure Time</SelectItem>
-              <SelectItem value="rating">Best Rated</SelectItem>
-            </SelectContent>
-          </Select>
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "gap-2",
+                showFilters && "border-sky-500 text-sky-500"
+              )}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+            </Button>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <SelectTrigger className="w-[180px]">
+                <ArrowUpDown className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="price">Lowest Price</SelectItem>
+                <SelectItem value="duration">Shortest Duration</SelectItem>
+                <SelectItem value="departure">Departure Time</SelectItem>
+                <SelectItem value="rating">Best Rated</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Quick Stats Bar */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <Card className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 border-emerald-500/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <TrendingDown className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Lowest Price</p>
+                <p className="text-xl font-bold text-emerald-500">${stats.lowestPrice}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-sky-500/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-sky-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Fastest</p>
+                <p className="text-xl font-bold text-sky-500">{stats.fastestDuration}h</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-purple-500/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                <Plane className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Direct Flights</p>
+                <p className="text-xl font-bold text-purple-500">{stats.directFlights}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-amber-500/20">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Verified</p>
+                <p className="text-xl font-bold text-amber-500">{stats.realPrices}</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Fare Class Quick Filter */}
@@ -111,34 +226,36 @@ export default function FlightResultsSection({
           />
         </div>
 
-        {/* Advanced Filters */}
-        <div className="mb-6">
-          <FlightFilters
-            filters={{
-              priceRange: filters.priceRange,
-              durationMax: 24,
-              directOnly: filters.stops === "nonstop",
-              refundableOnly: false,
-              airlines: filters.airlines,
-              categories: [],
-              alliances: filters.alliances,
-              departureTime: { start: 0, end: 24 },
-              amenities: [],
-            }}
-            onFiltersChange={(newFilters) =>
-              setFilters((prev) => ({
-                ...prev,
-                priceRange: newFilters.priceRange,
-                airlines: newFilters.airlines,
-                alliances: newFilters.alliances,
-                stops: newFilters.directOnly ? "nonstop" : "any",
-              }))
-            }
-            maxPrice={Math.max(...searchResults.map((f) => f.price), 5000)}
-            maxDuration={24}
-            availableAirlines={[...new Set(searchResults.map((f) => f.airlineCode))]}
-          />
-        </div>
+        {/* Advanced Filters - Collapsible */}
+        {showFilters && (
+          <div className="mb-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <FlightFilters
+              filters={{
+                priceRange: filters.priceRange,
+                durationMax: 24,
+                directOnly: filters.stops === "nonstop",
+                refundableOnly: false,
+                airlines: filters.airlines,
+                categories: [],
+                alliances: filters.alliances,
+                departureTime: { start: 0, end: 24 },
+                amenities: [],
+              }}
+              onFiltersChange={(newFilters) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  priceRange: newFilters.priceRange,
+                  airlines: newFilters.airlines,
+                  alliances: newFilters.alliances,
+                  stops: newFilters.directOnly ? "nonstop" : "any",
+                }))
+              }
+              maxPrice={Math.max(...searchResults.map((f) => f.price), 5000)}
+              maxDuration={24}
+              availableAirlines={[...new Set(searchResults.map((f) => f.airlineCode))]}
+            />
+          </div>
+        )}
 
         {/* Compare Button */}
         {compareFlights.length > 0 && (
@@ -180,7 +297,7 @@ export default function FlightResultsSection({
         )}
 
         <div className="space-y-4">
-          {searchResults.map((flight, index) => (
+          {sortedResults.map((flight, index) => (
             <div
               key={flight.id}
               className="animate-in fade-in slide-in-from-bottom-4 duration-300"

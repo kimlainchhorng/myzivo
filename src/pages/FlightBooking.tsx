@@ -12,6 +12,13 @@ import FlightResultsSection from "@/components/flight/FlightResultsSection";
 import FlightDiscoverySections from "@/components/flight/FlightDiscoverySections";
 import TravelBundleCard from "@/components/flight/TravelBundleCard";
 import { TrendingDestinationsSection } from "@/components/flight/TrendingDestinationsSection";
+import FlightStatsBar from "@/components/flight/FlightStatsBar";
+import FlightPromoSection from "@/components/flight/FlightPromoSection";
+import FlightTestimonialsSection from "@/components/flight/FlightTestimonialsSection";
+import FlightFeaturedDestinations from "@/components/flight/FlightFeaturedDestinations";
+import FlightQuickActions from "@/components/flight/FlightQuickActions";
+import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
+import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
 import { getAirlineLogo } from "@/data/airlines";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -214,6 +221,35 @@ const FlightBooking = () => {
         {/* Discovery Sections (shown when no search results) */}
         {!searchResults && (
           <>
+            {/* Stats Bar */}
+            <FlightStatsBar />
+
+            {/* Quick Actions */}
+            <FlightQuickActions 
+              onActionClick={(action) => {
+                toast.info(`Opening ${action} feature...`);
+              }}
+            />
+
+            {/* Featured Destinations */}
+            <FlightFeaturedDestinations
+              onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
+            />
+
+            {/* Promo Section */}
+            <FlightPromoSection 
+              onPromoClick={(code) => {
+                toast.success(`Promo code ${code} copied to clipboard!`);
+              }}
+            />
+
+            {/* Airline Partners Carousel */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <AirlineLogosCarousel />
+              </div>
+            </section>
+
             <FlightDiscoverySections
               fromCity={fromCity}
               toCity={toCity}
@@ -233,6 +269,12 @@ const FlightBooking = () => {
             <TrendingDestinationsSection
               onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
             />
+
+            {/* Testimonials Section */}
+            <FlightTestimonialsSection />
+
+            {/* Trust Indicators */}
+            <FlightTrustIndicators />
           </>
         )}
       </main>
