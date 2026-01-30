@@ -3,9 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Crown, Plane, Sparkles } from "lucide-react";
 import { useState } from "react";
 
-// GitHub CDN for airline logos (free, no auth required)
+// Logo.clearbit CDN for airline logos (reliable, free)
 const getAirlineLogo = (code: string) => {
-  return `https://raw.githubusercontent.com/Jxck-S/airline-logos/main/logos/${code}.png`;
+  // Use pics.avs.io which is a free airline logo API
+  return `https://pics.avs.io/200/80/${code}.png`;
 };
 
 interface AirlineLogoProps {
