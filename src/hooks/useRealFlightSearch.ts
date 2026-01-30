@@ -81,26 +81,35 @@ const transformToGeneratedFlight = (
   const fromAirport = airports.find(a => a.code === fromCode);
   const toAirport = airports.find(a => a.code === toCode);
   
-  // Parse departure time
+  // Parse departure time - handle ISO format with timezone
   const departureTime = new Date(apiPrice.departureAt);
-  const depTimeStr = departureTime.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    hour12: false 
-  });
   
-  // Calculate arrival time
+  // Format departure time as HH:MM in 24h format
+  const depHours = departureTime.getHours().toString().padStart(2, '0');
+  const depMinutes = departureTime.getMinutes().toString().padStart(2, '0');
+  const depTimeStr = `${depHours}:${depMinutes}`;
+  
+  // Calculate arrival time from departure + duration (duration is in minutes)
   const arrivalTime = new Date(departureTime.getTime() + apiPrice.duration * 60 * 1000);
-  const arrTimeStr = arrivalTime.toLocaleTimeString('en-US', { 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    hour12: false 
-  });
+  const arrHours = arrivalTime.getHours().toString().padStart(2, '0');
+  const arrMinutes = arrivalTime.getMinutes().toString().padStart(2, '0');
   
-  // Format duration
+  // Check if arrival is next day
+  const isNextDay = arrivalTime.getDate() !== departureTime.getDate() || 
+                    arrivalTime.getMonth() !== departureTime.getMonth();
+  const dayDiff = Math.floor((arrivalTime.getTime() - departureTime.getTime()) / (24 * 60 * 60 * 1000));
+  const arrTimeStr = isNextDay 
+    ? `${arrHours}:${arrMinutes}+${dayDiff > 0 ? dayDiff : 1}` 
+    : `${arrHours}:${arrMinutes}`;
+  
+  // Format duration: convert minutes to Xh Ym format
   const hours = Math.floor(apiPrice.duration / 60);
   const minutes = apiPrice.duration % 60;
   const durationStr = `${hours}h ${minutes}m`;
+  
+  // Format flight number: AIRLINE-NUMBER format (e.g., "B6-1124")
+  const flightNum = apiPrice.flightNumber || String(1000 + index);
+  const formattedFlightNumber = `${apiPrice.airline}-${flightNum}`;
   
   // Calculate prices for other classes based on category
   const economyPrice = apiPrice.price;
@@ -116,25 +125,39 @@ const transformToGeneratedFlight = (
     'low-cost': ['snacks']
   };
   
-  // Aircraft selection
+  // Aircraft selection based on route duration
+  const isLongHaul = apiPrice.duration > 360; // 6+ hours
   const aircraftByCategory = {
-    premium: ['Airbus A380-800', 'Airbus A350-1000', 'Boeing 777-300ER', 'Boeing 787-9'],
-    'full-service': ['Boeing 787-9', 'Airbus A330-300', 'Boeing 767-400ER', 'Airbus A321neo'],
+    premium: isLongHaul 
+      ? ['Airbus A380-800', 'Airbus A350-1000', 'Boeing 777-300ER', 'Boeing 787-10']
+      : ['Airbus A350-900', 'Boeing 787-9', 'Airbus A321neo'],
+    'full-service': isLongHaul
+      ? ['Boeing 787-9', 'Airbus A330-300', 'Boeing 777-200ER']
+      : ['Boeing 737-900', 'Airbus A321neo', 'Boeing 757-200'],
     'low-cost': ['Boeing 737 MAX 8', 'Airbus A320neo', 'Airbus A321neo']
   };
   
   const aircraftList = aircraftByCategory[category];
   
-  // Generate consistent but varied data based on index
-  const terminalOptions = ['1', '2', '3', 'A', 'B', 'C'];
-  const depTerminal = terminalOptions[index % terminalOptions.length];
-  const arrTerminal = terminalOptions[(index + 3) % terminalOptions.length];
+  // Generate consistent but varied data based on flight number for reproducibility
+  const flightHash = flightNum.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const terminalOptions = ['1', '2', '3', 'A', 'B', 'C', 'D'];
+  const depTerminal = terminalOptions[flightHash % terminalOptions.length];
+  const arrTerminal = terminalOptions[(flightHash + 3) % terminalOptions.length];
+  
+  // On-time performance based on airline category and transfers
+  const baseOnTime = category === 'premium' ? 90 : category === 'full-service' ? 82 : 75;
+  const transferPenalty = apiPrice.transfers * 3;
+  const onTimePerf = Math.max(65, baseOnTime - transferPenalty + (flightHash % 5));
+  
+  // Carbon offset based on duration
+  const carbonOffset = Math.round((apiPrice.duration / 60) * 45 + (flightHash % 20));
   
   return {
-    id: `${apiPrice.airline}-${apiPrice.flightNumber}-${departureTime.getTime()}-${index}`,
+    id: `${apiPrice.airline}-${flightNum}-${departureTime.getTime()}-${index}`,
     airline: airlineInfo.name,
     airlineCode: apiPrice.airline,
-    flightNumber: `${apiPrice.airline}${apiPrice.flightNumber || (1000 + index)}`,
+    flightNumber: formattedFlightNumber,
     departure: {
       time: depTimeStr,
       city: fromAirport?.city || fromCode,
@@ -149,19 +172,19 @@ const transformToGeneratedFlight = (
     },
     duration: durationStr,
     stops: apiPrice.transfers,
-    stopCities: apiPrice.transfers > 0 ? ['Connection'] : undefined,
+    stopCities: apiPrice.transfers > 0 ? generateStopCities(apiPrice.transfers, fromCode, toCode) : undefined,
     price: economyPrice,
     premiumEconomyPrice: category !== 'low-cost' ? Math.round(economyPrice * 1.6) : undefined,
     businessPrice: category !== 'low-cost' ? businessPrice : undefined,
     firstPrice,
     class: 'Economy',
     amenities: amenitiesByCategory[category],
-    seatsLeft: Math.floor(Math.random() * 15) + 2,
+    seatsLeft: 2 + (flightHash % 18),
     category,
     alliance: airlineInfo.alliance || 'Independent',
-    aircraft: aircraftList[Math.floor(Math.random() * aircraftList.length)],
-    onTimePerformance: Math.floor(75 + Math.random() * 20),
-    carbonOffset: Math.round((apiPrice.duration / 60) * 50 + Math.random() * 30),
+    aircraft: aircraftList[flightHash % aircraftList.length],
+    onTimePerformance: onTimePerf,
+    carbonOffset,
     baggageIncluded: category === 'low-cost' ? 'Carry-on only' : 
                      category === 'premium' ? '2 × 32kg checked' : '1 × 23kg checked',
     refundable: category === 'premium',
@@ -173,6 +196,34 @@ const transformToGeneratedFlight = (
     bookingLink: apiPrice.link,
     isRealPrice: true
   };
+};
+
+// Generate realistic stop cities based on route
+const generateStopCities = (transfers: number, from: string, to: string): string[] => {
+  // Major hub cities for connections
+  const hubsByRegion: Record<string, string[]> = {
+    us: ['Atlanta', 'Dallas', 'Chicago', 'Denver', 'Charlotte', 'Houston', 'Phoenix'],
+    eu: ['London', 'Frankfurt', 'Amsterdam', 'Paris', 'Madrid', 'Munich'],
+    me: ['Dubai', 'Doha', 'Istanbul', 'Abu Dhabi'],
+    asia: ['Singapore', 'Hong Kong', 'Tokyo', 'Seoul', 'Bangkok'],
+  };
+  
+  // Flatten and filter out origin/destination
+  const allHubs = Object.values(hubsByRegion).flat();
+  const filtered = allHubs.filter(h => 
+    !h.toLowerCase().includes(from.toLowerCase()) && 
+    !h.toLowerCase().includes(to.toLowerCase())
+  );
+  
+  const stops: string[] = [];
+  for (let i = 0; i < transfers && i < filtered.length; i++) {
+    const idx = (from.charCodeAt(0) + to.charCodeAt(0) + i) % filtered.length;
+    if (!stops.includes(filtered[idx])) {
+      stops.push(filtered[idx]);
+    }
+  }
+  
+  return stops.length > 0 ? stops : ['Connection'];
 };
 
 export function useRealFlightSearch({
