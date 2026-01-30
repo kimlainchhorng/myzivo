@@ -77,6 +77,12 @@ export { default as MultiCityPlanner } from './MultiCityPlanner';
 export { default as LoyaltyRedemption } from './LoyaltyRedemption';
 export { default as InFlightServices } from './InFlightServices';
 
+// Premium Features
+export { default as SeatUpgradeBidding } from './SeatUpgradeBidding';
+export { default as AirportLoungeAccess } from './AirportLoungeAccess';
+export { default as GroundTransportBooking } from './GroundTransportBooking';
+export { default as TravelCompanionFinder } from './TravelCompanionFinder';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
