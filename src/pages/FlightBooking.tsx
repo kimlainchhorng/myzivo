@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -24,7 +24,12 @@ import {
   Star,
   Sparkles,
   Globe,
-  Zap
+  Zap,
+  MapPin,
+  TrendingUp,
+  Leaf,
+  Crown,
+  Award
 } from "lucide-react";
 import { format } from "date-fns";
 import {
@@ -41,16 +46,20 @@ import AirlineLogosCarousel from "@/components/flight/AirlineLogosCarousel";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import airplaneCloudsImage from "@/assets/airplane-clouds.jpg";
 import businessClassImage from "@/assets/flight-business-class.jpg";
-import { premiumAirlines, fullServiceAirlines, lowCostAirlines } from "@/data/airlines";
+import { premiumAirlines, fullServiceAirlines, lowCostAirlines, getAirlineLogo } from "@/data/airlines";
+import { airports, searchAirports, getPopularAirports, formatAirportDisplay, popularRoutes, type Airport } from "@/data/airports";
 
-// Popular destinations with real images
+// Enhanced popular destinations with real airport data
 const popularDestinations = [
-  { city: "New York", code: "JFK", country: "USA", image: "🗽", price: 299 },
-  { city: "London", code: "LHR", country: "UK", image: "🇬🇧", price: 449 },
-  { city: "Tokyo", code: "NRT", country: "Japan", image: "🗼", price: 699 },
-  { city: "Paris", code: "CDG", country: "France", image: "🗼", price: 399 },
-  { city: "Dubai", code: "DXB", country: "UAE", image: "🏙️", price: 549 },
-  { city: "Sydney", code: "SYD", country: "Australia", image: "🦘", price: 899 },
+  { city: "New York", code: "JFK", country: "USA", region: "North America", price: 299, trending: true },
+  { city: "London", code: "LHR", country: "United Kingdom", region: "Europe", price: 449, trending: true },
+  { city: "Tokyo", code: "NRT", country: "Japan", region: "Asia", price: 699, trending: false },
+  { city: "Paris", code: "CDG", country: "France", region: "Europe", price: 399, trending: true },
+  { city: "Dubai", code: "DXB", country: "UAE", region: "Middle East", price: 549, trending: true },
+  { city: "Sydney", code: "SYD", country: "Australia", region: "Oceania", price: 899, trending: false },
+  { city: "Singapore", code: "SIN", country: "Singapore", region: "Asia", price: 749, trending: true },
+  { city: "Barcelona", code: "BCN", country: "Spain", region: "Europe", price: 379, trending: false },
+  { city: "Bali", code: "DPS", country: "Indonesia", region: "Asia", price: 649, trending: true },
 ];
 
 // Use real airline data
@@ -59,109 +68,251 @@ const featuredAirlines = [
   ...fullServiceAirlines.slice(0, 5),
 ];
 
-// Sample flights with REAL airlines
+// Extended sample flights with comprehensive real data
 const sampleFlights = [
   {
     id: 1,
     airline: "Singapore Airlines",
     airlineCode: "SQ",
-    airlineLogo: "🇸🇬",
-    flightNumber: "SQ-1234",
+    flightNumber: "SQ-26",
     departure: { time: "08:00", city: "Los Angeles", code: "LAX" },
     arrival: { time: "16:30", city: "New York", code: "JFK" },
     duration: "5h 30m",
     stops: 0,
     price: 459,
+    businessPrice: 2450,
+    firstPrice: 8900,
     class: "Economy",
-    amenities: ["wifi", "entertainment", "meals"],
+    amenities: ["wifi", "entertainment", "meals", "power", "lounge"],
     seatsLeft: 5,
     category: "premium" as const,
     alliance: "Star Alliance",
+    aircraft: "Airbus A380-800",
+    onTimePerformance: 92,
+    carbonOffset: 184,
   },
   {
     id: 2,
     airline: "Emirates",
     airlineCode: "EK",
-    airlineLogo: "🇦🇪",
-    flightNumber: "EK-205",
+    flightNumber: "EK-202",
     departure: { time: "10:15", city: "Los Angeles", code: "LAX" },
     arrival: { time: "19:00", city: "New York", code: "JFK" },
     duration: "5h 45m",
     stops: 0,
     price: 549,
+    businessPrice: 3200,
+    firstPrice: 12500,
     class: "Business",
-    amenities: ["wifi", "entertainment", "meals", "lounge"],
+    amenities: ["wifi", "entertainment", "meals", "lounge", "shower", "bar"],
     seatsLeft: 3,
     category: "premium" as const,
     alliance: "Independent",
+    aircraft: "Boeing 777-300ER",
+    onTimePerformance: 89,
+    carbonOffset: 195,
   },
   {
     id: 3,
-    airline: "Delta Airlines",
+    airline: "Delta Air Lines",
     airlineCode: "DL",
-    airlineLogo: "🇺🇸",
     flightNumber: "DL-890",
-    departure: { time: "14:30", city: "Los Angeles", code: "LAX" },
-    arrival: { time: "22:45", city: "New York", code: "JFK" },
+    departure: { time: "06:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "14:15", city: "New York", code: "JFK" },
     duration: "5h 15m",
     stops: 0,
     price: 299,
+    businessPrice: 1450,
     class: "Economy",
-    amenities: ["wifi", "entertainment"],
+    amenities: ["wifi", "entertainment", "meals"],
     seatsLeft: 12,
     category: "full-service" as const,
     alliance: "SkyTeam",
+    aircraft: "Boeing 757-200",
+    onTimePerformance: 86,
+    carbonOffset: 165,
   },
   {
     id: 4,
     airline: "Qatar Airways",
     airlineCode: "QR",
-    airlineLogo: "🇶🇦",
-    flightNumber: "QR-1100",
-    departure: { time: "18:00", city: "Los Angeles", code: "LAX" },
-    arrival: { time: "02:30", city: "New York", code: "JFK" },
+    flightNumber: "QR-7731",
+    departure: { time: "23:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "07:30", city: "New York", code: "JFK" },
     duration: "5h 30m",
     stops: 0,
-    price: 499,
+    price: 529,
+    businessPrice: 2890,
     class: "Business",
-    amenities: ["wifi", "entertainment", "meals", "lounge"],
+    amenities: ["wifi", "entertainment", "meals", "lounge", "bar"],
     seatsLeft: 4,
     category: "premium" as const,
     alliance: "Oneworld",
+    aircraft: "Airbus A350-1000",
+    onTimePerformance: 91,
+    carbonOffset: 178,
   },
   {
     id: 5,
-    airline: "JetBlue",
+    airline: "JetBlue Airways",
     airlineCode: "B6",
-    airlineLogo: "🇺🇸",
     flightNumber: "B6-422",
-    departure: { time: "06:30", city: "Los Angeles", code: "LAX" },
-    arrival: { time: "14:45", city: "New York", code: "JFK" },
-    duration: "5h 15m",
+    departure: { time: "11:30", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "19:50", city: "New York", code: "JFK" },
+    duration: "5h 20m",
     stops: 0,
     price: 189,
+    businessPrice: 899,
     class: "Economy",
-    amenities: ["wifi", "entertainment"],
-    seatsLeft: 18,
+    amenities: ["wifi", "entertainment", "snacks"],
+    seatsLeft: 24,
     category: "full-service" as const,
     alliance: "Independent",
+    aircraft: "Airbus A321LR",
+    onTimePerformance: 80,
+    carbonOffset: 155,
   },
   {
     id: 6,
     airline: "ANA",
     airlineCode: "NH",
-    airlineLogo: "🇯🇵",
-    flightNumber: "NH-1055",
+    flightNumber: "NH-105",
     departure: { time: "23:00", city: "Los Angeles", code: "LAX" },
     arrival: { time: "06:30", city: "New York", code: "JFK" },
     duration: "5h 30m",
     stops: 0,
     price: 529,
+    businessPrice: 2650,
+    firstPrice: 9500,
     class: "Premium Economy",
-    amenities: ["wifi", "entertainment", "meals"],
+    amenities: ["wifi", "entertainment", "meals", "power"],
     seatsLeft: 6,
     category: "premium" as const,
     alliance: "Star Alliance",
+    aircraft: "Boeing 787-9 Dreamliner",
+    onTimePerformance: 94,
+    carbonOffset: 172,
+  },
+  {
+    id: 7,
+    airline: "American Airlines",
+    airlineCode: "AA",
+    flightNumber: "AA-1123",
+    departure: { time: "07:30", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "15:50", city: "New York", code: "JFK" },
+    duration: "5h 20m",
+    stops: 0,
+    price: 279,
+    businessPrice: 1380,
+    class: "Economy",
+    amenities: ["wifi", "entertainment", "power"],
+    seatsLeft: 18,
+    category: "full-service" as const,
+    alliance: "Oneworld",
+    aircraft: "Airbus A321neo",
+    onTimePerformance: 82,
+    carbonOffset: 158,
+  },
+  {
+    id: 8,
+    airline: "United Airlines",
+    airlineCode: "UA",
+    flightNumber: "UA-2456",
+    departure: { time: "09:45", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "18:05", city: "New York", code: "JFK" },
+    duration: "5h 20m",
+    stops: 0,
+    price: 289,
+    businessPrice: 1520,
+    class: "Economy",
+    amenities: ["wifi", "entertainment", "meals", "power"],
+    seatsLeft: 9,
+    category: "full-service" as const,
+    alliance: "Star Alliance",
+    aircraft: "Boeing 787-9",
+    onTimePerformance: 84,
+    carbonOffset: 172,
+  },
+  {
+    id: 9,
+    airline: "Alaska Airlines",
+    airlineCode: "AS",
+    flightNumber: "AS-1089",
+    departure: { time: "14:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "22:25", city: "New York", code: "JFK" },
+    duration: "5h 25m",
+    stops: 0,
+    price: 229,
+    businessPrice: 1150,
+    class: "Economy",
+    amenities: ["wifi", "entertainment", "snacks", "power"],
+    seatsLeft: 15,
+    category: "full-service" as const,
+    alliance: "Oneworld",
+    aircraft: "Boeing 737 MAX 9",
+    onTimePerformance: 88,
+    carbonOffset: 148,
+  },
+  {
+    id: 10,
+    airline: "Delta Air Lines",
+    airlineCode: "DL",
+    flightNumber: "DL-1567",
+    departure: { time: "05:30", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "16:45", city: "New York", code: "JFK" },
+    duration: "8h 15m",
+    stops: 1,
+    stopCities: ["Atlanta"],
+    price: 199,
+    businessPrice: 980,
+    class: "Economy",
+    amenities: ["wifi", "entertainment"],
+    seatsLeft: 28,
+    category: "full-service" as const,
+    alliance: "SkyTeam",
+    aircraft: "Boeing 737-900",
+    onTimePerformance: 78,
+    carbonOffset: 210,
+  },
+  {
+    id: 11,
+    airline: "Southwest Airlines",
+    airlineCode: "WN",
+    flightNumber: "WN-2341",
+    departure: { time: "16:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "00:30", city: "New York", code: "JFK" },
+    duration: "5h 30m",
+    stops: 0,
+    price: 149,
+    class: "Economy",
+    amenities: ["snacks"],
+    seatsLeft: 42,
+    category: "low-cost" as const,
+    alliance: "Independent",
+    aircraft: "Boeing 737 MAX 8",
+    onTimePerformance: 75,
+    carbonOffset: 152,
+  },
+  {
+    id: 12,
+    airline: "Cathay Pacific",
+    airlineCode: "CX",
+    flightNumber: "CX-880",
+    departure: { time: "20:00", city: "Los Angeles", code: "LAX" },
+    arrival: { time: "04:30", city: "New York", code: "JFK" },
+    duration: "5h 30m",
+    stops: 0,
+    price: 489,
+    businessPrice: 2750,
+    firstPrice: 9200,
+    class: "Premium Economy",
+    amenities: ["wifi", "entertainment", "meals", "power", "lounge"],
+    seatsLeft: 7,
+    category: "premium" as const,
+    alliance: "Oneworld",
+    aircraft: "Airbus A350-900",
+    onTimePerformance: 90,
+    carbonOffset: 176,
   },
 ];
 
@@ -534,7 +685,13 @@ const FlightBooking = () => {
         {!searchResults && (
           <section className="py-12">
             <div className="container mx-auto px-4">
-              <h2 className="font-display text-2xl font-bold mb-6">Popular Destinations</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="font-display text-2xl font-bold">Popular Destinations</h2>
+                <Badge variant="outline" className="text-sky-400 border-sky-400/50">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  Live Prices
+                </Badge>
+              </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {popularDestinations.map((dest, index) => (
                   <div
@@ -543,16 +700,26 @@ const FlightBooking = () => {
                     className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 touch-manipulation active:scale-[0.98]"
                     style={{ animationDelay: `${index * 75}ms` }}
                   >
-                    <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden">
+                    <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative">
+                      {dest.trending && (
+                        <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Trending
+                        </Badge>
+                      )}
                       <CardContent className="p-0">
                         <div className="flex items-center">
-                          <div className="w-24 h-24 bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
-                            {dest.image}
+                          <div className="w-24 h-24 bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                            <MapPin className="w-8 h-8 text-sky-400" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
                           </div>
                           <div className="flex-1 p-4">
                             <h3 className="font-display font-semibold text-lg">{dest.city}</h3>
                             <p className="text-sm text-muted-foreground">{dest.country} • {dest.code}</p>
-                            <p className="text-sky-400 font-bold mt-1">From ${dest.price}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <p className="text-sky-400 font-bold">From ${dest.price}</p>
+                              <span className="text-xs text-muted-foreground">round trip</span>
+                            </div>
                           </div>
                           <ArrowRight className="w-5 h-5 text-muted-foreground mr-4 group-hover:text-sky-400 transition-colors" />
                         </div>
