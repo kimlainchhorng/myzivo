@@ -39,7 +39,7 @@ interface OnboardingEmailRequest {
   emailType: "welcome" | "how_it_works" | "trust" | "popular";
 }
 
-const BASE_URL = "https://myzivo.lovable.app";
+const BASE_URL = "https://hizivo.com";
 
 // Email templates
 const emailTemplates = {

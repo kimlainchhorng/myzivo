@@ -35,4 +35,4 @@ Disallow: /driver
 Disallow: /restaurant
 
 # Sitemap location
-Sitemap: https://myzivo.lovable.app/sitemap.xml
+Sitemap: https://hizivo.com/sitemap.xml

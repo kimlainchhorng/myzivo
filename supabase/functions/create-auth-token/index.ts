@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     
     // Allowed target apps
     const allowedApps = [
-      "myzivo.lovable.app",
+      "hizivo.com",
       "zivorestaurant.lovable.app", 
       "zivodriver.lovable.app",
       "localhost"

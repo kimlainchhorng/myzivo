@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const APP_URLS = {
-  main: "https://myzivo.lovable.app",
+  main: "https://hizivo.com",
   restaurant: "https://zivorestaurant.lovable.app",
   driver: "https://zivodriver.lovable.app",
 } as const;

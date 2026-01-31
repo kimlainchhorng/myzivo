@@ -68,7 +68,7 @@ const FlightLanding = () => {
       <SEOHead 
         title={title}
         description={description}
-        canonical={`https://myzivo.lovable.app/flights${route ? `/${route}` : fromCity ? `/from-${fromCity}` : toCity ? `/to-${toCity}` : ''}`}
+        canonical={`https://hizivo.com/flights${route ? `/${route}` : fromCity ? `/from-${fromCity}` : toCity ? `/to-${toCity}` : ''}`}
       />
       <OrganizationSchema />
       <Header />
