@@ -1,8 +1,9 @@
-import { Plane, Search, ExternalLink, ArrowRight } from "lucide-react";
+import { Plane, Search, ExternalLink, Hotel, Car, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { useNavigate } from "react-router-dom";
 
 interface NoFlightsFoundProps {
   onClearFilters?: () => void;
@@ -17,6 +18,8 @@ export default function NoFlightsFound({
   origin,
   destination 
 }: NoFlightsFoundProps) {
+  const navigate = useNavigate();
+
   const handleSearchPartner = () => {
     // Track this click for analytics
     trackAffiliateClick({
@@ -37,6 +40,30 @@ export default function NoFlightsFound({
     
     // Open same affiliate link in new tab
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCrossSellClick = (type: 'hotel' | 'car' | 'activities') => {
+    trackAffiliateClick({
+      flightId: `no_results_crosssell-${type}`,
+      airline: 'ZIVO',
+      airlineCode: 'ZV',
+      origin: origin || '',
+      destination: destination || '',
+      price: 0,
+      passengers: 1,
+      cabinClass: 'economy',
+      affiliatePartner: type === 'activities' ? 'klook' : 'zivo_internal',
+      referralUrl: type === 'activities' ? AFFILIATE_LINKS.activities.url : `/${type === 'hotel' ? 'book-hotel' : 'rent-car'}`,
+      source: 'no_results_cross_sell',
+      ctaType: 'cross_sell',
+      serviceType: type === 'hotel' ? 'hotels' : type === 'car' ? 'car_rental' : 'activities',
+    });
+
+    if (type === 'activities') {
+      window.open(AFFILIATE_LINKS.activities.url, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(type === 'hotel' ? '/book-hotel' : '/rent-car');
+    }
   };
 
   return (
@@ -65,7 +92,7 @@ export default function NoFlightsFound({
       </div>
 
       {/* Primary Affiliate CTA */}
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto mb-8">
         <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
           <p className="text-sm text-muted-foreground mb-4">
             Search 728+ airlines with our trusted partner
@@ -76,7 +103,7 @@ export default function NoFlightsFound({
             onClick={handleSearchPartner}
           >
             <Plane className="w-5 h-5" />
-            Search All Flights
+            View Deals with Our Travel Partner
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
@@ -84,6 +111,37 @@ export default function NoFlightsFound({
           </p>
         </div>
       </div>
+
+      {/* Cross-Sell Options */}
+      {destination && (
+        <div className="max-w-lg mx-auto">
+          <p className="text-sm text-muted-foreground mb-4">Or explore other options for your trip:</p>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              onClick={() => handleCrossSellClick('hotel')}
+              className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-all"
+            >
+              <Hotel className="w-6 h-6 text-amber-500 mx-auto mb-2" />
+              <p className="text-sm font-medium">Hotels</p>
+            </button>
+            <button
+              onClick={() => handleCrossSellClick('car')}
+              className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all"
+            >
+              <Car className="w-6 h-6 text-emerald-500 mx-auto mb-2" />
+              <p className="text-sm font-medium">Cars</p>
+            </button>
+            <button
+              onClick={() => handleCrossSellClick('activities')}
+              className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 transition-all"
+            >
+              <Ticket className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+              <p className="text-sm font-medium">Activities</p>
+              <ExternalLink className="w-3 h-3 text-muted-foreground mx-auto mt-1" />
+            </button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }
