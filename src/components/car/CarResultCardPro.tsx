@@ -13,11 +13,11 @@ import {
   Cog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
 
 /**
  * PROFESSIONAL CAR RENTAL RESULT CARD
- * Expedia / Rentalcars quality design
- * Vehicle image with clear specs and pricing
+ * With full affiliate deep link support
  */
 
 interface CarResultCardProProps {
@@ -39,6 +39,13 @@ interface CarResultCardProProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onBook?: () => void;
+  // Search context for deep links
+  pickupLocation?: string;
+  pickupDate?: string;
+  returnDate?: string;
+  pickupTime?: string;
+  returnTime?: string;
+  driverAge?: number;
 }
 
 export default function CarResultCardPro({
@@ -60,7 +67,15 @@ export default function CarResultCardPro({
   isSelected,
   onSelect,
   onBook,
+  pickupLocation,
+  pickupDate,
+  returnDate,
+  pickupTime,
+  returnTime,
+  driverAge = 25,
 }: CarResultCardProProps) {
+  const { redirectWithParams, redirectSimple } = useCarRedirect('car_result_card', 'result_card');
+
   // Category to emoji mapping
   const categoryEmojis: Record<string, string> = {
     'Economy': '🚗',
@@ -71,6 +86,26 @@ export default function CarResultCardPro({
     'Convertible': '🏎️',
     'Midsize': '🚗',
     'Full-size': '🚙',
+  };
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Use deep link if we have search context
+    if (pickupLocation && pickupDate && returnDate) {
+      redirectWithParams({
+        pickupLocation,
+        pickupDate,
+        returnDate,
+        pickupTime,
+        returnTime,
+        driverAge,
+      });
+    } else {
+      redirectSimple();
+    }
+    
+    onBook?.();
   };
 
   return (
@@ -175,7 +210,7 @@ export default function CarResultCardPro({
                   <p className="text-xs text-muted-foreground">From</p>
                   <div className="flex items-baseline gap-1">
                     <p className="text-xl sm:text-2xl font-bold">${pricePerDay}</p>
-                    <span className="text-sm text-muted-foreground">/day</span>
+                    <span className="text-sm text-muted-foreground">* /day</span>
                   </div>
                   {totalPrice && daysCount && (
                     <p className="text-xs text-muted-foreground">
@@ -184,20 +219,20 @@ export default function CarResultCardPro({
                   )}
                 </div>
 
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBook?.();
-                  }}
-                  className={cn(
-                    "gap-2 font-semibold",
-                    "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
-                    "shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40"
-                  )}
-                >
-                  Rent Now
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    onClick={handleBookClick}
+                    className={cn(
+                      "gap-2 font-semibold min-h-[44px] touch-manipulation active:scale-[0.98]",
+                      "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
+                      "shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40"
+                    )}
+                  >
+                    Rent Now
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                  <p className="text-[9px] text-muted-foreground">Opens partner site</p>
+                </div>
               </div>
             </div>
           </div>

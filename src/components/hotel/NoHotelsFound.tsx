@@ -1,7 +1,8 @@
 import { Hotel, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
+import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface NoHotelsFoundProps {
   onModifySearch?: () => void;
@@ -20,16 +21,20 @@ export default function NoHotelsFound({
   guests = 2,
   rooms = 1,
 }: NoHotelsFoundProps) {
+  const { redirectWithParams, redirectSimple } = useHotelRedirect('no_hotels_found', 'no_results_fallback');
+
   const handleSearchPartner = () => {
-    const partner = hotelAffiliatePartners[0]; // Booking.com
-    const url = partner.urlTemplate({
-      destination: destination || '',
-      checkIn,
-      checkOut,
-      guests,
-      rooms,
-    });
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (destination && checkIn && checkOut) {
+      redirectWithParams({
+        destination,
+        checkIn,
+        checkOut,
+        guests,
+        rooms,
+      });
+    } else {
+      redirectSimple();
+    }
   };
 
   return (
@@ -60,7 +65,7 @@ export default function NoHotelsFound({
           </p>
           <Button
             size="lg"
-            className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30"
+            className="w-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 min-h-[48px] touch-manipulation active:scale-[0.98]"
             onClick={handleSearchPartner}
           >
             <Hotel className="w-5 h-5" />
@@ -68,7 +73,7 @@ export default function NoHotelsFound({
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            You will be redirected to our trusted travel partner to complete your booking.
+            {AFFILIATE_DISCLOSURE_TEXT.short}
           </p>
         </div>
       </div>

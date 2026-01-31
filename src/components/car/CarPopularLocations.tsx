@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, TrendingUp, ArrowRight } from "lucide-react";
+import { MapPin, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
+import { format, addDays } from "date-fns";
 
 const locations = [
   { city: "Los Angeles", state: "CA", image: "🌴", cars: 850, avgPrice: 45, airport: "LAX", trending: true },
@@ -19,6 +21,23 @@ interface CarPopularLocationsProps {
 }
 
 const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
+  const { redirectWithParams } = useCarRedirect('popular_locations', 'popular_route');
+
+  // Default dates: tomorrow pickup, 1 week rental
+  const pickupDate = format(addDays(new Date(), 1), 'yyyy-MM-dd');
+  const returnDate = format(addDays(new Date(), 8), 'yyyy-MM-dd');
+
+  const handleLocationClick = (loc: typeof locations[0]) => {
+    // Redirect to partner with deep link including airport code
+    redirectWithParams({
+      pickupLocation: `${loc.city} ${loc.airport}`,
+      pickupDate,
+      returnDate,
+    });
+    
+    onSelect?.(loc.city);
+  };
+
   return (
     <section className="py-12 sm:py-16 border-t border-border/50 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent" />
@@ -47,7 +66,7 @@ const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
                 "hover:border-violet-500/50 hover:-translate-y-1 touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
-              onClick={() => onSelect?.(loc.city)}
+              onClick={() => handleLocationClick(loc)}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-0">
@@ -75,13 +94,21 @@ const CarPopularLocations = ({ onSelect }: CarPopularLocationsProps) => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{loc.cars}+ cars</span>
-                    <span className="text-sm font-bold text-violet-400">From ${loc.avgPrice}/day</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm font-bold text-violet-400">From ${loc.avgPrice}*</span>
+                      <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+        
+        {/* Price Disclaimer */}
+        <p className="text-[10px] text-muted-foreground text-center mt-4">
+          *Prices are indicative and may change. Final price shown on partner site.
+        </p>
       </div>
     </section>
   );
