@@ -98,6 +98,12 @@ import SmartSuggestions from "@/components/shared/SmartSuggestions";
 import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
 import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
 import CompanionInvite from "@/components/shared/CompanionInvite";
+import CarToActivityBridge from "@/components/shared/CarToActivityBridge";
+import TravelInsuranceWidget from "@/components/shared/TravelInsuranceWidget";
+import GroupBookingManager from "@/components/shared/GroupBookingManager";
+import PriceAlertWidget from "@/components/shared/PriceAlertWidget";
+import BookingFlowStepper, { fullTripFlow } from "@/components/shared/BookingFlowStepper";
+import TripOverviewCard from "@/components/shared/TripOverviewCard";
 import ActiveBookingsBar from "@/components/shared/ActiveBookingsBar";
 
 // Popular locations
