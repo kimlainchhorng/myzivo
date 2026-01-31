@@ -60,6 +60,10 @@ import HotelGuestReviews from "@/components/hotel/HotelGuestReviews";
 import HotelPropertyHighlights from "@/components/hotel/HotelPropertyHighlights";
 import HotelBookingTips from "@/components/hotel/HotelBookingTips";
 import HotelDestinationGuides from "@/components/hotel/HotelDestinationGuides";
+import HotelPriceCalendar from "@/components/hotel/HotelPriceCalendar";
+import HotelNearbyAttractions from "@/components/hotel/HotelNearbyAttractions";
+import HotelAwardsShowcase from "@/components/hotel/HotelAwardsShowcase";
+import HotelTestimonials from "@/components/hotel/HotelTestimonials";
 
 // Popular destinations
 const popularCities = [

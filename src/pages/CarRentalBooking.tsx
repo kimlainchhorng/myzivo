@@ -58,6 +58,10 @@ import CarPickupTips from "@/components/car/CarPickupTips";
 import CarDriverRequirements from "@/components/car/CarDriverRequirements";
 import CarAccessoriesAddons from "@/components/car/CarAccessoriesAddons";
 import CarRoadTripPlanner from "@/components/car/CarRoadTripPlanner";
+import CarPopularRoutes from "@/components/car/CarPopularRoutes";
+import CarSeasonalOffers from "@/components/car/CarSeasonalOffers";
+import CarCustomerStories from "@/components/car/CarCustomerStories";
+import CarQuickFilters from "@/components/car/CarQuickFilters";
 
 // Popular locations
 const popularLocations = [
