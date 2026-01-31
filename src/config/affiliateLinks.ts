@@ -4,14 +4,14 @@
 export const AFFILIATE_LINKS = {
   // Searadar - Flight search and booking
   flights: {
-    url: "https://searadar.tpo.li/iAbLlX9i",
+    url: "https://searadar.tpo.li/iAbLlX9i?subid=zivo_flights",
     name: "Searadar",
     description: "Search and compare flight prices from 728 airlines",
   },
   
   // Klook - Activities, tours, and attractions
   activities: {
-    url: "https://klook.tpo.li/ToVcOax7",
+    url: "https://klook.tpo.li/ToVcOax7?subid=zivo_activities",
     name: "Klook",
     description: "Book tours, activities, and attractions worldwide",
   },
