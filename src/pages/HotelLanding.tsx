@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Hotel, Search, Star, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles } from "lucide-react";
+import { Hotel, Search, Star, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import TrustIndicators from "@/components/shared/TrustIndicators";
+import TravelFAQ from "@/components/shared/TravelFAQ";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -171,6 +172,19 @@ export default function HotelLanding() {
         </section>
 
         <TrustIndicators />
+
+        {/* FAQ Section with Schema */}
+        <TravelFAQ serviceType="hotels" className="bg-muted/20" />
+
+        {/* Redirect Notice */}
+        <section className="py-6 bg-amber-500/5 border-y border-amber-500/20">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <ExternalLink className="w-4 h-4 text-amber-500" />
+              <span>You will be redirected to our trusted travel partner to complete your booking.</span>
+            </div>
+          </div>
+        </section>
 
         {/* Affiliate Disclaimer */}
         <section className="py-8 border-t border-border/50">
