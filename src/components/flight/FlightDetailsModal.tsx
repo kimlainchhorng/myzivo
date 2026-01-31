@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAirlineLogo } from '@/data/airlines';
-import { affiliatePartners } from '@/data/affiliatePartners';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from '@/config/affiliateLinks';
 import type { GeneratedFlight } from '@/data/flightGenerator';
 import { useState } from 'react';
 
@@ -354,56 +354,11 @@ export default function FlightDetailsModal({
 
         <Separator className="my-4" />
 
-        {/* Partner Selection */}
-        <div className="mb-4">
-          <p className="text-sm font-medium mb-3">Book with trusted partners:</p>
-          <div className="grid grid-cols-3 gap-2">
-            {affiliatePartners.slice(0, 3).map((partner) => {
-              const url = partner.urlTemplate({
-                origin: flight.departure.code,
-                destination: flight.arrival.code,
-              });
-              
-              return (
-                <a
-                  key={partner.id}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => {
-                    trackAffiliateClick({
-                      flightId: flight.flightNumber || String(flight.id),
-                      airline: flight.airline,
-                      airlineCode: flight.airlineCode,
-                      origin: flight.departure.code,
-                      destination: flight.arrival.code,
-                      price: flight.price,
-                      passengers: 1,
-                      cabinClass: 'economy',
-                      affiliatePartner: partner.id,
-                      referralUrl: url,
-                      source: 'flight_modal',
-                    });
-                    onSelectFlight?.(flight);
-                  }}
-                  className={cn(
-                    "flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-white text-xs font-medium transition-colors",
-                    partner.color, "hover:opacity-90"
-                  )}
-                >
-                  <span>{partner.logo}</span>
-                  {partner.name}
-                </a>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Action buttons */}
         <div className="flex flex-col gap-3">
           {/* Affiliate disclosure */}
           <p className="text-xs text-muted-foreground text-center px-2">
-            You will be redirected to our trusted travel partner to complete your booking.{' '}
+            {AFFILIATE_DISCLOSURE_TEXT.short}{' '}
             <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
           </p>
           
@@ -413,7 +368,7 @@ export default function FlightDetailsModal({
             </Button>
             
             <a 
-              href={flight.bookingLink || `https://www.skyscanner.com/transport/flights/${flight.departure.code}/${flight.arrival.code}/`}
+              href={AFFILIATE_LINKS.flights.url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold transition-colors"
@@ -427,15 +382,15 @@ export default function FlightDetailsModal({
                   price: flight.price,
                   passengers: 1,
                   cabinClass: 'economy',
-                  affiliatePartner: 'skyscanner',
-                  referralUrl: flight.bookingLink || `https://www.skyscanner.com/transport/flights/${flight.departure.code}/${flight.arrival.code}/`,
+                  affiliatePartner: 'searadar',
+                  referralUrl: AFFILIATE_LINKS.flights.url,
                   source: 'flight_modal_primary',
                 });
                 onSelectFlight?.(flight);
               }}
             >
               <ExternalLink className="w-4 h-4" />
-              Book on Skyscanner
+              Book Flight
             </a>
           </div>
         </div>
