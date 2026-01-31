@@ -25,27 +25,26 @@ import {
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const partnerBenefits = [
-  {
-    icon: Users,
-    title: "Qualified Traffic",
-    description: "ZIVO sends travel-intent users actively searching for flights, hotels, and car rentals to your platform.",
-  },
-  {
-    icon: Target,
-    title: "Comparison Focus",
-    description: "We focus on search and comparison — we never compete with your checkout or booking flow.",
-  },
-  {
-    icon: BarChart3,
-    title: "Performance Tracking",
-    description: "Track conversions, clicks, and revenue with transparent reporting and analytics.",
-  },
-  {
-    icon: Globe,
-    title: "Global Reach",
-    description: "Access travelers from around the world through our growing international platform.",
-  },
+const services = [
+  { icon: Plane, label: "Flights" },
+  { icon: Hotel, label: "Hotels & Accommodations" },
+  { icon: Car, label: "Car Rentals" },
+  { icon: Ticket, label: "Airport Transfers" },
+  { icon: Globe, label: "Activities & Travel Services" },
+];
+
+const howWeWork = [
+  "We send high-intent users who are actively searching and comparing",
+  "We do not interfere with partner checkout or pricing",
+  "We focus on transparency and compliance",
+  "We clearly disclose affiliate relationships",
+];
+
+const trafficSources = [
+  { label: "Organic Search (SEO)", description: "High-quality, intent-driven traffic" },
+  { label: "Educational Content Creators", description: "Travel tips and comparisons" },
+  { label: "Social Media Discovery", description: "Authentic travel inspiration" },
+  { label: "Paid Ads", description: "Search & compare messaging only" },
 ];
 
 const partnerTypes = [
@@ -79,35 +78,13 @@ const partnerTypes = [
   },
 ];
 
-const howItWorks = [
-  {
-    step: 1,
-    title: "User Searches",
-    description: "Travelers enter their trip details on ZIVO",
-  },
-  {
-    step: 2,
-    title: "We Compare",
-    description: "ZIVO displays options from multiple partners",
-  },
-  {
-    step: 3,
-    title: "User Clicks",
-    description: "When ready, users click through to your site",
-  },
-  {
-    step: 4,
-    title: "You Convert",
-    description: "Booking happens entirely on your platform",
-  },
-];
-
 export default function Partners() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Partner with ZIVO – Travel Affiliate & Partnership Program"
         description="Partner with ZIVO to reach qualified travel shoppers. We send ready-to-book traffic to airlines, hotels, car rental companies, and travel services."
+        canonical="https://hizivo.com/partners"
       />
       <Header />
       
@@ -117,111 +94,95 @@ export default function Partners() {
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Handshake className="w-3 h-3 mr-1" />
-              Partnerships
+              Partner Program
             </Badge>
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
               Partner with ZIVO
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Join our growing network of travel partners and connect with millions of travelers 
-              actively searching for flights, hotels, and travel services.
+              ZIVO is a travel search and comparison platform that connects users 
+              with trusted travel partners worldwide.
             </p>
           </div>
 
-          {/* Value Proposition */}
-          <Card className="mb-16 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-teal-500/10">
-            <CardContent className="p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div>
-                  <h2 className="text-3xl font-bold mb-4">What ZIVO Offers Partners</h2>
-                  <div className="space-y-4 text-muted-foreground text-lg">
-                    <p>
-                      ZIVO is a travel search and comparison platform that sends <strong>qualified, high-intent traffic</strong> to 
-                      our travel partners.
-                    </p>
-                    <p>
-                      We focus entirely on <strong>discovery and comparison</strong> — we never compete with your 
-                      checkout process or booking flow.
-                    </p>
-                    <p>
-                      When users are ready to book, they're redirected directly to your platform to complete the transaction.
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    "High-intent travel shoppers",
-                    "No checkout competition",
-                    "Transparent performance tracking",
-                    "Global audience reach",
-                    "Mobile-optimized experience",
-                  ].map((item) => (
-                    <div key={item} className="flex items-center gap-3 p-3 rounded-xl bg-card/50 border border-border/50">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                      <span className="font-medium">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* How Partnership Works */}
+          {/* What We Help Travelers Discover */}
           <div className="mb-16">
-            <div className="text-center mb-10">
-              <Badge className="mb-4 bg-violet-500/20 text-violet-500 border-violet-500/30">
-                <Zap className="w-3 h-3 mr-1" />
-                Simple Process
-              </Badge>
-              <h2 className="text-3xl font-bold mb-4">How It Works</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                A clear, performance-based partnership model
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {howItWorks.map((item, index) => (
-                <div key={item.step} className="relative">
-                  <Card className="h-full text-center">
-                    <CardContent className="p-6">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-                        <span className="text-xl font-bold text-primary">{item.step}</span>
-                      </div>
-                      <h3 className="font-bold mb-2">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    </CardContent>
-                  </Card>
-                  {index < howItWorks.length - 1 && (
-                    <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
-                  )}
+            <h2 className="text-2xl font-bold text-center mb-8">
+              We help travelers discover and compare
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+              {services.map((service) => (
+                <div
+                  key={service.label}
+                  className="flex flex-col items-center gap-3 p-5 rounded-2xl bg-card border border-border/50 hover:border-primary/30 transition-all"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
+                    <service.icon className="w-6 h-6 text-primary" />
+                  </div>
+                  <span className="text-sm font-medium text-center">{service.label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Partner Benefits */}
+          {/* Important Disclosure */}
+          <Card className="mb-16 border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/5">
+            <CardContent className="p-6 sm:p-8">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-6 h-6 text-amber-500" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-xl mb-2">Important</h3>
+                  <p className="text-muted-foreground">
+                    ZIVO does not sell travel products, issue tickets, or process payments.
+                    All bookings are completed securely on our partners' websites.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* How We Work With Partners */}
           <div className="mb-16">
             <div className="text-center mb-10">
               <Badge className="mb-4 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Benefits
+                <CheckCircle2 className="w-3 h-3 mr-1" />
+                Our Approach
               </Badge>
-              <h2 className="text-3xl font-bold mb-4">Why Partner with ZIVO</h2>
+              <h2 className="text-2xl font-bold mb-4">How we work with partners</h2>
             </div>
+            <div className="space-y-4 max-w-2xl mx-auto">
+              {howWeWork.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-4 p-5 rounded-xl bg-card border border-border/50"
+                >
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-            <div className="grid sm:grid-cols-2 gap-6">
-              {partnerBenefits.map((benefit) => (
-                <Card key={benefit.title} className="border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <benefit.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-lg mb-2">{benefit.title}</h3>
-                        <p className="text-muted-foreground">{benefit.description}</p>
-                      </div>
+          {/* Traffic Sources */}
+          <div className="mb-16">
+            <div className="text-center mb-10">
+              <Badge className="mb-4 bg-sky-500/20 text-sky-500 border-sky-500/30">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                Quality Traffic
+              </Badge>
+              <h2 className="text-2xl font-bold mb-4">Traffic sources</h2>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+              {trafficSources.map((source) => (
+                <Card key={source.label} className="border-border/50">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">{source.label}</h3>
                     </div>
+                    <p className="text-sm text-muted-foreground pl-8">{source.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -231,14 +192,11 @@ export default function Partners() {
           {/* Partner Types */}
           <div className="mb-16">
             <div className="text-center mb-10">
-              <Badge className="mb-4 bg-sky-500/20 text-sky-500 border-sky-500/30">
+              <Badge className="mb-4 bg-violet-500/20 text-violet-500 border-violet-500/30">
                 <Building2 className="w-3 h-3 mr-1" />
                 Who We Work With
               </Badge>
-              <h2 className="text-3xl font-bold mb-4">Partnership Opportunities</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                We're open to partnerships with airlines, OTAs, hotels, car rental companies, and travel service providers.
-              </p>
+              <h2 className="text-2xl font-bold mb-4">Partnership Opportunities</h2>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-6">
@@ -260,58 +218,21 @@ export default function Partners() {
             </div>
           </div>
 
-          {/* Transparency Note */}
-          <Card className="mb-12 border-muted bg-muted/30">
-            <CardContent className="p-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-3">Our Commitment</h3>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      We never compete with your checkout or booking process
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      All bookings and payments are handled on your platform
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      Transparent tracking and performance reporting
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      Partner logos displayed only with explicit approval
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* CTA */}
+          {/* Contact CTA */}
           <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">
-            <h2 className="text-3xl font-bold mb-4">Interested in Partnering?</h2>
+            <h2 className="text-3xl font-bold mb-4">Interested in partnering with ZIVO?</h2>
             <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-              We're growing our partner network and would love to hear from you.
+              We'd love to hear from you. Reach out to discuss partnership opportunities.
             </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/contact">
-                <Button size="lg" className="bg-gradient-to-r from-primary to-teal-400 gap-2">
-                  <Mail className="w-4 h-4" />
-                  Contact Us
-                </Button>
-              </Link>
-              <Link to="/about">
-                <Button size="lg" variant="outline" className="gap-2">
-                  Learn About ZIVO
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-primary to-teal-400 gap-2"
+              onClick={() => window.location.href = "mailto:kimlain@hizivo.com"}
+            >
+              <Mail className="w-4 h-4" />
+              kimlain@hizivo.com
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </main>
