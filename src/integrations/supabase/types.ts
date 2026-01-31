@@ -7434,41 +7434,65 @@ export type Database = {
         Row: {
           address: string | null
           amenities: Json | null
+          cancellation_policy: string | null
+          check_in_time: string | null
+          check_out_time: string | null
           city: string | null
           country: string | null
+          created_at: string | null
           description: string | null
           id: string | null
+          images: Json | null
+          lat: number | null
+          lng: number | null
           logo_url: string | null
           name: string | null
           rating: number | null
           star_rating: number | null
           status: Database["public"]["Enums"]["partner_status"] | null
+          website: string | null
         }
         Insert: {
           address?: string | null
           amenities?: Json | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           country?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string | null
+          images?: Json | null
+          lat?: number | null
+          lng?: number | null
           logo_url?: string | null
           name?: string | null
           rating?: number | null
           star_rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
+          website?: string | null
         }
         Update: {
           address?: string | null
           amenities?: Json | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
           city?: string | null
           country?: string | null
+          created_at?: string | null
           description?: string | null
           id?: string | null
+          images?: Json | null
+          lat?: number | null
+          lng?: number | null
           logo_url?: string | null
           name?: string | null
           rating?: number | null
           star_rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
+          website?: string | null
         }
         Relationships: []
       }
