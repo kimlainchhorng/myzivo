@@ -103,8 +103,9 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
       {isOpen && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className={cn(
-            "w-[760px] bg-card/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative",
-            `shadow-xl ${getGlowColor()}`
+            "bg-card/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl overflow-hidden relative",
+            `shadow-xl ${getGlowColor()}`,
+            data.sections.length > 2 ? "w-[920px]" : "w-[760px]"
           )}>
             {/* Static background gradient */}
             <div className={cn(
@@ -143,50 +144,56 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
               </div>
             </div>
 
-            {/* Content Grid */}
+            {/* Content Grid - Dynamic based on sections */}
             <div className="relative p-6">
-              <div className="grid grid-cols-2 gap-10">
+              <div className={cn(
+                "grid gap-8",
+                data.sections.length > 2 ? "grid-cols-4" : "grid-cols-2"
+              )}>
                 {data.sections.map((section) => (
                   <div key={section.title}>
                     <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
-                      <span className="w-8 h-px bg-gradient-to-r from-primary/50 to-transparent" />
+                      <span className="w-6 h-px bg-gradient-to-r from-primary/50 to-transparent" />
                       {section.title}
                     </h4>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {section.items.map((item) => (
                         <Link key={item.label} to={item.href}>
-                          <div className="flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-200 group cursor-pointer relative overflow-hidden border border-transparent hover:border-white/10 hover:bg-white/5 hover:translate-x-1">
+                          <div className="flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 group cursor-pointer relative overflow-hidden border border-transparent hover:border-white/10 hover:bg-white/5 hover:translate-x-0.5">
                             {/* Icon container */}
                             <div className={cn(
-                              "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+                              "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
                               "bg-gradient-to-br from-muted/90 to-muted/50 border border-white/10",
-                              "group-hover:border-primary/30 group-hover:shadow-lg group-hover:shadow-primary/20",
+                              "group-hover:border-primary/30 group-hover:shadow-md group-hover:shadow-primary/20",
                               "transition-all duration-200",
                               item.color || "text-muted-foreground"
                             )}>
-                              <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                              <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
                             </div>
                             
                             {/* Text content */}
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2.5">
-                                <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-200">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-200 truncate">
                                   {item.label}
                                 </span>
                                 {item.badge && (
-                                  <Badge className="text-[10px] px-2.5 py-0.5 h-auto bg-gradient-to-r from-eats via-orange-500 to-eats text-white border-0 shadow-lg shadow-eats/40 font-bold uppercase tracking-wide">
+                                  <Badge className={cn(
+                                    "text-[9px] px-1.5 py-0 h-4 border-0 shadow-md font-bold uppercase tracking-wide",
+                                    item.badge === "New" && "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/40",
+                                    item.badge === "Hot" && "bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-rose-500/40",
+                                    item.badge === "Save" && "bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-amber-500/40",
+                                    item.badge === "Popular" && "bg-gradient-to-r from-sky-500 to-blue-500 text-white shadow-sky-500/40",
+                                    item.badge === "Green" && "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-500/40",
+                                    !["New", "Hot", "Save", "Popular", "Green"].includes(item.badge || "") && "bg-gradient-to-r from-primary to-teal-500 text-white shadow-primary/40"
+                                  )}>
                                     {item.badge}
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-xs text-muted-foreground/80 line-clamp-1 mt-1 group-hover:text-muted-foreground transition-colors duration-200">
+                              <p className="text-[11px] text-muted-foreground/70 line-clamp-1 group-hover:text-muted-foreground transition-colors duration-200">
                                 {item.description}
                               </p>
-                            </div>
-                            
-                            {/* Arrow indicator */}
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <ArrowRight className="w-4 h-4 text-primary" />
                             </div>
                           </div>
                         </Link>
@@ -198,10 +205,10 @@ const MegaMenuDropdown = ({ data }: MegaMenuDropdownProps) => {
             </div>
 
             {/* Policy Links Footer */}
-            <div className="relative px-6 py-4 bg-gradient-to-r from-muted/30 via-muted/20 to-muted/30 border-t border-white/5">
+            <div className="relative px-6 py-3.5 bg-gradient-to-r from-muted/30 via-muted/20 to-muted/30 border-t border-white/5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                  {data.policies.slice(0, 4).map((policy) => (
+                <div className="flex items-center gap-4">
+                  {data.policies.slice(0, 5).map((policy) => (
                     <Link key={policy.label} to={policy.href}>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors group">
                         <policy.icon className="w-3.5 h-3.5 group-hover:text-primary transition-colors" />
