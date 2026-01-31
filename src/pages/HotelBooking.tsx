@@ -79,6 +79,13 @@ import TravelBlog from "@/components/shared/TravelBlog";
 import DestinationGuides from "@/components/shared/DestinationGuides";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import AppFeatures from "@/components/shared/AppFeatures";
+import HotelNeighborhood from "@/components/hotel/HotelNeighborhood";
+import HotelSustainability from "@/components/hotel/HotelSustainability";
+import HotelPetFriendly from "@/components/hotel/HotelPetFriendly";
+import WeatherWidget from "@/components/shared/WeatherWidget";
+import PackingList from "@/components/shared/PackingList";
+import TripPlanner from "@/components/shared/TripPlanner";
+import EmergencyContacts from "@/components/shared/EmergencyContacts";
 
 // Popular destinations
 const popularCities = [
@@ -695,6 +702,27 @@ const HotelBooking = () => {
         {/* Local Experiences */}
         {!searchResults && <LocalExperiences />}
 
+        {/* Neighborhood Guide */}
+        {!searchResults && <HotelNeighborhood />}
+
+        {/* Sustainability */}
+        {!searchResults && <HotelSustainability />}
+
+        {/* Pet Friendly */}
+        {!searchResults && <HotelPetFriendly />}
+
+        {/* Weather Widget */}
+        {!searchResults && <WeatherWidget />}
+
+        {/* Trip Planner */}
+        {!searchResults && <TripPlanner />}
+
+        {/* Packing List */}
+        {!searchResults && <PackingList />}
+
+        {/* Emergency Contacts */}
+        {!searchResults && <EmergencyContacts />}
+
         {/* App Features */}
         {!searchResults && <AppFeatures />}
 
@@ -718,6 +746,9 @@ const HotelBooking = () => {
 
         {/* Trust Indicators */}
         {!searchResults && <HotelTrustIndicators />}
+
+        {/* Live Chat Widget */}
+        <LiveChatWidget />
       </main>
 
       {/* Selected Hotel Summary Sidebar */}
