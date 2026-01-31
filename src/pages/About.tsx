@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -10,7 +11,10 @@ import {
   Users, 
   Globe,
   TrendingUp,
-  CheckCircle
+  CheckCircle,
+  Car,
+  Hotel,
+  MapPin
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +22,10 @@ import { Button } from "@/components/ui/button";
 const About = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="About ZIVO – Travel Search & Comparison Platform"
+        description="ZIVO is a travel search and comparison platform helping users find and compare flights, hotels, and car rentals from trusted partners worldwide."
+      />
       <Header />
       
       <main className="pt-24 pb-20">
@@ -25,14 +33,14 @@ const About = () => {
           {/* Header */}
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-sky-500/20 text-sky-500 border-sky-500/30">
-              <Plane className="w-3 h-3 mr-1" />
+              <Globe className="w-3 h-3 mr-1" />
               About Us
             </Badge>
             <h1 className="font-display text-4xl font-bold mb-4">
-              About ZIVO Flights
+              About ZIVO
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your trusted flight search and comparison platform
+              Your trusted travel search and comparison platform
             </p>
           </div>
 
@@ -46,15 +54,60 @@ const About = () => {
                 <div>
                   <h2 className="text-2xl font-bold mb-3">What We Do</h2>
                   <p className="text-muted-foreground text-lg leading-relaxed">
-                    ZIVO Flights helps travelers search and compare flights from over 500 airlines 
-                    worldwide. We aggregate pricing data from multiple sources to help you find the 
-                    best options for your journey. <strong>We then redirect you to our trusted travel 
-                    partners to complete your booking.</strong>
+                    ZIVO is a <strong>travel search and comparison platform</strong> that helps travelers 
+                    find and compare flights, hotels, and car rentals from hundreds of providers worldwide. 
+                    We aggregate pricing data from multiple sources to help you find the best options for 
+                    your journey. <strong>We then redirect you to our trusted travel partners to complete 
+                    your booking.</strong>
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Services We Offer */}
+          <h2 className="text-2xl font-bold mb-6 text-center">Our Services</h2>
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <Link to="/book-flight">
+              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6">
+                  <div className="w-14 h-14 rounded-2xl bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Plane className="w-7 h-7 text-sky-500" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Flights</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Search and compare flights from 500+ airlines worldwide
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/book-hotel">
+              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Hotel className="w-7 h-7 text-amber-500" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Hotels</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Compare hotel prices from leading booking platforms
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link to="/rent-car">
+              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
+                <CardContent className="p-6">
+                  <div className="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
+                    <Car className="w-7 h-7 text-violet-500" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Car Rentals</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Find and compare car rental deals from top providers
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
 
           {/* Important Notice */}
           <Card className="mb-8 border-amber-500/30 bg-amber-500/5">

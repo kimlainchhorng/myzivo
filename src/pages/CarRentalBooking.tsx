@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,6 +88,10 @@ const CarRentalBooking = () => {
 
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
+      <SEOHead 
+        title="ZIVO Car Rentals – Compare & Rent Cars Worldwide"
+        description="Compare car rental prices from top providers worldwide. Find the best deals on economy, SUV, luxury and more. Book with trusted partners."
+      />
       <Header />
       
       <main className="pt-16 pb-32 lg:pb-20">

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -99,6 +100,10 @@ const HotelBooking = () => {
 
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
+      <SEOHead 
+        title="ZIVO Hotels – Compare & Book Hotels Worldwide"
+        description="Compare hotel prices from leading booking platforms. Find the best deals on hotels, resorts, and vacation rentals. Book with trusted partners."
+      />
       <Header />
       
       <main className="pt-16 pb-32 lg:pb-20">

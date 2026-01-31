@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -309,6 +310,10 @@ const FlightResults = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`Flights ${fromCode} to ${toCode} – Compare Prices | ZIVO`}
+        description={`Compare flight prices from ${fromCode} to ${toCode}. Search ${flights.length}+ options from trusted airlines and book with our travel partners.`}
+      />
       <Header />
 
       <main className="pt-20 pb-32 lg:pb-20">
