@@ -86,6 +86,14 @@ import GroupBookingManager from "@/components/shared/GroupBookingManager";
 import PriceAlertWidget from "@/components/shared/PriceAlertWidget";
 import BookingFlowStepper, { fullTripFlow } from "@/components/shared/BookingFlowStepper";
 import TripOverviewCard from "@/components/shared/TripOverviewCard";
+import ItineraryExporter from "@/components/shared/ItineraryExporter";
+import BookingConfirmationCard from "@/components/shared/BookingConfirmationCard";
+import RealTimeStatusWidget from "@/components/shared/RealTimeStatusWidget";
+import PaymentMethodSelector from "@/components/shared/PaymentMethodSelector";
+import RewardsRedemptionWidget from "@/components/shared/RewardsRedemptionWidget";
+import TripNotificationsCenter from "@/components/shared/TripNotificationsCenter";
+import QuickRebookWidget from "@/components/shared/QuickRebookWidget";
+import BookingReceiptCard from "@/components/shared/BookingReceiptCard";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -470,6 +478,33 @@ const FlightBooking = () => {
                   <ServiceFlowHub currentService="flight" />
                   <ServiceRecommendations context="flight" destination={toCity.split(" (")[0] || undefined} />
                 </div>
+              </div>
+            </section>
+
+            {/* Quick Rebook & Notifications */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <QuickRebookWidget />
+                  <TripNotificationsCenter />
+                </div>
+              </div>
+            </section>
+
+            {/* Rewards & Payment Options */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <RewardsRedemptionWidget />
+                  <ItineraryExporter tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
+                </div>
+              </div>
+            </section>
+
+            {/* Real-Time Status */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4 max-w-4xl">
+                <RealTimeStatusWidget />
               </div>
             </section>
 
