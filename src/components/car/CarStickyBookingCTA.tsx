@@ -2,6 +2,7 @@ import { ExternalLink, Car, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 interface CarStickyBookingCTAProps {
   className?: string;
@@ -33,6 +34,24 @@ export default function CarStickyBookingCTA({
       returnTime,
       driverAge,
     });
+
+    // Track the click
+    trackAffiliateClick({
+      flightId: `car-sticky-${pickupLocation}`,
+      airline: partner.name,
+      airlineCode: partner.id.toUpperCase(),
+      origin: pickupLocation || '',
+      destination: pickupLocation || '',
+      price: 0,
+      passengers: 1,
+      cabinClass: 'standard',
+      affiliatePartner: partner.id,
+      referralUrl: url,
+      source: 'sticky_booking_cta',
+      ctaType: 'sticky_cta',
+      serviceType: 'car_rental',
+    });
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -57,14 +76,14 @@ export default function CarStickyBookingCTA({
             </p>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Button - Large, easy to tap */}
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 shrink-0"
+            className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 shrink-0 min-h-[48px] px-6 touch-manipulation active:scale-[0.98]"
             onClick={handleBookClick}
           >
             <Sparkles className="w-4 h-4" />
-            Compare Cars
+            View Deals
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>

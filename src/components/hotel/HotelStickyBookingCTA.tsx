@@ -2,6 +2,7 @@ import { ExternalLink, Hotel, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 interface HotelStickyBookingCTAProps {
   className?: string;
@@ -32,6 +33,24 @@ export default function HotelStickyBookingCTA({
       guests,
       rooms,
     });
+
+    // Track the click
+    trackAffiliateClick({
+      flightId: `hotel-sticky-${destination}`,
+      airline: partner.name,
+      airlineCode: partner.id.toUpperCase(),
+      origin: 'ZIVO',
+      destination: destination || '',
+      price: 0,
+      passengers: guests,
+      cabinClass: 'standard',
+      affiliatePartner: partner.id,
+      referralUrl: url,
+      source: 'sticky_booking_cta',
+      ctaType: 'sticky_cta',
+      serviceType: 'hotels',
+    });
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
@@ -58,14 +77,14 @@ export default function HotelStickyBookingCTA({
             </p>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Button - Large, easy to tap */}
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 shrink-0"
+            className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 shrink-0 min-h-[48px] px-6 touch-manipulation active:scale-[0.98]"
             onClick={handleBookClick}
           >
             <Sparkles className="w-4 h-4" />
-            Compare Hotels
+            View Deals
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>

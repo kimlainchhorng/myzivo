@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plane, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 const routes = [
   { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true },
@@ -49,6 +50,21 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
               onClick={() => {
+                trackAffiliateClick({
+                  flightId: `popular-${route.from}-${route.to}`,
+                  airline: 'Multiple',
+                  airlineCode: 'ALL',
+                  origin: route.from,
+                  destination: route.to,
+                  price: route.price,
+                  passengers: 1,
+                  cabinClass: 'economy',
+                  affiliatePartner: 'searadar',
+                  referralUrl: AFFILIATE_LINKS.flights.url,
+                  source: 'popular_routes',
+                  ctaType: 'result_card',
+                  serviceType: 'flights',
+                });
                 window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
                 onSelect?.(route.from, route.to);
               }}
@@ -81,7 +97,8 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">{route.searches} searches</span>
                   <div className="flex items-center gap-1">
-                    <span className="text-lg font-bold text-sky-400">From ${route.price}</span>
+                    <span className="text-xs text-muted-foreground">From</span>
+                    <span className="text-lg font-bold text-sky-400">${route.price}*</span>
                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
@@ -89,6 +106,11 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
             </Card>
           ))}
         </div>
+        
+        {/* Price Disclaimer */}
+        <p className="text-[10px] text-muted-foreground text-center mt-4">
+          *Prices are indicative and may change. Final price shown on partner site.
+        </p>
       </div>
     </section>
   );

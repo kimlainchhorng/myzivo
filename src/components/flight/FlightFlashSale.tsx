@@ -3,12 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 const flashDeals = [
-  { route: "LAX → NYC", price: 89, originalPrice: 189, airline: "JetBlue", expires: 3600 },
-  { route: "SFO → SEA", price: 49, originalPrice: 129, airline: "Alaska", expires: 7200 },
-  { route: "MIA → ATL", price: 59, originalPrice: 149, airline: "Delta", expires: 1800 },
-  { route: "ORD → DEN", price: 79, originalPrice: 169, airline: "United", expires: 5400 },
+  { route: "LAX → NYC", price: 89, originalPrice: 189, airline: "JetBlue", expires: 3600, origin: "LAX", destination: "JFK" },
+  { route: "SFO → SEA", price: 49, originalPrice: 129, airline: "Alaska", expires: 7200, origin: "SFO", destination: "SEA" },
+  { route: "MIA → ATL", price: 59, originalPrice: 149, airline: "Delta", expires: 1800, origin: "MIA", destination: "ATL" },
+  { route: "ORD → DEN", price: 79, originalPrice: 169, airline: "United", expires: 5400, origin: "ORD", destination: "DEN" },
 ];
 
 const FlightFlashSale = () => {
@@ -61,7 +62,8 @@ const FlightFlashSale = () => {
               <p className="text-sm text-muted-foreground mb-2">{deal.airline}</p>
 
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-3xl font-bold text-green-400">${deal.price}</span>
+                <span className="text-xs text-muted-foreground">From</span>
+                <span className="text-3xl font-bold text-green-400">${deal.price}*</span>
                 <span className="text-lg text-muted-foreground line-through">${deal.originalPrice}</span>
                 <Badge className="bg-green-500/20 text-green-400 border-0">
                   -{Math.round((1 - deal.price / deal.originalPrice) * 100)}%
@@ -74,12 +76,30 @@ const FlightFlashSale = () => {
               </div>
 
               <Button 
-                className="w-full bg-gradient-to-r from-red-500 to-orange-500 group-hover:shadow-lg group-hover:shadow-red-500/20" 
+                className="w-full bg-gradient-to-r from-red-500 to-orange-500 group-hover:shadow-lg group-hover:shadow-red-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]" 
                 size="sm"
-                onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+                onClick={() => {
+                  trackAffiliateClick({
+                    flightId: `flash-${deal.origin}-${deal.destination}`,
+                    airline: deal.airline,
+                    airlineCode: deal.airline.substring(0, 2).toUpperCase(),
+                    origin: deal.origin,
+                    destination: deal.destination,
+                    price: deal.price,
+                    passengers: 1,
+                    cabinClass: 'economy',
+                    affiliatePartner: 'searadar',
+                    referralUrl: AFFILIATE_LINKS.flights.url,
+                    source: 'flash_sale',
+                    ctaType: 'result_card',
+                    serviceType: 'flights',
+                  });
+                  window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+                }}
               >
-                Grab Deal <ExternalLink className="w-4 h-4 ml-1" />
+                View Deal <ExternalLink className="w-4 h-4 ml-1" />
               </Button>
+              <p className="text-[8px] text-muted-foreground text-center mt-2">*Indicative price</p>
             </div>
           ))}
         </div>
