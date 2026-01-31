@@ -36,7 +36,7 @@ import ImageHero from "@/components/shared/ImageHero";
 import BigSearchCard from "@/components/shared/BigSearchCard";
 import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
-import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
+import { EnhanceYourTrip } from "@/components/travel-extras";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
@@ -360,7 +360,7 @@ const HotelBooking = () => {
             
             <TrustFeatureCards columns={4} />
             <TrustSection service="hotels" />
-            <TravelExtrasCTA currentService="hotels" />
+            <EnhanceYourTrip currentService="hotels" destination={destination} />
             
             {/* Internal Linking */}
             <InternalLinkGrid currentService="hotels" />
