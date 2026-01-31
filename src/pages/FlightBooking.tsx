@@ -94,6 +94,14 @@ import RewardsRedemptionWidget from "@/components/shared/RewardsRedemptionWidget
 import TripNotificationsCenter from "@/components/shared/TripNotificationsCenter";
 import QuickRebookWidget from "@/components/shared/QuickRebookWidget";
 import BookingReceiptCard from "@/components/shared/BookingReceiptCard";
+import TripModificationWidget from "@/components/shared/TripModificationWidget";
+import TravelDocumentsWidget from "@/components/shared/TravelDocumentsWidget";
+import TripRatingWidget from "@/components/shared/TripRatingWidget";
+import EmergencySupportWidget from "@/components/shared/EmergencySupportWidget";
+import LoyaltyTierWidget from "@/components/shared/LoyaltyTierWidget";
+import TripComparisonWidget from "@/components/shared/TripComparisonWidget";
+import RefundTrackerWidget from "@/components/shared/RefundTrackerWidget";
+import TripSharingWidget from "@/components/shared/TripSharingWidget";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -505,6 +513,43 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4 max-w-4xl">
                 <RealTimeStatusWidget />
+              </div>
+            </section>
+
+            {/* Trip Management Tools */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <TripModificationWidget />
+                  <TravelDocumentsWidget />
+                </div>
+              </div>
+            </section>
+
+            {/* Loyalty & Comparison */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <LoyaltyTierWidget />
+                  <TripComparisonWidget />
+                </div>
+              </div>
+            </section>
+
+            {/* Trip Sharing & Rating */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <TripSharingWidget tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
+                  <TripRatingWidget providerName="Air France" />
+                </div>
+              </div>
+            </section>
+
+            {/* Emergency Support */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4 max-w-4xl">
+                <EmergencySupportWidget destination={toCity.split(" (")[0] || "Paris"} />
               </div>
             </section>
 
