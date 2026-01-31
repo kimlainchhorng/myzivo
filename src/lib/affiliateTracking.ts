@@ -17,6 +17,8 @@ export interface AffiliateClick {
   referralUrl: string;
   userAgent: string;
   source: string;
+  ctaType?: 'top_cta' | 'result_card' | 'sticky_cta' | 'compare_prices' | 'no_results_fallback' | 'partner_selector';
+  serviceType?: 'flights' | 'hotels' | 'car_rental' | 'activities';
 }
 
 // Generate session ID for tracking
@@ -29,7 +31,7 @@ export const getSessionId = (): string => {
   return sessionId;
 };
 
-// Track affiliate click
+// Track affiliate click with CTA type for analytics
 export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp" | "sessionId" | "userAgent">) => {
   const click: AffiliateClick = {
     ...data,
@@ -44,8 +46,13 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
   clicks.push(click);
   localStorage.setItem("affiliate_clicks", JSON.stringify(clicks));
 
-  // Log for analytics
-  console.log("[Affiliate Tracking]", click);
+  // Log for analytics with CTA type
+  console.log("[Affiliate Tracking]", {
+    ctaType: click.ctaType,
+    serviceType: click.serviceType,
+    partner: click.affiliatePartner,
+    source: click.source,
+  });
 
   // In production, you would send to your analytics endpoint:
   // await fetch('/api/track-affiliate', { method: 'POST', body: JSON.stringify(click) });

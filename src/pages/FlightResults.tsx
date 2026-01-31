@@ -57,6 +57,7 @@ import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 import { getAirlineLogo } from "@/data/airlines";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import NoFlightsFound from "@/components/flight/NoFlightsFound";
@@ -286,8 +287,26 @@ const FlightResults = () => {
     </div>
   );
 
-  const handleBookFlight = (e: React.MouseEvent) => {
+  const handleBookFlight = (flight: GeneratedFlight, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Track the click with CTA type
+    trackAffiliateClick({
+      flightId: flight.id,
+      airline: flight.airline,
+      airlineCode: flight.airlineCode,
+      origin: fromCode,
+      destination: toCode,
+      price: flight.price,
+      passengers: parseInt(passengers),
+      cabinClass,
+      affiliatePartner: 'searadar',
+      referralUrl: AFFILIATE_LINKS.flights.url,
+      source: 'result_card',
+      ctaType: 'result_card',
+      serviceType: 'flights',
+    });
+    
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
   };
 
@@ -610,10 +629,10 @@ const FlightResults = () => {
                             </div>
                             <div className="flex flex-col gap-2">
                               <Button
-                                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20"
-                                onClick={handleBookFlight}
+                                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]"
+                                onClick={(e) => handleBookFlight(flight, e)}
                               >
-                                Book Flight
+                                View Deal
                                 <ExternalLink className="w-4 h-4" />
                               </Button>
                               <p className="text-[9px] text-muted-foreground text-center max-w-[120px] leading-tight">
@@ -680,6 +699,8 @@ const FlightResults = () => {
       <StickyBookingCTA 
         lowestPrice={lowestPrice}
         flightCount={flights.length}
+        origin={fromCode}
+        destination={toCode}
       />
 
       <Footer />

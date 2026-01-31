@@ -1,16 +1,42 @@
 import { ExternalLink, Plane, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
 
 interface StickyBookingCTAProps {
   className?: string;
   lowestPrice?: number;
   flightCount?: number;
+  origin?: string;
+  destination?: string;
 }
 
-export default function StickyBookingCTA({ className, lowestPrice, flightCount }: StickyBookingCTAProps) {
+export default function StickyBookingCTA({ 
+  className, 
+  lowestPrice, 
+  flightCount,
+  origin,
+  destination 
+}: StickyBookingCTAProps) {
   const handleBookClick = () => {
+    // Track the click with CTA type
+    trackAffiliateClick({
+      flightId: `sticky-${origin}-${destination}`,
+      airline: 'Multiple',
+      airlineCode: 'ALL',
+      origin: origin || '',
+      destination: destination || '',
+      price: lowestPrice || 0,
+      passengers: 1,
+      cabinClass: 'economy',
+      affiliatePartner: 'searadar',
+      referralUrl: AFFILIATE_LINKS.flights.url,
+      source: 'sticky_booking_cta',
+      ctaType: 'sticky_cta',
+      serviceType: 'flights',
+    });
+
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
   };
 
@@ -29,22 +55,22 @@ export default function StickyBookingCTA({ className, lowestPrice, flightCount }
             {lowestPrice && (
               <div className="flex items-baseline gap-1">
                 <span className="text-xs text-muted-foreground">From</span>
-                <span className="text-2xl font-bold text-sky-500">${lowestPrice}</span>
+                <span className="text-2xl font-bold text-sky-500">${lowestPrice}*</span>
               </div>
             )}
             <p className="text-[10px] text-muted-foreground truncate">
-              {flightCount ? `${flightCount} flights available` : "Compare flight prices"}
+              {flightCount ? `${flightCount} flights • Compare prices` : "Compare flight prices"}
             </p>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Button - Large, easy to tap */}
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 shrink-0"
+            className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 shrink-0 min-h-[48px] px-6 touch-manipulation active:scale-[0.98]"
             onClick={handleBookClick}
           >
             <Sparkles className="w-4 h-4" />
-            Search Flights
+            View Deals
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
