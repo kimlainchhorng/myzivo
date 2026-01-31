@@ -14,7 +14,8 @@ import {
   Sparkles,
   Shield,
   Clock,
-  MapPin
+  MapPin,
+  Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -23,14 +24,18 @@ import {
   ACTIVITY_PARTNERS,
   ESIM_PARTNERS,
   LUGGAGE_PARTNERS,
+  COMPENSATION_PARTNERS,
   openPartnerLink,
   AFFILIATE_DISCLOSURE_TEXT
 } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { getOptimizedAddOnOrder, trackAddOnClick, type AddOnCategory as OptAddOnCategory } from "@/lib/revenueOptimization";
 
 /**
  * ENHANCE YOUR TRIP - Unified Travel Add-ons Section
  * Appears after search results on Flights, Hotels, and Car Rental pages
+ * 
+ * Uses A/B tested add-on ordering for revenue optimization.
  * 
  * Categories:
  * 1. Airport Transfers & Rides
@@ -38,6 +43,7 @@ import { trackAffiliateClick } from "@/lib/affiliateTracking";
  * 3. Things To Do / Activities
  * 4. Travel eSIM
  * 5. Luggage Storage
+ * 6. Flight Compensation
  */
 
 export type CurrentService = "flights" | "hotels" | "cars";
@@ -59,6 +65,7 @@ interface AddOnCategory {
   gradient: string;
   borderColor: string;
   items: AddOnItem[];
+  showFor: CurrentService[];
 }
 
 interface AddOnItem {
@@ -77,7 +84,24 @@ export default function EnhanceYourTrip({
   compact = false
 }: EnhanceYourTripProps) {
   
-  const handleAffiliateClick = (item: AddOnItem, category: 'flights' | 'hotels' | 'car_rental' | 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation') => {
+  const handleAffiliateClick = (item: AddOnItem, category: ServiceCategoryType) => {
+    // Track add-on click for A/B testing and revenue optimization
+    const categoryMap: Record<ServiceCategoryType, OptAddOnCategory | null> = {
+      transfers: 'transfers',
+      activities: 'activities',
+      esim: 'esim',
+      luggage: 'luggage',
+      compensation: 'compensation',
+      car_rental: 'cars',
+      flights: null,
+      hotels: null,
+    };
+    
+    const optCategory = categoryMap[category];
+    if (optCategory) {
+      trackAddOnClick(optCategory);
+    }
+    
     trackAffiliateClick({
       flightId: `addon-${item.id}`,
       airline: item.name,
@@ -97,18 +121,17 @@ export default function EnhanceYourTrip({
     openPartnerLink(item.trackingUrl);
   };
 
-  // Build categories based on current service
-  const categories: AddOnCategory[] = [];
-
-  // Airport Transfers - Show for Flights and Hotels
-  if (currentService === "flights" || currentService === "hotels") {
-    categories.push({
+  // Build all available categories
+  const allCategories: AddOnCategory[] = [
+    // Airport Transfers - Show for Flights and Hotels
+    {
       id: "transfers",
       title: "Airport Transfers & Rides",
       description: "Book airport transfers with trusted providers",
       icon: Car,
       gradient: "from-amber-500/10 to-orange-500/10",
       borderColor: "hover:border-amber-500/50",
+      showFor: ["flights", "hotels"],
       items: TRANSFER_PARTNERS.slice(0, 3).map(p => ({
         id: p.id,
         name: p.name,
@@ -117,18 +140,16 @@ export default function EnhanceYourTrip({
         trackingUrl: p.trackingUrl,
         features: p.features.slice(0, 2),
       })),
-    });
-  }
-
-  // Car Rental - Show for Flights and Hotels
-  if (currentService === "flights" || currentService === "hotels") {
-    categories.push({
+    },
+    // Car Rental - Show for Flights and Hotels
+    {
       id: "car_rental",
       title: "Rent a Car",
       description: "Explore your destination on your terms",
       icon: Car,
       gradient: "from-violet-500/10 to-purple-500/10",
       borderColor: "hover:border-violet-500/50",
+      showFor: ["flights", "hotels"],
       items: CAR_PARTNERS.slice(0, 3).map(p => ({
         id: p.id,
         name: p.name,
@@ -137,54 +158,52 @@ export default function EnhanceYourTrip({
         trackingUrl: p.trackingUrl,
         features: p.features.slice(0, 2),
       })),
-    });
-  }
-
-  // Things To Do - Show for all services
-  categories.push({
-    id: "activities",
-    title: "Things To Do",
-    description: "Discover tours, museums & experiences",
-    icon: Ticket,
-    gradient: "from-emerald-500/10 to-teal-500/10",
-    borderColor: "hover:border-emerald-500/50",
-    items: ACTIVITY_PARTNERS.slice(0, 3).map(p => ({
-      id: p.id,
-      name: p.name,
-      tagline: p.id === 'tiqets' ? 'Skip-the-line' : p.id === 'wegotrip' ? 'Audio guides' : 'Live events',
-      logo: p.logo,
-      trackingUrl: p.trackingUrl,
-      features: p.features.slice(0, 2),
-    })),
-  });
-
-  // Travel eSIM - Show for all services
-  categories.push({
-    id: "esim",
-    title: "Travel Internet",
-    description: "Stay connected abroad",
-    icon: Wifi,
-    gradient: "from-cyan-500/10 to-teal-500/10",
-    borderColor: "hover:border-cyan-500/50",
-    items: ESIM_PARTNERS.slice(0, 3).map(p => ({
-      id: p.id,
-      name: p.name,
-      tagline: p.id === 'airalo' ? 'From $4.50' : p.id === 'drimsim' ? 'Pay as you go' : 'Budget friendly',
-      logo: p.logo,
-      trackingUrl: p.trackingUrl,
-      features: p.features.slice(0, 2),
-    })),
-  });
-
-  // Luggage Storage - Show for Flights and Hotels
-  if (currentService === "flights" || currentService === "hotels") {
-    categories.push({
+    },
+    // Things To Do - Show for all services
+    {
+      id: "activities",
+      title: "Things To Do",
+      description: "Discover tours, museums & experiences",
+      icon: Ticket,
+      gradient: "from-emerald-500/10 to-teal-500/10",
+      borderColor: "hover:border-emerald-500/50",
+      showFor: ["flights", "hotels", "cars"],
+      items: ACTIVITY_PARTNERS.slice(0, 3).map(p => ({
+        id: p.id,
+        name: p.name,
+        tagline: p.id === 'tiqets' ? 'Skip-the-line' : p.id === 'wegotrip' ? 'Audio guides' : 'Live events',
+        logo: p.logo,
+        trackingUrl: p.trackingUrl,
+        features: p.features.slice(0, 2),
+      })),
+    },
+    // Travel eSIM - Show for all services
+    {
+      id: "esim",
+      title: "Travel Internet",
+      description: "Stay connected abroad",
+      icon: Wifi,
+      gradient: "from-cyan-500/10 to-teal-500/10",
+      borderColor: "hover:border-cyan-500/50",
+      showFor: ["flights", "hotels", "cars"],
+      items: ESIM_PARTNERS.slice(0, 3).map(p => ({
+        id: p.id,
+        name: p.name,
+        tagline: p.id === 'airalo' ? 'From $4.50' : p.id === 'drimsim' ? 'Pay as you go' : 'Budget friendly',
+        logo: p.logo,
+        trackingUrl: p.trackingUrl,
+        features: p.features.slice(0, 2),
+      })),
+    },
+    // Luggage Storage - Show for Flights and Hotels
+    {
       id: "luggage",
       title: "Luggage Storage",
       description: "Store bags securely while you explore",
       icon: Luggage,
       gradient: "from-purple-500/10 to-pink-500/10",
       borderColor: "hover:border-purple-500/50",
+      showFor: ["flights", "hotels"],
       items: LUGGAGE_PARTNERS.map(p => ({
         id: p.id,
         name: p.name,
@@ -193,8 +212,53 @@ export default function EnhanceYourTrip({
         trackingUrl: p.trackingUrl,
         features: p.features.slice(0, 2),
       })),
+    },
+    // Flight Compensation - Only for Flights
+    {
+      id: "compensation",
+      title: "Flight Compensation",
+      description: "Claim up to €600 for delayed flights",
+      icon: Scale,
+      gradient: "from-rose-500/10 to-red-500/10",
+      borderColor: "hover:border-rose-500/50",
+      showFor: ["flights"],
+      items: COMPENSATION_PARTNERS.slice(0, 2).map(p => ({
+        id: p.id,
+        name: p.name,
+        tagline: p.id === 'airhelp' ? 'No win no fee' : 'Free check',
+        logo: p.logo,
+        trackingUrl: p.trackingUrl,
+        features: p.features.slice(0, 2),
+      })),
+    },
+  ];
+
+  // Get A/B tested optimal order for add-ons
+  const optimizedOrder = getOptimizedAddOnOrder();
+  
+  // Filter categories for current service and sort by optimized order
+  const categories = allCategories
+    .filter(cat => cat.showFor.includes(currentService))
+    .sort((a, b) => {
+      // Map category IDs to the optimization order
+      const orderMap: Record<string, OptAddOnCategory> = {
+        transfers: 'transfers',
+        activities: 'activities',
+        esim: 'esim',
+        luggage: 'luggage',
+        compensation: 'compensation',
+        car_rental: 'cars',
+      };
+      
+      const aOrder = optimizedOrder.indexOf(orderMap[a.id] as OptAddOnCategory);
+      const bOrder = optimizedOrder.indexOf(orderMap[b.id] as OptAddOnCategory);
+      
+      // If not found in optimized order, put at end
+      const aIdx = aOrder === -1 ? 999 : aOrder;
+      const bIdx = bOrder === -1 ? 999 : bOrder;
+      
+      return aIdx - bIdx;
     });
-  }
 
   if (compact) {
     return (

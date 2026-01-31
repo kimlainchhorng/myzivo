@@ -63,6 +63,9 @@ const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 
+// Admin pages - lazy load
+const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
+
 const queryClient = new QueryClient();
 
 // Premium loading fallback
@@ -165,6 +168,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/ab-testing"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <ABTestingDashboard />
                     </ProtectedRoute>
                   }
                 />
