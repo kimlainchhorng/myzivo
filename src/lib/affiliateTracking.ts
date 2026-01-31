@@ -18,7 +18,7 @@ export interface AffiliateClick {
   userAgent: string;
   source: string;
   ctaType?: 'top_cta' | 'result_card' | 'sticky_cta' | 'compare_prices' | 'no_results_fallback' | 'partner_selector' | 'exit_intent' | 'cross_sell' | 'popular_route' | 'trending_deal';
-  serviceType?: 'flights' | 'hotels' | 'car_rental' | 'activities';
+  serviceType?: 'flights' | 'hotels' | 'car_rental' | 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation';
   device?: 'mobile' | 'desktop' | 'tablet';
   route?: string;
 }

@@ -1,9 +1,14 @@
 // Car rental affiliate partner configuration for booking redirects
+// Updated with new Travelpayouts links
+
+import { TRAVELPAYOUTS_DIRECT_LINKS } from '@/config/affiliateLinks';
+
 export interface CarAffiliatePartner {
   id: string;
   name: string;
   logo: string;
   baseUrl: string;
+  trackingUrl: string;
   urlTemplate: (params: CarAffiliateParams) => string;
   priority: number;
   commissionRate: string;
@@ -22,124 +27,55 @@ export interface CarAffiliateParams {
 
 export const carAffiliatePartners: CarAffiliatePartner[] = [
   {
-    id: 'rentalcars',
-    name: 'Rentalcars.com',
+    id: 'economybookings',
+    name: 'EconomyBookings',
     logo: '🚗',
-    baseUrl: 'https://www.rentalcars.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate, pickupTime, returnTime }) => {
-      const params = new URLSearchParams();
-      params.set('searchQuery', pickupLocation);
-      if (pickupDate) params.set('puDay', pickupDate.split('-')[2]);
-      if (pickupDate) params.set('puMonth', pickupDate.split('-')[1]);
-      if (pickupDate) params.set('puYear', pickupDate.split('-')[0]);
-      if (returnDate) params.set('doDay', returnDate.split('-')[2]);
-      if (returnDate) params.set('doMonth', returnDate.split('-')[1]);
-      if (returnDate) params.set('doYear', returnDate.split('-')[0]);
-      if (pickupTime) params.set('puHour', pickupTime.split(':')[0]);
-      if (returnTime) params.set('doHour', returnTime.split(':')[0]);
-      return `https://www.rentalcars.com/SearchResults.do?${params.toString()}`;
-    },
+    baseUrl: 'https://www.economybookings.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
+    urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
     priority: 100,
-    commissionRate: 'Up to 7%',
-    features: ['Free cancellation', 'No hidden fees', 'Price comparison'],
-    color: 'bg-orange-500'
+    commissionRate: '4-6%',
+    features: ['500+ providers', 'No hidden fees', 'Free cancellation', 'Best price guarantee'],
+    color: 'bg-violet-500'
   },
   {
-    id: 'kayak_cars',
-    name: 'Kayak Cars',
-    logo: '🛫',
-    baseUrl: 'https://www.kayak.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate }) => {
-      const pickup = pickupDate || 'flexible';
-      const returnD = returnDate || 'flexible';
-      return `https://www.kayak.com/cars/${encodeURIComponent(pickupLocation)}/${pickup}/${returnD}`;
-    },
+    id: 'qeeq',
+    name: 'QEEQ',
+    logo: '🚙',
+    baseUrl: 'https://www.qeeq.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
+    urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
     priority: 95,
-    commissionRate: 'Competitive',
-    features: ['Compare all providers', 'Price forecast', 'No booking fees'],
-    color: 'bg-orange-600'
-  },
-  {
-    id: 'expedia_cars',
-    name: 'Expedia Cars',
-    logo: '🌐',
-    baseUrl: 'https://www.expedia.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate, pickupTime, returnTime }) => {
-      const params = new URLSearchParams();
-      params.set('locn', pickupLocation);
-      if (pickupDate) params.set('date1', pickupDate);
-      if (returnDate) params.set('date2', returnDate);
-      if (pickupTime) params.set('time1', pickupTime);
-      if (returnTime) params.set('time2', returnTime);
-      return `https://www.expedia.com/Cars?${params.toString()}`;
-    },
-    priority: 90,
-    commissionRate: 'Competitive',
-    features: ['Bundle with flight', 'Member discounts', 'Free cancellation'],
-    color: 'bg-yellow-500'
-  },
-  {
-    id: 'priceline_cars',
-    name: 'Priceline Cars',
-    logo: '💰',
-    baseUrl: 'https://www.priceline.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate }) => {
-      return `https://www.priceline.com/drive/at/${encodeURIComponent(pickupLocation)}/from/${pickupDate || 'flexible'}/to/${returnDate || 'flexible'}`;
-    },
-    priority: 85,
-    commissionRate: 'Competitive',
-    features: ['Express deals', 'VIP access', 'Price match'],
+    commissionRate: '4-8%',
+    features: ['Price match', 'Full insurance options', '24/7 support'],
     color: 'bg-blue-500'
   },
   {
-    id: 'discovercars',
-    name: 'DiscoverCars',
-    logo: '🔍',
-    baseUrl: 'https://www.discovercars.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate, driverAge }) => {
-      const params = new URLSearchParams();
-      params.set('location', pickupLocation);
-      if (pickupDate) params.set('pickup_date', pickupDate);
-      if (returnDate) params.set('return_date', returnDate);
-      if (driverAge) params.set('driver_age', String(driverAge));
-      return `https://www.discovercars.com/search?${params.toString()}`;
-    },
-    priority: 80,
-    commissionRate: 'Up to 70%',
-    features: ['Full insurance included', 'No hidden fees', 'Great prices'],
-    color: 'bg-green-500'
-  },
-  {
-    id: 'autoeurope',
-    name: 'Auto Europe',
-    logo: '🚙',
-    baseUrl: 'https://www.autoeurope.com',
-    urlTemplate: ({ pickupLocation, pickupDate, returnDate }) => {
-      const params = new URLSearchParams();
-      params.set('pickup', pickupLocation);
-      if (pickupDate) params.set('pickupDate', pickupDate);
-      if (returnDate) params.set('returnDate', returnDate);
-      return `https://www.autoeurope.com/go/booking/?${params.toString()}`;
-    },
-    priority: 75,
-    commissionRate: 'Competitive',
-    features: ['Price match', 'No change fees', '24/7 support'],
-    color: 'bg-blue-700'
+    id: 'getrentacar',
+    name: 'GetRentACar',
+    logo: '🚐',
+    baseUrl: 'https://www.getrentacar.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.getrentacar,
+    urlTemplate: () => TRAVELPAYOUTS_DIRECT_LINKS.cars.getrentacar,
+    priority: 90,
+    commissionRate: '4-6%',
+    features: ['Local providers', 'Budget-friendly', 'Easy booking'],
+    color: 'bg-emerald-500'
   },
 ];
 
 export function getCarAffiliateUrl(
   partnerId: string,
-  params: CarAffiliateParams
+  _params: CarAffiliateParams
 ): string {
   const partner = carAffiliatePartners.find(p => p.id === partnerId);
   if (!partner) {
-    return carAffiliatePartners[0].urlTemplate(params);
+    return carAffiliatePartners[0].trackingUrl;
   }
-  return partner.urlTemplate(params);
+  return partner.trackingUrl;
 }
 
-export function getTopCarPartners(limit: number = 6): CarAffiliatePartner[] {
+export function getTopCarPartners(limit: number = 3): CarAffiliatePartner[] {
   return carAffiliatePartners
     .sort((a, b) => b.priority - a.priority)
     .slice(0, limit);
