@@ -104,15 +104,20 @@ const AffiliateDisclosure = () => {
                 </p>
                 <div className="grid md:grid-cols-2 gap-3">
                   {[
-                    { name: "Skyscanner", type: "Meta-search" },
-                    { name: "Kayak", type: "Meta-search" },
-                    { name: "Google Flights", type: "Meta-search" },
-                    { name: "Expedia", type: "OTA" },
-                    { name: "Booking.com", type: "OTA" },
-                    { name: "Direct Airlines", type: "Carrier" },
+                    { name: "Skyscanner", type: "Meta-search", logo: "🔍" },
+                    { name: "Kayak", type: "Meta-search", logo: "🛫" },
+                    { name: "Momondo", type: "Meta-search", logo: "✈️" },
+                    { name: "Kiwi.com", type: "Meta-search", logo: "🥝" },
+                    { name: "Trip.com", type: "OTA", logo: "🌏" },
+                    { name: "Cheapflights", type: "Meta-search", logo: "💰" },
+                    { name: "Google Flights", type: "Meta-search", logo: "🔵" },
+                    { name: "Booking.com", type: "Hotels/Flights", logo: "🏨" },
                   ].map((partner) => (
                     <div key={partner.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="font-medium">{partner.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{partner.logo}</span>
+                        <span className="font-medium">{partner.name}</span>
+                      </div>
                       <Badge variant="outline">{partner.type}</Badge>
                     </div>
                   ))}

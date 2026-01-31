@@ -580,17 +580,17 @@ const CarRentalBooking = () => {
           </section>
         )}
 
-        {/* Why Rent With Us */}
+        {/* Why Rent With Us - Affiliate Compliant */}
         {!searchResults && (
           <section className="py-12 border-t border-border/50">
             <div className="container mx-auto px-4">
-              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Rent With ZIVO</h2>
+              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Search With ZIVO Cars</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { icon: "💰", title: "Best Price Guarantee", desc: "No hidden fees, ever" },
-                  { icon: "🔒", title: "Free Cancellation", desc: "Cancel up to 48h before" },
-                  { icon: "🛡️", title: "Full Insurance", desc: "Drive with peace of mind" },
-                  { icon: "🎧", title: "24/7 Roadside Help", desc: "We're always here for you" },
+                  { icon: "🔍", title: "Compare Top Providers", desc: "Enterprise, Hertz, Avis & more" },
+                  { icon: "🔒", title: "Secure Redirect", desc: "Book safely with our partners" },
+                  { icon: "⚡", title: "Real-Time Availability", desc: "Live pricing & inventory" },
+                  { icon: "🎧", title: "24/7 Support", desc: "We're always here for you" },
                 ].map((item, index) => (
                   <div
                     key={item.title}
@@ -603,6 +603,12 @@ const CarRentalBooking = () => {
                   </div>
                 ))}
               </div>
+              
+              {/* Affiliate Disclosure */}
+              <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
+                ZIVO may earn a commission when you book through our partner links at no extra cost to you.{' '}
+                <a href="/affiliate-disclosure" className="text-violet-400 hover:underline">Learn more</a>
+              </p>
             </div>
           </section>
         )}
