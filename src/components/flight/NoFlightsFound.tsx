@@ -2,6 +2,7 @@ import { Plane, Search, ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 interface NoFlightsFoundProps {
   onClearFilters?: () => void;
@@ -17,6 +18,24 @@ export default function NoFlightsFound({
   destination 
 }: NoFlightsFoundProps) {
   const handleSearchPartner = () => {
+    // Track this click for analytics
+    trackAffiliateClick({
+      flightId: `no_results-${origin}-${destination}`,
+      airline: 'Multiple',
+      airlineCode: 'ALL',
+      origin: origin || '',
+      destination: destination || '',
+      price: 0,
+      passengers: 1,
+      cabinClass: 'economy',
+      affiliatePartner: 'searadar',
+      referralUrl: AFFILIATE_LINKS.flights.url,
+      source: 'no_flights_found',
+      ctaType: 'no_results_fallback',
+      serviceType: 'flights',
+    });
+    
+    // Open same affiliate link in new tab
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
   };
 
