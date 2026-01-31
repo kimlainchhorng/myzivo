@@ -75,10 +75,10 @@ const FlightSearch = () => {
   };
 
   const trustBadges = [
-    { icon: Shield, text: "Free Cancellation", color: "text-emerald-500" },
-    { icon: Award, text: "Best Price Guarantee", color: "text-amber-500" },
+    { icon: Shield, text: "Secure Booking", color: "text-emerald-500" },
+    { icon: Award, text: "Compare & Save", color: "text-amber-500" },
     { icon: Clock, text: "24/7 Support", color: "text-sky-500" },
-    { icon: Zap, text: "Instant Confirmation", color: "text-purple-500" },
+    { icon: Zap, text: "Real-Time Prices", color: "text-purple-500" },
   ];
 
   const popularRoutes = [
