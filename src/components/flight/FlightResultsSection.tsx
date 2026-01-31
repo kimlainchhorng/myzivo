@@ -124,112 +124,112 @@ export default function FlightResultsSection({
   }, [searchResults, sortBy]);
 
   return (
-    <section className="py-8">
-      <div className="container mx-auto px-4">
-        {/* Affiliate Disclosure Notice */}
-        <div className="mb-6 p-4 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center shrink-0">
-            <ExternalLink className="w-4 h-4 text-sky-500" />
+    <section className="py-4 sm:py-8">
+      <div className="container mx-auto px-3 sm:px-4">
+        {/* Affiliate Disclosure Notice - Mobile optimized */}
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-start gap-2 sm:gap-3">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-sky-500/20 flex items-center justify-center shrink-0">
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">Book with our trusted partners:</span>{" "}
-              When you select a flight, you'll be redirected to our partner site to complete your booking. 
+              <span className="hidden sm:inline">When you select a flight, you'll be redirected to our partner site to complete your booking. </span>
               ZIVO may earn a commission at no extra cost to you.{" "}
               <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
             </p>
           </div>
         </div>
 
-        {/* Results Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        {/* Results Header - Mobile stack */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
-            <h2 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-3">
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-sky-500">{searchResults.length}</span> flights found
               {stats.realPrices > 0 && (
-                <Badge className="bg-emerald-500/20 text-emerald-500 text-xs">
-                  <Zap className="w-3 h-3 mr-1" />
-                  {stats.realPrices} Live Prices
+                <Badge className="bg-emerald-500/20 text-emerald-500 text-[10px] sm:text-xs">
+                  <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
+                  {stats.realPrices} Live
                 </Badge>
               )}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-[10px] sm:text-sm text-muted-foreground mt-0.5 sm:mt-1 line-clamp-1">
               {fromCity.split(" (")[0]} → {toCity.split(" (")[0]} •{" "}
-              {departDate ? format(departDate, "MMM d, yyyy") : "Select date"} • {passengers} passenger{parseInt(passengers) > 1 ? "s" : ""}
+              {departDate ? format(departDate, "MMM d") : "Select date"} • {passengers} pax
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
               className={cn(
-                "gap-2",
+                "gap-1.5 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3",
                 showFilters && "border-sky-500 text-sky-500"
               )}
             >
-              <SlidersHorizontal className="w-4 h-4" />
-              Filters
+              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden xs:inline">Filters</span>
             </Button>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-              <SelectTrigger className="w-[180px]">
-                <ArrowUpDown className="w-4 h-4 mr-2" />
+              <SelectTrigger className="w-[130px] sm:w-[180px] h-8 sm:h-9 text-xs sm:text-sm">
+                <ArrowUpDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="price">Lowest Price</SelectItem>
-                <SelectItem value="duration">Shortest Duration</SelectItem>
-                <SelectItem value="departure">Departure Time</SelectItem>
-                <SelectItem value="rating">Best Rated</SelectItem>
+                <SelectItem value="price" className="text-xs sm:text-sm">Lowest Price</SelectItem>
+                <SelectItem value="duration" className="text-xs sm:text-sm">Shortest</SelectItem>
+                <SelectItem value="departure" className="text-xs sm:text-sm">Departure</SelectItem>
+                <SelectItem value="rating" className="text-xs sm:text-sm">Best Rated</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {/* Quick Stats Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        {/* Quick Stats Bar - 2x2 on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
           <Card className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 border-emerald-500/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <TrendingDown className="w-5 h-5 text-emerald-500" />
+            <CardContent className="p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Lowest Price</p>
-                <p className="text-xl font-bold text-emerald-500">${stats.lowestPrice}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Lowest</p>
+                <p className="text-base sm:text-xl font-bold text-emerald-500">${stats.lowestPrice}</p>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-sky-500/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-sky-500" />
+            <CardContent className="p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-sky-500" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Fastest</p>
-                <p className="text-xl font-bold text-sky-500">{stats.fastestDuration}h</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Fastest</p>
+                <p className="text-base sm:text-xl font-bold text-sky-500">{stats.fastestDuration}h</p>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-purple-500/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                <Plane className="w-5 h-5 text-purple-500" />
+            <CardContent className="p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0">
+                <Plane className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Direct Flights</p>
-                <p className="text-xl font-bold text-purple-500">{stats.directFlights}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Direct</p>
+                <p className="text-base sm:text-xl font-bold text-purple-500">{stats.directFlights}</p>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-amber-500/20">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-amber-500" />
+            <CardContent className="p-2.5 sm:p-4 flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Verified</p>
-                <p className="text-xl font-bold text-amber-500">{stats.realPrices}</p>
+              <div className="min-w-0">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Verified</p>
+                <p className="text-base sm:text-xl font-bold text-amber-500">{stats.realPrices}</p>
               </div>
             </CardContent>
           </Card>
