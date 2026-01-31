@@ -17,6 +17,11 @@ import FlightQuickActions from "@/components/flight/FlightQuickActions";
 import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
 import FlightPremiumExperience from "@/components/flight/FlightPremiumExperience";
 import FlightAlertsPromo from "@/components/flight/FlightAlertsPromo";
+import FlightDealsCarousel from "@/components/flight/FlightDealsCarousel";
+import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
+import FlightPopularRoutes from "@/components/flight/FlightPopularRoutes";
+import FlightTravelTips from "@/components/flight/FlightTravelTips";
+import FlightMobileAppPromo from "@/components/flight/FlightMobileAppPromo";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -196,16 +201,41 @@ const FlightBooking = () => {
               setSelectedLoyaltyProgram={setSelectedLoyaltyProgram}
             />
 
+            {/* Flash Deals Carousel */}
+            <FlightDealsCarousel
+              onSelect={(from, to) => {
+                setFromCity(`(${from})`);
+                setToCity(`(${to})`);
+              }}
+            />
+
             {/* Trending Destinations */}
             <TrendingDestinationsSection
               onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
             />
 
+            {/* Popular Routes */}
+            <FlightPopularRoutes
+              onSelect={(from, to) => {
+                setFromCity(`(${from})`);
+                setToCity(`(${to})`);
+              }}
+            />
+
+            {/* Airline Partners */}
+            <FlightAirlinePartners />
+
             {/* Premium Experience */}
             <FlightPremiumExperience />
 
+            {/* Travel Tips */}
+            <FlightTravelTips />
+
             {/* Price Alerts Promo */}
             <FlightAlertsPromo onSetAlert={() => toast.success("Price alert feature coming soon!")} />
+
+            {/* Mobile App Promo */}
+            <FlightMobileAppPromo />
 
             {/* Testimonials Section */}
             <FlightTestimonialsSection />

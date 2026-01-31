@@ -40,6 +40,10 @@ import CarStatsBar from "@/components/car/CarStatsBar";
 import CarPromoSection from "@/components/car/CarPromoSection";
 import CarTestimonialsSection from "@/components/car/CarTestimonialsSection";
 import CarTrustIndicators from "@/components/car/CarTrustIndicators";
+import CarFeaturedVehicles from "@/components/car/CarFeaturedVehicles";
+import CarCategoriesGrid from "@/components/car/CarCategoriesGrid";
+import CarRentalBenefits from "@/components/car/CarRentalBenefits";
+import CarPopularLocations from "@/components/car/CarPopularLocations";
 
 // Popular locations
 const popularLocations = [
@@ -593,6 +597,30 @@ const CarRentalBooking = () => {
             onPromoClick={(code) => toast.success(`Promo code ${code} copied!`)}
           />
         )}
+
+        {/* Featured Vehicles */}
+        {!searchResults && (
+          <CarFeaturedVehicles 
+            onSelect={(name) => toast.info(`Viewing ${name}`)}
+          />
+        )}
+
+        {/* Categories Grid */}
+        {!searchResults && (
+          <CarCategoriesGrid 
+            onSelect={(category) => setCarType(category.toLowerCase())}
+          />
+        )}
+
+        {/* Popular Locations */}
+        {!searchResults && (
+          <CarPopularLocations 
+            onSelect={(city) => setPickupLocation(city)}
+          />
+        )}
+
+        {/* Benefits Section */}
+        {!searchResults && <CarRentalBenefits />}
 
         {/* Testimonials */}
         {!searchResults && <CarTestimonialsSection />}
