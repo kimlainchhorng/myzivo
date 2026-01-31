@@ -40,6 +40,9 @@ import PartnersSection from "@/components/home/PartnersSection";
 import CTASection from "@/components/home/CTASection";
 import UnifiedSearchHub from "@/components/home/UnifiedSearchHub";
 import TripBuilderWidget from "@/components/home/TripBuilderWidget";
+import SavedTripsManager from "@/components/shared/SavedTripsManager";
+import BundleDealsCarousel from "@/components/shared/BundleDealsCarousel";
+import TripPlannerWizard from "@/components/shared/TripPlannerWizard";
 import { cn } from "@/lib/utils";
 
 // Quick services for mobile
@@ -264,6 +267,19 @@ const DesktopHomePage = () => {
                 <TrendingSection />
               </div>
               <TripBuilderWidget />
+            </div>
+          </div>
+        </section>
+
+        {/* Bundle Deals & Saved Trips */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              <BundleDealsCarousel />
+              <div className="space-y-6">
+                <SavedTripsManager />
+                <TripPlannerWizard />
+              </div>
             </div>
           </div>
         </section>

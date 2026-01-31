@@ -76,6 +76,9 @@ import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
 import CrossSellBanner from "@/components/shared/CrossSellBanner";
 import SmartSuggestions from "@/components/shared/SmartSuggestions";
 import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
+import FlightToHotelBridge from "@/components/shared/FlightToHotelBridge";
+import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
+import CompanionInvite from "@/components/shared/CompanionInvite";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -239,10 +242,30 @@ const FlightBooking = () => {
               </div>
             </section>
 
+            {/* Flight to Hotel Bridge - Workflow Connector */}
+            <section className="py-4">
+              <div className="container mx-auto px-4 max-w-4xl">
+                <FlightToHotelBridge 
+                  flightDestination={toCity.split(" (")[0] || "Paris"} 
+                  passengers={parseInt(passengers)}
+                />
+              </div>
+            </section>
+
             {/* Cross-Sell Banner */}
             <section className="py-4">
               <div className="container mx-auto px-4 max-w-4xl">
                 <CrossSellBanner currentService="flight" destination={toCity.split(" (")[0] || undefined} />
+              </div>
+            </section>
+
+            {/* Trip Planning Tools */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <TripChecklistWidget destination={toCity.split(" (")[0] || "Paris"} />
+                  <CompanionInvite tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
+                </div>
               </div>
             </section>
 
