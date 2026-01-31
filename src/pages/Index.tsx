@@ -38,6 +38,8 @@ import PromoBanner from "@/components/home/PromoBanner";
 import HowItWorks from "@/components/home/HowItWorks";
 import PartnersSection from "@/components/home/PartnersSection";
 import CTASection from "@/components/home/CTASection";
+import UnifiedSearchHub from "@/components/home/UnifiedSearchHub";
+import TripBuilderWidget from "@/components/home/TripBuilderWidget";
 import { cn } from "@/lib/utils";
 
 // Quick services for mobile
@@ -250,9 +252,22 @@ const DesktopHomePage = () => {
       <Header />
       <main>
         <HeroSection />
+        <UnifiedSearchHub />
         <PromoBanner />
         <QuickActionsSection />
-        <TrendingSection />
+        
+        {/* Trip Builder Section */}
+        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="lg:col-span-2">
+                <TrendingSection />
+              </div>
+              <TripBuilderWidget />
+            </div>
+          </div>
+        </section>
+        
         <StatsSection />
         <LiveStatsSection />
         <FeaturesSection />
