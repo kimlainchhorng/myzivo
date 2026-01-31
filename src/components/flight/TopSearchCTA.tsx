@@ -1,8 +1,8 @@
-import { ExternalLink, Plane, Sparkles, Search, ShieldCheck } from "lucide-react";
+import { ExternalLink, Sparkles, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
 import { cn } from "@/lib/utils";
 
 interface TopSearchCTAProps {
@@ -10,6 +10,10 @@ interface TopSearchCTAProps {
   lowestPrice?: number;
   origin?: string;
   destination?: string;
+  departDate?: string;
+  returnDate?: string;
+  passengers?: number;
+  cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
   className?: string;
 }
 
@@ -18,27 +22,30 @@ export default function TopSearchCTA({
   lowestPrice,
   origin,
   destination,
+  departDate,
+  returnDate,
+  passengers = 1,
+  cabinClass = 'economy',
   className 
 }: TopSearchCTAProps) {
-  const handleSearchClick = () => {
-    // Track the click with CTA type
-    trackAffiliateClick({
-      flightId: `search-${origin}-${destination}`,
-      airline: 'Multiple',
-      airlineCode: 'ALL',
-      origin: origin || '',
-      destination: destination || '',
-      price: lowestPrice || 0,
-      passengers: 1,
-      cabinClass: 'economy',
-      affiliatePartner: 'searadar',
-      referralUrl: AFFILIATE_LINKS.flights.url,
-      source: 'top_search_cta',
-      ctaType: 'top_cta',
-      serviceType: 'flights',
-    });
+  const { redirectWithParams, redirectSimple } = useFlightRedirect('top_search_cta', 'top_cta');
 
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+  const handleSearchClick = () => {
+    // Use deep link if we have search parameters
+    if (origin && destination && departDate) {
+      redirectWithParams({
+        origin,
+        destination,
+        departDate,
+        returnDate,
+        passengers,
+        cabinClass,
+        tripType: returnDate ? 'roundtrip' : 'oneway',
+      });
+    } else {
+      // Fallback to simple redirect
+      redirectSimple();
+    }
   };
 
   return (
