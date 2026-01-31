@@ -31,6 +31,8 @@ import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
+import { TrustFeatureCards } from "@/components/marketing";
+import { OGImageMeta } from "@/components/marketing";
 import { cn } from "@/lib/utils";
 
 /**
@@ -79,6 +81,7 @@ const FlightSearch = () => {
         title="ZIVO Flights – Search & Compare Flights Worldwide"
         description="Search and compare flights from 500+ airlines worldwide. Find great options and book with trusted travel partners. No booking fees."
       />
+      <OGImageMeta pageType="flights" />
       <Header />
 
       <main className="pb-20">
@@ -272,6 +275,9 @@ const FlightSearch = () => {
           service="flights" 
           onSelect={handleDestinationSelect}
         />
+
+        {/* Trust Features */}
+        <TrustFeatureCards columns={4} />
 
         {/* Why Book Section */}
         <TrustSection service="flights" />

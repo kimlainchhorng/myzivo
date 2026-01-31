@@ -39,6 +39,7 @@ import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 
 /**
@@ -95,6 +96,7 @@ const HotelBooking = () => {
         title="ZIVO Hotels – Compare & Book Hotels Worldwide"
         description="Compare hotel prices from leading booking platforms. Find the best deals on hotels, resorts, and vacation rentals. Book with trusted partners."
       />
+      <OGImageMeta pageType="hotels" />
       <Header />
       
       <main className="pb-32 lg:pb-20">
@@ -336,6 +338,7 @@ const HotelBooking = () => {
               service="hotels" 
               onSelect={handleDestinationSelect}
             />
+            <TrustFeatureCards columns={4} />
             <TrustSection service="hotels" />
             <TravelExtrasCTA currentService="hotels" />
             <TravelFAQ serviceType="hotels" className="bg-muted/20" />

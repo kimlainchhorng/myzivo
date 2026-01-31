@@ -35,6 +35,7 @@ import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 
 /**
@@ -103,6 +104,7 @@ const CarRentalBooking = () => {
         title="ZIVO Car Rentals – Compare & Rent Cars Worldwide"
         description="Compare car rental prices from top providers worldwide. Find the best deals on economy, SUV, luxury and more. Book with trusted partners."
       />
+      <OGImageMeta pageType="cars" />
       <Header />
       
       <main className="pb-32 lg:pb-20">
@@ -330,6 +332,7 @@ const CarRentalBooking = () => {
               service="cars" 
               onSelect={handleLocationSelect}
             />
+            <TrustFeatureCards columns={4} />
             <TrustSection service="cars" />
             <TravelExtrasCTA currentService="cars" />
             <TravelFAQ serviceType="cars" className="bg-muted/20" />
