@@ -77,10 +77,15 @@ import UserTestimonials from "@/components/shared/UserTestimonials";
 import AppFeatures from "@/components/shared/AppFeatures";
 import CarPickupMap from "@/components/car/CarPickupMap";
 import CarFuelPolicy from "@/components/car/CarFuelPolicy";
+import CarChildSeats from "@/components/car/CarChildSeats";
+import CarRoadTrips from "@/components/car/CarRoadTrips";
 import WeatherWidget from "@/components/shared/WeatherWidget";
 import PackingList from "@/components/shared/PackingList";
 import TripPlanner from "@/components/shared/TripPlanner";
 import EmergencyContacts from "@/components/shared/EmergencyContacts";
+import CurrencyConverter from "@/components/shared/CurrencyConverter";
+import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
+import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
 
 // Popular locations
 const popularLocations = [
@@ -733,6 +738,21 @@ const CarRentalBooking = () => {
 
         {/* Fuel Policy */}
         {!searchResults && <CarFuelPolicy />}
+
+        {/* Child Seats */}
+        {!searchResults && <CarChildSeats />}
+
+        {/* Road Trips */}
+        {!searchResults && <CarRoadTrips />}
+
+        {/* Currency Converter */}
+        {!searchResults && <CurrencyConverter />}
+
+        {/* Time Zone Converter */}
+        {!searchResults && <TimeZoneConverter />}
+
+        {/* Travel Insurance */}
+        {!searchResults && <TravelInsuranceCompare />}
 
         {/* Weather Widget */}
         {!searchResults && <WeatherWidget />}
