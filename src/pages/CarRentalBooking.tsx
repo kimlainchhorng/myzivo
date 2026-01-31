@@ -62,6 +62,13 @@ import CarPopularRoutes from "@/components/car/CarPopularRoutes";
 import CarSeasonalOffers from "@/components/car/CarSeasonalOffers";
 import CarCustomerStories from "@/components/car/CarCustomerStories";
 import CarQuickFilters from "@/components/car/CarQuickFilters";
+import CarComparisonWidget from "@/components/car/CarComparisonWidget";
+import CarLoyaltyRewards from "@/components/car/CarLoyaltyRewards";
+import CarElectricVehicles from "@/components/car/CarElectricVehicles";
+import CarGroupBooking from "@/components/car/CarGroupBooking";
+import CarWeeklyDeals from "@/components/car/CarWeeklyDeals";
+import LiveChatWidget from "@/components/shared/LiveChatWidget";
+import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
 
 // Popular locations
 const popularLocations = [
