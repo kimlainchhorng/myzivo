@@ -84,36 +84,36 @@ const QuickActionsSection = () => {
   const repeatOrders = repeatFoodOrders?.length ? repeatFoodOrders : defaultRepeatOrders;
   
   return (
-    <section className="py-14 lg:py-24 relative overflow-hidden">
+    <section className="py-10 sm:py-14 lg:py-24 relative overflow-hidden">
       {/* Enhanced Background */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/4 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
       
       {/* Floating emoji - CSS animated */}
-      <div className="absolute top-24 right-[10%] text-4xl hidden lg:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
+      <div className="absolute top-24 right-[10%] text-3xl sm:text-4xl hidden md:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
         ⚡
       </div>
       
       <div className="container mx-auto px-4 relative z-10">
-        <div className="space-y-12">
+        <div className="space-y-8 sm:space-y-12">
           {/* Header with animated icon */}
           <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-4">
-              <div className="relative p-3.5 rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-xl shadow-primary/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:rotate-3">
-                <Zap className="w-7 h-7 text-white relative z-10" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-lg sm:shadow-xl shadow-primary/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:rotate-3">
+                <Zap className="w-5 h-5 sm:w-7 sm:h-7 text-white relative z-10" />
                 {/* CSS Shine effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" style={{ transform: 'skewX(-15deg)' }} />
               </div>
               <div>
-                <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold">Quick Actions</h2>
-                <p className="text-sm sm:text-base text-muted-foreground">One tap to get started</p>
+                <h2 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold">Quick Actions</h2>
+                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground">One tap to get started</p>
               </div>
             </div>
           </div>
 
-          {/* Quick Action Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Quick Action Grid - improved mobile layout */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
             {quickActions.map((action, index) => (
               <div
                 key={action.id}
@@ -121,7 +121,7 @@ const QuickActionsSection = () => {
                 style={{ animationDelay: `${index * 80}ms`, animationFillMode: 'both' }}
               >
                 <QuickAction
-                  icon={<action.icon className="w-6 h-6 text-white" />}
+                  icon={<action.icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
                   label={action.label}
                   description={action.description}
                   onClick={() => navigate(action.href)}
@@ -132,8 +132,8 @@ const QuickActionsSection = () => {
             ))}
           </div>
 
-          {/* Recent + Repeat Orders */}
-          <div className="grid lg:grid-cols-2 gap-8">
+          {/* Recent + Repeat Orders - improved mobile stacking */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             <div className="animate-in fade-in slide-in-from-left-4 duration-500" style={{ animationDelay: '200ms' }}>
               <RecentlyViewed 
                 items={recentItems} 
