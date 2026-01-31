@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { getAirlineLogo as getCDNLogo } from "@/data/airlines";
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface FlightTicketCardProps {
   flight: {
@@ -328,9 +329,14 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
 
             <div className="flex flex-col gap-2 w-full lg:w-auto">
               <Button 
-                onClick={onSelect}
+                onClick={() => {
+                  // Open Searadar affiliate link in new tab
+                  window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+                  // Also trigger the onSelect for tracking
+                  onSelect?.();
+                }}
                 className={cn(
-                  "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl",
+                  "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl gap-2",
                   isSelected
                     ? "bg-sky-500 text-white shadow-lg shadow-sky-500/40"
                     : isPremiumAirline
@@ -340,29 +346,20 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
               >
                 {isSelected ? (
                   <>
-                    <Check className="w-4 h-4 mr-1.5" />
+                    <Check className="w-4 h-4" />
                     Selected
                   </>
                 ) : (
                   <>
-                    Select
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    Book Flight
+                    <ExternalLink className="w-4 h-4" />
                   </>
                 )}
               </Button>
               
-              {flight.bookingLink && (
-                <a 
-                  href={flight.bookingLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-muted-foreground hover:text-sky-400 flex items-center justify-center gap-1 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  Book direct
-                </a>
-              )}
+              <p className="text-[10px] text-muted-foreground text-center leading-tight">
+                {AFFILIATE_DISCLOSURE_TEXT.short}
+              </p>
             </div>
           </div>
         </div>

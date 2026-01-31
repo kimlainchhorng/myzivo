@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Check, Sparkles } from 'lucide-react';
+import { ExternalLink, Check, Sparkles, Plane } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { affiliatePartners, type AffiliatePartner, type AffiliateUrlParams } from '@/data/affiliatePartners';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from '@/config/affiliateLinks';
 
 interface AffiliatePartnerSelectorProps {
   origin: string;
@@ -34,21 +34,8 @@ export default function AffiliatePartnerSelector({
   airlineCode = 'XX',
   className,
 }: AffiliatePartnerSelectorProps) {
-  const [selectedPartner, setSelectedPartner] = useState<string>('skyscanner');
-
-  const handlePartnerClick = (partner: AffiliatePartner) => {
-    const params: AffiliateUrlParams = {
-      origin,
-      destination,
-      departDate,
-      returnDate,
-      passengers,
-      cabinClass,
-    };
-
-    const url = partner.urlTemplate(params);
-
-    // Track the click using existing interface
+  const handleBookFlight = () => {
+    // Track the click
     trackAffiliateClick({
       flightId: flightNumber || `${origin}-${destination}`,
       airline: airline,
@@ -58,84 +45,83 @@ export default function AffiliatePartnerSelector({
       price: price || 0,
       passengers,
       cabinClass,
-      affiliatePartner: partner.id,
-      referralUrl: url,
+      affiliatePartner: 'searadar',
+      referralUrl: AFFILIATE_LINKS.flights.url,
       source: 'partner_selector',
     });
 
-    // Open in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // Open Searadar in new tab
+    window.open(AFFILIATE_LINKS.flights.url, '_blank', 'noopener,noreferrer');
   };
 
-  const topPartners = affiliatePartners.slice(0, 6);
-
   return (
-    <div className={cn("space-y-3 sm:space-y-4", className)}>
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />
-        <h3 className="font-semibold text-sm sm:text-base">Compare Prices on Partner Sites</h3>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-        {topPartners.map((partner) => (
-          <Card
-            key={partner.id}
-            className={cn(
-              "cursor-pointer transition-all touch-manipulation active:scale-[0.98]",
-              selectedPartner === partner.id 
-                ? "border-sky-500 bg-sky-500/10" 
-                : "hover:border-sky-500/50"
-            )}
-            onClick={() => setSelectedPartner(partner.id)}
-          >
-            <CardContent className="p-2.5 sm:p-3">
-              <div className="flex items-start justify-between mb-1.5 sm:mb-2">
-                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  <span className="text-lg sm:text-xl">{partner.logo}</span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-xs sm:text-sm truncate">{partner.name}</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground">{partner.commissionRate}</p>
-                  </div>
-                </div>
-                {selectedPartner === partner.id && (
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-sky-500 flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
-                  </div>
+    <div className={cn("space-y-4", className)}>
+      {/* Main CTA */}
+      <Card className="border-2 border-sky-500/30 bg-gradient-to-r from-sky-500/10 to-blue-500/5">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-12 h-12 rounded-xl bg-sky-500/20 flex items-center justify-center">
+                <Plane className="w-6 h-6 text-sky-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-base sm:text-lg">Search & Compare Flights</h3>
+                <p className="text-sm text-muted-foreground">
+                  Powered by {AFFILIATE_LINKS.flights.name} • 728+ airlines
+                </p>
+              </div>
+            </div>
+            
+            <Button
+              size="lg"
+              className="w-full sm:w-auto gap-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30 hover:opacity-90"
+              onClick={handleBookFlight}
+            >
+              <Sparkles className="w-4 h-4" />
+              Search Flights
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Route info */}
+          {origin && destination && (
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <Badge variant="secondary" className="font-mono">
+                  {origin}
+                </Badge>
+                <span className="text-muted-foreground">→</span>
+                <Badge variant="secondary" className="font-mono">
+                  {destination}
+                </Badge>
+                {departDate && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{departDate}</span>
+                  </>
+                )}
+                {passengers > 1 && (
+                  <>
+                    <span className="text-muted-foreground">•</span>
+                    <span className="text-muted-foreground">{passengers} passengers</span>
+                  </>
                 )}
               </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-              <div className="flex flex-wrap gap-1 mb-2 sm:mb-3">
-                {partner.features.slice(0, 2).map((feature) => (
-                  <Badge 
-                    key={feature} 
-                    variant="secondary" 
-                    className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0"
-                  >
-                    {feature}
-                  </Badge>
-                ))}
-              </div>
-
-              <Button
-                size="sm"
-                className={cn("w-full h-7 sm:h-8 text-[10px] sm:text-xs gap-1 touch-manipulation active:scale-[0.98]", partner.color, "hover:opacity-90 text-white")}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePartnerClick(partner);
-                }}
-              >
-                <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                <span className="truncate">Search {partner.name}</span>
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Affiliate Disclosure */}
+      <div className="p-3 rounded-lg bg-muted/30 border border-border/50">
+        <div className="flex items-start gap-2">
+          <ExternalLink className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            {AFFILIATE_DISCLOSURE_TEXT.short}{' '}
+            <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+          </p>
+        </div>
       </div>
-
-      <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
-        ZIVO may earn a commission when you book through partner links.{' '}
-        <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
-      </p>
     </div>
   );
 }

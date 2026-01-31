@@ -40,6 +40,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
 const GroundTransport = lazy(() => import("./pages/GroundTransport"));
 const Events = lazy(() => import("./pages/Events"));
+const ThingsToDo = lazy(() => import("./pages/ThingsToDo"));
 const TravelInsurance = lazy(() => import("./pages/TravelInsurance"));
 const Install = lazy(() => import("./pages/Install"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
@@ -132,6 +133,9 @@ const App = () => (
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
                 <Route path="/events" element={<Events />} />
+                <Route path="/things-to-do" element={<ThingsToDo />} />
+                <Route path="/activities" element={<ThingsToDo />} />
+                <Route path="/experiences" element={<ThingsToDo />} />
                 <Route path="/travel-insurance" element={<TravelInsurance />} />
                 <Route path="/install" element={<Install />} />
                 <Route

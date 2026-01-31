@@ -1,6 +1,7 @@
-import { Home, Map, Calendar, Users, Camera, Sparkles, ArrowRight, Star } from "lucide-react";
+import { Calendar, Sparkles, ArrowRight, Star, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT, openAffiliateLink } from "@/config/affiliateLinks";
 
 const experiences = [
   {
@@ -38,6 +39,10 @@ const experiences = [
 ];
 
 const LocalExperiences = () => {
+  const handleBookExperience = () => {
+    openAffiliateLink("activities");
+  };
+
   return (
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
@@ -57,6 +62,7 @@ const LocalExperiences = () => {
           {experiences.map((exp) => (
             <div
               key={exp.title}
+              onClick={handleBookExperience}
               className="group p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-pink-500/50 transition-all cursor-pointer"
             >
               <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
@@ -80,9 +86,18 @@ const LocalExperiences = () => {
         </div>
 
         <div className="text-center mt-8">
-          <Button variant="outline" size="lg">
-            View All Experiences <ArrowRight className="w-4 h-4 ml-2" />
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={handleBookExperience}
+            className="gap-2"
+          >
+            View All Experiences 
+            <ExternalLink className="w-4 h-4" />
           </Button>
+          <p className="text-xs text-muted-foreground mt-3">
+            {AFFILIATE_DISCLOSURE_TEXT.short}
+          </p>
         </div>
       </div>
     </section>

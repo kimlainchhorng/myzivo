@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { 
   Car, 
   Compass, 
@@ -8,12 +7,14 @@ import {
   Calendar,
   Star,
   Clock,
-  Ticket
+  Ticket,
+  ExternalLink
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT, openAffiliateLink } from "@/config/affiliateLinks";
 
 interface CarToActivityBridgeProps {
   destination?: string;
@@ -32,8 +33,11 @@ const CarToActivityBridge = ({
   rentalDates,
   className 
 }: CarToActivityBridgeProps) => {
-  const navigate = useNavigate();
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+
+  const handleBookActivity = () => {
+    openAffiliateLink("activities");
+  };
 
   return (
     <Card className={cn(
@@ -120,13 +124,18 @@ const CarToActivityBridge = ({
             Skip for now
           </Button>
           <Button
-            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
-            onClick={() => navigate("/experiences")}
+            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 gap-2"
+            onClick={handleBookActivity}
           >
             Browse Activities
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
+        
+        {/* Affiliate Notice */}
+        <p className="text-[10px] text-muted-foreground text-center mt-3">
+          {AFFILIATE_DISCLOSURE_TEXT.short}
+        </p>
       </CardContent>
     </Card>
   );
