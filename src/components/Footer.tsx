@@ -321,21 +321,30 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} ZIVO LLC. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
-                <Globe className="w-4 h-4" />
-                <span>English (US)</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-              <span className="text-border">|</span>
-              <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
-                <MapPin className="w-4 h-4" />
-                <span>United States</span>
-              </button>
+          <div className="flex flex-col gap-4">
+            {/* Affiliate Disclosure */}
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+                ZIVO may earn a commission when users book through partner links. ZIVO does not sell airline tickets, hotel rooms, or rental cars directly. All bookings are completed on partner websites.
+              </p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} ZIVO LLC. All rights reserved.
+              </p>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
+                  <Globe className="w-4 h-4" />
+                  <span>English (US)</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+                <span className="text-border">|</span>
+                <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
+                  <MapPin className="w-4 h-4" />
+                  <span>United States</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

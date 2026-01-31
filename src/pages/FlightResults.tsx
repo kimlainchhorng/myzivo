@@ -49,12 +49,17 @@ import {
   Heart,
   Share2,
   Bell,
+  ExternalLink,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 import { getAirlineLogo } from "@/data/airlines";
+import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
+import TopSearchCTA from "@/components/flight/TopSearchCTA";
+import NoFlightsFound from "@/components/flight/NoFlightsFound";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -281,11 +286,16 @@ const FlightResults = () => {
     </div>
   );
 
+  const handleBookFlight = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="pt-20 pb-20">
+      <main className="pt-20 pb-32 lg:pb-20">
         <div className="container mx-auto px-4">
           {/* Search Summary Bar */}
           <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
@@ -403,6 +413,15 @@ const FlightResults = () => {
                   </Select>
                 </div>
               </div>
+
+              {/* Top Search CTA */}
+              <TopSearchCTA 
+                flightCount={flights.length}
+                lowestPrice={lowestPrice}
+                origin={fromCode}
+                destination={toCode}
+                className="mb-6"
+              />
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -587,15 +606,19 @@ const FlightResults = () => {
                           <div className="p-4 lg:p-6 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-muted/20">
                             <div className="text-center">
                               <p className="text-3xl lg:text-4xl font-bold text-sky-500">${flight.price}</p>
-                              <p className="text-xs text-muted-foreground">per person</p>
+                              <p className="text-xs text-muted-foreground">per person*</p>
                             </div>
                             <div className="flex flex-col gap-2">
                               <Button
                                 className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20"
+                                onClick={handleBookFlight}
                               >
-                                Select
-                                <ArrowRight className="w-4 h-4" />
+                                Book Flight
+                                <ExternalLink className="w-4 h-4" />
                               </Button>
+                              <p className="text-[9px] text-muted-foreground text-center max-w-[120px] leading-tight">
+                                Opens partner site
+                              </p>
                               <div className="flex items-center justify-center gap-1">
                                 <Button
                                   variant="ghost"
@@ -627,26 +650,37 @@ const FlightResults = () => {
               </div>
 
               {flights.length === 0 && !isLoading && (
-                <Card className="p-12 text-center">
-                  <Plane className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-xl font-semibold mb-2">No flights found</h3>
-                  <p className="text-muted-foreground mb-6">Try adjusting your filters or search criteria</p>
-                  <div className="flex justify-center gap-3">
-                    <Button variant="outline" onClick={() => {
-                      setStopsFilter([]);
-                      setTimeFilter([]);
-                      setMaxPrice(2000);
-                    }}>
-                      Clear Filters
-                    </Button>
-                    <Button onClick={() => navigate("/book-flight")}>Modify Search</Button>
-                  </div>
-                </Card>
+                <NoFlightsFound
+                  onClearFilters={() => {
+                    setStopsFilter([]);
+                    setTimeFilter([]);
+                    setMaxPrice(2000);
+                  }}
+                  onModifySearch={() => navigate("/book-flight")}
+                  origin={fromCode}
+                  destination={toCode}
+                />
+              )}
+
+              {/* Price Disclaimer */}
+              {flights.length > 0 && (
+                <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <p className="text-xs text-muted-foreground text-center">
+                    *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
+                    {" "}{AFFILIATE_DISCLOSURE_TEXT.full}
+                  </p>
+                </div>
               )}
             </div>
           </div>
         </div>
       </main>
+
+      {/* Sticky Mobile CTA */}
+      <StickyBookingCTA 
+        lowestPrice={lowestPrice}
+        flightCount={flights.length}
+      />
 
       <Footer />
     </div>
