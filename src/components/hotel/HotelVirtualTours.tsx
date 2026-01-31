@@ -2,12 +2,18 @@ import { Play, Pause, Maximize2, Volume2, VolumeX, Eye, Sparkles } from "lucide-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
+// Import images
+import hotelBeachResort from "@/assets/hotel-beach-resort.jpg";
+import hotelMountainLodge from "@/assets/hotel-mountain-lodge.jpg";
+import hotelLuxuryPool from "@/assets/hotel-luxury-pool.jpg";
+import hotelSpa from "@/assets/hotel-spa.jpg";
+
 const tours = [
   {
     id: 1,
     hotel: "Grand Luxury Resort",
     location: "Maldives",
-    thumbnail: "🏝️",
+    thumbnail: hotelBeachResort,
     duration: "3:45",
     views: "12.5K",
     features: ["Overwater Villa", "Private Pool", "Ocean View"],
@@ -16,7 +22,7 @@ const tours = [
     id: 2,
     hotel: "Alpine Chalet",
     location: "Swiss Alps",
-    thumbnail: "🏔️",
+    thumbnail: hotelMountainLodge,
     duration: "4:20",
     views: "8.2K",
     features: ["Mountain View", "Fireplace", "Ski Access"],
@@ -25,7 +31,7 @@ const tours = [
     id: 3,
     hotel: "Desert Oasis Palace",
     location: "Dubai",
-    thumbnail: "🏜️",
+    thumbnail: hotelLuxuryPool,
     duration: "5:10",
     views: "15.8K",
     features: ["Royal Suite", "Butler Service", "Desert View"],
@@ -34,7 +40,7 @@ const tours = [
     id: 4,
     hotel: "Tropical Paradise",
     location: "Bali",
-    thumbnail: "🌴",
+    thumbnail: hotelSpa,
     duration: "3:55",
     views: "10.3K",
     features: ["Infinity Pool", "Jungle View", "Spa Villa"],
@@ -68,10 +74,12 @@ const HotelVirtualTours = () => {
             {/* Main Video Player */}
             <div className="lg:col-span-2">
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-purple-500/20 aspect-video">
-                {/* Video Placeholder */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-[120px]">{tours[activeTour].thumbnail}</span>
-                </div>
+                {/* Video Placeholder with Real Image */}
+                <img 
+                  src={tours[activeTour].thumbnail}
+                  alt={tours[activeTour].hotel}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
@@ -170,8 +178,12 @@ const HotelVirtualTours = () => {
                       : "bg-card/50 border border-border/50 hover:border-primary/30"
                   }`}
                 >
-                  <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center text-3xl flex-shrink-0">
-                    {tour.thumbnail}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img 
+                      src={tour.thumbnail}
+                      alt={tour.hotel}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-1 text-left">
                     <h4 className="font-medium line-clamp-1">{tour.hotel}</h4>

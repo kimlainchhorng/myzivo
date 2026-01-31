@@ -4,12 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Wifi, Waves, Dumbbell, Heart, ArrowRight, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Import hotel images
+import hotelLuxuryPool from "@/assets/hotel-luxury-pool.jpg";
+import hotelRoomLuxury from "@/assets/hotel-room-luxury.jpg";
+import hotelBoutique from "@/assets/hotel-boutique.jpg";
+import hotelBeachResort from "@/assets/hotel-beach-resort.jpg";
+
 const featuredProperties = [
   {
     id: 1,
     name: "The Ritz-Carlton",
     location: "Central Park, NYC",
-    image: "🏰",
+    image: hotelRoomLuxury,
     rating: 4.9,
     reviews: 4520,
     pricePerNight: 599,
@@ -22,7 +28,7 @@ const featuredProperties = [
     id: 2,
     name: "Four Seasons Resort",
     location: "Beverly Hills, LA",
-    image: "🌴",
+    image: hotelLuxuryPool,
     rating: 4.9,
     reviews: 3890,
     pricePerNight: 549,
@@ -35,7 +41,7 @@ const featuredProperties = [
     id: 3,
     name: "W Hotel",
     location: "South Beach, Miami",
-    image: "🏖️",
+    image: hotelBeachResort,
     rating: 4.8,
     reviews: 2340,
     pricePerNight: 399,
@@ -48,7 +54,7 @@ const featuredProperties = [
     id: 4,
     name: "Mandarin Oriental",
     location: "Las Vegas Strip",
-    image: "🎰",
+    image: hotelBoutique,
     rating: 4.9,
     reviews: 1890,
     pricePerNight: 459,
@@ -96,12 +102,14 @@ const HotelFeaturedProperties = ({ onSelect }: HotelFeaturedPropertiesProps) => 
             >
               <CardContent className="p-0 h-full flex flex-col">
                 <div className={cn(
-                  "relative bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center",
+                  "relative overflow-hidden",
                   property.featured ? "h-48 sm:h-64" : "h-40"
                 )}>
-                  <span className={cn("transition-transform group-hover:scale-110", property.featured ? "text-8xl" : "text-6xl")}>
-                    {property.image}
-                  </span>
+                  <img 
+                    src={property.image} 
+                    alt={property.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
                   <Badge className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                     {property.tag}
                   </Badge>
