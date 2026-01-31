@@ -41,6 +41,10 @@ import HotelStatsBar from "@/components/hotel/HotelStatsBar";
 import HotelPromoSection from "@/components/hotel/HotelPromoSection";
 import HotelTestimonialsSection from "@/components/hotel/HotelTestimonialsSection";
 import HotelTrustIndicators from "@/components/hotel/HotelTrustIndicators";
+import HotelFeaturedProperties from "@/components/hotel/HotelFeaturedProperties";
+import HotelAmenitiesShowcase from "@/components/hotel/HotelAmenitiesShowcase";
+import HotelRewardsSection from "@/components/hotel/HotelRewardsSection";
+import HotelPopularDestinations from "@/components/hotel/HotelPopularDestinations";
 
 // Popular destinations
 const popularCities = [
@@ -561,6 +565,26 @@ const HotelBooking = () => {
             onPromoClick={(code) => toast.success(`Promo code ${code} copied!`)}
           />
         )}
+
+        {/* Featured Properties */}
+        {!searchResults && (
+          <HotelFeaturedProperties 
+            onSelect={(name) => toast.info(`Viewing ${name}`)}
+          />
+        )}
+
+        {/* Amenities Showcase */}
+        {!searchResults && <HotelAmenitiesShowcase />}
+
+        {/* Popular Destinations */}
+        {!searchResults && (
+          <HotelPopularDestinations 
+            onSelect={(city) => setDestination(city)}
+          />
+        )}
+
+        {/* Rewards Section */}
+        {!searchResults && <HotelRewardsSection />}
 
         {/* Testimonials */}
         {!searchResults && <HotelTestimonialsSection />}
