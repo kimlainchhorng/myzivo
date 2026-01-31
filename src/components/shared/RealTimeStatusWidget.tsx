@@ -13,6 +13,11 @@ import { cn } from "@/lib/utils";
 
 interface RealTimeStatusWidgetProps {
   className?: string;
+  flightNumber?: string;
+  departureCode?: string;
+  arrivalCode?: string;
+  departureTime?: string;
+  flightStatus?: "on-time" | "delayed" | "boarding" | "departed";
 }
 
 interface StatusUpdate {
@@ -22,12 +27,6 @@ interface StatusUpdate {
   time: string;
   status: "info" | "warning" | "success";
 }
-
-const mockUpdates: StatusUpdate[] = [
-  { id: "1", type: "flight", message: "Flight AA123 is on time", time: "2 min ago", status: "success" },
-  { id: "2", type: "gate", message: "Gate changed to B24", time: "5 min ago", status: "warning" },
-  { id: "3", type: "boarding", message: "Boarding begins in 45 min", time: "10 min ago", status: "info" },
-];
 
 const statusColors = {
   info: "text-sky-400 bg-sky-500/10",
@@ -42,9 +41,23 @@ const statusIcons = {
   boarding: CheckCircle2,
 };
 
-const RealTimeStatusWidget = ({ className }: RealTimeStatusWidgetProps) => {
+const RealTimeStatusWidget = ({ 
+  className,
+  flightNumber = "AA 1234",
+  departureCode = "JFK",
+  arrivalCode = "CDG",
+  departureTime = "10:30 AM",
+  flightStatus = "on-time"
+}: RealTimeStatusWidgetProps) => {
   const [isLive, setIsLive] = useState(true);
   const [lastUpdate, setLastUpdate] = useState("Just now");
+
+  // Generate dynamic updates based on props
+  const dynamicUpdates: StatusUpdate[] = [
+    { id: "1", type: "flight", message: `Flight ${flightNumber} is ${flightStatus === "on-time" ? "on time" : flightStatus}`, time: "2 min ago", status: flightStatus === "on-time" ? "success" : "warning" },
+    { id: "2", type: "gate", message: "Gate assigned: B24", time: "5 min ago", status: "info" },
+    { id: "3", type: "boarding", message: `Boarding begins in 45 min`, time: "10 min ago", status: "info" },
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -52,6 +65,13 @@ const RealTimeStatusWidget = ({ className }: RealTimeStatusWidgetProps) => {
     }, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  const statusBadgeConfig = {
+    "on-time": { label: "On Time", className: "bg-emerald-500/20 text-emerald-400" },
+    "delayed": { label: "Delayed", className: "bg-red-500/20 text-red-400" },
+    "boarding": { label: "Boarding", className: "bg-amber-500/20 text-amber-400" },
+    "departed": { label: "Departed", className: "bg-sky-500/20 text-sky-400" }
+  };
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -77,21 +97,23 @@ const RealTimeStatusWidget = ({ className }: RealTimeStatusWidgetProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Plane className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium">AA123</span>
+            <span className="text-sm font-medium">{flightNumber}</span>
           </div>
-          <Badge className="bg-emerald-500/20 text-emerald-400">On Time</Badge>
+          <Badge className={statusBadgeConfig[flightStatus].className}>
+            {statusBadgeConfig[flightStatus].label}
+          </Badge>
         </div>
         <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-          <span>JFK</span>
+          <span>{departureCode}</span>
           <ArrowRight className="w-3 h-3" />
-          <span>CDG</span>
-          <span className="ml-auto">Departs 10:30 AM</span>
+          <span>{arrivalCode}</span>
+          <span className="ml-auto">Departs {departureTime}</span>
         </div>
       </div>
 
       {/* Updates List */}
       <div className="space-y-2">
-        {mockUpdates.map((update) => {
+        {dynamicUpdates.map((update) => {
           const Icon = statusIcons[update.type];
           return (
             <div

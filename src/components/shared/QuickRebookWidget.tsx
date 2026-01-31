@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface QuickRebookWidgetProps {
   className?: string;
+  recentTrips?: PastTrip[];
 }
 
 interface PastTrip {
@@ -26,7 +27,7 @@ interface PastTrip {
   isFavorite: boolean;
 }
 
-const pastTrips: PastTrip[] = [
+const defaultTrips: PastTrip[] = [
   { id: "1", type: "flight", title: "NYC → Paris", details: "Air France • Direct", lastBooked: "Mar 2024", price: 899, isFavorite: true },
   { id: "2", type: "hotel", title: "Le Grand Hotel", details: "Paris • 5 nights", lastBooked: "Mar 2024", price: 1250, isFavorite: false },
   { id: "3", type: "flight", title: "NYC → London", details: "British Airways • Direct", lastBooked: "Jan 2024", price: 750, isFavorite: true },
@@ -38,7 +39,11 @@ const typeConfig = {
   car: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10" },
 };
 
-const QuickRebookWidget = ({ className }: QuickRebookWidgetProps) => {
+const QuickRebookWidget = ({ 
+  className,
+  recentTrips = defaultTrips
+}: QuickRebookWidgetProps) => {
+  const trips = recentTrips.length > 0 ? recentTrips : defaultTrips;
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -52,7 +57,7 @@ const QuickRebookWidget = ({ className }: QuickRebookWidgetProps) => {
       </div>
 
       <div className="space-y-3">
-        {pastTrips.map((trip) => {
+        {trips.map((trip) => {
           const config = typeConfig[trip.type];
           const Icon = config.icon;
           

@@ -110,6 +110,10 @@ import SeatSelectionWidget from "@/components/shared/SeatSelectionWidget";
 import MealPreferenceWidget from "@/components/shared/MealPreferenceWidget";
 import CheckInReminderWidget from "@/components/shared/CheckInReminderWidget";
 import BoardingPassWidget from "@/components/shared/BoardingPassWidget";
+import FlightTrackerWidget from "@/components/shared/FlightTrackerWidget";
+import CarbonFootprintWidget from "@/components/shared/CarbonFootprintWidget";
+import AITravelAssistantWidget from "@/components/shared/AITravelAssistantWidget";
+import UpgradeOpportunityWidget from "@/components/shared/UpgradeOpportunityWidget";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 
@@ -516,10 +520,62 @@ const FlightBooking = () => {
               </div>
             </section>
 
-            {/* Real-Time Status */}
+            {/* Real-Time Status & Flight Tracker */}
             <section className="py-8 border-t border-border/50">
-              <div className="container mx-auto px-4 max-w-4xl">
-                <RealTimeStatusWidget />
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Live Flight Information</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <RealTimeStatusWidget 
+                    flightNumber="AA 1234" 
+                    departureCode={fromCode} 
+                    arrivalCode={toCode}
+                    departureTime="10:30 AM"
+                    flightStatus="on-time"
+                  />
+                  <FlightTrackerWidget 
+                    flightNumber="AA 1234"
+                    airline="American Airlines"
+                    departureCode={fromCode}
+                    arrivalCode={toCode}
+                    departureCity={fromCity.split(" (")[0]}
+                    arrivalCity={toCity.split(" (")[0] || "New York"}
+                    status="in-flight"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* AI Assistant & Upgrades */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Smart Travel Tools</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <AITravelAssistantWidget 
+                    destination={toCity.split(" (")[0] || "Paris"} 
+                    departureCity={fromCity.split(" (")[0]}
+                  />
+                  <UpgradeOpportunityWidget 
+                    currentClass={cabinClass as "economy" | "premium" | "business"}
+                    route={`${fromCode} → ${toCode}`}
+                    basePrice={selectedFlight?.price || 650}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Carbon Footprint & Sustainability */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Sustainable Travel</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <CarbonFootprintWidget 
+                    distanceKm={5500}
+                    cabinClass={cabinClass as "economy" | "premium" | "business" | "first"}
+                    passengers={parseInt(passengers)}
+                    airline={selectedFlight?.airline || "United Airlines"}
+                  />
+                  <TripModificationWidget />
+                </div>
               </div>
             </section>
 
@@ -527,28 +583,28 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <TripModificationWidget />
                   <TravelDocumentsWidget />
+                  <LoyaltyTierWidget memberMiles={42500} monthlyEarned={2500} />
                 </div>
               </div>
             </section>
 
-            {/* Loyalty & Comparison */}
+            {/* Trip Comparison & Sharing */}
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <LoyaltyTierWidget />
                   <TripComparisonWidget />
+                  <TripSharingWidget tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
                 </div>
               </div>
             </section>
 
-            {/* Trip Sharing & Rating */}
+            {/* Trip Rating */}
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <TripSharingWidget tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
-                  <TripRatingWidget providerName="Air France" />
+                  <TripRatingWidget providerName={selectedFlight?.airline || "Air France"} />
+                  <RefundTrackerWidget />
                 </div>
               </div>
             </section>

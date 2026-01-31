@@ -12,27 +12,41 @@ import { cn } from "@/lib/utils";
 
 interface LoyaltyTierWidgetProps {
   className?: string;
+  memberMiles?: number;
+  memberName?: string;
+  monthlyEarned?: number;
 }
 
 const tiers = [
-  { name: "Bronze", minMiles: 0, color: "from-amber-700 to-amber-600" },
-  { name: "Silver", minMiles: 25000, color: "from-gray-400 to-gray-300" },
-  { name: "Gold", minMiles: 50000, color: "from-amber-500 to-yellow-400" },
-  { name: "Platinum", minMiles: 100000, color: "from-purple-500 to-pink-400" },
+  { name: "Bronze", minMiles: 0, color: "from-amber-700 to-amber-600", benefits: ["Basic seat selection"] },
+  { name: "Silver", minMiles: 25000, color: "from-gray-400 to-gray-300", benefits: ["Free seat selection", "Priority boarding", "1.5x miles"] },
+  { name: "Gold", minMiles: 50000, color: "from-amber-500 to-yellow-400", benefits: ["Lounge access", "2x miles", "Free upgrades"] },
+  { name: "Platinum", minMiles: 100000, color: "from-purple-500 to-pink-400", benefits: ["Unlimited lounge", "3x miles", "Companion passes"] },
 ];
 
-const currentBenefits = [
-  { icon: Gift, label: "Free seat selection" },
-  { icon: Zap, label: "Priority boarding" },
-  { icon: Star, label: "1.5x miles earning" },
-];
-
-const LoyaltyTierWidget = ({ className }: LoyaltyTierWidgetProps) => {
-  const currentMiles = 42500;
-  const currentTier = tiers[1]; // Silver
-  const nextTier = tiers[2]; // Gold
-  const progressToNext = ((currentMiles - currentTier.minMiles) / (nextTier.minMiles - currentTier.minMiles)) * 100;
-  const milesToNext = nextTier.minMiles - currentMiles;
+const LoyaltyTierWidget = ({ 
+  className,
+  memberMiles = 42500,
+  memberName = "Traveler",
+  monthlyEarned = 2500
+}: LoyaltyTierWidgetProps) => {
+  // Calculate current tier based on miles
+  const currentTierIndex = tiers.findIndex((tier, index) => {
+    const nextTier = tiers[index + 1];
+    return !nextTier || memberMiles < nextTier.minMiles;
+  });
+  const currentTier = tiers[currentTierIndex];
+  const nextTier = tiers[currentTierIndex + 1] || tiers[currentTierIndex];
+  const progressToNext = currentTierIndex < tiers.length - 1 
+    ? ((memberMiles - currentTier.minMiles) / (nextTier.minMiles - currentTier.minMiles)) * 100 
+    : 100;
+  const milesToNext = nextTier.minMiles - memberMiles;
+  
+  const currentBenefits = [
+    { icon: Gift, label: currentTier.benefits[0] || "Free seat selection" },
+    { icon: Zap, label: currentTier.benefits[1] || "Priority boarding" },
+    { icon: Star, label: currentTier.benefits[2] || "1.5x miles earning" },
+  ];
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -52,10 +66,10 @@ const LoyaltyTierWidget = ({ className }: LoyaltyTierWidgetProps) => {
           <span className="text-xs text-muted-foreground">Total Miles</span>
           <div className="flex items-center gap-1 text-emerald-400 text-xs">
             <TrendingUp className="w-3 h-3" />
-            +2,500 this month
+            +{monthlyEarned.toLocaleString()} this month
           </div>
         </div>
-        <p className="text-3xl font-bold">{currentMiles.toLocaleString()}</p>
+        <p className="text-3xl font-bold">{memberMiles.toLocaleString()}</p>
       </div>
 
       {/* Progress to Next Tier */}

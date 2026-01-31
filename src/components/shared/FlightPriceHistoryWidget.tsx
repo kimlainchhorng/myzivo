@@ -3,25 +3,30 @@ import { TrendingDown, TrendingUp, Calendar, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface FlightPriceHistoryWidgetProps {
-  className?: string;
-  route?: string;
-}
-
 interface PricePoint {
   month: string;
   price: number;
   trend: "low" | "medium" | "high";
 }
 
-const priceHistory: PricePoint[] = [
-  { month: "Aug", price: 245, trend: "medium" },
-  { month: "Sep", price: 198, trend: "low" },
-  { month: "Oct", price: 276, trend: "high" },
-  { month: "Nov", price: 312, trend: "high" },
-  { month: "Dec", price: 389, trend: "high" },
-  { month: "Jan", price: 167, trend: "low" },
-];
+interface FlightPriceHistoryWidgetProps {
+  className?: string;
+  route?: string;
+  priceData?: PricePoint[];
+}
+
+const generatePriceHistory = (basePrice: number = 245): PricePoint[] => {
+  const months = ["Aug", "Sep", "Oct", "Nov", "Dec", "Jan"];
+  const variations = [1.0, 0.8, 1.12, 1.27, 1.58, 0.68];
+  
+  return months.map((month, index) => {
+    const price = Math.round(basePrice * variations[index]);
+    const trend: "low" | "medium" | "high" = 
+      variations[index] < 0.85 ? "low" : 
+      variations[index] > 1.2 ? "high" : "medium";
+    return { month, price, trend };
+  });
+};
 
 const trendColors = {
   low: "bg-emerald-500",
@@ -29,9 +34,14 @@ const trendColors = {
   high: "bg-red-500",
 };
 
-const FlightPriceHistoryWidget = ({ className, route = "JFK → LAX" }: FlightPriceHistoryWidgetProps) => {
+const FlightPriceHistoryWidget = ({ 
+  className, 
+  route = "JFK → LAX",
+  priceData
+}: FlightPriceHistoryWidgetProps) => {
   const [selectedMonth, setSelectedMonth] = useState<PricePoint | null>(null);
   
+  const priceHistory = priceData || generatePriceHistory();
   const maxPrice = Math.max(...priceHistory.map(p => p.price));
   const minPrice = Math.min(...priceHistory.map(p => p.price));
   const avgPrice = Math.round(priceHistory.reduce((a, b) => a + b.price, 0) / priceHistory.length);
