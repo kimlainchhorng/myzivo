@@ -7233,37 +7233,28 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
-          full_name: string | null
+          first_name: string | null
           id: string | null
           is_online: boolean | null
           rating: number | null
-          status: Database["public"]["Enums"]["driver_status"] | null
-          total_trips: number | null
-          vehicle_model: string | null
           vehicle_type: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: never
           id?: string | null
           is_online?: boolean | null
           rating?: number | null
-          status?: Database["public"]["Enums"]["driver_status"] | null
-          total_trips?: number | null
-          vehicle_model?: string | null
           vehicle_type?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
-          full_name?: string | null
+          first_name?: never
           id?: string | null
           is_online?: boolean | null
           rating?: number | null
-          status?: Database["public"]["Enums"]["driver_status"] | null
-          total_trips?: number | null
-          vehicle_model?: string | null
           vehicle_type?: string | null
         }
         Relationships: []
