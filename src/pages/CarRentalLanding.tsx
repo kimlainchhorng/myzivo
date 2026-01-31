@@ -1,11 +1,12 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { CarFront, Search, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, Calendar } from "lucide-react";
+import { CarFront, Search, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, Calendar, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import TrustIndicators from "@/components/shared/TrustIndicators";
+import TravelFAQ from "@/components/shared/TravelFAQ";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -177,6 +178,19 @@ export default function CarRentalLanding() {
         </section>
 
         <TrustIndicators />
+
+        {/* FAQ Section with Schema */}
+        <TravelFAQ serviceType="cars" />
+
+        {/* Redirect Notice */}
+        <section className="py-6 bg-emerald-500/5 border-y border-emerald-500/20">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <ExternalLink className="w-4 h-4 text-emerald-500" />
+              <span>You will be redirected to our trusted travel partner to complete your booking.</span>
+            </div>
+          </div>
+        </section>
 
         {/* Affiliate Disclaimer */}
         <section className="py-8 border-t border-border/50">
