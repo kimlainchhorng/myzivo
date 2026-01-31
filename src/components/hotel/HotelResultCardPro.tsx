@@ -14,11 +14,11 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
 
 /**
  * PROFESSIONAL HOTEL RESULT CARD
- * Booking.com quality design
- * Image-first with clear rating, location, price
+ * With full affiliate deep link support
  */
 
 interface HotelResultCardProProps {
@@ -36,6 +36,12 @@ interface HotelResultCardProProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onBook?: () => void;
+  // Search context for deep links
+  destination?: string;
+  checkIn?: string;
+  checkOut?: string;
+  guests?: number;
+  rooms?: number;
 }
 
 export default function HotelResultCardPro({
@@ -53,7 +59,14 @@ export default function HotelResultCardPro({
   isSelected,
   onSelect,
   onBook,
+  destination,
+  checkIn,
+  checkOut,
+  guests = 2,
+  rooms = 1,
 }: HotelResultCardProProps) {
+  const { redirectWithParams, redirectSimple } = useHotelRedirect('hotel_result_card', 'result_card');
+
   const getAmenityIcon = (amenity: string) => {
     const lower = amenity.toLowerCase();
     if (lower.includes('wifi') || lower.includes('internet')) return <Wifi className="w-3 h-3" />;
@@ -73,6 +86,25 @@ export default function HotelResultCardPro({
   };
 
   const ratingInfo = getRatingLabel(rating);
+
+  const handleBookClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // Use deep link if we have search context
+    if (destination && checkIn && checkOut) {
+      redirectWithParams({
+        destination: destination || city,
+        checkIn,
+        checkOut,
+        guests,
+        rooms,
+      });
+    } else {
+      redirectSimple();
+    }
+    
+    onBook?.();
+  };
 
   return (
     <Card 
@@ -183,7 +215,7 @@ export default function HotelResultCardPro({
                       <p className="text-xs text-muted-foreground">From</p>
                       <p className="text-xl sm:text-2xl font-bold">
                         ${pricePerNight}
-                        <span className="text-sm font-normal text-muted-foreground">/night</span>
+                        <span className="text-sm font-normal text-muted-foreground">* /night</span>
                       </p>
                     </>
                   ) : priceLevel ? (
@@ -194,20 +226,20 @@ export default function HotelResultCardPro({
                   ) : null}
                 </div>
 
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBook?.();
-                  }}
-                  className={cn(
-                    "gap-2 font-semibold",
-                    "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
-                    "shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
-                  )}
-                >
-                  View Deals
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
+                <div className="flex flex-col items-end gap-1">
+                  <Button
+                    onClick={handleBookClick}
+                    className={cn(
+                      "gap-2 font-semibold min-h-[44px] touch-manipulation active:scale-[0.98]",
+                      "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
+                      "shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
+                    )}
+                  >
+                    View Deals
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                  <p className="text-[9px] text-muted-foreground">Opens partner site</p>
+                </div>
               </div>
             </div>
           </div>

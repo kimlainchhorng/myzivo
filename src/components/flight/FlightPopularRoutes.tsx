@@ -2,8 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plane, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
+import { format, addDays } from "date-fns";
 
 const routes = [
   { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true },
@@ -21,6 +21,27 @@ interface FlightPopularRoutesProps {
 }
 
 const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
+  const { redirectWithParams } = useFlightRedirect('popular_routes', 'popular_route');
+
+  // Generate dynamic dates (2 weeks from now, 1 week trip)
+  const departDate = format(addDays(new Date(), 14), 'yyyy-MM-dd');
+  const returnDate = format(addDays(new Date(), 21), 'yyyy-MM-dd');
+
+  const handleRouteClick = (route: typeof routes[0]) => {
+    // Use dynamic deep link with real parameters
+    redirectWithParams({
+      origin: route.from,
+      destination: route.to,
+      departDate,
+      returnDate,
+      passengers: 1,
+      cabinClass: 'economy',
+      tripType: 'roundtrip',
+    });
+    
+    onSelect?.(route.from, route.to);
+  };
+
   return (
     <section className="py-12 sm:py-16 border-t border-border/50 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent" />
@@ -49,25 +70,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                 "hover:border-sky-500/50 hover:-translate-y-1 touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
-              onClick={() => {
-                trackAffiliateClick({
-                  flightId: `popular-${route.from}-${route.to}`,
-                  airline: 'Multiple',
-                  airlineCode: 'ALL',
-                  origin: route.from,
-                  destination: route.to,
-                  price: route.price,
-                  passengers: 1,
-                  cabinClass: 'economy',
-                  affiliatePartner: 'searadar',
-                  referralUrl: AFFILIATE_LINKS.flights.url,
-                  source: 'popular_routes',
-                  ctaType: 'result_card',
-                  serviceType: 'flights',
-                });
-                window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
-                onSelect?.(route.from, route.to);
-              }}
+              onClick={() => handleRouteClick(route)}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-4">
