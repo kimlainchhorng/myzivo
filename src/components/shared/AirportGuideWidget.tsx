@@ -13,13 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface AirportGuideWidgetProps {
-  className?: string;
-  airportCode?: string;
-  airportName?: string;
-  terminal?: string;
-}
-
 interface Amenity {
   name: string;
   type: string;
@@ -28,7 +21,26 @@ interface Amenity {
   icon: React.ElementType;
 }
 
-const amenities: Amenity[] = [
+interface AirportStats {
+  securityWait?: string;
+  loungesAvailable?: number;
+  diningOptions?: number;
+}
+
+interface AirportGuideWidgetProps {
+  className?: string;
+  airportCode?: string;
+  airportName?: string;
+  terminal?: string;
+  gate?: string;
+  hasFreeWifi?: boolean;
+  amenities?: Amenity[];
+  stats?: AirportStats;
+  onViewMap?: () => void;
+  onBookLounge?: () => void;
+}
+
+const defaultAmenities: Amenity[] = [
   { name: "Sky Lounge", type: "Lounge", location: "Gate B12", rating: 4.5, icon: Armchair },
   { name: "Blue Bottle Coffee", type: "Cafe", location: "Gate B8", rating: 4.2, icon: Coffee },
   { name: "Hudson News", type: "Shopping", location: "Main Hall", icon: ShoppingBag },
@@ -39,7 +51,13 @@ const AirportGuideWidget = ({
   className, 
   airportCode = "JFK",
   airportName = "John F. Kennedy International",
-  terminal = "Terminal 4"
+  terminal = "Terminal 4",
+  gate,
+  hasFreeWifi = true,
+  amenities = defaultAmenities,
+  stats = { securityWait: "~15 min", loungesAvailable: 3, diningOptions: 24 },
+  onViewMap,
+  onBookLounge
 }: AirportGuideWidgetProps) => {
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -56,10 +74,20 @@ const AirportGuideWidget = ({
         <p className="font-semibold">{airportName}</p>
         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
           <span>{terminal}</span>
-          <span>•</span>
-          <span className="flex items-center gap-1">
-            <Wifi className="w-3 h-3" /> Free WiFi
-          </span>
+          {gate && (
+            <>
+              <span>•</span>
+              <span>Gate {gate}</span>
+            </>
+          )}
+          {hasFreeWifi && (
+            <>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <Wifi className="w-3 h-3" /> Free WiFi
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -68,23 +96,25 @@ const AirportGuideWidget = ({
         <div className="p-2 rounded-lg bg-muted/20 text-center">
           <Clock className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Security</p>
-          <p className="text-[10px] text-muted-foreground">~15 min wait</p>
+          <p className="text-[10px] text-muted-foreground">{stats.securityWait} wait</p>
         </div>
         <div className="p-2 rounded-lg bg-muted/20 text-center">
           <Armchair className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Lounges</p>
-          <p className="text-[10px] text-muted-foreground">3 available</p>
+          <p className="text-[10px] text-muted-foreground">{stats.loungesAvailable} available</p>
         </div>
         <div className="p-2 rounded-lg bg-muted/20 text-center">
           <Utensils className="w-4 h-4 mx-auto mb-1 text-muted-foreground" />
           <p className="text-xs font-medium">Dining</p>
-          <p className="text-[10px] text-muted-foreground">24 options</p>
+          <p className="text-[10px] text-muted-foreground">{stats.diningOptions} options</p>
         </div>
       </div>
 
       {/* Nearby Amenities */}
       <div>
-        <p className="text-xs text-muted-foreground mb-2">Near Your Gate</p>
+        <p className="text-xs text-muted-foreground mb-2">
+          {gate ? `Near Gate ${gate}` : "Near Your Gate"}
+        </p>
         <div className="space-y-2">
           {amenities.map((amenity, i) => {
             const Icon = amenity.icon;
@@ -117,11 +147,11 @@ const AirportGuideWidget = ({
 
       {/* Actions */}
       <div className="flex gap-2 mt-4">
-        <Button variant="outline" size="sm" className="flex-1 text-xs">
+        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onViewMap}>
           <MapPin className="w-3 h-3 mr-1" />
           Terminal Map
         </Button>
-        <Button variant="outline" size="sm" className="flex-1 text-xs">
+        <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={onBookLounge}>
           <Armchair className="w-3 h-3 mr-1" />
           Book Lounge
         </Button>

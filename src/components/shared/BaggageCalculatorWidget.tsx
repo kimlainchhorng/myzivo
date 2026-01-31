@@ -5,12 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-interface BaggageCalculatorWidgetProps {
-  className?: string;
-  includedBags?: number;
-  maxWeight?: number;
-}
-
 interface BagType {
   id: string;
   name: string;
@@ -19,37 +13,71 @@ interface BagType {
   included: boolean;
 }
 
+interface BaggageCalculatorWidgetProps {
+  className?: string;
+  includedBags?: number;
+  maxWeight?: number;
+  maxBagsAllowed?: number;
+  additionalBagPrice?: number;
+  overweightFeePerKg?: number;
+  currency?: string;
+  initialWeight?: number;
+  onBaggageChange?: (bags: BagType[], totalCost: number) => void;
+}
+
 const BaggageCalculatorWidget = ({ 
   className, 
   includedBags = 1,
-  maxWeight = 23 
+  maxWeight = 23,
+  maxBagsAllowed = 4,
+  additionalBagPrice = 35,
+  overweightFeePerKg = 15,
+  currency = "$",
+  initialWeight = 18,
+  onBaggageChange
 }: BaggageCalculatorWidgetProps) => {
   const [bags, setBags] = useState<BagType[]>([
-    { id: "1", name: "Checked Bag 1", maxWeight: 23, price: 0, included: true },
+    { id: "1", name: "Checked Bag 1", maxWeight, price: 0, included: true },
   ]);
-  const [currentWeight, setCurrentWeight] = useState(18);
+  const [currentWeight, setCurrentWeight] = useState(initialWeight);
 
   const addBag = () => {
-    if (bags.length < 4) {
-      setBags([...bags, {
+    if (bags.length < maxBagsAllowed) {
+      const newBags = [...bags, {
         id: String(bags.length + 1),
         name: `Checked Bag ${bags.length + 1}`,
-        maxWeight: 23,
-        price: bags.length >= includedBags ? 35 : 0,
+        maxWeight,
+        price: bags.length >= includedBags ? additionalBagPrice : 0,
         included: bags.length < includedBags
-      }]);
+      }];
+      setBags(newBags);
+      const totalCost = newBags.reduce((sum, bag) => sum + bag.price, 0) + 
+        (currentWeight > maxWeight ? (currentWeight - maxWeight) * overweightFeePerKg : 0);
+      onBaggageChange?.(newBags, totalCost);
     }
   };
 
   const removeBag = () => {
     if (bags.length > 1) {
-      setBags(bags.slice(0, -1));
+      const newBags = bags.slice(0, -1);
+      setBags(newBags);
+      const totalCost = newBags.reduce((sum, bag) => sum + bag.price, 0) + 
+        (currentWeight > maxWeight ? (currentWeight - maxWeight) * overweightFeePerKg : 0);
+      onBaggageChange?.(newBags, totalCost);
     }
+  };
+
+  const handleWeightChange = (weight: number) => {
+    setCurrentWeight(weight);
+    const totalCost = bags.reduce((sum, bag) => sum + bag.price, 0) + 
+      (weight > maxWeight ? (weight - maxWeight) * overweightFeePerKg : 0);
+    onBaggageChange?.(bags, totalCost);
   };
 
   const totalCost = bags.reduce((sum, bag) => sum + bag.price, 0);
   const weightPercentage = (currentWeight / maxWeight) * 100;
   const isOverweight = currentWeight > maxWeight;
+  const overweightFee = isOverweight ? (currentWeight - maxWeight) * overweightFeePerKg : 0;
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -67,7 +95,7 @@ const BaggageCalculatorWidget = ({
       <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
         <div>
           <p className="text-sm font-medium">Checked Bags</p>
-          <p className="text-xs text-muted-foreground">Max 4 bags per passenger</p>
+          <p className="text-xs text-muted-foreground">Max {maxBagsAllowed} bags per passenger</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -85,7 +113,7 @@ const BaggageCalculatorWidget = ({
             size="icon"
             className="h-8 w-8"
             onClick={addBag}
-            disabled={bags.length >= 4}
+            disabled={bags.length >= maxBagsAllowed}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -102,7 +130,7 @@ const BaggageCalculatorWidget = ({
               min="0"
               max="32"
               value={currentWeight}
-              onChange={(e) => setCurrentWeight(Number(e.target.value))}
+              onChange={(e) => handleWeightChange(Number(e.target.value))}
               className="w-20 h-2 bg-muted rounded-lg appearance-none cursor-pointer"
             />
             <span className={cn(
@@ -131,7 +159,7 @@ const BaggageCalculatorWidget = ({
             <span className="text-sm font-medium text-red-400">Overweight</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Excess baggage fee: ${(currentWeight - maxWeight) * 15}/kg = ${(currentWeight - maxWeight) * 15}
+            Excess baggage fee: {currency}{overweightFeePerKg}/kg = {currency}{overweightFee}
           </p>
         </div>
       ) : (
@@ -154,20 +182,20 @@ const BaggageCalculatorWidget = ({
             <div key={bag.id} className="flex items-center justify-between text-sm">
               <span>{bag.name}</span>
               <span className={bag.included ? "text-emerald-400" : "text-foreground"}>
-                {bag.included ? "Included" : `$${bag.price}`}
+                {bag.included ? "Included" : `${currency}${bag.price}`}
               </span>
             </div>
           ))}
           {isOverweight && (
             <div className="flex items-center justify-between text-sm text-red-400">
               <span>Overweight Fee</span>
-              <span>${(currentWeight - maxWeight) * 15}</span>
+              <span>{currency}{overweightFee}</span>
             </div>
           )}
         </div>
         <div className="border-t border-border/50 mt-2 pt-2 flex items-center justify-between font-semibold">
           <span>Total</span>
-          <span>${totalCost + (isOverweight ? (currentWeight - maxWeight) * 15 : 0)}</span>
+          <span>{currency}{totalCost + overweightFee}</span>
         </div>
       </div>
 

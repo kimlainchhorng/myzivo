@@ -5,34 +5,49 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
+interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+}
+
 interface CheckInReminderWidgetProps {
   className?: string;
   flightNumber?: string;
   departureTime?: Date;
   checkInOpens?: Date;
   airline?: string;
+  defaultNotifications?: NotificationPreferences;
+  onCheckIn?: () => void;
+  onNotificationChange?: (prefs: NotificationPreferences) => void;
 }
 
 const CheckInReminderWidget = ({ 
   className, 
   flightNumber = "AA 1234",
-  departureTime = new Date(Date.now() + 26 * 60 * 60 * 1000), // 26 hours from now
-  checkInOpens = new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-  airline = "American Airlines"
+  departureTime,
+  checkInOpens,
+  airline = "American Airlines",
+  defaultNotifications = { email: true, push: true, sms: false },
+  onCheckIn,
+  onNotificationChange
 }: CheckInReminderWidgetProps) => {
-  const [timeUntilCheckIn, setTimeUntilCheckIn] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: true,
-    sms: false
-  });
+  // Default to 26 hours and 2 hours from now if not provided
+  const defaultDepartureTime = new Date(Date.now() + 26 * 60 * 60 * 1000);
+  const defaultCheckInOpens = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  
+  const actualDepartureTime = departureTime || defaultDepartureTime;
+  const actualCheckInOpens = checkInOpens || defaultCheckInOpens;
 
-  const checkInOpen = new Date() >= checkInOpens;
+  const [timeUntilCheckIn, setTimeUntilCheckIn] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [notifications, setNotifications] = useState<NotificationPreferences>(defaultNotifications);
+
+  const checkInOpen = new Date() >= actualCheckInOpens;
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const diff = checkInOpens.getTime() - now.getTime();
+      const diff = actualCheckInOpens.getTime() - now.getTime();
       
       if (diff > 0) {
         const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -45,7 +60,13 @@ const CheckInReminderWidget = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [checkInOpens]);
+  }, [actualCheckInOpens]);
+
+  const handleNotificationChange = (key: keyof NotificationPreferences, checked: boolean) => {
+    const newPrefs = { ...notifications, [key]: checked };
+    setNotifications(newPrefs);
+    onNotificationChange?.(newPrefs);
+  };
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -83,7 +104,7 @@ const CheckInReminderWidget = ({
           <p className="text-xs text-muted-foreground mb-3">
             Complete your check-in now to select your seat and get your boarding pass.
           </p>
-          <Button className="w-full gap-2">
+          <Button className="w-full gap-2" onClick={onCheckIn}>
             <ExternalLink className="w-4 h-4" />
             Check In Now
           </Button>
@@ -121,7 +142,7 @@ const CheckInReminderWidget = ({
             </div>
             <Switch 
               checked={notifications.email}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, email: checked }))}
+              onCheckedChange={(checked) => handleNotificationChange('email', checked)}
             />
           </div>
           <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
@@ -131,7 +152,7 @@ const CheckInReminderWidget = ({
             </div>
             <Switch 
               checked={notifications.push}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, push: checked }))}
+              onCheckedChange={(checked) => handleNotificationChange('push', checked)}
             />
           </div>
           <div className="flex items-center justify-between p-2 rounded-lg bg-muted/20">
@@ -141,7 +162,7 @@ const CheckInReminderWidget = ({
             </div>
             <Switch 
               checked={notifications.sms}
-              onCheckedChange={(checked) => setNotifications(prev => ({ ...prev, sms: checked }))}
+              onCheckedChange={(checked) => handleNotificationChange('sms', checked)}
             />
           </div>
         </div>
