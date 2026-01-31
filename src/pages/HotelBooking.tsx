@@ -49,6 +49,12 @@ import HotelNewsletterSection from "@/components/hotel/HotelNewsletterSection";
 import HotelFAQSection from "@/components/hotel/HotelFAQSection";
 import HotelSavingsCalculator from "@/components/hotel/HotelSavingsCalculator";
 import HotelMobileAppPromo from "@/components/hotel/HotelMobileAppPromo";
+import HotelLoyaltyProgram from "@/components/hotel/HotelLoyaltyProgram";
+import HotelCompareWidget from "@/components/hotel/HotelCompareWidget";
+import HotelLastMinuteDeals from "@/components/hotel/HotelLastMinuteDeals";
+import HotelSeasonalPromos from "@/components/hotel/HotelSeasonalPromos";
+import HotelSocialProof from "@/components/hotel/HotelSocialProof";
+import HotelPriceGuarantee from "@/components/hotel/HotelPriceGuarantee";
 
 // Popular destinations
 const popularCities = [
@@ -589,6 +595,24 @@ const HotelBooking = () => {
 
         {/* Rewards Section */}
         {!searchResults && <HotelRewardsSection />}
+
+        {/* Loyalty Program */}
+        {!searchResults && <HotelLoyaltyProgram />}
+
+        {/* Last Minute Deals */}
+        {!searchResults && <HotelLastMinuteDeals />}
+
+        {/* Compare Widget */}
+        {!searchResults && <HotelCompareWidget />}
+
+        {/* Seasonal Promos */}
+        {!searchResults && <HotelSeasonalPromos />}
+
+        {/* Social Proof */}
+        {!searchResults && <HotelSocialProof />}
+
+        {/* Price Guarantee */}
+        {!searchResults && <HotelPriceGuarantee />}
 
         {/* Savings Calculator */}
         {!searchResults && <HotelSavingsCalculator />}

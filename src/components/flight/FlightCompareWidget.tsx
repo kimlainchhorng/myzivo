@@ -1,0 +1,119 @@
+import { useState } from "react";
+import { Scale, X, Plus, Clock, Plane, Luggage, Utensils, Wifi, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+interface CompareFlight {
+  id: string;
+  airline: string;
+  route: string;
+  price: number;
+  duration: string;
+  stops: number;
+  departure: string;
+  arrival: string;
+  amenities: string[];
+}
+
+const sampleFlights: CompareFlight[] = [
+  { id: "1", airline: "Delta", route: "LAX → JFK", price: 299, duration: "5h 15m", stops: 0, departure: "6:00 AM", arrival: "2:15 PM", amenities: ["wifi", "meals", "entertainment"] },
+  { id: "2", airline: "United", route: "LAX → JFK", price: 279, duration: "5h 45m", stops: 0, departure: "8:30 AM", arrival: "5:15 PM", amenities: ["wifi", "snacks"] },
+  { id: "3", airline: "American", route: "LAX → JFK", price: 249, duration: "7h 20m", stops: 1, departure: "7:00 AM", arrival: "5:20 PM", amenities: ["wifi", "meals", "power"] },
+];
+
+const FlightCompareWidget = () => {
+  const [compareList, setCompareList] = useState<CompareFlight[]>(sampleFlights.slice(0, 2));
+
+  const removeFromCompare = (id: string) => {
+    setCompareList(compareList.filter(f => f.id !== id));
+  };
+
+  const addToCompare = (flight: CompareFlight) => {
+    if (compareList.length < 3 && !compareList.find(f => f.id === flight.id)) {
+      setCompareList([...compareList, flight]);
+    }
+  };
+
+  return (
+    <section className="py-12 px-4 bg-gradient-to-b from-background to-sky-500/5">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <Badge className="mb-3 bg-sky-500/10 text-sky-400 border-sky-500/20">
+            <Scale className="w-3 h-3 mr-1" /> Smart Compare
+          </Badge>
+          <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
+            Compare Flights Side by Side
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {compareList.map((flight, index) => (
+            <div key={flight.id} className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-4">
+              <button
+                onClick={() => removeFromCompare(flight.id)}
+                className="absolute top-2 right-2 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <Badge className="mb-3" variant="secondary">{flight.airline}</Badge>
+              <div className="text-center mb-4">
+                <p className="text-lg font-bold">{flight.route}</p>
+                <p className="text-sm text-muted-foreground">{flight.stops === 0 ? "Nonstop" : `${flight.stops} stop`}</p>
+              </div>
+
+              <div className="flex justify-between items-center mb-4 text-sm">
+                <div className="text-center">
+                  <p className="font-bold">{flight.departure}</p>
+                  <p className="text-xs text-muted-foreground">Depart</p>
+                </div>
+                <div className="flex-1 px-4">
+                  <div className="flex items-center gap-1 justify-center text-muted-foreground">
+                    <Clock className="w-3 h-3" />
+                    <span className="text-xs">{flight.duration}</span>
+                  </div>
+                  <div className="h-px bg-border my-1" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold">{flight.arrival}</p>
+                  <p className="text-xs text-muted-foreground">Arrive</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                {flight.amenities.map((amenity) => (
+                  <Badge key={amenity} variant="outline" className="text-xs">
+                    {amenity}
+                  </Badge>
+                ))}
+              </div>
+
+              <div className="text-center mb-4">
+                <span className="text-3xl font-bold text-sky-400">${flight.price}</span>
+              </div>
+
+              <Button className="w-full" variant={index === 0 ? "default" : "outline"}>
+                {index === 0 ? "Best Price" : "Select"}
+              </Button>
+            </div>
+          ))}
+
+          {compareList.length < 3 && (
+            <button
+              onClick={() => addToCompare(sampleFlights[2])}
+              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
+            >
+              <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">
+                <Plus className="w-8 h-8 text-sky-400" />
+              </div>
+              <p className="font-semibold">Add Flight to Compare</p>
+              <p className="text-sm text-muted-foreground">Up to 3 flights</p>
+            </button>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FlightCompareWidget;
