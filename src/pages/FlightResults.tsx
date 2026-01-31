@@ -24,7 +24,6 @@ import {
 import {
   Plane,
   Clock,
-  ArrowRight,
   ChevronLeft,
   SlidersHorizontal,
   ArrowUpDown,
@@ -33,23 +32,20 @@ import {
   Loader2,
   Star,
   Shield,
-  AlertCircle,
   Wifi,
   Utensils,
   Tv,
-  Crown,
   Sunrise,
   Sunset,
   Moon,
   Sun,
   Filter,
   X,
-  ChevronDown,
   Sparkles,
   Heart,
   Share2,
-  Bell,
   ExternalLink,
+  ShieldCheck,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -61,6 +57,8 @@ import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import NoFlightsFound from "@/components/flight/NoFlightsFound";
+import CrossSellSection from "@/components/flight/CrossSellSection";
+import TravelExtrasSection from "@/components/flight/TravelExtrasSection";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -88,6 +86,7 @@ const FlightResults = () => {
   const toCode = toMatch ? toMatch[1] : "JFK";
 
   const departDate = departDateStr ? parseISO(departDateStr) : undefined;
+  const destinationName = toCity.split(" (")[0] || toCode;
 
   // Fetch real flights
   const { data: realFlights, isLoading } = useRealFlightSearch({
@@ -145,7 +144,6 @@ const FlightResults = () => {
         case "departure":
           return a.departure.time.localeCompare(b.departure.time);
         case "best":
-          // Best = combination of price and duration
           const scoreA = a.price + (parseInt(a.duration.match(/(\d+)h/)?.[1] || "0") * 20);
           const scoreB = b.price + (parseInt(b.duration.match(/(\d+)h/)?.[1] || "0") * 20);
           return scoreA - scoreB;
@@ -290,7 +288,6 @@ const FlightResults = () => {
   const handleBookFlight = (flight: GeneratedFlight, e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // Track the click with CTA type
     trackAffiliateClick({
       flightId: flight.id,
       airline: flight.airline,
@@ -339,16 +336,16 @@ const FlightResults = () => {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/book-flight")}>
-                  Modify Search
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Bell className="w-4 h-4" />
-                  Price Alert
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/book-flight")}>
+                Modify Search
+              </Button>
             </div>
+          </div>
+
+          {/* Trust Signal */}
+          <div className="flex items-center justify-center gap-2 mb-6 text-sm text-muted-foreground">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <span>Compare prices from trusted travel partners</span>
           </div>
 
           <div className="flex gap-6">
@@ -451,7 +448,7 @@ const FlightResults = () => {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">From</p>
-                      <p className="text-xl font-bold text-emerald-500">${lowestPrice}</p>
+                      <p className="text-xl font-bold text-emerald-500">${lowestPrice}*</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -624,8 +621,9 @@ const FlightResults = () => {
                           {/* Price & Actions */}
                           <div className="p-4 lg:p-6 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-muted/20">
                             <div className="text-center">
+                              <p className="text-xs text-muted-foreground">From</p>
                               <p className="text-3xl lg:text-4xl font-bold text-sky-500">${flight.price}</p>
-                              <p className="text-xs text-muted-foreground">per person*</p>
+                              <p className="text-[10px] text-muted-foreground">per person*</p>
                             </div>
                             <div className="flex flex-col gap-2">
                               <Button
@@ -685,10 +683,30 @@ const FlightResults = () => {
               {flights.length > 0 && (
                 <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
                   <p className="text-xs text-muted-foreground text-center">
-                    *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
+                    *Prices are indicative and may change. Final price will be confirmed on our travel partner's website.
                     {" "}{AFFILIATE_DISCLOSURE_TEXT.full}
                   </p>
                 </div>
+              )}
+
+              {/* Cross-Sell Section - Hotels, Cars, Activities */}
+              {flights.length > 0 && (
+                <div className="mt-12">
+                  <CrossSellSection 
+                    destination={destinationName}
+                    origin={fromCity.split(" (")[0]}
+                    checkIn={departDateStr}
+                    checkOut={returnDateStr}
+                  />
+                </div>
+              )}
+
+              {/* Travel Extras Section */}
+              {flights.length > 0 && (
+                <TravelExtrasSection 
+                  destination={destinationName}
+                  className="mt-8"
+                />
               )}
             </div>
           </div>
