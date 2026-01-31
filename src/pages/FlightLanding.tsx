@@ -11,6 +11,7 @@ import PopularRoutesGrid from "@/components/seo/PopularRoutesGrid";
 import PopularDestinationsGrid from "@/components/seo/PopularDestinationsGrid";
 import CrossSellBanner from "@/components/seo/CrossSellBanner";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
+import { InternalLinkGrid } from "@/components/seo";
 import { getCityFromCode, formatRouteTitle } from "@/utils/seoUtils";
 import { Badge } from "@/components/ui/badge";
 import { Plane, Shield, Clock, Globe, TrendingUp } from "lucide-react";
@@ -154,6 +155,9 @@ const FlightLanding = () => {
 
         {/* Cross-Sell Banner */}
         <CrossSellBanner />
+
+        {/* Internal Linking - Cross-sell Hotels & Cars */}
+        <InternalLinkGrid currentService="flights" />
 
         {/* Trusted Partners */}
         <TrustedPartnersSection />

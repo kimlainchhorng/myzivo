@@ -33,6 +33,7 @@ import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import { TrustFeatureCards } from "@/components/marketing";
 import { OGImageMeta } from "@/components/marketing";
+import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/components/seo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -270,11 +271,17 @@ const FlightSearch = () => {
           </BigSearchCard>
         </ImageHero>
 
+        {/* SEO Content Block - H1 and intro for search engines */}
+        <SEOContentBlock serviceType="flights" className="bg-muted/5" />
+
         {/* Popular Destinations with Real Images */}
         <DestinationCardsGrid 
           service="flights" 
           onSelect={handleDestinationSelect}
         />
+
+        {/* Popular Routes Grid for SEO */}
+        <PopularRoutesGrid />
 
         {/* Trust Features */}
         <TrustFeatureCards columns={4} />
@@ -285,7 +292,10 @@ const FlightSearch = () => {
         {/* Travel Extras */}
         <TravelExtrasCTA currentService="flights" />
 
-        {/* FAQ Section */}
+        {/* Internal Linking - Cross-sell to Hotels & Cars */}
+        <InternalLinkGrid currentService="flights" />
+
+        {/* FAQ Section with Schema */}
         <TravelFAQ serviceType="flights" className="bg-muted/20" />
       </main>
 

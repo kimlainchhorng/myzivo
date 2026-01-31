@@ -1,8 +1,13 @@
+# ZIVO Travel - robots.txt
+# Search engine crawling instructions
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +15,24 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Allow: /
+
+# Main Travel Pages
+Allow: /book-flight
+Allow: /book-hotel
+Allow: /rent-car
+Allow: /flights/*
+Allow: /hotels/*
+Allow: /rent-car/*
+
+# Block internal/admin pages
+Disallow: /admin
+Disallow: /driver
+Disallow: /restaurant
+
+# Sitemap location
+Sitemap: https://myzivo.lovable.app/sitemap.xml

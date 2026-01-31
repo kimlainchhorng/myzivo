@@ -36,6 +36,7 @@ import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
+import { SEOContentBlock, InternalLinkGrid } from "@/components/seo";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 
 /**
@@ -328,13 +329,21 @@ const CarRentalBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
+            {/* SEO Content Block */}
+            <SEOContentBlock serviceType="cars" className="bg-muted/5" />
+            
             <DestinationCardsGrid 
               service="cars" 
               onSelect={handleLocationSelect}
             />
+            
             <TrustFeatureCards columns={4} />
             <TrustSection service="cars" />
             <TravelExtrasCTA currentService="cars" />
+            
+            {/* Internal Linking */}
+            <InternalLinkGrid currentService="cars" />
+            
             <TravelFAQ serviceType="cars" className="bg-muted/20" />
           </>
         )}

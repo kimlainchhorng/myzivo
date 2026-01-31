@@ -40,6 +40,7 @@ import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
+import { SEOContentBlock, InternalLinkGrid, PopularDestinationsGrid } from "@/components/seo";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 
 /**
@@ -334,13 +335,24 @@ const HotelBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
+            {/* SEO Content Block */}
+            <SEOContentBlock serviceType="hotels" className="bg-muted/5" />
+            
             <DestinationCardsGrid 
               service="hotels" 
               onSelect={handleDestinationSelect}
             />
+            
+            {/* Popular Destinations for SEO */}
+            <PopularDestinationsGrid />
+            
             <TrustFeatureCards columns={4} />
             <TrustSection service="hotels" />
             <TravelExtrasCTA currentService="hotels" />
+            
+            {/* Internal Linking */}
+            <InternalLinkGrid currentService="hotels" />
+            
             <TravelFAQ serviceType="hotels" className="bg-muted/20" />
           </>
         )}

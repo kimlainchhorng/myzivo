@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import TrustIndicators from "@/components/shared/TrustIndicators";
 import TravelFAQ from "@/components/shared/TravelFAQ";
+import { InternalLinkGrid } from "@/components/seo";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -178,6 +179,9 @@ export default function CarRentalLanding() {
         </section>
 
         <TrustIndicators />
+
+        {/* Internal Linking - Cross-sell Flights & Hotels */}
+        <InternalLinkGrid currentService="cars" />
 
         {/* FAQ Section with Schema */}
         <TravelFAQ serviceType="cars" />
