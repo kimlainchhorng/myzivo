@@ -36,7 +36,9 @@ const FlightLanding = lazy(() => import("./pages/FlightLanding"));
 const FlightResults = lazy(() => import("./pages/FlightResults"));
 const FlightDetails = lazy(() => import("./pages/FlightDetails"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
+const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
+const CarRentalLanding = lazy(() => import("./pages/CarRentalLanding"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
 const GroundTransport = lazy(() => import("./pages/GroundTransport"));
@@ -111,8 +113,17 @@ const App = () => (
                 
                 <Route path="/flights/results" element={<FlightResults />} />
                 <Route path="/flights/details/:id" element={<FlightDetails />} />
+                
+                {/* SEO Hotel Landing Pages */}
+                <Route path="/hotels" element={<HotelLanding />} />
+                <Route path="/hotels/in-:city" element={<HotelLanding />} />
                 <Route path="/book-hotel" element={<HotelBooking />} />
+                
+                {/* SEO Car Rental Landing Pages */}
+                <Route path="/car-rental" element={<CarRentalLanding />} />
+                <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
                 <Route path="/rent-car" element={<CarRentalBooking />} />
+                
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trips" element={<TripHistory />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -121,9 +132,9 @@ const App = () => (
                 <Route path="/driver" element={<DriverApp />} />
                 <Route path="/dashboard" element={<CustomerDashboard />} />
                 <Route path="/restaurant" element={<RestaurantDashboard />} />
-                <Route path="/car-rental" element={<CarRentalDashboard />} />
-                <Route path="/flights" element={<FlightDashboard />} />
-                <Route path="/hotels" element={<HotelDashboard />} />
+                <Route path="/car-rental-dashboard" element={<CarRentalDashboard />} />
+                <Route path="/flights-dashboard" element={<FlightDashboard />} />
+                <Route path="/hotels-dashboard" element={<HotelDashboard />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

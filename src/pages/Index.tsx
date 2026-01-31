@@ -43,6 +43,9 @@ import TripBuilderWidget from "@/components/home/TripBuilderWidget";
 import SavedTripsManager from "@/components/shared/SavedTripsManager";
 import BundleDealsCarousel from "@/components/shared/BundleDealsCarousel";
 import TripPlannerWizard from "@/components/shared/TripPlannerWizard";
+import TravelHeroActions from "@/components/home/TravelHeroActions";
+import HomepagePopularRoutes from "@/components/home/HomepagePopularRoutes";
+import TrustCredibilityBar from "@/components/home/TrustCredibilityBar";
 import { cn } from "@/lib/utils";
 
 // Quick services for mobile
@@ -120,6 +123,53 @@ const MobileHomePage = () => {
               <span className="text-[11px] font-medium text-muted-foreground">{service.label}</span>
             </button>
           ))}
+        </div>
+      </section>
+
+      {/* Travel Quick Actions - Priority CTAs */}
+      <section className="px-4 pb-6">
+        <h2 className="font-display font-bold text-lg mb-4">Travel & Book</h2>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => navigate("/flights")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto mb-2">
+              <Plane className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="font-bold text-xs">Flights</h3>
+            <p className="text-[10px] text-muted-foreground">Compare prices</p>
+          </button>
+
+          <button
+            onClick={() => navigate("/hotels")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-2">
+              <Hotel className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="font-bold text-xs">Hotels</h3>
+            <p className="text-[10px] text-muted-foreground">Best rates</p>
+          </button>
+
+          <button
+            onClick={() => navigate("/car-rental")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-2">
+              <CarFront className="w-5 h-5 text-white" />
+            </div>
+            <h3 className="font-bold text-xs">Cars</h3>
+            <p className="text-[10px] text-muted-foreground">Rent a car</p>
+          </button>
+        </div>
+        
+        {/* Trust Line */}
+        <div className="mt-4 py-3 px-4 rounded-xl bg-muted/30 border border-border/50">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <Shield className="w-3.5 h-3.5 text-primary" />
+            <span>No booking fees • Compare 500+ partners</span>
+          </div>
         </div>
       </section>
 
@@ -256,6 +306,16 @@ const DesktopHomePage = () => {
       <main>
         <HeroSection />
         <UnifiedSearchHub />
+        
+        {/* Travel Actions - Primary Conversion Focus */}
+        <TravelHeroActions />
+        
+        {/* Trust & Credibility */}
+        <TrustCredibilityBar />
+        
+        {/* Popular Routes - High Click Potential */}
+        <HomepagePopularRoutes />
+        
         <PromoBanner />
         <QuickActionsSection />
         
