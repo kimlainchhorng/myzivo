@@ -44,6 +44,10 @@ import CarFeaturedVehicles from "@/components/car/CarFeaturedVehicles";
 import CarCategoriesGrid from "@/components/car/CarCategoriesGrid";
 import CarRentalBenefits from "@/components/car/CarRentalBenefits";
 import CarPopularLocations from "@/components/car/CarPopularLocations";
+import CarNewsletterSection from "@/components/car/CarNewsletterSection";
+import CarFAQSection from "@/components/car/CarFAQSection";
+import CarSavingsCalculator from "@/components/car/CarSavingsCalculator";
+import CarMobileAppPromo from "@/components/car/CarMobileAppPromo";
 
 // Popular locations
 const popularLocations = [
@@ -621,6 +625,18 @@ const CarRentalBooking = () => {
 
         {/* Benefits Section */}
         {!searchResults && <CarRentalBenefits />}
+
+        {/* Savings Calculator */}
+        {!searchResults && <CarSavingsCalculator />}
+
+        {/* Newsletter Section */}
+        {!searchResults && <CarNewsletterSection />}
+
+        {/* FAQ Section */}
+        {!searchResults && <CarFAQSection />}
+
+        {/* Mobile App Promo */}
+        {!searchResults && <CarMobileAppPromo />}
 
         {/* Testimonials */}
         {!searchResults && <CarTestimonialsSection />}
