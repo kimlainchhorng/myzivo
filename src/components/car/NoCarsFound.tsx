@@ -1,7 +1,8 @@
 import { Car, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { carAffiliatePartners } from "@/data/carAffiliatePartners";
+import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface NoCarsFoundProps {
   onModifySearch?: () => void;
@@ -18,15 +19,19 @@ export default function NoCarsFound({
   returnDate,
   driverAge = 25,
 }: NoCarsFoundProps) {
+  const { redirectWithParams, redirectSimple } = useCarRedirect('no_cars_found', 'no_results_fallback');
+
   const handleSearchPartner = () => {
-    const partner = carAffiliatePartners[0]; // Rentalcars.com
-    const url = partner.urlTemplate({
-      pickupLocation: pickupLocation || '',
-      pickupDate,
-      returnDate,
-      driverAge,
-    });
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (pickupLocation && pickupDate && returnDate) {
+      redirectWithParams({
+        pickupLocation,
+        pickupDate,
+        returnDate,
+        driverAge,
+      });
+    } else {
+      redirectSimple();
+    }
   };
 
   return (
@@ -53,7 +58,7 @@ export default function NoCarsFound({
       <div className="max-w-md mx-auto">
         <div className="p-6 rounded-2xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-indigo-500/10 border border-violet-500/20">
           <p className="text-sm text-muted-foreground mb-4">
-            Search thousands of rental cars with our trusted partner
+            Search 500+ car rental providers with our trusted partner
           </p>
           <Button
             size="lg"
@@ -65,7 +70,7 @@ export default function NoCarsFound({
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            You will be redirected to our trusted travel partner to complete your booking.
+            {AFFILIATE_DISCLOSURE_TEXT.short}
           </p>
         </div>
       </div>

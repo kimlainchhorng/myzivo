@@ -1,8 +1,8 @@
-import { ExternalLink, Hotel, Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface HotelStickyBookingCTAProps {
   className?: string;
@@ -23,35 +23,22 @@ export default function HotelStickyBookingCTA({
   rooms = 1,
   hotelCount 
 }: HotelStickyBookingCTAProps) {
+  const { redirectWithParams, redirectSimple } = useHotelRedirect('sticky_booking_cta', 'sticky_cta');
+
   const handleBookClick = () => {
-    // Use Booking.com as default partner
-    const partner = hotelAffiliatePartners[0];
-    const url = partner.urlTemplate({
-      destination: destination || '',
-      checkIn,
-      checkOut,
-      guests,
-      rooms,
-    });
-
-    // Track the click
-    trackAffiliateClick({
-      flightId: `hotel-sticky-${destination}`,
-      airline: partner.name,
-      airlineCode: partner.id.toUpperCase(),
-      origin: 'ZIVO',
-      destination: destination || '',
-      price: 0,
-      passengers: guests,
-      cabinClass: 'standard',
-      affiliatePartner: partner.id,
-      referralUrl: url,
-      source: 'sticky_booking_cta',
-      ctaType: 'sticky_cta',
-      serviceType: 'hotels',
-    });
-
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Use deep link if we have search parameters
+    if (destination && checkIn && checkOut) {
+      redirectWithParams({
+        destination,
+        checkIn,
+        checkOut,
+        guests,
+        rooms,
+      });
+    } else {
+      // Fallback to simple redirect
+      redirectSimple();
+    }
   };
 
   return (
@@ -73,7 +60,7 @@ export default function HotelStickyBookingCTA({
               </div>
             )}
             <p className="text-[10px] text-muted-foreground truncate">
-              Compare prices from Booking.com, Hotels.com & more
+              Compare prices from Hotellook & partners
             </p>
           </div>
 
@@ -91,7 +78,7 @@ export default function HotelStickyBookingCTA({
 
         {/* Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          You will be redirected to our trusted travel partner to complete your booking.
+          {AFFILIATE_DISCLOSURE_TEXT.short}
         </p>
       </div>
     </div>

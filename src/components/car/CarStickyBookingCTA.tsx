@@ -1,8 +1,8 @@
-import { ExternalLink, Car, Sparkles } from "lucide-react";
+import { ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { carAffiliatePartners } from "@/data/carAffiliatePartners";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface CarStickyBookingCTAProps {
   className?: string;
@@ -23,36 +23,23 @@ export default function CarStickyBookingCTA({
   returnTime,
   driverAge = 25,
 }: CarStickyBookingCTAProps) {
+  const { redirectWithParams, redirectSimple } = useCarRedirect('sticky_booking_cta', 'sticky_cta');
+
   const handleBookClick = () => {
-    // Use Rentalcars.com as default partner
-    const partner = carAffiliatePartners[0];
-    const url = partner.urlTemplate({
-      pickupLocation: pickupLocation || '',
-      pickupDate,
-      returnDate,
-      pickupTime,
-      returnTime,
-      driverAge,
-    });
-
-    // Track the click
-    trackAffiliateClick({
-      flightId: `car-sticky-${pickupLocation}`,
-      airline: partner.name,
-      airlineCode: partner.id.toUpperCase(),
-      origin: pickupLocation || '',
-      destination: pickupLocation || '',
-      price: 0,
-      passengers: 1,
-      cabinClass: 'standard',
-      affiliatePartner: partner.id,
-      referralUrl: url,
-      source: 'sticky_booking_cta',
-      ctaType: 'sticky_cta',
-      serviceType: 'car_rental',
-    });
-
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Use deep link if we have search parameters
+    if (pickupLocation && pickupDate && returnDate) {
+      redirectWithParams({
+        pickupLocation,
+        pickupDate,
+        returnDate,
+        pickupTime,
+        returnTime,
+        driverAge,
+      });
+    } else {
+      // Fallback to simple redirect
+      redirectSimple();
+    }
   };
 
   return (
@@ -68,11 +55,11 @@ export default function CarStickyBookingCTA({
           {/* Info Summary */}
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-1">
-              <span className="text-sm font-semibold text-violet-500">6+</span>
-              <span className="text-xs text-muted-foreground">rental sites</span>
+              <span className="text-sm font-semibold text-violet-500">500+</span>
+              <span className="text-xs text-muted-foreground">car providers</span>
             </div>
             <p className="text-[10px] text-muted-foreground truncate">
-              Compare prices from Rentalcars, Kayak & more
+              Compare prices from EconomyBookings & partners
             </p>
           </div>
 
@@ -90,7 +77,7 @@ export default function CarStickyBookingCTA({
 
         {/* Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          You will be redirected to our trusted travel partner to complete your booking.
+          {AFFILIATE_DISCLOSURE_TEXT.short}
         </p>
       </div>
     </div>
