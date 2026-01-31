@@ -40,7 +40,11 @@ import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice
 import HotelPopularDestinations from "@/components/hotel/HotelPopularDestinations";
 import HotelFAQSection from "@/components/hotel/HotelFAQSection";
 import HotelTrustIndicators from "@/components/hotel/HotelTrustIndicators";
+import HotelTopSearchCTA from "@/components/hotel/HotelTopSearchCTA";
+import HotelStickyBookingCTA from "@/components/hotel/HotelStickyBookingCTA";
+import NoHotelsFound from "@/components/hotel/NoHotelsFound";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 
 const HotelBooking = () => {
   const [destination, setDestination] = useState("");
@@ -68,6 +72,21 @@ const HotelBooking = () => {
     }, 100);
   };
 
+  const handleBookHotel = (hotel: TripadvisorLocation, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    // Use Booking.com as default
+    const partner = hotelAffiliatePartners[0];
+    const url = partner.urlTemplate({
+      destination: hotel.name,
+      checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : undefined,
+      checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : undefined,
+      guests: parseInt(guests),
+      rooms: parseInt(rooms),
+    });
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   const getAmenityIcon = (amenity: string) => {
     const lowerAmenity = amenity.toLowerCase();
     if (lowerAmenity.includes('wifi') || lowerAmenity.includes('internet')) return <Wifi className="w-3 h-3" />;
@@ -82,7 +101,7 @@ const HotelBooking = () => {
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
       
-      <main className="pt-16 pb-20">
+      <main className="pt-16 pb-32 lg:pb-20">
         {/* Hero Section */}
         <section className="relative py-8 sm:py-16 lg:py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-radial from-amber-500/12 via-transparent to-transparent" />
@@ -265,7 +284,16 @@ const HotelBooking = () => {
                   </div>
                 </div>
 
-                <AffiliateRedirectNotice variant="banner" className="mb-6" />
+                {/* Top Search CTA */}
+                <HotelTopSearchCTA 
+                  hotelCount={results.length}
+                  destination={destination}
+                  checkIn={checkIn ? format(checkIn, "yyyy-MM-dd") : undefined}
+                  checkOut={checkOut ? format(checkOut, "yyyy-MM-dd") : undefined}
+                  guests={parseInt(guests)}
+                  rooms={parseInt(rooms)}
+                  className="mb-6"
+                />
 
                 <div className="grid lg:grid-cols-3 gap-6">
                   {/* Hotel List */}
@@ -345,33 +373,46 @@ const HotelBooking = () => {
                                 </div>
                               )}
 
-                              {/* CTA */}
+                              {/* CTA Buttons */}
                               <div className="flex items-center gap-2 mt-3">
                                 <Button
                                   size="sm"
-                                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs"
+                                  className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs gap-1"
+                                  onClick={(e) => handleBookHotel(hotel, e)}
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  Book Hotel
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleSelectHotel(hotel);
                                   }}
                                 >
-                                  <ExternalLink className="w-3 h-3 mr-1" />
                                   Compare Prices
                                 </Button>
                                 {hotel.web_url && (
                                   <Button
                                     size="sm"
-                                    variant="outline"
+                                    variant="ghost"
                                     className="text-xs"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       window.open(hotel.web_url, '_blank');
                                     }}
                                   >
-                                    View on TripAdvisor
+                                    TripAdvisor
                                   </Button>
                                 )}
                               </div>
+                              
+                              {/* Redirect notice */}
+                              <p className="text-[9px] text-muted-foreground mt-2">
+                                Opens partner site in new tab
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -416,15 +457,24 @@ const HotelBooking = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Price Disclaimer */}
+                <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <p className="text-xs text-muted-foreground text-center">
+                    *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
+                    ZIVO may earn a commission when you book through partner links.
+                  </p>
+                </div>
               </>
             ) : (
-              <div className="text-center py-12">
-                <Hotel className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No hotels found</h3>
-                <p className="text-muted-foreground">
-                  Try searching for a different destination or adjusting your dates.
-                </p>
-              </div>
+              <NoHotelsFound
+                onModifySearch={() => setHasSearched(false)}
+                destination={destination}
+                checkIn={checkIn ? format(checkIn, "yyyy-MM-dd") : undefined}
+                checkOut={checkOut ? format(checkOut, "yyyy-MM-dd") : undefined}
+                guests={parseInt(guests)}
+                rooms={parseInt(rooms)}
+              />
             )}
           </section>
         )}
@@ -438,6 +488,18 @@ const HotelBooking = () => {
           </>
         )}
       </main>
+
+      {/* Sticky Mobile CTA */}
+      {hasSearched && results.length > 0 && (
+        <HotelStickyBookingCTA
+          destination={destination}
+          checkIn={checkIn ? format(checkIn, "yyyy-MM-dd") : undefined}
+          checkOut={checkOut ? format(checkOut, "yyyy-MM-dd") : undefined}
+          guests={parseInt(guests)}
+          rooms={parseInt(rooms)}
+          hotelCount={results.length}
+        />
+      )}
 
       <Footer />
       <MobileBottomNav />

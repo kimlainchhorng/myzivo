@@ -31,16 +31,20 @@ import CarPopularLocations from "@/components/car/CarPopularLocations";
 import CarFAQSection from "@/components/car/CarFAQSection";
 import CarTrustIndicators from "@/components/car/CarTrustIndicators";
 import CarCategoriesGrid from "@/components/car/CarCategoriesGrid";
+import CarTopSearchCTA from "@/components/car/CarTopSearchCTA";
+import CarStickyBookingCTA from "@/components/car/CarStickyBookingCTA";
+import NoCarsFound from "@/components/car/NoCarsFound";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 
 // Car categories for visual display
 const carCategories = [
-  { name: "Economy", icon: "🚗", description: "Budget-friendly & fuel efficient" },
-  { name: "Compact", icon: "🚙", description: "Perfect for city driving" },
-  { name: "SUV", icon: "🚐", description: "Space for family trips" },
-  { name: "Luxury", icon: "🏎️", description: "Premium driving experience" },
-  { name: "Van", icon: "🚌", description: "Group travel & cargo" },
-  { name: "Convertible", icon: "🚗", description: "Open-top adventure" },
+  { name: "Economy", icon: "🚗", description: "Budget-friendly & fuel efficient", priceFrom: 25 },
+  { name: "Compact", icon: "🚙", description: "Perfect for city driving", priceFrom: 30 },
+  { name: "SUV", icon: "🚐", description: "Space for family trips", priceFrom: 45 },
+  { name: "Luxury", icon: "🏎️", description: "Premium driving experience", priceFrom: 85 },
+  { name: "Van", icon: "🚌", description: "Group travel & cargo", priceFrom: 55 },
+  { name: "Convertible", icon: "🚗", description: "Open-top adventure", priceFrom: 65 },
 ];
 
 const CarRentalBooking = () => {
@@ -65,11 +69,27 @@ const CarRentalBooking = () => {
     }, 100);
   };
 
+  const handleRentCar = (categoryName: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    // Use Rentalcars.com as default
+    const partner = carAffiliatePartners[0];
+    const url = partner.urlTemplate({
+      pickupLocation: pickupLocation,
+      pickupDate: pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined,
+      returnDate: returnDate ? format(returnDate, "yyyy-MM-dd") : undefined,
+      pickupTime,
+      returnTime,
+      driverAge: parseInt(driverAge),
+    });
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <Header />
       
-      <main className="pt-16 pb-20">
+      <main className="pt-16 pb-32 lg:pb-20">
         {/* Hero Section */}
         <section className="relative py-8 sm:py-16 lg:py-24 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-radial from-violet-500/12 via-transparent to-transparent" />
@@ -248,7 +268,16 @@ const CarRentalBooking = () => {
               </p>
             </div>
 
-            <AffiliateRedirectNotice variant="banner" className="mb-6" />
+            {/* Top Search CTA */}
+            <CarTopSearchCTA
+              pickupLocation={pickupLocation}
+              pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
+              returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
+              pickupTime={pickupTime}
+              returnTime={returnTime}
+              driverAge={parseInt(driverAge)}
+              className="mb-6"
+            />
 
             <div className="grid lg:grid-cols-3 gap-6">
               {/* Car Categories */}
@@ -269,18 +298,33 @@ const CarRentalBooking = () => {
                         <p className="text-xs text-muted-foreground mt-1">
                           {category.description}
                         </p>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="mt-3 w-full text-xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCategorySelect(category.name);
-                          }}
-                        >
-                          <ExternalLink className="w-3 h-3 mr-1" />
-                          Compare Prices
-                        </Button>
+                        <p className="text-sm font-semibold text-violet-500 mt-2">
+                          From ${category.priceFrom}/day*
+                        </p>
+                        <div className="flex flex-col gap-2 mt-3">
+                          <Button
+                            size="sm"
+                            className="w-full text-xs bg-gradient-to-r from-violet-500 to-purple-500 text-white gap-1"
+                            onClick={(e) => handleRentCar(category.name, e)}
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            Rent {category.name}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategorySelect(category.name);
+                            }}
+                          >
+                            Compare Prices
+                          </Button>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-2">
+                          Opens partner site
+                        </p>
                       </CardContent>
                     </Card>
                   ))}
@@ -314,6 +358,14 @@ const CarRentalBooking = () => {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+
+                {/* Price Disclaimer */}
+                <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+                  <p className="text-xs text-muted-foreground text-center">
+                    *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
+                    ZIVO may earn a commission when you book through partner links.
+                  </p>
                 </div>
               </div>
 
@@ -358,6 +410,19 @@ const CarRentalBooking = () => {
           </section>
         )}
 
+        {/* No Results State */}
+        {hasSearched && carCategories.length === 0 && (
+          <section className="container mx-auto px-4 py-8">
+            <NoCarsFound
+              onModifySearch={() => setHasSearched(false)}
+              pickupLocation={pickupLocation}
+              pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
+              returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
+              driverAge={parseInt(driverAge)}
+            />
+          </section>
+        )}
+
         {/* Discovery Sections (show when no search) */}
         {!hasSearched && (
           <>
@@ -368,6 +433,18 @@ const CarRentalBooking = () => {
           </>
         )}
       </main>
+
+      {/* Sticky Mobile CTA */}
+      {hasSearched && (
+        <CarStickyBookingCTA
+          pickupLocation={pickupLocation}
+          pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
+          returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
+          pickupTime={pickupTime}
+          returnTime={returnTime}
+          driverAge={parseInt(driverAge)}
+        />
+      )}
 
       <Footer />
       <MobileBottomNav />
