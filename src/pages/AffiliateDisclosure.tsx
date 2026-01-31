@@ -44,13 +44,13 @@ const AffiliateDisclosure = () => {
                 <div className="w-12 h-12 rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
                   <Info className="w-6 h-6 text-sky-500" />
                 </div>
-                <div>
+              <div>
                   <h2 className="text-xl font-bold mb-2">Quick Summary</h2>
                   <p className="text-muted-foreground">
-                    ZIVO Flights is an affiliate partner with various travel booking platforms. 
-                    When you book a flight through our links, we may earn a commission at no 
-                    additional cost to you. This helps us keep our service free while providing 
-                    you with the best flight deals.
+                    <strong>ZIVO does not sell airline tickets.</strong> ZIVO Flights is a flight search and 
+                    comparison platform. We help you find and compare flights from 500+ airlines, and then 
+                    redirect you to our trusted travel partners to complete your booking. When you book a 
+                    flight through our partner links, we may earn a commission at no additional cost to you.
                   </p>
                 </div>
               </div>

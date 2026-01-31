@@ -114,10 +114,10 @@ export default function FlightSearchHero({
   };
 
   const trustBadges = [
-    { icon: Shield, text: "Free Cancellation", color: "text-emerald-500" },
-    { icon: Award, text: "Best Price Guarantee", color: "text-amber-500" },
-    { icon: Clock, text: "24/7 Support", color: "text-sky-500" },
-    { icon: Zap, text: "Instant Confirmation", color: "text-purple-500" },
+    { icon: Search, text: "Compare 500+ Airlines", color: "text-sky-500" },
+    { icon: Shield, text: "Trusted Partners", color: "text-emerald-500" },
+    { icon: Clock, text: "Real-Time Prices", color: "text-amber-500" },
+    { icon: Zap, text: "Fast & Easy", color: "text-purple-500" },
   ];
 
   const quickDestinations = [
@@ -178,13 +178,13 @@ export default function FlightSearchHero({
             ZIVO Flights
           </Badge>
           <h1 className="font-display text-xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight">
-            Find your
+            Search & Compare
             <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent ml-1.5">
-              perfect flight
+              Flights
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed mb-3 sm:mb-4 px-2">
-            Compare 500+ airlines with exclusive deals
+            Compare prices from 500+ airlines worldwide
           </p>
 
           {/* Trust Badges - Horizontal scroll on mobile */}
