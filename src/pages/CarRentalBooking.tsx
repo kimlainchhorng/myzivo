@@ -28,7 +28,7 @@ import CarPartnerSelector from "@/components/car/CarPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
 import CarTopSearchCTA from "@/components/car/CarTopSearchCTA";
 import CarStickyBookingCTA from "@/components/car/CarStickyBookingCTA";
-import TopTierHero from "@/components/shared/TopTierHero";
+import ImageHero from "@/components/shared/ImageHero";
 import BigSearchCard from "@/components/shared/BigSearchCard";
 import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
@@ -107,7 +107,7 @@ const CarRentalBooking = () => {
       
       <main className="pb-32 lg:pb-20">
         {/* Hero with Big Search */}
-        <TopTierHero service="cars" icon={Car}>
+        <ImageHero service="cars" icon={Car}>
           <BigSearchCard service="cars">
             {/* Main Search Fields */}
             <div className="space-y-4">
@@ -247,7 +247,7 @@ const CarRentalBooking = () => {
               Search Cars
             </Button>
           </BigSearchCard>
-        </TopTierHero>
+        </ImageHero>
 
         {/* Search Results */}
         {hasSearched && (

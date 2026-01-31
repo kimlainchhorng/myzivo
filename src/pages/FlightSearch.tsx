@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AirportAutocomplete from "@/components/flight/AirportAutocomplete";
-import TopTierHero from "@/components/shared/TopTierHero";
+import ImageHero from "@/components/shared/ImageHero";
 import BigSearchCard from "@/components/shared/BigSearchCard";
 import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
@@ -83,7 +83,7 @@ const FlightSearch = () => {
 
       <main className="pb-20">
         {/* Hero with Big Search */}
-        <TopTierHero service="flights" icon={Plane}>
+        <ImageHero service="flights" icon={Plane}>
           <BigSearchCard service="flights">
             {/* Trip Type Toggle */}
             <div className="flex flex-wrap gap-2 mb-6">
@@ -265,7 +265,7 @@ const FlightSearch = () => {
               Search Flights
             </Button>
           </BigSearchCard>
-        </TopTierHero>
+        </ImageHero>
 
         {/* Popular Destinations with Real Images */}
         <DestinationCardsGrid 
