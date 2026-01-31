@@ -76,6 +76,12 @@ const CarsAdLanding = lazy(() => import("./pages/ads/CarsAdLanding"));
 const TransfersAdLanding = lazy(() => import("./pages/ads/TransfersAdLanding"));
 const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding"));
 
+// Creator landing pages - lazy load
+const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
+const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
+const CarsCreatorLanding = lazy(() => import("./pages/creators/CarsCreatorLanding"));
+const ExtrasCreatorLanding = lazy(() => import("./pages/creators/ExtrasCreatorLanding"));
+
 const queryClient = new QueryClient();
 
 // Premium loading fallback
@@ -205,6 +211,11 @@ const App = () => (
                 <Route path="/ads/car-rental" element={<CarsAdLanding />} />
                 <Route path="/ads/transfers" element={<TransfersAdLanding />} />
                 <Route path="/ads/activities" element={<ActivitiesAdLanding />} />
+                {/* Creator Landing Pages - for influencer traffic */}
+                <Route path="/creators/flights" element={<FlightsCreatorLanding />} />
+                <Route path="/creators/hotels" element={<HotelsCreatorLanding />} />
+                <Route path="/creators/car-rental" element={<CarsCreatorLanding />} />
+                <Route path="/creators/extras" element={<ExtrasCreatorLanding />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
