@@ -48,9 +48,9 @@ const airlines = [
 ];
 
 const features = [
-  { icon: Shield, label: "Free Cancellation", desc: "Up to 24h before" },
-  { icon: Star, label: "Best Price Guarantee", desc: "Or we'll refund the difference" },
-  { icon: Clock, label: "24/7 Support", desc: "Round the clock assistance" },
+  { icon: Shield, label: "Secure Partners", desc: "Trusted travel providers" },
+  { icon: Star, label: "Compare Prices", desc: "Search 500+ airlines instantly" },
+  { icon: Clock, label: "Real-Time Search", desc: "Live availability & pricing" },
 ];
 
 const stats = [
@@ -129,7 +129,7 @@ const FlightHeroSection = ({ onSearch }: FlightHeroSectionProps) => {
           </h1>
           
           <p className="text-lg sm:text-xl text-foreground/80 max-w-2xl mx-auto leading-relaxed mb-8 font-medium">
-            Compare 500+ airlines instantly. Find the best deals on business class, 
+            Search and compare 500+ airlines instantly. Find great options for business class, 
             first class, and economy flights worldwide.
           </p>
 

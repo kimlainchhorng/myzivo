@@ -72,7 +72,7 @@ const FlightBookingTips = () => {
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Flight Booking Secrets
           </h2>
-          <p className="text-muted-foreground">Insider tips to find the best deals</p>
+          <p className="text-muted-foreground">Insider tips for smarter travel planning</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">

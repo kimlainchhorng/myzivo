@@ -78,7 +78,7 @@ const FlightSearch = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="ZIVO Flights – Search & Compare Flights Worldwide"
-        description="Search and compare flights from 500+ airlines worldwide. Find the best deals and book with trusted travel partners. No booking fees."
+        description="Search and compare flights from 500+ airlines worldwide. Find great options and book with trusted travel partners. No booking fees."
       />
       <Header />
 
@@ -106,7 +106,7 @@ const FlightSearch = () => {
                 </span>
               </h1>
               <p className="text-lg text-white/70 max-w-xl mx-auto">
-                Search and compare flight options to find the best deals for your next trip.
+                Search and compare flight options to find great prices for your next trip.
               </p>
 
               {/* Trust Badges */}

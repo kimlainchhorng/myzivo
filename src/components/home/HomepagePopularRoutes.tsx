@@ -54,7 +54,7 @@ export default function HomepagePopularRoutes() {
               </h2>
             </div>
             <p className="text-muted-foreground">
-              Find the best deals on trending routes
+              Search and compare prices on trending routes
             </p>
           </div>
           <Link

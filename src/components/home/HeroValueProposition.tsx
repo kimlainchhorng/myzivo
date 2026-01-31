@@ -17,8 +17,8 @@ const values = [
   },
   {
     icon: Award,
-    title: "Best Prices",
-    description: "Guaranteed lowest rates or we match it",
+    title: "Compare & Save",
+    description: "Search across trusted travel partners",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
   },

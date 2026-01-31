@@ -66,7 +66,7 @@ export default function FlightPriceCalendar({ className, onSelectDate }: FlightP
             Find the Cheapest Days to Fly
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Explore prices across the month to find the best deals for your trip
+            Explore indicative prices across the month to compare options
           </p>
         </div>
 
