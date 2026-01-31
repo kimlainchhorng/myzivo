@@ -61,7 +61,7 @@ const FlightSeasonalDeals = () => {
             Fly More, Save More
           </h2>
           <p className="text-muted-foreground">
-            Discover the best deals for every season
+            Explore seasonal travel options
           </p>
         </div>
 

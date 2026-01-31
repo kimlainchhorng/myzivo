@@ -41,7 +41,7 @@ export const carAffiliatePartners: CarAffiliatePartner[] = [
     },
     priority: 100,
     commissionRate: 'Up to 7%',
-    features: ['Free cancellation', 'No hidden fees', 'Best price guarantee'],
+    features: ['Free cancellation', 'No hidden fees', 'Price comparison'],
     color: 'bg-orange-500'
   },
   {
@@ -106,7 +106,7 @@ export const carAffiliatePartners: CarAffiliatePartner[] = [
     },
     priority: 80,
     commissionRate: 'Up to 70%',
-    features: ['Full insurance included', 'No hidden fees', 'Best price'],
+    features: ['Full insurance included', 'No hidden fees', 'Great prices'],
     color: 'bg-green-500'
   },
   {

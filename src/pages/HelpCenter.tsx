@@ -71,6 +71,25 @@ const HelpCenter = () => {
     },
   ];
 
+  const travelFAQ = [
+    {
+      q: "How do I book a flight, hotel, or car rental?",
+      a: "ZIVO helps you search and compare prices from trusted travel partners. When you find an option you like, click 'View Deal' or 'Book' to be redirected to our partner's website to complete your booking."
+    },
+    {
+      q: "Does ZIVO process payments for travel bookings?",
+      a: "No. ZIVO is a search and comparison platform. All bookings, payments, refunds, and changes are handled directly by our travel partners. We do not collect or store any payment information."
+    },
+    {
+      q: "How do I change or cancel a travel booking?",
+      a: "Since bookings are completed with our travel partners, you'll need to contact them directly for any changes, cancellations, or refunds. Check your booking confirmation email for partner contact details."
+    },
+    {
+      q: "Are prices on ZIVO accurate?",
+      a: "Prices shown are indicative and sourced from our partners in real-time. Final pricing is confirmed on the partner's website. Prices may change based on availability and demand."
+    },
+  ];
+
   const handleTicketSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setTicketSubmitted(true);
@@ -236,6 +255,36 @@ const HelpCenter = () => {
                     </AccordionItem>
                   ))}
                 </Accordion>
+              </div>
+
+              {/* Travel FAQ */}
+              <div id="flights">
+                <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
+                    <Plane className="h-5 w-5 text-white" />
+                  </div>
+                  Flights, Hotels & Car Rentals
+                </h3>
+                <Accordion type="single" collapsible className="space-y-2">
+                  {travelFAQ.map((item, i) => (
+                    <AccordionItem key={i} value={`travel-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg">
+                      <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
+                        {item.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-5">
+                        {item.a}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+                
+                {/* Partner Disclaimer */}
+                <div className="mt-4 p-4 rounded-xl bg-sky-500/5 border border-sky-500/20">
+                  <p className="text-xs text-muted-foreground">
+                    <strong className="text-foreground">Important:</strong> All bookings, payments, refunds, and changes are handled directly by our travel partners. 
+                    ZIVO is a search and comparison platform and does not collect or process any payment information.
+                  </p>
+                </div>
               </div>
             </TabsContent>
 
