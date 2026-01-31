@@ -30,15 +30,17 @@ import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 
 const footerLinks = {
-  services: [
-    { name: "Rides", href: "/ride", icon: Car },
-    { name: "Food Delivery", href: "/food", icon: UtensilsCrossed },
+  travel: [
     { name: "Flights", href: "/book-flight", icon: Plane },
     { name: "Hotels", href: "/book-hotel", icon: Hotel },
     { name: "Car Rental", href: "/rent-car", icon: Car },
+    { name: "Things to Do", href: "/things-to-do", icon: Ticket },
+  ],
+  services: [
+    { name: "Rides", href: "/ride", icon: Car },
+    { name: "Food Delivery", href: "/food", icon: UtensilsCrossed },
     { name: "Package Delivery", href: "/package-delivery", icon: Package },
     { name: "Bus & Train", href: "/ground-transport", icon: Train },
-    { name: "Events", href: "/events", icon: Ticket },
     { name: "Travel Insurance", href: "/travel-insurance", icon: Shield },
   ],
   company: [
@@ -46,32 +48,18 @@ const footerLinks = {
     { name: "Contact Us", href: "/contact" },
     { name: "Careers", href: "#" },
     { name: "Newsroom", href: "#" },
-    { name: "Blog", href: "#" },
-  ],
-  partners: [
-    { name: "Drive with ZIVO", href: "/drive" },
-    { name: "Deliver with ZIVO", href: "/drive" },
-    { name: "Add Your Restaurant", href: "/restaurant-registration" },
-    { name: "List Your Hotel", href: "#" },
-    { name: "Business Solutions", href: "/partner-agreement" },
-    { name: "Affiliate Program", href: "/affiliate-disclosure" },
   ],
   support: [
     { name: "Help Center", href: "/help" },
     { name: "Safety Center", href: "/help#safety" },
     { name: "Contact Us", href: "/help#contact" },
     { name: "Accessibility", href: "/accessibility" },
-    { name: "Report an Issue", href: "/help#report" },
   ],
   legal: [
     { name: "Terms of Service", href: "/terms-of-service" },
     { name: "Privacy Policy", href: "/privacy-policy" },
-    { name: "Refund Policy", href: "/refund-policy" },
-    { name: "Community Guidelines", href: "/community-guidelines" },
-    { name: "Cookie Settings", href: "#" },
-    { name: "Partner Agreement", href: "/partner-agreement" },
-    { name: "Insurance Policy", href: "/insurance" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
+    { name: "Partner Agreement", href: "/partner-agreement" },
   ],
 };
 
@@ -233,11 +221,29 @@ const Footer = () => {
               </div>
             </div>
 
+            {/* Travel */}
+            <div>
+              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Travel</h4>
+              <ul className="space-y-3">
+                {footerLinks.travel.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                    >
+                      <link.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Services */}
             <div>
               <h4 className="font-display font-bold text-foreground mb-5 text-sm">Services</h4>
               <ul className="space-y-3">
-                {footerLinks.services.slice(0, 6).map((link) => (
+                {footerLinks.services.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
@@ -268,24 +274,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Partners */}
-            <div>
-              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Partners</h4>
-              <ul className="space-y-3">
-                {footerLinks.partners.map((link) => (
-                  <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Support & Legal */}
+            {/* Support */}
             <div>
               <h4 className="font-display font-bold text-foreground mb-5 text-sm">Support</h4>
               <ul className="space-y-3">

@@ -1,4 +1,3 @@
-// CSS animations used instead of framer-motion for mobile performance
 import { useNavigate } from "react-router-dom";
 import { 
   Car, 
@@ -7,55 +6,39 @@ import {
   Clock,
   ChevronRight,
   ArrowRight,
-  Sparkles,
-  MapPin,
   Plane,
   Hotel,
   CarFront,
   Package,
   Ticket,
   Shield,
-  TrendingUp,
   Users,
-  Zap
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import MobileAppShell from "@/components/MobileAppShell";
 import MobileLocationBar from "@/components/MobileLocationBar";
 import MobilePromoBanner from "@/components/MobilePromoBanner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import Header from "@/components/Header";
-import HeroSection from "@/components/HeroSection";
-import FeaturesSection from "@/components/FeaturesSection";
-import TrustSection from "@/components/TrustSection";
-import TestimonialsSection from "@/components/TestimonialsSection";
-import DriverCTASection from "@/components/DriverCTASection";
-import AppDownloadSection from "@/components/AppDownloadSection";
 import Footer from "@/components/Footer";
-import StatsSection from "@/components/StatsSection";
-import { QuickActionsSection, TrendingSection, LiveStatsSection, AllServicesSection } from "@/components/home/HomeSections";
-import PromoBanner from "@/components/home/PromoBanner";
-import HowItWorks from "@/components/home/HowItWorks";
-import PartnersSection from "@/components/home/PartnersSection";
-import CTASection from "@/components/home/CTASection";
-import UnifiedSearchHub from "@/components/home/UnifiedSearchHub";
-import TripBuilderWidget from "@/components/home/TripBuilderWidget";
-import SavedTripsManager from "@/components/shared/SavedTripsManager";
-import BundleDealsCarousel from "@/components/shared/BundleDealsCarousel";
-import TripPlannerWizard from "@/components/shared/TripPlannerWizard";
-import TravelHeroActions from "@/components/home/TravelHeroActions";
-import HomepagePopularRoutes from "@/components/home/HomepagePopularRoutes";
-import TrustCredibilityBar from "@/components/home/TrustCredibilityBar";
 import { cn } from "@/lib/utils";
+
+// New conversion-focused components
+import SimplifiedNav from "@/components/home/SimplifiedNav";
+import ConversionHero from "@/components/home/ConversionHero";
+import ServiceCards from "@/components/home/ServiceCards";
+import WhyZivo from "@/components/home/WhyZivo";
+import PopularDestinations from "@/components/home/PopularDestinations";
+import PlanYourTrip from "@/components/home/PlanYourTrip";
+import CrossSellBanner from "@/components/seo/CrossSellBanner";
 
 // Quick services for mobile
 const quickServices = [
-  { id: "ride", label: "Ride", icon: Car, href: "/ride", color: "text-primary", bgColor: "bg-primary/15" },
-  { id: "food", label: "Food", icon: UtensilsCrossed, href: "/food", color: "text-eats", bgColor: "bg-eats/15" },
   { id: "flights", label: "Flights", icon: Plane, href: "/book-flight", color: "text-sky-400", bgColor: "bg-sky-500/15" },
   { id: "hotels", label: "Hotels", icon: Hotel, href: "/book-hotel", color: "text-amber-400", bgColor: "bg-amber-500/15" },
-  { id: "cars", label: "Cars", icon: CarFront, href: "/rent-car", color: "text-emerald-400", bgColor: "bg-emerald-500/15" },
-  { id: "package", label: "Delivery", icon: Package, href: "/package-delivery", color: "text-violet-400", bgColor: "bg-violet-500/15" },
+  { id: "cars", label: "Cars", icon: CarFront, href: "/rent-car", color: "text-violet-400", bgColor: "bg-violet-500/15" },
+  { id: "ride", label: "Ride", icon: Car, href: "/ride", color: "text-primary", bgColor: "bg-primary/15" },
+  { id: "food", label: "Food", icon: UtensilsCrossed, href: "/food", color: "text-eats", bgColor: "bg-eats/15" },
+  { id: "package", label: "Delivery", icon: Package, href: "/package-delivery", color: "text-rose-400", bgColor: "bg-rose-500/15" },
   { id: "events", label: "Events", icon: Ticket, href: "/events", color: "text-pink-400", bgColor: "bg-pink-500/15" },
   { id: "insurance", label: "Insurance", icon: Shield, href: "/travel-insurance", color: "text-blue-400", bgColor: "bg-blue-500/15" },
 ];
@@ -71,8 +54,8 @@ const featuredRestaurants = [
 
 // Stats for mobile
 const mobileStats = [
-  { value: "5M+", label: "Rides", icon: Car },
-  { value: "10K+", label: "Drivers", icon: Users },
+  { value: "500+", label: "Airlines", icon: Plane },
+  { value: "1M+", label: "Hotels", icon: Hotel },
   { value: "4.9", label: "Rating", icon: Star },
 ];
 
@@ -90,13 +73,60 @@ const MobileHomePage = () => {
               <p className="text-muted-foreground text-sm">
                 {user ? `Hello, ${user.email?.split('@')[0]}` : 'Good morning'} 👋
               </p>
-              <h1 className="font-display text-xl font-bold">Where to today?</h1>
+              <h1 className="font-display text-xl font-bold">Search & Compare Travel</h1>
             </div>
           </div>
         </div>
 
-        <MobileLocationBar variant="search" onSearchClick={() => navigate("/ride")} />
+        <MobileLocationBar variant="search" onSearchClick={() => navigate("/book-flight")} />
       </div>
+
+      {/* Travel Quick Actions - Priority CTAs */}
+      <section className="px-4 pb-6">
+        <h2 className="font-display font-bold text-lg mb-4">Book Travel</h2>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => navigate("/book-flight")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <Plane className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-bold text-sm">Flights</h3>
+            <p className="text-[10px] text-muted-foreground">Compare prices</p>
+          </button>
+
+          <button
+            onClick={() => navigate("/book-hotel")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <Hotel className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-bold text-sm">Hotels</h3>
+            <p className="text-[10px] text-muted-foreground">Best rates</p>
+          </button>
+
+          <button
+            onClick={() => navigate("/rent-car")}
+            className="p-4 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center mx-auto mb-2 shadow-lg">
+              <CarFront className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-bold text-sm">Cars</h3>
+            <p className="text-[10px] text-muted-foreground">Rent a car</p>
+          </button>
+        </div>
+        
+        {/* Trust Line */}
+        <div className="mt-4 py-3 px-4 rounded-xl bg-muted/30 border border-border/50">
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <Shield className="w-3.5 h-3.5 text-primary" />
+            <span>No booking fees • Compare 500+ partners</span>
+          </div>
+        </div>
+      </section>
 
       {/* Promo Banner */}
       <MobilePromoBanner />
@@ -104,7 +134,7 @@ const MobileHomePage = () => {
       {/* Services Grid */}
       <section className="px-4 py-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-bold text-lg">Services</h2>
+          <h2 className="font-display font-bold text-lg">All Services</h2>
         </div>
         <div className="grid grid-cols-4 gap-3">
           {quickServices.map((service, index) => (
@@ -126,77 +156,28 @@ const MobileHomePage = () => {
         </div>
       </section>
 
-      {/* Travel Quick Actions - Priority CTAs */}
-      <section className="px-4 pb-6">
-        <h2 className="font-display font-bold text-lg mb-4">Travel & Book</h2>
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            onClick={() => navigate("/flights")}
-            className="p-4 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mx-auto mb-2">
-              <Plane className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-xs">Flights</h3>
-            <p className="text-[10px] text-muted-foreground">Compare prices</p>
-          </button>
-
-          <button
-            onClick={() => navigate("/hotels")}
-            className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-2">
-              <Hotel className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-xs">Hotels</h3>
-            <p className="text-[10px] text-muted-foreground">Best rates</p>
-          </button>
-
-          <button
-            onClick={() => navigate("/car-rental")}
-            className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 text-center touch-manipulation active:scale-[0.98] transition-transform"
-          >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-2">
-              <CarFront className="w-5 h-5 text-white" />
-            </div>
-            <h3 className="font-bold text-xs">Cars</h3>
-            <p className="text-[10px] text-muted-foreground">Rent a car</p>
-          </button>
-        </div>
-        
-        {/* Trust Line */}
-        <div className="mt-4 py-3 px-4 rounded-xl bg-muted/30 border border-border/50">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Shield className="w-3.5 h-3.5 text-primary" />
-            <span>No booking fees • Compare 500+ partners</span>
+      {/* Stats Section */}
+      <section className="px-4 py-6">
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-teal-500/5 border border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-2 mb-4">
+            <Shield className="w-4 h-4 text-primary" />
+            <h3 className="font-display font-bold">Why ZIVO?</h3>
           </div>
-        </div>
-      </section>
-
-      {/* Quick Actions Cards */}
-      <section className="px-4 pb-6">
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => navigate("/ride")}
-            className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-500/10 border border-primary/20 text-left touch-manipulation active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-left-4 duration-300"
-          >
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center mb-3">
-              <Car className="w-5 h-5 text-primary" />
-            </div>
-            <h3 className="font-bold text-sm mb-1">Book a Ride</h3>
-            <p className="text-xs text-muted-foreground">Get there fast</p>
-          </button>
-
-          <button
-            onClick={() => navigate("/food")}
-            className="p-4 rounded-2xl bg-gradient-to-br from-eats/20 to-orange-500/10 border border-eats/20 text-left touch-manipulation active:scale-[0.98] transition-transform animate-in fade-in slide-in-from-right-4 duration-300"
-          >
-            <div className="w-10 h-10 rounded-xl bg-eats/20 flex items-center justify-center mb-3">
-              <UtensilsCrossed className="w-5 h-5 text-eats" />
-            </div>
-            <h3 className="font-bold text-sm mb-1">Order Food</h3>
-            <p className="text-xs text-muted-foreground">Delivered fast</p>
-          </button>
+          <div className="grid grid-cols-3 gap-4">
+            {mobileStats.map((stat, index) => (
+              <div
+                key={stat.label}
+                className="text-center animate-in fade-in zoom-in-95 duration-300"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                  <stat.icon className="w-5 h-5 text-primary" />
+                </div>
+                <p className="font-display text-xl font-bold text-primary">{stat.value}</p>
+                <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -253,31 +234,6 @@ const MobileHomePage = () => {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="px-4 py-6">
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-teal-500/5 border border-primary/20 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h3 className="font-display font-bold">ZIVO Stats</h3>
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            {mobileStats.map((stat, index) => (
-              <div
-                key={stat.label}
-                className="text-center animate-in fade-in zoom-in-95 duration-300"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                  <stat.icon className="w-5 h-5 text-primary" />
-                </div>
-                <p className="font-display text-xl font-bold text-primary">{stat.value}</p>
-                <p className="text-[11px] text-muted-foreground">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Drive With Us CTA */}
       <section className="px-4 pb-8">
         <button
@@ -298,63 +254,29 @@ const MobileHomePage = () => {
   );
 };
 
-// Desktop version (original layout)
+// Desktop version - Conversion focused
 const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <SimplifiedNav />
       <main>
-        <HeroSection />
-        <UnifiedSearchHub />
+        {/* Hero Section */}
+        <ConversionHero />
         
-        {/* Travel Actions - Primary Conversion Focus */}
-        <TravelHeroActions />
+        {/* Service Cards - Above the fold entry points */}
+        <ServiceCards />
         
-        {/* Trust & Credibility */}
-        <TrustCredibilityBar />
+        {/* Why ZIVO - Trust & Value */}
+        <WhyZivo />
         
-        {/* Popular Routes - High Click Potential */}
-        <HomepagePopularRoutes />
+        {/* Popular Destinations */}
+        <PopularDestinations />
         
-        <PromoBanner />
-        <QuickActionsSection />
+        {/* Plan Your Trip - Cross-sell */}
+        <PlanYourTrip />
         
-        {/* Trip Builder Section */}
-        <section className="py-12 bg-gradient-to-b from-background to-muted/20">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <div className="lg:col-span-2">
-                <TrendingSection />
-              </div>
-              <TripBuilderWidget />
-            </div>
-          </div>
-        </section>
-
-        {/* Bundle Deals & Saved Trips */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-              <BundleDealsCarousel />
-              <div className="space-y-6">
-                <SavedTripsManager />
-                <TripPlannerWizard />
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        <StatsSection />
-        <LiveStatsSection />
-        <FeaturesSection />
-        <HowItWorks />
-        <AllServicesSection />
-        <TrustSection />
-        <TestimonialsSection />
-        <PartnersSection />
-        <DriverCTASection />
-        <CTASection />
-        <AppDownloadSection />
+        {/* Cross Sell Banner */}
+        <CrossSellBanner />
       </main>
       <Footer />
     </div>
