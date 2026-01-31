@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
+import { useCTAText, useCTAColor } from "@/hooks/useABTest";
 import { cn } from "@/lib/utils";
 
 interface TopSearchCTAProps {
@@ -29,8 +30,16 @@ export default function TopSearchCTA({
   className 
 }: TopSearchCTAProps) {
   const { redirectWithParams, redirectSimple } = useFlightRedirect('top_search_cta', 'top_cta');
+  
+  // A/B Testing hooks
+  const { primaryText, trackClick: trackTextClick } = useCTAText('flights');
+  const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('flights');
 
   const handleSearchClick = () => {
+    // Track A/B experiments
+    trackTextClick();
+    trackColorClick();
+    
     // Use deep link if we have search parameters
     if (origin && destination && departDate) {
       redirectWithParams({
@@ -85,11 +94,14 @@ export default function TopSearchCTA({
         <div className="flex flex-col items-end gap-2 shrink-0">
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation"
+            className={cn(
+              "gap-2 text-white shadow-lg shadow-sky-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation",
+              colorClassName
+            )}
             onClick={handleSearchClick}
           >
             <Search className="w-4 h-4" />
-            View All Deals
+            {primaryText}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">

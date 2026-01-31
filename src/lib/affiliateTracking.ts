@@ -1,4 +1,8 @@
 // Affiliate tracking utilities for flight bookings
+// Enhanced with A/B testing and revenue optimization integration
+
+import { getUserVariant, trackABEvent } from './abTesting';
+import { trackPartnerClick } from './revenueOptimization';
 
 export interface AffiliateClick {
   id: string;
@@ -21,6 +25,8 @@ export interface AffiliateClick {
   serviceType?: 'flights' | 'hotels' | 'car_rental' | 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation';
   device?: 'mobile' | 'desktop' | 'tablet';
   route?: string;
+  // A/B Testing fields
+  abExperiments?: Record<string, string>; // experimentId -> variantId
 }
 
 // Generate session ID for tracking
@@ -42,7 +48,24 @@ export const getDeviceType = (): 'mobile' | 'desktop' | 'tablet' => {
 };
 
 // Track affiliate click with CTA type for analytics
-export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp" | "sessionId" | "userAgent" | "device">) => {
+export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp" | "sessionId" | "userAgent" | "device" | "abExperiments">) => {
+  // Collect active A/B experiment assignments
+  const abExperiments: Record<string, string> = {};
+  const experimentIds = ['flights_cta_text', 'hotels_cta_text', 'cars_cta_text', 'cta_color_scheme', 'cta_placement', 'sticky_cta_mobile', 'result_sorting', 'addon_order'];
+  
+  for (const expId of experimentIds) {
+    const variant = getUserVariant(expId);
+    if (variant) {
+      abExperiments[expId] = variant.id;
+      // Track click event for A/B test
+      trackABEvent(expId, variant.id, 'click', {
+        ctaType: data.ctaType,
+        serviceType: data.serviceType,
+        partner: data.affiliatePartner,
+      });
+    }
+  }
+  
   const click: AffiliateClick = {
     ...data,
     id: `click_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
@@ -51,6 +74,7 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
     userAgent: navigator.userAgent,
     device: getDeviceType(),
     route: data.origin && data.destination ? `${data.origin}-${data.destination}` : undefined,
+    abExperiments,
   };
 
   // Store locally for demo (in production, send to backend)
@@ -58,7 +82,25 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
   clicks.push(click);
   localStorage.setItem("affiliate_clicks", JSON.stringify(clicks));
 
-  // Log for analytics with CTA type
+  // Track partner click for revenue optimization
+  if (data.serviceType && data.affiliatePartner) {
+    const serviceMap: Record<string, 'flights' | 'hotels' | 'cars' | 'transfers' | 'activities' | 'esim' | 'luggage' | 'compensation'> = {
+      flights: 'flights',
+      hotels: 'hotels',
+      car_rental: 'cars',
+      activities: 'activities',
+      transfers: 'transfers',
+      esim: 'esim',
+      luggage: 'luggage',
+      compensation: 'compensation',
+    };
+    const service = serviceMap[data.serviceType];
+    if (service) {
+      trackPartnerClick(service, data.affiliatePartner);
+    }
+  }
+
+  // Log for analytics with CTA type and A/B variants
   console.log("[Affiliate Tracking]", {
     ctaType: click.ctaType,
     serviceType: click.serviceType,
@@ -66,6 +108,7 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
     source: click.source,
     device: click.device,
     route: click.route,
+    abExperiments: click.abExperiments,
   });
 
   // In production, you would send to your analytics endpoint:

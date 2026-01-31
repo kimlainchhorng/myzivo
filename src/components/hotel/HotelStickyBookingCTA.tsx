@@ -2,6 +2,7 @@ import { ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
+import { useCTAText, useCTAColor, useStickyCTA } from "@/hooks/useABTest";
 import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface HotelStickyBookingCTAProps {
@@ -24,8 +25,18 @@ export default function HotelStickyBookingCTA({
   hotelCount 
 }: HotelStickyBookingCTAProps) {
   const { redirectWithParams, redirectSimple } = useHotelRedirect('sticky_booking_cta', 'sticky_cta');
+  
+  // A/B Testing hooks
+  const { primaryText, trackClick: trackTextClick } = useCTAText('hotels');
+  const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('hotels');
+  const { isSticky, trackClick: trackStickyClick } = useStickyCTA();
 
   const handleBookClick = () => {
+    // Track A/B experiments
+    trackTextClick();
+    trackColorClick();
+    trackStickyClick();
+    
     // Use deep link if we have search parameters
     if (destination && checkIn && checkOut) {
       redirectWithParams({
@@ -40,6 +51,11 @@ export default function HotelStickyBookingCTA({
       redirectSimple();
     }
   };
+
+  // If sticky variant is disabled, don't render
+  if (!isSticky) {
+    return null;
+  }
 
   return (
     <div className={cn(
@@ -64,14 +80,17 @@ export default function HotelStickyBookingCTA({
             </p>
           </div>
 
-          {/* CTA Button - Large, easy to tap */}
+          {/* CTA Button - A/B tested text and color */}
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 shrink-0 min-h-[48px] px-6 touch-manipulation active:scale-[0.98]"
+            className={cn(
+              "gap-2 text-white shadow-lg shadow-amber-500/30 shrink-0 min-h-[48px] px-6 touch-manipulation active:scale-[0.98]",
+              colorClassName
+            )}
             onClick={handleBookClick}
           >
             <Sparkles className="w-4 h-4" />
-            View Deals
+            {primaryText}
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>

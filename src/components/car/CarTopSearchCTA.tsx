@@ -1,9 +1,10 @@
-import { ExternalLink, Car, Sparkles, Search, ShieldCheck } from "lucide-react";
+import { ExternalLink, Sparkles, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { carAffiliatePartners } from "@/data/carAffiliatePartners";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
+import { useCTAText, useCTAColor } from "@/hooks/useABTest";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 interface CarTopSearchCTAProps {
   pickupLocation?: string;
@@ -24,35 +25,29 @@ export default function CarTopSearchCTA({
   driverAge = 25,
   className 
 }: CarTopSearchCTAProps) {
+  const { redirectWithParams, redirectSimple } = useCarRedirect('car_top_search_cta', 'top_cta');
+  
+  // A/B Testing hooks
+  const { primaryText, trackClick: trackTextClick } = useCTAText('cars');
+  const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('cars');
+
   const handleSearchClick = () => {
-    const partner = carAffiliatePartners[0]; // Rentalcars.com
-    const url = partner.urlTemplate({
-      pickupLocation: pickupLocation || '',
-      pickupDate,
-      returnDate,
-      pickupTime,
-      returnTime,
-      driverAge,
-    });
+    // Track A/B experiments
+    trackTextClick();
+    trackColorClick();
 
-    // Track the click
-    trackAffiliateClick({
-      flightId: `car-search-${pickupLocation}`,
-      airline: partner.name,
-      airlineCode: partner.id.toUpperCase(),
-      origin: pickupLocation || '',
-      destination: pickupLocation || '',
-      price: 0,
-      passengers: 1,
-      cabinClass: 'standard',
-      affiliatePartner: partner.id,
-      referralUrl: url,
-      source: 'top_search_cta',
-      ctaType: 'top_cta',
-      serviceType: 'car_rental',
-    });
-
-    window.open(url, "_blank", "noopener,noreferrer");
+    if (pickupLocation && pickupDate && returnDate) {
+      redirectWithParams({
+        pickupLocation,
+        pickupDate,
+        returnDate,
+        pickupTime,
+        returnTime,
+        driverAge,
+      });
+    } else {
+      redirectSimple();
+    }
   };
 
   return (
@@ -85,15 +80,18 @@ export default function CarTopSearchCTA({
         <div className="flex flex-col items-end gap-2 shrink-0">
           <Button
             size="lg"
-            className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white shadow-lg shadow-violet-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation active:scale-[0.98]"
+            className={cn(
+              "gap-2 text-white shadow-lg shadow-violet-500/30 w-full sm:w-auto min-h-[48px] touch-manipulation active:scale-[0.98]",
+              colorClassName
+            )}
             onClick={handleSearchClick}
           >
             <Search className="w-4 h-4" />
-            View Rental Deals
+            {primaryText}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">
-            You will be redirected to our trusted travel partner
+            {AFFILIATE_DISCLOSURE_TEXT.short}
           </p>
         </div>
       </div>
