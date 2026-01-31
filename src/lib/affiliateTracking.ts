@@ -17,8 +17,10 @@ export interface AffiliateClick {
   referralUrl: string;
   userAgent: string;
   source: string;
-  ctaType?: 'top_cta' | 'result_card' | 'sticky_cta' | 'compare_prices' | 'no_results_fallback' | 'partner_selector';
+  ctaType?: 'top_cta' | 'result_card' | 'sticky_cta' | 'compare_prices' | 'no_results_fallback' | 'partner_selector' | 'exit_intent' | 'cross_sell' | 'popular_route' | 'trending_deal';
   serviceType?: 'flights' | 'hotels' | 'car_rental' | 'activities';
+  device?: 'mobile' | 'desktop' | 'tablet';
+  route?: string;
 }
 
 // Generate session ID for tracking
@@ -31,14 +33,24 @@ export const getSessionId = (): string => {
   return sessionId;
 };
 
+// Detect device type
+export const getDeviceType = (): 'mobile' | 'desktop' | 'tablet' => {
+  const width = window.innerWidth;
+  if (width < 768) return 'mobile';
+  if (width < 1024) return 'tablet';
+  return 'desktop';
+};
+
 // Track affiliate click with CTA type for analytics
-export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp" | "sessionId" | "userAgent">) => {
+export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp" | "sessionId" | "userAgent" | "device">) => {
   const click: AffiliateClick = {
     ...data,
     id: `click_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
     timestamp: new Date(),
     sessionId: getSessionId(),
     userAgent: navigator.userAgent,
+    device: getDeviceType(),
+    route: data.origin && data.destination ? `${data.origin}-${data.destination}` : undefined,
   };
 
   // Store locally for demo (in production, send to backend)
@@ -52,12 +64,28 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
     serviceType: click.serviceType,
     partner: click.affiliatePartner,
     source: click.source,
+    device: click.device,
+    route: click.route,
   });
 
   // In production, you would send to your analytics endpoint:
   // await fetch('/api/track-affiliate', { method: 'POST', body: JSON.stringify(click) });
 
   return click;
+};
+
+// Track page view for session analytics
+export const trackPageView = (page: string, metadata?: Record<string, any>) => {
+  const views = JSON.parse(localStorage.getItem("page_views") || "[]");
+  views.push({
+    id: `view_${Date.now()}`,
+    sessionId: getSessionId(),
+    page,
+    timestamp: new Date(),
+    device: getDeviceType(),
+    ...metadata,
+  });
+  localStorage.setItem("page_views", JSON.stringify(views));
 };
 
 // Get affiliate clicks for analytics
@@ -104,7 +132,7 @@ export const buildAffiliateUrl = (params: {
   }
 };
 
-// Analytics aggregation
+// Analytics aggregation with enhanced metrics
 export const getAffiliateAnalytics = () => {
   const clicks = getAffiliateClicks();
   
@@ -139,6 +167,25 @@ export const getAffiliateAnalytics = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  // New: Clicks by CTA type
+  const clicksByCTA = clicks.reduce((acc, c) => {
+    const cta = c.ctaType || 'unknown';
+    acc[cta] = (acc[cta] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // New: Device breakdown
+  const clicksByDevice = clicks.reduce((acc, c) => {
+    const device = c.device || 'unknown';
+    acc[device] = (acc[device] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // New: CTR by CTA type (requires page views)
+  const pageViews = JSON.parse(localStorage.getItem("page_views") || "[]");
+  const resultsViews = pageViews.filter((v: any) => v.page === 'flight_results').length;
+  const conversionRate = resultsViews > 0 ? (clicks.length / resultsViews * 100).toFixed(2) : 0;
+
   return {
     totalClicks: clicks.length,
     todayClicks: todayClicks.length,
@@ -150,6 +197,10 @@ export const getAffiliateAnalytics = () => {
     topAirlines: Object.entries(topAirlines).sort((a, b) => b[1] - a[1]).slice(0, 5),
     topRoutes: Object.entries(topRoutes).sort((a, b) => b[1] - a[1]).slice(0, 5),
     clicksByPartner,
+    clicksByCTA,
+    clicksByDevice,
+    conversionRate,
+    resultsViews,
     recentClicks: clicks.slice(-10).reverse(),
   };
 };

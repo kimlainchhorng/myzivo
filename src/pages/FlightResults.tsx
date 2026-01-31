@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -54,12 +54,15 @@ import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 import { getAirlineLogo } from "@/data/airlines";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { trackAffiliateClick, trackPageView } from "@/lib/affiliateTracking";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import NoFlightsFound from "@/components/flight/NoFlightsFound";
 import CrossSellSection from "@/components/flight/CrossSellSection";
 import TravelExtrasSection from "@/components/flight/TravelExtrasSection";
+import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
+import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
+import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -88,6 +91,15 @@ const FlightResults = () => {
 
   const departDate = departDateStr ? parseISO(departDateStr) : undefined;
   const destinationName = toCity.split(" (")[0] || toCode;
+
+  // Track page view for analytics
+  useEffect(() => {
+    trackPageView("flight_results", {
+      origin: fromCode,
+      destination: toCode,
+      departDate: departDateStr,
+    });
+  }, [fromCode, toCode, departDateStr]);
 
   // Fetch real flights
   const { data: realFlights, isLoading } = useRealFlightSearch({
@@ -694,6 +706,19 @@ const FlightResults = () => {
                 </div>
               )}
 
+              {/* Contextual Cross-Sell Banner */}
+              {flights.length > 0 && (
+                <div className="mt-8">
+                  <ContextualCrossSell
+                    destination={destinationName}
+                    origin={fromCity.split(" (")[0]}
+                    checkIn={departDateStr}
+                    checkOut={returnDateStr}
+                    variant="banner"
+                  />
+                </div>
+              )}
+
               {/* Cross-Sell Section - Hotels, Cars, Activities */}
               {flights.length > 0 && (
                 <div className="mt-12">
@@ -704,6 +729,16 @@ const FlightResults = () => {
                     checkOut={returnDateStr}
                   />
                 </div>
+              )}
+
+              {/* Trending Deals Section */}
+              {flights.length > 0 && (
+                <TrendingDealsSection 
+                  title="More Popular Routes"
+                  subtitle="Deals travelers are booking now"
+                  maxDeals={6}
+                  className="mt-8"
+                />
               )}
 
               {/* Travel Extras Section */}
@@ -719,11 +754,19 @@ const FlightResults = () => {
       </main>
 
       {/* Sticky Mobile CTA */}
+      {/* Sticky Mobile CTA */}
       <StickyBookingCTA 
         lowestPrice={lowestPrice}
         flightCount={flights.length}
         origin={fromCode}
         destination={toCode}
+      />
+
+      {/* Exit Intent Prompt (Desktop Only) */}
+      <ExitIntentPrompt
+        origin={fromCode}
+        destination={toCode}
+        lowestPrice={lowestPrice}
       />
 
       <Footer />
