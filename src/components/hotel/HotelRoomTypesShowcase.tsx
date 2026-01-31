@@ -1,12 +1,19 @@
-import { Bed, Users, Maximize, Wifi, Coffee, Bath, Star, ArrowRight } from "lucide-react";
+import { Bed, Users, Maximize, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
+// Import images
+import hotelRoomLuxury from "@/assets/hotel-room-luxury.jpg";
+import hotelSpa from "@/assets/hotel-spa.jpg";
+import hotelLuxuryPool from "@/assets/hotel-luxury-pool.jpg";
+import hotelBeachResort from "@/assets/hotel-beach-resort.jpg";
 
 const roomTypes = [
   {
     id: 1,
     name: "Standard Room",
     description: "Comfortable essentials for a restful stay",
+    image: hotelRoomLuxury,
     size: "25 m²",
     beds: "1 Queen",
     guests: 2,
@@ -18,6 +25,7 @@ const roomTypes = [
     id: 2,
     name: "Deluxe Room",
     description: "Spacious comfort with premium amenities",
+    image: hotelSpa,
     size: "35 m²",
     beds: "1 King",
     guests: 2,
@@ -29,6 +37,7 @@ const roomTypes = [
     id: 3,
     name: "Executive Suite",
     description: "Luxury living with separate lounge area",
+    image: hotelLuxuryPool,
     size: "55 m²",
     beds: "1 King",
     guests: 3,
@@ -40,6 +49,7 @@ const roomTypes = [
     id: 4,
     name: "Family Suite",
     description: "Perfect for families with extra space",
+    image: hotelBeachResort,
     size: "65 m²",
     beds: "2 Queens",
     guests: 4,
@@ -81,8 +91,12 @@ const HotelRoomTypesShowcase = () => {
                 </div>
               )}
 
-              <div className="aspect-video rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 flex items-center justify-center mb-4">
-                <Bed className="w-12 h-12 text-amber-400/50" />
+              <div className="aspect-video rounded-xl overflow-hidden mb-4">
+                <img 
+                  src={room.image}
+                  alt={room.name}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
               </div>
 
               <h3 className="font-bold text-lg mb-1">{room.name}</h3>

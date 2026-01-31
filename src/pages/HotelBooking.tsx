@@ -42,6 +42,9 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
 import { SEOContentBlock, InternalLinkGrid, PopularDestinationsGrid } from "@/components/seo";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
+import HotelImageShowcase from "@/components/hotel/HotelImageShowcase";
+import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
+import HotelInspirationalBanner from "@/components/hotel/HotelInspirationalBanner";
 
 /**
  * ZIVO HOTELS - Top-Tier Hotel Search
@@ -335,6 +338,15 @@ const HotelBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
+            {/* Inspirational Banner */}
+            <HotelInspirationalBanner />
+            
+            {/* Featured Properties with Real Images */}
+            <HotelImageShowcase onSelect={handleDestinationSelect} />
+            
+            {/* Experience Gallery */}
+            <HotelExperienceGallery onCategorySelect={handleDestinationSelect} />
+            
             {/* SEO Content Block */}
             <SEOContentBlock serviceType="hotels" className="bg-muted/5" />
             
