@@ -5,8 +5,7 @@
  * Supports multiple affiliate networks with dynamic deep links
  * 
  * Primary Networks:
- * - Travelpayouts (Flights, Hotels, Cars, Activities)
- * - Secondary partners configurable for future expansion
+ * - Travelpayouts (Flights, Hotels, Cars, Activities, Transfers, eSIM, etc.)
  * 
  * IMPORTANT: Do not modify SubIDs without Business Operations approval.
  * 
@@ -28,7 +27,7 @@ export interface AffiliatePartner {
   features: string[];
   logo: string;
   isActive: boolean;
-  priority: number; // Higher = preferred
+  priority: number;
   supportedRegions?: string[];
 }
 
@@ -73,52 +72,80 @@ export interface ActivityDeepLinkParams {
 }
 
 // ============================================
-// TRAVELPAYOUTS CONFIGURATION (Primary Network)
+// TRAVELPAYOUTS DIRECT LINKS (NEW)
 // ============================================
 
-const TRAVELPAYOUTS_MARKER = '589611';
-
-export const TRAVELPAYOUTS_CONFIG = {
-  marker: TRAVELPAYOUTS_MARKER,
-  networks: {
-    flights: {
-      name: 'Aviasales/Searadar',
-      trackingDomain: 'searadar.tpo.li',
-      campaignId: 'iAbLlX9i',
-      subId: 'zivo_flights',
-    },
-    hotels: {
-      name: 'Hotellook',
-      trackingDomain: 'hotellook.tpo.li',
-      campaignId: '',
-      subId: 'zivo_hotels',
-    },
-    cars: {
-      name: 'EconomyBookings',
-      trackingDomain: 'economybookings.tpo.li',
-      campaignId: '',
-      subId: 'zivo_cars',
-    },
-    activities: {
-      name: 'Klook',
-      trackingDomain: 'klook.tpo.li',
-      campaignId: 'ToVcOax7',
-      subId: 'zivo_activities',
-    },
+export const TRAVELPAYOUTS_DIRECT_LINKS = {
+  // FLIGHTS
+  flights: {
+    primary: 'https://searadar.tpo.li/iAbLlX9i',
+    backup: 'https://aviasales.tpo.li/dSIFIrF9',
+    subId: 'zivo_flights',
+  },
+  
+  // CAR RENTAL
+  cars: {
+    economybookings: 'https://economybookings.tpo.li/J668L2lY',
+    qeeq: 'https://qeeq.tpo.li/GsmrS6zJ',
+    getrentacar: 'https://getrentacar.tpo.li/P20v54bz',
+    subId: 'zivo_cars',
+  },
+  
+  // AIRPORT TRANSFERS
+  transfers: {
+    kiwitaxi: 'https://kiwitaxi.tpo.li/Bj6zghJH',
+    gettransfer: 'https://gettransfer.tpo.li/FbrIguyh',
+    intui: 'https://intui.tpo.li/CgNTdSyh',
+    subId: 'zivo_transfers',
+  },
+  
+  // ACTIVITIES / THINGS TO DO
+  activities: {
+    tiqets: 'https://tiqets.tpo.li/5fqrcQWZ',
+    wegotrip: 'https://wegotrip.tpo.li/QSrOpIdV',
+    ticketnetwork: 'https://ticketnetwork.tpo.li/utk3u8Vr',
+    subId: 'zivo_activities',
+  },
+  
+  // TRAVEL eSIM / INTERNET
+  esim: {
+    airalo: 'https://airalo.tpo.li/zVRtp8Zt',
+    drimsim: 'https://drimsim.tpo.li/A9yKO5oA',
+    yesim: 'https://yesim.tpo.li/OpjeHJgH',
+    subId: 'zivo_esim',
+  },
+  
+  // LUGGAGE STORAGE
+  luggage: {
+    radicalstorage: 'https://radicalstorage.tpo.li/4W0KR99h',
+    subId: 'zivo_luggage',
+  },
+  
+  // FLIGHT COMPENSATION
+  compensation: {
+    airhelp: 'https://airhelp.tpo.li/7Z5saPi2',
+    compensair: 'https://compensair.tpo.li/npsp8pm0',
+    subId: 'zivo_compensation',
+  },
+  
+  // GENERAL FALLBACK
+  general: {
+    fallback: 'https://tpo.li/1hIVtHlP',
+    subId: 'zivo_general',
   },
 } as const;
 
 // ============================================
-// MULTI-PARTNER REGISTRIES
+// PARTNER REGISTRIES BY SERVICE
 // ============================================
 
 export const FLIGHT_PARTNERS: AffiliatePartner[] = [
   {
     id: 'searadar',
-    name: 'Searadar (Aviasales)',
+    name: 'Searadar',
     network: 'travelpayouts',
     baseUrl: 'https://www.aviasales.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.flights.trackingDomain}/${TRAVELPAYOUTS_CONFIG.networks.flights.campaignId}`,
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.primary,
     subId: 'zivo_flights',
     commissionRate: '0.5-3%',
     features: ['728 airlines', 'Real-time prices', 'Multi-city search', 'Price calendar'],
@@ -126,18 +153,230 @@ export const FLIGHT_PARTNERS: AffiliatePartner[] = [
     isActive: true,
     priority: 100,
   },
-  // Future: Skyscanner when approved
   {
-    id: 'skyscanner',
-    name: 'Skyscanner',
-    network: 'skyscanner',
-    baseUrl: 'https://www.skyscanner.com',
-    trackingUrl: 'https://www.skyscanner.com', // Replace with actual tracking URL when approved
-    subId: 'zivo_flights_sky',
-    commissionRate: '0.5-2%',
-    features: ['Price alerts', 'Flexible dates', 'Everywhere search'],
-    logo: '🔍',
-    isActive: false, // Enable when approved
+    id: 'aviasales',
+    name: 'Aviasales',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.aviasales.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.backup,
+    subId: 'zivo_flights_backup',
+    commissionRate: '0.5-3%',
+    features: ['728 airlines', 'Backup provider'],
+    logo: '✈️',
+    isActive: true,
+    priority: 90,
+  },
+];
+
+export const CAR_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'economybookings',
+    name: 'EconomyBookings',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.economybookings.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
+    subId: 'zivo_cars',
+    commissionRate: '4-6%',
+    features: ['500+ providers', 'No hidden fees', 'Free cancellation', 'Best price guarantee'],
+    logo: '🚗',
+    isActive: true,
+    priority: 100,
+  },
+  {
+    id: 'qeeq',
+    name: 'QEEQ',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.qeeq.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
+    subId: 'zivo_cars_qeeq',
+    commissionRate: '4-8%',
+    features: ['Price match', 'Full insurance options', '24/7 support'],
+    logo: '🚙',
+    isActive: true,
+    priority: 90,
+  },
+  {
+    id: 'getrentacar',
+    name: 'GetRentACar',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.getrentacar.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.getrentacar,
+    subId: 'zivo_cars_grac',
+    commissionRate: '4-6%',
+    features: ['Local providers', 'Budget-friendly', 'Easy booking'],
+    logo: '🚐',
+    isActive: true,
+    priority: 80,
+  },
+];
+
+export const TRANSFER_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'kiwitaxi',
+    name: 'KiwiTaxi',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.kiwitaxi.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.transfers.kiwitaxi,
+    subId: 'zivo_transfers',
+    commissionRate: '5-10%',
+    features: ['Airport transfers', 'Private cars', 'Fixed prices', '24/7 support'],
+    logo: '🚕',
+    isActive: true,
+    priority: 100,
+  },
+  {
+    id: 'gettransfer',
+    name: 'GetTransfer',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.gettransfer.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.transfers.gettransfer,
+    subId: 'zivo_transfers_gt',
+    commissionRate: '5-8%',
+    features: ['Compare drivers', 'Best prices', 'Safe & reliable'],
+    logo: '🚙',
+    isActive: true,
+    priority: 90,
+  },
+  {
+    id: 'intui',
+    name: 'Intui.travel',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.intui.travel',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.transfers.intui,
+    subId: 'zivo_transfers_intui',
+    commissionRate: '5-8%',
+    features: ['Group transfers', 'Shuttle services', 'Budget option'],
+    logo: '🚌',
+    isActive: true,
+    priority: 80,
+  },
+];
+
+export const ACTIVITY_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'tiqets',
+    name: 'Tiqets',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.tiqets.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.activities.tiqets,
+    subId: 'zivo_activities',
+    commissionRate: '5-8%',
+    features: ['Skip-the-line tickets', 'Museums & attractions', 'Instant confirmation', 'Mobile vouchers'],
+    logo: '🎫',
+    isActive: true,
+    priority: 100,
+  },
+  {
+    id: 'wegotrip',
+    name: 'WeGoTrip',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.wegotrip.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.activities.wegotrip,
+    subId: 'zivo_activities_wgt',
+    commissionRate: '5-8%',
+    features: ['Audio guides', 'Self-guided tours', 'Unique experiences'],
+    logo: '🎧',
+    isActive: true,
+    priority: 90,
+  },
+  {
+    id: 'ticketnetwork',
+    name: 'TicketNetwork',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.ticketnetwork.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.activities.ticketnetwork,
+    subId: 'zivo_activities_tn',
+    commissionRate: '3-6%',
+    features: ['Concerts', 'Sports events', 'Theater tickets', 'Live entertainment'],
+    logo: '🎭',
+    isActive: true,
+    priority: 80,
+  },
+];
+
+export const ESIM_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'airalo',
+    name: 'Airalo',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.airalo.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.esim.airalo,
+    subId: 'zivo_esim',
+    commissionRate: '10-15%',
+    features: ['190+ countries', 'Instant eSIM', 'No roaming fees', 'Easy setup'],
+    logo: '📱',
+    isActive: true,
+    priority: 100,
+  },
+  {
+    id: 'drimsim',
+    name: 'Drimsim',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.drimsim.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.esim.drimsim,
+    subId: 'zivo_esim_drim',
+    commissionRate: '8-12%',
+    features: ['Global SIM card', 'Pay as you go', 'Data packages'],
+    logo: '🌐',
+    isActive: true,
+    priority: 90,
+  },
+  {
+    id: 'yesim',
+    name: 'Yesim',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.yesim.app',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.esim.yesim,
+    subId: 'zivo_esim_yesim',
+    commissionRate: '8-12%',
+    features: ['Budget eSIM', 'Regional plans', 'Top-up anytime'],
+    logo: '📶',
+    isActive: true,
+    priority: 80,
+  },
+];
+
+export const LUGGAGE_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'radicalstorage',
+    name: 'Radical Storage',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.radicalstorage.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.luggage.radicalstorage,
+    subId: 'zivo_luggage',
+    commissionRate: '10-15%',
+    features: ['$5.90/day flat rate', '100+ cities', 'Secure locations', 'Insurance included'],
+    logo: '🧳',
+    isActive: true,
+    priority: 100,
+  },
+];
+
+export const COMPENSATION_PARTNERS: AffiliatePartner[] = [
+  {
+    id: 'airhelp',
+    name: 'AirHelp',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.airhelp.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.compensation.airhelp,
+    subId: 'zivo_compensation',
+    commissionRate: '15-25%',
+    features: ['Up to €600 compensation', 'No win no fee', 'Flight delay claims', '98% success rate'],
+    logo: '⚖️',
+    isActive: true,
+    priority: 100,
+  },
+  {
+    id: 'compensair',
+    name: 'Compensair',
+    network: 'travelpayouts',
+    baseUrl: 'https://www.compensair.com',
+    trackingUrl: TRAVELPAYOUTS_DIRECT_LINKS.compensation.compensair,
+    subId: 'zivo_compensation_ca',
+    commissionRate: '15-20%',
+    features: ['Free claim check', 'Up to €600', 'Quick processing', 'No paperwork'],
+    logo: '✈️',
+    isActive: true,
     priority: 90,
   },
 ];
@@ -148,7 +387,7 @@ export const HOTEL_PARTNERS: AffiliatePartner[] = [
     name: 'Hotellook',
     network: 'travelpayouts',
     baseUrl: 'https://www.hotellook.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.hotels.trackingDomain}`,
+    trackingUrl: 'https://hotellook.tpo.li',
     subId: 'zivo_hotels',
     commissionRate: '4-8%',
     features: ['2M+ hotels', 'Price comparison', 'No booking fees', 'Free cancellation'],
@@ -156,210 +395,10 @@ export const HOTEL_PARTNERS: AffiliatePartner[] = [
     isActive: true,
     priority: 100,
   },
-  // Booking.com via Travelpayouts network
-  {
-    id: 'booking_tp',
-    name: 'Booking.com',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.booking.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.hotels.trackingDomain}`,
-    subId: 'zivo_hotels_bdc',
-    commissionRate: '4-6%',
-    features: ['Free cancellation', 'Genius discounts', 'Best price guarantee'],
-    logo: '🔵',
-    isActive: true,
-    priority: 95,
-  },
-];
-
-export const CAR_PARTNERS: AffiliatePartner[] = [
-  {
-    id: 'economybookings',
-    name: 'EconomyBookings',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.economybookings.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.cars.trackingDomain}`,
-    subId: 'zivo_cars',
-    commissionRate: '4-6%',
-    features: ['500+ providers', 'No hidden fees', 'Free cancellation', 'Best price guarantee'],
-    logo: '🚗',
-    isActive: true,
-    priority: 100,
-  },
-  // DiscoverCars via Travelpayouts
-  {
-    id: 'discovercars',
-    name: 'DiscoverCars',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.discovercars.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.cars.trackingDomain}`,
-    subId: 'zivo_cars_dc',
-    commissionRate: '4-8%',
-    features: ['Price match', 'Full insurance options', '24/7 support'],
-    logo: '🚙',
-    isActive: true,
-    priority: 90,
-  },
-];
-
-export const ACTIVITY_PARTNERS: AffiliatePartner[] = [
-  {
-    id: 'klook',
-    name: 'Klook',
-    network: 'travelpayouts',
-    baseUrl: 'https://www.klook.com',
-    trackingUrl: `https://${TRAVELPAYOUTS_CONFIG.networks.activities.trackingDomain}/${TRAVELPAYOUTS_CONFIG.networks.activities.campaignId}`,
-    subId: 'zivo_activities',
-    commissionRate: '2-5%',
-    features: ['100K+ activities', 'Instant confirmation', 'Best price guarantee', 'Mobile voucher'],
-    logo: '🎯',
-    isActive: true,
-    priority: 100,
-  },
 ];
 
 // ============================================
-// DEEP LINK BUILDERS
-// ============================================
-
-/**
- * Build flight deep link with full search parameters
- */
-export function buildFlightDeepLink(params: FlightDeepLinkParams, partnerId?: string): string {
-  const { origin, destination, departDate, returnDate, passengers, cabinClass, tripType, currency = 'USD', locale = 'en' } = params;
-  
-  // Get partner (default to highest priority active partner)
-  const partner = partnerId 
-    ? FLIGHT_PARTNERS.find(p => p.id === partnerId && p.isActive)
-    : getActivePartners('flights')[0];
-  
-  if (!partner) {
-    console.warn('[Affiliate] No active flight partner found');
-    return AFFILIATE_LINKS.flights.url;
-  }
-  
-  // Format dates for Aviasales (DDMM)
-  const formatDate = (dateStr: string) => {
-    const [year, month, day] = dateStr.split('-');
-    return `${day}${month}`;
-  };
-  
-  const depart = formatDate(departDate);
-  const returnFormatted = returnDate ? formatDate(returnDate) : '';
-  
-  // Cabin class mapping
-  const cabinMap = {
-    economy: 'Y',
-    premium_economy: 'W',
-    business: 'C',
-    first: 'F',
-  };
-  
-  const queryParams = new URLSearchParams({
-    subid: partner.subId,
-    origin_iata: origin,
-    destination_iata: destination,
-    depart_date: departDate,
-    return_date: returnDate || '',
-    adults: String(passengers),
-    cabin: cabinMap[cabinClass],
-    one_way: tripType === 'oneway' ? 'true' : 'false',
-    currency,
-    locale,
-  });
-  
-  return `${partner.trackingUrl}?${queryParams.toString()}`;
-}
-
-/**
- * Build hotel deep link with full search parameters
- */
-export function buildHotelDeepLink(params: HotelDeepLinkParams, partnerId?: string): string {
-  const { destination, checkIn, checkOut, guests, rooms, currency = 'USD', locale = 'en' } = params;
-  
-  const partner = partnerId 
-    ? HOTEL_PARTNERS.find(p => p.id === partnerId && p.isActive)
-    : getActivePartners('hotels')[0];
-  
-  if (!partner) {
-    console.warn('[Affiliate] No active hotel partner found');
-    return AFFILIATE_LINKS.hotels.url;
-  }
-  
-  const queryParams = new URLSearchParams({
-    subid: partner.subId,
-    destination,
-    checkIn,
-    checkOut,
-    adults: String(guests),
-    rooms: String(rooms),
-    currency,
-    locale,
-  });
-  
-  return `${partner.trackingUrl}?${queryParams.toString()}`;
-}
-
-/**
- * Build car rental deep link with full search parameters
- */
-export function buildCarDeepLink(params: CarDeepLinkParams, partnerId?: string): string {
-  const { pickupLocation, pickupDate, returnDate, pickupTime, returnTime, driverAge = 30, vehicleType, currency = 'USD' } = params;
-  
-  const partner = partnerId 
-    ? CAR_PARTNERS.find(p => p.id === partnerId && p.isActive)
-    : getActivePartners('cars')[0];
-  
-  if (!partner) {
-    console.warn('[Affiliate] No active car partner found');
-    return AFFILIATE_LINKS.cars.url;
-  }
-  
-  const queryParams = new URLSearchParams({
-    subid: partner.subId,
-    pickup: pickupLocation,
-    pickupDate,
-    returnDate,
-    currency,
-  });
-  
-  if (pickupTime) queryParams.set('pickupTime', pickupTime);
-  if (returnTime) queryParams.set('returnTime', returnTime);
-  if (driverAge) queryParams.set('driverAge', String(driverAge));
-  if (vehicleType) queryParams.set('vehicleType', vehicleType);
-  
-  return `${partner.trackingUrl}?${queryParams.toString()}`;
-}
-
-/**
- * Build activity deep link with search parameters
- */
-export function buildActivityDeepLink(params: ActivityDeepLinkParams, partnerId?: string): string {
-  const { destination, date, category, currency = 'USD' } = params;
-  
-  const partner = partnerId 
-    ? ACTIVITY_PARTNERS.find(p => p.id === partnerId && p.isActive)
-    : getActivePartners('activities')[0];
-  
-  if (!partner) {
-    console.warn('[Affiliate] No active activity partner found');
-    return AFFILIATE_LINKS.activities.url;
-  }
-  
-  const queryParams = new URLSearchParams({
-    subid: partner.subId,
-    city: destination,
-    currency,
-  });
-  
-  if (date) queryParams.set('date', date);
-  if (category) queryParams.set('category', category);
-  
-  return `${partner.trackingUrl}?${queryParams.toString()}`;
-}
-
-// ============================================
-// SIMPLE AFFILIATE LINKS (Fallbacks)
+// SIMPLE AFFILIATE LINKS (Quick Access)
 // ============================================
 
 export interface AffiliateLink {
@@ -372,50 +411,137 @@ export interface AffiliateLink {
 
 export const AFFILIATE_LINKS: Record<string, AffiliateLink> = {
   flights: {
-    url: `https://${TRAVELPAYOUTS_CONFIG.networks.flights.trackingDomain}/${TRAVELPAYOUTS_CONFIG.networks.flights.campaignId}?subid=${TRAVELPAYOUTS_CONFIG.networks.flights.subId}`,
+    url: TRAVELPAYOUTS_DIRECT_LINKS.flights.primary,
     name: "Searadar",
     description: "Search and compare flight prices from 728 airlines",
-    subId: TRAVELPAYOUTS_CONFIG.networks.flights.subId,
-    fallbackUrl: "https://www.aviasales.com",
+    subId: 'zivo_flights',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.backup,
   },
   hotels: {
-    url: `https://${TRAVELPAYOUTS_CONFIG.networks.hotels.trackingDomain}?subid=${TRAVELPAYOUTS_CONFIG.networks.hotels.subId}`,
+    url: 'https://hotellook.tpo.li',
     name: "Hotellook",
     description: "Compare hotel prices across booking sites",
-    subId: TRAVELPAYOUTS_CONFIG.networks.hotels.subId,
+    subId: 'zivo_hotels',
     fallbackUrl: "https://www.hotellook.com",
   },
   cars: {
-    url: `https://${TRAVELPAYOUTS_CONFIG.networks.cars.trackingDomain}?subid=${TRAVELPAYOUTS_CONFIG.networks.cars.subId}`,
+    url: TRAVELPAYOUTS_DIRECT_LINKS.cars.economybookings,
     name: "EconomyBookings",
     description: "Compare car rental prices from 500+ providers",
-    subId: TRAVELPAYOUTS_CONFIG.networks.cars.subId,
-    fallbackUrl: "https://www.economybookings.com",
+    subId: 'zivo_cars',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.cars.qeeq,
   },
   activities: {
-    url: `https://${TRAVELPAYOUTS_CONFIG.networks.activities.trackingDomain}/${TRAVELPAYOUTS_CONFIG.networks.activities.campaignId}?subid=${TRAVELPAYOUTS_CONFIG.networks.activities.subId}`,
-    name: "Klook",
-    description: "Book tours, activities, and attractions worldwide",
-    subId: TRAVELPAYOUTS_CONFIG.networks.activities.subId,
-    fallbackUrl: "https://www.klook.com",
+    url: TRAVELPAYOUTS_DIRECT_LINKS.activities.tiqets,
+    name: "Tiqets",
+    description: "Book tours, attractions, and experiences worldwide",
+    subId: 'zivo_activities',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.activities.wegotrip,
+  },
+  transfers: {
+    url: TRAVELPAYOUTS_DIRECT_LINKS.transfers.kiwitaxi,
+    name: "KiwiTaxi",
+    description: "Book airport transfers and private rides",
+    subId: 'zivo_transfers',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.transfers.gettransfer,
+  },
+  esim: {
+    url: TRAVELPAYOUTS_DIRECT_LINKS.esim.airalo,
+    name: "Airalo",
+    description: "Get travel eSIM for 190+ countries",
+    subId: 'zivo_esim',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.esim.drimsim,
+  },
+  luggage: {
+    url: TRAVELPAYOUTS_DIRECT_LINKS.luggage.radicalstorage,
+    name: "Radical Storage",
+    description: "Store your bags securely while you explore",
+    subId: 'zivo_luggage',
+  },
+  compensation: {
+    url: TRAVELPAYOUTS_DIRECT_LINKS.compensation.airhelp,
+    name: "AirHelp",
+    description: "Get up to €600 for delayed or cancelled flights",
+    subId: 'zivo_compensation',
+    fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.compensation.compensair,
+  },
+  general: {
+    url: TRAVELPAYOUTS_DIRECT_LINKS.general.fallback,
+    name: "Travelpayouts",
+    description: "Explore all travel options",
+    subId: 'zivo_general',
   },
 } as const;
+
+// ============================================
+// DEEP LINK BUILDERS
+// ============================================
+
+export function buildFlightDeepLink(params: FlightDeepLinkParams, partnerId?: string): string {
+  const partner = partnerId 
+    ? FLIGHT_PARTNERS.find(p => p.id === partnerId && p.isActive)
+    : getActivePartners('flights')[0];
+  
+  if (!partner) {
+    return AFFILIATE_LINKS.flights.url;
+  }
+  
+  // Return direct tracking URL (deep links handled by partner)
+  return partner.trackingUrl;
+}
+
+export function buildHotelDeepLink(params: HotelDeepLinkParams, partnerId?: string): string {
+  const partner = partnerId 
+    ? HOTEL_PARTNERS.find(p => p.id === partnerId && p.isActive)
+    : getActivePartners('hotels')[0];
+  
+  if (!partner) {
+    return AFFILIATE_LINKS.hotels.url;
+  }
+  
+  return partner.trackingUrl;
+}
+
+export function buildCarDeepLink(params: CarDeepLinkParams, partnerId?: string): string {
+  const partner = partnerId 
+    ? CAR_PARTNERS.find(p => p.id === partnerId && p.isActive)
+    : getActivePartners('cars')[0];
+  
+  if (!partner) {
+    return AFFILIATE_LINKS.cars.url;
+  }
+  
+  return partner.trackingUrl;
+}
+
+export function buildActivityDeepLink(params: ActivityDeepLinkParams, partnerId?: string): string {
+  const partner = partnerId 
+    ? ACTIVITY_PARTNERS.find(p => p.id === partnerId && p.isActive)
+    : getActivePartners('activities')[0];
+  
+  if (!partner) {
+    return AFFILIATE_LINKS.activities.url;
+  }
+  
+  return partner.trackingUrl;
+}
 
 // ============================================
 // PARTNER HELPER FUNCTIONS
 // ============================================
 
-type ServiceType = 'flights' | 'hotels' | 'cars' | 'activities';
+type ServiceType = 'flights' | 'hotels' | 'cars' | 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation';
 
-/**
- * Get all active partners for a service, sorted by priority
- */
 export function getActivePartners(serviceType: ServiceType): AffiliatePartner[] {
-  const partnerMap = {
+  const partnerMap: Record<ServiceType, AffiliatePartner[]> = {
     flights: FLIGHT_PARTNERS,
     hotels: HOTEL_PARTNERS,
     cars: CAR_PARTNERS,
     activities: ACTIVITY_PARTNERS,
+    transfers: TRANSFER_PARTNERS,
+    esim: ESIM_PARTNERS,
+    luggage: LUGGAGE_PARTNERS,
+    compensation: COMPENSATION_PARTNERS,
   };
   
   return partnerMap[serviceType]
@@ -423,37 +549,30 @@ export function getActivePartners(serviceType: ServiceType): AffiliatePartner[] 
     .sort((a, b) => b.priority - a.priority);
 }
 
-/**
- * Get primary (highest priority active) partner
- */
 export function getPrimaryPartner(serviceType: ServiceType): AffiliatePartner | null {
   const active = getActivePartners(serviceType);
   return active[0] || null;
 }
 
-/**
- * Get partner by ID
- */
 export function getPartnerById(serviceType: ServiceType, partnerId: string): AffiliatePartner | null {
-  const partnerMap = {
+  const partnerMap: Record<ServiceType, AffiliatePartner[]> = {
     flights: FLIGHT_PARTNERS,
     hotels: HOTEL_PARTNERS,
     cars: CAR_PARTNERS,
     activities: ACTIVITY_PARTNERS,
+    transfers: TRANSFER_PARTNERS,
+    esim: ESIM_PARTNERS,
+    luggage: LUGGAGE_PARTNERS,
+    compensation: COMPENSATION_PARTNERS,
   };
   
   return partnerMap[serviceType].find(p => p.id === partnerId) || null;
 }
 
-/**
- * Select best partner based on context (region, time, A/B test, etc.)
- * For now, returns highest priority. Can be extended for smarter selection.
- */
 export function selectBestPartner(
   serviceType: ServiceType, 
   _context?: { region?: string; testGroup?: string }
 ): AffiliatePartner | null {
-  // Future: Add logic for region-based selection, A/B testing, etc.
   return getPrimaryPartner(serviceType);
 }
 
@@ -499,7 +618,12 @@ export function getAffiliateUrl(type: keyof typeof AFFILIATE_LINKS): string {
 export function getAffiliateLinkHealth(): Record<string, boolean> {
   const health: Record<string, boolean> = {};
   for (const [key, link] of Object.entries(AFFILIATE_LINKS)) {
-    health[key] = Boolean(link.url);
+    health[key] = !!link.url && link.url !== '#';
   }
   return health;
+}
+
+// Helper to open any partner URL directly
+export function openPartnerLink(url: string): void {
+  window.open(url, "_blank", "noopener,noreferrer");
 }

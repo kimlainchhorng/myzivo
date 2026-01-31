@@ -18,7 +18,8 @@ import {
   Heart,
   TrendingUp,
   Zap,
-  Globe
+  Globe,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +28,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT, openAffiliateLink } from "@/config/affiliateLinks";
+import { 
+  AFFILIATE_LINKS, 
+  AFFILIATE_DISCLOSURE_TEXT, 
+  openAffiliateLink,
+  ACTIVITY_PARTNERS,
+  openPartnerLink
+} from "@/config/affiliateLinks";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 const ThingsToDo = () => {
   const [category, setCategory] = useState("all");
@@ -155,6 +163,47 @@ const ThingsToDo = () => {
   const handleBookActivity = () => {
     openAffiliateLink("activities");
   };
+
+  const handlePartnerClick = (partner: typeof ACTIVITY_PARTNERS[0]) => {
+    trackAffiliateClick({
+      flightId: `activity-${partner.id}`,
+      airline: partner.name,
+      airlineCode: partner.id.toUpperCase(),
+      origin: '',
+      destination: '',
+      price: 0,
+      passengers: 1,
+      cabinClass: 'standard',
+      affiliatePartner: partner.id,
+      referralUrl: partner.trackingUrl,
+      source: 'things_to_do_page',
+      ctaType: 'result_card',
+      serviceType: 'activities',
+    });
+    openPartnerLink(partner.trackingUrl);
+  };
+
+  // Partner descriptions for UI
+  const activityPartnerCards = [
+    {
+      ...ACTIVITY_PARTNERS[0], // Tiqets
+      tagline: 'Skip-the-Line Tickets',
+      description: 'Museums, attractions & landmarks. Instant mobile tickets.',
+      highlight: 'Skip the lines',
+    },
+    {
+      ...ACTIVITY_PARTNERS[1], // WeGoTrip
+      tagline: 'Audio Guides & Tours',
+      description: 'Self-guided tours with audio narration. Explore at your pace.',
+      highlight: 'Self-paced',
+    },
+    {
+      ...ACTIVITY_PARTNERS[2], // TicketNetwork  
+      tagline: 'Live Events & Shows',
+      description: 'Concerts, sports, theater & live entertainment tickets.',
+      highlight: 'Live events',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
@@ -414,13 +463,91 @@ const ThingsToDo = () => {
                 className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 rounded-xl touch-manipulation"
               >
                 <Globe className="w-5 h-5" />
-                Explore All Activities on Klook
+                Explore All Activities on Tiqets
                 <ExternalLink className="w-4 h-4" />
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
                 {AFFILIATE_DISCLOSURE_TEXT.short}
               </p>
             </div>
+          </div>
+        </section>
+
+        {/* Booking Partners Section */}
+        <section className="py-10 sm:py-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <Badge className="mb-3 bg-purple-500/20 text-purple-500 border-purple-500/30">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Trusted Partners
+              </Badge>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2">
+                Book From Our Partners
+              </h2>
+              <p className="text-muted-foreground max-w-xl mx-auto">
+                Compare activities and tickets from top travel platforms
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {activityPartnerCards.map((partner, index) => (
+                <Card 
+                  key={partner.id}
+                  className="group cursor-pointer border-border/50 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 overflow-hidden animate-in fade-in slide-in-from-bottom-4"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => handlePartnerClick(partner)}
+                >
+                  {index === 0 && (
+                    <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-center py-1 text-xs font-medium">
+                      ⭐ Most Popular
+                    </div>
+                  )}
+                  
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                        {partner.logo}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-base group-hover:text-purple-500 transition-colors">
+                          {partner.name}
+                        </h3>
+                        <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-500">
+                          {partner.tagline}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {partner.description}
+                    </p>
+                    
+                    {/* Features */}
+                    <div className="space-y-1.5 mb-4">
+                      {partner.features.slice(0, 3).map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      size="sm"
+                      className="w-full gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90 touch-manipulation"
+                    >
+                      <Ticket className="w-4 h-4" />
+                      Browse Tickets
+                      <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            <p className="text-xs text-muted-foreground text-center mt-6 max-w-lg mx-auto">
+              {AFFILIATE_DISCLOSURE_TEXT.short}
+            </p>
           </div>
         </section>
 
