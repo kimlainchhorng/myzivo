@@ -53,6 +53,11 @@ import CarCompareWidget from "@/components/car/CarCompareWidget";
 import CarFlashDeals from "@/components/car/CarFlashDeals";
 import CarSocialProof from "@/components/car/CarSocialProof";
 import CarPriceGuarantee from "@/components/car/CarPriceGuarantee";
+import CarInsuranceOptions from "@/components/car/CarInsuranceOptions";
+import CarPickupTips from "@/components/car/CarPickupTips";
+import CarDriverRequirements from "@/components/car/CarDriverRequirements";
+import CarAccessoriesAddons from "@/components/car/CarAccessoriesAddons";
+import CarRoadTripPlanner from "@/components/car/CarRoadTripPlanner";
 
 // Popular locations
 const popularLocations = [
@@ -630,6 +635,21 @@ const CarRentalBooking = () => {
 
         {/* Benefits Section */}
         {!searchResults && <CarRentalBenefits />}
+
+        {/* Insurance Options */}
+        {!searchResults && <CarInsuranceOptions />}
+
+        {/* Driver Requirements */}
+        {!searchResults && <CarDriverRequirements />}
+
+        {/* Pickup Tips */}
+        {!searchResults && <CarPickupTips />}
+
+        {/* Accessories & Add-ons */}
+        {!searchResults && <CarAccessoriesAddons />}
+
+        {/* Road Trip Planner */}
+        {!searchResults && <CarRoadTripPlanner />}
 
         {/* Loyalty Program */}
         {!searchResults && <CarLoyaltyProgram />}

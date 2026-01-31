@@ -55,6 +55,11 @@ import HotelLastMinuteDeals from "@/components/hotel/HotelLastMinuteDeals";
 import HotelSeasonalPromos from "@/components/hotel/HotelSeasonalPromos";
 import HotelSocialProof from "@/components/hotel/HotelSocialProof";
 import HotelPriceGuarantee from "@/components/hotel/HotelPriceGuarantee";
+import HotelRoomTypesShowcase from "@/components/hotel/HotelRoomTypesShowcase";
+import HotelGuestReviews from "@/components/hotel/HotelGuestReviews";
+import HotelPropertyHighlights from "@/components/hotel/HotelPropertyHighlights";
+import HotelBookingTips from "@/components/hotel/HotelBookingTips";
+import HotelDestinationGuides from "@/components/hotel/HotelDestinationGuides";
 
 // Popular destinations
 const popularCities = [
@@ -595,6 +600,21 @@ const HotelBooking = () => {
 
         {/* Rewards Section */}
         {!searchResults && <HotelRewardsSection />}
+
+        {/* Room Types Showcase */}
+        {!searchResults && <HotelRoomTypesShowcase />}
+
+        {/* Property Highlights */}
+        {!searchResults && <HotelPropertyHighlights />}
+
+        {/* Guest Reviews */}
+        {!searchResults && <HotelGuestReviews />}
+
+        {/* Booking Tips */}
+        {!searchResults && <HotelBookingTips />}
+
+        {/* Destination Guides */}
+        {!searchResults && <HotelDestinationGuides />}
 
         {/* Loyalty Program */}
         {!searchResults && <HotelLoyaltyProgram />}
