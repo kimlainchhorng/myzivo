@@ -69,9 +69,16 @@ import HotelLoyaltyRewards from "@/components/hotel/HotelLoyaltyRewards";
 import HotelPremiumAccess from "@/components/hotel/HotelPremiumAccess";
 import HotelEventSpaces from "@/components/hotel/HotelEventSpaces";
 import HotelDiningOptions from "@/components/hotel/HotelDiningOptions";
+import HotelRoomTour from "@/components/hotel/HotelRoomTour";
+import HotelConciergeServices from "@/components/hotel/HotelConciergeServices";
+import HotelCheckInOut from "@/components/hotel/HotelCheckInOut";
 import LiveChatWidget from "@/components/shared/LiveChatWidget";
 import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
 import LocalExperiences from "@/components/shared/LocalExperiences";
+import TravelBlog from "@/components/shared/TravelBlog";
+import DestinationGuides from "@/components/shared/DestinationGuides";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import AppFeatures from "@/components/shared/AppFeatures";
 
 // Popular destinations
 const popularCities = [
@@ -616,8 +623,26 @@ const HotelBooking = () => {
         {/* Room Types Showcase */}
         {!searchResults && <HotelRoomTypesShowcase />}
 
+        {/* Virtual Room Tour */}
+        {!searchResults && <HotelRoomTour />}
+
+        {/* Concierge Services */}
+        {!searchResults && <HotelConciergeServices />}
+
+        {/* Check-In/Out Info */}
+        {!searchResults && <HotelCheckInOut />}
+
         {/* Property Highlights */}
         {!searchResults && <HotelPropertyHighlights />}
+
+        {/* Dining Options */}
+        {!searchResults && <HotelDiningOptions />}
+
+        {/* Event Spaces */}
+        {!searchResults && <HotelEventSpaces />}
+
+        {/* Nearby Attractions */}
+        {!searchResults && <HotelNearbyAttractions />}
 
         {/* Guest Reviews */}
         {!searchResults && <HotelGuestReviews />}
@@ -626,13 +651,25 @@ const HotelBooking = () => {
         {!searchResults && <HotelBookingTips />}
 
         {/* Destination Guides */}
+        {!searchResults && <DestinationGuides />}
+
+        {/* Hotel Destination Guides */}
         {!searchResults && <HotelDestinationGuides />}
+
+        {/* Premium Access */}
+        {!searchResults && <HotelPremiumAccess />}
 
         {/* Loyalty Program */}
         {!searchResults && <HotelLoyaltyProgram />}
 
+        {/* Loyalty Rewards */}
+        {!searchResults && <HotelLoyaltyRewards />}
+
         {/* Last Minute Deals */}
         {!searchResults && <HotelLastMinuteDeals />}
+
+        {/* Comparison Tool */}
+        {!searchResults && <HotelComparisonTool />}
 
         {/* Compare Widget */}
         {!searchResults && <HotelCompareWidget />}
@@ -646,8 +683,20 @@ const HotelBooking = () => {
         {/* Price Guarantee */}
         {!searchResults && <HotelPriceGuarantee />}
 
+        {/* Awards Showcase */}
+        {!searchResults && <HotelAwardsShowcase />}
+
         {/* Savings Calculator */}
         {!searchResults && <HotelSavingsCalculator />}
+
+        {/* Travel Blog */}
+        {!searchResults && <TravelBlog />}
+
+        {/* Local Experiences */}
+        {!searchResults && <LocalExperiences />}
+
+        {/* App Features */}
+        {!searchResults && <AppFeatures />}
 
         {/* Newsletter Section */}
         {!searchResults && <HotelNewsletterSection />}
@@ -655,8 +704,14 @@ const HotelBooking = () => {
         {/* FAQ Section */}
         {!searchResults && <HotelFAQSection />}
 
+        {/* User Testimonials */}
+        {!searchResults && <UserTestimonials />}
+
         {/* Mobile App Promo */}
         {!searchResults && <HotelMobileAppPromo />}
+
+        {/* Hotel Testimonials */}
+        {!searchResults && <HotelTestimonials />}
 
         {/* Testimonials */}
         {!searchResults && <HotelTestimonialsSection />}

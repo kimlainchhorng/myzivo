@@ -18,7 +18,6 @@ import FlightAlertsPromo from "@/components/flight/FlightAlertsPromo";
 import FlightDealsCarousel from "@/components/flight/FlightDealsCarousel";
 import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
 import FlightPopularRoutes from "@/components/flight/FlightPopularRoutes";
-import FlightTravelTips from "@/components/flight/FlightTravelTips";
 import FlightMobileAppPromo from "@/components/flight/FlightMobileAppPromo";
 import FlightNewsletterSection from "@/components/flight/FlightNewsletterSection";
 import FlightFAQSection from "@/components/flight/FlightFAQSection";
@@ -40,10 +39,20 @@ import FlightCorporateSection from "@/components/flight/FlightCorporateSection";
 import FlightAccessibility from "@/components/flight/FlightAccessibility";
 import FlightCarbonOffset from "@/components/flight/FlightCarbonOffset";
 import FlightFlashSale from "@/components/flight/FlightFlashSale";
+import FlightSeatMap from "@/components/flight/FlightSeatMap";
+import FlightBaggageOptions from "@/components/flight/FlightBaggageOptions";
+import FlightMealPreorder from "@/components/flight/FlightMealPreorder";
+import FlightInsuranceUpsell from "@/components/flight/FlightInsuranceUpsell";
+import FlightTravelTips from "@/components/flight/FlightTravelTips";
 import LiveChatWidget from "@/components/shared/LiveChatWidget";
 import LocalExperiences from "@/components/shared/LocalExperiences";
 import MobileAppBanner from "@/components/shared/MobileAppBanner";
 import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
+import TravelBlog from "@/components/shared/TravelBlog";
+import DestinationGuides from "@/components/shared/DestinationGuides";
+import TravelCalendar from "@/components/shared/TravelCalendar";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import AppFeatures from "@/components/shared/AppFeatures";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -292,6 +301,18 @@ const FlightBooking = () => {
             {/* Compare Widget */}
             <FlightCompareWidget />
 
+            {/* Seat Map Preview */}
+            <FlightSeatMap />
+
+            {/* Baggage Options */}
+            <FlightBaggageOptions />
+
+            {/* Meal Pre-order */}
+            <FlightMealPreorder />
+
+            {/* Insurance Upsell */}
+            <FlightInsuranceUpsell />
+
             {/* Baggage Guide */}
             <FlightBaggageGuide />
 
@@ -304,11 +325,20 @@ const FlightBooking = () => {
             {/* Travel Tips */}
             <FlightTravelTips />
 
+            {/* Travel Calendar */}
+            <TravelCalendar />
+
+            {/* Destination Guides */}
+            <DestinationGuides />
+
             {/* Destination Inspiration */}
             <FlightDestinationInspiration />
 
             {/* Local Experiences */}
             <LocalExperiences />
+
+            {/* Travel Blog */}
+            <TravelBlog />
 
             {/* Accessibility */}
             <FlightAccessibility />
@@ -322,6 +352,9 @@ const FlightBooking = () => {
             {/* Price Alerts Promo */}
             <FlightAlertsPromo onSetAlert={() => toast.success("Price alert feature coming soon!")} />
 
+            {/* App Features */}
+            <AppFeatures />
+
             {/* Mobile App Banner */}
             <MobileAppBanner />
 
@@ -330,6 +363,9 @@ const FlightBooking = () => {
 
             {/* FAQ Section */}
             <FlightFAQSection />
+
+            {/* User Testimonials */}
+            <UserTestimonials />
 
             {/* Mobile App Promo */}
             <FlightMobileAppPromo />
