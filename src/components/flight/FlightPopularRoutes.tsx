@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, TrendingUp, ArrowRight } from "lucide-react";
+import { Plane, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 const routes = [
   { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true },
@@ -47,7 +48,10 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                 "hover:border-sky-500/50 hover:-translate-y-1 touch-manipulation active:scale-[0.98]",
                 "animate-in fade-in slide-in-from-bottom-4"
               )}
-              onClick={() => onSelect?.(route.from, route.to)}
+              onClick={() => {
+                window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+                onSelect?.(route.from, route.to);
+              }}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <CardContent className="p-4">
@@ -76,7 +80,10 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">{route.searches} searches</span>
-                  <span className="text-lg font-bold text-sky-400">From ${route.price}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-lg font-bold text-sky-400">From ${route.price}</span>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

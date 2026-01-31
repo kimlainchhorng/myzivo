@@ -1,7 +1,8 @@
-import { Sparkles, Zap, TrendingDown, Bell, ArrowRight, Plane, Clock } from "lucide-react";
+import { Sparkles, Zap, TrendingDown, Bell, ArrowRight, Plane, Clock, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 const flashDeals = [
   { route: "LAX → NYC", price: 89, originalPrice: 189, airline: "JetBlue", expires: 3600 },
@@ -72,8 +73,12 @@ const FlightFlashSale = () => {
                 <span className="font-mono">{formatTime(timeLeft[index])}</span>
               </div>
 
-              <Button className="w-full bg-gradient-to-r from-red-500 to-orange-500 group-hover:shadow-lg group-hover:shadow-red-500/20" size="sm">
-                Grab Deal <ArrowRight className="w-4 h-4 ml-1" />
+              <Button 
+                className="w-full bg-gradient-to-r from-red-500 to-orange-500 group-hover:shadow-lg group-hover:shadow-red-500/20" 
+                size="sm"
+                onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+              >
+                Grab Deal <ExternalLink className="w-4 h-4 ml-1" />
               </Button>
             </div>
           ))}

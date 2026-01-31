@@ -15,9 +15,11 @@ import {
   ChevronUp,
   TrendingDown,
   Navigation,
-  Check
+  Check,
+  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 interface NearbyAirport {
   id: string;
@@ -160,8 +162,13 @@ export const NearbyAirports = ({
                   </p>
                 </div>
               </div>
-              <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
+              <Button 
+                size="sm" 
+                className="bg-emerald-500 hover:bg-emerald-600 gap-1"
+                onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+              >
                 View Deal
+                <ExternalLink className="w-3 h-3" />
               </Button>
             </div>
           </div>
@@ -336,20 +343,15 @@ export const NearbyAirports = ({
 
                     <div className="flex gap-2">
                       <Button 
-                        className="flex-1"
-                        onClick={() => setSelectedAirport(airport.id)}
+                        className="flex-1 gap-2"
+                        onClick={() => {
+                          setSelectedAirport(airport.id);
+                          window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+                        }}
                       >
-                        {selectedAirport === airport.id ? (
-                          <>
-                            <Check className="w-4 h-4 mr-2" />
-                            Selected
-                          </>
-                        ) : (
-                          <>
-                            <Plane className="w-4 h-4 mr-2" />
-                            Select This Airport
-                          </>
-                        )}
+                        <Plane className="w-4 h-4" />
+                        Search Flights
+                        <ExternalLink className="w-4 h-4" />
                       </Button>
                       <Button variant="outline">
                         <Navigation className="w-4 h-4 mr-2" />
