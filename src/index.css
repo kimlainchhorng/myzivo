@@ -9,75 +9,92 @@
 
 @layer base {
   :root {
-    /* ZIVO Brand - Dark Premium Theme */
+    /* =============================================
+       ZIVO BRAND SYSTEM - Light Theme
+       ============================================= */
+    
+    /* Core Backgrounds */
     --background: 209 40% 96%;
     --foreground: 222 47% 11%;
-
     --card: 210 40% 98%;
     --card-foreground: 222 47% 11%;
-
     --popover: 214 31% 91%;
     --popover-foreground: 222 47% 11%;
 
-    /* Electric Teal Primary */
-    --primary: 200 98% 39%;
-    --primary-foreground: 204 100% 97%;
+    /* Primary Brand - Electric Teal */
+    --primary: 198 93% 59%;
+    --primary-foreground: 222 47% 11%;
 
-    /* Warm Orange Secondary (Eats accent) */
+    /* Secondary */
     --secondary: 215 24% 26%;
     --secondary-foreground: 210 40% 98%;
 
+    /* Muted */
     --muted: 215 20% 65%;
     --muted-foreground: 222 47% 11%;
 
+    /* Accent */
     --accent: 210 40% 98%;
     --accent-foreground: 215 19% 34%;
 
+    /* Destructive */
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
+    /* Borders & Inputs */
     --border: 212 26% 83%;
     --input: 212 26% 83%;
-    --ring: 200 98% 39%;
-
+    --ring: 198 93% 59%;
     --radius: 0.5rem;
 
-    /* Custom ZIVO tokens */
+    /* =============================================
+       PRODUCT ACCENT COLORS
+       ============================================= */
+    
+    /* Flights - Sky Blue */
+    --flights-primary: 199 89% 48%;
+    --flights-light: 199 95% 73%;
+    --flights-dark: 200 98% 39%;
+    
+    /* Hotels - Warm Amber */
+    --hotels-primary: 38 92% 50%;
+    --hotels-light: 45 93% 58%;
+    --hotels-dark: 32 95% 44%;
+    
+    /* Cars - Purple Indigo */
+    --cars-primary: 263 70% 58%;
+    --cars-light: 270 95% 75%;
+    --cars-dark: 256 77% 51%;
+
+    /* =============================================
+       SEMANTIC COLORS
+       ============================================= */
     --success: 142 72% 45%;
     --warning: 38 92% 50%;
     --rides: 174 72% 50%;
     --eats: 24 95% 58%;
 
-    /* Gradients */
+    /* =============================================
+       GRADIENTS
+       ============================================= */
+    --gradient-flights: linear-gradient(135deg, hsl(199, 89%, 48%) 0%, hsl(214, 80%, 55%) 100%);
+    --gradient-hotels: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(24, 85%, 52%) 100%);
+    --gradient-cars: linear-gradient(135deg, hsl(263, 70%, 58%) 0%, hsl(280, 65%, 55%) 100%);
     --gradient-rides: linear-gradient(135deg, hsl(174, 72%, 50%) 0%, hsl(180, 65%, 35%) 100%);
     --gradient-eats: linear-gradient(135deg, hsl(24, 95%, 58%) 0%, hsl(15, 85%, 45%) 100%);
     --gradient-premium: linear-gradient(135deg, hsl(220, 20%, 12%) 0%, hsl(220, 25%, 8%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
 
-    /* Shadows */
+    /* =============================================
+       SHADOWS
+       ============================================= */
+    --shadow-flights: 0 10px 40px -10px hsl(199 89% 48% / 0.3);
+    --shadow-hotels: 0 10px 40px -10px hsl(38 92% 50% / 0.3);
+    --shadow-cars: 0 10px 40px -10px hsl(263 70% 58% / 0.3);
     --shadow-glow-rides: 0 0 40px -10px hsl(174 72% 50% / 0.4);
     --shadow-glow-eats: 0 0 40px -10px hsl(24 95% 58% / 0.4);
     --shadow-card: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
     --shadow-elevated: 0 20px 50px -12px rgba(0, 0, 0, 0.6);
-
-    /* Sidebar (matching dark theme) */
-    --sidebar-background: 220 18% 8%;
-    --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 200 98% 39%;
-    --sidebar-primary-foreground: 204 100% 97%;
-    --sidebar-accent: 215 24% 26%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 212 26% 83%;
-    --sidebar-ring: 200 98% 39%;
-    --chart-1: 198 93% 59%;
-    --chart-2: 213 93% 67%;
-    --chart-3: 215 20% 65%;
-    --chart-4: 215 16% 46%;
-    --chart-5: 215 19% 34%;
-    --sidebar: 210 40% 98%;
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -86,36 +103,103 @@
     --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+
+    /* =============================================
+       SIDEBAR
+       ============================================= */
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 198 93% 59%;
+    --sidebar-primary-foreground: 204 100% 97%;
+    --sidebar-accent: 215 24% 26%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 212 26% 83%;
+    --sidebar-ring: 198 93% 59%;
+    --sidebar: 210 40% 98%;
+
+    /* =============================================
+       CHARTS
+       ============================================= */
+    --chart-1: 198 93% 59%;
+    --chart-2: 213 93% 67%;
+    --chart-3: 215 20% 65%;
+    --chart-4: 215 16% 46%;
+    --chart-5: 215 19% 34%;
+
+    /* =============================================
+       TYPOGRAPHY
+       ============================================= */
+    --font-display: 'Outfit', 'Inter', system-ui, sans-serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+    /* =============================================
+       SPACING
+       ============================================= */
     --tracking-normal: 0em;
     --spacing: 0.25rem;
   }
 
   .dark {
-    /* Already dark by default */
+    /* =============================================
+       ZIVO BRAND SYSTEM - Dark Theme (Default)
+       ============================================= */
+    
+    /* Core Backgrounds */
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
     --card: 217 32% 17%;
     --card-foreground: 210 40% 98%;
     --popover: 215 24% 26%;
     --popover-foreground: 210 40% 98%;
+
+    /* Primary Brand - Electric Teal */
     --primary: 198 93% 59%;
     --primary-foreground: 204 80% 15%;
+
+    /* Secondary */
     --secondary: 212 26% 83%;
     --secondary-foreground: 228 84% 4%;
+
+    /* Muted */
     --muted: 215 16% 46%;
     --muted-foreground: 210 40% 98%;
+
+    /* Accent */
     --accent: 228 84% 4%;
     --accent-foreground: 215 20% 65%;
+
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
+
+    /* Borders & Inputs */
     --border: 215 19% 34%;
     --input: 215 19% 34%;
     --ring: 198 93% 59%;
+
+    /* Product Accent Colors (same in dark mode) */
+    --flights-primary: 199 89% 48%;
+    --flights-light: 199 95% 73%;
+    --flights-dark: 200 98% 39%;
+    
+    --hotels-primary: 38 92% 50%;
+    --hotels-light: 45 93% 58%;
+    --hotels-dark: 32 95% 44%;
+    
+    --cars-primary: 263 70% 58%;
+    --cars-light: 270 95% 75%;
+    --cars-dark: 256 77% 51%;
+
+    /* Charts */
     --chart-1: 199 95% 73%;
     --chart-2: 211 96% 78%;
     --chart-3: 215 20% 65%;
     --chart-4: 215 16% 46%;
     --chart-5: 215 19% 34%;
+
+    /* Sidebar */
     --sidebar: 217 32% 17%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 198 93% 59%;
@@ -124,6 +208,8 @@
     --sidebar-accent-foreground: 228 84% 4%;
     --sidebar-border: 215 19% 34%;
     --sidebar-ring: 198 93% 59%;
+
+    /* Shadows */
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
@@ -131,7 +217,7 @@
     --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
     --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25)
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
 }
 
