@@ -8,19 +8,26 @@ import {
   Plane, Clock, Wifi, Coffee, Tv, Luggage, Star, 
   ChevronDown, ChevronUp, Crown, Leaf, Zap, Shield,
   ArrowRight, Users, Check, Plus, Info, Sparkles,
-  ThumbsUp, AlertCircle, BarChart3
+  ThumbsUp, AlertCircle, BarChart3, ExternalLink
 } from 'lucide-react';
 import { getAirlineLogo } from '@/data/airlines';
 import type { GeneratedFlight } from '@/data/flightGenerator';
+import { AFFILIATE_LINKS } from '@/config/affiliateLinks';
+import { trackAffiliateClick } from '@/lib/affiliateTracking';
 
 interface FlightResultCardProps {
   flight: GeneratedFlight;
   onSelect: (flight: GeneratedFlight) => void;
+  onBook?: (flight: GeneratedFlight) => void;
   onCompare?: (flight: GeneratedFlight, selected: boolean) => void;
   isComparing?: boolean;
   isSelected?: boolean;
   showDetails?: boolean;
   variant?: 'default' | 'compact';
+  origin?: string;
+  destination?: string;
+  passengers?: number;
+  cabinClass?: string;
 }
 
 const categoryConfig = {
@@ -53,16 +60,50 @@ const categoryConfig = {
 export default function FlightResultCard({
   flight,
   onSelect,
+  onBook,
   onCompare,
   isComparing = false,
   isSelected = false,
   showDetails = false,
   variant = 'default',
+  origin = '',
+  destination = '',
+  passengers = 1,
+  cabinClass = 'economy',
 }: FlightResultCardProps) {
   const [isExpanded, setIsExpanded] = useState(showDetails);
   const [isHovered, setIsHovered] = useState(false);
 
   const category = categoryConfig[flight.category || 'full-service'];
+
+  // Unified booking handler - uses same affiliate link with tracking
+  const handleBookFlight = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    trackAffiliateClick({
+      flightId: flight.id,
+      airline: flight.airline,
+      airlineCode: flight.airlineCode,
+      origin,
+      destination,
+      price: flight.price,
+      passengers,
+      cabinClass,
+      affiliatePartner: 'searadar',
+      referralUrl: AFFILIATE_LINKS.flights.url,
+      source: 'flight_result_card',
+      ctaType: 'result_card',
+      serviceType: 'flights',
+    });
+    
+    // Open affiliate link in new tab - same URL for all CTAs
+    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+    
+    // Also call onBook if provided
+    if (onBook) {
+      onBook(flight);
+    }
+  };
   const CategoryIcon = category.icon;
 
   const amenities = [
@@ -193,18 +234,20 @@ export default function FlightResultCard({
             {/* Price & Action */}
             <div className="flex flex-col items-end gap-2 min-w-[140px]">
               <div className="text-right">
+                <p className="text-xs text-muted-foreground">From</p>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">${flight.price}</span>
-                  <span className="text-sm text-muted-foreground">/person</span>
+                  <span className="text-3xl font-bold text-sky-500">${flight.price}</span>
+                  <span className="text-xs text-muted-foreground">*</span>
                 </div>
+                <p className="text-[10px] text-muted-foreground">per person</p>
                 {flight.businessPrice && (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Business from ${flight.businessPrice}
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col items-end gap-1">
                 {flight.seatsLeft && flight.seatsLeft < 10 && (
                   <Badge variant="outline" className="text-amber-400 border-amber-500/50 text-xs">
                     <AlertCircle className="w-3 h-3 mr-1" />
@@ -212,12 +255,13 @@ export default function FlightResultCard({
                   </Badge>
                 )}
                 <Button 
-                  className="bg-sky-500 hover:bg-sky-600"
-                  onClick={() => onSelect(flight)}
+                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]"
+                  onClick={handleBookFlight}
                 >
-                  Select
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  View Deal
+                  <ExternalLink className="w-4 h-4" />
                 </Button>
+                <p className="text-[9px] text-muted-foreground">Opens partner site</p>
               </div>
             </div>
           </div>

@@ -35,7 +35,7 @@ export default function AffiliatePartnerSelector({
   className,
 }: AffiliatePartnerSelectorProps) {
   const handleBookFlight = () => {
-    // Track the click
+    // Track the click with consistent CTA type
     trackAffiliateClick({
       flightId: flightNumber || `${origin}-${destination}`,
       airline: airline,
@@ -48,9 +48,11 @@ export default function AffiliatePartnerSelector({
       affiliatePartner: 'searadar',
       referralUrl: AFFILIATE_LINKS.flights.url,
       source: 'partner_selector',
+      ctaType: 'compare_prices',
+      serviceType: 'flights',
     });
 
-    // Open Searadar in new tab
+    // Open SAME affiliate link in new tab - consistent across all CTAs
     window.open(AFFILIATE_LINKS.flights.url, '_blank', 'noopener,noreferrer');
   };
 
