@@ -37,6 +37,10 @@ import {
 } from "@/components/ui/select";
 import { BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
+import HotelStatsBar from "@/components/hotel/HotelStatsBar";
+import HotelPromoSection from "@/components/hotel/HotelPromoSection";
+import HotelTestimonialsSection from "@/components/hotel/HotelTestimonialsSection";
+import HotelTrustIndicators from "@/components/hotel/HotelTrustIndicators";
 
 // Popular destinations
 const popularCities = [
@@ -506,17 +510,20 @@ const HotelBooking = () => {
           </section>
         )}
 
+        {/* Stats Bar */}
+        {!searchResults && <HotelStatsBar />}
+
         {/* Popular Destinations */}
         {!searchResults && (
-          <section className="py-12">
+          <section className="py-8 sm:py-12">
             <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-2xl font-bold">Trending Destinations</h2>
-                <Button variant="ghost" className="text-amber-500">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="font-display text-xl sm:text-2xl font-bold">Trending Destinations</h2>
+                <Button variant="ghost" className="text-amber-500 text-sm sm:text-base">
                   Explore all <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {popularCities.map((city, index) => (
                   <div
                     key={city.city}
@@ -526,17 +533,17 @@ const HotelBooking = () => {
                   >
                     <Card className="glass-card hover:border-amber-500/50 transition-all group overflow-hidden">
                       <CardContent className="p-0">
-                        <div className="relative h-40 bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
-                          <span className="text-6xl group-hover:scale-110 transition-transform">
+                        <div className="relative h-28 sm:h-40 bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+                          <span className="text-4xl sm:text-6xl group-hover:scale-110 transition-transform">
                             {city.image}
                           </span>
                         </div>
-                        <div className="p-4">
-                          <h3 className="font-display font-semibold text-lg">{city.city}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{city.country}</p>
+                        <div className="p-3 sm:p-4">
+                          <h3 className="font-display font-semibold text-base sm:text-lg">{city.city}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{city.country}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{city.hotels} hotels</span>
-                            <span className="font-bold text-amber-400">From ${city.avgPrice}/night</span>
+                            <span className="text-[10px] sm:text-sm text-muted-foreground">{city.hotels} hotels</span>
+                            <span className="font-bold text-amber-400 text-xs sm:text-base">From ${city.avgPrice}/night</span>
                           </div>
                         </div>
                       </CardContent>
@@ -548,38 +555,18 @@ const HotelBooking = () => {
           </section>
         )}
 
-        {/* Why Book With Us - Affiliate Compliant */}
+        {/* Promo Section */}
         {!searchResults && (
-          <section className="py-12 border-t border-border/50">
-            <div className="container mx-auto px-4">
-              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Search With ZIVO Hotels</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { icon: "🔍", title: "Compare 500+ Sites", desc: "Find the best hotel deals" },
-                  { icon: "🔒", title: "Secure Redirect", desc: "Book safely with our partners" },
-                  { icon: "⚡", title: "Real-Time Prices", desc: "Live availability & rates" },
-                  { icon: "🎧", title: "24/7 Support", desc: "We're here whenever you need" },
-                ].map((item, index) => (
-                  <div
-                    key={item.title}
-                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
-                    style={{ animationDelay: `${index * 75}ms` }}
-                  >
-                    <div className="text-4xl mb-3">{item.icon}</div>
-                    <h3 className="font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Affiliate Disclosure */}
-              <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
-                ZIVO may earn a commission when you book through our partner links at no extra cost to you.{' '}
-                <a href="/affiliate-disclosure" className="text-amber-500 hover:underline">Learn more</a>
-              </p>
-            </div>
-          </section>
+          <HotelPromoSection 
+            onPromoClick={(code) => toast.success(`Promo code ${code} copied!`)}
+          />
         )}
+
+        {/* Testimonials */}
+        {!searchResults && <HotelTestimonialsSection />}
+
+        {/* Trust Indicators */}
+        {!searchResults && <HotelTrustIndicators />}
       </main>
 
       {/* Selected Hotel Summary Sidebar */}

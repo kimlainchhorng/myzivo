@@ -15,6 +15,8 @@ import FlightTestimonialsSection from "@/components/flight/FlightTestimonialsSec
 import FlightFeaturedDestinations from "@/components/flight/FlightFeaturedDestinations";
 import FlightQuickActions from "@/components/flight/FlightQuickActions";
 import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
+import FlightPremiumExperience from "@/components/flight/FlightPremiumExperience";
+import FlightAlertsPromo from "@/components/flight/FlightAlertsPromo";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -198,6 +200,12 @@ const FlightBooking = () => {
             <TrendingDestinationsSection
               onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
             />
+
+            {/* Premium Experience */}
+            <FlightPremiumExperience />
+
+            {/* Price Alerts Promo */}
+            <FlightAlertsPromo onSetAlert={() => toast.success("Price alert feature coming soon!")} />
 
             {/* Testimonials Section */}
             <FlightTestimonialsSection />

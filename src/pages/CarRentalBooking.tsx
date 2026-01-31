@@ -36,6 +36,10 @@ import {
 } from "@/components/ui/select";
 import { BookingSummaryCard, CheckoutModal, BookingConfirmation } from "@/components/booking";
 import { toast } from "sonner";
+import CarStatsBar from "@/components/car/CarStatsBar";
+import CarPromoSection from "@/components/car/CarPromoSection";
+import CarTestimonialsSection from "@/components/car/CarTestimonialsSection";
+import CarTrustIndicators from "@/components/car/CarTrustIndicators";
 
 // Popular locations
 const popularLocations = [
@@ -509,12 +513,15 @@ const CarRentalBooking = () => {
           </section>
         )}
 
+        {/* Stats Bar */}
+        {!searchResults && <CarStatsBar />}
+
         {/* Car Categories */}
         {!searchResults && (
-          <section className="py-12">
+          <section className="py-8 sm:py-12">
             <div className="container mx-auto px-4">
-              <h2 className="font-display text-2xl font-bold mb-6">Browse by Category</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <h2 className="font-display text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Browse by Category</h2>
+              <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
                 {carCategories.map((category, index) => (
                   <div
                     key={category.name}
@@ -522,13 +529,13 @@ const CarRentalBooking = () => {
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     <Card className="glass-card hover:border-rides/50 transition-all cursor-pointer group touch-manipulation active:scale-[0.98]">
-                      <CardContent className="p-4 text-center">
-                        <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">
+                      <CardContent className="p-2 sm:p-4 text-center">
+                        <div className="text-2xl sm:text-4xl mb-1 sm:mb-2 group-hover:scale-110 transition-transform">
                           {category.icon}
                         </div>
-                        <h3 className="font-semibold">{category.name}</h3>
-                        <p className="text-xs text-muted-foreground mb-1">{category.description}</p>
-                        <p className="text-sm font-medium text-rides">From ${category.avgPrice}/day</p>
+                        <h3 className="font-semibold text-xs sm:text-base">{category.name}</h3>
+                        <p className="text-[9px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1 hidden sm:block">{category.description}</p>
+                        <p className="text-[10px] sm:text-sm font-medium text-rides">${category.avgPrice}/day</p>
                       </CardContent>
                     </Card>
                   </div>
@@ -540,15 +547,15 @@ const CarRentalBooking = () => {
 
         {/* Popular Locations */}
         {!searchResults && (
-          <section className="py-12">
+          <section className="py-8 sm:py-12">
             <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-display text-2xl font-bold">Popular Pickup Locations</h2>
-                <Button variant="ghost" className="text-rides">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="font-display text-xl sm:text-2xl font-bold">Popular Pickup Locations</h2>
+                <Button variant="ghost" className="text-rides text-sm sm:text-base">
                   View all <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               </div>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {popularLocations.map((location, index) => (
                   <div
                     key={location.city}
@@ -558,17 +565,17 @@ const CarRentalBooking = () => {
                   >
                     <Card className="glass-card hover:border-rides/50 transition-all group overflow-hidden touch-manipulation active:scale-[0.98]">
                       <CardContent className="p-0">
-                        <div className="relative h-32 bg-gradient-to-br from-rides/20 to-cyan-500/20 flex items-center justify-center">
-                          <span className="text-5xl group-hover:scale-110 transition-transform">
+                        <div className="relative h-24 sm:h-32 bg-gradient-to-br from-rides/20 to-cyan-500/20 flex items-center justify-center">
+                          <span className="text-3xl sm:text-5xl group-hover:scale-110 transition-transform">
                             {location.image}
                           </span>
                         </div>
-                        <div className="p-4">
-                          <h3 className="font-display font-semibold text-lg">{location.city}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{location.state}</p>
+                        <div className="p-3 sm:p-4">
+                          <h3 className="font-display font-semibold text-base sm:text-lg">{location.city}</h3>
+                          <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-2">{location.state}</p>
                           <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{location.cars} cars</span>
-                            <span className="font-bold text-rides">From ${location.avgPrice}/day</span>
+                            <span className="text-[10px] sm:text-sm text-muted-foreground">{location.cars} cars</span>
+                            <span className="font-bold text-rides text-xs sm:text-base">${location.avgPrice}/day</span>
                           </div>
                         </div>
                       </CardContent>
@@ -580,38 +587,18 @@ const CarRentalBooking = () => {
           </section>
         )}
 
-        {/* Why Rent With Us - Affiliate Compliant */}
+        {/* Promo Section */}
         {!searchResults && (
-          <section className="py-12 border-t border-border/50">
-            <div className="container mx-auto px-4">
-              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Search With ZIVO Cars</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { icon: "🔍", title: "Compare Top Providers", desc: "Enterprise, Hertz, Avis & more" },
-                  { icon: "🔒", title: "Secure Redirect", desc: "Book safely with our partners" },
-                  { icon: "⚡", title: "Real-Time Availability", desc: "Live pricing & inventory" },
-                  { icon: "🎧", title: "24/7 Support", desc: "We're always here for you" },
-                ].map((item, index) => (
-                  <div
-                    key={item.title}
-                    className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
-                    style={{ animationDelay: `${index * 75}ms` }}
-                  >
-                    <div className="text-4xl mb-3">{item.icon}</div>
-                    <h3 className="font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Affiliate Disclosure */}
-              <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
-                ZIVO may earn a commission when you book through our partner links at no extra cost to you.{' '}
-                <a href="/affiliate-disclosure" className="text-violet-400 hover:underline">Learn more</a>
-              </p>
-            </div>
-          </section>
+          <CarPromoSection 
+            onPromoClick={(code) => toast.success(`Promo code ${code} copied!`)}
+          />
         )}
+
+        {/* Testimonials */}
+        {!searchResults && <CarTestimonialsSection />}
+
+        {/* Trust Indicators */}
+        {!searchResults && <CarTrustIndicators />}
       </main>
 
       {/* Selected Car Summary */}
