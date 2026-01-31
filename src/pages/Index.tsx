@@ -29,7 +29,7 @@ import ServiceCards from "@/components/home/ServiceCards";
 import WhyZivo from "@/components/home/WhyZivo";
 import PopularDestinations from "@/components/home/PopularDestinations";
 import PlanYourTrip from "@/components/home/PlanYourTrip";
-import CrossSellBanner from "@/components/seo/CrossSellBanner";
+import { AdCreativeShowcase, OGImageMeta } from "@/components/marketing";
 
 // Quick services for mobile
 const quickServices = [
@@ -258,6 +258,7 @@ const MobileHomePage = () => {
 const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
+      <OGImageMeta pageType="homepage" />
       <SimplifiedNav />
       <main>
         {/* Hero Section */}
@@ -265,6 +266,9 @@ const DesktopHomePage = () => {
         
         {/* Service Cards - Above the fold entry points */}
         <ServiceCards />
+        
+        {/* Ad Creative Showcase */}
+        <AdCreativeShowcase />
         
         {/* Why ZIVO - Trust & Value */}
         <WhyZivo />
@@ -274,9 +278,6 @@ const DesktopHomePage = () => {
         
         {/* Plan Your Trip - Cross-sell */}
         <PlanYourTrip />
-        
-        {/* Cross Sell Banner */}
-        <CrossSellBanner />
       </main>
       <Footer />
     </div>
