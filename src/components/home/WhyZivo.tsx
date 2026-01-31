@@ -1,26 +1,31 @@
-import { Shield, DollarSign, Globe, Headphones, CheckCircle } from "lucide-react";
+import { Shield, DollarSign, Globe, Lock, CheckCircle, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * WHY ZIVO - Trust & Transparency Section
+ * Official launch content matching brand guidelines
+ */
 
 const valueProps = [
   {
-    icon: DollarSign,
+    icon: Search,
     title: "Compare Prices from Trusted Partners",
-    description: "Search across 500+ airlines, hotels, and car rental companies to find the best deals.",
+    description: "Search across 500+ airlines, hotels, and car rental companies worldwide.",
   },
   {
-    icon: Shield,
-    title: "No Hidden Fees",
-    description: "What you see is what you pay. We don't charge any booking fees on ZIVO.",
+    icon: DollarSign,
+    title: "No Booking Fees on ZIVO",
+    description: "We don't charge any fees. Book directly with our trusted travel partners.",
+  },
+  {
+    icon: Lock,
+    title: "Secure Booking on Partner Sites",
+    description: "Complete your reservation safely on verified partner websites.",
   },
   {
     icon: Globe,
     title: "Worldwide Coverage",
-    description: "Book travel to any destination around the globe with our extensive partner network.",
-  },
-  {
-    icon: Headphones,
-    title: "24/7 Customer Support",
-    description: "Get help anytime with our dedicated support team available around the clock.",
+    description: "Find travel options for any destination around the globe.",
   },
 ];
 

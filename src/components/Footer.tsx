@@ -311,10 +311,13 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border">
           <div className="flex flex-col gap-4">
-            {/* Affiliate Disclosure */}
+            {/* Platform Description */}
             <div className="text-center">
+              <p className="text-sm font-medium text-muted-foreground mb-2">
+                ZIVO is a travel search and comparison platform.
+              </p>
               <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-                ZIVO may earn a commission when users book through partner links. ZIVO does not sell airline tickets, hotel rooms, or rental cars directly. All bookings are completed on partner websites.
+                ZIVO may earn a commission when you book through partner links. ZIVO does not sell travel products directly. All bookings are completed securely on partner websites.
               </p>
             </div>
             
