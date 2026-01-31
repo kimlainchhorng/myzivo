@@ -8169,6 +8169,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: { user_uuid: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
