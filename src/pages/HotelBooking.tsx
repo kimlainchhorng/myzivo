@@ -32,7 +32,7 @@ import HotelPartnerSelector from "@/components/hotel/HotelPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
 import HotelTopSearchCTA from "@/components/hotel/HotelTopSearchCTA";
 import HotelStickyBookingCTA from "@/components/hotel/HotelStickyBookingCTA";
-import TopTierHero from "@/components/shared/TopTierHero";
+import ImageHero from "@/components/shared/ImageHero";
 import BigSearchCard from "@/components/shared/BigSearchCard";
 import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
@@ -99,7 +99,7 @@ const HotelBooking = () => {
       
       <main className="pb-32 lg:pb-20">
         {/* Hero with Big Search */}
-        <TopTierHero service="hotels" icon={Hotel}>
+        <ImageHero service="hotels" icon={Hotel}>
           <BigSearchCard service="hotels">
             {/* Main Search Fields */}
             <div className="space-y-4">
@@ -226,7 +226,7 @@ const HotelBooking = () => {
               )}
             </Button>
           </BigSearchCard>
-        </TopTierHero>
+        </ImageHero>
 
         {/* Error State */}
         {error && (
