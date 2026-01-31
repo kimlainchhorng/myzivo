@@ -22,6 +22,10 @@ import FlightAirlinePartners from "@/components/flight/FlightAirlinePartners";
 import FlightPopularRoutes from "@/components/flight/FlightPopularRoutes";
 import FlightTravelTips from "@/components/flight/FlightTravelTips";
 import FlightMobileAppPromo from "@/components/flight/FlightMobileAppPromo";
+import FlightNewsletterSection from "@/components/flight/FlightNewsletterSection";
+import FlightFAQSection from "@/components/flight/FlightFAQSection";
+import FlightPriceCalendar from "@/components/flight/FlightPriceCalendar";
+import FlightSavingsStats from "@/components/flight/FlightSavingsStats";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -231,8 +235,26 @@ const FlightBooking = () => {
             {/* Travel Tips */}
             <FlightTravelTips />
 
+            {/* Price Calendar */}
+            <FlightPriceCalendar 
+              onSelectDate={(date) => {
+                const parsedDate = new Date(date);
+                setDepartDate(parsedDate);
+                toast.success(`Selected ${format(parsedDate, "MMM d, yyyy")}`);
+              }}
+            />
+
+            {/* Savings Stats */}
+            <FlightSavingsStats />
+
             {/* Price Alerts Promo */}
             <FlightAlertsPromo onSetAlert={() => toast.success("Price alert feature coming soon!")} />
+
+            {/* Newsletter Section */}
+            <FlightNewsletterSection />
+
+            {/* FAQ Section */}
+            <FlightFAQSection />
 
             {/* Mobile App Promo */}
             <FlightMobileAppPromo />

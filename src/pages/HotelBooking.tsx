@@ -45,6 +45,10 @@ import HotelFeaturedProperties from "@/components/hotel/HotelFeaturedProperties"
 import HotelAmenitiesShowcase from "@/components/hotel/HotelAmenitiesShowcase";
 import HotelRewardsSection from "@/components/hotel/HotelRewardsSection";
 import HotelPopularDestinations from "@/components/hotel/HotelPopularDestinations";
+import HotelNewsletterSection from "@/components/hotel/HotelNewsletterSection";
+import HotelFAQSection from "@/components/hotel/HotelFAQSection";
+import HotelSavingsCalculator from "@/components/hotel/HotelSavingsCalculator";
+import HotelMobileAppPromo from "@/components/hotel/HotelMobileAppPromo";
 
 // Popular destinations
 const popularCities = [
@@ -585,6 +589,18 @@ const HotelBooking = () => {
 
         {/* Rewards Section */}
         {!searchResults && <HotelRewardsSection />}
+
+        {/* Savings Calculator */}
+        {!searchResults && <HotelSavingsCalculator />}
+
+        {/* Newsletter Section */}
+        {!searchResults && <HotelNewsletterSection />}
+
+        {/* FAQ Section */}
+        {!searchResults && <HotelFAQSection />}
+
+        {/* Mobile App Promo */}
+        {!searchResults && <HotelMobileAppPromo />}
 
         {/* Testimonials */}
         {!searchResults && <HotelTestimonialsSection />}
