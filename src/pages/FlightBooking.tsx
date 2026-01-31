@@ -7,13 +7,11 @@ import { toast } from "sonner";
 import FlightSearchHero from "@/components/flight/FlightSearchHero";
 import FlightResultsSection from "@/components/flight/FlightResultsSection";
 import FlightDiscoverySections from "@/components/flight/FlightDiscoverySections";
-import TravelBundleCard from "@/components/flight/TravelBundleCard";
 import { TrendingDestinationsSection } from "@/components/flight/TrendingDestinationsSection";
 import FlightStatsBar from "@/components/flight/FlightStatsBar";
 import FlightPromoSection from "@/components/flight/FlightPromoSection";
 import FlightTestimonialsSection from "@/components/flight/FlightTestimonialsSection";
 import FlightFeaturedDestinations from "@/components/flight/FlightFeaturedDestinations";
-import FlightQuickActions from "@/components/flight/FlightQuickActions";
 import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
 import FlightPremiumExperience from "@/components/flight/FlightPremiumExperience";
 import FlightAlertsPromo from "@/components/flight/FlightAlertsPromo";
@@ -36,9 +34,16 @@ import FlightAirportGuide from "@/components/flight/FlightAirportGuide";
 import FlightClassComparison from "@/components/flight/FlightClassComparison";
 import FlightBookingTips from "@/components/flight/FlightBookingTips";
 import FlightDestinationInspiration from "@/components/flight/FlightDestinationInspiration";
-import FlightPriceHistory from "@/components/flight/FlightPriceHistory";
-import FlightAlternativeDates from "@/components/flight/FlightAlternativeDates";
-import FlightMilesCalculator from "@/components/flight/FlightMilesCalculator";
+import FlightBundleDeals from "@/components/flight/FlightBundleDeals";
+import FlightCustomerSupport from "@/components/flight/FlightCustomerSupport";
+import FlightCorporateSection from "@/components/flight/FlightCorporateSection";
+import FlightAccessibility from "@/components/flight/FlightAccessibility";
+import FlightCarbonOffset from "@/components/flight/FlightCarbonOffset";
+import FlightFlashSale from "@/components/flight/FlightFlashSale";
+import LiveChatWidget from "@/components/shared/LiveChatWidget";
+import LocalExperiences from "@/components/shared/LocalExperiences";
+import MobileAppBanner from "@/components/shared/MobileAppBanner";
+import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -187,22 +192,29 @@ const FlightBooking = () => {
         {/* Discovery Sections (shown when no search results) */}
         {!searchResults && (
           <>
-            {/* Stats Bar */}
+            {/* Stats Bar - Social Proof */}
             <FlightStatsBar />
 
-            {/* Featured Destinations */}
+            {/* Flash Sale - Urgency */}
+            <FlightFlashSale />
+
+            {/* Featured Destinations - Discovery */}
             <FlightFeaturedDestinations
               onSelectDestination={(city, code) => setToCity(`${city} (${code})`)}
             />
 
-            {/* Promo Section */}
-            <FlightPromoSection 
-              onPromoClick={(code) => {
-                toast.success(`Promo code ${code} copied to clipboard!`);
+            {/* Promo Codes - Conversion */}
+            <PromoCodeBanner />
+
+            {/* Flash Deals Carousel */}
+            <FlightDealsCarousel
+              onSelect={(from, to) => {
+                setFromCity(`(${from})`);
+                setToCity(`(${to})`);
               }}
             />
 
-
+            {/* Discovery Sections */}
             <FlightDiscoverySections
               fromCity={fromCity}
               toCity={toCity}
@@ -218,13 +230,8 @@ const FlightBooking = () => {
               setSelectedLoyaltyProgram={setSelectedLoyaltyProgram}
             />
 
-            {/* Flash Deals Carousel */}
-            <FlightDealsCarousel
-              onSelect={(from, to) => {
-                setFromCity(`(${from})`);
-                setToCity(`(${to})`);
-              }}
-            />
+            {/* Bundle Deals - Upsell */}
+            <FlightBundleDeals />
 
             {/* Trending Destinations */}
             <TrendingDestinationsSection
@@ -239,44 +246,8 @@ const FlightBooking = () => {
               }}
             />
 
-            {/* Airline Partners */}
-            <FlightAirlinePartners />
-
-            {/* Premium Experience */}
-            <FlightPremiumExperience />
-
-            {/* Travel Tips */}
-            <FlightTravelTips />
-
-            {/* Baggage Guide */}
-            <FlightBaggageGuide />
-
-            {/* Airport Guide */}
-            <FlightAirportGuide />
-
-            {/* Class Comparison */}
-            <FlightClassComparison />
-
-            {/* Booking Tips */}
-            <FlightBookingTips />
-
-            {/* Destination Inspiration */}
-            <FlightDestinationInspiration />
-
-            {/* Loyalty Program */}
-            <FlightLoyaltyProgram />
-
             {/* Seasonal Deals */}
             <FlightSeasonalDeals />
-
-            {/* Compare Widget */}
-            <FlightCompareWidget />
-
-            {/* Social Proof */}
-            <FlightSocialProof />
-
-            {/* Price Guarantee */}
-            <FlightPriceGuarantee />
 
             {/* Price Calendar */}
             <FlightPriceCalendar 
@@ -287,11 +258,72 @@ const FlightBooking = () => {
               }}
             />
 
+            {/* Airline Partners */}
+            <FlightAirlinePartners />
+
+            {/* Loyalty Program */}
+            <FlightLoyaltyProgram />
+
+            {/* Social Proof */}
+            <FlightSocialProof />
+
             {/* Savings Stats */}
             <FlightSavingsStats />
 
+            {/* Carbon Offset - Sustainability */}
+            <FlightCarbonOffset />
+
+            {/* Premium Experience */}
+            <FlightPremiumExperience />
+
+            {/* Class Comparison */}
+            <FlightClassComparison />
+
+            {/* Price Guarantee */}
+            <FlightPriceGuarantee />
+
+            {/* Promo Section */}
+            <FlightPromoSection 
+              onPromoClick={(code) => {
+                toast.success(`Promo code ${code} copied to clipboard!`);
+              }}
+            />
+
+            {/* Compare Widget */}
+            <FlightCompareWidget />
+
+            {/* Baggage Guide */}
+            <FlightBaggageGuide />
+
+            {/* Airport Guide */}
+            <FlightAirportGuide />
+
+            {/* Booking Tips */}
+            <FlightBookingTips />
+
+            {/* Travel Tips */}
+            <FlightTravelTips />
+
+            {/* Destination Inspiration */}
+            <FlightDestinationInspiration />
+
+            {/* Local Experiences */}
+            <LocalExperiences />
+
+            {/* Accessibility */}
+            <FlightAccessibility />
+
+            {/* Corporate Section */}
+            <FlightCorporateSection />
+
+            {/* Customer Support */}
+            <FlightCustomerSupport />
+
             {/* Price Alerts Promo */}
             <FlightAlertsPromo onSetAlert={() => toast.success("Price alert feature coming soon!")} />
+
+            {/* Mobile App Banner */}
+            <MobileAppBanner />
 
             {/* Newsletter Section */}
             <FlightNewsletterSection />
@@ -309,6 +341,9 @@ const FlightBooking = () => {
             <FlightTrustIndicators />
           </>
         )}
+
+        {/* Live Chat Widget */}
+        <LiveChatWidget />
       </main>
 
       <Footer />

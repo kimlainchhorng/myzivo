@@ -64,6 +64,14 @@ import HotelPriceCalendar from "@/components/hotel/HotelPriceCalendar";
 import HotelNearbyAttractions from "@/components/hotel/HotelNearbyAttractions";
 import HotelAwardsShowcase from "@/components/hotel/HotelAwardsShowcase";
 import HotelTestimonials from "@/components/hotel/HotelTestimonials";
+import HotelComparisonTool from "@/components/hotel/HotelComparisonTool";
+import HotelLoyaltyRewards from "@/components/hotel/HotelLoyaltyRewards";
+import HotelPremiumAccess from "@/components/hotel/HotelPremiumAccess";
+import HotelEventSpaces from "@/components/hotel/HotelEventSpaces";
+import HotelDiningOptions from "@/components/hotel/HotelDiningOptions";
+import LiveChatWidget from "@/components/shared/LiveChatWidget";
+import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
+import LocalExperiences from "@/components/shared/LocalExperiences";
 
 // Popular destinations
 const popularCities = [
