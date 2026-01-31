@@ -59,7 +59,7 @@ import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import NoFlightsFound from "@/components/flight/NoFlightsFound";
 import CrossSellSection from "@/components/flight/CrossSellSection";
-import TravelExtrasSection from "@/components/flight/TravelExtrasSection";
+import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
@@ -741,9 +741,10 @@ const FlightResults = () => {
                 />
               )}
 
-              {/* Travel Extras Section */}
+              {/* Enhance Your Trip Section */}
               {flights.length > 0 && (
-                <TravelExtrasSection 
+                <EnhanceYourTrip 
+                  currentService="flights"
                   destination={destinationName}
                   className="mt-8"
                 />

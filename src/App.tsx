@@ -45,6 +45,7 @@ const GroundTransport = lazy(() => import("./pages/GroundTransport"));
 const Events = lazy(() => import("./pages/Events"));
 const ThingsToDo = lazy(() => import("./pages/ThingsToDo"));
 const TravelInsurance = lazy(() => import("./pages/TravelInsurance"));
+const TravelExtras = lazy(() => import("./pages/TravelExtras"));
 const Install = lazy(() => import("./pages/Install"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Promotions = lazy(() => import("./pages/Promotions"));
@@ -156,6 +157,8 @@ const App = () => (
                 <Route path="/activities" element={<ThingsToDo />} />
                 <Route path="/experiences" element={<ThingsToDo />} />
                 <Route path="/travel-insurance" element={<TravelInsurance />} />
+                <Route path="/extras" element={<TravelExtras />} />
+                <Route path="/travel-extras" element={<TravelExtras />} />
                 <Route path="/install" element={<Install />} />
                 <Route
                   path="/admin"

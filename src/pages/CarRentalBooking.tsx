@@ -32,7 +32,7 @@ import ImageHero from "@/components/shared/ImageHero";
 import BigSearchCard from "@/components/shared/BigSearchCard";
 import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
 import TrustSection from "@/components/shared/TrustSection";
-import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
+import { EnhanceYourTrip } from "@/components/travel-extras";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
@@ -339,7 +339,7 @@ const CarRentalBooking = () => {
             
             <TrustFeatureCards columns={4} />
             <TrustSection service="cars" />
-            <TravelExtrasCTA currentService="cars" />
+            <EnhanceYourTrip currentService="cars" destination={pickupLocation} />
             
             {/* Internal Linking */}
             <InternalLinkGrid currentService="cars" />
