@@ -19,6 +19,12 @@ interface BoardingPassWidgetProps {
   seat?: string;
   boardingGroup?: string;
   bookingRef?: string;
+  terminal?: string;
+  airlineName?: string;
+  boardingStatus?: "ready" | "boarding" | "final-call" | "departed";
+  onDownloadPDF?: () => void;
+  onAddToWallet?: (type: "apple" | "google") => void;
+  onShare?: () => void;
 }
 
 const BoardingPassWidget = ({ 
@@ -33,9 +39,24 @@ const BoardingPassWidget = ({
   gate = "B24",
   seat = "14A",
   boardingGroup = "2",
-  bookingRef = "XK7F9M"
+  bookingRef = "XK7F9M",
+  terminal = "Terminal 4",
+  airlineName = "ZIVO AIR",
+  boardingStatus = "ready",
+  onDownloadPDF,
+  onAddToWallet,
+  onShare
 }: BoardingPassWidgetProps) => {
   const [isFlipped, setIsFlipped] = useState(false);
+
+  const statusConfig = {
+    ready: { label: "Ready to Board", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    boarding: { label: "Boarding Now", color: "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse" },
+    "final-call": { label: "Final Call", color: "bg-red-500/10 text-red-400 border-red-500/20 animate-pulse" },
+    departed: { label: "Departed", color: "bg-muted/50 text-muted-foreground border-muted/30" },
+  };
+
+  const status = statusConfig[boardingStatus];
 
   return (
     <div className={cn("relative perspective-1000", className)}>
@@ -61,12 +82,12 @@ const BoardingPassWidget = ({
                 <Plane className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-lg">ZIVO AIR</p>
+                <p className="font-bold text-lg">{airlineName}</p>
                 <p className="text-xs text-muted-foreground">Boarding Pass</p>
               </div>
             </div>
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-              Ready to Board
+            <Badge className={status.color}>
+              {status.label}
             </Badge>
           </div>
 
@@ -158,19 +179,19 @@ const BoardingPassWidget = ({
           </div>
 
           <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start gap-3">
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={onDownloadPDF}>
               <Download className="w-4 h-4" />
               Download PDF
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3">
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={() => onAddToWallet?.("apple")}>
               <Smartphone className="w-4 h-4" />
               Add to Apple Wallet
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3">
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={() => onAddToWallet?.("google")}>
               <Smartphone className="w-4 h-4" />
               Add to Google Wallet
             </Button>
-            <Button variant="outline" className="w-full justify-start gap-3">
+            <Button variant="outline" className="w-full justify-start gap-3" onClick={onShare}>
               <Share2 className="w-4 h-4" />
               Share Pass
             </Button>
@@ -189,7 +210,7 @@ const BoardingPassWidget = ({
 
           <div className="flex items-center justify-center gap-2 mt-4 p-3 rounded-lg bg-primary/10">
             <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Gate {gate} • Terminal 4</span>
+            <span className="text-sm font-medium">Gate {gate} • {terminal}</span>
           </div>
 
           {/* Flip hint */}

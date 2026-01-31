@@ -1,28 +1,34 @@
-import { Clock, AlertTriangle, CheckCircle2, TrendingUp, Plane } from "lucide-react";
+import { Clock, AlertTriangle, CheckCircle2, TrendingUp, Plane, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+
+type ImpactLevel = "low" | "medium" | "high";
+
+interface DelayFactor {
+  factor: string;
+  impact: ImpactLevel;
+  description: string;
+}
 
 interface FlightDelayPredictorWidgetProps {
   className?: string;
   flightNumber?: string;
   route?: string;
+  onTimeScore?: number;
+  avgDelay?: number;
+  historicalFlights?: number;
+  delayFactors?: DelayFactor[];
 }
 
-interface DelayFactor {
-  factor: string;
-  impact: "low" | "medium" | "high";
-  description: string;
-}
-
-const delayFactors: DelayFactor[] = [
+const defaultDelayFactors: DelayFactor[] = [
   { factor: "Weather", impact: "low", description: "Clear conditions expected" },
   { factor: "Air Traffic", impact: "medium", description: "Moderate congestion at destination" },
   { factor: "Airline History", impact: "low", description: "92% on-time for this route" },
   { factor: "Time of Day", impact: "low", description: "Morning flights have fewer delays" },
 ];
 
-const impactColors = {
+const impactColors: Record<ImpactLevel, { bg: string; text: string; dot: string }> = {
   low: { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-500" },
   medium: { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-500" },
   high: { bg: "bg-red-500/10", text: "text-red-400", dot: "bg-red-500" },
@@ -31,10 +37,21 @@ const impactColors = {
 const FlightDelayPredictorWidget = ({ 
   className, 
   flightNumber = "AA 1234",
-  route = "JFK → LAX" 
+  route = "JFK → LAX",
+  onTimeScore = 87,
+  avgDelay = 12,
+  historicalFlights = 500,
+  delayFactors = defaultDelayFactors
 }: FlightDelayPredictorWidgetProps) => {
-  const onTimeScore = 87;
-  const avgDelay = 12;
+  const riskLevel = onTimeScore >= 80 ? "low" : onTimeScore >= 60 ? "medium" : "high";
+  const riskConfig = {
+    low: { icon: CheckCircle2, label: "Low Delay Risk", message: "This flight has a strong on-time record. Minimal delays expected.", color: "text-emerald-400", bg: "bg-emerald-500/5 border-emerald-500/20" },
+    medium: { icon: AlertTriangle, label: "Moderate Delay Risk", message: "Some delays possible. Consider arriving early.", color: "text-amber-400", bg: "bg-amber-500/5 border-amber-500/20" },
+    high: { icon: AlertTriangle, label: "High Delay Risk", message: "Significant delays likely. Plan accordingly and check for updates.", color: "text-red-400", bg: "bg-red-500/5 border-red-500/20" },
+  };
+
+  const risk = riskConfig[riskLevel];
+  const RiskIcon = risk.icon;
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -73,19 +90,19 @@ const FlightDelayPredictorWidget = ({
           className="h-2"
         />
         <div className="flex items-center justify-between mt-1">
-          <span className="text-[10px] text-muted-foreground">Based on 500+ historical flights</span>
+          <span className="text-[10px] text-muted-foreground">Based on {historicalFlights.toLocaleString()}+ historical flights</span>
           <span className="text-[10px] text-muted-foreground">Avg delay: {avgDelay} min</span>
         </div>
       </div>
 
       {/* Risk Assessment */}
-      <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 mb-4">
+      <div className={cn("p-3 rounded-lg border mb-4", risk.bg)}>
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          <span className="text-sm font-medium text-emerald-400">Low Delay Risk</span>
+          <RiskIcon className={cn("w-4 h-4", risk.color)} />
+          <span className={cn("text-sm font-medium", risk.color)}>{risk.label}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          This flight has a strong on-time record. Minimal delays expected.
+          {risk.message}
         </p>
       </div>
 

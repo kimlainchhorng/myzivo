@@ -574,7 +574,10 @@ const FlightBooking = () => {
                     passengers={parseInt(passengers)}
                     airline={selectedFlight?.airline || "United Airlines"}
                   />
-                  <TripModificationWidget />
+                  <TripModificationWidget 
+                    confirmationCode={selectedFlight ? `ZV-${selectedFlight.flightNumber}` : "ZV-2024-DEMO"}
+                    bookingStatus="confirmed"
+                  />
                 </div>
               </div>
             </section>
@@ -583,7 +586,7 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <TravelDocumentsWidget />
+                  <TravelDocumentsWidget destination={toCity.split(" (")[0] || "Paris"} />
                   <LoyaltyTierWidget memberMiles={42500} monthlyEarned={2500} />
                 </div>
               </div>
@@ -593,8 +596,21 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <TripComparisonWidget />
-                  <TripSharingWidget tripName={`${toCity.split(" (")[0] || "Paris"} Trip`} />
+                  <TripComparisonWidget 
+                    flightOptions={searchResults?.slice(0, 3).map((f, i) => ({
+                      id: String(i + 1),
+                      airline: f.airline,
+                      price: f.price,
+                      duration: f.duration,
+                      stops: f.stops,
+                      rating: 4.0 + Math.random() * 0.8,
+                      features: { wifi: i < 2, meals: true, legroom: i === 0 }
+                    })) || undefined}
+                  />
+                  <TripSharingWidget 
+                    tripName={`${toCity.split(" (")[0] || "Paris"} Trip`}
+                    tripId={`${toCode.toLowerCase()}-${Date.now()}`}
+                  />
                 </div>
               </div>
             </section>
@@ -603,8 +619,13 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <TripRatingWidget providerName={selectedFlight?.airline || "Air France"} />
-                  <RefundTrackerWidget />
+                  <TripRatingWidget 
+                    providerName={selectedFlight?.airline || "Air France"} 
+                    tripType="flight"
+                  />
+                  <RefundTrackerWidget 
+                    refundAmount={selectedFlight?.price || 899}
+                  />
                 </div>
               </div>
             </section>
@@ -623,7 +644,7 @@ const FlightBooking = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
                   <FlightPriceHistoryWidget route={`${fromCode} → ${toCode}`} />
                   <FlightDelayPredictorWidget 
-                    flightNumber="AA 1234" 
+                    flightNumber={selectedFlight?.flightNumber || "AA 1234"} 
                     route={`${fromCode} → ${toCode}`} 
                   />
                 </div>
@@ -636,9 +657,13 @@ const FlightBooking = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
                   <AirportGuideWidget 
                     airportCode={fromCode} 
-                    airportName={fromCity.split(" (")[0] || "Los Angeles International"} 
+                    airportName={fromCity.split(" (")[0] || "Los Angeles International"}
+                    terminal="Terminal 4"
                   />
-                  <BaggageCalculatorWidget includedBags={1} maxWeight={23} />
+                  <BaggageCalculatorWidget 
+                    includedBags={cabinClass === "economy" ? 1 : 2} 
+                    maxWeight={cabinClass === "economy" ? 23 : 32} 
+                  />
                 </div>
               </div>
             </section>
@@ -648,7 +673,10 @@ const FlightBooking = () => {
               <div className="container mx-auto px-4">
                 <h2 className="text-xl font-bold text-center mb-6">Customize Your Flight</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
-                  <SeatSelectionWidget />
+                  <SeatSelectionWidget 
+                    premiumPrice={cabinClass === "economy" ? 45 : 0}
+                    exitPrice={cabinClass === "economy" ? 35 : 0}
+                  />
                   <MealPreferenceWidget />
                 </div>
               </div>
@@ -660,16 +688,16 @@ const FlightBooking = () => {
                 <h2 className="text-xl font-bold text-center mb-6">Ready to Fly</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
                   <CheckInReminderWidget 
-                    flightNumber="AA 1234" 
-                    airline="American Airlines" 
+                    flightNumber={selectedFlight?.flightNumber || "AA 1234"} 
+                    airline={selectedFlight?.airline || "American Airlines"} 
                   />
                   <BoardingPassWidget 
-                    passengerName="JOHN DOE"
-                    flightNumber="AA 1234"
+                    flightNumber={selectedFlight?.flightNumber || "AA 1234"}
                     departureCity={fromCity.split(" (")[0] || "Los Angeles"}
                     arrivalCity={toCity.split(" (")[0] || "New York"}
                     departureCode={fromCode}
                     arrivalCode={toCode}
+                    airlineName={selectedFlight?.airline || "ZIVO AIR"}
                   />
                 </div>
               </div>

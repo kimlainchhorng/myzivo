@@ -11,18 +11,51 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+interface EmergencyContact {
+  type: string;
+  number: string;
+  icon: React.ElementType;
+}
+
+interface QuickLink {
+  label: string;
+  url?: string;
+  onClick?: () => void;
+}
+
 interface EmergencySupportWidgetProps {
   className?: string;
   destination?: string;
+  countryCode?: string;
+  emergencyContacts?: EmergencyContact[];
+  quickLinks?: QuickLink[];
+  supportPhone?: string;
+  onCallSupport?: () => void;
+  onChatSupport?: () => void;
 }
 
-const emergencyContacts = [
+const defaultEmergencyContacts: EmergencyContact[] = [
   { type: "Police", number: "17", icon: Shield },
   { type: "Medical", number: "15", icon: Heart },
   { type: "Fire", number: "18", icon: AlertTriangle },
 ];
 
-const EmergencySupportWidget = ({ className, destination = "Paris" }: EmergencySupportWidgetProps) => {
+const defaultQuickLinks: QuickLink[] = [
+  { label: "Nearest Hospital" },
+  { label: "Embassy Information" },
+  { label: "Insurance Claim" },
+];
+
+const EmergencySupportWidget = ({ 
+  className, 
+  destination = "Paris",
+  countryCode = "FR",
+  emergencyContacts = defaultEmergencyContacts,
+  quickLinks = defaultQuickLinks,
+  supportPhone,
+  onCallSupport,
+  onChatSupport
+}: EmergencySupportWidgetProps) => {
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
       <div className="flex items-center justify-between mb-4">
@@ -40,6 +73,9 @@ const EmergencySupportWidget = ({ className, destination = "Paris" }: EmergencyS
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">{destination}</span>
+          {countryCode && (
+            <Badge variant="secondary" className="text-[10px]">{countryCode}</Badge>
+          )}
         </div>
         <p className="text-xs text-muted-foreground mt-1">Emergency numbers for your destination</p>
       </div>
@@ -65,12 +101,15 @@ const EmergencySupportWidget = ({ className, destination = "Paris" }: EmergencyS
       {/* ZIVO Support */}
       <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 mb-4">
         <p className="text-xs text-muted-foreground mb-2">ZIVO Travel Support</p>
+        {supportPhone && (
+          <p className="text-sm font-medium mb-2">{supportPhone}</p>
+        )}
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button size="sm" variant="outline" className="flex-1" onClick={onCallSupport}>
             <Phone className="w-3 h-3 mr-1" />
             Call
           </Button>
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button size="sm" variant="outline" className="flex-1" onClick={onChatSupport}>
             <MessageCircle className="w-3 h-3 mr-1" />
             Chat
           </Button>
@@ -79,18 +118,16 @@ const EmergencySupportWidget = ({ className, destination = "Paris" }: EmergencyS
 
       {/* Quick Links */}
       <div className="space-y-2">
-        <button className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors text-sm">
-          <span>Nearest Hospital</span>
-          <ExternalLink className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors text-sm">
-          <span>Embassy Information</span>
-          <ExternalLink className="w-4 h-4 text-muted-foreground" />
-        </button>
-        <button className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors text-sm">
-          <span>Insurance Claim</span>
-          <ExternalLink className="w-4 h-4 text-muted-foreground" />
-        </button>
+        {quickLinks.map((link) => (
+          <button 
+            key={link.label}
+            onClick={link.onClick}
+            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/20 transition-colors text-sm"
+          >
+            <span>{link.label}</span>
+            <ExternalLink className="w-4 h-4 text-muted-foreground" />
+          </button>
+        ))}
       </div>
     </div>
   );

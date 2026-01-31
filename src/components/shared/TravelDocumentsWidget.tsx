@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { 
   FileText, 
   Upload,
@@ -14,10 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
-interface TravelDocumentsWidgetProps {
-  className?: string;
-}
-
 interface Document {
   id: string;
   type: string;
@@ -26,10 +21,18 @@ interface Document {
   expiryDate?: string;
 }
 
-const documents: Document[] = [
+interface TravelDocumentsWidgetProps {
+  className?: string;
+  documents?: Document[];
+  destination?: string;
+  onUpload?: (docId: string) => void;
+  onView?: (docId: string) => void;
+}
+
+const defaultDocuments: Document[] = [
   { id: "1", type: "passport", name: "Passport", status: "verified", expiryDate: "Dec 2028" },
-  { id: "2", type: "visa", name: "Tourist Visa (France)", status: "pending" },
-  { id: "3", type: "insurance", name: "Travel Insurance", status: "verified", expiryDate: "Jul 2024" },
+  { id: "2", type: "visa", name: "Tourist Visa", status: "pending" },
+  { id: "3", type: "insurance", name: "Travel Insurance", status: "verified", expiryDate: "Jul 2025" },
   { id: "4", type: "vaccination", name: "Vaccination Card", status: "missing" },
 ];
 
@@ -40,9 +43,15 @@ const statusConfig = {
   missing: { label: "Missing", icon: Plus, color: "text-muted-foreground bg-muted/30" },
 };
 
-const TravelDocumentsWidget = ({ className }: TravelDocumentsWidgetProps) => {
+const TravelDocumentsWidget = ({ 
+  className,
+  documents = defaultDocuments,
+  destination,
+  onUpload,
+  onView
+}: TravelDocumentsWidgetProps) => {
   const verifiedCount = documents.filter(d => d.status === "verified").length;
-  const progress = (verifiedCount / documents.length) * 100;
+  const progress = documents.length > 0 ? (verifiedCount / documents.length) * 100 : 0;
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -55,6 +64,12 @@ const TravelDocumentsWidget = ({ className }: TravelDocumentsWidgetProps) => {
           {verifiedCount}/{documents.length} Ready
         </Badge>
       </div>
+
+      {destination && (
+        <div className="text-xs text-muted-foreground mb-3">
+          Required for travel to <span className="text-foreground font-medium">{destination}</span>
+        </div>
+      )}
 
       {/* Progress */}
       <div className="mb-4">
@@ -86,12 +101,22 @@ const TravelDocumentsWidget = ({ className }: TravelDocumentsWidgetProps) => {
                 )}
               </div>
               {doc.status === "missing" ? (
-                <Button variant="outline" size="sm" className="h-7 text-xs">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-xs"
+                  onClick={() => onUpload?.(doc.id)}
+                >
                   <Upload className="w-3 h-3 mr-1" />
                   Add
                 </Button>
               ) : doc.status === "verified" ? (
-                <Button variant="ghost" size="sm" className="h-7">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-7"
+                  onClick={() => onView?.(doc.id)}
+                >
                   <Eye className="w-3 h-3" />
                 </Button>
               ) : (

@@ -1,12 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Armchair, Check, X, Info, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-interface SeatSelectionWidgetProps {
-  className?: string;
-}
 
 type SeatStatus = "available" | "selected" | "occupied" | "premium" | "exit";
 
@@ -18,35 +14,74 @@ interface Seat {
   price: number;
 }
 
-const generateSeats = (): Seat[] => {
-  const seats: Seat[] = [];
-  const positions = ["A", "B", "C", "D", "E", "F"];
-  
-  for (let row = 1; row <= 6; row++) {
-    positions.forEach((pos) => {
-      const isExit = row === 3;
-      const isPremium = row <= 2;
-      const isOccupied = Math.random() > 0.7;
-      
-      seats.push({
-        id: `${row}${pos}`,
-        row,
-        position: pos,
-        status: isOccupied ? "occupied" : isExit ? "exit" : isPremium ? "premium" : "available",
-        price: isPremium ? 45 : isExit ? 35 : 0,
-      });
-    });
-  }
-  return seats;
-};
+interface SeatSelectionWidgetProps {
+  className?: string;
+  rows?: number;
+  premiumRows?: number;
+  exitRow?: number;
+  standardPrice?: number;
+  premiumPrice?: number;
+  exitPrice?: number;
+  occupancyRate?: number;
+  currency?: string;
+  preSelectedSeat?: string;
+  onSeatSelect?: (seat: Seat | null) => void;
+  onConfirm?: (seat: Seat) => void;
+}
 
-const SeatSelectionWidget = ({ className }: SeatSelectionWidgetProps) => {
-  const [seats] = useState<Seat[]>(generateSeats);
-  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
+const SeatSelectionWidget = ({ 
+  className,
+  rows = 6,
+  premiumRows = 2,
+  exitRow = 3,
+  standardPrice = 0,
+  premiumPrice = 45,
+  exitPrice = 35,
+  occupancyRate = 0.3,
+  currency = "$",
+  preSelectedSeat,
+  onSeatSelect,
+  onConfirm
+}: SeatSelectionWidgetProps) => {
+  const seats = useMemo(() => {
+    const generatedSeats: Seat[] = [];
+    const positions = ["A", "B", "C", "D", "E", "F"];
+    
+    for (let row = 1; row <= rows; row++) {
+      positions.forEach((pos) => {
+        const isExit = row === exitRow;
+        const isPremium = row <= premiumRows;
+        // Use deterministic "random" based on seat position
+        const seedValue = (row * 7 + pos.charCodeAt(0)) % 100;
+        const isOccupied = seedValue < occupancyRate * 100;
+        
+        generatedSeats.push({
+          id: `${row}${pos}`,
+          row,
+          position: pos,
+          status: isOccupied ? "occupied" : isExit ? "exit" : isPremium ? "premium" : "available",
+          price: isPremium ? premiumPrice : isExit ? exitPrice : standardPrice,
+        });
+      });
+    }
+    return generatedSeats;
+  }, [rows, premiumRows, exitRow, standardPrice, premiumPrice, exitPrice, occupancyRate]);
+
+  const [selectedSeat, setSelectedSeat] = useState<Seat | null>(
+    preSelectedSeat ? seats.find(s => s.id === preSelectedSeat) || null : null
+  );
 
   const handleSeatClick = (seat: Seat) => {
     if (seat.status === "occupied") return;
-    setSelectedSeat(seat.id === selectedSeat?.id ? null : seat);
+    const newSelection = seat.id === selectedSeat?.id ? null : seat;
+    setSelectedSeat(newSelection);
+    onSeatSelect?.(newSelection);
+  };
+
+  const handleConfirm = () => {
+    if (selectedSeat) {
+      onConfirm?.(selectedSeat);
+    }
   };
 
   const getSeatStyles = (seat: Seat) => {
@@ -76,7 +111,7 @@ const SeatSelectionWidget = ({ className }: SeatSelectionWidgetProps) => {
         </div>
         {selectedSeat && (
           <Badge className="bg-primary/10 text-primary">
-            Seat {selectedSeat.id} • ${selectedSeat.price || "Free"}
+            Seat {selectedSeat.id} • {selectedSeat.price > 0 ? `${currency}${selectedSeat.price}` : "Free"}
           </Badge>
         )}
       </div>
@@ -89,11 +124,11 @@ const SeatSelectionWidget = ({ className }: SeatSelectionWidgetProps) => {
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-amber-500/20" />
-          <span className="text-muted-foreground">Premium ($45)</span>
+          <span className="text-muted-foreground">Premium ({currency}{premiumPrice})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-emerald-500/20" />
-          <span className="text-muted-foreground">Exit Row ($35)</span>
+          <span className="text-muted-foreground">Exit Row ({currency}{exitPrice})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-muted/50">
@@ -114,7 +149,7 @@ const SeatSelectionWidget = ({ className }: SeatSelectionWidgetProps) => {
 
         {/* Seats Grid */}
         <div className="space-y-2">
-          {[1, 2, 3, 4, 5, 6].map((row) => (
+          {Array.from({ length: rows }, (_, i) => i + 1).map((row) => (
             <div key={row} className="flex items-center justify-center gap-1">
               {/* Left section (A, B, C) */}
               <div className="flex gap-1">
@@ -190,8 +225,8 @@ const SeatSelectionWidget = ({ className }: SeatSelectionWidgetProps) => {
                 </p>
               </div>
             </div>
-            <Button size="sm">
-              Confirm ${selectedSeat.price || "Free"}
+            <Button size="sm" onClick={handleConfirm}>
+              Confirm {selectedSeat.price > 0 ? `${currency}${selectedSeat.price}` : "Free"}
             </Button>
           </div>
         </div>

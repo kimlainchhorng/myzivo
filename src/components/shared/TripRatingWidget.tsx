@@ -11,14 +11,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface RatingCategory {
+  id: string;
+  label: string;
+}
 
 interface TripRatingWidgetProps {
   className?: string;
   tripType?: "flight" | "hotel" | "car";
   providerName?: string;
+  bookingId?: string;
+  milesReward?: number;
+  ratingCategories?: RatingCategory[];
+  onSubmit?: (data: { ratings: Record<string, number>; review: string }) => void;
 }
 
-const ratingCategories = [
+const defaultRatingCategories: RatingCategory[] = [
   { id: "overall", label: "Overall Experience" },
   { id: "service", label: "Service Quality" },
   { id: "value", label: "Value for Money" },
@@ -28,7 +38,11 @@ const ratingCategories = [
 const TripRatingWidget = ({ 
   className, 
   tripType = "flight",
-  providerName = "Air France"
+  providerName = "Air France",
+  bookingId,
+  milesReward = 500,
+  ratingCategories = defaultRatingCategories,
+  onSubmit
 }: TripRatingWidgetProps) => {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [hoveredStar, setHoveredStar] = useState<{ category: string; star: number } | null>(null);
@@ -40,7 +54,11 @@ const TripRatingWidget = ({
   };
 
   const handleSubmit = () => {
+    if (onSubmit) {
+      onSubmit({ ratings, review });
+    }
     setSubmitted(true);
+    toast.success("Thank you for your feedback!");
   };
 
   if (submitted) {
@@ -55,7 +73,7 @@ const TripRatingWidget = ({
         </p>
         <div className="flex items-center justify-center gap-2">
           <Gift className="w-4 h-4 text-amber-400" />
-          <span className="text-sm font-medium text-amber-400">+500 ZIVO Miles earned!</span>
+          <span className="text-sm font-medium text-amber-400">+{milesReward} ZIVO Miles earned!</span>
         </div>
       </div>
     );
@@ -70,7 +88,7 @@ const TripRatingWidget = ({
         </div>
         <Badge variant="outline" className="text-xs">
           <Gift className="w-3 h-3 mr-1 text-amber-400" />
-          +500 Miles
+          +{milesReward} Miles
         </Badge>
       </div>
 
@@ -78,6 +96,9 @@ const TripRatingWidget = ({
       <div className="p-3 rounded-lg bg-muted/30 border border-border/30 mb-4">
         <p className="text-xs text-muted-foreground">Rate your experience with</p>
         <p className="font-medium">{providerName}</p>
+        {bookingId && (
+          <p className="text-xs text-muted-foreground mt-1">Booking: {bookingId}</p>
+        )}
       </div>
 
       {/* Rating Categories */}
@@ -88,7 +109,7 @@ const TripRatingWidget = ({
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => {
                 const isHovered = hoveredStar?.category === category.id && hoveredStar.star >= star;
-                const isRated = ratings[category.id] >= star;
+                const isRated = (ratings[category.id] || 0) >= star;
                 
                 return (
                   <button

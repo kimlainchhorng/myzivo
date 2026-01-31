@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   Scale, 
   Plane, 
@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface TripComparisonWidgetProps {
-  className?: string;
+interface FlightFeatures {
+  wifi: boolean;
+  meals: boolean;
+  legroom: boolean;
 }
 
 interface FlightOption {
@@ -24,10 +26,18 @@ interface FlightOption {
   duration: string;
   stops: number;
   rating: number;
-  features: { wifi: boolean; meals: boolean; legroom: boolean };
+  features: FlightFeatures;
 }
 
-const flightOptions: FlightOption[] = [
+interface TripComparisonWidgetProps {
+  className?: string;
+  flightOptions?: FlightOption[];
+  currency?: string;
+  maxSelections?: number;
+  onSelectFlight?: (flight: FlightOption) => void;
+}
+
+const defaultFlightOptions: FlightOption[] = [
   { 
     id: "1", 
     airline: "Air France", 
@@ -57,20 +67,49 @@ const flightOptions: FlightOption[] = [
   },
 ];
 
-const TripComparisonWidget = ({ className }: TripComparisonWidgetProps) => {
-  const [selectedOptions, setSelectedOptions] = useState<string[]>(["1", "2"]);
+const TripComparisonWidget = ({ 
+  className,
+  flightOptions = defaultFlightOptions,
+  currency = "$",
+  maxSelections = 3,
+  onSelectFlight
+}: TripComparisonWidgetProps) => {
+  const [selectedOptions, setSelectedOptions] = useState<string[]>(
+    flightOptions.slice(0, 2).map(f => f.id)
+  );
 
   const toggleOption = (id: string) => {
     if (selectedOptions.includes(id)) {
       setSelectedOptions(selectedOptions.filter(o => o !== id));
-    } else if (selectedOptions.length < 3) {
+    } else if (selectedOptions.length < maxSelections) {
       setSelectedOptions([...selectedOptions, id]);
     }
   };
 
-  const comparedFlights = flightOptions.filter(f => selectedOptions.includes(f.id));
-  const bestPrice = Math.min(...comparedFlights.map(f => f.price));
-  const bestRating = Math.max(...comparedFlights.map(f => f.rating));
+  const comparedFlights = useMemo(() => 
+    flightOptions.filter(f => selectedOptions.includes(f.id)),
+    [flightOptions, selectedOptions]
+  );
+
+  const bestPrice = useMemo(() => 
+    comparedFlights.length > 0 ? Math.min(...comparedFlights.map(f => f.price)) : 0,
+    [comparedFlights]
+  );
+
+  const bestRating = useMemo(() => 
+    comparedFlights.length > 0 ? Math.max(...comparedFlights.map(f => f.rating)) : 0,
+    [comparedFlights]
+  );
+
+  const bestValueFlight = useMemo(() => {
+    if (comparedFlights.length === 0) return null;
+    // Best value = best balance of price and rating
+    return comparedFlights.reduce((best, current) => {
+      const currentScore = current.rating / (current.price / 100);
+      const bestScore = best.rating / (best.price / 100);
+      return currentScore > bestScore ? current : best;
+    });
+  }, [comparedFlights]);
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -80,7 +119,7 @@ const TripComparisonWidget = ({ className }: TripComparisonWidgetProps) => {
           <h3 className="font-semibold text-sm">Compare Options</h3>
         </div>
         <Badge variant="secondary" className="text-xs">
-          {selectedOptions.length}/3 selected
+          {selectedOptions.length}/{maxSelections} selected
         </Badge>
       </div>
 
@@ -127,7 +166,7 @@ const TripComparisonWidget = ({ className }: TripComparisonWidgetProps) => {
                       "font-bold",
                       flight.price === bestPrice && "text-emerald-400"
                     )}>
-                      ${flight.price}
+                      {currency}{flight.price}
                     </span>
                   </td>
                 ))}
@@ -149,7 +188,7 @@ const TripComparisonWidget = ({ className }: TripComparisonWidgetProps) => {
                     {flight.stops === 0 ? (
                       <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px]">Direct</Badge>
                     ) : (
-                      <span>{flight.stops} stop</span>
+                      <span>{flight.stops} stop{flight.stops > 1 ? 's' : ''}</span>
                     )}
                   </td>
                 ))}
@@ -205,12 +244,16 @@ const TripComparisonWidget = ({ className }: TripComparisonWidgetProps) => {
       )}
 
       {/* Best Value Indicator */}
-      {comparedFlights.length >= 2 && (
+      {bestValueFlight && comparedFlights.length >= 2 && (
         <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/20">
           <p className="text-xs text-muted-foreground mb-1">Best Value</p>
           <div className="flex items-center justify-between">
-            <span className="font-bold">Air France</span>
-            <Button size="sm" className="bg-gradient-to-r from-primary to-teal-500">
+            <span className="font-bold">{bestValueFlight.airline}</span>
+            <Button 
+              size="sm" 
+              className="bg-gradient-to-r from-primary to-teal-500"
+              onClick={() => onSelectFlight?.(bestValueFlight)}
+            >
               Select <ArrowRight className="w-3 h-3 ml-1" />
             </Button>
           </div>

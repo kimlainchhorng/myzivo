@@ -4,10 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface MealPreferenceWidgetProps {
-  className?: string;
-}
-
 interface MealOption {
   id: string;
   name: string;
@@ -18,7 +14,16 @@ interface MealOption {
   popular?: boolean;
 }
 
-const mealOptions: MealOption[] = [
+interface MealPreferenceWidgetProps {
+  className?: string;
+  mealOptions?: MealOption[];
+  currency?: string;
+  preSelectedMealId?: string;
+  onMealSelect?: (meal: MealOption | null) => void;
+  onConfirm?: (meal: MealOption, specialRequests: string) => void;
+}
+
+const defaultMealOptions: MealOption[] = [
   { 
     id: "standard", 
     name: "Classic Chicken", 
@@ -62,9 +67,29 @@ const mealOptions: MealOption[] = [
   },
 ];
 
-const MealPreferenceWidget = ({ className }: MealPreferenceWidgetProps) => {
-  const [selectedMeal, setSelectedMeal] = useState<MealOption | null>(null);
+const MealPreferenceWidget = ({ 
+  className,
+  mealOptions = defaultMealOptions,
+  currency = "$",
+  preSelectedMealId,
+  onMealSelect,
+  onConfirm
+}: MealPreferenceWidgetProps) => {
+  const [selectedMeal, setSelectedMeal] = useState<MealOption | null>(
+    preSelectedMealId ? mealOptions.find(m => m.id === preSelectedMealId) || null : null
+  );
   const [specialRequests, setSpecialRequests] = useState("");
+
+  const handleMealClick = (meal: MealOption) => {
+    setSelectedMeal(meal);
+    onMealSelect?.(meal);
+  };
+
+  const handleConfirm = () => {
+    if (selectedMeal) {
+      onConfirm?.(selectedMeal, specialRequests);
+    }
+  };
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -75,7 +100,7 @@ const MealPreferenceWidget = ({ className }: MealPreferenceWidgetProps) => {
         </div>
         {selectedMeal && (
           <Badge className="bg-primary/10 text-primary">
-            {selectedMeal.price > 0 ? `+$${selectedMeal.price}` : "Included"}
+            {selectedMeal.price > 0 ? `+${currency}${selectedMeal.price}` : "Included"}
           </Badge>
         )}
       </div>
@@ -89,7 +114,7 @@ const MealPreferenceWidget = ({ className }: MealPreferenceWidgetProps) => {
           return (
             <button
               key={meal.id}
-              onClick={() => setSelectedMeal(meal)}
+              onClick={() => handleMealClick(meal)}
               className={cn(
                 "w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left",
                 isSelected 
@@ -117,7 +142,7 @@ const MealPreferenceWidget = ({ className }: MealPreferenceWidgetProps) => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">
-                  {meal.price > 0 ? `+$${meal.price}` : "Free"}
+                  {meal.price > 0 ? `+${currency}${meal.price}` : "Free"}
                 </span>
                 {isSelected && (
                   <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
@@ -151,7 +176,7 @@ const MealPreferenceWidget = ({ className }: MealPreferenceWidgetProps) => {
               <p className="text-sm font-medium">{selectedMeal.name}</p>
               <p className="text-xs text-muted-foreground">{selectedMeal.description}</p>
             </div>
-            <Button size="sm">Confirm</Button>
+            <Button size="sm" onClick={handleConfirm}>Confirm</Button>
           </div>
         </div>
       )}

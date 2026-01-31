@@ -3,29 +3,63 @@ import {
   Clock,
   CheckCircle2,
   CreditCard,
-  AlertCircle,
-  ArrowRight,
-  Coins
+  Coins,
+  ArrowRight
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-interface RefundTrackerWidgetProps {
-  className?: string;
+interface RefundStep {
+  id: number;
+  label: string;
+  status: "completed" | "current" | "pending";
+  date?: string;
 }
 
-const refundSteps = [
+interface TravelCreditOffer {
+  enabled: boolean;
+  bonusPercent: number;
+  creditAmount: number;
+}
+
+interface RefundTrackerWidgetProps {
+  className?: string;
+  refundAmount?: number;
+  currency?: string;
+  refundSteps?: RefundStep[];
+  estimatedDays?: string;
+  paymentMethod?: string;
+  paymentLast4?: string;
+  travelCreditOffer?: TravelCreditOffer;
+  onChooseTravelCredit?: () => void;
+}
+
+const defaultRefundSteps: RefundStep[] = [
   { id: 1, label: "Request Submitted", status: "completed", date: "Jun 10" },
   { id: 2, label: "Under Review", status: "completed", date: "Jun 11" },
   { id: 3, label: "Approved", status: "current", date: "Jun 12" },
-  { id: 4, label: "Processing", status: "pending", date: "" },
-  { id: 5, label: "Refunded", status: "pending", date: "" },
+  { id: 4, label: "Processing", status: "pending" },
+  { id: 5, label: "Refunded", status: "pending" },
 ];
 
-const RefundTrackerWidget = ({ className }: RefundTrackerWidgetProps) => {
+const RefundTrackerWidget = ({ 
+  className,
+  refundAmount = 899.00,
+  currency = "$",
+  refundSteps = defaultRefundSteps,
+  estimatedDays = "5-7 business days",
+  paymentMethod = "Visa",
+  paymentLast4 = "4242",
+  travelCreditOffer = { enabled: true, bonusPercent: 10, creditAmount: 988.90 },
+  onChooseTravelCredit
+}: RefundTrackerWidgetProps) => {
   const currentStep = refundSteps.findIndex(s => s.status === "current") + 1;
-  const progress = (currentStep / refundSteps.length) * 100;
+  const progress = refundSteps.length > 0 ? (currentStep / refundSteps.length) * 100 : 0;
+
+  const statusBadge = currentStep < refundSteps.length 
+    ? { label: "In Progress", className: "bg-amber-500/20 text-amber-400" }
+    : { label: "Completed", className: "bg-emerald-500/20 text-emerald-400" };
 
   return (
     <div className={cn("p-4 rounded-xl bg-card/60 backdrop-blur-xl border border-border/50", className)}>
@@ -34,8 +68,8 @@ const RefundTrackerWidget = ({ className }: RefundTrackerWidgetProps) => {
           <RotateCcw className="w-4 h-4 text-primary" />
           <h3 className="font-semibold text-sm">Refund Status</h3>
         </div>
-        <Badge className="bg-amber-500/20 text-amber-400">
-          In Progress
+        <Badge className={statusBadge.className}>
+          {statusBadge.label}
         </Badge>
       </div>
 
@@ -44,11 +78,11 @@ const RefundTrackerWidget = ({ className }: RefundTrackerWidgetProps) => {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground mb-1">Refund Amount</p>
-            <p className="text-2xl font-bold">$899.00</p>
+            <p className="text-2xl font-bold">{currency}{refundAmount.toFixed(2)}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground mb-1">ETA</p>
-            <p className="text-sm font-medium">5-7 business days</p>
+            <p className="text-sm font-medium">{estimatedDays}</p>
           </div>
         </div>
       </div>
@@ -64,7 +98,7 @@ const RefundTrackerWidget = ({ className }: RefundTrackerWidgetProps) => {
 
       {/* Steps */}
       <div className="space-y-3 mb-4">
-        {refundSteps.map((step, index) => (
+        {refundSteps.map((step) => (
           <div key={step.id} className="flex items-center gap-3">
             <div className={cn(
               "w-6 h-6 rounded-full flex items-center justify-center",
@@ -102,23 +136,28 @@ const RefundTrackerWidget = ({ className }: RefundTrackerWidgetProps) => {
         <p className="text-xs text-muted-foreground mb-2">Refund to</p>
         <div className="flex items-center gap-2">
           <CreditCard className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm">Visa •••• 4242</span>
+          <span className="text-sm">{paymentMethod} •••• {paymentLast4}</span>
         </div>
       </div>
 
-      {/* Alternative */}
-      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Coins className="w-4 h-4 text-amber-400" />
-            <div>
-              <p className="text-xs font-medium">Get 10% more as Travel Credit</p>
-              <p className="text-[10px] text-muted-foreground">$988.90 instant credit</p>
+      {/* Travel Credit Alternative */}
+      {travelCreditOffer.enabled && (
+        <button 
+          onClick={onChooseTravelCredit}
+          className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15 transition-colors"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-amber-400" />
+              <div className="text-left">
+                <p className="text-xs font-medium">Get {travelCreditOffer.bonusPercent}% more as Travel Credit</p>
+                <p className="text-[10px] text-muted-foreground">{currency}{travelCreditOffer.creditAmount.toFixed(2)} instant credit</p>
+              </div>
             </div>
+            <ArrowRight className="w-4 h-4 text-amber-400" />
           </div>
-          <ArrowRight className="w-4 h-4 text-amber-400" />
-        </div>
-      </div>
+        </button>
+      )}
     </div>
   );
 };
