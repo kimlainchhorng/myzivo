@@ -73,11 +73,11 @@ export default function TrustBadgesSection({
 }: TrustBadgesSectionProps) {
   if (variant === 'compact') {
     return (
-      <div className={cn("flex flex-wrap items-center justify-center gap-4 py-4", className)}>
+      <div className={cn("flex flex-wrap items-center justify-center gap-3 sm:gap-4 py-3 sm:py-4", className)}>
         {trustBadges.map((badge) => (
-          <div key={badge.title} className="flex items-center gap-2">
-            <badge.icon className={cn("w-4 h-4", badge.color)} />
-            <span className="text-sm font-medium">{badge.title}</span>
+          <div key={badge.title} className="flex items-center gap-1.5 sm:gap-2">
+            <badge.icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4", badge.color)} />
+            <span className="text-xs sm:text-sm font-medium">{badge.title}</span>
           </div>
         ))}
       </div>
@@ -85,40 +85,40 @@ export default function TrustBadgesSection({
   }
 
   return (
-    <section className={cn("py-12 border-t border-border/50", className)}>
-      <div className="container mx-auto px-4">
+    <section className={cn("py-8 sm:py-12 border-t border-border/50", className)}>
+      <div className="container mx-auto px-3 sm:px-4">
         {/* Trust Badges Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-12">
           {trustBadges.map((badge) => (
             <div 
               key={badge.title}
-              className="p-4 rounded-2xl bg-card border border-border/50 text-center"
+              className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-card border border-border/50 text-center"
             >
               <div className={cn(
-                "w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center",
+                "w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl mx-auto mb-2 sm:mb-3 flex items-center justify-center",
                 badge.bgColor
               )}>
-                <badge.icon className={cn("w-6 h-6", badge.color)} />
+                <badge.icon className={cn("w-5 h-5 sm:w-6 sm:h-6", badge.color)} />
               </div>
-              <h4 className="font-semibold">{badge.title}</h4>
-              <p className="text-xs text-muted-foreground">{badge.description}</p>
+              <h4 className="font-semibold text-sm sm:text-base">{badge.title}</h4>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{badge.description}</p>
             </div>
           ))}
         </div>
 
         {/* Partner Logos */}
-        <div className="text-center mb-12">
-          <p className="text-sm text-muted-foreground mb-6">
+        <div className="text-center mb-8 sm:mb-12">
+          <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
             Compare prices from trusted travel partners
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
             {partnerLogos.map((partner) => (
               <div 
                 key={partner.name}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/30 border border-border/50"
+                className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted/30 border border-border/50"
               >
-                <span className="text-lg">{partner.logo}</span>
-                <span className="text-sm font-medium">{partner.name}</span>
+                <span className="text-sm sm:text-lg">{partner.logo}</span>
+                <span className="text-[10px] sm:text-sm font-medium">{partner.name}</span>
               </div>
             ))}
           </div>
@@ -126,28 +126,28 @@ export default function TrustBadgesSection({
 
         {/* Testimonials */}
         <div className="max-w-4xl mx-auto">
-          <h3 className="text-center font-display text-xl font-bold mb-6">
+          <h3 className="text-center font-display text-lg sm:text-xl font-bold mb-4 sm:mb-6">
             What Travelers Say
           </h3>
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {testimonials.map((testimonial, index) => (
               <div 
                 key={index}
-                className="p-4 rounded-xl bg-card border border-border/50"
+                className="p-3 sm:p-4 rounded-xl bg-card border border-border/50"
               >
                 <div className="flex gap-0.5 mb-2">
                   {Array.from({ length: testimonial.rating }).map((_, i) => (
-                    <span key={i} className="text-amber-400">★</span>
+                    <span key={i} className="text-amber-400 text-sm sm:text-base">★</span>
                   ))}
                 </div>
-                <p className="text-sm mb-3 italic">"{testimonial.quote}"</p>
+                <p className="text-xs sm:text-sm mb-2 sm:mb-3 italic">"{testimonial.quote}"</p>
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-xs font-bold">{testimonial.author.charAt(0)}</span>
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-[10px] sm:text-xs font-bold">{testimonial.author.charAt(0)}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">{testimonial.author}</p>
-                    <p className="text-xs text-muted-foreground">{testimonial.location}</p>
+                    <p className="text-xs sm:text-sm font-medium">{testimonial.author}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">{testimonial.location}</p>
                   </div>
                 </div>
               </div>
@@ -156,22 +156,22 @@ export default function TrustBadgesSection({
         </div>
 
         {/* Security Badges */}
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Lock className="w-4 h-4" />
-            <span className="text-sm">SSL Encrypted</span>
+        <div className="mt-8 sm:mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-muted-foreground">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">SSL Encrypted</span>
           </div>
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
-            <span className="text-sm">Verified Partners</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">Verified Partners</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Award className="w-4 h-4" />
-            <span className="text-sm">Price Comparison</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">Price Comparison</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Headphones className="w-4 h-4" />
-            <span className="text-sm">24/7 Support</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Headphones className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="text-xs sm:text-sm">24/7 Support</span>
           </div>
         </div>
       </div>
