@@ -47,7 +47,7 @@ Start comparing and plan your next trip with confidence.`,
 
   // Social media ready posts
   social: {
-    twitter: "🚀 ZIVO is live! Search & compare flights, hotels, and car rentals worldwide. No booking fees. Start your search → myzivo.lovable.app",
+    twitter: "🚀 ZIVO is live! Search & compare flights, hotels, and car rentals worldwide. No booking fees. Start your search → hizivo.com",
     linkedin: "Excited to announce the launch of ZIVO — a new way to search and compare travel worldwide. Compare flights from 500+ airlines, find hotels globally, and rent cars at major destinations. All in one place. #travel #startup #launch",
     instagram: "✈️ ZIVO IS LIVE ✈️\n\nYour new way to search & compare travel:\n→ Flights from 500+ airlines\n→ Hotels worldwide\n→ Car rentals everywhere\n\nNo booking fees. Secure partner booking.\n\nLink in bio 🔗",
   },

@@ -10,8 +10,8 @@ export default function OrganizationSchema() {
       "@type": "Organization",
       "name": "ZIVO",
       "alternateName": "ZIVO Travel",
-      "url": "https://myzivo.lovable.app",
-      "logo": "https://myzivo.lovable.app/logo.png",
+      "url": "https://hizivo.com",
+      "logo": "https://hizivo.com/logo.png",
       "description": "ZIVO is a travel search and comparison platform helping users find the best deals on flights, hotels, and car rentals from 500+ partners.",
       "foundingDate": "2024",
       "sameAs": [
