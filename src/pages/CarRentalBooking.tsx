@@ -96,6 +96,9 @@ import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
 import CrossSellBanner from "@/components/shared/CrossSellBanner";
 import SmartSuggestions from "@/components/shared/SmartSuggestions";
 import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
+import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
+import CompanionInvite from "@/components/shared/CompanionInvite";
+import ActiveBookingsBar from "@/components/shared/ActiveBookingsBar";
 
 // Popular locations
 const popularLocations = [
@@ -638,6 +641,35 @@ const CarRentalBooking = () => {
                     </Card>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Trip Planning Tools - Workflow */}
+        {!searchResults && (
+          <section className="py-8 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                <div className="lg:col-span-2">
+                  <SmartSuggestions context="car" />
+                </div>
+                <TripFlowConnector 
+                  destination={pickupLocation || undefined} 
+                  currentStep="car" 
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Trip Planning Widgets */}
+        {!searchResults && (
+          <section className="py-8">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <TripChecklistWidget destination={pickupLocation || "Los Angeles"} />
+                <CompanionInvite tripName={`${pickupLocation || "Los Angeles"} Road Trip`} />
               </div>
             </div>
           </section>

@@ -102,6 +102,9 @@ import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
 import CrossSellBanner from "@/components/shared/CrossSellBanner";
 import SmartSuggestions from "@/components/shared/SmartSuggestions";
 import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
+import HotelToCarBridge from "@/components/shared/HotelToCarBridge";
+import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
+import CompanionInvite from "@/components/shared/CompanionInvite";
 
 // Popular destinations
 const popularCities = [
@@ -611,6 +614,27 @@ const HotelBooking = () => {
                     </Card>
                   </div>
                 ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Hotel to Car Bridge - Workflow Connector */}
+        {!searchResults && (
+          <section className="py-4">
+            <div className="container mx-auto px-4 max-w-4xl">
+              <HotelToCarBridge hotelLocation={destination || "Paris"} />
+            </div>
+          </section>
+        )}
+
+        {/* Trip Planning Tools */}
+        {!searchResults && (
+          <section className="py-8 border-t border-border/50">
+            <div className="container mx-auto px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                <TripChecklistWidget destination={destination || "Paris"} />
+                <CompanionInvite tripName={`${destination || "Paris"} Trip`} />
               </div>
             </div>
           </section>
