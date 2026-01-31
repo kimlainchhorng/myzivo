@@ -42,12 +42,11 @@ const footerLinks = {
     { name: "Travel Insurance", href: "/travel-insurance", icon: Shield },
   ],
   company: [
-    { name: "About ZIVO", href: "#" },
+    { name: "About ZIVO", href: "/about" },
+    { name: "Contact Us", href: "/contact" },
     { name: "Careers", href: "#" },
     { name: "Newsroom", href: "#" },
-    { name: "Investor Relations", href: "#" },
     { name: "Blog", href: "#" },
-    { name: "Sustainability", href: "#" },
   ],
   partners: [
     { name: "Drive with ZIVO", href: "/drive" },
@@ -324,7 +323,7 @@ const Footer = () => {
         <div className="py-6 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} ZIVO Technologies Inc. All rights reserved.
+              © {new Date().getFullYear()} ZIVO LLC. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">

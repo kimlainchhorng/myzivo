@@ -55,6 +55,8 @@ const CommunityGuidelines = lazy(() => import("./pages/legal/CommunityGuidelines
 const InsurancePolicy = lazy(() => import("./pages/legal/InsurancePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilityStatement"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
 
 const queryClient = new QueryClient();
 
@@ -125,6 +127,8 @@ const App = () => (
                 <Route path="/insurance" element={<InsurancePolicy />} />
                 <Route path="/accessibility" element={<AccessibilityStatement />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
                 <Route path="/events" element={<Events />} />

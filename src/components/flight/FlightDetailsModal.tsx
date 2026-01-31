@@ -353,45 +353,30 @@ export default function FlightDetailsModal({
         <Separator className="my-4" />
 
         {/* Action buttons */}
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
+        <div className="flex flex-col gap-3">
+          {/* Affiliate disclosure */}
+          <p className="text-xs text-muted-foreground text-center px-2">
+            You will be redirected to our trusted travel partner to complete your booking.
+          </p>
           
-          {flight.bookingLink ? (
-            <div className="flex-1 flex gap-2">
-              <Button 
-                className="flex-1 bg-primary"
-                onClick={() => {
-                  onSelectFlight?.(flight);
-                  onOpenChange(false);
-                }}
-              >
-                Select
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <a 
-                href={flight.bookingLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white font-medium transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Book Now
-              </a>
-            </div>
-          ) : (
-            <Button 
-              className="flex-1 bg-primary"
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            
+            <a 
+              href={flight.bookingLink || `https://www.skyscanner.com/transport/flights/${flight.departure.code}/${flight.arrival.code}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold transition-colors"
               onClick={() => {
                 onSelectFlight?.(flight);
-                onOpenChange(false);
               }}
             >
-              Select This Flight
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          )}
+              <ExternalLink className="w-4 h-4" />
+              Book on Partner Site
+            </a>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

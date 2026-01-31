@@ -19,7 +19,9 @@ import {
   Plane,
   Filter,
   X,
-  CheckCircle
+  CheckCircle,
+  ExternalLink,
+  Info
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -122,6 +124,21 @@ export default function FlightResultsSection({
   return (
     <section className="py-8">
       <div className="container mx-auto px-4">
+        {/* Affiliate Disclosure Notice */}
+        <div className="mb-6 p-4 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center shrink-0">
+            <ExternalLink className="w-4 h-4 text-sky-500" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">Book with our trusted partners:</span>{" "}
+              When you select a flight, you'll be redirected to our partner site to complete your booking. 
+              ZIVO may earn a commission at no extra cost to you.{" "}
+              <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+            </p>
+          </div>
+        </div>
+
         {/* Results Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>

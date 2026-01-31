@@ -1,11 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Plane, CalendarIcon, Users, Luggage } from "lucide-react";
 import { format } from "date-fns";
-import { BookingConfirmation, BookingSummaryCard, CheckoutModal } from "@/components/booking";
 import { toast } from "sonner";
 import FlightSearchHero from "@/components/flight/FlightSearchHero";
 import FlightResultsSection from "@/components/flight/FlightResultsSection";
@@ -19,11 +16,10 @@ import FlightFeaturedDestinations from "@/components/flight/FlightFeaturedDestin
 import FlightQuickActions from "@/components/flight/FlightQuickActions";
 import FlightTrustIndicators from "@/components/flight/FlightTrustIndicators";
 
-import { getAirlineLogo } from "@/data/airlines";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 
-type BookingStep = "search" | "select" | "details" | "confirmation";
+type BookingStep = "search" | "select";
 
 const FlightBooking = () => {
   const navigate = useNavigate();
@@ -37,9 +33,6 @@ const FlightBooking = () => {
   const [searchResults, setSearchResults] = useState<GeneratedFlight[] | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<GeneratedFlight | null>(null);
   const [bookingStep, setBookingStep] = useState<BookingStep>("search");
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [confirmationNumber, setConfirmationNumber] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedLoyaltyProgram, setSelectedLoyaltyProgram] = useState<string | null>(null);
   const [recentSearches] = useState<string[]>(["New York (JFK)", "London (LHR)", "Tokyo (NRT)"]);
@@ -111,17 +104,10 @@ const FlightBooking = () => {
   };
 
   const handleSelectFlight = (flight: GeneratedFlight) => {
+    // User selected a flight - they will be redirected via the modal
     setSelectedFlight(flight);
-    setBookingStep("details");
-  };
-
-  const handleConfirmBooking = async () => {
-    setIsProcessing(true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsProcessing(false);
-    setIsCheckoutOpen(false);
-    setConfirmationNumber(`ZV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`);
-    setBookingStep("confirmation");
+    // Track affiliate click (would normally send to analytics)
+    console.log('Affiliate click tracked for flight:', flight.airline, flight.flightNumber);
   };
 
   const handleReset = () => {
@@ -130,50 +116,6 @@ const FlightBooking = () => {
     setBookingStep("search");
     navigate("/book-flight");
   };
-
-  const totalPrice = selectedFlight ? selectedFlight.price * parseInt(passengers) : 0;
-  const taxes = totalPrice * 0.12;
-  const grandTotal = totalPrice + taxes;
-
-  // Show confirmation screen
-  if (bookingStep === "confirmation" && selectedFlight) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <BookingConfirmation
-          confirmationNumber={confirmationNumber}
-          title="Your flight is booked!"
-          subtitle={`${selectedFlight.departure.city} → ${selectedFlight.arrival.city}`}
-          details={[
-            {
-              label: "Flight",
-              value: `${selectedFlight.airline} ${selectedFlight.flightNumber}`,
-              icon: <Plane className="w-4 h-4" />,
-            },
-            {
-              label: "Date",
-              value: departDate ? format(departDate, "MMM d, yyyy") : "Selected date",
-              icon: <CalendarIcon className="w-4 h-4" />,
-            },
-            {
-              label: "Passengers",
-              value: `${passengers} passenger${parseInt(passengers) > 1 ? "s" : ""}`,
-              icon: <Users className="w-4 h-4" />,
-            },
-            {
-              label: "Class",
-              value: cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1),
-              icon: <Luggage className="w-4 h-4" />,
-            },
-          ]}
-          totalAmount={grandTotal}
-          onGoHome={handleReset}
-          accentColor="sky"
-        />
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
@@ -265,21 +207,6 @@ const FlightBooking = () => {
           </>
         )}
       </main>
-
-
-      {/* Checkout Modal */}
-      <CheckoutModal
-        open={isCheckoutOpen}
-        onOpenChange={setIsCheckoutOpen}
-        amount={grandTotal}
-        serviceName={`${selectedFlight?.airline} ${selectedFlight?.flightNumber}`}
-        serviceDetails={`${selectedFlight?.departure.city} → ${selectedFlight?.arrival.city} • ${passengers} passenger${
-          parseInt(passengers) > 1 ? "s" : ""
-        }`}
-        onConfirm={handleConfirmBooking}
-        isProcessing={isProcessing}
-        accentColor="sky"
-      />
 
       <Footer />
     </div>
