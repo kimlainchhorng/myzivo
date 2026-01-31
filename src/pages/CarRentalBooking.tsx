@@ -4,18 +4,14 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Car,
   Search,
-  CalendarIcon,
+  CalendarDays,
   MapPin,
   Clock,
-  ExternalLink,
-  Info,
-  Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -26,27 +22,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CarResultCardPro from "@/components/car/CarResultCardPro";
 import CarPartnerSelector from "@/components/car/CarPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
-import CarPopularLocations from "@/components/car/CarPopularLocations";
-import CarFAQSection from "@/components/car/CarFAQSection";
-import CarTrustIndicators from "@/components/car/CarTrustIndicators";
-import CarCategoriesGrid from "@/components/car/CarCategoriesGrid";
 import CarTopSearchCTA from "@/components/car/CarTopSearchCTA";
 import CarStickyBookingCTA from "@/components/car/CarStickyBookingCTA";
-import NoCarsFound from "@/components/car/NoCarsFound";
+import ProfessionalHero from "@/components/shared/ProfessionalHero";
+import ProfessionalSearchCard from "@/components/shared/ProfessionalSearchCard";
+import PopularDestinationsGrid from "@/components/shared/PopularDestinationsGrid";
+import WhyBookSection from "@/components/shared/WhyBookSection";
+import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
+import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
-import TravelPageHero from "@/components/shared/TravelPageHero";
-import TravelSearchCard from "@/components/shared/TravelSearchCard";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 
+/**
+ * ZIVO CAR RENTAL - Professional Booking Page
+ * Expedia / Rentalcars quality UX/UI
+ */
+
 const carCategories = [
-  { name: "Economy", icon: "🚗", description: "Budget-friendly & fuel efficient", priceFrom: 25 },
-  { name: "Compact", icon: "🚙", description: "Perfect for city driving", priceFrom: 30 },
-  { name: "SUV", icon: "🚐", description: "Space for family trips", priceFrom: 45 },
-  { name: "Luxury", icon: "🏎️", description: "Premium driving experience", priceFrom: 85 },
-  { name: "Van", icon: "🚌", description: "Group travel & cargo", priceFrom: 55 },
-  { name: "Convertible", icon: "🚗", description: "Open-top adventure", priceFrom: 65 },
+  { name: "Economy", passengers: 4, bags: 2, priceFrom: 25, transmission: 'Automatic' as const, hasAC: true },
+  { name: "Compact", passengers: 5, bags: 2, priceFrom: 30, transmission: 'Automatic' as const, hasAC: true },
+  { name: "Midsize", passengers: 5, bags: 3, priceFrom: 38, transmission: 'Automatic' as const, hasAC: true },
+  { name: "Full-size", passengers: 5, bags: 4, priceFrom: 42, transmission: 'Automatic' as const, hasAC: true },
+  { name: "SUV", passengers: 7, bags: 4, priceFrom: 55, transmission: 'Automatic' as const, hasAC: true },
+  { name: "Luxury", passengers: 5, bags: 3, priceFrom: 95, transmission: 'Automatic' as const, hasAC: true },
 ];
 
 const CarRentalBooking = () => {
@@ -86,6 +87,15 @@ const CarRentalBooking = () => {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const handleLocationSelect = (city: string) => {
+    setPickupLocation(city);
+  };
+
+  // Calculate days for pricing
+  const daysCount = pickupDate && returnDate 
+    ? Math.max(1, Math.ceil((returnDate.getTime() - pickupDate.getTime()) / (1000 * 60 * 60 * 24)))
+    : undefined;
+
   return (
     <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
       <SEOHead 
@@ -94,30 +104,25 @@ const CarRentalBooking = () => {
       />
       <Header />
       
-      <main className="pt-16 pb-32 lg:pb-20">
-        <TravelPageHero
+      <main className="pb-32 lg:pb-20">
+        <ProfessionalHero
           service="cars"
           icon={Car}
-          serviceName="ZIVO Car Rental"
-          title="Compare & Save on"
-          highlightedText="Car Rentals Worldwide"
-          subtitle="Search across Rentalcars, Kayak, Expedia & more. Find the best deal from trusted providers."
+          title="Search & Compare Car Rentals"
+          subtitle="Compare prices from Rentalcars, Kayak, Expedia & more."
         >
-          <TravelSearchCard
-            service="cars"
-            disclaimer="Compare prices from multiple rental companies. Book through our partners."
-          >
+          <ProfessionalSearchCard service="cars">
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Pickup Location */}
               <div className="lg:col-span-2">
-                <label className="text-sm text-muted-foreground mb-1 block">Pickup Location</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Location</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
                   <Input
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
                     placeholder="City, airport, or address"
-                    className="h-12 pl-10 bg-background/50"
+                    className="h-11 pl-10"
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
                 </div>
@@ -125,11 +130,11 @@ const CarRentalBooking = () => {
 
               {/* Pickup Date */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Pickup Date</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-12 justify-start bg-background/50">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                    <Button variant="outline" className="w-full h-11 justify-start">
+                      <CalendarDays className="mr-2 h-4 w-4 text-violet-500" />
                       {pickupDate ? format(pickupDate, "MMM d") : "Select date"}
                     </Button>
                   </PopoverTrigger>
@@ -147,11 +152,11 @@ const CarRentalBooking = () => {
 
               {/* Return Date */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Return Date</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Date</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-12 justify-start bg-background/50">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                    <Button variant="outline" className="w-full h-11 justify-start">
+                      <CalendarDays className="mr-2 h-4 w-4 text-purple-500" />
                       {returnDate ? format(returnDate, "MMM d") : "Select date"}
                     </Button>
                   </PopoverTrigger>
@@ -171,10 +176,10 @@ const CarRentalBooking = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               {/* Pickup Time */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Pickup Time</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Time</label>
                 <Select value={pickupTime} onValueChange={setPickupTime}>
-                  <SelectTrigger className="h-12 bg-background/50">
-                    <Clock className="w-4 h-4 mr-2" />
+                  <SelectTrigger className="h-11">
+                    <Clock className="w-4 h-4 mr-2 text-violet-500" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -190,10 +195,10 @@ const CarRentalBooking = () => {
 
               {/* Return Time */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Return Time</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Time</label>
                 <Select value={returnTime} onValueChange={setReturnTime}>
-                  <SelectTrigger className="h-12 bg-background/50">
-                    <Clock className="w-4 h-4 mr-2" />
+                  <SelectTrigger className="h-11">
+                    <Clock className="w-4 h-4 mr-2 text-purple-500" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -209,9 +214,9 @@ const CarRentalBooking = () => {
 
               {/* Driver Age */}
               <div>
-                <label className="text-sm text-muted-foreground mb-1 block">Driver Age</label>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Driver Age</label>
                 <Select value={driverAge} onValueChange={setDriverAge}>
-                  <SelectTrigger className="h-12 bg-background/50">
+                  <SelectTrigger className="h-11">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -228,15 +233,19 @@ const CarRentalBooking = () => {
                 <Button 
                   onClick={handleSearch}
                   disabled={!pickupLocation.trim()}
-                  className="w-full h-12 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white font-semibold shadow-lg shadow-violet-500/30"
+                  className={cn(
+                    "w-full h-11 font-semibold",
+                    "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
+                    "shadow-lg shadow-violet-500/25"
+                  )}
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search
                 </Button>
               </div>
             </div>
-          </TravelSearchCard>
-        </TravelPageHero>
+          </ProfessionalSearchCard>
+        </ProfessionalHero>
 
         {/* Search Results */}
         {hasSearched && (
@@ -246,7 +255,7 @@ const CarRentalBooking = () => {
                 Car Rentals in {pickupLocation}
               </h2>
               <p className="text-sm text-muted-foreground">
-                Select a car type to compare prices across rental sites
+                {carCategories.length} categories available • Compare prices across rental sites
               </p>
             </div>
 
@@ -261,90 +270,26 @@ const CarRentalBooking = () => {
             />
 
             <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {carCategories.map((category) => (
-                    <Card 
-                      key={category.name}
-                      className={cn(
-                        "cursor-pointer transition-all hover:shadow-lg",
-                        selectedCategory === category.name && "ring-2 ring-violet-500"
-                      )}
-                      onClick={() => handleCategorySelect(category.name)}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <div className="text-4xl mb-2">{category.icon}</div>
-                        <h3 className="font-semibold">{category.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {category.description}
-                        </p>
-                        <p className="text-sm font-semibold text-violet-500 mt-2">
-                          From ${category.priceFrom}/day*
-                        </p>
-                        <div className="flex flex-col gap-2 mt-3">
-                          <Button
-                            size="sm"
-                            className="w-full text-xs bg-gradient-to-r from-violet-500 to-purple-500 text-white gap-1"
-                            onClick={(e) => handleRentCar(category.name, e)}
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            Rent {category.name}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full text-xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCategorySelect(category.name);
-                            }}
-                          >
-                            Compare Prices
-                          </Button>
-                        </div>
-                        <p className="text-[9px] text-muted-foreground mt-2">
-                          Opens partner site
-                        </p>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                  <Card className="bg-violet-500/5 border-violet-500/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Sparkles className="w-5 h-5 text-violet-500 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-sm">Why Compare?</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Prices vary by up to 40% between rental sites. We help you find the best deal.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-green-500/5 border-green-500/20">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Info className="w-5 h-5 text-green-500 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-sm">Free Cancellation</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Most partners offer free cancellation. Check terms before booking.
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
-                  <p className="text-xs text-muted-foreground text-center">
-                    *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
-                    ZIVO may earn a commission when you book through partner links.
-                  </p>
-                </div>
+              <div className="lg:col-span-2 space-y-4">
+                {carCategories.map((category) => (
+                  <CarResultCardPro
+                    key={category.name}
+                    id={category.name}
+                    category={category.name}
+                    passengers={category.passengers}
+                    bags={category.bags}
+                    transmission={category.transmission}
+                    hasAC={category.hasAC}
+                    mileage="Unlimited"
+                    fuelPolicy="Full to Full"
+                    pricePerDay={category.priceFrom}
+                    totalPrice={daysCount ? category.priceFrom * daysCount : undefined}
+                    daysCount={daysCount}
+                    isSelected={selectedCategory === category.name}
+                    onSelect={() => handleCategorySelect(category.name)}
+                    onBook={() => handleRentCar(category.name)}
+                  />
+                ))}
               </div>
 
               <div className="space-y-6">
@@ -365,16 +310,27 @@ const CarRentalBooking = () => {
                 <AffiliateRedirectNotice variant="banner" />
               </div>
             </div>
+
+            {/* Price Disclaimer */}
+            <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+              <p className="text-xs text-muted-foreground text-center">
+                *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
+                ZIVO may earn a commission when you book through partner links.
+              </p>
+            </div>
           </section>
         )}
 
-        {/* Discovery Sections */}
+        {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
-            <CarCategoriesGrid />
-            <CarPopularLocations />
-            <CarTrustIndicators />
-            <CarFAQSection />
+            <PopularDestinationsGrid 
+              service="cars" 
+              onSelect={handleLocationSelect}
+            />
+            <WhyBookSection service="cars" />
+            <TravelExtrasCTA currentService="cars" />
+            <TravelFAQ serviceType="cars" className="bg-muted/20" />
           </>
         )}
 
