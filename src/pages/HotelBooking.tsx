@@ -98,13 +98,18 @@ import SocialProofTicker from "@/components/shared/SocialProofTicker";
 import RewardsProgress from "@/components/shared/RewardsProgress";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import TripFlowConnector from "@/components/shared/TripFlowConnector";
+import HotelToCarBridge from "@/components/shared/HotelToCarBridge";
+import TravelInsuranceWidget from "@/components/shared/TravelInsuranceWidget";
+import GroupBookingManager from "@/components/shared/GroupBookingManager";
+import PriceAlertWidget from "@/components/shared/PriceAlertWidget";
+import BookingFlowStepper, { flightHotelFlow } from "@/components/shared/BookingFlowStepper";
+import TripOverviewCard from "@/components/shared/TripOverviewCard";
+import CompanionInvite from "@/components/shared/CompanionInvite";
 import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
 import CrossSellBanner from "@/components/shared/CrossSellBanner";
 import SmartSuggestions from "@/components/shared/SmartSuggestions";
 import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
-import HotelToCarBridge from "@/components/shared/HotelToCarBridge";
 import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
-import CompanionInvite from "@/components/shared/CompanionInvite";
 
 // Popular destinations
 const popularCities = [

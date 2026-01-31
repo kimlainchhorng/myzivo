@@ -79,6 +79,13 @@ import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
 import FlightToHotelBridge from "@/components/shared/FlightToHotelBridge";
 import TripChecklistWidget from "@/components/shared/TripChecklistWidget";
 import CompanionInvite from "@/components/shared/CompanionInvite";
+import AirportTransferBridge from "@/components/shared/AirportTransferBridge";
+import TravelInsuranceWidget from "@/components/shared/TravelInsuranceWidget";
+import MultiCityPlanner from "@/components/shared/MultiCityPlanner";
+import GroupBookingManager from "@/components/shared/GroupBookingManager";
+import PriceAlertWidget from "@/components/shared/PriceAlertWidget";
+import BookingFlowStepper, { fullTripFlow } from "@/components/shared/BookingFlowStepper";
+import TripOverviewCard from "@/components/shared/TripOverviewCard";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
