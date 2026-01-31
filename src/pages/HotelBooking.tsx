@@ -14,6 +14,7 @@ import {
   Users,
   Loader2,
   AlertCircle,
+  MapPin,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -31,18 +32,18 @@ import HotelPartnerSelector from "@/components/hotel/HotelPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
 import HotelTopSearchCTA from "@/components/hotel/HotelTopSearchCTA";
 import HotelStickyBookingCTA from "@/components/hotel/HotelStickyBookingCTA";
-import ProfessionalHero from "@/components/shared/ProfessionalHero";
-import ProfessionalSearchCard from "@/components/shared/ProfessionalSearchCard";
-import PopularDestinationsGrid from "@/components/shared/PopularDestinationsGrid";
-import WhyBookSection from "@/components/shared/WhyBookSection";
+import TopTierHero from "@/components/shared/TopTierHero";
+import BigSearchCard from "@/components/shared/BigSearchCard";
+import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
+import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 
 /**
- * ZIVO HOTELS - Professional Booking Page
- * Booking.com quality UX/UI
+ * ZIVO HOTELS - Top-Tier Hotel Search
+ * Booking.com / Expedia quality
  */
 
 const HotelBooking = () => {
@@ -97,129 +98,135 @@ const HotelBooking = () => {
       <Header />
       
       <main className="pb-32 lg:pb-20">
-        <ProfessionalHero
-          service="hotels"
-          icon={Hotel}
-          title="Search & Compare Hotels"
-          subtitle="Compare prices from Booking.com, Hotels.com, Expedia & more."
-        >
-          <ProfessionalSearchCard service="hotels">
-            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {/* Destination */}
-              <div className="lg:col-span-2">
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Destination</label>
-                <Input
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="City, region, or hotel name"
-                  className="h-11"
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                />
+        {/* Hero with Big Search */}
+        <TopTierHero service="hotels" icon={Hotel}>
+          <BigSearchCard service="hotels">
+            {/* Main Search Fields */}
+            <div className="space-y-4">
+              {/* Row 1: Destination */}
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Where are you going?</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-500 pointer-events-none" />
+                  <Input
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    placeholder="City, hotel name, or destination"
+                    className="h-14 pl-11 text-base"
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                </div>
               </div>
 
-              {/* Check-in */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Check-in</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-11 justify-start">
-                      <CalendarDays className="mr-2 h-4 w-4 text-amber-500" />
-                      {checkIn ? format(checkIn, "MMM d") : "Add date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={checkIn}
-                      onSelect={setCheckIn}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              {/* Row 2: Dates & Guests */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Check-in */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Check-in</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-12 justify-start">
+                        <CalendarDays className="mr-2 h-4 w-4 text-amber-500" />
+                        {checkIn ? format(checkIn, "MMM d") : "Add date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={setCheckIn}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              {/* Check-out */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Check-out</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-11 justify-start">
-                      <CalendarDays className="mr-2 h-4 w-4 text-orange-500" />
-                      {checkOut ? format(checkOut, "MMM d") : "Add date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={checkOut}
-                      onSelect={setCheckOut}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                {/* Check-out */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Check-out</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-12 justify-start">
+                        <CalendarDays className="mr-2 h-4 w-4 text-orange-500" />
+                        {checkOut ? format(checkOut, "MMM d") : "Add date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={setCheckOut}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-              {/* Guests */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Guests</label>
-                <Select value={guests} onValueChange={setGuests}>
-                  <SelectTrigger className="h-11">
-                    <Users className="w-4 h-4 mr-2 text-purple-500" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Guest</SelectItem>
-                    <SelectItem value="2">2 Guests</SelectItem>
-                    <SelectItem value="3">3 Guests</SelectItem>
-                    <SelectItem value="4">4 Guests</SelectItem>
-                    <SelectItem value="5">5+ Guests</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Guests */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Guests</label>
+                  <Select value={guests} onValueChange={setGuests}>
+                    <SelectTrigger className="h-12">
+                      <Users className="w-4 h-4 mr-2 text-purple-500" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Guest</SelectItem>
+                      <SelectItem value="2">2 Guests</SelectItem>
+                      <SelectItem value="3">3 Guests</SelectItem>
+                      <SelectItem value="4">4 Guests</SelectItem>
+                      <SelectItem value="5">5+ Guests</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Rooms */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Rooms</label>
+                  <Select value={rooms} onValueChange={setRooms}>
+                    <SelectTrigger className="h-12">
+                      <Hotel className="w-4 h-4 mr-2 text-amber-500" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 Room</SelectItem>
+                      <SelectItem value="2">2 Rooms</SelectItem>
+                      <SelectItem value="3">3 Rooms</SelectItem>
+                      <SelectItem value="4">4+ Rooms</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center mt-4">
-              <div className="flex-1 min-w-[120px]">
-                <Select value={rooms} onValueChange={setRooms}>
-                  <SelectTrigger className="h-11">
-                    <Hotel className="w-4 h-4 mr-2 text-amber-500" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Room</SelectItem>
-                    <SelectItem value="2">2 Rooms</SelectItem>
-                    <SelectItem value="3">3 Rooms</SelectItem>
-                    <SelectItem value="4">4+ Rooms</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button 
-                onClick={handleSearch}
-                disabled={isLoading || !destination.trim()}
-                className={cn(
-                  "h-11 px-8 font-semibold",
-                  "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
-                  "shadow-lg shadow-amber-500/25"
-                )}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  <>
-                    <Search className="w-5 h-5 mr-2" />
-                    Search Hotels
-                  </>
-                )}
-              </Button>
-            </div>
-          </ProfessionalSearchCard>
-        </ProfessionalHero>
+            {/* Search Button - Big & Prominent */}
+            <Button 
+              onClick={handleSearch}
+              disabled={isLoading || !destination.trim()}
+              size="lg"
+              className={cn(
+                "w-full h-14 font-bold text-lg mt-6",
+                "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
+                "shadow-xl shadow-amber-500/30 hover:shadow-amber-500/40",
+                "transition-all duration-300 active:scale-[0.98]"
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-5 h-5 mr-2" />
+                  Search Hotels
+                </>
+              )}
+            </Button>
+          </BigSearchCard>
+        </TopTierHero>
 
         {/* Error State */}
         {error && (
@@ -325,11 +332,11 @@ const HotelBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
-            <PopularDestinationsGrid 
+            <DestinationCardsGrid 
               service="hotels" 
               onSelect={handleDestinationSelect}
             />
-            <WhyBookSection service="hotels" />
+            <TrustSection service="hotels" />
             <TravelExtrasCTA currentService="hotels" />
             <TravelFAQ serviceType="hotels" className="bg-muted/20" />
           </>

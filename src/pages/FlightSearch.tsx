@@ -25,17 +25,17 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AirportAutocomplete from "@/components/flight/AirportAutocomplete";
-import ProfessionalHero from "@/components/shared/ProfessionalHero";
-import ProfessionalSearchCard from "@/components/shared/ProfessionalSearchCard";
-import PopularDestinationsGrid from "@/components/shared/PopularDestinationsGrid";
-import WhyBookSection from "@/components/shared/WhyBookSection";
+import TopTierHero from "@/components/shared/TopTierHero";
+import BigSearchCard from "@/components/shared/BigSearchCard";
+import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
+import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import { cn } from "@/lib/utils";
 
 /**
- * ZIVO FLIGHTS - Professional Search Page
- * Google Flights quality UX/UI
+ * ZIVO FLIGHTS - Top-Tier Travel Search
+ * Skyscanner / Kayak / Google Flights quality
  */
 
 const FlightSearch = () => {
@@ -82,15 +82,11 @@ const FlightSearch = () => {
       <Header />
 
       <main className="pb-20">
-        <ProfessionalHero
-          service="flights"
-          icon={Plane}
-          title="Search & Compare Flights"
-          subtitle="Compare prices from 500+ airlines. Book with our trusted travel partners."
-        >
-          <ProfessionalSearchCard service="flights">
+        {/* Hero with Big Search */}
+        <TopTierHero service="flights" icon={Plane}>
+          <BigSearchCard service="flights">
             {/* Trip Type Toggle */}
-            <div className="flex flex-wrap gap-2 mb-5">
+            <div className="flex flex-wrap gap-2 mb-6">
               {[
                 { id: "roundtrip", label: "Round Trip", icon: RefreshCw },
                 { id: "oneway", label: "One Way", icon: Plane },
@@ -100,7 +96,7 @@ const FlightSearch = () => {
                   key={type.id}
                   onClick={() => setTripType(type.id as typeof tripType)}
                   className={cn(
-                    "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm",
+                    "px-4 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 text-sm",
                     tripType === type.id
                       ? "bg-sky-500 text-white shadow-lg shadow-sky-500/25"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -112,10 +108,10 @@ const FlightSearch = () => {
               ))}
             </div>
 
-            {/* Search Fields */}
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              {/* From/To Row */}
-              <div className="md:col-span-2 grid md:grid-cols-[1fr,auto,1fr] gap-3 items-end">
+            {/* Main Search Fields - 2 Row Layout */}
+            <div className="space-y-4">
+              {/* Row 1: From / To */}
+              <div className="grid md:grid-cols-[1fr,auto,1fr] gap-3 items-end">
                 <AirportAutocomplete
                   value={fromCity}
                   onChange={setFromCity}
@@ -126,7 +122,7 @@ const FlightSearch = () => {
                   variant="outline"
                   size="icon"
                   onClick={swapCities}
-                  className="h-11 w-11 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500"
+                  className="h-12 w-12 rounded-full border-dashed border-2 hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex"
                 >
                   <ArrowLeftRight className="w-4 h-4" />
                 </Button>
@@ -139,43 +135,61 @@ const FlightSearch = () => {
                 />
               </div>
 
-              {/* Departure Date */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Departure</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full h-11 justify-start text-left font-normal"
-                    >
-                      <CalendarDays className="w-4 h-4 mr-2 text-sky-500" />
-                      {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={departDate}
-                      onSelect={setDepartDate}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+              {/* Mobile swap button */}
+              <Button
+                variant="outline"
+                onClick={swapCities}
+                className="w-full h-10 md:hidden border-dashed gap-2"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                Swap Airports
+              </Button>
 
-              {/* Return Date */}
-              {tripType === "roundtrip" && (
+              {/* Row 2: Dates, Passengers, Class */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Departure Date */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Departure</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 justify-start text-left font-normal"
+                      >
+                        <CalendarDays className="w-4 h-4 mr-2 text-sky-500" />
+                        {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={departDate}
+                        onSelect={setDepartDate}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Return Date */}
                 <div>
                   <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return</label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className="w-full h-11 justify-start text-left font-normal"
+                        className={cn(
+                          "w-full h-12 justify-start text-left font-normal",
+                          tripType !== "roundtrip" && "opacity-50 cursor-not-allowed"
+                        )}
+                        disabled={tripType !== "roundtrip"}
                       >
                         <CalendarDays className="w-4 h-4 mr-2 text-orange-500" />
-                        {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
+                        {tripType === "roundtrip" 
+                          ? (returnDate ? format(returnDate, "EEE, MMM d") : "Select date")
+                          : "One way"
+                        }
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -189,78 +203,78 @@ const FlightSearch = () => {
                     </PopoverContent>
                   </Popover>
                 </div>
-              )}
 
-              {/* Passengers */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Passengers</label>
-                <Select value={passengers} onValueChange={setPassengers}>
-                  <SelectTrigger className="h-11">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-purple-500" />
-                      <span>{passengers} {parseInt(passengers) === 1 ? "Passenger" : "Passengers"}</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                      <SelectItem key={n} value={n.toString()}>
-                        {n} {n === 1 ? "Passenger" : "Passengers"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Passengers */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Passengers</label>
+                  <Select value={passengers} onValueChange={setPassengers}>
+                    <SelectTrigger className="h-12">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-purple-500" />
+                        <span>{passengers} {parseInt(passengers) === 1 ? "Traveler" : "Travelers"}</span>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                        <SelectItem key={n} value={n.toString()}>
+                          {n} {n === 1 ? "Traveler" : "Travelers"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Cabin Class */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Cabin Class</label>
-                <Select value={cabinClass} onValueChange={setCabinClass}>
-                  <SelectTrigger className="h-11">
-                    <div className="flex items-center gap-2">
-                      <Crown className={cn(
-                        "w-4 h-4",
-                        cabinClass === "first" ? "text-amber-500" :
-                        cabinClass === "business" ? "text-blue-500" : "text-emerald-500"
-                      )} />
-                      <span className="capitalize">{cabinClass}</span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="economy">Economy</SelectItem>
-                    <SelectItem value="premium">Premium Economy</SelectItem>
-                    <SelectItem value="business">Business</SelectItem>
-                    <SelectItem value="first">First Class</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Cabin Class */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Class</label>
+                  <Select value={cabinClass} onValueChange={setCabinClass}>
+                    <SelectTrigger className="h-12">
+                      <div className="flex items-center gap-2">
+                        <Crown className={cn(
+                          "w-4 h-4",
+                          cabinClass === "first" ? "text-amber-500" :
+                          cabinClass === "business" ? "text-blue-500" : "text-emerald-500"
+                        )} />
+                        <span className="capitalize">{cabinClass}</span>
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="economy">Economy</SelectItem>
+                      <SelectItem value="premium">Premium Economy</SelectItem>
+                      <SelectItem value="business">Business</SelectItem>
+                      <SelectItem value="first">First Class</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {/* Search Button */}
+            {/* Search Button - Big & Prominent */}
             <Button
               onClick={handleSearch}
               disabled={!fromCity || !toCity || !departDate}
               size="lg"
               className={cn(
-                "w-full h-12 font-semibold text-base",
+                "w-full h-14 font-bold text-lg mt-6",
                 "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
-                "shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40",
-                "transition-all duration-200"
+                "shadow-xl shadow-sky-500/30 hover:shadow-sky-500/40",
+                "transition-all duration-300 active:scale-[0.98]"
               )}
             >
               <Search className="w-5 h-5 mr-2" />
               Search Flights
             </Button>
-          </ProfessionalSearchCard>
-        </ProfessionalHero>
+          </BigSearchCard>
+        </TopTierHero>
 
-        {/* Popular Destinations */}
-        <PopularDestinationsGrid 
+        {/* Popular Destinations with Real Images */}
+        <DestinationCardsGrid 
           service="flights" 
           onSelect={handleDestinationSelect}
         />
 
         {/* Why Book Section */}
-        <WhyBookSection service="flights" />
+        <TrustSection service="flights" />
 
         {/* Travel Extras */}
         <TravelExtrasCTA currentService="flights" />

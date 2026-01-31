@@ -12,6 +12,7 @@ import {
   CalendarDays,
   MapPin,
   Clock,
+  User,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -27,18 +28,18 @@ import CarPartnerSelector from "@/components/car/CarPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
 import CarTopSearchCTA from "@/components/car/CarTopSearchCTA";
 import CarStickyBookingCTA from "@/components/car/CarStickyBookingCTA";
-import ProfessionalHero from "@/components/shared/ProfessionalHero";
-import ProfessionalSearchCard from "@/components/shared/ProfessionalSearchCard";
-import PopularDestinationsGrid from "@/components/shared/PopularDestinationsGrid";
-import WhyBookSection from "@/components/shared/WhyBookSection";
+import TopTierHero from "@/components/shared/TopTierHero";
+import BigSearchCard from "@/components/shared/BigSearchCard";
+import DestinationCardsGrid from "@/components/shared/DestinationCardsGrid";
+import TrustSection from "@/components/shared/TrustSection";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 
 /**
- * ZIVO CAR RENTAL - Professional Booking Page
- * Expedia / Rentalcars quality UX/UI
+ * ZIVO CAR RENTAL - Top-Tier Car Search
+ * Expedia / Rentalcars quality
  */
 
 const carCategories = [
@@ -105,147 +106,148 @@ const CarRentalBooking = () => {
       <Header />
       
       <main className="pb-32 lg:pb-20">
-        <ProfessionalHero
-          service="cars"
-          icon={Car}
-          title="Search & Compare Car Rentals"
-          subtitle="Compare prices from Rentalcars, Kayak, Expedia & more."
-        >
-          <ProfessionalSearchCard service="cars">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Pickup Location */}
-              <div className="lg:col-span-2">
+        {/* Hero with Big Search */}
+        <TopTierHero service="cars" icon={Car}>
+          <BigSearchCard service="cars">
+            {/* Main Search Fields */}
+            <div className="space-y-4">
+              {/* Row 1: Location */}
+              <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Location</label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-violet-500" />
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500 pointer-events-none" />
                   <Input
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
                     placeholder="City, airport, or address"
-                    className="h-11 pl-10"
+                    className="h-14 pl-11 text-base"
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
                 </div>
               </div>
 
-              {/* Pickup Date */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-11 justify-start">
-                      <CalendarDays className="mr-2 h-4 w-4 text-violet-500" />
-                      {pickupDate ? format(pickupDate, "MMM d") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={pickupDate}
-                      onSelect={setPickupDate}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+              {/* Row 2: Dates */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {/* Pickup Date */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-12 justify-start">
+                        <CalendarDays className="mr-2 h-4 w-4 text-violet-500" />
+                        {pickupDate ? format(pickupDate, "MMM d") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={pickupDate}
+                        onSelect={setPickupDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Pickup Time */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Time</label>
+                  <Select value={pickupTime} onValueChange={setPickupTime}>
+                    <SelectTrigger className="h-12">
+                      <Clock className="w-4 h-4 mr-2 text-violet-500" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => {
+                        const hour = i.toString().padStart(2, '0');
+                        return (
+                          <SelectItem key={hour} value={`${hour}:00`}>{hour}:00</SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Return Date */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full h-12 justify-start">
+                        <CalendarDays className="mr-2 h-4 w-4 text-purple-500" />
+                        {returnDate ? format(returnDate, "MMM d") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={returnDate}
+                        onSelect={setReturnDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Return Time */}
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Time</label>
+                  <Select value={returnTime} onValueChange={setReturnTime}>
+                    <SelectTrigger className="h-12">
+                      <Clock className="w-4 h-4 mr-2 text-purple-500" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => {
+                        const hour = i.toString().padStart(2, '0');
+                        return (
+                          <SelectItem key={hour} value={`${hour}:00`}>{hour}:00</SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {/* Return Date */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full h-11 justify-start">
-                      <CalendarDays className="mr-2 h-4 w-4 text-purple-500" />
-                      {returnDate ? format(returnDate, "MMM d") : "Select date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={returnDate}
-                      onSelect={setReturnDate}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+              {/* Row 3: Driver Age */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="col-span-2 md:col-span-1">
+                  <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Driver Age</label>
+                  <Select value={driverAge} onValueChange={setDriverAge}>
+                    <SelectTrigger className="h-12">
+                      <User className="w-4 h-4 mr-2 text-violet-500" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="21">21-24 years</SelectItem>
+                      <SelectItem value="25">25-29 years</SelectItem>
+                      <SelectItem value="30">30-64 years</SelectItem>
+                      <SelectItem value="65">65+ years</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              {/* Pickup Time */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Time</label>
-                <Select value={pickupTime} onValueChange={setPickupTime}>
-                  <SelectTrigger className="h-11">
-                    <Clock className="w-4 h-4 mr-2 text-violet-500" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i.toString().padStart(2, '0');
-                      return (
-                        <SelectItem key={hour} value={`${hour}:00`}>{hour}:00</SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Return Time */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Time</label>
-                <Select value={returnTime} onValueChange={setReturnTime}>
-                  <SelectTrigger className="h-11">
-                    <Clock className="w-4 h-4 mr-2 text-purple-500" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i.toString().padStart(2, '0');
-                      return (
-                        <SelectItem key={hour} value={`${hour}:00`}>{hour}:00</SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Driver Age */}
-              <div>
-                <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Driver Age</label>
-                <Select value={driverAge} onValueChange={setDriverAge}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="21">21-24</SelectItem>
-                    <SelectItem value="25">25-29</SelectItem>
-                    <SelectItem value="30">30-64</SelectItem>
-                    <SelectItem value="65">65+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Search Button */}
-              <div className="flex items-end">
-                <Button 
-                  onClick={handleSearch}
-                  disabled={!pickupLocation.trim()}
-                  className={cn(
-                    "w-full h-11 font-semibold",
-                    "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
-                    "shadow-lg shadow-violet-500/25"
-                  )}
-                >
-                  <Search className="w-5 h-5 mr-2" />
-                  Search
-                </Button>
-              </div>
-            </div>
-          </ProfessionalSearchCard>
-        </ProfessionalHero>
+            {/* Search Button - Big & Prominent */}
+            <Button 
+              onClick={handleSearch}
+              disabled={!pickupLocation.trim()}
+              size="lg"
+              className={cn(
+                "w-full h-14 font-bold text-lg mt-6",
+                "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
+                "shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40",
+                "transition-all duration-300 active:scale-[0.98]"
+              )}
+            >
+              <Search className="w-5 h-5 mr-2" />
+              Search Cars
+            </Button>
+          </BigSearchCard>
+        </TopTierHero>
 
         {/* Search Results */}
         {hasSearched && (
@@ -324,11 +326,11 @@ const CarRentalBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
-            <PopularDestinationsGrid 
+            <DestinationCardsGrid 
               service="cars" 
               onSelect={handleLocationSelect}
             />
-            <WhyBookSection service="cars" />
+            <TrustSection service="cars" />
             <TravelExtrasCTA currentService="cars" />
             <TravelFAQ serviceType="cars" className="bg-muted/20" />
           </>
