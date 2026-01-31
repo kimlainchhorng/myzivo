@@ -69,6 +69,12 @@ import CarGroupBooking from "@/components/car/CarGroupBooking";
 import CarWeeklyDeals from "@/components/car/CarWeeklyDeals";
 import LiveChatWidget from "@/components/shared/LiveChatWidget";
 import PromoCodeBanner from "@/components/shared/PromoCodeBanner";
+import CarUpgrades from "@/components/car/CarUpgrades";
+import CarGPSAddons from "@/components/car/CarGPSAddons";
+import CarFleetShowcase from "@/components/car/CarFleetShowcase";
+import TravelBlog from "@/components/shared/TravelBlog";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import AppFeatures from "@/components/shared/AppFeatures";
 
 // Popular locations
 const popularLocations = [
@@ -656,20 +662,53 @@ const CarRentalBooking = () => {
         {/* Pickup Tips */}
         {!searchResults && <CarPickupTips />}
 
+        {/* Car Upgrades */}
+        {!searchResults && <CarUpgrades />}
+
+        {/* GPS & Add-ons */}
+        {!searchResults && <CarGPSAddons />}
+
         {/* Accessories & Add-ons */}
         {!searchResults && <CarAccessoriesAddons />}
+
+        {/* Fleet Showcase */}
+        {!searchResults && <CarFleetShowcase />}
 
         {/* Road Trip Planner */}
         {!searchResults && <CarRoadTripPlanner />}
 
+        {/* Popular Routes */}
+        {!searchResults && <CarPopularRoutes />}
+
+        {/* Seasonal Offers */}
+        {!searchResults && <CarSeasonalOffers />}
+
+        {/* Electric Vehicles */}
+        {!searchResults && <CarElectricVehicles />}
+
+        {/* Group Booking */}
+        {!searchResults && <CarGroupBooking />}
+
+        {/* Weekly Deals */}
+        {!searchResults && <CarWeeklyDeals />}
+
         {/* Loyalty Program */}
         {!searchResults && <CarLoyaltyProgram />}
+
+        {/* Loyalty Rewards */}
+        {!searchResults && <CarLoyaltyRewards />}
 
         {/* Flash Deals */}
         {!searchResults && <CarFlashDeals />}
 
+        {/* Comparison Widget */}
+        {!searchResults && <CarComparisonWidget />}
+
         {/* Compare Widget */}
         {!searchResults && <CarCompareWidget />}
+
+        {/* Customer Stories */}
+        {!searchResults && <CarCustomerStories />}
 
         {/* Social Proof */}
         {!searchResults && <CarSocialProof />}
@@ -680,11 +719,20 @@ const CarRentalBooking = () => {
         {/* Savings Calculator */}
         {!searchResults && <CarSavingsCalculator />}
 
+        {/* Travel Blog */}
+        {!searchResults && <TravelBlog />}
+
+        {/* App Features */}
+        {!searchResults && <AppFeatures />}
+
         {/* Newsletter Section */}
         {!searchResults && <CarNewsletterSection />}
 
         {/* FAQ Section */}
         {!searchResults && <CarFAQSection />}
+
+        {/* User Testimonials */}
+        {!searchResults && <UserTestimonials />}
 
         {/* Mobile App Promo */}
         {!searchResults && <CarMobileAppPromo />}
