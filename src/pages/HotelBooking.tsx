@@ -92,6 +92,11 @@ import EmergencyContacts from "@/components/shared/EmergencyContacts";
 import CurrencyConverter from "@/components/shared/CurrencyConverter";
 import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
 import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
+import HotelAccessibility from "@/components/hotel/HotelAccessibility";
+import HotelParking from "@/components/hotel/HotelParking";
+import SocialProofTicker from "@/components/shared/SocialProofTicker";
+import RewardsProgress from "@/components/shared/RewardsProgress";
+import MobileBottomNav from "@/components/shared/MobileBottomNav";
 
 // Popular destinations
 const popularCities = [
@@ -768,11 +773,26 @@ const HotelBooking = () => {
         {/* Testimonials */}
         {!searchResults && <HotelTestimonialsSection />}
 
+        {/* Accessibility */}
+        {!searchResults && <HotelAccessibility />}
+
+        {/* Parking */}
+        {!searchResults && <HotelParking />}
+
+        {/* Rewards Progress */}
+        {!searchResults && <RewardsProgress />}
+
         {/* Trust Indicators */}
         {!searchResults && <HotelTrustIndicators />}
 
         {/* Live Chat Widget */}
         <LiveChatWidget />
+        
+        {/* Social Proof Ticker */}
+        <SocialProofTicker />
+        
+        {/* Mobile Bottom Nav */}
+        <MobileBottomNav />
       </main>
 
       {/* Selected Hotel Summary Sidebar */}

@@ -86,6 +86,11 @@ import EmergencyContacts from "@/components/shared/EmergencyContacts";
 import CurrencyConverter from "@/components/shared/CurrencyConverter";
 import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
 import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
+import CarAccessibility from "@/components/car/CarAccessibility";
+import CarSustainability from "@/components/car/CarSustainability";
+import SocialProofTicker from "@/components/shared/SocialProofTicker";
+import RewardsProgress from "@/components/shared/RewardsProgress";
+import MobileBottomNav from "@/components/shared/MobileBottomNav";
 
 // Popular locations
 const popularLocations = [
@@ -784,11 +789,26 @@ const CarRentalBooking = () => {
         {/* Testimonials */}
         {!searchResults && <CarTestimonialsSection />}
 
+        {/* Accessibility */}
+        {!searchResults && <CarAccessibility />}
+
+        {/* Sustainability */}
+        {!searchResults && <CarSustainability />}
+
+        {/* Rewards Progress */}
+        {!searchResults && <RewardsProgress />}
+
         {/* Trust Indicators */}
         {!searchResults && <CarTrustIndicators />}
 
         {/* Live Chat Widget */}
         <LiveChatWidget />
+        
+        {/* Social Proof Ticker */}
+        <SocialProofTicker />
+        
+        {/* Mobile Bottom Nav */}
+        <MobileBottomNav />
       </main>
 
       {/* Selected Car Summary */}

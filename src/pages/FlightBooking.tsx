@@ -65,6 +65,12 @@ import EmergencyContacts from "@/components/shared/EmergencyContacts";
 import CurrencyConverter from "@/components/shared/CurrencyConverter";
 import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
 import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
+import FlightSocialShare from "@/components/flight/FlightSocialShare";
+import FlightReviewsWidget from "@/components/flight/FlightReviewsWidget";
+import SocialProofTicker from "@/components/shared/SocialProofTicker";
+import FAQAccordion from "@/components/shared/FAQAccordion";
+import RewardsProgress from "@/components/shared/RewardsProgress";
+import MobileBottomNav from "@/components/shared/MobileBottomNav";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -388,6 +394,15 @@ const FlightBooking = () => {
             {/* Travel Blog */}
             <TravelBlog />
 
+            {/* Social Share */}
+            <FlightSocialShare />
+
+            {/* Reviews Widget */}
+            <FlightReviewsWidget />
+
+            {/* Rewards Progress */}
+            <RewardsProgress />
+
             {/* Accessibility */}
             <FlightAccessibility />
 
@@ -428,6 +443,12 @@ const FlightBooking = () => {
 
         {/* Live Chat Widget */}
         <LiveChatWidget />
+        
+        {/* Social Proof Ticker */}
+        <SocialProofTicker />
+        
+        {/* Mobile Bottom Nav */}
+        <MobileBottomNav />
       </main>
 
       <Footer />
