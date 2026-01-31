@@ -67,6 +67,7 @@ const Partners = lazy(() => import("./pages/Partners"));
 
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
+const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -180,6 +181,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <ABTestingDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/revenue"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <RevenueDashboard />
                     </ProtectedRoute>
                   }
                 />
