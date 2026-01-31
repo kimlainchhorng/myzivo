@@ -45,21 +45,19 @@ const footerLinks = {
   ],
   company: [
     { name: "About ZIVO", href: "/about" },
+    { name: "How It Works", href: "/how-it-works" },
+    { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
-    { name: "Careers", href: "#" },
-    { name: "Newsroom", href: "#" },
   ],
   support: [
     { name: "Help Center", href: "/help" },
     { name: "Safety Center", href: "/help#safety" },
-    { name: "Contact Us", href: "/help#contact" },
     { name: "Accessibility", href: "/accessibility" },
   ],
   legal: [
     { name: "Terms of Service", href: "/terms-of-service" },
     { name: "Privacy Policy", href: "/privacy-policy" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
-    { name: "Partner Agreement", href: "/partner-agreement" },
   ],
 };
 

@@ -14,7 +14,14 @@ import {
   CheckCircle,
   Car,
   Hotel,
-  MapPin
+  MapPin,
+  Smartphone,
+  Zap,
+  DollarSign,
+  Building2,
+  Wifi,
+  Ticket,
+  Luggage
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -23,94 +30,197 @@ const About = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="About ZIVO – Travel Search & Comparison Platform"
-        description="ZIVO is a travel search and comparison platform helping users find and compare flights, hotels, and car rentals from trusted partners worldwide."
+        title="About ZIVO – Global Travel Search & Comparison Platform"
+        description="ZIVO is a global travel search and comparison platform helping users find and compare flights, hotels, car rentals, and travel services from trusted partners worldwide."
       />
       <Header />
       
       <main className="pt-24 pb-20">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-5xl">
           {/* Header */}
-          <div className="text-center mb-12">
-            <Badge className="mb-4 bg-sky-500/20 text-sky-500 border-sky-500/30">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <Globe className="w-3 h-3 mr-1" />
               About Us
             </Badge>
-            <h1 className="font-display text-4xl font-bold mb-4">
+            <h1 className="font-display text-4xl md:text-5xl font-bold mb-6">
               About ZIVO
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Your trusted travel search and comparison platform
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              ZIVO is a global travel search and comparison platform that helps users find and compare 
+              flights, hotels, car rentals, and travel services from trusted partners worldwide.
             </p>
           </div>
 
-          {/* Hero Card */}
-          <Card className="mb-8 border-sky-500/30 bg-gradient-to-r from-sky-500/10 to-blue-500/5">
-            <CardContent className="p-8">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shrink-0">
-                  <Search className="w-8 h-8 text-white" />
-                </div>
+          {/* What We Do - Hero Card */}
+          <Card className="mb-12 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-teal-500/10 overflow-hidden">
+            <CardContent className="p-8 md:p-12">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <h2 className="text-2xl font-bold mb-3">What We Do</h2>
-                  <p className="text-muted-foreground text-lg leading-relaxed">
-                    ZIVO is a <strong>travel search and comparison platform</strong> that helps travelers 
-                    find and compare flights, hotels, and car rentals from hundreds of providers worldwide. 
-                    We aggregate pricing data from multiple sources to help you find the best options for 
-                    your journey. <strong>We then redirect you to our trusted travel partners to complete 
-                    your booking.</strong>
-                  </p>
+                  <h2 className="text-3xl font-bold mb-4">What We Do</h2>
+                  <div className="space-y-4 text-muted-foreground text-lg leading-relaxed">
+                    <p>
+                      ZIVO aggregates and compares travel options from multiple trusted partners, 
+                      helping travelers find the best flights, hotels, car rentals, and travel services 
+                      in one place.
+                    </p>
+                    <p className="font-medium text-foreground">
+                      ZIVO does not sell tickets or process payments.
+                    </p>
+                    <p>
+                      When users are ready to book, they are redirected to our travel partners to 
+                      complete their reservation securely.
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                    <Plane className="w-8 h-8 text-sky-500 mx-auto mb-3" />
+                    <p className="font-semibold">Flights</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                    <Hotel className="w-8 h-8 text-amber-500 mx-auto mb-3" />
+                    <p className="font-semibold">Hotels</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                    <Car className="w-8 h-8 text-violet-500 mx-auto mb-3" />
+                    <p className="font-semibold">Car Rentals</p>
+                  </div>
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center">
+                    <Ticket className="w-8 h-8 text-emerald-500 mx-auto mb-3" />
+                    <p className="font-semibold">Activities</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Services We Offer */}
-          <h2 className="text-2xl font-bold mb-6 text-center">Our Services</h2>
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Link to="/book-flight">
-              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardContent className="p-6">
-                  <div className="w-14 h-14 rounded-2xl bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Plane className="w-7 h-7 text-sky-500" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">Flights</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Search and compare flights from 500+ airlines worldwide
+          {/* Business Model - How We Make Money */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <Badge className="mb-4 bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+                <DollarSign className="w-3 h-3 mr-1" />
+                Transparent Model
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">How ZIVO Makes Money</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                We believe in full transparency about our business model.
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  icon: Users,
+                  title: "Free for Users",
+                  description: "ZIVO is completely free for travelers to use",
+                  color: "text-sky-500",
+                  bgColor: "bg-sky-500/10"
+                },
+                {
+                  icon: DollarSign,
+                  title: "No Booking Fees",
+                  description: "We never charge fees for using our platform",
+                  color: "text-emerald-500",
+                  bgColor: "bg-emerald-500/10"
+                },
+                {
+                  icon: Building2,
+                  title: "Affiliate Revenue",
+                  description: "We earn commissions when users book through partner links",
+                  color: "text-violet-500",
+                  bgColor: "bg-violet-500/10"
+                },
+                {
+                  icon: CheckCircle,
+                  title: "No Price Impact",
+                  description: "Our commission has no impact on the price you pay",
+                  color: "text-amber-500",
+                  bgColor: "bg-amber-500/10"
+                }
+              ].map((item) => (
+                <Card key={item.title} className="text-center border-border/50">
+                  <CardContent className="p-6">
+                    <div className={`w-14 h-14 rounded-2xl ${item.bgColor} flex items-center justify-center mx-auto mb-4`}>
+                      <item.icon className={`w-7 h-7 ${item.color}`} />
+                    </div>
+                    <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Platform Scale */}
+          <div className="mb-16">
+            <div className="text-center mb-8">
+              <Badge className="mb-4 bg-violet-500/20 text-violet-500 border-violet-500/30">
+                <Globe className="w-3 h-3 mr-1" />
+                Global Platform
+              </Badge>
+              <h2 className="text-3xl font-bold mb-4">Built for Scale</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                ZIVO is a growing travel platform with global coverage and expanding services.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <Card className="border-border/50">
+                <CardContent className="p-6 text-center">
+                  <Globe className="w-10 h-10 text-primary mx-auto mb-4" />
+                  <h3 className="font-bold text-xl mb-2">Global Coverage</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Access to flights, hotels, and services across 195+ countries worldwide
                   </p>
                 </CardContent>
               </Card>
-            </Link>
-            <Link to="/book-hotel">
-              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardContent className="p-6">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Hotel className="w-7 h-7 text-amber-500" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">Hotels</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Compare hotel prices from leading booking platforms
+              <Card className="border-border/50">
+                <CardContent className="p-6 text-center">
+                  <Building2 className="w-10 h-10 text-primary mx-auto mb-4" />
+                  <h3 className="font-bold text-xl mb-2">Multiple Partners</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Connected to trusted travel partners, airlines, and booking platforms
                   </p>
                 </CardContent>
               </Card>
-            </Link>
-            <Link to="/rent-car">
-              <Card className="text-center hover:shadow-lg transition-shadow cursor-pointer h-full">
-                <CardContent className="p-6">
-                  <div className="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Car className="w-7 h-7 text-violet-500" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">Car Rentals</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Find and compare car rental deals from top providers
+              <Card className="border-border/50">
+                <CardContent className="p-6 text-center">
+                  <Smartphone className="w-10 h-10 text-primary mx-auto mb-4" />
+                  <h3 className="font-bold text-xl mb-2">Mobile-First</h3>
+                  <p className="text-muted-foreground text-sm">
+                    Optimized for seamless experience on any device
                   </p>
                 </CardContent>
               </Card>
-            </Link>
+            </div>
+
+            {/* Expanding Services */}
+            <Card className="border-border/50 bg-muted/30">
+              <CardContent className="p-8">
+                <h3 className="font-bold text-xl mb-6 text-center">Expanding Travel Ecosystem</h3>
+                <div className="flex flex-wrap justify-center gap-4">
+                  {[
+                    { icon: Plane, label: "Flights", color: "text-sky-500" },
+                    { icon: Hotel, label: "Hotels", color: "text-amber-500" },
+                    { icon: Car, label: "Car Rentals", color: "text-violet-500" },
+                    { icon: MapPin, label: "Transfers", color: "text-orange-500" },
+                    { icon: Ticket, label: "Activities", color: "text-emerald-500" },
+                    { icon: Wifi, label: "eSIM", color: "text-cyan-500" },
+                    { icon: Luggage, label: "Luggage Storage", color: "text-pink-500" },
+                  ].map((service) => (
+                    <div key={service.label} className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50">
+                      <service.icon className={`w-4 h-4 ${service.color}`} />
+                      <span className="text-sm font-medium">{service.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Important Notice */}
-          <Card className="mb-8 border-amber-500/30 bg-amber-500/5">
+          <Card className="mb-12 border-amber-500/30 bg-amber-500/5">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
@@ -119,134 +229,36 @@ const About = () => {
                 <div>
                   <h3 className="text-xl font-bold mb-2 text-amber-500">Important Notice</h3>
                   <p className="text-muted-foreground">
-                    <strong>ZIVO does not sell airline tickets directly.</strong> We are a flight search 
-                    and comparison platform. When you select a flight, you will be redirected to our 
-                    trusted travel partners (such as Skyscanner, airlines, or online travel agencies) 
-                    to complete your purchase. All bookings, payments, and customer service are handled 
-                    by the respective partner or airline.
+                    <strong>ZIVO does not sell airline tickets, hotel rooms, or car rentals directly.</strong> We are a 
+                    search and comparison platform. When you select an option, you will be redirected to our 
+                    trusted travel partners to complete your purchase. All bookings, payments, and customer 
+                    service are handled by the respective partner.
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* How It Works */}
-          <h2 className="text-2xl font-bold mb-6 text-center">How ZIVO Flights Works</h2>
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-xl font-bold text-sky-500">1</span>
-                </div>
-                <h3 className="font-bold mb-2">Search</h3>
-                <p className="text-sm text-muted-foreground">
-                  Enter your travel details and we'll search hundreds of airlines and travel sites
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-xl font-bold text-sky-500">2</span>
-                </div>
-                <h3 className="font-bold mb-2">Compare</h3>
-                <p className="text-sm text-muted-foreground">
-                  Review prices, schedules, and amenities side-by-side to find your best option
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="p-6">
-                <div className="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-xl font-bold text-sky-500">3</span>
-                </div>
-                <h3 className="font-bold mb-2">Book with Partner</h3>
-                <p className="text-sm text-muted-foreground">
-                  Click through to our partner site to complete your booking securely
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Features */}
-          <div className="space-y-6 mb-12">
-            <h2 className="text-2xl font-bold text-center">Why Choose ZIVO Flights</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {[
-                {
-                  icon: Globe,
-                  title: "500+ Airlines",
-                  description: "Compare prices from major carriers and budget airlines worldwide",
-                  color: "text-sky-500"
-                },
-                {
-                  icon: TrendingUp,
-                  title: "Live Prices",
-                  description: "Real-time pricing from multiple booking platforms",
-                  color: "text-emerald-500"
-                },
-                {
-                  icon: Shield,
-                  title: "Trusted Partners",
-                  description: "We only work with reputable travel booking platforms",
-                  color: "text-purple-500"
-                },
-                {
-                  icon: Users,
-                  title: "Free to Use",
-                  description: "No fees or charges for using our comparison service",
-                  color: "text-amber-500"
-                }
-              ].map((feature) => (
-                <div key={feature.title} className="flex items-start gap-4 p-4 rounded-xl bg-card border border-border">
-                  <div className={`w-10 h-10 rounded-lg bg-muted flex items-center justify-center ${feature.color}`}>
-                    <feature.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* What We Don't Do */}
-          <Card className="mb-8">
-            <CardContent className="p-6">
-              <h3 className="text-xl font-bold mb-4">What We Don't Do</h3>
-              <ul className="space-y-3">
-                {[
-                  "We do not sell airline tickets or issue boarding passes",
-                  "We do not process payments for flight bookings",
-                  "We do not provide customer service for completed bookings",
-                  "We do not guarantee prices shown (final price determined by booking partner)"
-                ].map((item, index) => (
-                  <li key={index} className="flex items-start gap-2 text-muted-foreground">
-                    <span className="text-red-400 mt-0.5">✕</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 text-sm text-muted-foreground">
-                For booking inquiries, changes, or cancellations, please contact the airline or 
-                travel agency where you completed your purchase.
-              </p>
-            </CardContent>
-          </Card>
-
           {/* CTA */}
-          <div className="text-center">
-            <h2 className="text-2xl font-bold mb-4">Ready to Find Your Flight?</h2>
-            <p className="text-muted-foreground mb-6">
-              Start comparing prices from 500+ airlines today
+          <div className="text-center bg-gradient-to-r from-primary/10 via-background to-teal-500/10 rounded-3xl p-10 border border-primary/20">
+            <h2 className="text-3xl font-bold mb-4">Start Your Journey</h2>
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+              Compare flights, hotels, and car rentals from trusted partners worldwide.
             </p>
-            <Link to="/book-flight">
-              <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-600">
-                <Search className="w-4 h-4 mr-2" />
-                Search Flights
-              </Button>
-            </Link>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/book-flight">
+                <Button size="lg" className="bg-gradient-to-r from-primary to-teal-400 gap-2">
+                  <Plane className="w-4 h-4" />
+                  Search Flights
+                </Button>
+              </Link>
+              <Link to="/how-it-works">
+                <Button size="lg" variant="outline" className="gap-2">
+                  <Zap className="w-4 h-4" />
+                  How It Works
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </main>
