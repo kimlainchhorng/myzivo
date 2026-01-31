@@ -97,82 +97,29 @@ export function usePriceAlerts() {
     ));
   }, []);
 
-  // Check price alerts using real flight prices
+  // Check price alerts using indicative price simulation
+  // Note: Real price alerts would require user to check partner sites
   const checkAlerts = useCallback(async () => {
     if (alerts.length === 0) return;
     
-    const updatedAlerts = await Promise.all(alerts.map(async (alert) => {
+    const updatedAlerts = alerts.map((alert) => {
       // Skip already triggered alerts
       if (alert.triggered) return alert;
       
-      try {
-        // Try to fetch real prices via Supabase edge function
-        const response = await fetch('/api/get-flight-prices', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            origin: alert.route.fromCode,
-            destination: alert.route.toCode,
-            departureDate: alert.departureDate,
-          }),
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.prices?.length > 0) {
-            const lowestPrice = Math.min(...data.prices.map((p: any) => p.price));
-            const isTriggered = lowestPrice <= alert.targetPrice;
-            
-            if (isTriggered && !alert.triggered) {
-              // Send browser notification if enabled
-              if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('🎉 Price Alert Triggered!', {
-                  body: `${alert.route.fromCode} → ${alert.route.toCode} dropped to $${Math.round(lowestPrice)}`,
-                  icon: '/favicon.ico',
-                  tag: alert.id,
-                });
-              }
-              
-              toast.success(
-                `🎉 Price dropped! ${alert.route.fromCode} → ${alert.route.toCode} is now $${Math.round(lowestPrice)}`,
-                {
-                  action: {
-                    label: 'Book Now',
-                    onClick: () => {
-                      window.location.href = `/book-flight?from=${alert.route.fromCode}&to=${alert.route.toCode}`;
-                    },
-                  },
-                  duration: 10000,
-                }
-              );
-            }
-
-            return {
-              ...alert,
-              currentPrice: Math.round(lowestPrice),
-              lastCheckedAt: new Date(),
-              triggered: isTriggered,
-              triggeredPrice: isTriggered ? Math.round(lowestPrice) : undefined,
-            };
-          }
-        }
-      } catch (error) {
-        console.error('Error checking price for alert:', error);
-      }
-      
-      // Fallback: simulate price fluctuation for demo
+      // Simulate indicative price fluctuation for demo/UX
+      // Real prices are only available on partner sites
       const priceChange = (Math.random() - 0.5) * 50;
       const newPrice = Math.max(alert.historicalLow, alert.currentPrice + priceChange);
       const isTriggered = newPrice <= alert.targetPrice;
       
       if (isTriggered && !alert.triggered) {
         toast.success(
-          `🎉 Price dropped! ${alert.route.fromCode} → ${alert.route.toCode} is now $${Math.round(newPrice)}`,
+          `🔔 Price may have dropped! ${alert.route.fromCode} → ${alert.route.toCode} - Check partner sites for current prices`,
           {
             action: {
-              label: 'Book Now',
+              label: 'Compare Prices',
               onClick: () => {
-                window.location.href = `/book-flight?from=${alert.route.fromCode}&to=${alert.route.toCode}`;
+                window.location.href = `/flights/${alert.route.fromCode.toLowerCase()}-to-${alert.route.toCode.toLowerCase()}`;
               },
             },
             duration: 10000,
@@ -187,7 +134,7 @@ export function usePriceAlerts() {
         triggered: isTriggered,
         triggeredPrice: isTriggered ? Math.round(newPrice) : undefined,
       };
-    }));
+    });
 
     setAlerts(updatedAlerts);
   }, [alerts]);

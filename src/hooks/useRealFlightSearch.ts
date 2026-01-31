@@ -1,21 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { allAirlines, getAirlineLogo, getAirlineByCode, type Airline } from "@/data/airlines";
 import { airports } from "@/data/airports";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 
-interface TravelpayoutsPrice {
-  price: number;
-  airline: string;
-  flightNumber: string;
-  departureAt: string;
-  returnAt?: string;
-  duration: number; // minutes
-  transfers: number;
-  origin: string;
-  destination: string;
-  link: string;
-}
+/**
+ * AFFILIATE-ONLY MODEL:
+ * This hook generates indicative flight data for display purposes only.
+ * All actual prices are shown on partner sites after redirect.
+ * We do NOT call any external APIs for pricing data.
+ */
 
 interface FlightSearchParams {
   origin: string;
@@ -26,67 +19,65 @@ interface FlightSearchParams {
   enabled?: boolean;
 }
 
-interface FlightPricesResponse {
-  success: boolean;
-  prices: TravelpayoutsPrice[];
-  currency: string;
-  origin: string;
-  destination: string;
-  note?: string;
-  error?: string;
-}
-
 // Extended airline fallback for codes not in main database
 const extendedAirlineInfo: Record<string, { name: string; category: Airline['category']; alliance: string }> = {
-  // Russian/CIS
-  'SU': { name: 'Aeroflot', category: 'full-service', alliance: 'SkyTeam' },
-  'S7': { name: 'S7 Airlines', category: 'full-service', alliance: 'Oneworld' },
-  'DP': { name: 'Pobeda', category: 'low-cost', alliance: 'Independent' },
-  'U6': { name: 'Ural Airlines', category: 'full-service', alliance: 'Independent' },
-  'FV': { name: 'Rossiya Airlines', category: 'full-service', alliance: 'Independent' },
-  'UT': { name: 'UTair', category: 'full-service', alliance: 'Independent' },
-  'N4': { name: 'Nordwind Airlines', category: 'full-service', alliance: 'Independent' },
-  // Middle East & Africa
-  'WY': { name: 'Oman Air', category: 'full-service', alliance: 'Independent' },
-  'GF': { name: 'Gulf Air', category: 'full-service', alliance: 'Independent' },
-  'SV': { name: 'Saudia', category: 'full-service', alliance: 'SkyTeam' },
-  'MS': { name: 'EgyptAir', category: 'full-service', alliance: 'Star Alliance' },
-  'ET': { name: 'Ethiopian Airlines', category: 'full-service', alliance: 'Star Alliance' },
-  'SA': { name: 'South African Airways', category: 'full-service', alliance: 'Star Alliance' },
-  // Asia
-  'PG': { name: 'Bangkok Airways', category: 'full-service', alliance: 'Independent' },
-  'PR': { name: 'Philippine Airlines', category: 'full-service', alliance: 'Independent' },
-  'HU': { name: 'Hainan Airlines', category: 'premium', alliance: 'Independent' },
-  'CZ': { name: 'China Southern', category: 'full-service', alliance: 'SkyTeam' },
-  'CA': { name: 'Air China', category: 'full-service', alliance: 'Star Alliance' },
-  'MU': { name: 'China Eastern', category: 'full-service', alliance: 'SkyTeam' },
-  '3U': { name: 'Sichuan Airlines', category: 'full-service', alliance: 'Independent' },
-  'HO': { name: 'Juneyao Airlines', category: 'full-service', alliance: 'Star Alliance' },
-  '5J': { name: 'Cebu Pacific', category: 'low-cost', alliance: 'Independent' },
-  'Z2': { name: 'AirAsia Philippines', category: 'low-cost', alliance: 'Independent' },
-  'ZG': { name: 'Zipair Tokyo', category: 'low-cost', alliance: 'Independent' },
-  'MM': { name: 'Peach Aviation', category: 'low-cost', alliance: 'Independent' },
-  '7C': { name: 'Jeju Air', category: 'low-cost', alliance: 'Independent' },
-  'LJ': { name: 'Jin Air', category: 'low-cost', alliance: 'Independent' },
-  'TW': { name: 'T\'way Air', category: 'low-cost', alliance: 'Independent' },
-  // Oceania
-  'SB': { name: 'Aircalin', category: 'full-service', alliance: 'Independent' },
-  // South Asia
-  'PK': { name: 'Pakistan International', category: 'full-service', alliance: 'Independent' },
-  'BG': { name: 'Biman Bangladesh', category: 'full-service', alliance: 'Independent' },
-  'WB': { name: 'RwandAir', category: 'full-service', alliance: 'Independent' },
-  // Americas
-  'G3': { name: 'GOL Linhas Aéreas', category: 'low-cost', alliance: 'Independent' },
-  'AD': { name: 'Azul Brazilian Airlines', category: 'full-service', alliance: 'Independent' },
-  'H2': { name: 'Sky Airline', category: 'low-cost', alliance: 'Independent' },
-  'JA': { name: 'JetSMART', category: 'low-cost', alliance: 'Independent' },
-  // Europe
-  'VY': { name: 'Vueling', category: 'low-cost', alliance: 'Independent' },
-  'HV': { name: 'Transavia', category: 'low-cost', alliance: 'Independent' },
-  'DE': { name: 'Condor', category: 'full-service', alliance: 'Independent' },
-  'DY': { name: 'Norwegian', category: 'low-cost', alliance: 'Independent' },
+  // Major US Airlines
+  'AA': { name: 'American Airlines', category: 'full-service', alliance: 'Oneworld' },
+  'DL': { name: 'Delta Air Lines', category: 'full-service', alliance: 'SkyTeam' },
+  'UA': { name: 'United Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'WN': { name: 'Southwest Airlines', category: 'low-cost', alliance: 'Independent' },
+  'B6': { name: 'JetBlue Airways', category: 'full-service', alliance: 'Independent' },
+  'AS': { name: 'Alaska Airlines', category: 'full-service', alliance: 'Oneworld' },
+  'NK': { name: 'Spirit Airlines', category: 'low-cost', alliance: 'Independent' },
+  'F9': { name: 'Frontier Airlines', category: 'low-cost', alliance: 'Independent' },
+  // European
+  'BA': { name: 'British Airways', category: 'full-service', alliance: 'Oneworld' },
+  'AF': { name: 'Air France', category: 'full-service', alliance: 'SkyTeam' },
+  'LH': { name: 'Lufthansa', category: 'full-service', alliance: 'Star Alliance' },
+  'KL': { name: 'KLM Royal Dutch', category: 'full-service', alliance: 'SkyTeam' },
+  'IB': { name: 'Iberia', category: 'full-service', alliance: 'Oneworld' },
+  'AZ': { name: 'ITA Airways', category: 'full-service', alliance: 'SkyTeam' },
+  'SK': { name: 'SAS Scandinavian', category: 'full-service', alliance: 'SkyTeam' },
+  'LX': { name: 'Swiss International', category: 'full-service', alliance: 'Star Alliance' },
+  'OS': { name: 'Austrian Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'SN': { name: 'Brussels Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'TP': { name: 'TAP Air Portugal', category: 'full-service', alliance: 'Star Alliance' },
+  'AY': { name: 'Finnair', category: 'full-service', alliance: 'Oneworld' },
   'EI': { name: 'Aer Lingus', category: 'full-service', alliance: 'Independent' },
-  'BT': { name: 'airBaltic', category: 'full-service', alliance: 'Independent' },
+  'U2': { name: 'easyJet', category: 'low-cost', alliance: 'Independent' },
+  'FR': { name: 'Ryanair', category: 'low-cost', alliance: 'Independent' },
+  'VY': { name: 'Vueling', category: 'low-cost', alliance: 'Independent' },
+  'W6': { name: 'Wizz Air', category: 'low-cost', alliance: 'Independent' },
+  'DY': { name: 'Norwegian', category: 'low-cost', alliance: 'Independent' },
+  // Middle East
+  'EK': { name: 'Emirates', category: 'premium', alliance: 'Independent' },
+  'QR': { name: 'Qatar Airways', category: 'premium', alliance: 'Oneworld' },
+  'EY': { name: 'Etihad Airways', category: 'premium', alliance: 'Independent' },
+  'TK': { name: 'Turkish Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'MS': { name: 'EgyptAir', category: 'full-service', alliance: 'Star Alliance' },
+  // Asia Pacific
+  'CX': { name: 'Cathay Pacific', category: 'premium', alliance: 'Oneworld' },
+  'JL': { name: 'Japan Airlines', category: 'full-service', alliance: 'Oneworld' },
+  'NH': { name: 'All Nippon Airways', category: 'full-service', alliance: 'Star Alliance' },
+  'KE': { name: 'Korean Air', category: 'full-service', alliance: 'SkyTeam' },
+  'OZ': { name: 'Asiana Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'TG': { name: 'Thai Airways', category: 'full-service', alliance: 'Star Alliance' },
+  'MH': { name: 'Malaysia Airlines', category: 'full-service', alliance: 'Oneworld' },
+  'SQ': { name: 'Singapore Airlines', category: 'premium', alliance: 'Star Alliance' },
+  'QF': { name: 'Qantas', category: 'full-service', alliance: 'Oneworld' },
+  'NZ': { name: 'Air New Zealand', category: 'full-service', alliance: 'Star Alliance' },
+  'VA': { name: 'Virgin Australia', category: 'full-service', alliance: 'Independent' },
+  // Low-cost Asia
+  'AK': { name: 'AirAsia', category: 'low-cost', alliance: 'Independent' },
+  'TR': { name: 'Scoot', category: 'low-cost', alliance: 'Independent' },
+  '5J': { name: 'Cebu Pacific', category: 'low-cost', alliance: 'Independent' },
+  // Americas
+  'AC': { name: 'Air Canada', category: 'full-service', alliance: 'Star Alliance' },
+  'AM': { name: 'Aeromexico', category: 'full-service', alliance: 'SkyTeam' },
+  'LA': { name: 'LATAM Airlines', category: 'full-service', alliance: 'Independent' },
+  'AV': { name: 'Avianca', category: 'full-service', alliance: 'Star Alliance' },
+  'CM': { name: 'Copa Airlines', category: 'full-service', alliance: 'Star Alliance' },
+  'G3': { name: 'GOL Linhas Aéreas', category: 'low-cost', alliance: 'Independent' },
 };
 
 // Map airline code to full airline info from our database with fallback
@@ -122,137 +113,132 @@ const getAirlineInfo = (code: string): { name: string; category: Airline['catego
   };
 };
 
-// Convert API response to GeneratedFlight format
-const transformToGeneratedFlight = (
-  apiPrice: TravelpayoutsPrice,
-  index: number,
+// Route-based indicative pricing (not real prices - for display only)
+const getIndicativePricing = (fromCode: string, toCode: string): { minPrice: number; maxPrice: number } => {
+  // Approximate distance-based pricing
+  const domesticRoutes = ['JFK-LAX', 'LAX-JFK', 'ORD-MIA', 'MIA-ORD', 'DFW-LAS', 'LAS-DFW', 'SFO-SEA', 'SEA-SFO'];
+  const transatlanticRoutes = ['JFK-LHR', 'LHR-JFK', 'LAX-LHR', 'JFK-CDG', 'ORD-FRA', 'MIA-MAD'];
+  const transpacificRoutes = ['LAX-NRT', 'SFO-HKG', 'JFK-HND', 'SEA-ICN'];
+  
+  const route = `${fromCode}-${toCode}`;
+  const reverseRoute = `${toCode}-${fromCode}`;
+  
+  if (domesticRoutes.includes(route) || domesticRoutes.includes(reverseRoute)) {
+    return { minPrice: 89, maxPrice: 299 };
+  }
+  if (transatlanticRoutes.includes(route) || transatlanticRoutes.includes(reverseRoute)) {
+    return { minPrice: 299, maxPrice: 899 };
+  }
+  if (transpacificRoutes.includes(route) || transpacificRoutes.includes(reverseRoute)) {
+    return { minPrice: 449, maxPrice: 1299 };
+  }
+  
+  // Default international pricing
+  return { minPrice: 199, maxPrice: 799 };
+};
+
+// Generate indicative flights for display (affiliate redirect for real prices)
+const generateIndicativeFlights = (
   fromCode: string,
-  toCode: string
-): GeneratedFlight => {
-  const airlineInfo = getAirlineInfo(apiPrice.airline);
+  toCode: string,
+  departureDate?: string
+): GeneratedFlight[] => {
   const fromAirport = airports.find(a => a.code === fromCode);
   const toAirport = airports.find(a => a.code === toCode);
+  const pricing = getIndicativePricing(fromCode, toCode);
   
-  // Parse departure time - handle ISO format with timezone
-  const departureTime = new Date(apiPrice.departureAt);
+  // Airlines that commonly fly various routes
+  const airlineCodes = ['AA', 'DL', 'UA', 'BA', 'AF', 'LH', 'EK', 'B6', 'AS'];
+  const flights: GeneratedFlight[] = [];
   
-  // Format departure time as HH:MM in 24h format
-  const depHours = departureTime.getHours().toString().padStart(2, '0');
-  const depMinutes = departureTime.getMinutes().toString().padStart(2, '0');
-  const depTimeStr = `${depHours}:${depMinutes}`;
+  // Generate 6-8 indicative flight options
+  const numFlights = 6 + Math.floor(Math.random() * 3);
   
-  // Calculate arrival time from departure + duration (duration is in minutes)
-  const arrivalTime = new Date(departureTime.getTime() + apiPrice.duration * 60 * 1000);
-  const arrHours = arrivalTime.getHours().toString().padStart(2, '0');
-  const arrMinutes = arrivalTime.getMinutes().toString().padStart(2, '0');
+  for (let i = 0; i < numFlights; i++) {
+    const airlineCode = airlineCodes[i % airlineCodes.length];
+    const airlineInfo = getAirlineInfo(airlineCode);
+    
+    // Varied departure times
+    const depHour = 6 + (i * 2) % 16; // 6am to 10pm
+    const depMinutes = [0, 15, 30, 45][i % 4];
+    const depTimeStr = `${depHour.toString().padStart(2, '0')}:${depMinutes.toString().padStart(2, '0')}`;
+    
+    // Flight duration based on route type
+    const baseDuration = pricing.maxPrice > 500 ? 480 : pricing.maxPrice > 300 ? 360 : 180;
+    const duration = baseDuration + (i * 15) % 60;
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+    const durationStr = `${hours}h ${minutes}m`;
+    
+    // Calculate arrival time
+    const arrHour = (depHour + hours) % 24;
+    const arrMinutes = (depMinutes + minutes) % 60;
+    const isNextDay = depHour + hours >= 24;
+    const arrTimeStr = isNextDay 
+      ? `${arrHour.toString().padStart(2, '0')}:${arrMinutes.toString().padStart(2, '0')}+1`
+      : `${arrHour.toString().padStart(2, '0')}:${arrMinutes.toString().padStart(2, '0')}`;
+    
+    // Indicative price (varies by airline category)
+    const priceMultiplier = airlineInfo.category === 'premium' ? 1.4 : airlineInfo.category === 'low-cost' ? 0.7 : 1;
+    const basePrice = pricing.minPrice + (i * (pricing.maxPrice - pricing.minPrice) / numFlights);
+    const indicativePrice = Math.round(basePrice * priceMultiplier);
+    
+    const stops = i < 3 ? 0 : i < 6 ? 1 : 2;
+    
+    flights.push({
+      id: `indicative-${airlineCode}-${i}-${Date.now()}`,
+      airline: airlineInfo.name,
+      airlineCode,
+      flightNumber: `${airlineCode}-${1000 + i * 100}`,
+      departure: {
+        time: depTimeStr,
+        city: fromAirport?.city || fromCode,
+        code: fromCode,
+        terminal: ['A', 'B', 'C', 'D'][i % 4]
+      },
+      arrival: {
+        time: arrTimeStr,
+        city: toAirport?.city || toCode,
+        code: toCode,
+        terminal: ['1', '2', '3'][i % 3]
+      },
+      duration: durationStr,
+      stops,
+      stopCities: stops > 0 ? generateStopCities(stops, fromCode, toCode) : undefined,
+      price: indicativePrice,
+      premiumEconomyPrice: airlineInfo.category !== 'low-cost' ? Math.round(indicativePrice * 1.6) : undefined,
+      businessPrice: airlineInfo.category !== 'low-cost' ? Math.round(indicativePrice * 3.5) : undefined,
+      firstPrice: airlineInfo.category === 'premium' ? Math.round(indicativePrice * 8) : undefined,
+      class: 'Economy',
+      amenities: airlineInfo.category === 'premium' 
+        ? ['wifi', 'entertainment', 'meals', 'power', 'lounge'] 
+        : airlineInfo.category === 'low-cost' 
+          ? ['snacks'] 
+          : ['wifi', 'entertainment', 'meals', 'power'],
+      seatsLeft: 2 + (i % 10),
+      category: airlineInfo.category,
+      alliance: airlineInfo.alliance,
+      aircraft: 'Boeing 737 MAX / Airbus A320neo',
+      onTimePerformance: 75 + (i % 15),
+      carbonOffset: Math.round(duration * 0.5),
+      baggageIncluded: airlineInfo.category === 'low-cost' ? 'Carry-on only' : '1 × 23kg checked',
+      refundable: airlineInfo.category === 'premium',
+      wifi: airlineInfo.category !== 'low-cost',
+      entertainment: airlineInfo.category !== 'low-cost',
+      meals: airlineInfo.category !== 'low-cost',
+      legroom: airlineInfo.category === 'premium' ? '34"' : airlineInfo.category === 'low-cost' ? '28"' : '31"',
+      logo: getAirlineLogo(airlineCode),
+      bookingLink: undefined, // Will be generated on redirect
+      isRealPrice: false, // Indicative pricing only
+    });
+  }
   
-  // Check if arrival is next day
-  const isNextDay = arrivalTime.getDate() !== departureTime.getDate() || 
-                    arrivalTime.getMonth() !== departureTime.getMonth();
-  const dayDiff = Math.floor((arrivalTime.getTime() - departureTime.getTime()) / (24 * 60 * 60 * 1000));
-  const arrTimeStr = isNextDay 
-    ? `${arrHours}:${arrMinutes}+${dayDiff > 0 ? dayDiff : 1}` 
-    : `${arrHours}:${arrMinutes}`;
-  
-  // Format duration: convert minutes to Xh Ym format
-  const hours = Math.floor(apiPrice.duration / 60);
-  const minutes = apiPrice.duration % 60;
-  const durationStr = `${hours}h ${minutes}m`;
-  
-  // Format flight number: AIRLINE-NUMBER format (e.g., "B6-1124")
-  const flightNum = apiPrice.flightNumber || String(1000 + index);
-  const formattedFlightNumber = `${apiPrice.airline}-${flightNum}`;
-  
-  // Calculate prices for other classes based on category
-  const economyPrice = apiPrice.price;
-  const category = airlineInfo.category || 'full-service';
-  const businessMultiplier = category === 'premium' ? 4 : category === 'low-cost' ? 2.5 : 3.5;
-  const businessPrice = Math.round(economyPrice * businessMultiplier);
-  const firstPrice = category === 'premium' ? Math.round(economyPrice * 8) : undefined;
-  
-  // Amenities based on category
-  const amenitiesByCategory = {
-    premium: ['wifi', 'entertainment', 'meals', 'power', 'lounge', 'priority'],
-    'full-service': ['wifi', 'entertainment', 'meals', 'power'],
-    'low-cost': ['snacks']
-  };
-  
-  // Aircraft selection based on route duration
-  const isLongHaul = apiPrice.duration > 360; // 6+ hours
-  const aircraftByCategory = {
-    premium: isLongHaul 
-      ? ['Airbus A380-800', 'Airbus A350-1000', 'Boeing 777-300ER', 'Boeing 787-10']
-      : ['Airbus A350-900', 'Boeing 787-9', 'Airbus A321neo'],
-    'full-service': isLongHaul
-      ? ['Boeing 787-9', 'Airbus A330-300', 'Boeing 777-200ER']
-      : ['Boeing 737-900', 'Airbus A321neo', 'Boeing 757-200'],
-    'low-cost': ['Boeing 737 MAX 8', 'Airbus A320neo', 'Airbus A321neo']
-  };
-  
-  const aircraftList = aircraftByCategory[category];
-  
-  // Generate consistent but varied data based on flight number for reproducibility
-  const flightHash = flightNum.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-  const terminalOptions = ['1', '2', '3', 'A', 'B', 'C', 'D'];
-  const depTerminal = terminalOptions[flightHash % terminalOptions.length];
-  const arrTerminal = terminalOptions[(flightHash + 3) % terminalOptions.length];
-  
-  // On-time performance based on airline category and transfers
-  const baseOnTime = category === 'premium' ? 90 : category === 'full-service' ? 82 : 75;
-  const transferPenalty = apiPrice.transfers * 3;
-  const onTimePerf = Math.max(65, baseOnTime - transferPenalty + (flightHash % 5));
-  
-  // Carbon offset based on duration
-  const carbonOffset = Math.round((apiPrice.duration / 60) * 45 + (flightHash % 20));
-  
-  return {
-    id: `${apiPrice.airline}-${flightNum}-${departureTime.getTime()}-${index}`,
-    airline: airlineInfo.name,
-    airlineCode: apiPrice.airline,
-    flightNumber: formattedFlightNumber,
-    departure: {
-      time: depTimeStr,
-      city: fromAirport?.city || fromCode,
-      code: fromCode,
-      terminal: depTerminal
-    },
-    arrival: {
-      time: arrTimeStr,
-      city: toAirport?.city || toCode,
-      code: toCode,
-      terminal: arrTerminal
-    },
-    duration: durationStr,
-    stops: apiPrice.transfers,
-    stopCities: apiPrice.transfers > 0 ? generateStopCities(apiPrice.transfers, fromCode, toCode) : undefined,
-    price: economyPrice,
-    premiumEconomyPrice: category !== 'low-cost' ? Math.round(economyPrice * 1.6) : undefined,
-    businessPrice: category !== 'low-cost' ? businessPrice : undefined,
-    firstPrice,
-    class: 'Economy',
-    amenities: amenitiesByCategory[category],
-    seatsLeft: 2 + (flightHash % 18),
-    category,
-    alliance: airlineInfo.alliance || 'Independent',
-    aircraft: aircraftList[flightHash % aircraftList.length],
-    onTimePerformance: onTimePerf,
-    carbonOffset,
-    baggageIncluded: category === 'low-cost' ? 'Carry-on only' : 
-                     category === 'premium' ? '2 × 32kg checked' : '1 × 23kg checked',
-    refundable: category === 'premium',
-    wifi: category !== 'low-cost',
-    entertainment: category !== 'low-cost',
-    meals: category !== 'low-cost',
-    legroom: category === 'premium' ? '34"' : category === 'low-cost' ? '28"' : '31"',
-    logo: getAirlineLogo(apiPrice.airline),
-    bookingLink: apiPrice.link,
-    isRealPrice: true
-  };
+  // Sort by price
+  return flights.sort((a, b) => a.price - b.price);
 };
 
 // Generate realistic stop cities based on route
 const generateStopCities = (transfers: number, from: string, to: string): string[] => {
-  // Major hub cities for connections
   const hubsByRegion: Record<string, string[]> = {
     us: ['Atlanta', 'Dallas', 'Chicago', 'Denver', 'Charlotte', 'Houston', 'Phoenix'],
     eu: ['London', 'Frankfurt', 'Amsterdam', 'Paris', 'Madrid', 'Munich'],
@@ -260,7 +246,6 @@ const generateStopCities = (transfers: number, from: string, to: string): string
     asia: ['Singapore', 'Hong Kong', 'Tokyo', 'Seoul', 'Bangkok'],
   };
   
-  // Flatten and filter out origin/destination
   const allHubs = Object.values(hubsByRegion).flat();
   const filtered = allHubs.filter(h => 
     !h.toLowerCase().includes(from.toLowerCase()) && 
@@ -278,6 +263,11 @@ const generateStopCities = (transfers: number, from: string, to: string): string
   return stops.length > 0 ? stops : ['Connection'];
 };
 
+/**
+ * Hook that returns indicative flight data for display.
+ * All actual pricing comes from affiliate partner sites on redirect.
+ * NO external API calls are made.
+ */
 export function useRealFlightSearch({
   origin,
   destination,
@@ -287,50 +277,19 @@ export function useRealFlightSearch({
   enabled = true,
 }: FlightSearchParams) {
   return useQuery({
-    queryKey: ['real-flights', origin, destination, departureDate, returnDate, currency],
+    queryKey: ['indicative-flights', origin, destination, departureDate, returnDate],
     queryFn: async (): Promise<GeneratedFlight[]> => {
-      console.log(`[FlightSearch] Fetching prices for ${origin} → ${destination}`);
+      console.log(`[FlightSearch] Generating indicative flights for ${origin} → ${destination}`);
       
-      const { data, error } = await supabase.functions.invoke('get-flight-prices', {
-        body: { origin, destination, departureDate, returnDate, currency },
-      });
-
-      if (error) {
-        console.error('[FlightSearch] Edge function error:', error);
-        throw error;
-      }
-
-      const response = data as FlightPricesResponse;
+      // Generate indicative flight data (no API calls)
+      const flights = generateIndicativeFlights(origin, destination, departureDate);
       
-      // Handle graceful fallback for unsupported routes
-      if (!response?.success) {
-        console.warn('[FlightSearch] API returned unsuccessful:', response?.error);
-        return [];
-      }
-      
-      // Log if route is not in pricing database
-      if (response.note) {
-        console.log('[FlightSearch]', response.note);
-      }
-
-      if (!response?.prices?.length) {
-        console.log('[FlightSearch] No real prices available, will use generated flights');
-        return [];
-      }
-
-      // Transform API data to GeneratedFlight format
-      const flights = response.prices.map((price: TravelpayoutsPrice, index: number) => 
-        transformToGeneratedFlight(price, index, origin, destination)
-      );
-
-      console.log(`[FlightSearch] Loaded ${flights.length} real flights from API`);
+      console.log(`[FlightSearch] Generated ${flights.length} indicative flight options`);
       return flights;
     },
     enabled: enabled && !!origin && !!destination && origin.length === 3 && destination.length === 3,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
-    retry: 1,
-    retryDelay: 1000,
   });
 }
 
@@ -343,10 +302,10 @@ export function useCombinedFlights({
   enabled = true,
 }: Omit<FlightSearchParams, 'currency'>) {
   const { 
-    data: realFlights, 
-    isLoading: isLoadingReal,
-    isError: isRealError,
-    error: realError
+    data: flights, 
+    isLoading,
+    isError,
+    error
   } = useRealFlightSearch({
     origin,
     destination,
@@ -356,10 +315,10 @@ export function useCombinedFlights({
   });
 
   return {
-    flights: realFlights || [],
-    isLoading: isLoadingReal,
-    isError: isRealError,
-    error: realError,
-    hasRealPrices: (realFlights?.length || 0) > 0,
+    flights: flights || [],
+    isLoading,
+    isError,
+    error,
+    hasRealPrices: false, // All prices are indicative
   };
 }
