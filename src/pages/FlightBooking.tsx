@@ -26,6 +26,11 @@ import FlightNewsletterSection from "@/components/flight/FlightNewsletterSection
 import FlightFAQSection from "@/components/flight/FlightFAQSection";
 import FlightPriceCalendar from "@/components/flight/FlightPriceCalendar";
 import FlightSavingsStats from "@/components/flight/FlightSavingsStats";
+import FlightLoyaltyProgram from "@/components/flight/FlightLoyaltyProgram";
+import FlightSocialProof from "@/components/flight/FlightSocialProof";
+import FlightPriceGuarantee from "@/components/flight/FlightPriceGuarantee";
+import FlightCompareWidget from "@/components/flight/FlightCompareWidget";
+import FlightSeasonalDeals from "@/components/flight/FlightSeasonalDeals";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -234,6 +239,21 @@ const FlightBooking = () => {
 
             {/* Travel Tips */}
             <FlightTravelTips />
+
+            {/* Loyalty Program */}
+            <FlightLoyaltyProgram />
+
+            {/* Seasonal Deals */}
+            <FlightSeasonalDeals />
+
+            {/* Compare Widget */}
+            <FlightCompareWidget />
+
+            {/* Social Proof */}
+            <FlightSocialProof />
+
+            {/* Price Guarantee */}
+            <FlightPriceGuarantee />
 
             {/* Price Calendar */}
             <FlightPriceCalendar 
