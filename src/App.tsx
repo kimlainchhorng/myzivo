@@ -69,6 +69,13 @@ const Partners = lazy(() => import("./pages/Partners"));
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
 const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
 
+// Ad landing pages - lazy load
+const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
+const HotelsAdLanding = lazy(() => import("./pages/ads/HotelsAdLanding"));
+const CarsAdLanding = lazy(() => import("./pages/ads/CarsAdLanding"));
+const TransfersAdLanding = lazy(() => import("./pages/ads/TransfersAdLanding"));
+const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding"));
+
 const queryClient = new QueryClient();
 
 // Premium loading fallback
@@ -192,6 +199,12 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                {/* Ad Landing Pages - for paid traffic */}
+                <Route path="/ads/flights" element={<FlightsAdLanding />} />
+                <Route path="/ads/hotels" element={<HotelsAdLanding />} />
+                <Route path="/ads/car-rental" element={<CarsAdLanding />} />
+                <Route path="/ads/transfers" element={<TransfersAdLanding />} />
+                <Route path="/ads/activities" element={<ActivitiesAdLanding />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
