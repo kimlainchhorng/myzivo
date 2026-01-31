@@ -97,6 +97,11 @@ import HotelParking from "@/components/hotel/HotelParking";
 import SocialProofTicker from "@/components/shared/SocialProofTicker";
 import RewardsProgress from "@/components/shared/RewardsProgress";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import TripFlowConnector from "@/components/shared/TripFlowConnector";
+import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
+import CrossSellBanner from "@/components/shared/CrossSellBanner";
+import SmartSuggestions from "@/components/shared/SmartSuggestions";
+import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
 
 // Popular destinations
 const popularCities = [

@@ -71,6 +71,11 @@ import SocialProofTicker from "@/components/shared/SocialProofTicker";
 import FAQAccordion from "@/components/shared/FAQAccordion";
 import RewardsProgress from "@/components/shared/RewardsProgress";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
+import TripFlowConnector from "@/components/shared/TripFlowConnector";
+import ServiceRecommendations from "@/components/shared/ServiceRecommendations";
+import CrossSellBanner from "@/components/shared/CrossSellBanner";
+import SmartSuggestions from "@/components/shared/SmartSuggestions";
+import ServiceFlowHub from "@/components/shared/ServiceFlowHub";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -219,6 +224,28 @@ const FlightBooking = () => {
         {/* Discovery Sections (shown when no search results) */}
         {!searchResults && (
           <>
+            {/* Trip Flow Connector - Workflow */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+                  <div className="lg:col-span-2">
+                    <SmartSuggestions context="flight" />
+                  </div>
+                  <TripFlowConnector 
+                    destination={toCity.split(" (")[0] || undefined} 
+                    currentStep="flight" 
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Cross-Sell Banner */}
+            <section className="py-4">
+              <div className="container mx-auto px-4 max-w-4xl">
+                <CrossSellBanner currentService="flight" destination={toCity.split(" (")[0] || undefined} />
+              </div>
+            </section>
+
             {/* Stats Bar - Social Proof */}
             <FlightStatsBar />
 
@@ -405,6 +432,16 @@ const FlightBooking = () => {
 
             {/* Accessibility */}
             <FlightAccessibility />
+
+            {/* Service Flow Hub - Complete Journey */}
+            <section className="py-12 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <ServiceFlowHub currentService="flight" />
+                  <ServiceRecommendations context="flight" destination={toCity.split(" (")[0] || undefined} />
+                </div>
+              </div>
+            </section>
 
             {/* Corporate Section */}
             <FlightCorporateSection />
