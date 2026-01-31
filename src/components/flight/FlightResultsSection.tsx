@@ -36,6 +36,8 @@ import InFlightServices from "./InFlightServices";
 import LoyaltyRedemption from "./LoyaltyRedemption";
 import SeatUpgradeBidding from "./SeatUpgradeBidding";
 import AirportLoungeAccess from "./AirportLoungeAccess";
+import CrossSellSection from "./CrossSellSection";
+import TrustBadgesSection from "./TrustBadgesSection";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { cn } from "@/lib/utils";
 
@@ -460,6 +462,18 @@ export default function FlightResultsSection({
             }
           />
         </div>
+
+        {/* Cross-Sell Section - Hotels, Cars, Insurance */}
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <CrossSellSection
+            destination={toCity.split(" (")[0]}
+            origin={fromCity.split(" (")[0]}
+            checkIn={departDate ? departDate.toISOString().split('T')[0] : undefined}
+          />
+        </div>
+
+        {/* Trust & Credibility */}
+        <TrustBadgesSection className="mt-8" />
       </div>
 
       {/* Flight Comparison Modal */}

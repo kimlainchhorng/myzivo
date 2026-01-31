@@ -548,16 +548,16 @@ const HotelBooking = () => {
           </section>
         )}
 
-        {/* Why Book With Us */}
+        {/* Why Book With Us - Affiliate Compliant */}
         {!searchResults && (
           <section className="py-12 border-t border-border/50">
             <div className="container mx-auto px-4">
-              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Book With ZIVO Hotels</h2>
+              <h2 className="font-display text-xl font-bold mb-8 text-center">Why Search With ZIVO Hotels</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { icon: "💰", title: "Best Price Guarantee", desc: "Find a lower price? We'll match it" },
-                  { icon: "🔒", title: "Secure Booking", desc: "Your data is always protected" },
-                  { icon: "⚡", title: "Instant Confirmation", desc: "Get confirmed in seconds" },
+                  { icon: "🔍", title: "Compare 500+ Sites", desc: "Find the best hotel deals" },
+                  { icon: "🔒", title: "Secure Redirect", desc: "Book safely with our partners" },
+                  { icon: "⚡", title: "Real-Time Prices", desc: "Live availability & rates" },
                   { icon: "🎧", title: "24/7 Support", desc: "We're here whenever you need" },
                 ].map((item, index) => (
                   <div
@@ -571,6 +571,12 @@ const HotelBooking = () => {
                   </div>
                 ))}
               </div>
+              
+              {/* Affiliate Disclosure */}
+              <p className="text-center text-xs text-muted-foreground mt-8 max-w-2xl mx-auto">
+                ZIVO may earn a commission when you book through our partner links at no extra cost to you.{' '}
+                <a href="/affiliate-disclosure" className="text-amber-500 hover:underline">Learn more</a>
+              </p>
             </div>
           </section>
         )}
