@@ -82,10 +82,16 @@ import AppFeatures from "@/components/shared/AppFeatures";
 import HotelNeighborhood from "@/components/hotel/HotelNeighborhood";
 import HotelSustainability from "@/components/hotel/HotelSustainability";
 import HotelPetFriendly from "@/components/hotel/HotelPetFriendly";
+import HotelSpaServices from "@/components/hotel/HotelSpaServices";
+import HotelLoyaltyCalculator from "@/components/hotel/HotelLoyaltyCalculator";
+import HotelKidsAmenities from "@/components/hotel/HotelKidsAmenities";
 import WeatherWidget from "@/components/shared/WeatherWidget";
 import PackingList from "@/components/shared/PackingList";
 import TripPlanner from "@/components/shared/TripPlanner";
 import EmergencyContacts from "@/components/shared/EmergencyContacts";
+import CurrencyConverter from "@/components/shared/CurrencyConverter";
+import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
+import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
 
 // Popular destinations
 const popularCities = [
@@ -710,6 +716,24 @@ const HotelBooking = () => {
 
         {/* Pet Friendly */}
         {!searchResults && <HotelPetFriendly />}
+
+        {/* Spa Services */}
+        {!searchResults && <HotelSpaServices />}
+
+        {/* Loyalty Calculator */}
+        {!searchResults && <HotelLoyaltyCalculator />}
+
+        {/* Kids Amenities */}
+        {!searchResults && <HotelKidsAmenities />}
+
+        {/* Currency Converter */}
+        {!searchResults && <CurrencyConverter />}
+
+        {/* Time Zone Converter */}
+        {!searchResults && <TimeZoneConverter />}
+
+        {/* Travel Insurance */}
+        {!searchResults && <TravelInsuranceCompare />}
 
         {/* Weather Widget */}
         {!searchResults && <WeatherWidget />}

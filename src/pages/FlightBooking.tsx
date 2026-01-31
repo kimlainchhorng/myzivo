@@ -47,6 +47,8 @@ import FlightTravelTips from "@/components/flight/FlightTravelTips";
 import FlightPriceHistory from "@/components/flight/FlightPriceHistory";
 import FlightAirportInfo from "@/components/flight/FlightAirportInfo";
 import FlightDelayPredictor from "@/components/flight/FlightDelayPredictor";
+import FlightLoungeAccess from "@/components/flight/FlightLoungeAccess";
+import FlightVisaChecker from "@/components/flight/FlightVisaChecker";
 import LiveChatWidget from "@/components/shared/LiveChatWidget";
 import LocalExperiences from "@/components/shared/LocalExperiences";
 import MobileAppBanner from "@/components/shared/MobileAppBanner";
@@ -60,6 +62,9 @@ import WeatherWidget from "@/components/shared/WeatherWidget";
 import PackingList from "@/components/shared/PackingList";
 import TripPlanner from "@/components/shared/TripPlanner";
 import EmergencyContacts from "@/components/shared/EmergencyContacts";
+import CurrencyConverter from "@/components/shared/CurrencyConverter";
+import TimeZoneConverter from "@/components/shared/TimeZoneConverter";
+import TravelInsuranceCompare from "@/components/shared/TravelInsuranceCompare";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -334,6 +339,21 @@ const FlightBooking = () => {
 
             {/* Delay Predictor */}
             <FlightDelayPredictor />
+
+            {/* Lounge Access */}
+            <FlightLoungeAccess />
+
+            {/* Visa Checker */}
+            <FlightVisaChecker />
+
+            {/* Currency Converter */}
+            <CurrencyConverter />
+
+            {/* Time Zone Converter */}
+            <TimeZoneConverter />
+
+            {/* Travel Insurance Compare */}
+            <TravelInsuranceCompare />
 
             {/* Weather Widget */}
             <WeatherWidget />
