@@ -36,6 +36,9 @@ import FlightAirportGuide from "@/components/flight/FlightAirportGuide";
 import FlightClassComparison from "@/components/flight/FlightClassComparison";
 import FlightBookingTips from "@/components/flight/FlightBookingTips";
 import FlightDestinationInspiration from "@/components/flight/FlightDestinationInspiration";
+import FlightPriceHistory from "@/components/flight/FlightPriceHistory";
+import FlightAlternativeDates from "@/components/flight/FlightAlternativeDates";
+import FlightMilesCalculator from "@/components/flight/FlightMilesCalculator";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
