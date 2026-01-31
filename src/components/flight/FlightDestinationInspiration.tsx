@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar } from "lucide-react";
+import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 const destinations = [
   {
@@ -87,7 +88,7 @@ const FlightDestinationInspiration = () => {
           {destinations.map((dest, index) => (
             <button
               key={dest.id}
-              onClick={() => navigate("/book-flight")}
+              onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
               className={cn(
                 "group relative p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
                 "text-left transition-all duration-300 hover:border-sky-500/30 hover:shadow-xl",
@@ -119,7 +120,10 @@ const FlightDestinationInspiration = () => {
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                 <div>
                   <p className="text-xs text-muted-foreground">From</p>
-                  <p className="text-xl font-bold text-sky-400">${dest.fromPrice}</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-xl font-bold text-sky-400">${dest.fromPrice}</p>
+                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Calendar className="w-3 h-3" />
@@ -132,12 +136,12 @@ const FlightDestinationInspiration = () => {
 
         <div className="text-center mt-8">
           <Button 
-            onClick={() => navigate("/book-flight")}
+            onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
             variant="outline" 
-            className="rounded-xl"
+            className="rounded-xl gap-2"
           >
             Explore All Destinations
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
       </div>
