@@ -102,7 +102,14 @@ import LoyaltyTierWidget from "@/components/shared/LoyaltyTierWidget";
 import TripComparisonWidget from "@/components/shared/TripComparisonWidget";
 import RefundTrackerWidget from "@/components/shared/RefundTrackerWidget";
 import TripSharingWidget from "@/components/shared/TripSharingWidget";
-
+import FlightPriceHistoryWidget from "@/components/shared/FlightPriceHistoryWidget";
+import FlightDelayPredictorWidget from "@/components/shared/FlightDelayPredictorWidget";
+import AirportGuideWidget from "@/components/shared/AirportGuideWidget";
+import BaggageCalculatorWidget from "@/components/shared/BaggageCalculatorWidget";
+import SeatSelectionWidget from "@/components/shared/SeatSelectionWidget";
+import MealPreferenceWidget from "@/components/shared/MealPreferenceWidget";
+import CheckInReminderWidget from "@/components/shared/CheckInReminderWidget";
+import BoardingPassWidget from "@/components/shared/BoardingPassWidget";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 
@@ -550,6 +557,65 @@ const FlightBooking = () => {
             <section className="py-8 border-t border-border/50">
               <div className="container mx-auto px-4 max-w-4xl">
                 <EmergencySupportWidget destination={toCity.split(" (")[0] || "Paris"} />
+              </div>
+            </section>
+
+            {/* Pre-Flight Tools - Price & Delay Analysis */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Pre-Flight Intelligence</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <FlightPriceHistoryWidget route={`${fromCode} → ${toCode}`} />
+                  <FlightDelayPredictorWidget 
+                    flightNumber="AA 1234" 
+                    route={`${fromCode} → ${toCode}`} 
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* Airport & Baggage Guide */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <AirportGuideWidget 
+                    airportCode={fromCode} 
+                    airportName={fromCity.split(" (")[0] || "Los Angeles International"} 
+                  />
+                  <BaggageCalculatorWidget includedBags={1} maxWeight={23} />
+                </div>
+              </div>
+            </section>
+
+            {/* Seat & Meal Selection */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Customize Your Flight</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <SeatSelectionWidget />
+                  <MealPreferenceWidget />
+                </div>
+              </div>
+            </section>
+
+            {/* Check-In & Boarding */}
+            <section className="py-8 border-t border-border/50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-xl font-bold text-center mb-6">Ready to Fly</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+                  <CheckInReminderWidget 
+                    flightNumber="AA 1234" 
+                    airline="American Airlines" 
+                  />
+                  <BoardingPassWidget 
+                    passengerName="JOHN DOE"
+                    flightNumber="AA 1234"
+                    departureCity={fromCity.split(" (")[0] || "Los Angeles"}
+                    arrivalCity={toCity.split(" (")[0] || "New York"}
+                    departureCode={fromCode}
+                    arrivalCode={toCode}
+                  />
+                </div>
               </div>
             </section>
 
