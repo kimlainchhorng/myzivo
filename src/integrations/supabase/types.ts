@@ -7229,6 +7229,45 @@ export type Database = {
           },
         ]
       }
+      driver_earnings_summary: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          earning_type: string | null
+          id: string | null
+          net_amount: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          earning_type?: string | null
+          id?: string | null
+          net_amount?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          earning_type?: string | null
+          id?: string | null
+          net_amount?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_earnings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers_public: {
         Row: {
           avatar_url: string | null
@@ -7546,6 +7585,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       rental_cars_public: {
         Row: {

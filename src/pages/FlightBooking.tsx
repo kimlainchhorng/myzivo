@@ -44,6 +44,9 @@ import FlightBaggageOptions from "@/components/flight/FlightBaggageOptions";
 import FlightMealPreorder from "@/components/flight/FlightMealPreorder";
 import FlightInsuranceUpsell from "@/components/flight/FlightInsuranceUpsell";
 import FlightTravelTips from "@/components/flight/FlightTravelTips";
+import FlightPriceHistory from "@/components/flight/FlightPriceHistory";
+import FlightAirportInfo from "@/components/flight/FlightAirportInfo";
+import FlightDelayPredictor from "@/components/flight/FlightDelayPredictor";
 import LiveChatWidget from "@/components/shared/LiveChatWidget";
 import LocalExperiences from "@/components/shared/LocalExperiences";
 import MobileAppBanner from "@/components/shared/MobileAppBanner";
@@ -53,6 +56,10 @@ import DestinationGuides from "@/components/shared/DestinationGuides";
 import TravelCalendar from "@/components/shared/TravelCalendar";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import AppFeatures from "@/components/shared/AppFeatures";
+import WeatherWidget from "@/components/shared/WeatherWidget";
+import PackingList from "@/components/shared/PackingList";
+import TripPlanner from "@/components/shared/TripPlanner";
+import EmergencyContacts from "@/components/shared/EmergencyContacts";
 
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
@@ -319,11 +326,32 @@ const FlightBooking = () => {
             {/* Airport Guide */}
             <FlightAirportGuide />
 
+            {/* Airport Info */}
+            <FlightAirportInfo />
+
+            {/* Price History */}
+            <FlightPriceHistory />
+
+            {/* Delay Predictor */}
+            <FlightDelayPredictor />
+
+            {/* Weather Widget */}
+            <WeatherWidget />
+
             {/* Booking Tips */}
             <FlightBookingTips />
 
             {/* Travel Tips */}
             <FlightTravelTips />
+
+            {/* Trip Planner */}
+            <TripPlanner />
+
+            {/* Packing List */}
+            <PackingList />
+
+            {/* Emergency Contacts */}
+            <EmergencyContacts />
 
             {/* Travel Calendar */}
             <TravelCalendar />

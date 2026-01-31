@@ -75,6 +75,12 @@ import CarFleetShowcase from "@/components/car/CarFleetShowcase";
 import TravelBlog from "@/components/shared/TravelBlog";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import AppFeatures from "@/components/shared/AppFeatures";
+import CarPickupMap from "@/components/car/CarPickupMap";
+import CarFuelPolicy from "@/components/car/CarFuelPolicy";
+import WeatherWidget from "@/components/shared/WeatherWidget";
+import PackingList from "@/components/shared/PackingList";
+import TripPlanner from "@/components/shared/TripPlanner";
+import EmergencyContacts from "@/components/shared/EmergencyContacts";
 
 // Popular locations
 const popularLocations = [
@@ -722,6 +728,24 @@ const CarRentalBooking = () => {
         {/* Travel Blog */}
         {!searchResults && <TravelBlog />}
 
+        {/* Pickup Map */}
+        {!searchResults && <CarPickupMap />}
+
+        {/* Fuel Policy */}
+        {!searchResults && <CarFuelPolicy />}
+
+        {/* Weather Widget */}
+        {!searchResults && <WeatherWidget />}
+
+        {/* Trip Planner */}
+        {!searchResults && <TripPlanner />}
+
+        {/* Packing List */}
+        {!searchResults && <PackingList />}
+
+        {/* Emergency Contacts */}
+        {!searchResults && <EmergencyContacts />}
+
         {/* App Features */}
         {!searchResults && <AppFeatures />}
 
@@ -742,6 +766,9 @@ const CarRentalBooking = () => {
 
         {/* Trust Indicators */}
         {!searchResults && <CarTrustIndicators />}
+
+        {/* Live Chat Widget */}
+        <LiveChatWidget />
       </main>
 
       {/* Selected Car Summary */}
