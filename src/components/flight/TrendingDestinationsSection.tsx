@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, TrendingUp, Zap, RefreshCw } from "lucide-react";
+import { ArrowRight, TrendingUp, Info } from "lucide-react";
 import { useTrendingDestinations } from "@/hooks/useTrendingFlights";
 
 interface TrendingDestinationsSectionProps {
@@ -10,7 +9,7 @@ interface TrendingDestinationsSectionProps {
 }
 
 export function TrendingDestinationsSection({ onSelectDestination }: TrendingDestinationsSectionProps) {
-  const { destinations, isLoading, hasRealPrices, refetch } = useTrendingDestinations();
+  const { destinations, isLoading, disclaimer } = useTrendingDestinations();
 
   return (
     <section className="py-12 border-t border-border/50">
@@ -18,15 +17,10 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-display text-2xl font-bold">Popular Destinations</h2>
           <div className="flex items-center gap-2">
-            {hasRealPrices && (
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                <Zap className="w-3 h-3 mr-1" />
-                Live Prices
-              </Badge>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isLoading}>
-              <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-            </Button>
+            <Badge variant="outline" className="text-xs text-muted-foreground">
+              <Info className="w-3 h-3 mr-1" />
+              Indicative Prices
+            </Badge>
           </div>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -37,11 +31,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
               className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-300 touch-manipulation active:scale-[0.98]"
               style={{ animationDelay: `${index * 75}ms` }}
             >
-              <Card
-                className={`glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative ${
-                  dest.isRealPrice ? "border-emerald-500/20" : ""
-                }`}
-              >
+              <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative">
                 {dest.trending && (
                   <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -64,8 +54,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                           <Skeleton className="h-5 w-16" />
                         ) : (
                           <>
-                            <p className="text-sky-400 font-bold">From ${dest.price}</p>
-                            {dest.isRealPrice && <Zap className="w-3 h-3 text-emerald-400" />}
+                            <p className="text-sky-400 font-bold">From ${dest.price}*</p>
                           </>
                         )}
                         <span className="text-xs text-muted-foreground">round trip</span>
@@ -78,6 +67,10 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
             </div>
           ))}
         </div>
+        {/* Price Disclaimer */}
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          {disclaimer}
+        </p>
       </div>
     </section>
   );
