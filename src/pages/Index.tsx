@@ -30,6 +30,7 @@ import WhyZivo from "@/components/home/WhyZivo";
 import PopularDestinations from "@/components/home/PopularDestinations";
 import PlanYourTrip from "@/components/home/PlanYourTrip";
 import LaunchBanner from "@/components/home/LaunchBanner";
+import ZivoMoreSection from "@/components/home/ZivoMoreSection";
 import { AdCreativeShowcase, OGImageMeta } from "@/components/marketing";
 
 // Quick services for mobile
@@ -277,6 +278,9 @@ const DesktopHomePage = () => {
         
         {/* Why ZIVO - Trust & Value */}
         <WhyZivo />
+        
+        {/* ZIVO More Section - Rides/Eats Coming Soon + Extras */}
+        <ZivoMoreSection />
         
         {/* Popular Destinations */}
         <PopularDestinations />

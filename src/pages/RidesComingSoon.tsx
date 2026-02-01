@@ -1,11 +1,11 @@
 /**
  * ZIVO Rides — Coming Soon
  * 
- * Placeholder page for the planned ride discovery service.
- * No booking buttons, no pricing, no checkout.
+ * Placeholder page for the planned transportation service.
+ * NO booking buttons, NO pricing, NO checkout, NO affiliate redirects.
  */
 
-import { Car, Clock, Bell, ArrowLeft, Sparkles } from "lucide-react";
+import { Car, Clock, ArrowLeft, Sparkles, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ const RidesComingSoon = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="ZIVO Rides — Coming Soon"
-        description="ZIVO Rides is a planned ride discovery and transportation platform. Coming soon to help you explore transportation options."
+        description="ZIVO Rides is a planned transportation service. It is not currently available for booking or payment."
       />
       
       <Header />
@@ -53,36 +53,44 @@ const RidesComingSoon = () => {
             {/* Title */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               ZIVO <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">Rides</span>
+              <span className="block text-2xl md:text-3xl mt-2 text-muted-foreground font-normal">
+                — Coming Soon
+              </span>
             </h1>
 
             {/* Description */}
-            <p className="text-lg text-muted-foreground mb-4 max-w-2xl mx-auto">
-              ZIVO Rides is a planned ride discovery and transportation platform.
-            </p>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              In the future, ZIVO Rides aims to help users explore transportation options 
-              such as airport rides and local transport services through trusted partners.
-            </p>
+            <div className="bg-muted/30 rounded-2xl p-6 mb-8 max-w-2xl mx-auto border border-border/50">
+              <p className="text-lg text-foreground mb-4">
+                ZIVO Rides is a planned transportation service.
+              </p>
+              <p className="text-muted-foreground">
+                It is not currently available for booking or payment.
+              </p>
+            </div>
 
             {/* Status Card */}
-            <Card className="max-w-md mx-auto bg-muted/30 border-border/50">
+            <Card className="max-w-md mx-auto bg-card border-border/50">
               <CardContent className="p-6 text-center">
                 <Sparkles className="w-8 h-8 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">We're Building Something Great</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  ZIVO Rides is not currently accepting bookings or payments.
+                <h3 className="font-semibold text-lg mb-3">Need Airport Transfers Today?</h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  For airport transfers right now, explore ZIVO Extras.
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Stay tuned for updates on our ride discovery service.
-                </p>
+                <Button 
+                  onClick={() => navigate("/extras")}
+                  className="gap-2 bg-gradient-to-r from-primary to-teal-400 text-white"
+                >
+                  Explore Airport Transfers
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
               </CardContent>
             </Card>
           </div>
 
-          {/* CTA Section */}
+          {/* Explore Active Services */}
           <div className="max-w-xl mx-auto text-center">
             <p className="text-sm text-muted-foreground mb-6">
-              In the meantime, explore our active travel services:
+              Explore our active travel services:
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Button onClick={() => navigate("/book-flight")} variant="outline" className="gap-2">

@@ -2,10 +2,10 @@
  * ZIVO Eats — Coming Soon
  * 
  * Placeholder page for the planned food discovery service.
- * No ordering buttons, no pricing, no checkout.
+ * NO ordering buttons, NO pricing, NO checkout, NO affiliate redirects.
  */
 
-import { UtensilsCrossed, Clock, Bell, ArrowLeft, Sparkles } from "lucide-react";
+import { UtensilsCrossed, Clock, ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +20,7 @@ const EatsComingSoon = () => {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="ZIVO Eats — Coming Soon"
-        description="ZIVO Eats is a future food discovery concept. Coming soon to help you explore dining options through partner platforms."
+        description="ZIVO Eats is a planned food discovery and delivery service. It is not currently available for ordering or payment."
       />
       
       <Header />
@@ -53,33 +53,35 @@ const EatsComingSoon = () => {
             {/* Title */}
             <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               ZIVO <span className="bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">Eats</span>
+              <span className="block text-2xl md:text-3xl mt-2 text-muted-foreground font-normal">
+                — Coming Soon
+              </span>
             </h1>
 
             {/* Description */}
-            <p className="text-lg text-muted-foreground mb-4 max-w-2xl mx-auto">
-              ZIVO Eats is a future food discovery concept by ZIVO.
-            </p>
-            <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-              ZIVO Eats is designed to help users explore dining options and food 
-              services through partner platforms.
-            </p>
+            <div className="bg-muted/30 rounded-2xl p-6 mb-8 max-w-2xl mx-auto border border-border/50">
+              <p className="text-lg text-foreground mb-4">
+                ZIVO Eats is a planned food discovery and delivery service.
+              </p>
+              <p className="text-muted-foreground">
+                It is not currently available for ordering or payment.
+              </p>
+            </div>
 
             {/* Status Card */}
-            <Card className="max-w-md mx-auto bg-muted/30 border-border/50">
+            <Card className="max-w-md mx-auto bg-card border-border/50">
               <CardContent className="p-6 text-center">
                 <Sparkles className="w-8 h-8 text-orange-500 mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Cooking Up Something Special</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  ZIVO Eats does not process orders or payments.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  We're planning to bring you the best dining discovery experience.
+                <h3 className="font-semibold text-lg mb-3">Cooking Up Something Special</h3>
+                <p className="text-sm text-muted-foreground">
+                  We're planning to bring you the best food discovery experience.
+                  Stay tuned for updates!
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* CTA Section */}
+          {/* Explore Active Services */}
           <div className="max-w-xl mx-auto text-center">
             <p className="text-sm text-muted-foreground mb-6">
               In the meantime, explore our active travel services:
