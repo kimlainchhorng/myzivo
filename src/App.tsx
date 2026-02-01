@@ -50,6 +50,7 @@ const FlightResults = lazy(() => import("./pages/FlightResults"));
 const FlightDetails = lazy(() => import("./pages/FlightDetails"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
+const HotelsPage = lazy(() => import("./pages/HotelsPage"));
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
 const CarRentalLanding = lazy(() => import("./pages/CarRentalLanding"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -171,10 +172,11 @@ const App = () => (
                 <Route path="/flights/results" element={<FlightResults />} />
                 <Route path="/flights/details/:id" element={<FlightDetails />} />
                 
-                {/* SEO Hotel Landing Pages */}
-                <Route path="/hotels" element={<HotelLanding />} />
-                <Route path="/hotels/:city" element={<HotelLanding />} />
-                <Route path="/hotels/in-:city" element={<HotelLanding />} />
+                {/* Hotels Pages */}
+                <Route path="/hotels" element={<HotelsPage />} />
+                <Route path="/hotels/:city" element={<HotelsPage />} />
+                <Route path="/hotels/in-:city" element={<HotelsPage />} />
+                <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 
                 {/* SEO Car Rental Landing Pages */}
                 <Route path="/car-rental" element={<CarRentalLanding />} />
