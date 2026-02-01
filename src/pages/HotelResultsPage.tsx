@@ -10,7 +10,6 @@ import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import { HotelSearchFormPro } from "@/components/search";
 import HotelFiltersComponent, { HotelFilters } from "@/components/hotels/HotelFilters";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -31,6 +30,7 @@ import {
   AffiliateDisclaimer,
   ResultsBreadcrumbs,
   ResultsFAQ,
+  HotelEditSearchForm,
 } from "@/components/results";
 import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch";
 import { getCityBySlug } from "@/data/cities";
@@ -254,14 +254,9 @@ export default function HotelResultsPage() {
             { label: `${adults} guest${adults !== 1 ? "s" : ""}, ${rooms} room${rooms !== 1 ? "s" : ""}` },
           ]}
           searchForm={
-            <HotelSearchFormPro
-              initialCity={citySlug}
-              initialCityDisplay={cityName}
-              initialCheckIn={checkIn ? parseISO(checkIn) : undefined}
-              initialCheckOut={checkOut ? parseISO(checkOut) : undefined}
-              initialAdults={adults}
-              initialRooms={rooms}
-              navigateOnSearch={true}
+            <HotelEditSearchForm
+              onSearch={() => {}}
+              onCancel={() => {}}
             />
           }
         />

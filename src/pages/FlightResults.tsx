@@ -60,6 +60,8 @@ import {
   AffiliateDisclaimer,
   ResultsBreadcrumbs,
   ResultsFAQ,
+  FlightEditSearchForm,
+  useEditSearchModal,
 } from "@/components/results";
 import { FlightSearchFormPro } from "@/components/search";
 
@@ -568,7 +570,10 @@ const FlightResults = () => {
             { label: cabinClass.charAt(0).toUpperCase() + cabinClass.slice(1) },
           ]}
           searchForm={
-            <FlightSearchFormPro navigateOnSearch={true} />
+            <FlightEditSearchForm
+              onSearch={() => {}}
+              onCancel={() => {}}
+            />
           }
         />
 
