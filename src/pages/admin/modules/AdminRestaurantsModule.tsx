@@ -184,7 +184,7 @@ export default function AdminRestaurantsModule() {
                       <td className="p-3 hidden md:table-cell">
                         <div className="flex items-center gap-1 text-xs">
                           <MapPin className="w-3 h-3" />
-                          {restaurant.city}
+                          <span className="truncate max-w-[120px]">{restaurant.address}</span>
                         </div>
                       </td>
                       <td className="p-3 hidden lg:table-cell">
@@ -252,8 +252,8 @@ export default function AdminRestaurantsModule() {
                   <p className="font-medium">{selectedRestaurant.cuisine_type || "Various"}</p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">City</Label>
-                  <p className="font-medium">{selectedRestaurant.city}</p>
+                  <Label className="text-xs text-muted-foreground">Location</Label>
+                  <p className="font-medium truncate">{selectedRestaurant.address}</p>
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground">Rating</Label>
