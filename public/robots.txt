@@ -1,6 +1,7 @@
 # ZIVO Travel - robots.txt
 # https://hizivo.com
 
+# Primary Search Engines
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -9,6 +10,7 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
+# Social Media Crawlers
 User-agent: Twitterbot
 Allow: /
 
@@ -18,26 +20,38 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
+# All Other Bots
 User-agent: *
 Allow: /
 
-# Main Travel Pages
+# ===========================
+# PUBLIC PAGES - ALLOW ALL
+# ===========================
+
+# Main Travel Services
 Allow: /flights
 Allow: /flights/*
 Allow: /hotels
 Allow: /hotels/*
 Allow: /rent-car
+Allow: /rent-car/*
 Allow: /car-rental
 Allow: /car-rental/*
 Allow: /rides
 Allow: /eats
 Allow: /extras
+Allow: /travel-extras
+Allow: /things-to-do
+Allow: /activities
+Allow: /ground-transport
+Allow: /travel-insurance
 
 # Company & Info Pages
 Allow: /about
 Allow: /how-it-works
 Allow: /partners
 Allow: /creators
+Allow: /creators/*
 Allow: /contact
 Allow: /help
 
@@ -45,24 +59,45 @@ Allow: /help
 Allow: /terms
 Allow: /privacy
 Allow: /affiliate-disclosure
+Allow: /accessibility
 
-# Block internal/admin pages
+# ===========================
+# PRIVATE PAGES - DISALLOW
+# ===========================
+
+# Admin & Dashboard
 Disallow: /admin
 Disallow: /admin/*
-Disallow: /driver
-Disallow: /restaurant
 Disallow: /dashboard
+Disallow: /dashboard/*
+
+# Driver & Restaurant Portals
+Disallow: /driver
+Disallow: /driver/*
+Disallow: /restaurant
+Disallow: /restaurant/*
+
+# User Account Pages
 Disallow: /profile
+Disallow: /profile/*
+Disallow: /settings
+
+# Authentication
 Disallow: /auth-callback
-Disallow: /out
 Disallow: /login
 Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 
-# Block ad landing pages from organic index (paid traffic only)
+# Tracking & Redirects
+Disallow: /out
+Disallow: /out/*
+
+# Ad Landing Pages (paid traffic only)
 Disallow: /ads/
 Disallow: /ads/*
 
-# Sitemap location
+# ===========================
+# SITEMAP
+# ===========================
 Sitemap: https://hizivo.com/sitemap.xml
