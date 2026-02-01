@@ -74,7 +74,8 @@ export function IndicativePriceAlert({ service, className }: IndicativePriceAler
     <Alert className={cn(config.border, config.bg, className)}>
       <Info className={cn("h-4 w-4", config.color)} />
       <AlertDescription className="text-sm">
-        <strong>Indicative prices</strong> – View real-time {serviceLabel} prices on partner sites.
+        <strong>Indicative prices</strong> – Prices are estimates and may change. 
+        Final price shown on partner site. View real-time {serviceLabel} prices by clicking "View Deal".
       </AlertDescription>
     </Alert>
   );
@@ -90,9 +91,11 @@ export function AffiliateDisclaimer({ className }: AffiliateDisclaimerProps) {
     <section className={cn("py-8 border-t border-border/50 bg-muted/20", className)}>
       <div className="container mx-auto px-4 text-center">
         <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          *Prices shown are indicative estimates and may change. Final prices are displayed on partner booking sites.
-          ZIVO is a travel comparison platform and may earn a commission when users book through partner links.
-          All bookings are completed directly on partner websites. We do not handle payments or reservations.
+          *Prices shown are indicative estimates only and may change due to real-time availability, 
+          taxes, fees, and supplier pricing. Final prices are displayed on partner booking sites.
+          ZIVO is a meta-search travel comparison platform – we do not sell tickets or handle payments. 
+          All bookings are completed directly with our trusted travel partners.
+          ZIVO may earn a commission when users book through partner links.
         </p>
       </div>
     </section>
