@@ -68,13 +68,14 @@ import { FlightResultsSkeleton, FlightResultsHeaderSkeleton } from "@/components
 const FlightResults = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [sortBy, setSortBy] = useState<"price" | "duration" | "departure" | "best">("best");
-  const [maxPrice, setMaxPrice] = useState(2000);
+  const [sortBy, setSortBy] = useState<"price" | "duration" | "departure" | "best">("price");
+  const [maxPrice, setMaxPrice] = useState(5000);
   const [stopsFilter, setStopsFilter] = useState<number[]>([]);
   const [timeFilter, setTimeFilter] = useState<string[]>([]);
+  const [airlineFilter, setAirlineFilter] = useState<string[]>([]);
   const [savedFlights, setSavedFlights] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
-
+  const [currency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
   // Parse and validate URL parameters using IATA codes
   const parsedParams = useMemo(() => parseFlightSearchParams(searchParams), [searchParams]);
   
@@ -144,6 +145,10 @@ const FlightResults = () => {
       filtered = filtered.filter(f => stopsFilter.includes(f.stops));
     }
 
+    if (airlineFilter.length > 0) {
+      filtered = filtered.filter(f => airlineFilter.includes(f.airlineCode));
+    }
+
     if (timeFilter.length > 0) {
       filtered = filtered.filter(f => {
         const hour = parseInt(f.departure.time.split(":")[0]);
@@ -174,7 +179,30 @@ const FlightResults = () => {
           return 0;
       }
     });
-  }, [realFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, isValid]);
+  }, [realFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, airlineFilter, isValid]);
+
+  // Get unique airlines from unfiltered flights for filter options
+  const availableAirlines = useMemo(() => {
+    const combined = [...(realFlights || []), ...generatedFlights];
+    const airlineMap = new Map<string, { code: string; name: string; count: number }>();
+    
+    combined.forEach(f => {
+      if (airlineMap.has(f.airlineCode)) {
+        const existing = airlineMap.get(f.airlineCode)!;
+        existing.count++;
+      } else {
+        airlineMap.set(f.airlineCode, { code: f.airlineCode, name: f.airline, count: 1 });
+      }
+    });
+    
+    return Array.from(airlineMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [realFlights, generatedFlights]);
+
+  // Format price with currency
+  const formatPrice = (price: number) => {
+    const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
+    return `${symbols[currency]}${price.toLocaleString()}`;
+  };
 
   const handleSelectFlight = (flight: GeneratedFlight) => {
     sessionStorage.setItem("selectedFlight", JSON.stringify(flight));
@@ -211,19 +239,19 @@ const FlightResults = () => {
       <div>
         <h3 className="font-semibold mb-3 flex items-center gap-2">
           <TrendingDown className="w-4 h-4 text-emerald-500" />
-          Max Price: ${maxPrice}
+          Max Price: {formatPrice(maxPrice)}
         </h3>
         <Slider
           value={[maxPrice]}
           onValueChange={(v) => setMaxPrice(v[0])}
           min={100}
-          max={3000}
+          max={5000}
           step={50}
           className="py-2"
         />
         <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>$100</span>
-          <span>$3,000</span>
+          <span>{formatPrice(100)}</span>
+          <span>{formatPrice(5000)}</span>
         </div>
       </div>
 
@@ -255,6 +283,46 @@ const FlightResults = () => {
           ))}
         </div>
       </div>
+
+      {/* Airlines */}
+      {availableAirlines.length > 0 && (
+        <div>
+          <h3 className="font-semibold mb-3 flex items-center gap-2">
+            <Plane className="w-4 h-4 text-sky-500" />
+            Airlines
+          </h3>
+          <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+            {availableAirlines.map(airline => (
+              <label key={airline.code} className="flex items-center gap-3 cursor-pointer group">
+                <Checkbox
+                  checked={airlineFilter.includes(airline.code)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setAirlineFilter(prev => [...prev, airline.code]);
+                    } else {
+                      setAirlineFilter(prev => prev.filter(a => a !== airline.code));
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <img 
+                    src={getAirlineLogo(airline.code)}
+                    alt={airline.name}
+                    className="w-5 h-5 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${airline.code}&background=0ea5e9&color=fff&size=24`;
+                    }}
+                  />
+                  <span className="group-hover:text-foreground transition-colors truncate text-sm">
+                    {airline.name}
+                  </span>
+                </div>
+                <Badge variant="secondary" className="text-xs shrink-0">{airline.count}</Badge>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Departure Time */}
       <div>
@@ -291,14 +359,15 @@ const FlightResults = () => {
       </div>
 
       {/* Clear Filters */}
-      {(stopsFilter.length > 0 || timeFilter.length > 0 || maxPrice < 2000) && (
+      {(stopsFilter.length > 0 || timeFilter.length > 0 || airlineFilter.length > 0 || maxPrice < 5000) && (
         <Button
           variant="outline"
           className="w-full gap-2"
           onClick={() => {
             setStopsFilter([]);
             setTimeFilter([]);
-            setMaxPrice(2000);
+            setAirlineFilter([]);
+            setMaxPrice(5000);
           }}
         >
           <X className="w-4 h-4" />
@@ -436,9 +505,9 @@ const FlightResults = () => {
                       <Filter className="w-5 h-5 text-sky-500" />
                       Filters
                     </h2>
-                    {(stopsFilter.length > 0 || timeFilter.length > 0) && (
+                    {(stopsFilter.length > 0 || timeFilter.length > 0 || airlineFilter.length > 0) && (
                       <Badge className="bg-sky-500/20 text-sky-500">
-                        {stopsFilter.length + timeFilter.length} active
+                        {stopsFilter.length + timeFilter.length + airlineFilter.length} active
                       </Badge>
                     )}
                   </div>
@@ -470,8 +539,8 @@ const FlightResults = () => {
                       <Button variant="outline" className="lg:hidden gap-2">
                         <SlidersHorizontal className="w-4 h-4" />
                         Filters
-                        {(stopsFilter.length > 0 || timeFilter.length > 0) && (
-                          <Badge className="bg-sky-500 text-white ml-1">{stopsFilter.length + timeFilter.length}</Badge>
+                        {(stopsFilter.length > 0 || timeFilter.length > 0 || airlineFilter.length > 0) && (
+                          <Badge className="bg-sky-500 text-white ml-1">{stopsFilter.length + timeFilter.length + airlineFilter.length}</Badge>
                         )}
                       </Button>
                     </SheetTrigger>
@@ -532,7 +601,7 @@ const FlightResults = () => {
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">From</p>
-                        <p className="text-xl font-bold text-emerald-500">${lowestPrice}*</p>
+                        <p className="text-xl font-bold text-emerald-500">{formatPrice(lowestPrice)}*</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -693,7 +762,7 @@ const FlightResults = () => {
                             <div className="p-4 lg:p-6 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-muted/20">
                               <div className="text-center">
                                 <p className="text-xs text-muted-foreground">From</p>
-                                <p className="text-3xl lg:text-4xl font-bold text-sky-500">${flight.price.toLocaleString()}</p>
+                                <p className="text-3xl lg:text-4xl font-bold text-sky-500">{formatPrice(flight.price)}</p>
                                 <p className="text-[10px] text-muted-foreground">per person*</p>
                               </div>
                               <div className="flex flex-col gap-2">
@@ -743,7 +812,8 @@ const FlightResults = () => {
                   onClearFilters={() => {
                     setStopsFilter([]);
                     setTimeFilter([]);
-                    setMaxPrice(2000);
+                    setAirlineFilter([]);
+                    setMaxPrice(5000);
                   }}
                   onModifySearch={() => navigate("/flights")}
                   origin={originIata}

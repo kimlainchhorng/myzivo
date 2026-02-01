@@ -113,28 +113,41 @@ const getAirlineInfo = (code: string): { name: string; category: Airline['catego
   };
 };
 
-// Route-based indicative pricing (not real prices - for display only)
-const getIndicativePricing = (fromCode: string, toCode: string): { minPrice: number; maxPrice: number } => {
-  // Approximate distance-based pricing
-  const domesticRoutes = ['JFK-LAX', 'LAX-JFK', 'ORD-MIA', 'MIA-ORD', 'DFW-LAS', 'LAS-DFW', 'SFO-SEA', 'SEA-SFO'];
-  const transatlanticRoutes = ['JFK-LHR', 'LHR-JFK', 'LAX-LHR', 'JFK-CDG', 'ORD-FRA', 'MIA-MAD'];
-  const transpacificRoutes = ['LAX-NRT', 'SFO-HKG', 'JFK-HND', 'SEA-ICN'];
+// Calculate approximate distance between airports (Haversine formula)
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+// Route-based indicative pricing using actual airport coordinates
+const getIndicativePricing = (fromCode: string, toCode: string): { minPrice: number; maxPrice: number; duration: number } => {
+  const fromAirport = airports.find(a => a.code === fromCode);
+  const toAirport = airports.find(a => a.code === toCode);
   
-  const route = `${fromCode}-${toCode}`;
-  const reverseRoute = `${toCode}-${fromCode}`;
-  
-  if (domesticRoutes.includes(route) || domesticRoutes.includes(reverseRoute)) {
-    return { minPrice: 89, maxPrice: 299 };
-  }
-  if (transatlanticRoutes.includes(route) || transatlanticRoutes.includes(reverseRoute)) {
-    return { minPrice: 299, maxPrice: 899 };
-  }
-  if (transpacificRoutes.includes(route) || transpacificRoutes.includes(reverseRoute)) {
-    return { minPrice: 449, maxPrice: 1299 };
+  // Calculate distance-based pricing
+  let distance = 5000; // default for unknown airports
+  if (fromAirport && toAirport) {
+    distance = calculateDistance(fromAirport.lat, fromAirport.lng, toAirport.lat, toAirport.lng);
   }
   
-  // Default international pricing
-  return { minPrice: 199, maxPrice: 799 };
+  // Price per km varies by distance (longer = cheaper per km due to fixed costs)
+  const pricePerKm = distance < 1500 ? 0.12 : distance < 5000 ? 0.08 : distance < 10000 ? 0.06 : 0.05;
+  const basePrice = Math.round(distance * pricePerKm);
+  
+  // Duration estimate: ~800 km/h average including taxi, takeoff, landing
+  const flightDuration = Math.round((distance / 750) * 60 + 60); // Add 60 min for ground operations
+  
+  // Price range
+  const minPrice = Math.max(89, Math.round(basePrice * 0.7));
+  const maxPrice = Math.round(basePrice * 1.8);
+  
+  return { minPrice, maxPrice, duration: flightDuration };
 };
 
 // Generate indicative flights for display (affiliate redirect for real prices)
@@ -147,43 +160,48 @@ const generateIndicativeFlights = (
   const toAirport = airports.find(a => a.code === toCode);
   const pricing = getIndicativePricing(fromCode, toCode);
   
-  // Airlines that commonly fly various routes
-  const airlineCodes = ['AA', 'DL', 'UA', 'BA', 'AF', 'LH', 'EK', 'B6', 'AS'];
+  // Airlines that commonly fly various routes - mix of categories
+  const airlineCodes = ['AA', 'DL', 'UA', 'BA', 'AF', 'LH', 'EK', 'B6', 'AS', 'QR', 'SQ', 'WN'];
   const flights: GeneratedFlight[] = [];
   
-  // Generate 6-8 indicative flight options
-  const numFlights = 6 + Math.floor(Math.random() * 3);
+  // Generate 8-12 indicative flight options
+  const numFlights = 8 + Math.floor(Math.random() * 5);
   
   for (let i = 0; i < numFlights; i++) {
     const airlineCode = airlineCodes[i % airlineCodes.length];
     const airlineInfo = getAirlineInfo(airlineCode);
     
-    // Varied departure times
-    const depHour = 6 + (i * 2) % 16; // 6am to 10pm
+    // Varied departure times throughout the day
+    const depHour = 5 + (i * 2) % 18; // 5am to 11pm
     const depMinutes = [0, 15, 30, 45][i % 4];
     const depTimeStr = `${depHour.toString().padStart(2, '0')}:${depMinutes.toString().padStart(2, '0')}`;
     
-    // Flight duration based on route type
-    const baseDuration = pricing.maxPrice > 500 ? 480 : pricing.maxPrice > 300 ? 360 : 180;
-    const duration = baseDuration + (i * 15) % 60;
+    // Use calculated duration from pricing, with variation
+    const baseDuration = pricing.duration;
+    const durationVariation = (i % 3) * 20 - 20; // -20, 0, +20 minutes
+    const stopsVariation = i < 4 ? 0 : i < 8 ? 45 : 90; // stops add time
+    const duration = Math.max(60, baseDuration + durationVariation + stopsVariation);
     const hours = Math.floor(duration / 60);
     const minutes = duration % 60;
     const durationStr = `${hours}h ${minutes}m`;
     
     // Calculate arrival time
-    const arrHour = (depHour + hours) % 24;
-    const arrMinutes = (depMinutes + minutes) % 60;
-    const isNextDay = depHour + hours >= 24;
-    const arrTimeStr = isNextDay 
-      ? `${arrHour.toString().padStart(2, '0')}:${arrMinutes.toString().padStart(2, '0')}+1`
+    const totalMinutes = depHour * 60 + depMinutes + duration;
+    const arrHour = Math.floor(totalMinutes / 60) % 24;
+    const arrMinutes = totalMinutes % 60;
+    const daysAdded = Math.floor(totalMinutes / (24 * 60));
+    const arrTimeStr = daysAdded > 0
+      ? `${arrHour.toString().padStart(2, '0')}:${arrMinutes.toString().padStart(2, '0')}+${daysAdded}`
       : `${arrHour.toString().padStart(2, '0')}:${arrMinutes.toString().padStart(2, '0')}`;
     
-    // Indicative price (varies by airline category)
-    const priceMultiplier = airlineInfo.category === 'premium' ? 1.4 : airlineInfo.category === 'low-cost' ? 0.7 : 1;
-    const basePrice = pricing.minPrice + (i * (pricing.maxPrice - pricing.minPrice) / numFlights);
-    const indicativePrice = Math.round(basePrice * priceMultiplier);
-    
-    const stops = i < 3 ? 0 : i < 6 ? 1 : 2;
+    // Indicative price (varies by airline category and stops)
+    const categoryMultiplier = airlineInfo.category === 'premium' ? 1.5 : airlineInfo.category === 'low-cost' ? 0.65 : 1;
+    const stops = i < 4 ? 0 : i < 8 ? 1 : 2;
+    const stopsDiscount = stops === 0 ? 1 : stops === 1 ? 0.85 : 0.7;
+    const priceSpread = (i / numFlights) * (pricing.maxPrice - pricing.minPrice);
+    const basePrice = pricing.minPrice + priceSpread;
+    const indicativePrice = Math.round(basePrice * categoryMultiplier * stopsDiscount);
+
     
     flights.push({
       id: `indicative-${airlineCode}-${i}-${Date.now()}`,
