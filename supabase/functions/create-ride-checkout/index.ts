@@ -1,0 +1,156 @@
+/**
+ * Create Ride Checkout Session
+ * Creates a Stripe Checkout session for ride payments
+ */
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+interface RideCheckoutRequest {
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  pickup_address: string;
+  pickup_lat?: number;
+  pickup_lng?: number;
+  dropoff_address: string;
+  dropoff_lat?: number;
+  dropoff_lng?: number;
+  ride_type: "standard" | "xl" | "premium";
+  scheduled_at?: string;
+  notes?: string;
+  estimated_fare: number;
+  distance_miles?: number;
+  duration_minutes?: number;
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const body: RideCheckoutRequest = await req.json();
+    const {
+      customer_name,
+      customer_phone,
+      customer_email,
+      pickup_address,
+      pickup_lat,
+      pickup_lng,
+      dropoff_address,
+      dropoff_lat,
+      dropoff_lng,
+      ride_type,
+      scheduled_at,
+      notes,
+      estimated_fare,
+      distance_miles,
+      duration_minutes,
+    } = body;
+
+    // Validate required fields
+    if (!customer_name || !customer_phone || !pickup_address || !dropoff_address || !estimated_fare) {
+      throw new Error("Missing required fields");
+    }
+
+    // Create ride request in pending state
+    const { data: rideRequest, error: rideError } = await supabase
+      .from("ride_requests")
+      .insert({
+        customer_name,
+        customer_phone,
+        customer_email: customer_email || null,
+        pickup_address,
+        pickup_lat: pickup_lat || null,
+        pickup_lng: pickup_lng || null,
+        dropoff_address,
+        dropoff_lat: dropoff_lat || null,
+        dropoff_lng: dropoff_lng || null,
+        ride_type,
+        scheduled_at: scheduled_at || null,
+        notes: notes || null,
+        status: "pending_payment",
+        payment_status: "pending",
+        payment_amount: estimated_fare,
+        payment_currency: "usd",
+        estimated_fare_min: estimated_fare * 0.9,
+        estimated_fare_max: estimated_fare * 1.1,
+        distance_miles: distance_miles || null,
+        duration_minutes: duration_minutes || null,
+      })
+      .select()
+      .single();
+
+    if (rideError) {
+      console.error("Error creating ride request:", rideError);
+      throw new Error("Failed to create ride request");
+    }
+
+    // Initialize Stripe
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    // Create Stripe Checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      customer_email: customer_email || undefined,
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `ZIVO Ride - ${ride_type.charAt(0).toUpperCase() + ride_type.slice(1)}`,
+              description: `From: ${pickup_address}\nTo: ${dropoff_address}`,
+            },
+            unit_amount: Math.round(estimated_fare * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        type: "ride",
+        ride_request_id: rideRequest.id,
+        customer_name,
+        customer_phone,
+        ride_type,
+      },
+      success_url: `${req.headers.get("origin")}/rides/success?session_id={CHECKOUT_SESSION_ID}&request_id=${rideRequest.id}`,
+      cancel_url: `${req.headers.get("origin")}/rides?cancelled=true`,
+    });
+
+    // Update ride request with session ID
+    await supabase
+      .from("ride_requests")
+      .update({ stripe_checkout_session_id: session.id })
+      .eq("id", rideRequest.id);
+
+    return new Response(
+      JSON.stringify({ 
+        url: session.url,
+        session_id: session.id,
+        request_id: rideRequest.id,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+  } catch (error: unknown) {
+    console.error("Error:", error);
+    const message = error instanceof Error ? error.message : "An error occurred";
+    return new Response(
+      JSON.stringify({ error: message }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+    );
+  }
+});
