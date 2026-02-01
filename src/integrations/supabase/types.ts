@@ -2026,6 +2026,51 @@ export type Database = {
         }
         Relationships: []
       }
+      eats_zones: {
+        Row: {
+          city_name: string
+          created_at: string
+          delivery_fee_base: number
+          delivery_fee_per_mile: number
+          id: string
+          is_active: boolean
+          service_fee_percent: number
+          small_order_fee: number
+          small_order_threshold: number
+          tax_rate: number
+          updated_at: string
+          zone_code: string
+        }
+        Insert: {
+          city_name: string
+          created_at?: string
+          delivery_fee_base?: number
+          delivery_fee_per_mile?: number
+          id?: string
+          is_active?: boolean
+          service_fee_percent?: number
+          small_order_fee?: number
+          small_order_threshold?: number
+          tax_rate?: number
+          updated_at?: string
+          zone_code: string
+        }
+        Update: {
+          city_name?: string
+          created_at?: string
+          delivery_fee_base?: number
+          delivery_fee_per_mile?: number
+          id?: string
+          is_active?: boolean
+          service_fee_percent?: number
+          small_order_fee?: number
+          small_order_threshold?: number
+          tax_rate?: number
+          updated_at?: string
+          zone_code?: string
+        }
+        Relationships: []
+      }
       emergency_contacts: {
         Row: {
           created_at: string
@@ -2483,6 +2528,8 @@ export type Database = {
       }
       food_orders: {
         Row: {
+          admin_override_reason: string | null
+          admin_price_override: number | null
           created_at: string | null
           customer_email: string | null
           customer_id: string
@@ -2502,6 +2549,13 @@ export type Database = {
           picked_up_at: string | null
           placed_at: string | null
           prepared_at: string | null
+          quoted_delivery_fee: number | null
+          quoted_service_fee: number | null
+          quoted_small_order_fee: number | null
+          quoted_subtotal: number | null
+          quoted_tax: number | null
+          quoted_tip: number | null
+          quoted_total: number | null
           rating: number | null
           refund_status: string | null
           refunded_at: string | null
@@ -2514,8 +2568,11 @@ export type Database = {
           tax: number | null
           total_amount: number
           updated_at: string | null
+          zone_code: string | null
         }
         Insert: {
+          admin_override_reason?: string | null
+          admin_price_override?: number | null
           created_at?: string | null
           customer_email?: string | null
           customer_id: string
@@ -2535,6 +2592,13 @@ export type Database = {
           picked_up_at?: string | null
           placed_at?: string | null
           prepared_at?: string | null
+          quoted_delivery_fee?: number | null
+          quoted_service_fee?: number | null
+          quoted_small_order_fee?: number | null
+          quoted_subtotal?: number | null
+          quoted_tax?: number | null
+          quoted_tip?: number | null
+          quoted_total?: number | null
           rating?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -2547,8 +2611,11 @@ export type Database = {
           tax?: number | null
           total_amount: number
           updated_at?: string | null
+          zone_code?: string | null
         }
         Update: {
+          admin_override_reason?: string | null
+          admin_price_override?: number | null
           created_at?: string | null
           customer_email?: string | null
           customer_id?: string
@@ -2568,6 +2635,13 @@ export type Database = {
           picked_up_at?: string | null
           placed_at?: string | null
           prepared_at?: string | null
+          quoted_delivery_fee?: number | null
+          quoted_service_fee?: number | null
+          quoted_small_order_fee?: number | null
+          quoted_subtotal?: number | null
+          quoted_tax?: number | null
+          quoted_tip?: number | null
+          quoted_total?: number | null
           rating?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -2580,6 +2654,7 @@ export type Database = {
           tax?: number | null
           total_amount?: number
           updated_at?: string | null
+          zone_code?: string | null
         }
         Relationships: [
           {
@@ -4971,6 +5046,8 @@ export type Database = {
       ride_requests: {
         Row: {
           admin_notes: string | null
+          admin_override_reason: string | null
+          admin_price_override: number | null
           assigned_driver_id: string | null
           created_at: string
           customer_email: string | null
@@ -4991,6 +5068,13 @@ export type Database = {
           pickup_address: string
           pickup_lat: number | null
           pickup_lng: number | null
+          quoted_base_fare: number | null
+          quoted_booking_fee: number | null
+          quoted_distance_fee: number | null
+          quoted_service_fee: number | null
+          quoted_surge_multiplier: number | null
+          quoted_time_fee: number | null
+          quoted_total: number | null
           refund_status: string | null
           refunded_at: string | null
           ride_type: string
@@ -4999,9 +5083,12 @@ export type Database = {
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
           updated_at: string
+          zone_code: string | null
         }
         Insert: {
           admin_notes?: string | null
+          admin_override_reason?: string | null
+          admin_price_override?: number | null
           assigned_driver_id?: string | null
           created_at?: string
           customer_email?: string | null
@@ -5022,6 +5109,13 @@ export type Database = {
           pickup_address: string
           pickup_lat?: number | null
           pickup_lng?: number | null
+          quoted_base_fare?: number | null
+          quoted_booking_fee?: number | null
+          quoted_distance_fee?: number | null
+          quoted_service_fee?: number | null
+          quoted_surge_multiplier?: number | null
+          quoted_time_fee?: number | null
+          quoted_total?: number | null
           refund_status?: string | null
           refunded_at?: string | null
           ride_type?: string
@@ -5030,9 +5124,12 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
+          zone_code?: string | null
         }
         Update: {
           admin_notes?: string | null
+          admin_override_reason?: string | null
+          admin_price_override?: number | null
           assigned_driver_id?: string | null
           created_at?: string
           customer_email?: string | null
@@ -5053,6 +5150,13 @@ export type Database = {
           pickup_address?: string
           pickup_lat?: number | null
           pickup_lng?: number | null
+          quoted_base_fare?: number | null
+          quoted_booking_fee?: number | null
+          quoted_distance_fee?: number | null
+          quoted_service_fee?: number | null
+          quoted_surge_multiplier?: number | null
+          quoted_time_fee?: number | null
+          quoted_total?: number | null
           refund_status?: string | null
           refunded_at?: string | null
           ride_type?: string
@@ -5061,6 +5165,7 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
+          zone_code?: string | null
         }
         Relationships: [
           {
@@ -5078,6 +5183,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ride_zones: {
+        Row: {
+          base_fare: number
+          booking_fee: number
+          city_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          minimum_fare: number
+          per_mile_rate: number
+          per_minute_rate: number
+          premium_multiplier: number
+          service_fee_percent: number
+          standard_multiplier: number
+          surge_multiplier: number
+          updated_at: string
+          xl_multiplier: number
+          zone_code: string
+        }
+        Insert: {
+          base_fare?: number
+          booking_fee?: number
+          city_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          minimum_fare?: number
+          per_mile_rate?: number
+          per_minute_rate?: number
+          premium_multiplier?: number
+          service_fee_percent?: number
+          standard_multiplier?: number
+          surge_multiplier?: number
+          updated_at?: string
+          xl_multiplier?: number
+          zone_code: string
+        }
+        Update: {
+          base_fare?: number
+          booking_fee?: number
+          city_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          minimum_fare?: number
+          per_mile_rate?: number
+          per_minute_rate?: number
+          premium_multiplier?: number
+          service_fee_percent?: number
+          standard_multiplier?: number
+          surge_multiplier?: number
+          updated_at?: string
+          xl_multiplier?: number
+          zone_code?: string
+        }
+        Relationships: []
       }
       safety_alerts: {
         Row: {

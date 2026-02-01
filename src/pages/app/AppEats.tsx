@@ -1,8 +1,8 @@
 /**
  * App Eats Screen
- * MVP flow with payment: Restaurants -> Menu -> Cart -> Checkout -> Success
+ * MVP flow with pricing engine: Restaurants -> Menu -> Cart -> Checkout -> Success
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   UtensilsCrossed, Search, MapPin, Star, Clock, Plus, Minus, 
@@ -13,11 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEatsZones } from "@/hooks/useZonePricing";
+import { calculateEatsFare, formatCurrency, DEFAULT_EATS_ZONE, EatsPriceBreakdown as BreakdownType } from "@/lib/pricing";
+import { EatsPriceBreakdown } from "@/components/pricing/EatsPriceBreakdown";
 
-type EatsStep = "restaurants" | "menu" | "cart" | "checkout" | "submitted";
+type EatsStep = "restaurants" | "menu" | "cart" | "checkout" | "processing" | "submitted";
 
 interface CartItem {
   id: string;
@@ -70,9 +74,14 @@ const AppEats = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [address, setAddress] = useState("");
+  const [selectedZone, setSelectedZone] = useState("DEFAULT");
+  const [tipAmount, setTipAmount] = useState(3);
   const [contactInfo, setContactInfo] = useState({ name: "", phone: "", email: "", notes: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Fetch zones from database
+  const { data: zones } = useEatsZones();
 
   // Check for success return from Stripe
   useEffect(() => {
@@ -88,8 +97,19 @@ const AppEats = () => {
     }
   }, [searchParams]);
 
+  // Get current zone pricing
+  const currentZone = useMemo(() => {
+    if (!zones) return DEFAULT_EATS_ZONE;
+    return zones.find(z => z.zone_code === selectedZone) || DEFAULT_EATS_ZONE;
+  }, [zones, selectedZone]);
+
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Calculate price breakdown using pricing engine
+  const priceBreakdown = useMemo(() => {
+    return calculateEatsFare(currentZone, cartTotal, 0, tipAmount);
+  }, [currentZone, cartTotal, tipAmount]);
 
   const addToCart = (item: { id: string; name: string; price: number }) => {
     setCart(prev => {
@@ -115,12 +135,43 @@ const AppEats = () => {
   };
 
   const handleSubmit = async () => {
-    if (!contactInfo.name || !contactInfo.phone || !address) return;
+    if (!contactInfo.name || !contactInfo.phone || !address || !selectedRestaurant) return;
     
+    setStep("processing");
     setIsSubmitting(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setStep("submitted");
-    setIsSubmitting(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-eats-checkout", {
+        body: {
+          customer_name: contactInfo.name,
+          customer_phone: contactInfo.phone,
+          customer_email: contactInfo.email || undefined,
+          delivery_address: address,
+          restaurant_id: selectedRestaurant.id,
+          restaurant_name: selectedRestaurant.name,
+          items: cart,
+          subtotal: priceBreakdown.subtotal,
+          delivery_fee: priceBreakdown.deliveryFee,
+          service_fee: priceBreakdown.serviceFee,
+          small_order_fee: priceBreakdown.smallOrderFee,
+          tax: priceBreakdown.tax,
+          tip: priceBreakdown.tip,
+          total: priceBreakdown.total,
+          zone_code: currentZone.zone_code,
+          special_instructions: contactInfo.notes || undefined,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error("No checkout URL returned");
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Failed to start payment. Please try again.");
+      setStep("checkout");
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -129,6 +180,9 @@ const AppEats = () => {
     setCart([]);
     setContactInfo({ name: "", phone: "", email: "", notes: "" });
     setAddress("");
+    setTipAmount(3);
+    setOrderId(null);
+    navigate("/eats", { replace: true });
   };
 
   const getTitle = () => {
@@ -143,6 +197,7 @@ const AppEats = () => {
     if (step === "menu") setStep("restaurants");
     else if (step === "cart") setStep("menu");
     else if (step === "checkout") setStep("cart");
+    else if (step === "processing") setStep("checkout");
     else if (step === "submitted") handleReset();
   };
 
@@ -157,7 +212,7 @@ const AppEats = () => {
       showBack={step !== "restaurants"}
       onBack={handleBack}
       headerRightAction={
-        cartCount > 0 && step !== "cart" && step !== "checkout" && step !== "submitted" ? (
+        cartCount > 0 && step !== "cart" && step !== "checkout" && step !== "submitted" && step !== "processing" ? (
           <button
             onClick={() => setStep("cart")}
             className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-colors"
@@ -173,8 +228,8 @@ const AppEats = () => {
       {/* Step: Restaurants */}
       {step === "restaurants" && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          {/* Address Input */}
-          <div className="p-4 border-b border-border/50">
+          {/* Address & Zone Input */}
+          <div className="p-4 border-b border-border/50 space-y-3">
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-eats" />
               <Input
@@ -184,6 +239,20 @@ const AppEats = () => {
                 className="pl-9 h-11 rounded-xl"
               />
             </div>
+            {zones && zones.length > 1 && (
+              <Select value={selectedZone} onValueChange={setSelectedZone}>
+                <SelectTrigger className="h-10">
+                  <SelectValue placeholder="Select city" />
+                </SelectTrigger>
+                <SelectContent>
+                  {zones.map((zone) => (
+                    <SelectItem key={zone.zone_code} value={zone.zone_code}>
+                      {zone.city_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           {/* Search */}
@@ -251,7 +320,7 @@ const AppEats = () => {
           </div>
 
           {/* Menu Categories */}
-          <div className="px-4 space-y-6">
+          <div className="px-4 space-y-6 pb-24">
             {menuCategories.map((category) => (
               <div key={category.name}>
                 <h3 className="font-bold text-lg mb-3">{category.name}</h3>
@@ -266,7 +335,7 @@ const AppEats = () => {
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm">{item.name}</h4>
                           <p className="text-xs text-muted-foreground">{item.description}</p>
-                          <p className="text-sm font-bold text-eats mt-1">${item.price.toFixed(2)}</p>
+                          <p className="text-sm font-bold text-eats mt-1">{formatCurrency(item.price)}</p>
                         </div>
                         {cartItem ? (
                           <div className="flex items-center gap-2">
@@ -308,7 +377,7 @@ const AppEats = () => {
                 className="w-full h-12 rounded-xl font-bold gap-2 bg-eats hover:bg-eats/90"
               >
                 <ShoppingBag className="w-5 h-5" />
-                View Cart ({cartCount}) • ${cartTotal.toFixed(2)}
+                View Cart ({cartCount}) • {formatCurrency(cartTotal)}
               </Button>
             </div>
           )}
@@ -337,7 +406,7 @@ const AppEats = () => {
                   >
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-sm">{item.name}</h4>
-                      <p className="text-sm text-eats font-bold">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="text-sm text-eats font-bold">{formatCurrency(item.price * item.quantity)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <button
@@ -358,20 +427,13 @@ const AppEats = () => {
                 ))}
               </div>
 
-              <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span>${cartTotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Delivery Fee</span>
-                  <span>TBD</span>
-                </div>
-                <div className="flex justify-between font-bold pt-2 border-t border-border/50">
-                  <span>Total</span>
-                  <span className="text-eats">${cartTotal.toFixed(2)}+</span>
-                </div>
-              </div>
+              {/* Price Breakdown */}
+              <EatsPriceBreakdown
+                breakdown={priceBreakdown}
+                itemCount={cartCount}
+                showTipSelector={true}
+                onTipChange={setTipAmount}
+              />
 
               <Button
                 onClick={() => setStep("checkout")}
@@ -390,8 +452,15 @@ const AppEats = () => {
         <div className="p-4 space-y-4 animate-in fade-in slide-in-from-right duration-200">
           <div className="p-3 rounded-xl bg-eats/5 border border-eats/20">
             <p className="text-sm font-medium">Order from {selectedRestaurant?.name}</p>
-            <p className="text-xs text-muted-foreground">{cartCount} items • ${cartTotal.toFixed(2)}</p>
+            <p className="text-xs text-muted-foreground">{cartCount} items • {currentZone.city_name}</p>
           </div>
+
+          {/* Price Breakdown (read-only) */}
+          <EatsPriceBreakdown
+            breakdown={priceBreakdown}
+            itemCount={cartCount}
+            showTipSelector={false}
+          />
 
           <div className="space-y-3">
             <div>
@@ -438,7 +507,7 @@ const AppEats = () => {
             </div>
 
             <div>
-              <Label htmlFor="email" className="text-sm">Email (optional)</Label>
+              <Label htmlFor="email" className="text-sm">Email (for receipt)</Label>
               <div className="relative mt-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -469,29 +538,49 @@ const AppEats = () => {
             disabled={!contactInfo.name || !contactInfo.phone || !address || isSubmitting}
             className="w-full h-12 rounded-xl font-bold gap-2 bg-eats hover:bg-eats/90"
           >
-            {isSubmitting ? "Submitting..." : `Submit Order • $${cartTotal.toFixed(2)}`}
+            <CreditCard className="w-5 h-5" />
+            Pay {formatCurrency(priceBreakdown.total)} & Order
           </Button>
 
           <p className="text-xs text-center text-muted-foreground">
-            Order request received. A partner/vendor will confirm shortly.
+            Secure payment via Stripe. We don't store your card details.
           </p>
+        </div>
+      )}
+
+      {/* Step: Processing */}
+      {step === "processing" && (
+        <div className="py-20 text-center space-y-6 animate-in fade-in duration-200">
+          <Loader2 className="w-12 h-12 mx-auto text-eats animate-spin" />
+          <div>
+            <h2 className="font-display text-xl font-bold mb-2">Redirecting to Payment...</h2>
+            <p className="text-muted-foreground text-sm">
+              Please wait while we set up your secure checkout.
+            </p>
+          </div>
         </div>
       )}
 
       {/* Step: Submitted */}
       {step === "submitted" && (
         <div className="p-4 py-12 text-center space-y-6 animate-in fade-in zoom-in-95 duration-300">
-          <div className="w-20 h-20 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckCircle2 className="w-10 h-10 text-green-500" />
+          <div className="w-20 h-20 mx-auto rounded-full bg-eats/10 flex items-center justify-center">
+            <CheckCircle2 className="w-10 h-10 text-eats" />
           </div>
           <div>
-            <h2 className="font-display text-2xl font-bold mb-2">Order Submitted!</h2>
+            <h2 className="font-display text-2xl font-bold mb-2">Payment Received!</h2>
             <p className="text-muted-foreground max-w-sm mx-auto">
-              Order request received. A partner/vendor will confirm shortly.
+              Your order has been placed. The restaurant will confirm shortly.
             </p>
           </div>
+          {orderId && (
+            <div className="py-3 px-4 rounded-xl bg-muted/30 border border-border/50 inline-block">
+              <p className="text-xs text-muted-foreground mb-1">Order ID</p>
+              <p className="font-mono font-bold text-sm">{orderId.slice(0, 8).toUpperCase()}</p>
+            </div>
+          )}
           <div className="py-4 px-6 rounded-2xl bg-muted/30 border border-border/50 max-w-sm mx-auto">
-            <p className="text-sm text-muted-foreground mb-2">What happens next?</p>
+            <p className="text-sm text-muted-foreground mb-2">Status: <span className="text-eats font-semibold">Paid / Awaiting Confirmation</span></p>
             <ul className="text-sm text-left space-y-2">
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-eats rounded-full" />
@@ -499,11 +588,11 @@ const AppEats = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-eats rounded-full" />
-                You'll receive a call/text with details
+                You'll receive updates via text/email
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-eats rounded-full" />
-                Pay upon delivery
+                Delivery in {selectedRestaurant?.eta || "30-45"} minutes
               </li>
             </ul>
           </div>
