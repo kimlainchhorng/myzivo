@@ -4,13 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Car, 
-  Plane, 
-  Hotel, 
   Ticket, 
   Wifi, 
   Luggage, 
   ArrowRight,
-  ExternalLink,
   Sparkles,
   Shield,
   Clock,
@@ -18,32 +15,15 @@ import {
   Scale
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { 
-  TRANSFER_PARTNERS,
-  CAR_PARTNERS,
-  ACTIVITY_PARTNERS,
-  ESIM_PARTNERS,
-  LUGGAGE_PARTNERS,
-  COMPENSATION_PARTNERS,
-  openPartnerLink,
-  AFFILIATE_DISCLOSURE_TEXT
-} from "@/config/affiliateLinks";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
-import { getOptimizedAddOnOrder, trackAddOnClick, type AddOnCategory as OptAddOnCategory } from "@/lib/revenueOptimization";
+import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 
 /**
  * ENHANCE YOUR TRIP - Unified Travel Add-ons Section
  * Appears after search results on Flights, Hotels, and Car Rental pages
  * 
- * Uses A/B tested add-on ordering for revenue optimization.
- * 
- * Categories:
- * 1. Airport Transfers & Rides
- * 2. Car Rental (cross-sell)
- * 3. Things To Do / Activities
- * 4. Travel eSIM
- * 5. Luggage Storage
- * 6. Flight Compensation
+ * IMPORTANT: This component NO LONGER contains direct partner links.
+ * All partner links are consolidated on /extras page.
+ * This component only shows category previews that link to /extras.
  */
 
 export type CurrentService = "flights" | "hotels" | "cars";
@@ -55,26 +35,14 @@ interface EnhanceYourTripProps {
   compact?: boolean;
 }
 
-type ServiceCategoryType = 'flights' | 'hotels' | 'car_rental' | 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation';
-
-interface AddOnCategory {
-  id: ServiceCategoryType;
+interface CategoryPreview {
+  id: string;
   title: string;
   description: string;
   icon: React.ElementType;
   gradient: string;
   borderColor: string;
-  items: AddOnItem[];
   showFor: CurrentService[];
-}
-
-interface AddOnItem {
-  id: string;
-  name: string;
-  tagline: string;
-  logo: string;
-  trackingUrl: string;
-  features: string[];
 }
 
 export default function EnhanceYourTrip({ 
@@ -84,181 +52,57 @@ export default function EnhanceYourTrip({
   compact = false
 }: EnhanceYourTripProps) {
   
-  const handleAffiliateClick = (item: AddOnItem, category: ServiceCategoryType) => {
-    // Track add-on click for A/B testing and revenue optimization
-    const categoryMap: Record<ServiceCategoryType, OptAddOnCategory | null> = {
-      transfers: 'transfers',
-      activities: 'activities',
-      esim: 'esim',
-      luggage: 'luggage',
-      compensation: 'compensation',
-      car_rental: 'cars',
-      flights: null,
-      hotels: null,
-    };
-    
-    const optCategory = categoryMap[category];
-    if (optCategory) {
-      trackAddOnClick(optCategory);
-    }
-    
-    trackAffiliateClick({
-      flightId: `addon-${item.id}`,
-      airline: item.name,
-      airlineCode: item.id.toUpperCase(),
-      origin: destination || '',
-      destination: destination || '',
-      price: 0,
-      passengers: 1,
-      cabinClass: 'standard',
-      affiliatePartner: item.id,
-      referralUrl: item.trackingUrl,
-      source: 'enhance_your_trip',
-      ctaType: 'cross_sell',
-      serviceType: category,
-    });
-    
-    openPartnerLink(item.trackingUrl);
-  };
-
-  // Build all available categories
-  const allCategories: AddOnCategory[] = [
-    // Airport Transfers - Show for Flights and Hotels
+  // Category previews - no direct partner links, just internal navigation
+  const allCategories: CategoryPreview[] = [
     {
       id: "transfers",
-      title: "Airport Transfers & Rides",
-      description: "Book airport transfers with trusted providers",
+      title: "Airport Transfers",
+      description: "Book airport pickups & rides",
       icon: Car,
       gradient: "from-amber-500/10 to-orange-500/10",
       borderColor: "hover:border-amber-500/50",
       showFor: ["flights", "hotels"],
-      items: TRANSFER_PARTNERS.slice(0, 3).map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: p.id === 'kiwitaxi' ? 'Fixed prices' : p.id === 'gettransfer' ? 'Compare drivers' : 'Shared shuttles',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
     },
-    // Car Rental - Show for Flights and Hotels
-    {
-      id: "car_rental",
-      title: "Rent a Car",
-      description: "Explore your destination on your terms",
-      icon: Car,
-      gradient: "from-violet-500/10 to-purple-500/10",
-      borderColor: "hover:border-violet-500/50",
-      showFor: ["flights", "hotels"],
-      items: CAR_PARTNERS.slice(0, 3).map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: p.id === 'economybookings' ? 'Best value' : p.id === 'qeeq' ? 'Price match' : 'Local deals',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
-    },
-    // Things To Do - Show for all services
     {
       id: "activities",
-      title: "Things To Do",
-      description: "Discover tours, museums & experiences",
+      title: "Tours & Activities",
+      description: "Discover local experiences",
       icon: Ticket,
       gradient: "from-emerald-500/10 to-teal-500/10",
       borderColor: "hover:border-emerald-500/50",
       showFor: ["flights", "hotels", "cars"],
-      items: ACTIVITY_PARTNERS.slice(0, 3).map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: p.id === 'tiqets' ? 'Skip-the-line' : p.id === 'wegotrip' ? 'Audio guides' : 'Live events',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
     },
-    // Travel eSIM - Show for all services
     {
       id: "esim",
-      title: "Travel Internet",
+      title: "Travel eSIM",
       description: "Stay connected abroad",
       icon: Wifi,
       gradient: "from-cyan-500/10 to-teal-500/10",
       borderColor: "hover:border-cyan-500/50",
       showFor: ["flights", "hotels", "cars"],
-      items: ESIM_PARTNERS.slice(0, 3).map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: p.id === 'airalo' ? 'From $4.50' : p.id === 'drimsim' ? 'Pay as you go' : 'Budget friendly',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
     },
-    // Luggage Storage - Show for Flights and Hotels
     {
       id: "luggage",
       title: "Luggage Storage",
-      description: "Store bags securely while you explore",
+      description: "Store bags securely",
       icon: Luggage,
       gradient: "from-purple-500/10 to-pink-500/10",
       borderColor: "hover:border-purple-500/50",
       showFor: ["flights", "hotels"],
-      items: LUGGAGE_PARTNERS.map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: '$5.90/day',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
     },
-    // Flight Compensation - Only for Flights
     {
       id: "compensation",
       title: "Flight Compensation",
-      description: "Claim up to €600 for delayed flights",
+      description: "Claim up to €600",
       icon: Scale,
       gradient: "from-rose-500/10 to-red-500/10",
       borderColor: "hover:border-rose-500/50",
       showFor: ["flights"],
-      items: COMPENSATION_PARTNERS.slice(0, 2).map(p => ({
-        id: p.id,
-        name: p.name,
-        tagline: p.id === 'airhelp' ? 'No win no fee' : 'Free check',
-        logo: p.logo,
-        trackingUrl: p.trackingUrl,
-        features: p.features.slice(0, 2),
-      })),
     },
   ];
 
-  // Get A/B tested optimal order for add-ons
-  const optimizedOrder = getOptimizedAddOnOrder();
-  
-  // Filter categories for current service and sort by optimized order
-  const categories = allCategories
-    .filter(cat => cat.showFor.includes(currentService))
-    .sort((a, b) => {
-      // Map category IDs to the optimization order
-      const orderMap: Record<string, OptAddOnCategory> = {
-        transfers: 'transfers',
-        activities: 'activities',
-        esim: 'esim',
-        luggage: 'luggage',
-        compensation: 'compensation',
-        car_rental: 'cars',
-      };
-      
-      const aOrder = optimizedOrder.indexOf(orderMap[a.id] as OptAddOnCategory);
-      const bOrder = optimizedOrder.indexOf(orderMap[b.id] as OptAddOnCategory);
-      
-      // If not found in optimized order, put at end
-      const aIdx = aOrder === -1 ? 999 : aOrder;
-      const bIdx = bOrder === -1 ? 999 : bOrder;
-      
-      return aIdx - bIdx;
-    });
+  // Filter categories for current service
+  const categories = allCategories.filter(cat => cat.showFor.includes(currentService));
 
   if (compact) {
     return (
@@ -276,25 +120,25 @@ export default function EnhanceYourTrip({
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {categories.slice(0, 4).map((category) => (
-              <Card 
-                key={category.id}
-                className={cn(
-                  "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
-                  category.borderColor
-                )}
-                onClick={() => category.items[0] && handleAffiliateClick(category.items[0], category.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <div className={cn(
-                    "w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center",
-                    `bg-gradient-to-br ${category.gradient}`
-                  )}>
-                    <category.icon className="w-5 h-5 text-foreground" />
-                  </div>
-                  <h4 className="font-medium text-sm mb-1">{category.title}</h4>
-                  <p className="text-xs text-muted-foreground line-clamp-1">{category.description}</p>
-                </CardContent>
-              </Card>
+              <Link to="/extras" key={category.id}>
+                <Card 
+                  className={cn(
+                    "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg h-full",
+                    category.borderColor
+                  )}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl mx-auto mb-2 flex items-center justify-center",
+                      `bg-gradient-to-br ${category.gradient}`
+                    )}>
+                      <category.icon className="w-5 h-5 text-foreground" />
+                    </div>
+                    <h4 className="font-medium text-sm mb-1">{category.title}</h4>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{category.description}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
           
@@ -326,85 +170,46 @@ export default function EnhanceYourTrip({
           </p>
         </div>
 
-        {/* Categories Grid */}
-        <div className="space-y-10 max-w-6xl mx-auto">
-          {categories.map((category, categoryIndex) => (
-            <div 
-              key={category.id} 
-              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-              style={{ animationDelay: `${categoryIndex * 100}ms` }}
-            >
-              {/* Category Header */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center",
-                  `bg-gradient-to-br ${category.gradient}`
-                )}>
-                  <category.icon className="w-5 h-5 text-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg">{category.title}</h3>
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                </div>
-              </div>
-
-              {/* Partner Cards */}
-              <div className={cn(
-                "grid gap-4",
-                category.items.length === 1 ? "sm:grid-cols-1 max-w-md" : "sm:grid-cols-2 lg:grid-cols-3"
-              )}>
-                {category.items.map((item, itemIndex) => (
-                  <Card
-                    key={item.id}
-                    className={cn(
-                      "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50",
-                      category.borderColor
-                    )}
-                    onClick={() => handleAffiliateClick(item, category.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform",
-                          `bg-gradient-to-br ${category.gradient}`
-                        )}>
-                          {item.logo}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-bold text-sm group-hover:text-primary transition-colors">
-                              {item.name}
-                            </h4>
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                              {item.tagline}
-                            </Badge>
-                          </div>
-                          <div className="flex flex-wrap gap-1 mb-3">
-                            {item.features.map((feature, i) => (
-                              <span key={i} className="text-xs text-muted-foreground">
-                                {i > 0 && "•"} {feature}
-                              </span>
-                            ))}
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-white transition-colors touch-manipulation"
-                          >
-                            {category.id === 'transfers' ? 'Book Transfer' :
-                             category.id === 'car_rental' ? 'Rent a Car' :
-                             category.id === 'activities' ? 'Explore Activities' :
-                             category.id === 'esim' ? 'Get eSIM' :
-                             'Find Storage'}
-                            <ExternalLink className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+        {/* Categories Grid - Links to /extras */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          {categories.map((category, index) => (
+            <Link to="/extras" key={category.id}>
+              <Card
+                className={cn(
+                  "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50 h-full",
+                  category.borderColor,
+                  "animate-in fade-in slide-in-from-bottom-4"
+                )}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform",
+                      `bg-gradient-to-br ${category.gradient}`
+                    )}>
+                      <category.icon className="w-6 h-6 text-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-base mb-1 group-hover:text-primary transition-colors">
+                        {category.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {category.description}
+                      </p>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors touch-manipulation"
+                      >
+                        View Options
+                        <ArrowRight className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
 
@@ -432,7 +237,7 @@ export default function EnhanceYourTrip({
         {/* View All Link */}
         <div className="text-center mt-6">
           <Link to="/extras">
-            <Button variant="outline" className="gap-2">
+            <Button className="gap-2 bg-gradient-to-r from-primary to-teal-500">
               View All Travel Extras
               <ArrowRight className="w-4 h-4" />
             </Button>

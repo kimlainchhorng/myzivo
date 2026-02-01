@@ -1,15 +1,17 @@
 /**
  * TRAVEL EXTRAS PAGE - /extras
- * Organized hub for all travel add-on services
- * All partner links consolidated here
+ * EXCLUSIVE CENTRALIZED HUB for all travel add-on partner links
+ * All partner links are consolidated here - NOT scattered on other pages
  */
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { 
-  Car, 
   Ticket, 
+  Car, 
   Wifi, 
   Luggage, 
   Scale,
@@ -19,99 +21,201 @@ import {
   Shield,
   Clock,
   Globe,
-  Bus
+  Headphones,
+  Search,
+  MapPin,
+  Plane
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
-  TRANSFER_PARTNERS,
-  ACTIVITY_PARTNERS,
-  ESIM_PARTNERS,
-  LUGGAGE_PARTNERS,
-  COMPENSATION_PARTNERS,
-  AFFILIATE_DISCLOSURE_TEXT,
-  openPartnerLink
-} from "@/config/affiliateLinks";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { openPartnerLink } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { RedirectDisclaimer } from "@/components/shared/RedirectDisclaimer";
-import ServiceHero from "@/components/shared/ServiceHero";
-import UserTestimonials from "@/components/shared/UserTestimonials";
-import ExperienceGallery from "@/components/shared/ExperienceGallery";
 import heroExtras from "@/assets/hero-extras.jpg";
 
-interface ExtraCategory {
-  id: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  gradient: string;
-  image: string;
-  partners: Array<{ id: string; name: string; logo: string; features: string[]; trackingUrl: string }>;
-  trackingCategory: 'transfers' | 'activities' | 'esim' | 'luggage' | 'compensation';
-}
-
-const categories: ExtraCategory[] = [
+// ============================================
+// EXTRAS PARTNERS REGISTRY - ALL 13 PARTNERS
+// ============================================
+const EXTRAS_PARTNERS = [
   {
-    id: "transfers",
-    title: "Airport Transfers",
-    description: "Pre-book airport pickups and drop-offs worldwide",
-    icon: Bus,
-    gradient: "from-amber-500 to-orange-600",
-    image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=300&fit=crop&q=75&fm=webp",
-    partners: TRANSFER_PARTNERS,
-    trackingCategory: 'transfers',
-  },
-  {
-    id: "activities",
-    title: "Activities & Tours",
-    description: "Discover tours, museums, and local experiences",
+    id: 'klook',
+    name: 'Klook',
+    category: 'Activities & Tours',
+    description: 'Book tours and attractions worldwide',
     icon: Ticket,
-    gradient: "from-emerald-500 to-teal-600",
-    image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&h=300&fit=crop&q=75&fm=webp",
-    partners: ACTIVITY_PARTNERS,
-    trackingCategory: 'activities',
+    logo: '🎟️',
+    trackingUrl: 'https://klook.tpo.li/ToVcOax7',
+    gradient: 'from-emerald-500/10 to-teal-500/10',
+    borderHover: 'hover:border-emerald-500/50',
   },
   {
-    id: "esim",
-    title: "Travel eSIM",
-    description: "Stay connected abroad with instant data plans",
+    id: 'tiqets',
+    name: 'Tiqets',
+    category: 'Museums & Attractions',
+    description: 'Skip-the-line museum tickets',
+    icon: Ticket,
+    logo: '🎫',
+    trackingUrl: 'https://tiqets.tpo.li/5fqrcQWZ',
+    gradient: 'from-violet-500/10 to-purple-500/10',
+    borderHover: 'hover:border-violet-500/50',
+  },
+  {
+    id: 'kiwitaxi',
+    name: 'KiwiTaxi',
+    category: 'Airport Transfers',
+    description: 'Fixed-price airport pickups',
+    icon: Car,
+    logo: '🚕',
+    trackingUrl: 'https://kiwitaxi.tpo.li/Bj6zghJH',
+    gradient: 'from-amber-500/10 to-orange-500/10',
+    borderHover: 'hover:border-amber-500/50',
+  },
+  {
+    id: 'gettransfer',
+    name: 'GetTransfer',
+    category: 'Transfers Marketplace',
+    description: 'Compare local transfer drivers',
+    icon: Car,
+    logo: '🚙',
+    trackingUrl: 'https://gettransfer.tpo.li/FbrIguyh',
+    gradient: 'from-amber-500/10 to-orange-500/10',
+    borderHover: 'hover:border-amber-500/50',
+  },
+  {
+    id: 'airalo',
+    name: 'Airalo',
+    category: 'eSIM',
+    description: 'Instant eSIM for 190+ countries',
     icon: Wifi,
-    gradient: "from-cyan-500 to-blue-600",
-    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=300&fit=crop&q=75&fm=webp",
-    partners: ESIM_PARTNERS,
-    trackingCategory: 'esim',
+    logo: '📱',
+    trackingUrl: 'https://airalo.tpo.li/zVRtp8Zt',
+    gradient: 'from-cyan-500/10 to-blue-500/10',
+    borderHover: 'hover:border-cyan-500/50',
   },
   {
-    id: "luggage",
-    title: "Luggage Storage",
-    description: "Store your bags safely while you explore",
+    id: 'yesim',
+    name: 'Yesim',
+    category: 'eSIM',
+    description: 'Budget-friendly travel eSIM',
+    icon: Wifi,
+    logo: '📶',
+    trackingUrl: 'https://yesim.tpo.li/OpjeHJgH',
+    gradient: 'from-cyan-500/10 to-blue-500/10',
+    borderHover: 'hover:border-cyan-500/50',
+  },
+  {
+    id: 'drimsim',
+    name: 'Drimsim',
+    category: 'SIM',
+    description: 'Global SIM card with data',
+    icon: Globe,
+    logo: '🌐',
+    trackingUrl: 'https://drimsim.tpo.li/A9yKO5oA',
+    gradient: 'from-sky-500/10 to-indigo-500/10',
+    borderHover: 'hover:border-sky-500/50',
+  },
+  {
+    id: 'radicalstorage',
+    name: 'Radical Storage',
+    category: 'Luggage Storage',
+    description: 'Store bags from $5.90/day',
     icon: Luggage,
-    gradient: "from-violet-500 to-purple-600",
-    image: "https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=600&h=300&fit=crop&q=75&fm=webp",
-    partners: LUGGAGE_PARTNERS,
-    trackingCategory: 'luggage',
+    logo: '🧳',
+    trackingUrl: 'https://radicalstorage.tpo.li/4W0KR99h',
+    gradient: 'from-purple-500/10 to-pink-500/10',
+    borderHover: 'hover:border-purple-500/50',
   },
   {
-    id: "compensation",
-    title: "Flight Compensation",
-    description: "Get up to €600 for delayed or cancelled flights",
+    id: 'wegotrip',
+    name: 'WeGoTrip',
+    category: 'Audio Tours',
+    description: 'Self-guided audio experiences',
+    icon: Headphones,
+    logo: '🎧',
+    trackingUrl: 'https://wegotrip.tpo.li/QSrOpIdV',
+    gradient: 'from-rose-500/10 to-pink-500/10',
+    borderHover: 'hover:border-rose-500/50',
+  },
+  {
+    id: 'airhelp',
+    name: 'AirHelp',
+    category: 'Flight Compensation',
+    description: 'Claim up to €600 for delays',
     icon: Scale,
-    gradient: "from-red-500 to-rose-600",
-    image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&h=300&fit=crop&q=75&fm=webp",
-    partners: COMPENSATION_PARTNERS,
-    trackingCategory: 'compensation',
+    logo: '⚖️',
+    trackingUrl: 'https://airhelp.tpo.li/7Z5saPi2',
+    gradient: 'from-red-500/10 to-rose-500/10',
+    borderHover: 'hover:border-red-500/50',
+  },
+  {
+    id: 'compensair',
+    name: 'Compensair',
+    category: 'Flight Compensation',
+    description: 'Free flight compensation check',
+    icon: Plane,
+    logo: '✈️',
+    trackingUrl: 'https://compensair.tpo.li/npsp8pm0',
+    gradient: 'from-red-500/10 to-rose-500/10',
+    borderHover: 'hover:border-red-500/50',
+  },
+  {
+    id: 'searadar',
+    name: 'Searadar',
+    category: 'Travel Radar',
+    description: 'Compare all travel options',
+    icon: Search,
+    logo: '🔍',
+    trackingUrl: 'https://searadar.tpo.li/iAbLlX9i',
+    gradient: 'from-indigo-500/10 to-violet-500/10',
+    borderHover: 'hover:border-indigo-500/50',
+  },
+  {
+    id: 'ticketnetwork',
+    name: 'TicketNetwork',
+    category: 'Tickets Marketplace',
+    description: 'Concerts, sports, live events',
+    icon: Ticket,
+    logo: '🎭',
+    trackingUrl: 'https://ticketnetwork.tpo.li/utk3u8Vr',
+    gradient: 'from-fuchsia-500/10 to-pink-500/10',
+    borderHover: 'hover:border-fuchsia-500/50',
   },
 ];
 
 export default function TravelExtras() {
-  const handlePartnerClick = (partner: { id: string; name: string; trackingUrl: string }, category: ExtraCategory['trackingCategory']) => {
+  const [city, setCity] = useState('');
+  
+  const handlePartnerClick = (partner: typeof EXTRAS_PARTNERS[0]) => {
+    // Map partner category to valid tracking service type
+    const categoryToServiceType: Record<string, 'activities' | 'transfers' | 'esim' | 'luggage' | 'compensation'> = {
+      'Activities & Tours': 'activities',
+      'Museums & Attractions': 'activities',
+      'Airport Transfers': 'transfers',
+      'Transfers Marketplace': 'transfers',
+      'eSIM': 'esim',
+      'SIM': 'esim',
+      'Luggage Storage': 'luggage',
+      'Audio Tours': 'activities',
+      'Flight Compensation': 'compensation',
+      'Travel Radar': 'activities',
+      'Tickets Marketplace': 'activities',
+    };
+    
+    const serviceType = categoryToServiceType[partner.category] || 'activities';
+    
+    // Track the click with analytics
     trackAffiliateClick({
       flightId: `extras-${partner.id}`,
       airline: partner.name,
       airlineCode: partner.id.toUpperCase(),
-      origin: '',
-      destination: '',
+      origin: city || '',
+      destination: city || '',
       price: 0,
       passengers: 1,
       cabinClass: 'standard',
@@ -119,14 +223,23 @@ export default function TravelExtras() {
       referralUrl: partner.trackingUrl,
       source: 'extras_page',
       ctaType: 'cross_sell',
-      serviceType: category,
+      serviceType: serviceType,
     });
     
+    // Open through /out for tracking
     openPartnerLink(partner.trackingUrl, {
       partnerId: partner.id,
       partnerName: partner.name,
-      product: category,
-      pageSource: 'travel-extras',
+      product: 'extras',
+      pageSource: 'extras',
+    });
+    
+    // Open through /out for tracking
+    openPartnerLink(partner.trackingUrl, {
+      partnerId: partner.id,
+      partnerName: partner.name,
+      product: 'extras',
+      pageSource: 'extras',
     });
   };
 
@@ -135,122 +248,145 @@ export default function TravelExtras() {
       <Header />
       
       <main className="flex-1 pt-20">
-        {/* Hero Section with Photo */}
-        <ServiceHero
-          service="extras"
-          title="Everything You Need for Your Trip"
-          subtitle="From airport transfers to travel eSIMs - find all your travel essentials in one place"
-          icon={Sparkles}
-          image={heroExtras}
-        />
-
-        {/* Experience Gallery */}
-        <ExperienceGallery 
-          service="extras"
-          title="Popular Activities"
-          subtitle="Discover experiences around the world"
-        />
-
-        {/* Categories */}
-        {categories.map((category, index) => (
-          <section 
-            key={category.id} 
-            className={cn(
-              "py-12 border-b border-border",
-              index % 2 === 1 && "bg-muted/20"
-            )}
-          >
-            <div className="container mx-auto px-4">
-              {/* Category Header with Image */}
-              <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
-                {/* Category Image */}
-                <div className="w-full md:w-48 aspect-[2/1] md:aspect-[4/3] rounded-2xl overflow-hidden flex-shrink-0">
-                  <img
-                    src={category.image}
-                    alt={category.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+        {/* Hero Section */}
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0">
+            <img
+              src={heroExtras}
+              alt="Travel extras and services"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+          </div>
+          
+          <div className="relative container mx-auto px-4 py-16 sm:py-20">
+            <div className="max-w-3xl mx-auto text-center">
+              <Badge className="mb-4 bg-primary/10 text-primary border-primary/30">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Travel Add-Ons
+              </Badge>
+              
+              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                ZIVO{" "}
+                <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+                  Extras
+                </span>
+              </h1>
+              
+              <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
+                Tours, transfers, eSIM, luggage storage, and travel services — book on trusted partner sites.
+              </p>
+              
+              {/* Optional City Input */}
+              <div className="max-w-sm mx-auto">
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Traveling to (city)"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="pl-10 h-12 bg-background/80 backdrop-blur-sm border-border/50"
                   />
                 </div>
-                
-                {/* Category Info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br text-white",
-                      category.gradient
-                    )}>
-                      <category.icon className="w-5 h-5" />
-                    </div>
-                    <h2 className="font-bold text-xl">{category.title}</h2>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{category.description}</p>
-                </div>
-              </div>
-
-              {/* Partner Cards */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
-                {category.partners.map((partner) => (
-                  <Card
-                    key={partner.id}
-                    className="group cursor-pointer border-border/50 hover:border-primary/50 hover:shadow-lg transition-all duration-300"
-                    onClick={() => handlePartnerClick(partner, category.trackingCategory)}
-                  >
-                    <CardContent className="p-5">
-                      <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                          {partner.logo}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold mb-1 group-hover:text-primary transition-colors">
-                            {partner.name}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                            {partner.features.slice(0, 2).join(' • ')}
-                          </p>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors"
-                          >
-                            Explore <ExternalLink className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Optional: helps us personalize your experience
+                </p>
               </div>
             </div>
-          </section>
-        ))}
+          </div>
+        </section>
 
-        {/* Testimonials */}
-        <UserTestimonials />
-
-        {/* Trust & Disclosure */}
-        <section className="py-12">
+        {/* Partner Grid - All 13 Partners */}
+        <section className="py-12 sm:py-16">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <div className="flex flex-wrap items-center justify-center gap-6 mb-6 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-emerald-500" />
-                  <span>Trusted partners</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-500" />
-                  <span>Instant confirmation</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-sky-500" />
-                  <span>Worldwide coverage</span>
-                </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-7xl mx-auto">
+              <TooltipProvider>
+                {EXTRAS_PARTNERS.map((partner, index) => (
+                  <Tooltip key={partner.id}>
+                    <TooltipTrigger asChild>
+                      <Card
+                        className={cn(
+                          "group cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg border-border/50",
+                          partner.borderHover,
+                          "animate-in fade-in slide-in-from-bottom-4"
+                        )}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                        onClick={() => handlePartnerClick(partner)}
+                      >
+                        <CardContent className="p-5">
+                          <div className="flex items-start gap-4">
+                            {/* Icon */}
+                            <div className={cn(
+                              "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform",
+                              `bg-gradient-to-br ${partner.gradient}`
+                            )}>
+                              {partner.logo}
+                            </div>
+                            
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-muted-foreground mb-0.5">
+                                {partner.category}
+                              </p>
+                              <h3 className="font-bold text-sm mb-1 group-hover:text-primary transition-colors">
+                                {partner.name}
+                              </h3>
+                              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                                {partner.description}
+                              </p>
+                              
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors touch-manipulation"
+                              >
+                                Explore
+                                <ExternalLink className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>You will be redirected to a partner site.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </TooltipProvider>
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Indicators */}
+        <section className="py-8 border-t border-border/50 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-emerald-500" />
+                <span>Trusted partners</span>
               </div>
-              
-              <RedirectDisclaimer variant="banner" className="mb-4" />
-              
-              <p className="text-xs text-muted-foreground">
-                {AFFILIATE_DISCLOSURE_TEXT.short}
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <span>Instant confirmation</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-sky-500" />
+                <span>Worldwide coverage</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Affiliate Disclosure Footer */}
+        <section className="py-10 border-t border-border/50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto text-center">
+              <p className="text-sm text-muted-foreground mb-4">
+                ZIVO may earn a commission when users book through partner links.
+                <br />
+                Bookings are completed on partner websites.
               </p>
             </div>
           </div>
