@@ -29,6 +29,8 @@ import {
   IndicativePriceAlert,
   RedirectNotice,
   AffiliateDisclaimer,
+  ResultsBreadcrumbs,
+  ResultsFAQ,
 } from "@/components/results";
 import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch";
 import { getCityBySlug } from "@/data/cities";
@@ -235,6 +237,9 @@ export default function HotelResultsPage() {
       <Header />
 
       <main className="pt-16">
+        {/* Breadcrumbs */}
+        <ResultsBreadcrumbs service="hotels" />
+
         {/* Sticky Search Summary */}
         <StickySearchSummary
           service="hotels"
@@ -346,6 +351,9 @@ export default function HotelResultsPage() {
             </div>
           </section>
         )}
+
+        {/* FAQ Section */}
+        <ResultsFAQ service="hotels" />
 
         {/* Affiliate Disclaimer */}
         <AffiliateDisclaimer />

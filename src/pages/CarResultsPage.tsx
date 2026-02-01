@@ -29,6 +29,8 @@ import {
   IndicativePriceAlert,
   RedirectNotice,
   AffiliateDisclaimer,
+  ResultsBreadcrumbs,
+  ResultsFAQ,
 } from "@/components/results";
 import { useRealCarSearch, type CarResult } from "@/hooks/useRealCarSearch";
 import { getAirportByCode } from "@/components/car/AirportAutocomplete";
@@ -329,6 +331,9 @@ export default function CarResultsPage() {
       <Header />
 
       <main className="pt-16">
+        {/* Breadcrumbs */}
+        <ResultsBreadcrumbs service="cars" />
+
         {/* Sticky Search Summary */}
         <StickySearchSummary
           service="cars"
@@ -439,6 +444,9 @@ export default function CarResultsPage() {
             </div>
           </section>
         )}
+
+        {/* FAQ Section */}
+        <ResultsFAQ service="cars" />
 
         {/* Affiliate Disclaimer */}
         <AffiliateDisclaimer />

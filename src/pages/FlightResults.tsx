@@ -64,6 +64,7 @@ import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
 import { FlightResultsSkeleton, FlightResultsHeaderSkeleton } from "@/components/flight/FlightResultsSkeleton";
+import { ResultsBreadcrumbs, ResultsFAQ } from "@/components/results";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -536,7 +537,10 @@ const FlightResults = () => {
       <Header />
 
       <main className="pt-20 pb-32 lg:pb-20">
-        <div className="container mx-auto px-4">
+        {/* Breadcrumbs */}
+        <ResultsBreadcrumbs service="flights" />
+
+        <div className="container mx-auto px-4 mt-6">
           {/* Search Summary Bar */}
           <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -959,6 +963,9 @@ const FlightResults = () => {
             </div>
           </div>
         </div>
+
+        {/* FAQ Section */}
+        <ResultsFAQ service="flights" />
       </main>
 
       {/* Sticky Mobile CTA */}
