@@ -2,8 +2,12 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed } from "lucide-react";
 import heroImage from "@/assets/hero-homepage.jpg";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 export default function HeroSection() {
+  // Preload hero image for LCP optimization
+  useImagePreload({ src: heroImage, enabled: true });
+
   return (
     <section className="relative min-h-[90vh] lg:min-h-[85vh]">
       {/* Mobile: Stacked layout */}
@@ -13,7 +17,13 @@ export default function HeroSection() {
           <img
             src={heroImage}
             alt="ZIVO - Travel, Rides & Eats in One Place"
+            width={1920}
+            height={1080}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover"
+            style={{ aspectRatio: "16/9" }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/50 to-background" />
         </div>
@@ -167,7 +177,13 @@ export default function HeroSection() {
           <img
             src={heroImage}
             alt="ZIVO - Modern airport terminal, premium travel marketplace"
+            width={1920}
+            height={1080}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             className="w-full h-full object-cover"
+            style={{ aspectRatio: "16/9" }}
           />
           <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background/20" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20" />

@@ -281,10 +281,14 @@ export default function DestinationCardsGrid({
               {/* Image */}
               <div className="relative aspect-square overflow-hidden">
                 <img 
-                  src={dest.image} 
+                  src={dest.image.replace("q=80", "q=75&fm=webp&auto=format")} 
                   alt={`${dest.city}, ${dest.country} - Travel destination`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  width={400}
+                  height={400}
                   loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  style={{ aspectRatio: "1/1" }}
                 />
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

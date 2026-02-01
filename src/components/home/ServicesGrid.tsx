@@ -132,12 +132,16 @@ export default function ServicesGrid() {
                 )}
               >
                 {/* Image Header */}
-                <div className="relative h-32 overflow-hidden">
+                <div className="relative h-32 overflow-hidden" style={{ aspectRatio: "4/3" }}>
                   <img
                     src={service.image}
                     alt={`ZIVO ${service.title} - ${service.description}`}
+                    width={400}
+                    height={300}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    style={{ aspectRatio: "4/3" }}
                   />
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />

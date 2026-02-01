@@ -13,6 +13,19 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-charts": ["recharts"],
+          "vendor-map": ["mapbox-gl"],
+        },
+      },
+    },
+    cssCodeSplit: true,
+    sourcemap: false,
+  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
@@ -107,6 +120,31 @@ export default defineConfig(({ mode }) => ({
               cacheName: "google-fonts-webfonts",
               expiration: {
                 maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "unsplash-images",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(jpg|jpeg|png|webp|avif)$/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "local-images",
+              expiration: {
+                maxEntries: 60,
                 maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
