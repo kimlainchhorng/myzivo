@@ -16,6 +16,13 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
+// App (mobile-first) pages - lazy load
+const AppHome = lazy(() => import("./pages/app/AppHome"));
+const AppTravel = lazy(() => import("./pages/app/AppTravel"));
+const AppRides = lazy(() => import("./pages/app/AppRides"));
+const AppEats = lazy(() => import("./pages/app/AppEats"));
+const AppMore = lazy(() => import("./pages/app/AppMore"));
+
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
 const Eats = lazy(() => import("./pages/Eats"));
@@ -133,16 +140,21 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 
-                {/* Lazy loaded routes */}
-                <Route path="/food" element={<Eats />} />
-                <Route path="/eats" element={<Eats />} />
+                {/* App (Mobile-first) Routes */}
+                <Route path="/app" element={<AppHome />} />
+                <Route path="/travel" element={<AppTravel />} />
+                <Route path="/rides" element={<AppRides />} />
+                <Route path="/ride" element={<AppRides />} />
+                <Route path="/eats" element={<AppEats />} />
+                <Route path="/food" element={<AppEats />} />
+                <Route path="/more" element={<AppMore />} />
+                
+                {/* Legacy routes for deep links */}
                 <Route path="/eats/restaurants" element={<EatsRestaurants />} />
                 <Route path="/eats/restaurant/:id" element={<EatsRestaurantMenu />} />
                 <Route path="/eats/checkout" element={<EatsCheckout />} />
-                <Route path="/ride" element={<Rides />} />
-                <Route path="/rides" element={<Rides />} />
-                <Route path="/zivo-rides" element={<Rides />} />
-                <Route path="/zivo-eats" element={<Eats />} />
+                <Route path="/zivo-rides" element={<AppRides />} />
+                <Route path="/zivo-eats" element={<AppEats />} />
                 <Route path="/book-flight" element={<FlightBooking />} />
                 
                 {/* SEO Flight Landing Pages */}
