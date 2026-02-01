@@ -1,0 +1,13 @@
+/**
+ * Search Components Index
+ * Professional search forms with structured autocomplete
+ */
+
+export { default as LocationAutocomplete } from './LocationAutocomplete';
+export type { LocationOption } from './LocationAutocomplete';
+
+export { default as FlightSearchFormPro } from './FlightSearchFormPro';
+export { default as HotelSearchFormPro } from './HotelSearchFormPro';
+export { default as CarSearchFormPro } from './CarSearchFormPro';
+
+export { useAirportSearch, useCitySearch } from './hooks/useLocationSearch';
