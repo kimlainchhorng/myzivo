@@ -25,6 +25,7 @@ export interface UTMParams {
 export interface SubIDComponents {
   product: string;
   page: string;
+  partner: string;
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
@@ -120,12 +121,13 @@ export function initUTMTracking(): UTMParams {
 
 /**
  * Generate SubID for affiliate tracking
- * Format: {product}.{page}.{utm_source}.{utm_campaign}.{creator}.{date}
+ * Format: {product}.{page}.{partner}.{utm_source}.{utm_campaign}.{creator}.{date}
  */
 export function generateSubID(
   product: string,
   page: string,
-  utmParams?: UTMParams
+  utmParams?: UTMParams,
+  partnerId?: string
 ): { subid: string; components: SubIDComponents } {
   const params = utmParams || getPersistedUTMParams();
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -133,6 +135,7 @@ export function generateSubID(
   const components: SubIDComponents = {
     product: sanitize(product, 15),
     page: sanitize(page, 20),
+    partner: sanitize(partnerId, 15),
     utm_source: sanitize(params.utm_source, 15),
     utm_medium: sanitize(params.utm_medium, 10),
     utm_campaign: sanitize(params.utm_campaign, 20),
@@ -143,10 +146,11 @@ export function generateSubID(
   };
   
   // Build SubID with core components
-  // Format: product.page.source.campaign.creator.date
+  // Format: product.page.partner.source.campaign.creator.date
   let subid = [
     components.product,
     components.page,
+    components.partner,
     components.utm_source,
     components.utm_campaign,
     components.creator,

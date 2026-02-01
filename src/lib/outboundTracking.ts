@@ -57,7 +57,8 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
   error?: string;
 }> {
   const utmParams = getPersistedUTMParams();
-  const { subid, components } = generateSubID(data.product, data.pageSource, utmParams);
+  // Pass partnerId to include it in the SubID format
+  const { subid, components } = generateSubID(data.product, data.pageSource, utmParams, data.partnerId);
   const finalUrl = appendSubIDToURL(data.destinationUrl, subid, data.partnerId);
   
   const logEntry: ClickLogEntry = {

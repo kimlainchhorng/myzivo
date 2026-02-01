@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRideRequests } from "@/hooks/useRideRequests";
 import { useFoodOrders } from "@/hooks/useEatsOrders";
 import { useDrivers } from "@/hooks/useDrivers";
+import { useClickStats } from "@/hooks/useClickStats";
 import { cn } from "@/lib/utils";
 import { format, subDays, isAfter } from "date-fns";
 
@@ -20,8 +21,9 @@ export default function AdminOverview() {
   const { data: rideRequests, isLoading: ridesLoading } = useRideRequests("all");
   const { data: foodOrders, isLoading: eatsLoading } = useFoodOrders("all");
   const { data: drivers, isLoading: driversLoading } = useDrivers();
+  const { data: clickStats, isLoading: clicksLoading } = useClickStats();
 
-  const isLoading = ridesLoading || eatsLoading || driversLoading;
+  const isLoading = ridesLoading || eatsLoading || driversLoading || clicksLoading;
 
   // Calculate stats
   const today = new Date();
@@ -148,18 +150,28 @@ export default function AdminOverview() {
           </CardContent>
         </Card>
 
-        {/* Affiliate Clicks */}
+        {/* Affiliate Clicks - Now with real data */}
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "150ms" }}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
                 <MousePointerClick className="w-5 h-5 text-violet-500" />
               </div>
+              {clickStats && clickStats.today > 0 && (
+                <Badge className="text-[10px] bg-violet-500">
+                  +{clickStats.today} today
+                </Badge>
+              )}
             </div>
-            <p className="text-2xl font-bold">--</p>
+            <p className="text-2xl font-bold">{isLoading ? "..." : (clickStats?.today ?? 0)}</p>
             <p className="text-xs text-muted-foreground">Clicks Today</p>
             <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-              <span>View analytics</span>
+              <span>{clickStats?.week ?? 0} this week</span>
+              {clickStats?.byPartner?.[0] && (
+                <span className="ml-2 text-violet-400">
+                  Top: {clickStats.byPartner[0].partner}
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>
