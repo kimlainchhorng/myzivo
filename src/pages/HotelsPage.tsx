@@ -10,7 +10,7 @@ import { format, addDays } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import HotelSearchForm, { HotelSearchParams } from "@/components/hotels/HotelSearchForm";
+import { HotelSearchFormPro, type HotelSearchParams } from "@/components/search";
 import HotelFiltersComponent, { HotelFilters } from "@/components/hotels/HotelFilters";
 import HotelResultCard, { HotelResult } from "@/components/hotels/HotelResultCard";
 import HotelResultsSkeleton from "@/components/hotels/HotelResultsSkeleton";
@@ -182,8 +182,9 @@ export default function HotelsPage() {
               </div>
 
               {/* Search Form */}
-              <HotelSearchForm
-                initialCity={city?.name || ""}
+              <HotelSearchFormPro
+                initialCity={city?.slug || ""}
+                initialCityDisplay={city?.name || ""}
                 className="max-w-5xl mx-auto"
                 onSearch={handleSearch}
                 navigateOnSearch={false}

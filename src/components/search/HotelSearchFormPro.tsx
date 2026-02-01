@@ -30,21 +30,33 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useCitySearch } from "./hooks/useLocationSearch";
 
+export interface HotelSearchParams {
+  citySlug: string;
+  cityName: string;
+  checkIn: Date;
+  checkOut: Date;
+  adults: number;
+  rooms: number;
+  children?: number;
+}
+
 interface HotelSearchFormProProps {
   // Initial values
   initialCity?: string;
+  initialCityDisplay?: string;
   initialCheckIn?: Date;
   initialCheckOut?: Date;
   initialAdults?: number;
   initialRooms?: number;
   // Callbacks
-  onSearch?: (params: URLSearchParams) => void;
+  onSearch?: (params: HotelSearchParams) => void;
   navigateOnSearch?: boolean;
   className?: string;
 }
 
 export default function HotelSearchFormPro({
   initialCity = "",
+  initialCityDisplay = "",
   initialCheckIn,
   initialCheckOut,
   initialAdults = 2,
@@ -94,10 +106,12 @@ export default function HotelSearchFormPro({
         setCityOption(option);
         setCityDisplay(option.label);
       } else {
-        setCityDisplay(initialCity);
+        setCityDisplay(initialCityDisplay || initialCity);
       }
+    } else if (initialCityDisplay) {
+      setCityDisplay(initialCityDisplay);
     }
-  }, [initialCity, getBySlug]);
+  }, [initialCity, initialCityDisplay, getBySlug]);
 
   // Validate form
   const validate = (): boolean => {
@@ -128,37 +142,46 @@ export default function HotelSearchFormPro({
   // Handle search
   const handleSearch = () => {
     if (!validate()) return;
+    if (!checkIn || !checkOut) return;
 
-    // Get city slug
+    // Get city slug and name
     const citySlug = cityOption?.value || cityDisplay.toLowerCase().replace(/\s+/g, '-');
+    const cityName = cityOption?.label || cityDisplay;
 
-    const params = new URLSearchParams({
-      city: citySlug,
-      checkin: checkIn ? format(checkIn, "yyyy-MM-dd") : "",
-      checkout: checkOut ? format(checkOut, "yyyy-MM-dd") : "",
-      adults: String(adults),
-      rooms: String(rooms),
+    // Call onSearch callback with structured params
+    onSearch?.({
+      citySlug,
+      cityName,
+      checkIn,
+      checkOut,
+      adults,
+      rooms,
+      children: children > 0 ? children : undefined,
     });
-
-    if (children > 0) {
-      params.set("children", String(children));
-    }
-
-    // Preserve UTM params
-    const currentParams = new URLSearchParams(window.location.search);
-    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "creator"].forEach((key) => {
-      const val = currentParams.get(key);
-      if (val) params.set(key, val);
-    });
-
-    onSearch?.(params);
 
     if (navigateOnSearch) {
+      const params = new URLSearchParams({
+        city: citySlug,
+        checkin: format(checkIn, "yyyy-MM-dd"),
+        checkout: format(checkOut, "yyyy-MM-dd"),
+        adults: String(adults),
+        rooms: String(rooms),
+      });
+
+      if (children > 0) {
+        params.set("children", String(children));
+      }
+
+      // Preserve UTM params
+      const currentParams = new URLSearchParams(window.location.search);
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "creator"].forEach((key) => {
+        const val = currentParams.get(key);
+        if (val) params.set(key, val);
+      });
+
       navigate(`/hotels/results?${params.toString()}`);
     }
   };
-
-  // Check if form is valid
   const isFormValid = useMemo(() => {
     const hasCity = !!cityOption || !!cityDisplay.trim();
     const hasCheckIn = !!checkIn;

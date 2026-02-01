@@ -8,6 +8,7 @@ export type { LocationOption } from './LocationAutocomplete';
 
 export { default as FlightSearchFormPro } from './FlightSearchFormPro';
 export { default as HotelSearchFormPro } from './HotelSearchFormPro';
+export type { HotelSearchParams } from './HotelSearchFormPro';
 export { default as CarSearchFormPro } from './CarSearchFormPro';
 
 export { useAirportSearch, useCitySearch } from './hooks/useLocationSearch';

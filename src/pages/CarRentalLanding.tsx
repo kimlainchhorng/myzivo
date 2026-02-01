@@ -1,7 +1,5 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { CarFront, Search, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, Calendar, ExternalLink } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useParams } from "react-router-dom";
+import { CarFront, Shield, Clock, CheckCircle, ExternalLink } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -12,8 +10,8 @@ import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import { InternalLinkGrid } from "@/components/seo";
+import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { heroPhotos, serviceOverlays } from "@/config/photos";
 
 const trustBadges = [
@@ -24,8 +22,6 @@ const trustBadges = [
 
 export default function CarRentalLanding() {
   const { location } = useParams<{ location?: string }>();
-  const navigate = useNavigate();
-  const [pickupLocation, setPickupLocation] = useState(location?.replace(/-/g, " ") || "");
 
   const formattedLocation = location?.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   
@@ -38,14 +34,6 @@ export default function CarRentalLanding() {
     : "Compare car rental prices from trusted providers. Find the best rates on rental cars worldwide. No booking fees on ZIVO.";
 
   const heroImage = heroPhotos.cars;
-
-  const handleSearch = () => {
-    if (pickupLocation) {
-      navigate(`/rent-car?location=${encodeURIComponent(pickupLocation)}`);
-    } else {
-      navigate("/rent-car");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,29 +77,10 @@ export default function CarRentalLanding() {
               <p className="text-lg text-white/80 mb-8">
                 Compare prices from Hertz, Enterprise, Avis, Budget and more. No booking fees on ZIVO.
               </p>
-
-              {/* Search Form */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
-                <div className="flex-1 relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-400" />
-                  <Input
-                    type="text"
-                    placeholder="Pick-up location"
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    className="pl-12 h-14 text-base rounded-xl bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSearch}
-                  size="lg" 
-                  className="h-14 px-8 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-semibold shadow-lg shadow-violet-500/30"
-                >
-                  <Search className="w-5 h-5 mr-2" />
-                  Search Cars
-                </Button>
-              </div>
             </div>
+
+            {/* Professional Search Form */}
+            <CarSearchFormPro className="max-w-4xl mx-auto" />
 
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
