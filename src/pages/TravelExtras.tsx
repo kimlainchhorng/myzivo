@@ -38,6 +38,7 @@ import { buildOutboundURL } from "@/lib/outboundTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import heroExtras from "@/assets/hero-extras.jpg";
 
 // Import partner thumbnail images
@@ -314,6 +315,9 @@ export default function TravelExtras() {
               </div>
             </div>
           </section>
+
+          {/* Global Trust Bar */}
+          <GlobalTrustBar variant="compact" />
 
           {/* Partner Grid - All Partners */}
           <section className="py-12 sm:py-16">

@@ -16,6 +16,7 @@ import ImageHero from "@/components/shared/ImageHero";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { formatRouteTitle } from "@/utils/seoUtils";
 
 /**
@@ -71,6 +72,9 @@ const FlightLanding = () => {
             navigateOnSearch={true}
           />
         </ImageHero>
+
+        {/* Trust Bar */}
+        <GlobalTrustBar variant="compact" />
 
         {/* Partner Logos */}
         <PartnerLogosStrip service="flights" />

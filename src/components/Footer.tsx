@@ -120,16 +120,22 @@ const Footer = () => {
                 Search & compare flights, hotels, and car rentals from trusted partners.
               </p>
               
+              {/* Business Info Block */}
+              <div className="p-3 rounded-xl bg-muted/30 border border-border/50 mb-4">
+                <p className="text-xs font-medium text-foreground mb-1">ZIVO LLC</p>
+                <p className="text-[10px] text-muted-foreground">Travel Search & Comparison Platform</p>
+              </div>
+              
               {/* Contact Emails */}
               <div className="space-y-1">
                 {contactEmails.map((contact) => (
                   <a
                     key={contact.email}
                     href={`mailto:${contact.email}`}
-                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors justify-center lg:justify-start"
+                    className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors justify-center lg:justify-start"
                   >
-                    <Mail className="w-3.5 h-3.5" />
-                    {contact.email}
+                    <Mail className="w-3 h-3" />
+                    <span className="text-[10px]">{contact.label}:</span> {contact.email}
                   </a>
                 ))}
               </div>
