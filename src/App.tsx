@@ -52,6 +52,7 @@ const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 const HotelsPage = lazy(() => import("./pages/HotelsPage"));
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
+const CarResultsPage = lazy(() => import("./pages/CarResultsPage"));
 const CarRentalLanding = lazy(() => import("./pages/CarRentalLanding"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
@@ -188,6 +189,7 @@ const App = () => (
                 <Route path="/car-rental" element={<CarRentalLanding />} />
                 <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
                 <Route path="/rent-car" element={<CarRentalBooking />} />
+                <Route path="/rent-car/results" element={<CarResultsPage />} />
                 <Route path="/rent-car/:city" element={<CarRentalLanding />} />
                 
                 <Route path="/profile" element={<Profile />} />
