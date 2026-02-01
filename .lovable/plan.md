@@ -1,277 +1,316 @@
 
+# Performance & Core Web Vitals Optimization for ZIVO
 
-# Consistent Photo Style Implementation for ZIVO
+## Current State Analysis
 
-## Overview
+### What Already Works Well
+1. **Route-level code splitting** - 80+ pages use `React.lazy()` for dynamic imports
+2. **Native lazy loading** - Most images use `loading="lazy"` attribute
+3. **PWA with service worker caching** - Mapbox, fonts, and static assets cached
+4. **LazyLoadSection component** - IntersectionObserver-based section loading
+5. **Skeleton loaders** - Basic skeletons exist for cards and lists
 
-This plan replaces all existing images with a cohesive **high-quality travel photography** style using a consistent **cool/neutral tone with slight blue tint**. All photos will be placed only in correct locations (heroes, cards, tiles) with proper aspect ratios and optimization.
-
----
-
-## Style Specifications
-
-### Visual Consistency Rules
-- **Color tone**: Cool/neutral with subtle blue tint (no warm/saturated styles)
-- **Lighting**: Clean, soft, professional lighting
-- **Subject focus**: Travel products and scenes (minimal faces)
-- **Overlays**: Soft dark gradient on all hero images for text readability
-- **No mixing**: Pure photography only (no illustrations)
-
-### Aspect Ratios
-| Element Type | Aspect Ratio | Typical Size |
-|--------------|--------------|--------------|
-| Hero images | 16:9 | 1920x1080 |
-| Service cards | 4:3 | 600x450 |
-| Destination tiles | 1:1 | 400x400 |
-| Restaurant thumbnails | 1:1 | 300x300 |
-| Car category tiles | 4:3 | 600x450 |
+### Critical Performance Issues Identified
+1. **No responsive images** - Missing `srcset`/`sizes` attributes (0 matches found)
+2. **No image preloading** - Hero images not preloaded (0 matches found)
+3. **No explicit dimensions** - Images lack `width`/`height` causing CLS
+4. **JPG format only** - No WebP conversion (32 JPG files in assets)
+5. **No blur placeholders** - Images pop in without smooth transitions
+6. **Unsplash images lack optimization** - Using default quality (q=80)
+7. **Hero images loaded lazily** - Should be `loading="eager"` with preload
 
 ---
 
-## Page-by-Page Implementation
+## Implementation Plan
 
-### HOME PAGE (/)
+### Phase 1: Enhanced OptimizedImage Component
 
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "modern airport terminal wide angle, clean, minimal, cool tone, blue tint, professional travel photography, no people in focus"
-- Replace: `src/assets/hero-homepage.jpg`
+**File: `src/components/shared/OptimizedImage.tsx`**
 
-**6 Service Cards (4:3)** - Generate dedicated card images:
+Add responsive image support with srcset, explicit dimensions, and blur placeholder:
 
-| Service | Current | New Prompt |
-|---------|---------|------------|
-| Flights | Uses hero-flights.jpg | "airplane taking off runway, minimal, cool tone, clean sky, professional" |
-| Hotels | Uses hero-hotels.jpg | "modern hotel lobby interior, premium, clean lighting, cool neutral" |
-| Cars | Uses hero-cars.jpg | "rental car parked near airport terminal, clean, modern, cool blue" |
-| Rides | Uses hero-rides.jpg | "car pickup in city street, modern, evening twilight, cool tone" |
-| Eats | Uses hero-eats.jpg | "food delivery bag on modern car hood, clean, professional" |
-| Extras | Uses hero-homepage.jpg | "travel essentials flat lay passport luggage phone, clean white background" |
-
-**Files to create:**
-- `src/assets/service-flights.jpg`
-- `src/assets/service-hotels.jpg`
-- `src/assets/service-cars.jpg`
-- `src/assets/service-rides.jpg`
-- `src/assets/service-eats.jpg`
-- `src/assets/service-extras.jpg`
-
-**Files to modify:**
-- `src/components/home/ServicesGrid.tsx` - Update to use dedicated service card images
-
----
-
-### FLIGHTS PAGE (/flights)
-
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "airplane wing sunrise clouds wide angle, premium, calm, cool blue tones, professional travel photography"
-- Replace: `src/assets/hero-flights.jpg`
-
-**Changes to `src/components/shared/ImageHero.tsx`:**
-- Verify overlay gradient is `from-slate-950/90 via-blue-950/80 to-slate-950/70` ✓ (already correct)
-- Ensure alt text follows pattern ✓ (already implemented)
-
----
-
-### HOTELS PAGE (/hotels)
-
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "luxury hotel lobby modern design wide angle, warm-neutral tones, premium, clean lighting, professional"
-- Replace: `src/assets/hero-hotels.jpg`
-
-**Destination Tiles (1:1)** - Update aspect ratio from 4:3 to 1:1:
-
-**Changes to `src/components/shared/DestinationCardsGrid.tsx`:**
-- Line 282: Change `aspect-[4/3]` to `aspect-square`
-- Update Unsplash URLs to use `w=400&h=400&fit=crop`
-
-**New destination image URLs (1:1, cool/neutral tone):**
 ```text
-NYC: https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=80
-LA: https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=80
-Miami: https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=400&h=400&fit=crop&q=80
-Las Vegas: https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=80
-Paris: https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=80
-Tokyo: https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=80
-London: https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=80
-Dubai: https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=80
+New Props:
+- width: number (required for CLS prevention)
+- height: number (required for CLS prevention)
+- sizes?: string (responsive sizes attribute)
+- srcSet?: { src: string; width: number }[] (responsive sources)
+- blurDataURL?: string (optional blur placeholder)
+- quality?: number (for Unsplash URL optimization)
+
+Features to add:
+- Generate srcset automatically for Unsplash URLs
+- Add width/height to prevent layout shift
+- Implement blur-up placeholder effect
+- Support WebP format detection
 ```
 
----
+### Phase 2: Create PerformantHeroImage Component
 
-### CAR RENTAL PAGE (/rent-car)
+**File: `src/components/shared/PerformantHeroImage.tsx`**
 
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "modern car at airport terminal wide angle, clean, cool neutral tones, professional automotive photography"
-- Replace: `src/assets/hero-cars.jpg`
+Specialized hero image component with:
+- Always `loading="eager"`
+- Preload link injection via `useEffect`
+- Fixed dimensions (16:9 aspect ratio)
+- Critical-path optimization
+- Blur placeholder while loading
 
-**Car Category Tiles** - Update aspect ratio and images in `src/config/photos.ts`:
+### Phase 3: Create useImagePreload Hook
 
-| Category | New Unsplash URL (4:3, cool tone) |
-|----------|-----------------------------------|
-| Economy | Compact city car, clean, urban background |
-| Compact | Small sedan, urban street, clean |
-| Midsize | Standard sedan, professional, clean |
-| SUV | SUV near mountains, clean, adventure |
-| Luxury | Luxury sedan, clean, modern, premium |
-| Van | Van/minivan, family travel, clean |
+**File: `src/hooks/useImagePreload.ts`**
 
-**Changes to `src/config/photos.ts`:**
-- Lines 86-129: Update all car category URLs with consistent cool-tone Unsplash images
+Custom hook that:
+- Injects `<link rel="preload" as="image">` into document head
+- Supports responsive preload with `imagesrcset`
+- Cleans up on unmount
+- Only preloads above-fold images
 
-**Add Electric category:**
-```typescript
-electric: {
-  src: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&h=400&fit=crop&q=80",
-  alt: "Electric car at charging station - Modern EV rental",
-  label: "Electric",
-  passengers: 5,
-  bags: 2,
-},
-```
-
-**Changes to `src/components/car/CarCategoryTiles.tsx`:**
-- Update `CarCategory` type to include "electric"
-- Add electric to categoryOrder array
-
----
-
-### RIDES PAGE (/rides)
-
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "city rideshare pickup at curb modern evening clean, cool blue tones, urban, no driver visible, professional"
-- Replace: `src/assets/hero-rides.jpg`
-
----
-
-### EATS PAGE (/eats)
-
-**Hero Image (16:9)** - Generate new image:
-- Prompt: "food delivery package modern clean, appetizing meal, cool neutral background, professional food photography"
-- Replace: `src/assets/hero-eats.jpg`
-
-**Restaurant Thumbnails (1:1)** - Create consistent food images:
-
-Currently using emojis in `src/pages/app/AppEats.tsx`. Update to use proper photos:
-
-**Create new file: `src/config/restaurantPhotos.ts`**
-```typescript
-export const restaurantPhotos = {
-  burger: { src: "https://images.unsplash.com/...", alt: "Gourmet burger - American cuisine" },
-  sushi: { src: "https://images.unsplash.com/...", alt: "Fresh sushi platter - Japanese cuisine" },
-  pizza: { src: "https://images.unsplash.com/...", alt: "Artisan pizza - Italian cuisine" },
-  taco: { src: "https://images.unsplash.com/...", alt: "Fresh tacos - Mexican cuisine" },
-  noodles: { src: "https://images.unsplash.com/...", alt: "Thai noodles - Asian cuisine" },
-  salad: { src: "https://images.unsplash.com/...", alt: "Fresh salad bowl - Healthy cuisine" },
-};
-```
-
-**Changes to `src/pages/app/AppEats.tsx`:**
-- Lines 37-43: Add photo URLs to restaurant data
-- Lines 296-298: Replace emoji div with proper 1:1 image
-
----
-
-### EXTRAS PAGE (/extras)
-
-**Hero Image (16:9)** - Current hero-extras.jpg is good but verify consistency:
-- If needed, regenerate with: "travel essentials luggage passport phone flat lay clean, cool neutral, minimal, white/gray background"
-
-**Category Cards** - Keep using Lucide icons (no random images needed)
-- The current implementation with icons is clean and consistent
-
----
-
-## Centralized Photo Configuration Updates
+### Phase 4: Update Photo Configuration
 
 **File: `src/config/photos.ts`**
 
-Update all photo definitions:
+Add optimization metadata:
 
 ```text
 Changes:
-1. Add heroHomepage to imports and heroPhotos
-2. Update all Unsplash URLs with consistent parameters (?w=WIDTH&h=HEIGHT&fit=crop&q=80)
-3. Add electric car category
-4. Update destinationPhotos to use 1:1 aspect ratio URLs
-5. Add restaurantPhotos export
-6. Update aspectRatios.destinationTile to "1:1"
+- Add width/height for each image
+- Add srcset configurations for responsive sizes
+- Optimize Unsplash URLs with q=75 instead of q=80
+- Add smaller breakpoints: 320, 640, 1024, 1440
+- Include blur placeholder data URLs
 ```
+
+### Phase 5: Update Hero Components
+
+**Files to modify:**
+- `src/components/home/HeroSection.tsx`
+- `src/components/shared/ImageHero.tsx`
+- `src/components/shared/ServiceHero.tsx`
+
+Changes:
+- Add explicit width/height (1920x1080)
+- Add preload for hero image
+- Ensure `loading="eager"`
+- Add fetchpriority="high" attribute
+
+### Phase 6: Optimize ServicesGrid
+
+**File: `src/components/home/ServicesGrid.tsx`**
+
+Changes:
+- Add width/height to service card images (400x300)
+- Use srcset for responsive loading
+- Keep `loading="lazy"` for below-fold cards
+- Add skeleton placeholder with matching aspect ratio
+
+### Phase 7: Optimize DestinationCardsGrid
+
+**File: `src/components/shared/DestinationCardsGrid.tsx`**
+
+Changes:
+- Update Unsplash URLs to use optimized quality (q=75)
+- Add srcset for responsive 1:1 images
+- Add explicit dimensions (400x400)
+- Reduce initial grid to 4 items, "Load more" for rest
+
+### Phase 8: Add Image Skeleton Components
+
+**File: `src/components/shared/SkeletonLoaders.tsx`**
+
+Add new skeleton types:
+- `SkeletonHeroImage` - Full-width hero placeholder
+- `SkeletonServiceCard` - 4:3 card with shimmer
+- `SkeletonDestinationTile` - 1:1 tile placeholder
+
+### Phase 9: Vite Build Optimization
+
+**File: `vite.config.ts`**
+
+Add optimizations:
+
+```text
+build: {
+  rollupOptions: {
+    output: {
+      manualChunks: {
+        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+        'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', ...],
+        'vendor-charts': ['recharts'],
+        'vendor-forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
+        'vendor-map': ['mapbox-gl'],
+      },
+    },
+  },
+  cssCodeSplit: true,
+  sourcemap: false,
+  minify: 'terser',
+  terserOptions: {
+    compress: {
+      drop_console: true,
+      drop_debugger: true,
+    },
+  },
+},
+```
+
+### Phase 10: PWA Cache Optimization
+
+**File: `vite.config.ts` (workbox config)**
+
+Add image caching strategy:
+
+```text
+runtimeCaching: [
+  // Existing entries...
+  {
+    urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
+    handler: "CacheFirst",
+    options: {
+      cacheName: "unsplash-images",
+      expiration: {
+        maxEntries: 100,
+        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+      },
+      cacheableResponse: {
+        statuses: [0, 200],
+      },
+    },
+  },
+  {
+    urlPattern: /\.(jpg|jpeg|png|webp|avif)$/i,
+    handler: "CacheFirst",
+    options: {
+      cacheName: "local-images",
+      expiration: {
+        maxEntries: 60,
+        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+      },
+    },
+  },
+],
+```
+
+### Phase 11: Defer Non-Critical Scripts
+
+**File: `index.html`**
+
+Changes:
+- Move Travelpayouts script to bottom of body
+- Add `defer` attribute to non-critical scripts
+- Remove render-blocking resources
+
+### Phase 12: Add Performance Monitoring Utilities
+
+**File: `src/lib/performance.ts`**
+
+Create utilities for:
+- Web Vitals tracking (LCP, CLS, INP)
+- Image load timing measurement
+- Performance entry observer
 
 ---
 
-## Asset Generation List
+## Technical Implementation Details
 
-**Hero Images to Generate (1920x1080, <250KB):**
-1. `hero-homepage.jpg` - Modern airport terminal, cool tone
-2. `hero-flights.jpg` - Airplane wing sunrise, cool blue
-3. `hero-hotels.jpg` - Luxury hotel lobby, warm-neutral
-4. `hero-cars.jpg` - Car at airport, cool neutral
-5. `hero-rides.jpg` - City pickup, evening, cool blue
-6. `hero-eats.jpg` - Food delivery, clean, cool neutral
+### Responsive Image srcset Strategy
 
-**Service Card Images to Generate (600x450, <100KB):**
-7. `service-flights.jpg` - Airplane takeoff, cool tone
-8. `service-hotels.jpg` - Hotel lobby interior
-9. `service-cars.jpg` - Rental car at terminal
-10. `service-rides.jpg` - City car pickup
-11. `service-eats.jpg` - Food delivery bag
-12. `service-extras.jpg` - Travel essentials flat lay
+For heroes (16:9):
+```text
+srcset="
+  /image.jpg?w=320 320w,
+  /image.jpg?w=640 640w,
+  /image.jpg?w=1024 1024w,
+  /image.jpg?w=1440 1440w,
+  /image.jpg?w=1920 1920w
+"
+sizes="100vw"
+```
+
+For cards (4:3):
+```text
+srcset="
+  /image.jpg?w=200 200w,
+  /image.jpg?w=400 400w,
+  /image.jpg?w=600 600w
+"
+sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+```
+
+### Unsplash URL Optimization
+
+Current: `?w=400&h=400&fit=crop&q=80`
+Optimized: `?w=400&h=400&fit=crop&q=75&fm=webp&auto=format`
+
+The `fm=webp&auto=format` parameters tell Unsplash to:
+- Serve WebP if browser supports it
+- Fall back to JPEG otherwise
+
+### CLS Prevention Pattern
+
+All images must have:
+```html
+<img 
+  src="..."
+  width="1920"
+  height="1080"
+  alt="..."
+  style="aspect-ratio: 16/9"
+/>
+```
+
+This ensures the browser reserves space before image loads.
 
 ---
 
-## Technical Implementation
-
-### Overlay Gradients (Consistent Across All Heroes)
-```css
-/* Base overlay for all heroes */
-.hero-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(15, 23, 42, 0.9),    /* slate-950/90 */
-    rgba(30, 41, 59, 0.7),    /* slate-800/70 */
-    rgba(15, 23, 42, 0.6)     /* slate-950/60 */
-  );
-}
-```
-
-### Performance Requirements
-- All images: WebP format where possible
-- Heroes: `loading="eager"`, max 250KB
-- Cards/Tiles: `loading="lazy"`, max 100KB
-- Responsive srcSet for different viewport sizes
-- Alt text on every image for SEO
-
-### Files to Modify Summary
-
-| File | Changes |
-|------|---------|
-| `src/config/photos.ts` | Update all URLs, add electric category, add restaurant photos |
-| `src/components/home/ServicesGrid.tsx` | Use dedicated service card images |
-| `src/components/shared/DestinationCardsGrid.tsx` | Change to 1:1 aspect ratio |
-| `src/components/car/CarCategoryTiles.tsx` | Add electric category |
-| `src/pages/app/AppEats.tsx` | Replace emoji thumbnails with photos |
-
-### Files to Create
+## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/config/restaurantPhotos.ts` | Restaurant thumbnail photo config |
-| 6 hero assets | AI-generated hero images |
-| 6 service card assets | AI-generated service thumbnails |
+| `src/components/shared/PerformantHeroImage.tsx` | Optimized hero image with preload |
+| `src/hooks/useImagePreload.ts` | Preload link injection hook |
+| `src/lib/performance.ts` | Web Vitals tracking utilities |
+
+## Files to Modify
+
+| File | Key Changes |
+|------|-------------|
+| `src/components/shared/OptimizedImage.tsx` | Add srcset, dimensions, blur placeholder |
+| `src/components/shared/SkeletonLoaders.tsx` | Add image-specific skeletons |
+| `src/components/home/HeroSection.tsx` | Add preload, dimensions, fetchpriority |
+| `src/components/shared/ImageHero.tsx` | Add preload, dimensions |
+| `src/components/shared/ServiceHero.tsx` | Add preload, dimensions |
+| `src/components/home/ServicesGrid.tsx` | Add dimensions to card images |
+| `src/components/shared/DestinationCardsGrid.tsx` | Optimize Unsplash URLs, add dimensions |
+| `src/config/photos.ts` | Add dimensions and srcset configs |
+| `vite.config.ts` | Add build optimizations and image caching |
+| `index.html` | Defer scripts, add preconnect hints |
+
+---
+
+## Performance Targets
+
+| Metric | Current (Estimated) | Target |
+|--------|---------------------|--------|
+| LCP | > 3.5s | < 2.5s |
+| CLS | > 0.15 | < 0.1 |
+| INP | Unknown | < 200ms |
+| FCP | > 2s | < 1.8s |
+| TTI | > 5s | < 3.8s |
 
 ---
 
 ## Expected Outcomes
 
 After implementation:
-- All pages use consistent cool/neutral tone photography
-- Heroes are 16:9 with proper dark overlays
-- Service cards are 4:3 with lazy loading
-- Destination tiles are 1:1 (square)
-- Restaurant thumbnails are 1:1 (square)
-- No illustrations or mixed styles anywhere
-- No photos inside forms, modals, or navigation
-- All images have descriptive alt text
-- All images optimized for performance (<250KB)
-- Mobile layout maintains clean professional appearance
-
+- Hero images preloaded and render instantly
+- All images have explicit dimensions (zero CLS from images)
+- Responsive srcset serves appropriate sizes for device
+- WebP format auto-served via Unsplash
+- Unsplash images cached for 30 days via service worker
+- Local assets cached for 1 year
+- Bundle split into logical chunks (vendor, charts, map)
+- Console logs stripped in production
+- Non-critical scripts deferred
+- Skeleton loaders match final image dimensions
+- Mobile 3G/4G experience significantly improved
