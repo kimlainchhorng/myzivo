@@ -22,6 +22,7 @@ import { calculateEatsFare, formatCurrency, DEFAULT_EATS_ZONE, EatsPriceBreakdow
 import { EatsPriceBreakdown } from "@/components/pricing/EatsPriceBreakdown";
 import { ServiceHero } from "@/components/shared/ServiceHero";
 import heroEats from "@/assets/hero-eats.jpg";
+import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 
 type EatsStep = "restaurants" | "menu" | "cart" | "checkout" | "processing" | "submitted";
 
@@ -293,8 +294,13 @@ const AppEats = () => {
                 }}
                 className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 text-left touch-manipulation active:scale-[0.99] transition-transform"
               >
-                <div className="w-16 h-16 bg-muted/50 rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                  {restaurant.image}
+                <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                  <img 
+                    src={getRestaurantPhoto(restaurant.id).src}
+                    alt={getRestaurantPhoto(restaurant.id).alt}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm truncate">{restaurant.name}</h3>

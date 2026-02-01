@@ -27,7 +27,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "New York", 
       country: "USA", 
-      image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=80", 
       count: 450, 
       priceFrom: 199, 
       trending: true,
@@ -36,7 +36,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "London", 
       country: "United Kingdom", 
-      image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=80", 
       count: 380, 
       priceFrom: 459, 
       trending: true,
@@ -45,7 +45,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "Paris", 
       country: "France", 
-      image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=80", 
       count: 320, 
       priceFrom: 489,
       tag: "Romantic"
@@ -53,7 +53,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "Tokyo", 
       country: "Japan", 
-      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=80", 
       count: 290, 
       priceFrom: 689, 
       trending: true,
@@ -62,7 +62,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "Dubai", 
       country: "UAE", 
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=80", 
       count: 260, 
       priceFrom: 549,
       tag: "Luxury"
@@ -70,7 +70,7 @@ const destinations: Record<ServiceType, Destination[]> = {
     { 
       city: "Los Angeles", 
       country: "USA", 
-      image: "https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=400&h=300&fit=crop", 
+      image: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=80", 
       count: 410, 
       priceFrom: 149, 
       trending: true,
@@ -279,7 +279,7 @@ export default function DestinationCardsGrid({
               onClick={() => onSelect?.(dest.city)}
             >
               {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden">
+              <div className="relative aspect-square overflow-hidden">
                 <img 
                   src={dest.image} 
                   alt={`${dest.city}, ${dest.country} - Travel destination`}

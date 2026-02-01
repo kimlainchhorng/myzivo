@@ -3,14 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Import service card images
-import heroFlights from "@/assets/hero-flights.jpg";
-import heroHotels from "@/assets/hero-hotels.jpg";
-import heroCars from "@/assets/hero-cars.jpg";
-import heroRides from "@/assets/hero-rides.jpg";
-import heroEats from "@/assets/hero-eats.jpg";
-import heroHomepage from "@/assets/hero-homepage.jpg";
+import { serviceCardPhotos, ServiceType } from "@/config/photos";
 
 type ServiceStatus = "live" | "coming-soon";
 
@@ -38,7 +31,7 @@ const services: Service[] = [
     bgColor: "bg-flights-light",
     borderHover: "hover:border-flights/50",
     status: "live",
-    image: heroFlights,
+    image: serviceCardPhotos.flights.src,
   },
   {
     id: "hotels",
@@ -50,7 +43,7 @@ const services: Service[] = [
     bgColor: "bg-hotels-light",
     borderHover: "hover:border-hotels/50",
     status: "live",
-    image: heroHotels,
+    image: serviceCardPhotos.hotels.src,
   },
   {
     id: "cars",
@@ -62,7 +55,7 @@ const services: Service[] = [
     bgColor: "bg-cars-light",
     borderHover: "hover:border-cars/50",
     status: "live",
-    image: heroCars,
+    image: serviceCardPhotos.cars.src,
   },
   {
     id: "rides",
@@ -74,7 +67,7 @@ const services: Service[] = [
     bgColor: "bg-rides-light",
     borderHover: "hover:border-rides/50",
     status: "live",
-    image: heroRides,
+    image: serviceCardPhotos.rides.src,
   },
   {
     id: "eats",
@@ -86,7 +79,7 @@ const services: Service[] = [
     bgColor: "bg-eats-light",
     borderHover: "hover:border-eats/50",
     status: "live",
-    image: heroEats,
+    image: serviceCardPhotos.eats.src,
   },
   {
     id: "more",
@@ -98,7 +91,7 @@ const services: Service[] = [
     bgColor: "bg-more-light",
     borderHover: "hover:border-more/50",
     status: "live",
-    image: heroHomepage,
+    image: serviceCardPhotos.extras.src,
   },
 ];
 
