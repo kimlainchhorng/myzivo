@@ -1,14 +1,66 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// Security: Restrict CORS to known origins only
+const allowedOrigins = new Set([
+  "https://myzivo.lovable.app",
+  "https://hizivo.com",
+  "https://zivorestaurant.lovable.app",
+  "https://zivodriver.lovable.app",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://localhost:8080",
+]);
+
+// Security: Exact domain matching for target apps
+const allowedAppDomains = new Set([
+  "myzivo.lovable.app",
+  "hizivo.com",
+  "zivorestaurant.lovable.app",
+  "zivodriver.lovable.app",
+  "localhost",
+]);
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.has(origin) ? origin : "",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+function extractDomain(targetApp: string): string | null {
+  // If it looks like a full URL, parse it
+  if (targetApp.startsWith("http://") || targetApp.startsWith("https://")) {
+    try {
+      return new URL(targetApp).hostname;
+    } catch {
+      return null;
+    }
+  }
+  // Otherwise treat as domain directly (e.g., "hizivo.com")
+  // Validate it looks like a domain (no path, no query)
+  if (/^[a-zA-Z0-9.-]+$/.test(targetApp)) {
+    return targetApp;
+  }
+  return null;
+}
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Security: Reject requests from unknown origins
+  const origin = req.headers.get("origin") || "";
+  if (origin && !allowedOrigins.has(origin)) {
+    return new Response(
+      JSON.stringify({ error: "Forbidden origin" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -39,15 +91,9 @@ Deno.serve(async (req) => {
 
     const { targetApp } = await req.json();
     
-    // Allowed target apps
-    const allowedApps = [
-      "hizivo.com",
-      "zivorestaurant.lovable.app", 
-      "zivodriver.lovable.app",
-      "localhost"
-    ];
-
-    if (!allowedApps.some(app => targetApp?.includes(app))) {
+    // Security: Extract and validate domain using exact matching
+    const targetDomain = extractDomain(targetApp);
+    if (!targetDomain || !allowedAppDomains.has(targetDomain)) {
       return new Response(
         JSON.stringify({ error: "Invalid target app" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
