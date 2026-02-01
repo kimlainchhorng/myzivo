@@ -101,6 +101,12 @@ const Creators = lazy(() => import("./pages/Creators"));
 const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
 const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
 const CarsCreatorLanding = lazy(() => import("./pages/creators/CarsCreatorLanding"));
+
+// LP (Ad-safe landing pages) - lazy load
+const FlightsLP = lazy(() => import("./pages/lp/FlightsLP"));
+const HotelsLP = lazy(() => import("./pages/lp/HotelsLP"));
+const CarsLP = lazy(() => import("./pages/lp/CarsLP"));
+const ExtrasLP = lazy(() => import("./pages/lp/ExtrasLP"));
 const ExtrasCreatorLanding = lazy(() => import("./pages/creators/ExtrasCreatorLanding"));
 
 const queryClient = new QueryClient();
@@ -268,6 +274,11 @@ const App = () => (
                 <Route path="/creators/hotels" element={<HotelsCreatorLanding />} />
                 <Route path="/creators/car-rental" element={<CarsCreatorLanding />} />
                 <Route path="/creators/extras" element={<ExtrasCreatorLanding />} />
+                {/* LP Pages - Ad-safe landing pages for paid traffic */}
+                <Route path="/lp/flights" element={<FlightsLP />} />
+                <Route path="/lp/hotels" element={<HotelsLP />} />
+                <Route path="/lp/cars" element={<CarsLP />} />
+                <Route path="/lp/extras" element={<ExtrasLP />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
