@@ -16,7 +16,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
 // Lazy load all other pages for faster initial load
-const RiderApp = lazy(() => import("./pages/RiderApp"));
+const RidesComingSoon = lazy(() => import("./pages/RidesComingSoon"));
+const EatsComingSoon = lazy(() => import("./pages/EatsComingSoon"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
@@ -123,8 +124,8 @@ const App = () => (
                 <Route path="/signup" element={<Signup />} />
                 
                 {/* Lazy loaded routes */}
-                <Route path="/food" element={<FoodOrdering />} />
-                <Route path="/ride" element={<RiderApp />} />
+                <Route path="/food" element={<EatsComingSoon />} />
+                <Route path="/ride" element={<RidesComingSoon />} />
                 <Route path="/book-flight" element={<FlightBooking />} />
                 
                 {/* SEO Flight Landing Pages */}

@@ -3,7 +3,7 @@
   <!-- Main Pages -->
   <url>
     <loc>https://hizivo.com/</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,69 +11,81 @@
   <!-- Travel Services -->
   <url>
     <loc>https://hizivo.com/book-flight</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://hizivo.com/book-hotel</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://hizivo.com/rent-car</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://hizivo.com/travel-extras</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://hizivo.com/things-to-do</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
   
   <!-- Popular Flight Destinations -->
   <url>
     <loc>https://hizivo.com/flights/to-new-york</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-los-angeles</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-london</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-paris</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-tokyo</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-dubai</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-cancun</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/to-miami</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -81,19 +93,19 @@
   <!-- Popular Flight Origins -->
   <url>
     <loc>https://hizivo.com/flights/from-new-york</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/from-los-angeles</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/from-chicago</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -101,25 +113,25 @@
   <!-- Popular Flight Routes -->
   <url>
     <loc>https://hizivo.com/flights/new-york-to-los-angeles</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/new-york-to-london</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/los-angeles-to-tokyo</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/flights/miami-to-cancun</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -127,37 +139,37 @@
   <!-- Popular Hotel Destinations -->
   <url>
     <loc>https://hizivo.com/hotels/new-york</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/hotels/paris</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/hotels/london</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/hotels/tokyo</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/hotels/barcelona</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/hotels/miami</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -165,51 +177,71 @@
   <!-- Popular Car Rental Locations -->
   <url>
     <loc>https://hizivo.com/rent-car/los-angeles</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/rent-car/miami</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/rent-car/las-vegas</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://hizivo.com/rent-car/orlando</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   
-  <!-- Legal & Info Pages -->
+  <!-- Company & Info Pages -->
   <url>
     <loc>https://hizivo.com/about</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://hizivo.com/how-it-works</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://hizivo.com/partners</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://hizivo.com/contact</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- Legal & Compliance Pages -->
+  <url>
     <loc>https://hizivo.com/terms</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hizivo.com/privacy</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://hizivo.com/affiliate-disclosure</loc>
-    <lastmod>2026-01-31</lastmod>
+    <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
