@@ -21,6 +21,7 @@ export interface FlightSearchParams {
 
 export interface ApiFlightResult {
   id: string;
+  proposalId?: string;  // For booking link generation
   airline: string;
   airlineCode: string;
   flightNumber: string;
@@ -59,6 +60,7 @@ export interface FlightSearchResponse {
   airlines: Record<string, { iata: string; name: string; isLowcost: boolean }>;
   isRealPrice: boolean;
   searchId?: string;
+  resultsUrl?: string;
   currency: string;
   cached?: boolean;
   fallback?: boolean;

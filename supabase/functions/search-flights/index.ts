@@ -1,12 +1,16 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
+import { encode as encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
 
 /**
  * Aviasales Flights Search API Edge Function
- * Implements real-time flight search with caching and rate limiting
+ * Implements real-time flight search with proper MD5 signature authentication
  * 
  * API Flow:
- * 1. Start search → receive search_id
- * 2. Get results using search_id → poll until is_over=true
+ * 1. Build signature string (token + sorted values)
+ * 2. Calculate MD5 hash
+ * 3. Start search → receive search_id
+ * 4. Poll results using search_id → until is_over=true
  */
 
 const corsHeaders = {
@@ -15,7 +19,7 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// In-memory cache for search results (5-15 min TTL)
+// In-memory cache for search results (5-10 min TTL)
 const searchCache = new Map<string, { data: FlightSearchResult; timestamp: number }>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -23,6 +27,9 @@ const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_MAX = 100;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Affiliate marker
+const AFFILIATE_MARKER = '618730';
 
 interface FlightSearchParams {
   origin: string;
@@ -39,11 +46,13 @@ interface FlightSearchResult {
   airlines: Record<string, AirlineInfo>;
   isRealPrice: boolean;
   searchId?: string;
+  resultsUrl?: string;
   currency: string;
 }
 
 interface FlightResult {
   id: string;
+  proposalId?: string;
   airline: string;
   airlineCode: string;
   flightNumber: string;
@@ -91,34 +100,72 @@ function mapCabinClass(cabin: string): string {
   return map[cabin] || 'Y';
 }
 
-// Create signature for API authentication
-function createSignature(token: string, marker: string, params: Record<string, unknown>): string {
-  // Sort parameter values alphabetically and join with colon
-  const sortedValues = Object.values(params)
-    .map(v => {
-      if (typeof v === 'object' && v !== null) {
-        return JSON.stringify(v);
-      }
-      return String(v);
-    })
-    .sort()
-    .join(':');
-  
-  const signatureString = `${token}:${marker}:${sortedValues}`;
-  
-  // Create MD5 hash (Deno crypto)
+/**
+ * Create proper MD5 signature for Aviasales API
+ * According to docs: MD5(token + ":" + sorted values joined by ":")
+ */
+async function createMd5Signature(signatureString: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(signatureString);
-  
-  // For simplicity, we'll use a simple hash approach
-  // In production, use proper crypto
-  let hash = 0;
-  for (let i = 0; i < signatureString.length; i++) {
-    const char = signatureString.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  const hashArray = new Uint8Array(hashBuffer);
+  return new TextDecoder().decode(encodeHex(hashArray));
+}
+
+/**
+ * Build signature string according to Aviasales API specification
+ * 
+ * Order (from docs example):
+ * token:currency_code:locale:marker:market_code:[for each direction: date:destination:origin]:adults:children:infants:trip_class
+ * 
+ * Example from docs:
+ * YourToken:USD:en_US:YourMarker:US:2026-09-09:NYC:LAX:2026-09-25:LAX:NYC:1:0:0:Y
+ */
+function buildSignatureString(
+  token: string,
+  marker: string,
+  params: {
+    currency_code: string;
+    locale: string;
+    market_code: string;
+    search_params: {
+      trip_class: string;
+      passengers: { adults: number; children: number; infants: number };
+      directions: Array<{ origin: string; destination: string; date: string }>;
+    };
   }
-  return Math.abs(hash).toString(16).padStart(32, '0');
+): string {
+  const values: string[] = [];
+  
+  // 1. currency_code
+  values.push(params.currency_code);
+  
+  // 2. locale
+  values.push(params.locale);
+  
+  // 3. marker
+  values.push(marker);
+  
+  // 4. market_code
+  values.push(params.market_code);
+  
+  // 5. Directions - each direction's values sorted alphabetically (date, destination, origin)
+  for (const dir of params.search_params.directions) {
+    values.push(dir.date);
+    values.push(dir.destination);
+    values.push(dir.origin);
+  }
+  
+  // 6. Passengers sorted alphabetically: adults, children, infants
+  values.push(String(params.search_params.passengers.adults));
+  values.push(String(params.search_params.passengers.children));
+  values.push(String(params.search_params.passengers.infants));
+  
+  // 7. Trip class
+  values.push(params.search_params.trip_class);
+  
+  // Final format: token:value1:value2:value3...
+  return `${token}:${values.join(':')}`;
 }
 
 // Rate limit check
@@ -191,7 +238,8 @@ function parseTimeFromDatetime(datetime: string): string {
 // Transform API response to our format
 function transformApiResponse(
   apiData: Record<string, unknown>,
-  searchParams: FlightSearchParams
+  searchParams: FlightSearchParams,
+  searchId?: string
 ): FlightSearchResult {
   const flights: FlightResult[] = [];
   const airlines: Record<string, AirlineInfo> = {};
@@ -303,6 +351,7 @@ function transformApiResponse(
     
     flights.push({
       id: ticket.id,
+      proposalId: bestProposal.id,
       airline: airlineInfo.name,
       airlineCode: airlineInfo.iata,
       flightNumber: `${carrierCode}${firstLeg.operating_carrier_designator?.number || ''}`,
@@ -338,18 +387,19 @@ function transformApiResponse(
     flights,
     airlines,
     isRealPrice: true,
+    searchId,
     currency: flights[0]?.currency || 'USD'
   };
 }
 
-// Start search request
+// Start search request with proper MD5 signature
 async function startSearch(
   params: FlightSearchParams,
   userIp: string,
   hostUrl: string
 ): Promise<{ searchId: string; resultsUrl: string } | null> {
   const token = Deno.env.get('TRAVELPAYOUTS_API_TOKEN');
-  const marker = Deno.env.get('TRAVELPAYOUTS_MARKER') || '618730';
+  const marker = Deno.env.get('TRAVELPAYOUTS_MARKER') || AFFILIATE_MARKER;
   
   if (!token) {
     console.error('[API] TRAVELPAYOUTS_API_TOKEN not configured');
@@ -374,11 +424,10 @@ async function startSearch(
     });
   }
   
-  const searchBody = {
-    signature: '', // Will be set below
-    marker,
-    locale: 'en-us',
+  // Build request body structure
+  const requestParams = {
     currency_code: 'USD',
+    locale: 'en_US',  // Underscore format per API docs
     market_code: 'US',
     search_params: {
       trip_class: mapCabinClass(params.cabinClass),
@@ -391,32 +440,46 @@ async function startSearch(
     }
   };
   
-  // Create signature
-  searchBody.signature = createSignature(token, marker, searchBody.search_params);
+  // Build signature string and calculate MD5
+  const signatureString = buildSignatureString(token, marker, requestParams);
+  const signature = await createMd5Signature(signatureString);
+  
+  console.log(`[API] Signature string: ${signatureString.replace(token, 'TOKEN')}`);
+  console.log(`[API] MD5 signature: ${signature}`);
+  
+  // Build final request body
+  const searchBody = {
+    signature,
+    marker,
+    ...requestParams
+  };
   
   console.log(`[API] Starting search: ${params.origin} → ${params.destination}`);
+  console.log(`[API] Request body:`, JSON.stringify(searchBody, null, 2));
   
   try {
     const response = await fetch('https://tickets-api.travelpayouts.com/search/affiliate/start', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-real-host': hostUrl,
+        'x-real-host': hostUrl.replace(/^https?:\/\//, ''),
         'x-user-ip': userIp,
-        'x-signature': searchBody.signature,
+        'x-signature': signature,
         'x-affiliate-user-id': token
       },
       body: JSON.stringify(searchBody)
     });
     
+    const responseText = await response.text();
+    
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[API] Start search failed: ${response.status} - ${errorText}`);
+      console.error(`[API] Start search failed: ${response.status} - ${responseText}`);
       return null;
     }
     
-    const data = await response.json();
-    console.log(`[API] Search started, search_id: ${data.search_id}`);
+    const data = JSON.parse(responseText);
+    console.log(`[API] Search started successfully, search_id: ${data.search_id}`);
+    console.log(`[API] Results URL: ${data.results_url}`);
     
     return {
       searchId: data.search_id,
@@ -428,21 +491,21 @@ async function startSearch(
   }
 }
 
-// Get search results
+// Get search results with polling
 async function getSearchResults(
   searchId: string,
   resultsUrl: string,
-  token: string,
-  marker: string
+  token: string
 ): Promise<Record<string, unknown> | null> {
   const resultsEndpoint = `${resultsUrl}/search/affiliate/results`;
   
   let allData: Record<string, unknown> = {};
   let lastUpdateTimestamp = 0;
   let attempts = 0;
-  const maxAttempts = 10;
+  const maxAttempts = 15; // Increased for longer searches
   
   console.log(`[API] Fetching results for search_id: ${searchId}`);
+  console.log(`[API] Results endpoint: ${resultsEndpoint}`);
   
   while (attempts < maxAttempts) {
     attempts++;
@@ -462,11 +525,14 @@ async function getSearchResults(
       });
       
       if (!response.ok) {
-        console.error(`[API] Get results failed: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`[API] Get results failed: ${response.status} - ${errorText}`);
         break;
       }
       
       const data = await response.json();
+      
+      console.log(`[API] Poll ${attempts}: tickets=${(data.tickets || []).length}, is_over=${data.is_over}`);
       
       // Merge results
       if (data.airlines) {
@@ -487,7 +553,7 @@ async function getSearchResults(
       
       // Check if search is complete
       if (data.is_over) {
-        console.log(`[API] Search complete after ${attempts} attempts`);
+        console.log(`[API] Search complete after ${attempts} polls`);
         break;
       }
       
@@ -495,7 +561,7 @@ async function getSearchResults(
       lastUpdateTimestamp = data.last_update_timestamp || 0;
       
       // Wait before next poll (API suggests 1-2 seconds)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
     } catch (error) {
       console.error('[API] Get results error:', error);
@@ -503,7 +569,10 @@ async function getSearchResults(
     }
   }
   
-  if (Object.keys(allData).length === 0) {
+  const ticketCount = (allData.tickets as unknown[] || []).length;
+  console.log(`[API] Total tickets collected: ${ticketCount}`);
+  
+  if (ticketCount === 0) {
     return null;
   }
   
@@ -566,7 +635,6 @@ serve(async (req) => {
     
     // Get API token
     const token = Deno.env.get('TRAVELPAYOUTS_API_TOKEN');
-    const marker = Deno.env.get('TRAVELPAYOUTS_MARKER') || '618730';
     
     if (!token) {
       console.log('[Search] API token not configured, returning fallback');
@@ -601,15 +669,14 @@ serve(async (req) => {
       );
     }
     
-    // Wait a bit for results to be ready
+    // Wait a bit for initial results to be ready
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Get results
+    // Get results with polling
     const apiResults = await getSearchResults(
       searchInfo.searchId,
       searchInfo.resultsUrl,
-      token,
-      marker
+      token
     );
     
     if (!apiResults || !apiResults.tickets) {
@@ -620,6 +687,8 @@ serve(async (req) => {
           airlines: {},
           isRealPrice: false,
           fallback: true,
+          searchId: searchInfo.searchId,
+          resultsUrl: searchInfo.resultsUrl,
           message: 'No flights found for this route',
           whitelabelUrl: buildWhitelabelUrl(params)
         }),
@@ -628,13 +697,13 @@ serve(async (req) => {
     }
     
     // Transform results
-    const result = transformApiResponse(apiResults, params);
-    result.searchId = searchInfo.searchId;
+    const result = transformApiResponse(apiResults, params, searchInfo.searchId);
+    result.resultsUrl = searchInfo.resultsUrl;
     
     // Cache results
     setCache(cacheKey, result);
     
-    console.log(`[Search] Returning ${result.flights.length} flights`);
+    console.log(`[Search] Returning ${result.flights.length} flights (real prices)`);
     
     return new Response(
       JSON.stringify({
@@ -663,7 +732,7 @@ serve(async (req) => {
 
 // Build white label URL for fallback
 function buildWhitelabelUrl(params: FlightSearchParams): string {
-  const marker = '618730'; // Travelpayouts marker
+  const marker = AFFILIATE_MARKER;
   const base = 'https://search.jetradar.com/flights';
   
   const urlParams = new URLSearchParams({
