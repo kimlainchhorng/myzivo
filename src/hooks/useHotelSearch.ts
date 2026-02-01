@@ -1,5 +1,5 @@
 /**
- * Hotel Search Hook
+ * Hotel Search Hook (Legacy compatibility wrapper)
  * Generates mock hotel results for demo
  * Ready for real API integration
  */
@@ -7,7 +7,15 @@
 import { useState, useCallback } from "react";
 import { HotelResult } from "@/components/hotels/HotelResultCard";
 import { HotelFilters } from "@/components/hotels/HotelFilters";
-import { HotelSearchParams } from "@/components/hotels/HotelSearchForm";
+
+// Legacy interface for backward compatibility
+export interface LegacyHotelSearchParams {
+  destination: string;
+  checkIn: Date;
+  checkOut: Date;
+  guests: number;
+  rooms: number;
+}
 
 // Mock hotel data generator
 function generateMockHotels(destination: string, count: number = 10): HotelResult[] {
@@ -95,12 +103,15 @@ function filterHotels(hotels: HotelResult[], filters: HotelFilters): HotelResult
   });
 }
 
+/**
+ * @deprecated Use useRealHotelSearch instead
+ */
 export function useHotelSearch() {
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<HotelResult[]>([]);
-  const [searchParams, setSearchParams] = useState<HotelSearchParams | null>(null);
+  const [searchParams, setSearchParams] = useState<LegacyHotelSearchParams | null>(null);
 
-  const search = useCallback(async (params: HotelSearchParams, filters: HotelFilters) => {
+  const search = useCallback(async (params: LegacyHotelSearchParams, filters: HotelFilters) => {
     setIsLoading(true);
     setSearchParams(params);
     
