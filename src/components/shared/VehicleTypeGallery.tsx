@@ -1,12 +1,12 @@
 /**
  * VEHICLE TYPE GALLERY
  * Photo-based car/ride categories with 4:3 aspect ratio
- * Uses carCategoryPhotos config for cars, custom for rides
+ * Uses carCategoryPhotos config for real car photos
  */
 
 import { useNavigate } from "react-router-dom";
-import { carCategoryPhotos, CarCategory } from "@/config/photos";
-import { Users, Briefcase } from "lucide-react";
+import { carCategoryPhotos, type CarCategory } from "@/config/photos";
+import { Users, Briefcase, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VehicleTypeGalleryProps {
@@ -14,6 +14,7 @@ interface VehicleTypeGalleryProps {
   title?: string;
   subtitle?: string;
   className?: string;
+  onCategorySelect?: (category: CarCategory) => void;
 }
 
 const serviceColors = {
@@ -22,19 +23,21 @@ const serviceColors = {
     border: "border-violet-500/30",
     shadow: "shadow-violet-500/20",
     gradient: "from-violet-500 to-purple-600",
+    bg: "bg-violet-500/10",
   },
   rides: {
     text: "text-emerald-400",
     border: "border-emerald-500/30",
     shadow: "shadow-emerald-500/20",
     gradient: "from-emerald-500 to-teal-600",
+    bg: "bg-emerald-500/10",
   },
 };
 
-// Ride vehicle types with custom photos
+// Ride vehicle types with real photos
 const rideVehicleTypes = [
   {
-    type: "sedan",
+    type: "sedan" as const,
     label: "Sedan",
     passengers: 4,
     description: "Standard comfort",
@@ -42,7 +45,7 @@ const rideVehicleTypes = [
     alt: "Sedan ride - comfortable 4-passenger vehicle",
   },
   {
-    type: "suv",
+    type: "suv" as const,
     label: "SUV",
     passengers: 6,
     description: "Extra space",
@@ -50,7 +53,7 @@ const rideVehicleTypes = [
     alt: "SUV ride - spacious 6-passenger vehicle",
   },
   {
-    type: "premium",
+    type: "premium" as const,
     label: "Premium",
     passengers: 4,
     description: "Luxury experience",
@@ -58,7 +61,7 @@ const rideVehicleTypes = [
     alt: "Premium ride - luxury sedan experience",
   },
   {
-    type: "xl",
+    type: "xl" as const,
     label: "XL",
     passengers: 8,
     description: "Group travel",
@@ -67,18 +70,20 @@ const rideVehicleTypes = [
   },
 ];
 
-// Car categories to show
-const carCategories: CarCategory[] = ["economy", "compact", "suv", "luxury"];
+// All car categories from config
+const carCategories: CarCategory[] = ["economy", "compact", "suv", "luxury", "van", "electric"];
 
 export default function VehicleTypeGallery({
   service,
   title = service === "cars" ? "Browse by Car Type" : "Choose Your Ride",
   subtitle,
   className,
+  onCategorySelect,
 }: VehicleTypeGalleryProps) {
   const navigate = useNavigate();
   const colors = serviceColors[service];
 
+  // Build vehicle data from config
   const vehicles = service === "cars"
     ? carCategories.map((cat) => ({
         type: cat,
@@ -87,12 +92,25 @@ export default function VehicleTypeGallery({
         bags: carCategoryPhotos[cat].bags,
         src: carCategoryPhotos[cat].src,
         alt: carCategoryPhotos[cat].alt,
+        width: carCategoryPhotos[cat].width,
+        height: carCategoryPhotos[cat].height,
+        isElectric: cat === "electric",
       }))
-    : rideVehicleTypes;
+    : rideVehicleTypes.map((v) => ({
+        ...v,
+        bags: 0,
+        width: 600,
+        height: 450,
+        isElectric: false,
+      }));
 
   const handleClick = (vehicleType: string) => {
     if (service === "cars") {
-      navigate(`/rent-car?type=${vehicleType}`);
+      if (onCategorySelect) {
+        onCategorySelect(vehicleType as CarCategory);
+      } else {
+        navigate(`/rent-car?type=${vehicleType}`);
+      }
     }
     // For rides, could scroll to form or pre-select vehicle type
   };
@@ -111,8 +129,8 @@ export default function VehicleTypeGallery({
           )}
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
+        {/* Grid - 3 columns on desktop, 2 on mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {vehicles.map((vehicle, index) => (
             <button
               key={vehicle.type}
@@ -120,8 +138,8 @@ export default function VehicleTypeGallery({
               className={cn(
                 "group relative overflow-hidden rounded-2xl",
                 "border border-border/50 bg-card/50",
-                "hover:shadow-lg transition-all duration-300 hover:-translate-y-1",
-                `hover:${colors.border} hover:${colors.shadow}`
+                "hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
+                "hover:border-violet-500/50 hover:shadow-violet-500/10"
               )}
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -130,39 +148,44 @@ export default function VehicleTypeGallery({
                 <img
                   src={vehicle.src}
                   alt={vehicle.alt}
-                  width={600}
-                  height={450}
+                  width={vehicle.width}
+                  height={vehicle.height}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/30 to-transparent" />
-              </div>
-              
-              {/* Info Panel */}
-              <div className="p-4 bg-card/80">
-                <h3 className={cn(
-                  "font-bold text-lg mb-1 transition-colors",
-                  `group-hover:${colors.text}`
-                )}>
-                  {vehicle.label}
-                </h3>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
                 
-                {/* Specs Row */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{vehicle.passengers}</span>
+                {/* Electric Badge */}
+                {vehicle.isElectric && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 bg-emerald-500/90 text-white text-xs font-medium rounded-full">
+                    <Zap className="w-3 h-3" />
+                    EV
                   </div>
-                  {"bags" in vehicle && (
+                )}
+                
+                {/* Info Overlay (bottom) */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="font-bold text-lg text-white mb-1 group-hover:text-violet-300 transition-colors">
+                    {vehicle.label}
+                  </h3>
+                  
+                  {/* Specs Row */}
+                  <div className="flex items-center gap-3 text-xs text-white/80">
                     <div className="flex items-center gap-1">
-                      <Briefcase className="w-3.5 h-3.5" />
-                      <span>{vehicle.bags}</span>
+                      <Users className="w-3.5 h-3.5" />
+                      <span>{vehicle.passengers}</span>
                     </div>
-                  )}
-                  {"description" in vehicle && (
-                    <span className="text-xs">{vehicle.description}</span>
-                  )}
+                    {vehicle.bags > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Briefcase className="w-3.5 h-3.5" />
+                        <span>{vehicle.bags}</span>
+                      </div>
+                    )}
+                    {"description" in vehicle && vehicle.description && (
+                      <span className="text-xs opacity-75">{vehicle.description}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </button>
