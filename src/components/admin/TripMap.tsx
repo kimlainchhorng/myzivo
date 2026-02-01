@@ -10,9 +10,7 @@ import { useOnlineDrivers, useActiveTripsWithLocations } from "@/hooks/useOnline
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-// Get Mapbox token - check both VITE_ prefixed (client-side) and fallback
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
-  "pk.eyJ1Ijoia2ltbGFpbiIsImEiOiJjbWp4aXZydHc0NmQyM2hwdnVxODBvOHFiIn0.rl7sFlnNFKJpOMC4D3sPgA";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 const TripMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);

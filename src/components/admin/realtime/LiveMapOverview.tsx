@@ -12,8 +12,7 @@ import { useOnlineDrivers, useActiveTripsWithLocations } from "@/hooks/useOnline
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
-  "pk.eyJ1Ijoia2ltbGFpbiIsImEiOiJjbWp4aXZydHc0NmQyM2hwdnVxODBvOHFiIn0.rl7sFlnNFKJpOMC4D3sPgA";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 export default function LiveMapOverview() {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -21,6 +20,7 @@ export default function LiveMapOverview() {
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   
   const [selectedLayer, setSelectedLayer] = useState<string>("all");
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const { data: onlineDrivers, isLoading: driversLoading, refetch: refetchDrivers } = useOnlineDrivers();
   const { data: activeTrips, isLoading: tripsLoading, refetch: refetchTrips } = useActiveTripsWithLocations();
@@ -31,16 +31,26 @@ export default function LiveMapOverview() {
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    if (!MAPBOX_TOKEN) {
+      setMapError("Map unavailable - configuration needed");
+      return;
+    }
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [-74.006, 40.7128],
-      zoom: 11,
-    });
+    try {
+      mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-74.006, 40.7128],
+        zoom: 11,
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+    } catch (error) {
+      console.error("Map initialization failed:", error);
+      setMapError("Failed to initialize map");
+    }
 
     return () => {
       map.current?.remove();
