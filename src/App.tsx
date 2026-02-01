@@ -126,6 +126,8 @@ const App = () => (
                 {/* Lazy loaded routes */}
                 <Route path="/food" element={<EatsComingSoon />} />
                 <Route path="/ride" element={<RidesComingSoon />} />
+                <Route path="/zivo-rides" element={<RidesComingSoon />} />
+                <Route path="/zivo-eats" element={<EatsComingSoon />} />
                 <Route path="/book-flight" element={<FlightBooking />} />
                 
                 {/* SEO Flight Landing Pages */}
