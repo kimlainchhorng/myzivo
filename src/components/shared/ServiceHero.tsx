@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "extras";
 
@@ -75,6 +76,9 @@ export function ServiceHero({
 }: ServiceHeroProps) {
   const colors = serviceColors[service];
 
+  // Preload hero image for LCP optimization
+  useImagePreload({ src: image || "", enabled: !!image });
+
   return (
     <section className="relative overflow-hidden">
       {/* Background Image */}
@@ -83,8 +87,13 @@ export function ServiceHero({
           <img
             src={image}
             alt={`ZIVO ${service.charAt(0).toUpperCase() + service.slice(1)} - ${subtitle || title}`}
-            className="w-full h-full object-cover"
+            width={1920}
+            height={1080}
             loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="w-full h-full object-cover"
+            style={{ aspectRatio: "16/9" }}
           />
           {/* Gradient overlay */}
           <div 

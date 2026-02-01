@@ -74,7 +74,57 @@ const SkeletonGrid = ({ count = 6, columns = 3, variant = "default" }: SkeletonG
   );
 };
 
-// Hero Skeleton
+// Hero Image Skeleton - Full-width 16:9
+const SkeletonHeroImage = ({ className }: { className?: string }) => {
+  return (
+    <div 
+      className={cn(
+        "w-full aspect-video rounded-xl bg-muted/30 animate-pulse relative overflow-hidden",
+        className
+      )}
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-muted/50 via-transparent to-muted/50" />
+    </div>
+  );
+};
+
+// Service Card Skeleton - 4:3 aspect ratio
+const SkeletonServiceCard = ({ className }: { className?: string }) => {
+  return (
+    <div className={cn("rounded-xl overflow-hidden bg-card border border-border/50 animate-pulse", className)}>
+      {/* Image placeholder - 4:3 aspect */}
+      <div className="aspect-[4/3] bg-muted/50 relative">
+        <div className="absolute bottom-3 left-4 flex items-center gap-2">
+          <div className="w-10 h-10 rounded-xl bg-muted/30" />
+        </div>
+      </div>
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        <div className="h-4 w-24 bg-muted/50 rounded" />
+        <div className="h-3 w-full bg-muted/30 rounded" />
+        <div className="h-4 w-20 bg-muted/40 rounded" />
+      </div>
+    </div>
+  );
+};
+
+// Destination Tile Skeleton - 1:1 square
+const SkeletonDestinationTile = ({ className }: { className?: string }) => {
+  return (
+    <div className={cn("rounded-xl overflow-hidden bg-card animate-pulse", className)}>
+      {/* Image placeholder - 1:1 aspect */}
+      <div className="aspect-square bg-muted/50 relative">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <div className="absolute bottom-2 left-2 right-2 space-y-1">
+          <div className="h-4 w-20 bg-muted/50 rounded" />
+          <div className="h-3 w-14 bg-muted/30 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Hero Skeleton (legacy)
 const SkeletonHero = () => {
   return (
     <div className="w-full h-[400px] rounded-3xl bg-muted/30 animate-pulse relative overflow-hidden">
@@ -102,4 +152,37 @@ const SkeletonSearchBar = () => {
   );
 };
 
-export { SkeletonCard, SkeletonList, SkeletonGrid, SkeletonHero, SkeletonSearchBar };
+// Services Grid Skeleton (6 cards in grid)
+const SkeletonServicesGrid = () => {
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <SkeletonServiceCard key={index} />
+      ))}
+    </div>
+  );
+};
+
+// Destinations Row Skeleton (8 tiles)
+const SkeletonDestinationsRow = () => {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <SkeletonDestinationTile key={index} />
+      ))}
+    </div>
+  );
+};
+
+export { 
+  SkeletonCard, 
+  SkeletonList, 
+  SkeletonGrid, 
+  SkeletonHero, 
+  SkeletonSearchBar,
+  SkeletonHeroImage,
+  SkeletonServiceCard,
+  SkeletonDestinationTile,
+  SkeletonServicesGrid,
+  SkeletonDestinationsRow,
+};

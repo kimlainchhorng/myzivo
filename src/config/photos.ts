@@ -94,112 +94,142 @@ export const serviceCardPhotos: Record<ServiceType, { src: string; alt: string }
 
 // ============================================
 // CAR CATEGORY PHOTOS (Unsplash URLs - 4:3)
-// All images use cool/neutral tones
+// All images use cool/neutral tones + WebP optimization
 // ============================================
-export const carCategoryPhotos: Record<CarCategory, { src: string; alt: string; label: string; passengers: number; bags: number }> = {
+export const carCategoryPhotos: Record<CarCategory, { src: string; alt: string; label: string; passengers: number; bags: number; width: number; height: number }> = {
   economy: {
-    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Economy rental car - Compact hatchback for city driving",
     label: "Economy",
     passengers: 4,
     bags: 2,
+    width: 600,
+    height: 450,
   },
   compact: {
-    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Compact rental car - Small sedan for everyday travel",
     label: "Compact",
     passengers: 5,
     bags: 2,
+    width: 600,
+    height: 450,
   },
   midsize: {
-    src: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Midsize rental car - Standard sedan for comfortable travel",
     label: "Midsize",
     passengers: 5,
     bags: 3,
+    width: 600,
+    height: 450,
   },
   suv: {
-    src: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "SUV rental - Crossover vehicle for family adventures",
     label: "SUV",
     passengers: 7,
     bags: 4,
+    width: 600,
+    height: 450,
   },
   luxury: {
-    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Luxury rental car - Premium sedan for executive travel",
     label: "Luxury",
     passengers: 5,
     bags: 3,
+    width: 600,
+    height: 450,
   },
   van: {
-    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Van rental - Minivan for group travel",
     label: "Van",
     passengers: 8,
     bags: 5,
+    width: 600,
+    height: 450,
   },
   electric: {
-    src: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&h=450&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
     alt: "Electric car rental - Modern EV at charging station",
     label: "Electric",
     passengers: 5,
     bags: 2,
+    width: 600,
+    height: 450,
   },
 };
 
 // ============================================
 // DESTINATION PHOTOS (Unsplash URLs - 1:1 square)
-// All images use cool/neutral tones
+// All images use cool/neutral tones + WebP optimization
 // ============================================
-export const destinationPhotos: Record<DestinationCity, { src: string; alt: string; city: string; country: string }> = {
+export const destinationPhotos: Record<DestinationCity, { src: string; alt: string; city: string; country: string; width: number; height: number }> = {
   "new-york": {
-    src: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "New York, USA - Manhattan skyline at dusk",
     city: "New York",
     country: "USA",
+    width: 400,
+    height: 400,
   },
   london: {
-    src: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "London, United Kingdom - Tower Bridge at sunset",
     city: "London",
     country: "United Kingdom",
+    width: 400,
+    height: 400,
   },
   paris: {
-    src: "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Paris, France - Eiffel Tower with city view",
     city: "Paris",
     country: "France",
+    width: 400,
+    height: 400,
   },
   tokyo: {
-    src: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Tokyo, Japan - City skyline at night",
     city: "Tokyo",
     country: "Japan",
+    width: 400,
+    height: 400,
   },
   dubai: {
-    src: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Dubai, UAE - Burj Khalifa and modern skyline",
     city: "Dubai",
     country: "UAE",
+    width: 400,
+    height: 400,
   },
   "los-angeles": {
-    src: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Los Angeles, USA - Downtown skyline at golden hour",
     city: "Los Angeles",
     country: "USA",
+    width: 400,
+    height: 400,
   },
   miami: {
-    src: "https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Miami, Florida - Beach skyline view",
     city: "Miami",
     country: "Florida",
+    width: 400,
+    height: 400,
   },
   "las-vegas": {
-    src: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
     alt: "Las Vegas, Nevada - Strip lights at night",
     city: "Las Vegas",
     country: "Nevada",
+    width: 400,
+    height: 400,
   },
 };
 

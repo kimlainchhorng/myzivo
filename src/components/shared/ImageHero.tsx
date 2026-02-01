@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { LucideIcon, Shield, Globe, Zap, Headphones } from "lucide-react";
+import { useImagePreload } from "@/hooks/useImagePreload";
 
 // Hero images (imported as ES6 modules)
 import heroFlightsImg from "@/assets/hero-flights.jpg";
@@ -62,6 +63,9 @@ export default function ImageHero({
 }: ImageHeroProps) {
   const content = heroContent[service];
 
+  // Preload hero image for LCP optimization
+  useImagePreload({ src: content.image, enabled: true });
+
   return (
     <section className="relative overflow-hidden">
       {/* Full-width background image */}
@@ -69,8 +73,13 @@ export default function ImageHero({
         <img 
           src={content.image} 
           alt={`ZIVO ${service.charAt(0).toUpperCase() + service.slice(1)} - ${content.subheadline}`}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          width={1920}
+          height={1080}
           loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ aspectRatio: "16/9" }}
         />
         {/* Gradient overlay for text readability */}
         <div 

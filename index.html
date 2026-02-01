@@ -2,17 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    
-    <!-- Travelpayouts Drive Verification -->
-    <script data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
-      (function () {
-        var script = document.createElement("script");
-        script.async = 1;
-        script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
-        document.head.appendChild(script);
-      })();
-    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- Preconnect to critical origins for faster resource loading -->
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
     <title>ZIVO - Compare Flights, Hotels & Car Rentals | Best Travel Prices</title>
     <meta name="description" content="Compare flights, hotels, and car rentals from 500+ trusted travel partners. No booking fees. Find the best prices on ZIVO." />
@@ -115,5 +110,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Deferred non-critical scripts -->
+    <script defer data-noptimize="1" data-cfasync="false" data-wpfc-render="false">
+      (function () {
+        var script = document.createElement("script");
+        script.async = 1;
+        script.src = 'https://emrld.ltd/NDkzNzQ1.js?t=493745';
+        document.head.appendChild(script);
+      })();
+    </script>
   </body>
 </html>
