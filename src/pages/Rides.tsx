@@ -9,8 +9,8 @@ import RideRequestForm from "@/components/rides/RideRequestForm";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
+import ImageHero from "@/components/shared/ImageHero";
 import { cn } from "@/lib/utils";
-import { heroPhotos, serviceOverlays } from "@/config/photos";
 
 export default function Rides() {
   const [submitted, setSubmitted] = useState(false);
@@ -33,80 +33,39 @@ export default function Rides() {
     },
   ];
 
-  const heroImage = heroPhotos.rides;
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1 pt-16">
-        {/* Hero Section with Photo Background */}
-        <section className="relative py-12 md:py-20 overflow-hidden">
-          {/* Background Image */}
-          <div className="absolute inset-0">
-            <img
-              src={heroImage.src}
-              alt={heroImage.alt}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="eager"
-            />
-            {/* Gradient Overlay */}
-            <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.rides)} />
-            {/* Additional depth */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
-          </div>
-
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Left Content */}
-              <div className="space-y-8">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="space-y-4"
-                >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium text-white">
-                    <Car className="h-4 w-4 text-emerald-400" />
-                    ZIVO Rides
-                  </div>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
-                    Your Ride,{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                      On Demand
-                    </span>
-                  </h1>
-                  <p className="text-lg md:text-xl text-white/80 max-w-xl">
-                    Request a ride and we'll connect you with available drivers in your area. 
-                    No upfront payment required.
-                  </p>
-                </motion.div>
-
-                {/* Features */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="grid gap-4"
-                >
-                  {features.map((feature) => (
-                    <div
-                      key={feature.title}
-                      className="flex items-start gap-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
-                    >
-                      <div className="p-2 rounded-lg bg-emerald-500/20">
-                        <feature.icon className="h-5 w-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">{feature.title}</h3>
-                        <p className="text-sm text-white/70">
-                          {feature.description}
-                        </p>
-                      </div>
+        {/* Hero Section with ImageHero component */}
+        <ImageHero service="rides" icon={Car}>
+          <div className="max-w-4xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-8 items-start">
+              {/* Left Content - Features */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="hidden lg:grid gap-4"
+              >
+                {features.map((feature) => (
+                  <div
+                    key={feature.title}
+                    className="flex items-start gap-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
+                  >
+                    <div className="p-2 rounded-lg bg-emerald-500/20">
+                      <feature.icon className="h-5 w-5 text-emerald-400" />
                     </div>
-                  ))}
-                </motion.div>
-              </div>
+                    <div>
+                      <h3 className="font-semibold text-white">{feature.title}</h3>
+                      <p className="text-sm text-white/70">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
 
               {/* Right - Form Card */}
               <motion.div
@@ -169,7 +128,7 @@ export default function Rides() {
               </motion.div>
             </div>
           </div>
-        </section>
+        </ImageHero>
 
         {/* Vehicle Type Gallery */}
         <VehicleTypeGallery 

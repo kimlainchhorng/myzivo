@@ -1,12 +1,14 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { LucideIcon, Shield, Globe, Zap, Headphones } from "lucide-react";
+import { LucideIcon, Shield, Globe, Zap, Headphones, Star, Clock } from "lucide-react";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
 // Hero images (imported as ES6 modules)
 import heroFlightsImg from "@/assets/hero-flights.jpg";
 import heroHotelsImg from "@/assets/hero-hotels.jpg";
 import heroCarsImg from "@/assets/hero-cars.jpg";
+import heroRidesImg from "@/assets/hero-rides.jpg";
+import heroEatsImg from "@/assets/hero-eats.jpg";
 
 /**
  * PREMIUM IMAGE HERO SECTION
@@ -14,7 +16,7 @@ import heroCarsImg from "@/assets/hero-cars.jpg";
  * Full-width background images with overlay
  */
 
-export type ServiceType = "flights" | "hotels" | "cars";
+export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats";
 
 const heroContent = {
   flights: {
@@ -41,14 +43,56 @@ const heroContent = {
     accentColor: "violet",
     textGradient: "from-violet-400 via-purple-400 to-fuchsia-400",
   },
+  rides: {
+    headline: "Your Ride, On Demand",
+    subheadline: "Request a ride and we'll connect you with available drivers in your area.",
+    image: heroRidesImg,
+    overlayGradient: "from-slate-950/90 via-emerald-950/70 to-slate-950/60",
+    accentColor: "emerald",
+    textGradient: "from-emerald-400 via-teal-400 to-green-400",
+  },
+  eats: {
+    headline: "Delicious Food, Delivered",
+    subheadline: "Discover and order from local restaurants. Fast delivery to your door.",
+    image: heroEatsImg,
+    overlayGradient: "from-slate-950/90 via-orange-950/70 to-slate-950/60",
+    accentColor: "orange",
+    textGradient: "from-orange-400 via-amber-400 to-yellow-400",
+  },
 };
 
-const trustBadges = [
-  { icon: Shield, text: "Secure & Trusted" },
-  { icon: Globe, text: "500+ Partners" },
-  { icon: Zap, text: "Real-Time Prices" },
-  { icon: Headphones, text: "24/7 Support" },
-];
+const trustBadgesByService: Record<ServiceType, { icon: LucideIcon; text: string }[]> = {
+  flights: [
+    { icon: Shield, text: "Secure & Trusted" },
+    { icon: Globe, text: "500+ Partners" },
+    { icon: Zap, text: "Real-Time Prices" },
+    { icon: Headphones, text: "24/7 Support" },
+  ],
+  hotels: [
+    { icon: Shield, text: "Secure & Trusted" },
+    { icon: Globe, text: "500+ Partners" },
+    { icon: Zap, text: "Real-Time Prices" },
+    { icon: Headphones, text: "24/7 Support" },
+  ],
+  cars: [
+    { icon: Shield, text: "Secure & Trusted" },
+    { icon: Globe, text: "500+ Partners" },
+    { icon: Zap, text: "Real-Time Prices" },
+    { icon: Headphones, text: "24/7 Support" },
+  ],
+  rides: [
+    { icon: Shield, text: "Safe & Reliable" },
+    { icon: Clock, text: "Quick Response" },
+    { icon: Star, text: "Top-Rated Drivers" },
+    { icon: Headphones, text: "24/7 Support" },
+  ],
+  eats: [
+    { icon: Clock, text: "Fast Delivery" },
+    { icon: Star, text: "Top Restaurants" },
+    { icon: Shield, text: "Quality Assured" },
+    { icon: Headphones, text: "24/7 Support" },
+  ],
+};
 
 interface ImageHeroProps {
   service: ServiceType;
@@ -62,6 +106,7 @@ export default function ImageHero({
   children 
 }: ImageHeroProps) {
   const content = heroContent[service];
+  const trustBadges = trustBadgesByService[service];
 
   // Preload hero image for LCP optimization
   useImagePreload({ src: content.image, enabled: true });
@@ -107,13 +152,17 @@ export default function ImageHero({
               "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-xl border border-white/20",
               content.accentColor === "sky" && "bg-sky-500/30 shadow-sky-500/30",
               content.accentColor === "amber" && "bg-amber-500/30 shadow-amber-500/30",
-              content.accentColor === "violet" && "bg-violet-500/30 shadow-violet-500/30"
+              content.accentColor === "violet" && "bg-violet-500/30 shadow-violet-500/30",
+              content.accentColor === "emerald" && "bg-emerald-500/30 shadow-emerald-500/30",
+              content.accentColor === "orange" && "bg-orange-500/30 shadow-orange-500/30"
             )}>
               <Icon className={cn(
                 "w-7 h-7",
                 content.accentColor === "sky" && "text-sky-300",
                 content.accentColor === "amber" && "text-amber-300",
-                content.accentColor === "violet" && "text-violet-300"
+                content.accentColor === "violet" && "text-violet-300",
+                content.accentColor === "emerald" && "text-emerald-300",
+                content.accentColor === "orange" && "text-orange-300"
               )} />
             </div>
           </div>
@@ -145,7 +194,9 @@ export default function ImageHero({
                   "w-4 h-4",
                   content.accentColor === "sky" && "text-sky-400",
                   content.accentColor === "amber" && "text-amber-400",
-                  content.accentColor === "violet" && "text-violet-400"
+                  content.accentColor === "violet" && "text-violet-400",
+                  content.accentColor === "emerald" && "text-emerald-400",
+                  content.accentColor === "orange" && "text-orange-400"
                 )} />
                 <span className="font-medium">{badge.text}</span>
               </div>
