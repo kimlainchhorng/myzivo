@@ -1,53 +1,105 @@
 /**
  * Premium Hotel Search Form
- * Mobile-first, conversion-optimized design
+ * With city autocomplete and proper URL routing
  */
 
-import { useState } from "react";
-import { MapPin, Calendar, Users, Building2, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Calendar, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format, addDays } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
-
-interface HotelSearchFormProps {
-  initialDestination?: string;
-  onSearch: (params: HotelSearchParams) => void;
-  className?: string;
-}
+import CityAutocomplete from "./CityAutocomplete";
+import { getCityBySlug, cityNameToSlug, type City } from "@/data/cities";
 
 export interface HotelSearchParams {
-  destination: string;
+  citySlug: string;
+  cityName: string;
   checkIn: Date;
   checkOut: Date;
-  guests: number;
+  adults: number;
   rooms: number;
 }
 
-export default function HotelSearchForm({ 
-  initialDestination = "", 
-  onSearch,
-  className 
-}: HotelSearchFormProps) {
-  const [destination, setDestination] = useState(initialDestination);
-  const [checkIn, setCheckIn] = useState<Date>(addDays(new Date(), 7));
-  const [checkOut, setCheckOut] = useState<Date>(addDays(new Date(), 10));
-  const [guests, setGuests] = useState(2);
-  const [rooms, setRooms] = useState(1);
-  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+interface HotelSearchFormProps {
+  initialCity?: string;
+  initialCheckIn?: Date;
+  initialCheckOut?: Date;
+  initialAdults?: number;
+  initialRooms?: number;
+  onSearch?: (params: HotelSearchParams) => void;
+  className?: string;
+  navigateOnSearch?: boolean;
+}
 
+export default function HotelSearchForm({
+  initialCity = "",
+  initialCheckIn,
+  initialCheckOut,
+  initialAdults = 2,
+  initialRooms = 1,
+  onSearch,
+  className,
+  navigateOnSearch = true,
+}: HotelSearchFormProps) {
+  const navigate = useNavigate();
+  
+  // State
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [cityDisplayName, setCityDisplayName] = useState(initialCity);
+  const [checkIn, setCheckIn] = useState<Date>(initialCheckIn || addDays(new Date(), 7));
+  const [checkOut, setCheckOut] = useState<Date>(initialCheckOut || addDays(new Date(), 10));
+  const [adults, setAdults] = useState(initialAdults);
+  const [rooms, setRooms] = useState(initialRooms);
+  const [isGuestPopoverOpen, setIsGuestPopoverOpen] = useState(false);
+  
+  // Calculate nights
+  const nights = Math.max(1, differenceInDays(checkOut, checkIn));
+
+  // Handle city selection from autocomplete
+  const handleCityChange = (city: City | null, displayValue: string) => {
+    setSelectedCity(city);
+    setCityDisplayName(displayValue);
+  };
+
+  // Handle search submit
   const handleSearch = () => {
-    if (destination.trim()) {
-      onSearch({
-        destination: destination.trim(),
-        checkIn,
-        checkOut,
-        guests,
-        rooms,
+    // Get city slug - either from selected city or generate from display name
+    const citySlug = selectedCity?.slug || cityNameToSlug(cityDisplayName);
+    const cityName = selectedCity?.name || cityDisplayName;
+    
+    if (!citySlug || !cityDisplayName.trim()) {
+      return; // Don't search without a destination
+    }
+    
+    const searchParams: HotelSearchParams = {
+      citySlug,
+      cityName,
+      checkIn,
+      checkOut,
+      adults,
+      rooms,
+    };
+    
+    // Call onSearch callback if provided
+    if (onSearch) {
+      onSearch(searchParams);
+    }
+    
+    // Navigate to results page
+    if (navigateOnSearch) {
+      const urlParams = new URLSearchParams({
+        city: citySlug,
+        checkin: format(checkIn, 'yyyy-MM-dd'),
+        checkout: format(checkOut, 'yyyy-MM-dd'),
+        adults: String(adults),
+        rooms: String(rooms),
       });
+      
+      navigate(`/hotels/results?${urlParams.toString()}`);
     }
   };
 
@@ -60,19 +112,14 @@ export default function HotelSearchForm({
       <div className="h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 rounded-t-2xl mb-4 sm:mb-6" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Destination */}
+        {/* Destination - with autocomplete */}
         <div className="lg:col-span-2">
           <Label className="text-xs text-muted-foreground mb-1.5 block">Destination</Label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-hotels" />
-            <Input
-              type="text"
-              placeholder="City, hotel, or area"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="pl-11 h-12 text-base rounded-xl border-border/50 focus:border-hotels"
-            />
-          </div>
+          <CityAutocomplete
+            value={cityDisplayName}
+            onChange={handleCityChange}
+            placeholder="City or destination"
+          />
         </div>
 
         {/* Check-in */}
@@ -142,28 +189,28 @@ export default function HotelSearchForm({
                 className="w-full h-12 justify-start text-left font-normal rounded-xl border-border/50"
               >
                 <Users className="w-4 h-4 mr-2 text-hotels" />
-                <span className="truncate">{guests} guest{guests !== 1 ? 's' : ''}, {rooms} room{rooms !== 1 ? 's' : ''}</span>
+                <span className="truncate">{adults} guest{adults !== 1 ? 's' : ''}, {rooms} room{rooms !== 1 ? 's' : ''}</span>
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-64 p-4" align="end">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">Guests</span>
+                  <span className="font-medium">Adults</span>
                   <div className="flex items-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => setGuests(Math.max(1, guests - 1))}
+                      onClick={() => setAdults(Math.max(1, adults - 1))}
                     >
                       -
                     </Button>
-                    <span className="w-6 text-center">{guests}</span>
+                    <span className="w-6 text-center">{adults}</span>
                     <Button
                       variant="outline"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => setGuests(Math.min(10, guests + 1))}
+                      onClick={() => setAdults(Math.min(10, adults + 1))}
                     >
                       +
                     </Button>
@@ -204,16 +251,21 @@ export default function HotelSearchForm({
         </div>
       </div>
 
-      {/* Search Button */}
-      <Button
-        onClick={handleSearch}
-        disabled={!destination.trim()}
-        size="lg"
-        className="w-full sm:w-auto mt-4 h-14 px-10 rounded-xl bg-hotels hover:bg-hotels/90 text-white font-semibold text-lg"
-      >
-        <Search className="w-5 h-5 mr-2" />
-        Search Hotels
-      </Button>
+      {/* Nights indicator + Search Button */}
+      <div className="flex items-center justify-between mt-4 gap-4">
+        <div className="text-sm text-muted-foreground">
+          {nights} night{nights !== 1 ? 's' : ''}
+        </div>
+        <Button
+          onClick={handleSearch}
+          disabled={!cityDisplayName.trim()}
+          size="lg"
+          className="h-14 px-10 rounded-xl bg-hotels hover:bg-hotels/90 text-white font-semibold text-lg"
+        >
+          <Search className="w-5 h-5 mr-2" />
+          Search Hotels
+        </Button>
+      </div>
     </div>
   );
 }

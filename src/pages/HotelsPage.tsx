@@ -1,11 +1,12 @@
 /**
  * Premium Hotels Page
- * Conversion-focused layout with filters, results, and partner CTAs
+ * Conversion-focused layout with search, filters, and partner CTAs
  */
 
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { Hotel, Shield, CheckCircle, Clock, ExternalLink, Search as SearchIcon } from "lucide-react";
+import { format, addDays } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -20,9 +21,9 @@ import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import ExperienceGallery from "@/components/shared/ExperienceGallery";
 import { InternalLinkGrid } from "@/components/seo";
-import { useHotelSearch } from "@/hooks/useHotelSearch";
-import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
-import { format } from "date-fns";
+import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch";
+import { getCityBySlug, cityNameToSlug } from "@/data/cities";
+import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
 
 const trustBadges = [
@@ -42,30 +43,47 @@ const defaultFilters: HotelFilters = {
 
 export default function HotelsPage() {
   const [searchParams] = useSearchParams();
-  const initialDestination = searchParams.get("destination") || "";
+  const navigate = useNavigate();
+  
+  // Get initial city from URL if present
+  const initialCityParam = searchParams.get("destination") || searchParams.get("city") || "";
+  const city = getCityBySlug(initialCityParam) || (initialCityParam ? { 
+    slug: cityNameToSlug(initialCityParam), 
+    name: initialCityParam 
+  } : null);
   
   const [filters, setFilters] = useState<HotelFilters>(defaultFilters);
   const [hasSearched, setHasSearched] = useState(false);
   
-  const { isLoading, results, searchParams: currentSearch, search, applyFilters } = useHotelSearch();
-  const { redirectWithParams } = useHotelRedirect("hotels_page", "result_card");
+  const { isLoading, results, searchParams: currentSearch, search, applyFilters, whitelabelUrl } = useRealHotelSearch();
 
-  // Auto-search if destination is in URL
+  // Auto-search if city is in URL
   useEffect(() => {
-    if (initialDestination && !hasSearched) {
+    if (city && !hasSearched) {
+      const checkIn = addDays(new Date(), 7);
+      const checkOut = addDays(new Date(), 10);
+      
       handleSearch({
-        destination: initialDestination,
-        checkIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        checkOut: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        guests: 2,
+        citySlug: city.slug,
+        cityName: city.name,
+        checkIn,
+        checkOut,
+        adults: 2,
         rooms: 1,
       });
     }
-  }, [initialDestination]);
+  }, [city?.slug]);
 
   const handleSearch = async (params: HotelSearchParams) => {
     setHasSearched(true);
-    await search(params, filters);
+    await search({
+      citySlug: params.citySlug,
+      cityName: params.cityName,
+      checkIn: format(params.checkIn, 'yyyy-MM-dd'),
+      checkOut: format(params.checkOut, 'yyyy-MM-dd'),
+      adults: params.adults,
+      rooms: params.rooms,
+    }, filters);
   };
 
   const handleFilterChange = (newFilters: HotelFilters) => {
@@ -74,19 +92,45 @@ export default function HotelsPage() {
   };
 
   const handleViewDeal = (hotel: HotelResult) => {
-    if (currentSearch) {
-      redirectWithParams({
-        destination: currentSearch.destination,
-        checkIn: format(currentSearch.checkIn, "yyyy-MM-dd"),
-        checkOut: format(currentSearch.checkOut, "yyyy-MM-dd"),
-        guests: currentSearch.guests,
-        rooms: currentSearch.rooms,
-      });
-    }
+    if (!currentSearch) return;
+    
+    // Build tracking URL through /out
+    const outParams = new URLSearchParams({
+      city: currentSearch.citySlug,
+      cityName: currentSearch.cityName,
+      checkin: currentSearch.checkIn,
+      checkout: currentSearch.checkOut,
+      adults: String(currentSearch.adults),
+      rooms: String(currentSearch.rooms),
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      price: String(hotel.pricePerNight),
+      partner: 'booking',
+      product: 'hotels',
+      source: 'result_card',
+    });
+    
+    trackAffiliateClick({
+      flightId: hotel.id,
+      airline: 'Booking.com',
+      airlineCode: 'HOTEL',
+      origin: 'ZIVO',
+      destination: currentSearch.cityName,
+      price: hotel.pricePerNight,
+      passengers: currentSearch.adults,
+      cabinClass: 'standard',
+      affiliatePartner: 'booking',
+      referralUrl: `/out?${outParams.toString()}`,
+      source: 'hotel_result_card',
+      ctaType: 'result_card',
+      serviceType: 'hotels',
+    });
+    
+    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 
-  const pageTitle = currentSearch?.destination 
-    ? `Hotels in ${currentSearch.destination} | ZIVO`
+  const pageTitle = currentSearch?.cityName 
+    ? `Hotels in ${currentSearch.cityName} | ZIVO`
     : "Search & Compare Hotels | ZIVO";
   
   const pageDescription = "Find hotels worldwide and book securely on partner sites. Compare prices from Booking.com, Expedia, Hotels.com and 500+ partners.";
@@ -139,9 +183,10 @@ export default function HotelsPage() {
 
               {/* Search Form */}
               <HotelSearchForm
-                initialDestination={initialDestination}
-                onSearch={handleSearch}
+                initialCity={city?.name || ""}
                 className="max-w-5xl mx-auto"
+                onSearch={handleSearch}
+                navigateOnSearch={false}
               />
             </div>
           </div>
@@ -164,11 +209,11 @@ export default function HotelsPage() {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-xl font-bold">
-                        {currentSearch ? `Hotels in ${currentSearch.destination}` : "Search Results"}
+                        {currentSearch ? `Hotels in ${currentSearch.cityName}` : "Search Results"}
                       </h2>
                       {!isLoading && (
                         <p className="text-sm text-muted-foreground">
-                          {results.length} hotels found
+                          {results.length} hotels found • Indicative prices*
                         </p>
                       )}
                     </div>
@@ -283,9 +328,9 @@ export default function HotelsPage() {
         <section className="py-8 border-t border-border/50">
           <div className="container mx-auto px-4 text-center">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              *Prices shown are indicative estimates. Final prices are displayed on partner booking sites.
               ZIVO may earn a commission when users book through partner links.
               Bookings are completed on partner websites.
-              Prices are indicative and subject to change.
             </p>
           </div>
         </section>
