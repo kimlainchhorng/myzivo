@@ -14,9 +14,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import CuisinePhotoGrid from "@/components/shared/CuisinePhotoGrid";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { cn } from "@/lib/utils";
 import { CartProvider, useCart } from "@/contexts/CartContext";
+import { heroPhotos, serviceOverlays } from "@/config/photos";
+import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 
 function EatsContent() {
   const navigate = useNavigate();
@@ -32,6 +36,7 @@ function EatsContent() {
   };
 
   const popularRestaurants = restaurants?.slice(0, 4) || [];
+  const heroImage = heroPhotos.eats;
 
   return (
     <div className="min-h-screen bg-background">
@@ -42,19 +47,30 @@ function EatsContent() {
       
       <Header />
       
-      <main className="pt-20">
-        {/* Hero Section */}
+      <main className="pt-16">
+        {/* Hero Section with Photo Background */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
-          {/* Background Effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-eats/10 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-orange-500/15 to-amber-400/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-eats/10 to-transparent rounded-full blur-3xl" />
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={heroImage.src}
+              alt={heroImage.alt}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+            />
+            {/* Gradient Overlay */}
+            <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.eats)} />
+            {/* Additional depth */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
+            {/* Bottom fade */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" />
+          </div>
 
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-eats/10 text-eats text-sm font-semibold mb-6">
-                <Sparkles className="w-4 h-4" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-semibold mb-6 text-white">
+                <Sparkles className="w-4 h-4 text-orange-400" />
                 Food Delivery
               </div>
 
@@ -64,13 +80,13 @@ function EatsContent() {
               </div>
 
               {/* Title */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white">
                 ZIVO{" "}
                 <span className="bg-gradient-to-r from-eats to-orange-400 bg-clip-text text-transparent">
                   Eats
                 </span>
               </h1>
-              <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-xl mx-auto">
+              <p className="text-lg sm:text-xl text-white/80 mb-8 max-w-xl mx-auto">
                 Discover delicious food from local restaurants. Order now and we'll connect you with the best eats in your area.
               </p>
 
@@ -83,7 +99,7 @@ function EatsContent() {
                     placeholder="Enter your delivery address"
                     value={deliveryAddress}
                     onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="pl-12 h-14 text-base rounded-2xl bg-muted/50 border-border/50 focus:border-eats/50"
+                    className="pl-12 h-14 text-base rounded-2xl bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-eats/50"
                     onKeyDown={(e) => e.key === "Enter" && handleFindRestaurants()}
                   />
                 </div>
@@ -97,7 +113,7 @@ function EatsContent() {
                 </Button>
               </div>
 
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/60">
                 Or{" "}
                 <button
                   onClick={() => navigate("/eats/restaurants")}
@@ -109,6 +125,12 @@ function EatsContent() {
             </div>
           </div>
         </section>
+
+        {/* Cuisine Photo Grid */}
+        <CuisinePhotoGrid
+          title="Explore by Cuisine"
+          subtitle="Find your favorite food"
+        />
 
         {/* How It Works */}
         <section className="py-16 bg-muted/30">
@@ -127,29 +149,42 @@ function EatsContent() {
                   icon: Search,
                   title: "Browse Restaurants",
                   description: "Explore local restaurants and their menus",
+                  image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
                 {
                   step: 2,
                   icon: UtensilsCrossed,
                   title: "Select Your Food",
                   description: "Add your favorite items to your cart",
+                  image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
                 {
                   step: 3,
                   icon: Truck,
                   title: "Submit Your Order",
                   description: "We'll confirm and arrange delivery",
+                  image: "https://images.unsplash.com/photo-1526367790999-0150786686a2?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
               ].map((item, index) => (
                 <Card
                   key={item.step}
-                  className="text-center border-2 border-transparent hover:border-eats/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+                  className="overflow-hidden border-2 border-transparent hover:border-eats/30 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4 group"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <item.icon className="w-6 h-6 text-white" />
+                  {/* Step Photo */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+                    <div className="absolute bottom-3 left-3 w-10 h-10 rounded-xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center shadow-lg">
+                      <item.icon className="w-5 h-5 text-white" />
                     </div>
+                  </div>
+                  <CardContent className="p-5 text-center">
                     <div className="text-xs text-eats font-bold mb-2">STEP {item.step}</div>
                     <h3 className="font-bold text-lg mb-2">{item.title}</h3>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
@@ -182,50 +217,54 @@ function EatsContent() {
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {popularRestaurants.map((restaurant, index) => (
-                  <Card
-                    key={restaurant.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-eats/30 animate-in fade-in slide-in-from-bottom-4"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                    onClick={() => navigate(`/eats/restaurant/${restaurant.id}`)}
-                  >
-                    <div className="h-32 bg-gradient-to-br from-eats/20 to-orange-500/10 flex items-center justify-center">
-                      {restaurant.cover_image_url ? (
+                {popularRestaurants.map((restaurant, index) => {
+                  const photo = getRestaurantPhoto(restaurant.id);
+                  return (
+                    <Card
+                      key={restaurant.id}
+                      className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 border-transparent hover:border-eats/30 animate-in fade-in slide-in-from-bottom-4 group"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      onClick={() => navigate(`/eats/restaurant/${restaurant.id}`)}
+                    >
+                      <div className="h-32 relative overflow-hidden">
                         <img
-                          src={restaurant.cover_image_url}
+                          src={restaurant.cover_image_url || photo.src}
                           alt={restaurant.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
                         />
-                      ) : (
-                        <UtensilsCrossed className="w-12 h-12 text-eats/50" />
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {restaurant.cuisine_type || "Various cuisines"}
-                      </p>
-                      <div className="flex items-center gap-3 text-sm">
-                        {restaurant.rating && (
-                          <div className="flex items-center gap-1 text-amber-500">
-                            <Star className="w-4 h-4 fill-current" />
-                            <span className="font-medium">{restaurant.rating}</span>
-                          </div>
-                        )}
-                        {restaurant.avg_prep_time && (
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <Clock className="w-4 h-4" />
-                            <span>{restaurant.avg_prep_time} min</span>
-                          </div>
-                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent" />
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {restaurant.cuisine_type || "Various cuisines"}
+                        </p>
+                        <div className="flex items-center gap-3 text-sm">
+                          {restaurant.rating && (
+                            <div className="flex items-center gap-1 text-amber-500">
+                              <Star className="w-4 h-4 fill-current" />
+                              <span className="font-medium">{restaurant.rating}</span>
+                            </div>
+                          )}
+                          {restaurant.avg_prep_time && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="w-4 h-4" />
+                              <span>{restaurant.avg_prep_time} min</span>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           </section>
         )}
+
+        {/* Testimonials */}
+        <UserTestimonials />
 
         {/* CTA Section */}
         <section className="py-16 bg-gradient-to-r from-eats/10 to-orange-500/10">

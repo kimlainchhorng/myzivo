@@ -91,7 +91,6 @@ export function ServiceHero({
             height={1080}
             loading="eager"
             decoding="async"
-            fetchPriority="high"
             className="w-full h-full object-cover"
             style={{ aspectRatio: "16/9" }}
           />

@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Car, CheckCircle2, Clock, MapPin, Shield, Star } from "lucide-react";
+import { Car, CheckCircle2, Clock, MapPin, Shield, Star, Users, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RideRequestForm from "@/components/rides/RideRequestForm";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
+import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import { cn } from "@/lib/utils";
+import { heroPhotos, serviceOverlays } from "@/config/photos";
 
 export default function Rides() {
   const [submitted, setSubmitted] = useState(false);
@@ -29,19 +33,30 @@ export default function Rides() {
     },
   ];
 
+  const heroImage = heroPhotos.rides;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 pt-20 md:pt-24">
-        {/* Hero Section */}
+      <main className="flex-1 pt-16">
+        {/* Hero Section with Photo Background */}
         <section className="relative py-12 md:py-20 overflow-hidden">
-          {/* Background gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-teal-500/5" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-400/10 rounded-full blur-3xl" />
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={heroImage.src}
+              alt={heroImage.alt}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+            />
+            {/* Gradient Overlay */}
+            <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.rides)} />
+            {/* Additional depth */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
+          </div>
 
-          <div className="container mx-auto px-4 relative">
+          <div className="container mx-auto px-4 relative z-10">
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               {/* Left Content */}
               <div className="space-y-8">
@@ -51,17 +66,17 @@ export default function Rides() {
                   transition={{ duration: 0.5 }}
                   className="space-y-4"
                 >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                    <Car className="h-4 w-4" />
+                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium text-white">
+                    <Car className="h-4 w-4 text-emerald-400" />
                     ZIVO Rides
                   </div>
-                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight">
+                  <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
                     Your Ride,{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                       On Demand
                     </span>
                   </h1>
-                  <p className="text-lg md:text-xl text-muted-foreground max-w-xl">
+                  <p className="text-lg md:text-xl text-white/80 max-w-xl">
                     Request a ride and we'll connect you with available drivers in your area. 
                     No upfront payment required.
                   </p>
@@ -74,17 +89,17 @@ export default function Rides() {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="grid gap-4"
                 >
-                  {features.map((feature, index) => (
+                  {features.map((feature) => (
                     <div
                       key={feature.title}
-                      className="flex items-start gap-4 p-4 rounded-xl bg-card/50 border border-border/50"
+                      className="flex items-start gap-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20"
                     >
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <feature.icon className="h-5 w-5 text-primary" />
+                      <div className="p-2 rounded-lg bg-emerald-500/20">
+                        <feature.icon className="h-5 w-5 text-emerald-400" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{feature.title}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="font-semibold text-white">{feature.title}</h3>
+                        <p className="text-sm text-white/70">
                           {feature.description}
                         </p>
                       </div>
@@ -99,7 +114,7 @@ export default function Rides() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <Card className="border-2 shadow-xl bg-card/80 backdrop-blur-sm">
+                <Card className="border-2 shadow-xl bg-card/95 backdrop-blur-sm">
                   <CardContent className="p-6 md:p-8">
                     <AnimatePresence mode="wait">
                       {!submitted ? (
@@ -156,11 +171,29 @@ export default function Rides() {
           </div>
         </section>
 
+        {/* Vehicle Type Gallery */}
+        <VehicleTypeGallery 
+          service="rides" 
+          title="Choose Your Ride"
+          subtitle="Select the vehicle type that suits your needs"
+          className="bg-muted/30"
+        />
+
+        {/* Popular Cities */}
+        <PhotoDestinationGrid
+          service="cars"
+          title="Available Cities"
+          subtitle="Request rides in these popular destinations"
+          limit={8}
+        />
+
         {/* How It Works */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">How It Works</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                How It <span className="text-emerald-400">Works</span>
+              </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
                 Getting a ride with ZIVO is simple and straightforward
               </p>
@@ -172,16 +205,19 @@ export default function Rides() {
                   step: "1",
                   title: "Submit Request",
                   description: "Enter your pickup and drop-off locations along with your contact info",
+                  image: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
                 {
                   step: "2",
                   title: "Get Matched",
                   description: "We'll find available drivers in your area and connect you",
+                  image: "https://images.unsplash.com/photo-1560472355-536de3962603?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
                 {
                   step: "3",
                   title: "Enjoy Your Ride",
                   description: "Your driver will contact you to confirm and complete the ride",
+                  image: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=400&h=300&fit=crop&q=75&fm=webp",
                 },
               ].map((item, index) => (
                 <motion.div
@@ -190,18 +226,31 @@ export default function Rides() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="text-center"
+                  className="text-center group"
                 >
-                  <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center text-white font-bold text-xl">
-                    {item.step}
+                  {/* Step Photo */}
+                  <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-4 border border-border/50">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
+                    <div className="absolute bottom-3 left-3 w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold">
+                      {item.step}
+                    </div>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
+                  <h3 className="text-xl font-semibold mb-2 group-hover:text-emerald-400 transition-colors">{item.title}</h3>
                   <p className="text-muted-foreground">{item.description}</p>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
+
+        {/* Testimonials */}
+        <UserTestimonials />
       </main>
 
       <Footer />

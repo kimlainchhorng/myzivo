@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { Plane, Shield, Clock, Globe } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -8,14 +9,14 @@ import HowItWorksSection from "@/components/seo/HowItWorksSection";
 import TrustedPartnersSection from "@/components/seo/TrustedPartnersSection";
 import FlightFAQWithSchema from "@/components/seo/FlightFAQWithSchema";
 import PopularRoutesGrid from "@/components/seo/PopularRoutesGrid";
-import PopularDestinationsGrid from "@/components/seo/PopularDestinationsGrid";
 import CrossSellBanner from "@/components/seo/CrossSellBanner";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
 import { InternalLinkGrid } from "@/components/seo";
-import { getCityFromCode, formatRouteTitle } from "@/utils/seoUtils";
-import { Badge } from "@/components/ui/badge";
-import { Plane, Shield, Clock, Globe } from "lucide-react";
-import { cn } from "@/lib/utils";
+import ImageHero from "@/components/shared/ImageHero";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
+import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
+import { formatRouteTitle } from "@/utils/seoUtils";
 
 /**
  * Dynamic SEO landing page for flights
@@ -47,12 +48,6 @@ const FlightLanding = () => {
   // Generate dynamic SEO content
   const { title, description, h1 } = formatRouteTitle(from, to);
 
-  const trustBadges = [
-    { icon: Shield, text: "Secure Booking" },
-    { icon: Globe, text: "500+ Airlines" },
-    { icon: Clock, text: "24/7 Support" },
-  ];
-
   const handleSearch = (searchParams: URLSearchParams) => {
     navigate(`/flights/results?${searchParams.toString()}`);
   };
@@ -68,56 +63,17 @@ const FlightLanding = () => {
       <Header />
 
       <main className="pt-16">
-        {/* Hero Section with Search */}
-        <section className="relative py-16 sm:py-24 overflow-hidden">
-          {/* Background */}
-          <div className="absolute inset-0 bg-flights-light" />
+        {/* Hero Section with Full-Width Photo */}
+        <ImageHero service="flights" icon={Plane}>
+          <FlightSearchForm 
+            defaultFrom={from} 
+            defaultTo={to} 
+            onSearch={handleSearch} 
+          />
+        </ImageHero>
 
-          <div className="container mx-auto px-4 relative z-10">
-            {/* Page Title */}
-            <div className="text-center mb-10 max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-flights/10 border border-flights/20 text-sm font-medium mb-6">
-                <Plane className="w-4 h-4 text-flights" />
-                <span className="text-muted-foreground">Search & Compare Flights</span>
-              </div>
-              
-              <h1 className="text-display mb-4">
-                {h1}
-              </h1>
-              
-              <p className="text-body-lg text-muted-foreground mb-8">
-                {from && to 
-                  ? `Compare prices from 500+ airlines for your trip from ${from} to ${to}.`
-                  : from 
-                    ? `Find the best flight deals departing from ${from}.`
-                    : to 
-                      ? `Discover cheap flights to ${to} from any city.`
-                      : "Search and compare flight options to find the best deals for your next trip."
-                }
-              </p>
-
-              {/* Trust Badges */}
-              <div className="flex flex-wrap justify-center gap-4">
-                {trustBadges.map((item) => (
-                  <div
-                    key={item.text}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <item.icon className="w-4 h-4 text-flights" />
-                    <span>{item.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Search Form */}
-            <FlightSearchForm 
-              defaultFrom={from} 
-              defaultTo={to} 
-              onSearch={handleSearch} 
-            />
-          </div>
-        </section>
+        {/* Partner Logos */}
+        <PartnerLogosStrip service="flights" />
 
         {/* Popular Routes Section */}
         <section className="py-12 bg-muted/30">
@@ -132,12 +88,13 @@ const FlightLanding = () => {
           </div>
         </section>
 
-        {/* Popular Destinations */}
-        <section className="py-12">
-          <div className="container mx-auto px-4">
-            <PopularDestinationsGrid />
-          </div>
-        </section>
+        {/* Popular Destinations with Photos */}
+        <PhotoDestinationGrid
+          service="flights"
+          title="Popular Destinations"
+          subtitle="Discover cheap flights to top cities"
+          limit={8}
+        />
 
         {/* Why Compare Section */}
         <WhyCompareSection />
@@ -147,6 +104,9 @@ const FlightLanding = () => {
 
         {/* Cross-Sell Banner */}
         <CrossSellBanner />
+
+        {/* Testimonials */}
+        <UserTestimonials />
 
         {/* Internal Linking - Cross-sell Hotels & Cars */}
         <InternalLinkGrid currentService="flights" />
