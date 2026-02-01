@@ -37,11 +37,15 @@ const footerLinks = {
     { name: "Things to Do", href: "/things-to-do", icon: Ticket },
   ],
   services: [
-    { name: "Rides (Coming Soon)", href: "/ride", icon: Car },
-    { name: "Eats (Coming Soon)", href: "/food", icon: UtensilsCrossed },
+    { name: "ZIVO Rides", href: "/rides", icon: Car },
+    { name: "ZIVO Eats", href: "/eats", icon: UtensilsCrossed },
     { name: "Travel Insurance", href: "/travel-insurance", icon: Shield },
     { name: "Ground Transport", href: "/ground-transport", icon: Train },
     { name: "Package Delivery", href: "/package-delivery", icon: Package },
+  ],
+  contact: [
+    { name: "info@hizivo.com", href: "mailto:info@hizivo.com" },
+    { name: "payment@hizivo.com", href: "mailto:payment@hizivo.com" },
   ],
   company: [
     { name: "About ZIVO", href: "/about" },
@@ -313,15 +317,14 @@ const Footer = () => {
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Contact: <a href="mailto:info@hizivo.com" className="text-primary hover:underline">info@hizivo.com</a>
+                {" · "}
+                <a href="mailto:payment@hizivo.com" className="text-primary hover:underline">payment@hizivo.com</a>
               </p>
               <p className="text-xs text-muted-foreground font-medium">
                 ZIVO may earn a commission when users book through partner links.
               </p>
               <p className="text-xs text-muted-foreground">
                 Bookings are completed on partner websites.
-              </p>
-              <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/30">
-                ZIVO Rides and ZIVO Eats are planned services and are not currently operational.
               </p>
             </div>
             

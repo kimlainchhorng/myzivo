@@ -8,22 +8,38 @@ export default function OrganizationSchema() {
     const organizationSchema = {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "ZIVO",
+      "name": "ZIVO LLC",
       "alternateName": "ZIVO Travel",
       "url": "https://hizivo.com",
       "logo": "https://hizivo.com/logo.png",
       "description": "ZIVO is a travel search and comparison platform helping users find the best deals on flights, hotels, and car rentals from 500+ partners.",
       "foundingDate": "2024",
+      "email": "info@hizivo.com",
       "sameAs": [
         "https://twitter.com/zivotravel",
         "https://facebook.com/zivotravel",
         "https://instagram.com/zivotravel"
       ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "contactType": "customer service",
-        "availableLanguage": ["English"]
-      },
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "email": "info@hizivo.com",
+          "contactType": "customer service",
+          "availableLanguage": ["English"]
+        },
+        {
+          "@type": "ContactPoint",
+          "email": "payment@hizivo.com",
+          "contactType": "billing support",
+          "availableLanguage": ["English"]
+        },
+        {
+          "@type": "ContactPoint",
+          "email": "kimlain@hizivo.com",
+          "contactType": "business inquiries",
+          "availableLanguage": ["English"]
+        }
+      ],
       "areaServed": {
         "@type": "Place",
         "name": "Worldwide"
