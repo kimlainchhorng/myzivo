@@ -1,5 +1,5 @@
 # ZIVO Travel - robots.txt
-# Search engine crawling instructions
+# https://hizivo.com
 
 User-agent: Googlebot
 Allow: /
@@ -22,17 +22,47 @@ User-agent: *
 Allow: /
 
 # Main Travel Pages
-Allow: /book-flight
-Allow: /book-hotel
-Allow: /rent-car
+Allow: /flights
 Allow: /flights/*
+Allow: /hotels
 Allow: /hotels/*
-Allow: /rent-car/*
+Allow: /rent-car
+Allow: /car-rental
+Allow: /car-rental/*
+Allow: /rides
+Allow: /eats
+Allow: /extras
+
+# Company & Info Pages
+Allow: /about
+Allow: /how-it-works
+Allow: /partners
+Allow: /creators
+Allow: /contact
+Allow: /help
+
+# Legal Pages
+Allow: /terms
+Allow: /privacy
+Allow: /affiliate-disclosure
 
 # Block internal/admin pages
 Disallow: /admin
+Disallow: /admin/*
 Disallow: /driver
 Disallow: /restaurant
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /auth-callback
+Disallow: /out
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Block ad landing pages from organic index (paid traffic only)
+Disallow: /ads/
+Disallow: /ads/*
 
 # Sitemap location
 Sitemap: https://hizivo.com/sitemap.xml

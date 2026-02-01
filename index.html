@@ -97,10 +97,15 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "ZIVO",
+      "alternateName": "ZIVO Travel",
       "url": "https://hizivo.com",
+      "description": "Compare flights, hotels, and car rentals from 500+ trusted travel partners. Request rides and order food delivery.",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://hizivo.com/book-flight?q={search_term_string}",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://hizivo.com/flights?q={search_term_string}"
+        },
         "query-input": "required name=search_term_string"
       }
     }

@@ -1,17 +1,20 @@
 import { useEffect } from "react";
 
 /**
- * Injects Organization structured data for SEO
+ * Injects Organization and WebSite structured data for SEO
+ * This component should be rendered once at the app level
  */
 export default function OrganizationSchema() {
   useEffect(() => {
+    // Organization Schema
     const organizationSchema = {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "ZIVO LLC",
+      "name": "ZIVO",
+      "legalName": "ZIVO LLC",
       "alternateName": "ZIVO Travel",
       "url": "https://hizivo.com",
-      "logo": "https://hizivo.com/logo.png",
+      "logo": "https://hizivo.com/og-image.png",
       "description": "ZIVO is a travel search and comparison platform helping users find the best deals on flights, hotels, and car rentals from 500+ partners.",
       "foundingDate": "2024",
       "email": "info@hizivo.com",
@@ -43,21 +46,29 @@ export default function OrganizationSchema() {
       "areaServed": {
         "@type": "Place",
         "name": "Worldwide"
-      }
+      },
+      "knowsAbout": [
+        "Flight booking",
+        "Hotel reservations",
+        "Car rentals",
+        "Travel comparison",
+        "Ride services",
+        "Food delivery"
+      ]
     };
 
-    // Find or create script element
-    let scriptTag = document.querySelector('script[data-schema="organization"]');
-    if (!scriptTag) {
-      scriptTag = document.createElement("script");
-      scriptTag.setAttribute("type", "application/ld+json");
-      scriptTag.setAttribute("data-schema", "organization");
-      document.head.appendChild(scriptTag);
+    // Find or create Organization script element
+    let orgScript = document.querySelector('script[data-schema="organization"]');
+    if (!orgScript) {
+      orgScript = document.createElement("script");
+      orgScript.setAttribute("type", "application/ld+json");
+      orgScript.setAttribute("data-schema", "organization");
+      document.head.appendChild(orgScript);
     }
-    scriptTag.textContent = JSON.stringify(organizationSchema);
+    orgScript.textContent = JSON.stringify(organizationSchema);
 
     return () => {
-      scriptTag?.remove();
+      orgScript?.remove();
     };
   }, []);
 
