@@ -64,6 +64,8 @@ const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Partners = lazy(() => import("./pages/Partners"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
 
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
@@ -171,6 +173,8 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/partners" element={<Partners />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
                 <Route path="/events" element={<Events />} />

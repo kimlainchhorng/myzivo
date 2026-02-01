@@ -55,8 +55,8 @@ const footerLinks = {
     { name: "Accessibility", href: "/accessibility" },
   ],
   legal: [
-    { name: "Terms of Service", href: "/terms-of-service" },
-    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Terms & Conditions", href: "/terms" },
+    { name: "Privacy Policy", href: "/privacy" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
