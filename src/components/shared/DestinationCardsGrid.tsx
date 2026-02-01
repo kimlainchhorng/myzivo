@@ -282,7 +282,7 @@ export default function DestinationCardsGrid({
               <div className="relative aspect-[4/3] overflow-hidden">
                 <img 
                   src={dest.image} 
-                  alt={dest.city}
+                  alt={`${dest.city}, ${dest.country} - Travel destination`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading="lazy"
                 />

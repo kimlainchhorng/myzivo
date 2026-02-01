@@ -35,6 +35,8 @@ import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { RedirectDisclaimer } from "@/components/shared/RedirectDisclaimer";
+import ServiceHero from "@/components/shared/ServiceHero";
+import heroExtras from "@/assets/hero-extras.jpg";
 
 interface ExtraCategory {
   id: string;
@@ -125,23 +127,14 @@ export default function TravelExtras() {
       <Header />
       
       <main className="flex-1 pt-20">
-        {/* Hero Section */}
-        <section className="py-12 sm:py-16 border-b border-border">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-2xl mx-auto">
-              <Badge className="mb-4 bg-primary/10 text-primary border-primary/30">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Travel Extras
-              </Badge>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold mb-4">
-                Everything You Need for Your Trip
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                From airport transfers to travel eSIMs - find all your travel essentials in one place
-              </p>
-            </div>
-          </div>
-        </section>
+        {/* Hero Section with Photo */}
+        <ServiceHero
+          service="extras"
+          title="Everything You Need for Your Trip"
+          subtitle="From airport transfers to travel eSIMs - find all your travel essentials in one place"
+          icon={Sparkles}
+          image={heroExtras}
+        />
 
         {/* Categories */}
         {categories.map((category, index) => (
