@@ -1,289 +1,318 @@
 
-# Premium Homepage Redesign for ZIVO
+# SEO Destination Pages Implementation Plan
 
 ## Overview
 
-This plan redesigns the ZIVO homepage into a **premium, conversion-focused layout** with clear user flows into each service, no clutter or duplicated blocks, and a mobile-first approach using the established PHOTO style.
+This plan implements **30 SEO destination landing pages** to drive organic traffic and support affiliate approvals. Each page follows a premium photo-style template with unique content, embedded search forms, FAQ schema, and internal linking.
 
 ---
 
 ## Current State Analysis
 
-### What Exists Today
-1. **Desktop**: Uses `DesktopHomePage` with NavBar → HeroSection → ServicesGrid → ExtrasSection → TrustSection → Footer
-2. **Mobile**: Completely different component (`AppHome`) with different structure
-3. **Hero**: Center-aligned, full-background image with 3 CTAs (Flights/Hotels/Cars only)
-4. **ServicesGrid**: 6 premium photo cards with "Live" badges
-5. **ExtrasSection**: 5 icon-based cards for extras
-6. **TrustSection**: 4 trust icons + "How ZIVO Works" disclosure
+### What Already Exists
+1. **FlightLanding.tsx** - Handles `/flights`, `/flights/from-{city}`, `/flights/to-{city}`, `/flights/{route}` routes
+2. **HotelLanding.tsx** - Handles `/hotels` and `/hotels/in-{city}` routes
+3. **CarRentalLanding.tsx** - Handles `/car-rental` and `/car-rental/in-{location}` routes
+4. **SEO Components** - FAQSchema, InternalLinkGrid, TravelFAQ, PopularRoutesGrid, TrustedPartnersSection
+5. **Photo System** - `destinationPhotos` config with 8 cities, `heroPhotos` for services
+6. **Sitemap** - Already includes some destination URLs
 
 ### Issues to Fix
-1. Hero is **center-aligned** (spec requires left text + right photo)
-2. Hero **missing Rides & Eats CTAs** (only shows travel services)
-3. Hero copy doesn't match spec ("Your Travel, Simplified" vs "ZIVO — Travel, Rides & Eats in One Place")
-4. **No "How It Works" section** (3-step flow with partner disclosure)
-5. **No Popular Destinations section** on homepage
-6. ExtrasSection shows only 5 items (spec wants 6)
-7. **Different mobile layout** - AppHome is completely separate (needs unification)
-8. TrustSection has 4 items (spec wants simpler 3-bullet trust strip)
-9. **Missing exact footer disclosure text**
+1. **Missing route pattern** - `/flights/from-{city}-to-{city}` not properly handled (only `/flights/{route}` exists but parses `{from}-to-{to}`)
+2. **Emoji destinations** - HotelLanding and CarRentalLanding use emojis instead of photo tiles
+3. **Missing cities** - Need to add Chicago, Dallas, Atlanta, San Francisco, Orlando, Phoenix, San Diego, Cancun to `destinationPhotos`
+4. **No breadcrumb schema** - Missing for SEO structured data
+5. **Duplicate content risk** - Need unique intro paragraphs per city
+6. **URL format inconsistency** - Hotels use `/hotels/in-{city}`, Cars use `/car-rental/in-{location}`, but spec wants `/hotels/{city}` and `/rent-car/{city}`
 
 ---
 
-## New Section Structure
+## Implementation Plan
+
+### Phase 1: Expand Destination Photo Configuration
+
+**File: `src/config/photos.ts`**
+
+Add 12 new destination cities to `destinationPhotos`:
+
+| City | Unsplash Photo ID |
+|------|-------------------|
+| Chicago | Chicago skyline with river |
+| Dallas | Dallas skyline at night |
+| Atlanta | Atlanta downtown view |
+| San Francisco | Golden Gate Bridge |
+| Orlando | Orlando theme parks area |
+| Phoenix | Phoenix desert skyline |
+| San Diego | San Diego harbor |
+| Cancun | Cancun beach resort |
+| Barcelona | Barcelona cityscape |
+| Singapore | Marina Bay Sands |
+| Sydney | Sydney Opera House |
+| Amsterdam | Amsterdam canals |
+
+Update `DestinationCity` type to include all 20 cities.
+
+---
+
+### Phase 2: Create Destination Content Data System
+
+**File: `src/data/destinationContent.ts`** (NEW)
+
+Create unique, non-duplicate content for each destination:
 
 ```text
-DESKTOP HOMEPAGE FLOW
-=====================
-1. NavBar (existing - keep)
-2. Hero Section (REDESIGN - split layout)
-3. Services Grid (UPDATE - 6 cards with revised CTAs)
-4. How It Works (NEW - 3 steps)
-5. Popular Destinations (NEW - 8 tiles)
-6. ZIVO More / Extras (UPDATE - 6 items)
-7. Trust & Support (UPDATE - 3 bullets)
-8. Footer (UPDATE - exact disclosure text)
+Structure per city:
+- title: "Flights from Chicago to New York" | "Hotels in Paris"
+- metaDescription: Unique 155-char SEO description
+- h1: Page headline
+- introText: 120-200 word unique paragraph
+- travelTips: 5 bullet points (unique per city/service combo)
+- faqs: 5 city-specific FAQ items
+- relatedCities: 4 internal links to related pages
+- ogImage: City-specific OG image path
+```
+
+Content tone: Premium, helpful, no "cheapest guaranteed" claims.
+
+---
+
+### Phase 3: Create Breadcrumb Schema Component
+
+**File: `src/components/seo/BreadcrumbSchema.tsx`** (NEW)
+
+```text
+Props:
+- items: Array<{ name: string; url: string }>
+
+Output JSON-LD:
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://hizivo.com" },
+    { "@type": "ListItem", "position": 2, "name": "Flights", "item": "https://hizivo.com/flights" },
+    { "@type": "ListItem", "position": 3, "name": "Chicago to New York" }
+  ]
+}
 ```
 
 ---
 
-## Phase 1: Redesign Hero Section
+### Phase 4: Create Unified SEO Page Template Component
 
-**File: `src/components/home/HeroSection.tsx`**
+**File: `src/components/seo/SEODestinationPage.tsx`** (NEW)
 
-### New Layout: Split Hero (Text Left, Photo Right)
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│   Left Column (50%)           │   Right Column (50%)            │
-│                               │                                 │
-│   ZIVO — Travel, Rides &      │   [Premium Hero Photo]          │
-│   Eats in One Place           │   16:9 with dark overlay        │
-│                               │   hero-homepage.jpg             │
-│   Search flights, hotels,     │                                 │
-│   and car rentals. Request    │                                 │
-│   rides and food delivery     │                                 │
-│   — all from one platform.    │                                 │
-│                               │                                 │
-│   [Search Flights] [Hotels]   │                                 │
-│   [Rent Car] [Rides] [Eats]   │                                 │
-│                               │                                 │
-│   Trust: Bookings for travel  │                                 │
-│   are completed on partner    │                                 │
-│   sites.                      │                                 │
-│                               │                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Content Changes
-
-**Headline:** "ZIVO — Travel, Rides & Eats in One Place"
-
-**Subtext:** "Search flights, hotels, and car rentals. Request rides and food delivery — all from one platform."
-
-**Primary CTAs (row 1):**
-- "Search Flights" → /flights (bg-flights)
-- "Search Hotels" → /hotels (bg-hotels)
-
-**Secondary CTAs (row 2):**
-- "Rent a Car" → /rent-car (bg-cars)
-- "Request a Ride" → /rides (bg-rides)
-- "Order Food" → /eats (bg-eats)
-
-**Trust Line:** "Bookings for travel are completed on partner sites."
-
-### Mobile Layout
-- Single column, stacked
-- Photo at top (shorter height, 40vh)
-- Content below with CTAs stacked vertically
-- 2-column CTA grid for secondary buttons
-
----
-
-## Phase 2: Update Services Grid
-
-**File: `src/components/home/ServicesGrid.tsx`**
-
-### Card Content Updates
-
-| Card | Description | CTA |
-|------|-------------|-----|
-| Flights | "Compare flight options worldwide" | "Search Flights" |
-| Hotels | "Find hotels and compare rates" | "Search Hotels" |
-| Car Rental | "Compare rental cars in minutes" | "Rent a Car" |
-| Rides | "Request local rides and airport pickup" | "Request Ride" |
-| Eats | "Order meals from local restaurants" | "Order Food" |
-| Extras | "Transfers, activities, eSIM, and more" | "Explore Extras" |
-
-### Layout Changes
-- Keep 4:3 photo cards with icon overlay
-- Remove "Live" badges (redundant)
-- Update description text to match spec
-- Update CTA button text to match spec
-
-### Mobile: 2-column grid (already correct)
-
----
-
-## Phase 3: Create "How It Works" Section
-
-**File: `src/components/home/HowItWorks.tsx`** (NEW)
-
-### 3-Step Flow
+Reusable template component for all destination pages:
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                    HOW IT WORKS                                 │
-│                                                                 │
-│   ┌───────────┐     ┌───────────────┐     ┌─────────────────┐  │
-│   │     1     │     │      2        │     │       3         │  │
-│   │  Search   │ ─── │   Compare     │ ─── │    Book on      │  │
-│   │    or     │     │   Options     │     │   Partner Site  │  │
-│   │  Request  │     │               │     │  (or Confirm    │  │
-│   │           │     │               │     │   with ZIVO)    │  │
-│   └───────────┘     └───────────────┘     └─────────────────┘  │
-│                                                                 │
-│   "ZIVO may earn a commission when users book through          │
-│    partner links."                                              │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Props:
+- serviceType: 'flights' | 'hotels' | 'cars'
+- city: string (single city for hotels/cars)
+- fromCity?: string (for flight routes)
+- toCity?: string (for flight routes)
+
+Sections (in order):
+A) Premium Photo Hero
+   - 16:9 destination image with dark overlay
+   - Dynamic title, subtitle, trust badges
+   
+B) Pre-filled Search Form
+   - FlightSearchForm / HotelSearchForm / CarSearchForm
+   - Pre-populates origin/destination/city from URL
+   
+C) Unique Intro Content (120-200 words)
+   - City-specific paragraphs
+   - Partner booking mention
+   - No price guarantees
+   
+D) Travel Tips Section
+   - 5 bullet points per city
+   - Icons + short tips
+   
+E) Popular Related Routes/Cities
+   - 6-8 tiles linking to related SEO pages
+   
+F) FAQ Section with Schema
+   - 5 city-specific questions
+   - Uses FAQSchema component for JSON-LD
+   
+G) Internal Links Grid
+   - Cross-sell to other services
+   - Link to Extras (transfers, tours, eSIM)
+   
+H) Affiliate Disclaimer
+   - Standard partner disclosure text
 ```
 
-### Component Structure
-- 3 columns on desktop, 1 column stack on mobile
-- Circle icon with step number
-- Step title + brief description
-- Small disclosure text below
-
 ---
 
-## Phase 4: Create Popular Destinations Section
+### Phase 5: Update Route Configuration
 
-**File: `src/components/home/PopularDestinations.tsx`** (NEW)
+**File: `src/App.tsx`**
 
-### 8 Destination Tiles (1:1)
-
-Use destination photos from `src/config/photos.ts`:
-1. New York
-2. Los Angeles
-3. Miami
-4. Las Vegas
-5. Paris
-6. Tokyo
-7. London
-8. Dubai
-
-### Layout
-- 8-column grid on desktop (lg)
-- 4-column grid on tablet (md)
-- 2-column grid on mobile (sm)
-- Each tile: square image with city name overlay
-- Clicking navigates to /hotels (hotel-focused)
-
-### CTA
-- "Explore Hotels" → /hotels button below grid
-
----
-
-## Phase 5: Update Extras Section (ZIVO More)
-
-**File: `src/components/home/ExtrasSection.tsx`**
-
-### Update to 6 Items
-
-| Item | Icon | Description |
-|------|------|-------------|
-| Activities | Ticket | "Tours and activities" |
-| Tickets | Ticket | "Attractions and museums" |
-| Transfers | Bus | "Airport transfers" |
-| eSIM | Smartphone | "Stay connected abroad" |
-| Luggage Storage | Briefcase | "Store bags while exploring" |
-| Flight Compensation | Shield | "Claim for delays" |
-
-### Layout Changes
-- 6-column grid on desktop (xl)
-- 3-column on tablet (lg)
-- 2-column on mobile
-- Keep simple icon-based cards (no photos needed)
-
----
-
-## Phase 6: Simplify Trust Section
-
-**File: `src/components/home/TrustSection.tsx`**
-
-### New 3-Bullet Format
-
-Replace 4 trust icons + disclosure box with simpler:
+Update routes to support both URL patterns:
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│                       TRUST & SUPPORT                           │
-│                                                                 │
-│   ✓ Secure partner checkout                                    │
-│   ✓ Mobile-first experience                                    │
-│   ✓ Support: info@hizivo.com                                   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+Flights:
+- /flights → FlightLanding
+- /flights/from-{city} → FlightLanding
+- /flights/to-{city} → FlightLanding
+- /flights/from-{from}-to-{to} → FlightLanding (NEW explicit pattern)
+- /flights/{route} → FlightLanding (catch-all for other patterns)
+
+Hotels (add new simple pattern):
+- /hotels → HotelLanding
+- /hotels/{city} → HotelLanding (NEW - simpler URL)
+- /hotels/in-{city} → HotelLanding (keep for backwards compat)
+
+Cars (add new simple pattern):
+- /rent-car → CarRentalLanding (existing full experience)
+- /rent-car/{city} → CarRentalLanding (NEW - SEO pages)
+- /car-rental/in-{location} → CarRentalLanding (keep for compat)
 ```
 
-### Layout
-- Single row on desktop
-- Stacked on mobile
-- Clean, minimal design
-- No disclosure box (moved to HowItWorks section)
+---
+
+### Phase 6: Update FlightLanding for Route Pages
+
+**File: `src/pages/FlightLanding.tsx`**
+
+Enhance to handle `/flights/from-{from}-to-{to}` pattern:
+
+```text
+Changes:
+1. Add route parsing for "from-chicago-to-new-york" format
+2. Use SEODestinationPage template
+3. Generate city-specific content from destinationContent
+4. Add BreadcrumbSchema
+5. Pre-fill FlightSearchForm with both cities
+```
 
 ---
 
-## Phase 7: Update Footer Disclosure
+### Phase 7: Upgrade HotelLanding for City Pages
 
-**File: `src/components/Footer.tsx`**
+**File: `src/pages/HotelLanding.tsx`**
 
-### Update Disclosure Text (Lines 229-234)
+Transform to premium photo style:
 
-Current:
-> "ZIVO is a travel search engine. We may earn a commission when you book through our partner links..."
-
-Replace with exact spec text:
-> "ZIVO may earn a commission when users book through partner links.
-> Bookings are completed on partner websites."
-
-### Ensure Required Links Present
-- Privacy ✓
-- Terms ✓
-- Affiliate Disclosure ✓
-- Partners ✓
-- Creators ✓
-- Contact ✓
+```text
+Changes:
+1. Replace emoji grid with photo tiles from destinationPhotos
+2. Use SEODestinationPage template
+3. Add city-specific intro content (unique per city)
+4. Add BreadcrumbSchema
+5. Add city-specific FAQs
+6. Pre-fill HotelSearch with city
+7. Support both /hotels/{city} and /hotels/in-{city}
+```
 
 ---
 
-## Phase 8: Unify Mobile Experience
+### Phase 8: Upgrade CarRentalLanding for City Pages
 
-**File: `src/pages/Index.tsx`**
+**File: `src/pages/CarRentalLanding.tsx`**
 
-### Current Issue
-Desktop renders `DesktopHomePage`, mobile renders completely different `AppHome`.
+Transform to premium photo style:
 
-### Solution Options
+```text
+Changes:
+1. Replace emoji grid with photo tiles
+2. Use SEODestinationPage template
+3. Add city-specific intro content
+4. Add BreadcrumbSchema
+5. Add location-specific FAQs
+6. Pre-fill CarSearch with location
+7. Support both /rent-car/{city} and /car-rental/in-{location}
+```
 
-**Option A (Recommended):** Keep separate but align content
-- Update `AppHome` to match new desktop structure
-- Same sections, mobile-optimized layout
-- Consistent messaging and CTAs
+---
 
-**Option B:** Single responsive component
-- Merge into one component with responsive breakpoints
-- More code complexity but single source of truth
+### Phase 9: Create City-Specific FAQ Data
 
-### Mobile Layout Rules
-- Hero CTAs stack vertically (2 rows)
-- Services grid: 2 columns
-- How It Works: vertical stack
-- Destinations: 2-column grid, horizontal scroll optional
-- No giant blocks repeated
-- Sticky search button: optional (not required)
+**File: `src/data/destinationFAQs.ts`** (NEW)
+
+Unique FAQ sets per city to avoid duplicate content:
+
+```text
+Example for Chicago flights:
+- "What are the best airports to fly into Chicago?"
+- "When is the cheapest time to fly to Chicago?"
+- "How far is Chicago O'Hare from downtown?"
+- "Do flights from Chicago connect to international destinations?"
+- "What airlines operate out of Chicago?"
+
+Example for Paris hotels:
+- "What neighborhoods are best for hotels in Paris?"
+- "How early should I book Paris hotels?"
+- "Are Paris hotels walkable to major attractions?"
+- "What amenities do most Paris hotels offer?"
+- "Is breakfast included at Paris hotels?"
+```
+
+---
+
+### Phase 10: Update Sitemap with All Destination Pages
+
+**File: `public/sitemap.xml`**
+
+Add all 30 starter pages:
+
+```text
+Flights Routes (10):
+- /flights/from-chicago-to-new-york
+- /flights/from-chicago-to-los-angeles
+- /flights/from-new-york-to-miami
+- /flights/from-los-angeles-to-las-vegas
+- /flights/from-miami-to-new-york
+- /flights/from-dallas-to-los-angeles
+- /flights/from-atlanta-to-new-york
+- /flights/from-san-francisco-to-los-angeles
+- /flights/from-new-york-to-london
+- /flights/from-los-angeles-to-tokyo
+
+Hotels Cities (10):
+- /hotels/new-york
+- /hotels/los-angeles
+- /hotels/miami
+- /hotels/las-vegas
+- /hotels/chicago
+- /hotels/paris
+- /hotels/london
+- /hotels/tokyo
+- /hotels/dubai
+- /hotels/cancun
+
+Car Rental Cities (10):
+- /rent-car/miami
+- /rent-car/las-vegas
+- /rent-car/los-angeles
+- /rent-car/orlando
+- /rent-car/new-york
+- /rent-car/chicago
+- /rent-car/dallas
+- /rent-car/atlanta
+- /rent-car/phoenix
+- /rent-car/san-diego
+```
+
+---
+
+### Phase 11: Create HotelSearchForm and CarSearchForm Components
+
+**Files:**
+- `src/components/seo/HotelSearchForm.tsx` (NEW)
+- `src/components/seo/CarSearchForm.tsx` (NEW)
+
+Consistent with FlightSearchForm, pre-fill destination from URL params.
+
+---
+
+### Phase 12: Verify No noIndex on Public Pages
+
+**File: `src/components/SEOHead.tsx`**
+
+Ensure `noIndex` prop defaults to `false` and is not accidentally set on destination pages.
 
 ---
 
@@ -291,67 +320,99 @@ Desktop renders `DesktopHomePage`, mobile renders completely different `AppHome`
 
 | File | Purpose |
 |------|---------|
-| `src/components/home/HowItWorks.tsx` | 3-step how it works section |
-| `src/components/home/PopularDestinations.tsx` | 8 destination tiles |
+| `src/components/seo/BreadcrumbSchema.tsx` | JSON-LD breadcrumb structured data |
+| `src/components/seo/SEODestinationPage.tsx` | Reusable destination page template |
+| `src/components/seo/HotelSearchForm.tsx` | Pre-filled hotel search form |
+| `src/components/seo/CarSearchForm.tsx` | Pre-filled car search form |
+| `src/data/destinationContent.ts` | Unique content per destination |
+| `src/data/destinationFAQs.ts` | City-specific FAQ data |
 
 ## Files to Modify
 
 | File | Key Changes |
 |------|-------------|
-| `src/components/home/HeroSection.tsx` | Split layout, new copy, 5 CTAs |
-| `src/components/home/ServicesGrid.tsx` | Updated descriptions, CTA text, remove badges |
-| `src/components/home/ExtrasSection.tsx` | 6 items, updated icons/labels |
-| `src/components/home/TrustSection.tsx` | Simplified 3-bullet format |
-| `src/components/Footer.tsx` | Exact disclosure text |
-| `src/pages/Index.tsx` | Add HowItWorks and PopularDestinations |
-| `src/pages/app/AppHome.tsx` | Align with new desktop structure |
+| `src/config/photos.ts` | Add 12 new destination cities with photos |
+| `src/App.tsx` | Add new route patterns for destination pages |
+| `src/pages/FlightLanding.tsx` | Use SEODestinationPage template, add breadcrumbs |
+| `src/pages/HotelLanding.tsx` | Photo tiles, unique content, breadcrumbs |
+| `src/pages/CarRentalLanding.tsx` | Photo tiles, unique content, breadcrumbs |
+| `src/components/seo/InternalLinkGrid.tsx` | Add links to Extras (transfers, tours, eSIM) |
+| `public/sitemap.xml` | Add all 30 destination page URLs |
+| `src/utils/seoUtils.ts` | Add hotel/car SEO utility functions |
 
 ---
 
-## Technical Implementation Details
+## Technical Details
 
-### Hero Split Layout CSS
+### SEO Meta Generation Pattern
 
+For flights:
 ```text
-Desktop (lg+):
-- grid grid-cols-2
-- Left: text + CTAs
-- Right: relative image container with overlay
-
-Tablet (md):
-- Same split but smaller text
-
-Mobile (sm):
-- Stack: photo on top (40vh), content below
-- CTAs in 2-column grid
+Title: "Flights from Chicago to New York | Compare & Book | ZIVO"
+Description: "Compare flights from Chicago to New York. Search 500+ airlines for the best deals. Book securely with trusted travel partners."
+Canonical: "https://hizivo.com/flights/from-chicago-to-new-york"
 ```
 
-### CTA Button Styles
-
+For hotels:
 ```text
-Primary (row 1):
-- h-12 px-6 text-base font-semibold rounded-xl
-- bg-flights / bg-hotels
-
-Secondary (row 2):
-- h-11 px-5 text-sm font-medium rounded-xl
-- bg-cars / bg-rides / bg-eats
+Title: "Hotels in Paris | Compare Prices | ZIVO"
+Description: "Find the best hotels in Paris. Compare prices from Booking.com, Expedia, Hotels.com and 500+ partners. No booking fees."
+Canonical: "https://hizivo.com/hotels/paris"
 ```
 
-### Destination Tile Hover Effect
-- Scale 1.05 on hover
-- Gradient overlay darkens slightly
-- City name stays visible
+For cars:
+```text
+Title: "Car Rental in Miami | Compare Prices | ZIVO"
+Description: "Rent a car in Miami. Compare rental prices from Hertz, Enterprise, Avis and more. Book on partner sites."
+Canonical: "https://hizivo.com/rent-car/miami"
+```
+
+### Unique Content Strategy
+
+Each city page gets:
+1. Custom intro paragraph mentioning local landmarks/features
+2. 5 location-specific travel tips
+3. 5 unique FAQ questions about that destination
+4. Related cities based on common travel patterns
+
+Example unique intro for Chicago flights:
+> "Chicago, the Windy City, serves as a major hub for domestic and international travel. 
+> O'Hare International Airport (ORD) is one of the busiest in the world, offering connections 
+> to over 200 destinations. Whether you're visiting for business, exploring the iconic skyline, 
+> or catching a game at Wrigley Field, ZIVO helps you compare flights from 500+ airlines to find 
+> the best options. All bookings are completed on our trusted partner sites."
+
+### Photo Hero Layout
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ [16:9 City Photo with Dark Gradient Overlay]                   │
+│                                                                 │
+│    Badge: "Compare Flights" / "Compare Hotels" / "Car Rental"  │
+│                                                                 │
+│    H1: "Flights from Chicago to New York"                      │
+│    Subtitle: "Search 500+ airlines and book on partner sites"  │
+│                                                                 │
+│    Trust Badges: [Secure] [500+ Partners] [24/7 Support]        │
+│                                                                 │
+│    [=========== Search Form Pre-filled ===========]             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Expected Outcomes
 
 After implementation:
-- Clean, premium travel-tech homepage
-- Clear user flow into each service (5 CTAs in hero, 6 service cards)
-- No clutter or duplicated blocks
-- Consistent desktop and mobile experience
-- Proper affiliate disclosure in multiple locations
-- All required footer links present
-- Mobile-first, fast, premium look
+- 30 unique, indexable destination pages live
+- Each page has unique 120-200 word intro content
+- All pages include FAQ schema for rich snippets
+- Breadcrumb schema on every page
+- Internal linking between related destinations
+- Cross-sell links to Hotels, Cars, Extras
+- All pages in sitemap.xml with correct canonical URLs
+- No noIndex on any public page
+- Premium photo style consistent across all pages
+- Pre-filled search forms for high conversion
+- Affiliate-compliant disclaimers on every page
