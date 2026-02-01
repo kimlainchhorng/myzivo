@@ -1,6 +1,7 @@
 import { useIsMobile } from "@/hooks/use-mobile";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 
 // Desktop components
 import NavBar from "@/components/home/NavBar";
@@ -25,6 +26,9 @@ const DesktopHomePage = () => {
       <main className="pt-16">
         {/* 1. Hero Section - Split layout */}
         <HeroSection />
+        
+        {/* Trust Bar - Below hero */}
+        <GlobalTrustBar />
         
         {/* 2. Services Grid (6 cards) */}
         <ServicesGrid />

@@ -20,6 +20,7 @@ import UserTestimonials from "@/components/shared/UserTestimonials";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import ExperienceGallery from "@/components/shared/ExperienceGallery";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { InternalLinkGrid } from "@/components/seo";
 import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch";
 import { getCityBySlug, cityNameToSlug } from "@/data/cities";
@@ -192,6 +193,9 @@ export default function HotelsPage() {
             </div>
           </div>
         </section>
+
+        {/* Trust Bar */}
+        <GlobalTrustBar variant="compact" />
 
         {/* Results Section */}
         {hasSearched && (

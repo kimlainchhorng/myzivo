@@ -13,10 +13,10 @@ import SEOHead from "@/components/SEOHead";
 
 export default function OutboundRedirect() {
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState<'loading' | 'redirecting' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ready' | 'redirecting' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [countdown, setCountdown] = useState(1); // 1 second interstitial
   const [partnerName, setPartnerName] = useState<string>('');
+  const [finalUrl, setFinalUrl] = useState<string>('');
   
   useEffect(() => {
     const partnerId = searchParams.get('partner');
@@ -44,8 +44,6 @@ export default function OutboundRedirect() {
     
     // Log the click and get the final URL with SubID
     const processRedirect = async () => {
-      setStatus('redirecting');
-      
       const result = await logOutboundClick({
         partnerId,
         partnerName: name || partnerId,
@@ -54,29 +52,24 @@ export default function OutboundRedirect() {
         destinationUrl: decodedUrl,
       });
       
-      // Countdown before redirect
-      let count = 1;
-      const timer = setInterval(() => {
-        count -= 0.1;
-        setCountdown(Math.max(0, count));
-        
-        if (count <= 0) {
-          clearInterval(timer);
-          // Open in new tab with security attributes
-          const newWindow = window.open(result.finalUrl, '_blank', 'noopener,noreferrer');
-          if (!newWindow) {
-            // Popup blocked - show link
-            setStatus('error');
-            setErrorMessage('Popup blocked. Click the link below to continue.');
-          }
-        }
-      }, 100);
-      
-      return () => clearInterval(timer);
+      setFinalUrl(result.finalUrl);
+      setStatus('ready');
     };
     
     processRedirect();
   }, [searchParams]);
+
+  const handleContinue = () => {
+    setStatus('redirecting');
+    // Small delay for visual feedback
+    setTimeout(() => {
+      const newWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
+      if (!newWindow) {
+        setStatus('error');
+        setErrorMessage('Popup blocked. Click the link below to continue.');
+      }
+    }, 300);
+  };
   
   return (
     <>
@@ -102,7 +95,7 @@ export default function OutboundRedirect() {
             </div>
           )}
           
-          {status === 'redirecting' && (
+          {status === 'ready' && (
             <div className="space-y-6">
               {/* Interstitial Message */}
               <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
@@ -112,20 +105,21 @@ export default function OutboundRedirect() {
                   Redirecting to {partnerName}
                 </h1>
                 
-                <p className="text-muted-foreground text-sm mb-4">
-                  You are leaving ZIVO to complete your booking on a partner website.
+                <p className="text-muted-foreground text-sm mb-6">
+                  You're leaving ZIVO to complete your booking on a trusted partner website.
                 </p>
                 
-                {/* Progress bar */}
-                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary transition-all duration-100 ease-linear"
-                    style={{ width: `${(1 - countdown) * 100}%` }}
-                  />
-                </div>
+                {/* Continue Button */}
+                <button
+                  onClick={handleContinue}
+                  className="w-full py-3 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                >
+                  Continue to {partnerName}
+                  <ExternalLink className="w-4 h-4" />
+                </button>
                 
-                <p className="text-xs text-muted-foreground mt-3">
-                  Opening in a new tab...
+                <p className="text-xs text-muted-foreground mt-4">
+                  Opens in a new tab
                 </p>
               </div>
               
@@ -134,6 +128,13 @@ export default function OutboundRedirect() {
                 ZIVO may earn a commission when you book through partner links. 
                 This is at no extra cost to you.
               </p>
+            </div>
+          )}
+          
+          {status === 'redirecting' && (
+            <div className="space-y-4">
+              <Loader2 className="w-10 h-10 mx-auto text-primary animate-spin" />
+              <p className="text-muted-foreground">Opening partner site...</p>
             </div>
           )}
           

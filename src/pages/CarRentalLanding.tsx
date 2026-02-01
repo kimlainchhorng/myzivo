@@ -9,6 +9,7 @@ import UserTestimonials from "@/components/shared/UserTestimonials";
 import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { InternalLinkGrid } from "@/components/seo";
 import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
@@ -93,6 +94,9 @@ export default function CarRentalLanding() {
             </div>
           </div>
         </section>
+
+        {/* Trust Bar */}
+        <GlobalTrustBar variant="compact" />
 
         {/* Partner Logos */}
         <PartnerLogosStrip service="cars" />
