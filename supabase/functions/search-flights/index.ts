@@ -365,30 +365,51 @@ function transformApiResponse(
     }
     
     // Get carrier info - handle different formats
-    const carrier = firstLeg.operating_carrier_designator;
+    // API can return: operating_carrier, operating_carrier_designator, or marketing_carrier_designator
     let carrierCode = 'XX';
     let flightNumberStr = '';
     
-    if (carrier) {
-      if (typeof carrier === 'object') {
-        const c = carrier as Record<string, string>;
-        carrierCode = c.carrier_code || c.airline || 'XX';
+    // Try operating_carrier first (simple string like "AA")
+    if (firstLeg.operating_carrier && typeof firstLeg.operating_carrier === 'string') {
+      carrierCode = String(firstLeg.operating_carrier).toUpperCase();
+    }
+    
+    // Try operating_carrier_designator
+    const opCarrier = firstLeg.operating_carrier_designator;
+    if (carrierCode === 'XX' && opCarrier) {
+      if (typeof opCarrier === 'object') {
+        const c = opCarrier as Record<string, string>;
+        carrierCode = c.carrier_code || c.airline_code || c.carrier || 'XX';
         flightNumberStr = c.number || c.flight_number || '';
-      } else if (typeof carrier === 'string') {
-        // Format might be "AA1234"
-        const match = String(carrier).match(/^([A-Z]{2})(\d+)/);
+      } else if (typeof opCarrier === 'string') {
+        // Format might be "AA1234" or just "AA"
+        const match = String(opCarrier).match(/^([A-Z0-9]{2})(\d*)/);
         if (match) {
           carrierCode = match[1];
-          flightNumberStr = match[2];
+          flightNumberStr = match[2] || '';
         }
       }
     }
     
-    // Fallback to marketing carrier if operating carrier not found
-    if (carrierCode === 'XX' && firstLeg.marketing_carrier_designator) {
-      const mc = firstLeg.marketing_carrier_designator as Record<string, string>;
-      carrierCode = mc.carrier_code || mc.airline || 'XX';
-      flightNumberStr = flightNumberStr || mc.number || '';
+    // Fallback to marketing_carrier_designator
+    const mkCarrier = firstLeg.marketing_carrier_designator;
+    if (carrierCode === 'XX' && mkCarrier) {
+      if (typeof mkCarrier === 'object') {
+        const mc = mkCarrier as Record<string, string>;
+        carrierCode = mc.carrier_code || mc.airline_code || mc.carrier || 'XX';
+        flightNumberStr = flightNumberStr || mc.number || mc.flight_number || '';
+      } else if (typeof mkCarrier === 'string') {
+        const match = String(mkCarrier).match(/^([A-Z0-9]{2})(\d*)/);
+        if (match) {
+          carrierCode = match[1];
+          flightNumberStr = flightNumberStr || match[2] || '';
+        }
+      }
+    }
+    
+    // Final fallback: try airline field
+    if (carrierCode === 'XX' && firstLeg.airline) {
+      carrierCode = String(firstLeg.airline).toUpperCase().substring(0, 2);
     }
     
     const airlineInfo = airlinesOutput[carrierCode] || { iata: carrierCode, name: carrierCode, isLowcost: false };
@@ -447,7 +468,7 @@ function transformApiResponse(
       baggageIncluded: baggageCount > 0 ? `${baggageCount} × 23kg` : 'Carry-on only',
       isRefundable: false,
       agentId,
-      agentName: String(agent?.label || agent?.gate_name || ''),
+      agentName,
     });
     
     processedCount++;
