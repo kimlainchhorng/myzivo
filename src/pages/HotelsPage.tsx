@@ -15,6 +15,10 @@ import HotelResultCard, { HotelResult } from "@/components/hotels/HotelResultCar
 import HotelResultsSkeleton from "@/components/hotels/HotelResultsSkeleton";
 import PopularHotelDestinations from "@/components/hotels/PopularHotelDestinations";
 import TravelFAQ from "@/components/shared/TravelFAQ";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
+import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
+import ExperienceGallery from "@/components/shared/ExperienceGallery";
 import { InternalLinkGrid } from "@/components/seo";
 import { useHotelSearch } from "@/hooks/useHotelSearch";
 import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
@@ -223,14 +227,32 @@ export default function HotelsPage() {
         {/* Empty State - Show Popular Destinations */}
         {!hasSearched && (
           <>
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Search a destination to see live hotel options.
-              </p>
-            </div>
+            {/* Partner Logos */}
+            <PartnerLogosStrip service="hotels" />
+
+            {/* Popular Destinations with Photos */}
+            <PhotoDestinationGrid
+              service="hotels"
+              title="Popular Destinations"
+              subtitle="Find hotels in these top cities"
+              limit={8}
+            />
+
+            {/* Experience Gallery */}
+            <ExperienceGallery 
+              service="hotels"
+              title="Hotel Experiences"
+              subtitle="Discover world-class amenities"
+              className="bg-muted/20"
+            />
+
+            {/* Popular Destinations List */}
             <PopularHotelDestinations />
           </>
         )}
+
+        {/* Testimonials */}
+        <UserTestimonials />
 
         {/* Trust Section */}
         <section className="py-10 bg-muted/30 border-y border-border/50">

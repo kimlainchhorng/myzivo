@@ -36,6 +36,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { RedirectDisclaimer } from "@/components/shared/RedirectDisclaimer";
 import ServiceHero from "@/components/shared/ServiceHero";
+import UserTestimonials from "@/components/shared/UserTestimonials";
+import ExperienceGallery from "@/components/shared/ExperienceGallery";
 import heroExtras from "@/assets/hero-extras.jpg";
 
 interface ExtraCategory {
@@ -44,6 +46,7 @@ interface ExtraCategory {
   description: string;
   icon: React.ElementType;
   gradient: string;
+  image: string;
   partners: Array<{ id: string; name: string; logo: string; features: string[]; trackingUrl: string }>;
   trackingCategory: 'transfers' | 'activities' | 'esim' | 'luggage' | 'compensation';
 }
@@ -55,6 +58,7 @@ const categories: ExtraCategory[] = [
     description: "Pre-book airport pickups and drop-offs worldwide",
     icon: Bus,
     gradient: "from-amber-500 to-orange-600",
+    image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&h=300&fit=crop&q=75&fm=webp",
     partners: TRANSFER_PARTNERS,
     trackingCategory: 'transfers',
   },
@@ -64,6 +68,7 @@ const categories: ExtraCategory[] = [
     description: "Discover tours, museums, and local experiences",
     icon: Ticket,
     gradient: "from-emerald-500 to-teal-600",
+    image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&h=300&fit=crop&q=75&fm=webp",
     partners: ACTIVITY_PARTNERS,
     trackingCategory: 'activities',
   },
@@ -73,6 +78,7 @@ const categories: ExtraCategory[] = [
     description: "Stay connected abroad with instant data plans",
     icon: Wifi,
     gradient: "from-cyan-500 to-blue-600",
+    image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=300&fit=crop&q=75&fm=webp",
     partners: ESIM_PARTNERS,
     trackingCategory: 'esim',
   },
@@ -82,6 +88,7 @@ const categories: ExtraCategory[] = [
     description: "Store your bags safely while you explore",
     icon: Luggage,
     gradient: "from-violet-500 to-purple-600",
+    image: "https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=600&h=300&fit=crop&q=75&fm=webp",
     partners: LUGGAGE_PARTNERS,
     trackingCategory: 'luggage',
   },
@@ -91,6 +98,7 @@ const categories: ExtraCategory[] = [
     description: "Get up to €600 for delayed or cancelled flights",
     icon: Scale,
     gradient: "from-red-500 to-rose-600",
+    image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&h=300&fit=crop&q=75&fm=webp",
     partners: COMPENSATION_PARTNERS,
     trackingCategory: 'compensation',
   },
@@ -136,6 +144,13 @@ export default function TravelExtras() {
           image={heroExtras}
         />
 
+        {/* Experience Gallery */}
+        <ExperienceGallery 
+          service="extras"
+          title="Popular Activities"
+          subtitle="Discover experiences around the world"
+        />
+
         {/* Categories */}
         {categories.map((category, index) => (
           <section 
@@ -146,16 +161,29 @@ export default function TravelExtras() {
             )}
           >
             <div className="container mx-auto px-4">
-              {/* Category Header */}
-              <div className="flex items-center gap-4 mb-8">
-                <div className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br text-white",
-                  category.gradient
-                )}>
-                  <category.icon className="w-6 h-6" />
+              {/* Category Header with Image */}
+              <div className="flex flex-col md:flex-row items-start gap-6 mb-8">
+                {/* Category Image */}
+                <div className="w-full md:w-48 aspect-[2/1] md:aspect-[4/3] rounded-2xl overflow-hidden flex-shrink-0">
+                  <img
+                    src={category.image}
+                    alt={category.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 </div>
-                <div>
-                  <h2 className="font-bold text-xl">{category.title}</h2>
+                
+                {/* Category Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br text-white",
+                      category.gradient
+                    )}>
+                      <category.icon className="w-5 h-5" />
+                    </div>
+                    <h2 className="font-bold text-xl">{category.title}</h2>
+                  </div>
                   <p className="text-sm text-muted-foreground">{category.description}</p>
                 </div>
               </div>
@@ -196,6 +224,9 @@ export default function TravelExtras() {
             </div>
           </section>
         ))}
+
+        {/* Testimonials */}
+        <UserTestimonials />
 
         {/* Trust & Disclosure */}
         <section className="py-12">
