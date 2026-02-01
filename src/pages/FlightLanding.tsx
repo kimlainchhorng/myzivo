@@ -3,7 +3,7 @@ import { Plane, Shield, Clock, Globe } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-import FlightSearchForm from "@/components/seo/FlightSearchForm";
+import { FlightSearchFormPro } from "@/components/search";
 import WhyCompareSection from "@/components/seo/WhyCompareSection";
 import HowItWorksSection from "@/components/seo/HowItWorksSection";
 import TrustedPartnersSection from "@/components/seo/TrustedPartnersSection";
@@ -48,9 +48,9 @@ const FlightLanding = () => {
   // Generate dynamic SEO content
   const { title, description, h1 } = formatRouteTitle(from, to);
 
-  const handleSearch = (searchParams: URLSearchParams) => {
-    navigate(`/flights/results?${searchParams.toString()}`);
-  };
+  // Extract IATA codes for pre-filling
+  const fromIata = from.match(/\(([A-Z]{3})\)/)?.[1] || from.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+  const toIata = to.match(/\(([A-Z]{3})\)/)?.[1] || to.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,10 +65,10 @@ const FlightLanding = () => {
       <main className="pt-16">
         {/* Hero Section with Full-Width Photo */}
         <ImageHero service="flights" icon={Plane}>
-          <FlightSearchForm 
-            defaultFrom={from} 
-            defaultTo={to} 
-            onSearch={handleSearch} 
+          <FlightSearchFormPro 
+            initialFrom={fromIata} 
+            initialTo={toIata}
+            navigateOnSearch={true}
           />
         </ImageHero>
 
