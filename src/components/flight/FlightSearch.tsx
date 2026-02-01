@@ -398,7 +398,14 @@ const FlightSearch = ({ onSelectFlight, showFilters = true }: FlightSearchProps)
                         className="w-10 h-10 object-contain"
                         onError={(e) => { 
                           e.currentTarget.style.display = 'none';
-                          e.currentTarget.parentElement!.innerHTML = `<span class="text-xs font-bold text-muted-foreground">${flight.airlineCode}</span>`;
+                          // Security: Validate airline code format before using in DOM
+                          const safeCode = /^[A-Z0-9]{2,3}$/.test(flight.airlineCode) 
+                            ? flight.airlineCode 
+                            : '??';
+                          const span = document.createElement('span');
+                          span.className = 'text-xs font-bold text-muted-foreground';
+                          span.textContent = safeCode;
+                          e.currentTarget.parentElement!.appendChild(span);
                         }}
                       />
                     </div>
