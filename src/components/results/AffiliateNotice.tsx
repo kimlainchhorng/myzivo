@@ -1,9 +1,10 @@
 /**
  * Affiliate Notice Components
  * Partner redirect notices and disclaimers
+ * Compliance-focused design
  */
 
-import { ExternalLink, AlertCircle } from "lucide-react";
+import { ExternalLink, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
@@ -17,16 +18,19 @@ const serviceConfig = {
     color: "text-sky-500",
     border: "border-sky-500/20",
     bg: "bg-sky-500/5",
+    partner: "travel partner",
   },
   hotels: {
     color: "text-amber-500",
     border: "border-amber-500/20",
     bg: "bg-amber-500/5",
+    partner: "hotel booking partner",
   },
   cars: {
     color: "text-violet-500",
     border: "border-violet-500/20",
     bg: "bg-violet-500/5",
+    partner: "car rental partner",
   },
 };
 
@@ -36,22 +40,27 @@ export function RedirectNotice({ service, className }: RedirectNoticeProps) {
   return (
     <div
       className={cn(
-        "p-4 rounded-xl flex items-center gap-3",
+        "p-4 rounded-xl flex items-start gap-3",
         config.bg,
         config.border,
         "border",
         className
       )}
     >
-      <ExternalLink className={cn("w-5 h-5 shrink-0", config.color)} />
-      <p className="text-sm text-muted-foreground">
-        Clicking "View Deal" will redirect you to our trusted travel partner to complete your booking.
-      </p>
+      <ExternalLink className={cn("w-5 h-5 shrink-0 mt-0.5", config.color)} />
+      <div className="text-sm text-muted-foreground">
+        <p>
+          Clicking "View Deal" will redirect you to our trusted {config.partner} to complete your booking.
+        </p>
+        <p className="mt-1 text-xs opacity-75">
+          Prices may vary. Final price shown on partner site.
+        </p>
+      </div>
     </div>
   );
 }
 
-// Indicative price alert
+// Indicative price alert - more prominent
 interface IndicativePriceAlertProps {
   service: "flights" | "hotels" | "cars";
   className?: string;
@@ -63,27 +72,27 @@ export function IndicativePriceAlert({ service, className }: IndicativePriceAler
 
   return (
     <Alert className={cn(config.border, config.bg, className)}>
-      <AlertCircle className={cn("h-4 w-4", config.color)} />
+      <Info className={cn("h-4 w-4", config.color)} />
       <AlertDescription className="text-sm">
-        Prices shown are indicative estimates. View real-time {serviceLabel} prices on partner sites.
+        <strong>Indicative prices</strong> – View real-time {serviceLabel} prices on partner sites.
       </AlertDescription>
     </Alert>
   );
 }
 
-// Footer disclaimer
+// Footer disclaimer - compliance
 interface AffiliateDisclaimerProps {
   className?: string;
 }
 
 export function AffiliateDisclaimer({ className }: AffiliateDisclaimerProps) {
   return (
-    <section className={cn("py-8 border-t border-border/50", className)}>
+    <section className={cn("py-8 border-t border-border/50 bg-muted/20", className)}>
       <div className="container mx-auto px-4 text-center">
-        <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-          *Prices shown are indicative estimates. Final prices are displayed on partner booking sites.
-          ZIVO may earn a commission when users book through partner links.
-          Bookings are completed on partner websites.
+        <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          *Prices shown are indicative estimates and may change. Final prices are displayed on partner booking sites.
+          ZIVO is a travel comparison platform and may earn a commission when users book through partner links.
+          All bookings are completed directly on partner websites. We do not handle payments or reservations.
         </p>
       </div>
     </section>

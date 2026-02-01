@@ -1,6 +1,7 @@
 /**
  * Sort Select Component
  * Unified sorting for all results pages
+ * Premium design with consistent styling
  */
 
 import {
@@ -11,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type SortOption = {
   value: string;
@@ -24,13 +26,15 @@ interface SortSelectProps {
   className?: string;
 }
 
+// Flights: cheapest first, then duration-based options
 export const flightSortOptions: SortOption[] = [
-  { value: "price", label: "Cheapest" },
-  { value: "duration", label: "Fastest" },
+  { value: "price", label: "Cheapest First" },
   { value: "best", label: "Best Value" },
+  { value: "duration", label: "Fastest" },
   { value: "departure", label: "Departure Time" },
 ];
 
+// Hotels: value-focused, then ratings
 export const hotelSortOptions: SortOption[] = [
   { value: "price", label: "Lowest Price" },
   { value: "rating", label: "Guest Rating" },
@@ -38,22 +42,23 @@ export const hotelSortOptions: SortOption[] = [
   { value: "distance", label: "Distance" },
 ];
 
+// Cars: price and practical options
 export const carSortOptions: SortOption[] = [
   { value: "price", label: "Lowest Price" },
   { value: "category", label: "Car Category" },
-  { value: "company", label: "Company" },
+  { value: "company", label: "Supplier A-Z" },
 ];
 
 export function SortSelect({ value, onValueChange, options, className }: SortSelectProps) {
   return (
     <Select value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className || "w-[160px] h-9"}>
+      <SelectTrigger className={cn("w-[160px] h-9 text-sm", className)}>
         <ArrowUpDown className="w-4 h-4 mr-2 text-muted-foreground" />
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="end">
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
+          <SelectItem key={option.value} value={option.value} className="text-sm">
             {option.label}
           </SelectItem>
         ))}

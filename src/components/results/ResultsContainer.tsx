@@ -1,6 +1,7 @@
 /**
  * Results Container
  * Two-column layout with sidebar filters (desktop) and results list
+ * Premium, consistent design system across Flights, Hotels, Cars
  */
 
 import { ReactNode } from "react";
@@ -17,8 +18,10 @@ export function ResultsContainer({ filters, children, className }: ResultsContai
     <div className={cn("flex gap-6", className)}>
       {/* Filters Sidebar (Desktop) */}
       {filters && (
-        <aside className="hidden lg:block w-64 shrink-0">
-          <div className="sticky top-36 space-y-6">{filters}</div>
+        <aside className="hidden lg:block w-72 shrink-0">
+          <div className="sticky top-36 space-y-4 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 p-5">
+            {filters}
+          </div>
         </aside>
       )}
 
@@ -28,7 +31,7 @@ export function ResultsContainer({ filters, children, className }: ResultsContai
   );
 }
 
-// Results header with count and sort
+// Results header with count, sort, and filter trigger
 interface ResultsHeaderProps {
   count: number;
   itemName: string;
@@ -49,18 +52,29 @@ export function ResultsHeader({
   className,
 }: ResultsHeaderProps) {
   return (
-    <div className={cn("flex items-center justify-between gap-4 mb-4", className)}>
+    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5", className)}>
       <div>
-        {!isLoading && (
-          <p className="text-sm text-muted-foreground">
-            {count} {itemName}
-            {count !== 1 ? "s" : ""} found
-            {indicativePrice && " • Indicative prices*"}
-          </p>
+        {isLoading ? (
+          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+        ) : (
+          <>
+            <h2 className="text-lg font-semibold">
+              <span className="text-foreground">{count}</span>{" "}
+              <span className="text-muted-foreground">
+                {itemName}
+                {count !== 1 ? "s" : ""} found
+              </span>
+            </h2>
+            {indicativePrice && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                *Indicative prices – final price shown on partner site
+              </p>
+            )}
+          </>
         )}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         {filterTrigger}
         {sortElement}
       </div>

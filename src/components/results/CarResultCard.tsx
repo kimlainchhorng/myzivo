@@ -1,9 +1,10 @@
 /**
  * Premium Car Rental Result Card
- * Mobile-first, consistent design with clear CTA
+ * Unified design: Image left, specs center, price+CTA right
+ * Mobile-first with clear visual hierarchy
  */
 
-import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle } from "lucide-react";
+import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Zap, Fuel } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,9 @@ export interface CarCardData {
   days: number;
   features: string[];
   mileage?: string;
+  fuelPolicy?: string;
   freeCancellation?: boolean;
+  isBestDeal?: boolean;
 }
 
 interface CarResultCardProps {
@@ -34,7 +37,7 @@ interface CarResultCardProps {
   className?: string;
 }
 
-// Car category images
+// Car category images with better fallbacks
 const categoryImages: Record<string, string> = {
   economy: "🚗",
   compact: "🚙",
@@ -45,23 +48,44 @@ const categoryImages: Record<string, string> = {
   electric: "⚡",
   van: "🚐",
   convertible: "🚗",
+  premium: "🏎️",
+  minivan: "🚐",
 };
 
 export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps) {
   const categoryKey = car.category.toLowerCase().split(" ")[0];
   const carIcon = categoryImages[categoryKey] || "🚗";
+  const isElectric = car.category.toLowerCase().includes("electric");
 
   return (
     <Card
       className={cn(
-        "overflow-hidden transition-all duration-200 hover:shadow-lg hover:shadow-violet-500/5 hover:border-violet-500/30",
+        "overflow-hidden transition-all duration-200",
+        "hover:shadow-lg hover:shadow-violet-500/10 hover:border-violet-500/30",
+        car.isBestDeal && "ring-2 ring-emerald-500/50",
         className
       )}
     >
+      {/* Top badges */}
+      {(car.isBestDeal || isElectric) && (
+        <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
+          {car.isBestDeal && (
+            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+              Best Deal
+            </Badge>
+          )}
+          {isElectric && (
+            <Badge className="bg-green-500 text-white text-[10px] gap-1">
+              <Zap className="w-3 h-3" /> Electric
+            </Badge>
+          )}
+        </div>
+      )}
+
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
-          {/* Car Image/Icon */}
-          <div className="sm:w-48 h-36 sm:h-auto bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center p-4 shrink-0">
+          {/* LEFT: Car Image/Icon */}
+          <div className="sm:w-52 h-40 sm:h-auto bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center p-6 shrink-0">
             {car.imageUrl ? (
               <img
                 src={car.imageUrl}
@@ -70,29 +94,29 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                 loading="lazy"
               />
             ) : (
-              <span className="text-6xl">{car.categoryIcon || carIcon}</span>
+              <span className="text-7xl">{car.categoryIcon || carIcon}</span>
             )}
           </div>
 
-          {/* Details */}
+          {/* CENTER: Details & Specs */}
           <div className="flex-1 p-4">
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-3">
               <div>
                 <h3 className="font-bold text-lg">{car.category}</h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
-                  {car.companyLogo ? (
+                  {car.companyLogo && (
                     <img src={car.companyLogo} alt={car.company} className="h-4 object-contain" />
-                  ) : null}
+                  )}
                   {car.company}
                 </p>
               </div>
-              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
                 or similar
               </Badge>
             </div>
 
-            {/* Specs */}
-            <div className="flex flex-wrap gap-4 mb-3 text-sm text-muted-foreground">
+            {/* Specs row */}
+            <div className="flex flex-wrap gap-4 mb-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-violet-500" />
                 <span>{car.seats} seats</span>
@@ -121,20 +145,26 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                   Free Cancellation
                 </Badge>
               )}
-              {car.features.slice(0, 2).map((feature, i) => (
-                <Badge key={i} variant="outline" className="text-xs">
-                  {feature}
-                </Badge>
-              ))}
               {car.mileage && (
                 <Badge variant="outline" className="text-xs">
                   {car.mileage}
                 </Badge>
               )}
+              {car.fuelPolicy && (
+                <Badge variant="outline" className="text-xs gap-1">
+                  <Fuel className="w-3 h-3" />
+                  {car.fuelPolicy}
+                </Badge>
+              )}
+              {car.features.slice(0, 2).map((feature, i) => (
+                <Badge key={i} variant="outline" className="text-xs">
+                  {feature}
+                </Badge>
+              ))}
             </div>
           </div>
 
-          {/* Price & CTA */}
+          {/* RIGHT: Price & CTA */}
           <div className="sm:w-44 p-4 bg-gradient-to-br from-muted/30 to-muted/10 flex flex-col justify-center items-center sm:items-end border-t sm:border-t-0 sm:border-l border-border/50">
             <div className="text-center sm:text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
@@ -142,8 +172,8 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                 ${car.pricePerDay}
                 <span className="text-sm font-normal text-muted-foreground">/day</span>
               </p>
-              <p className="text-xs text-muted-foreground">
-                ${car.totalPrice} total for {car.days} day{car.days !== 1 ? "s" : ""}
+              <p className="text-xs text-muted-foreground mt-1">
+                ${car.totalPrice} total ({car.days} day{car.days !== 1 ? "s" : ""})
               </p>
             </div>
             <Button
