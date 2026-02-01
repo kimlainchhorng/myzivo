@@ -30,9 +30,7 @@ import {
   ArrowUpDown,
   Zap,
   TrendingDown,
-  Loader2,
   Star,
-  Shield,
   Wifi,
   Utensils,
   Tv,
@@ -47,6 +45,7 @@ import {
   Share2,
   ExternalLink,
   ShieldCheck,
+  AlertCircle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -55,6 +54,7 @@ import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
 import { getAirlineLogo } from "@/data/airlines";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { trackAffiliateClick, trackPageView } from "@/lib/affiliateTracking";
+import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import NoFlightsFound from "@/components/flight/NoFlightsFound";
@@ -63,6 +63,7 @@ import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
+import { FlightResultsSkeleton, FlightResultsHeaderSkeleton } from "@/components/flight/FlightResultsSkeleton";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -74,49 +75,58 @@ const FlightResults = () => {
   const [savedFlights, setSavedFlights] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Parse search params
-  const fromCity = searchParams.get("from") || "";
-  const toCity = searchParams.get("to") || "";
-  const departDateStr = searchParams.get("depart") || "";
-  const returnDateStr = searchParams.get("return") || "";
-  const passengers = searchParams.get("passengers") || "1";
-  const cabinClass = searchParams.get("cabin") || "economy";
-  const tripType = searchParams.get("tripType") || "roundtrip";
+  // Parse and validate URL parameters using IATA codes
+  const parsedParams = useMemo(() => parseFlightSearchParams(searchParams), [searchParams]);
+  
+  const {
+    originIata,
+    destinationIata,
+    originAirport,
+    destinationAirport,
+    originDisplay,
+    destinationDisplay,
+    departureDate,
+    returnDate,
+    passengers,
+    cabinClass,
+    tripType,
+    isValid,
+    errors,
+  } = parsedParams;
 
-  // Extract codes
-  const fromMatch = fromCity.match(/\(([A-Z]{3})\)/);
-  const toMatch = toCity.match(/\(([A-Z]{3})\)/);
-  const fromCode = fromMatch ? fromMatch[1] : "LAX";
-  const toCode = toMatch ? toMatch[1] : "JFK";
-
-  const departDate = departDateStr ? parseISO(departDateStr) : undefined;
-  const destinationName = toCity.split(" (")[0] || toCode;
+  // Parse departure date for calendar display
+  const departDateParsed = departureDate ? parseISO(departureDate) : undefined;
 
   // Track page view for analytics
   useEffect(() => {
-    trackPageView("flight_results", {
-      origin: fromCode,
-      destination: toCode,
-      departDate: departDateStr,
-    });
-  }, [fromCode, toCode, departDateStr]);
+    if (isValid) {
+      trackPageView("flight_results", {
+        origin: originIata,
+        destination: destinationIata,
+        departDate: departureDate,
+      });
+    }
+  }, [originIata, destinationIata, departureDate, isValid]);
 
-  // Fetch real flights
-  const { data: realFlights, isLoading } = useRealFlightSearch({
-    origin: fromCode,
-    destination: toCode,
-    departureDate: departDateStr,
-    returnDate: returnDateStr || undefined,
-    enabled: !!fromCode && !!toCode && !!departDateStr,
+  // Fetch real flights using validated IATA codes
+  const { data: realFlights, isLoading, isError, error } = useRealFlightSearch({
+    origin: originIata,
+    destination: destinationIata,
+    departureDate: departureDate || undefined,
+    returnDate: returnDate || undefined,
+    enabled: isValid,
   });
 
   // Generate fallback flights
   const generatedFlights = useMemo(() => {
-    return generateFlights(fromCode, toCode, departDate, 15);
-  }, [fromCode, toCode, departDate]);
+    if (!isValid) return [];
+    return generateFlights(originIata, destinationIata, departDateParsed, 15);
+  }, [originIata, destinationIata, departDateParsed, isValid]);
 
   // Combine and filter results
   const flights = useMemo(() => {
+    if (!isValid) return [];
+    
     const combined: GeneratedFlight[] = [];
     
     if (realFlights && realFlights.length > 0) {
@@ -164,16 +174,16 @@ const FlightResults = () => {
           return 0;
       }
     });
-  }, [realFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter]);
+  }, [realFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, isValid]);
 
   const handleSelectFlight = (flight: GeneratedFlight) => {
     sessionStorage.setItem("selectedFlight", JSON.stringify(flight));
     sessionStorage.setItem("flightSearchParams", JSON.stringify({
-      fromCity,
-      toCity,
-      departDate: departDateStr,
-      returnDate: returnDateStr,
-      passengers,
+      fromCity: originDisplay,
+      toCity: destinationDisplay,
+      departDate: departureDate,
+      returnDate,
+      passengers: String(passengers),
       cabinClass,
       tripType,
     }));
@@ -305,10 +315,10 @@ const FlightResults = () => {
       flightId: flight.id,
       airline: flight.airline,
       airlineCode: flight.airlineCode,
-      origin: fromCode,
-      destination: toCode,
+      origin: originIata,
+      destination: destinationIata,
       price: flight.price,
-      passengers: parseInt(passengers),
+      passengers,
       cabinClass,
       affiliatePartner: 'searadar',
       referralUrl: AFFILIATE_LINKS.flights.url,
@@ -320,11 +330,57 @@ const FlightResults = () => {
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
   };
 
+  // Render validation error state
+  if (!isValid && errors.length > 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEOHead 
+          title="Invalid Search – ZIVO Flights"
+          description="Please check your flight search parameters."
+        />
+        <Header />
+        
+        <main className="pt-20 pb-20">
+          <div className="container mx-auto px-4">
+            <Card className="max-w-lg mx-auto mt-12">
+              <CardContent className="p-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                </div>
+                <h1 className="text-xl font-bold mb-2">Invalid Search Parameters</h1>
+                <p className="text-muted-foreground mb-6">
+                  We couldn't process your flight search. Please check the following:
+                </p>
+                <ul className="text-left space-y-2 mb-6">
+                  {errors.map((err, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <X className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                      {err}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={() => navigate("/flights")}
+                  className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600"
+                >
+                  <Plane className="w-4 h-4" />
+                  New Search
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title={`Flights ${fromCode} to ${toCode} – Compare Prices | ZIVO`}
-        description={`Compare flight prices from ${fromCode} to ${toCode}. Search ${flights.length}+ options from trusted airlines and book with our travel partners.`}
+        title={`Flights ${originIata} to ${destinationIata} – Compare Prices | ZIVO`}
+        description={`Compare flight prices from ${originDisplay} to ${destinationDisplay}. Search ${flights.length}+ options from trusted airlines and book with our travel partners.`}
       />
       <Header />
 
@@ -337,23 +393,28 @@ const FlightResults = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => navigate("/book-flight")}
+                  onClick={() => navigate("/flights")}
                   className="shrink-0"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
                 <div>
                   <div className="flex items-center gap-2 text-lg font-bold">
-                    <span>{fromCity.split(" (")[0] || fromCode}</span>
+                    <span>{originAirport?.city || originIata}</span>
+                    <Badge variant="outline" className="text-xs font-mono">{originIata}</Badge>
                     <Plane className="w-4 h-4 text-sky-500 -rotate-45" />
-                    <span>{toCity.split(" (")[0] || toCode}</span>
+                    <span>{destinationAirport?.city || destinationIata}</span>
+                    <Badge variant="outline" className="text-xs font-mono">{destinationIata}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {departDate ? format(departDate, "EEE, MMM d") : ""} • {passengers} passenger{parseInt(passengers) > 1 ? "s" : ""} • {cabinClass}
+                    {departDateParsed ? format(departDateParsed, "EEE, MMM d, yyyy") : ""} 
+                    {returnDate && ` – ${format(parseISO(returnDate), "EEE, MMM d, yyyy")}`}
+                    {" • "}{passengers} passenger{passengers > 1 ? "s" : ""} 
+                    {" • "}<span className="capitalize">{cabinClass}</span>
                   </p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/book-flight")}>
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => navigate("/flights")}>
                 Modify Search
               </Button>
             </div>
@@ -392,7 +453,7 @@ const FlightResults = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div>
                   <h1 className="font-display text-2xl md:text-3xl font-bold flex items-center gap-3">
-                    <span className="text-sky-500">{flights.length}</span> flights found
+                    <span className="text-sky-500">{isLoading ? "..." : flights.length}</span> flights found
                     {flights.some(f => f.isRealPrice) && (
                       <Badge className="bg-emerald-500/20 text-emerald-500 text-xs">
                         <Zap className="w-3 h-3 mr-1" />
@@ -448,240 +509,234 @@ const FlightResults = () => {
               </div>
 
               {/* Top Search CTA */}
-              <TopSearchCTA 
-                flightCount={flights.length}
-                lowestPrice={lowestPrice}
-                origin={fromCode}
-                destination={toCode}
-                className="mb-6"
-              />
+              {!isLoading && flights.length > 0 && (
+                <TopSearchCTA 
+                  flightCount={flights.length}
+                  lowestPrice={lowestPrice}
+                  origin={originIata}
+                  destination={destinationIata}
+                  className="mb-6"
+                />
+              )}
 
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                <Card className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 border-emerald-500/20">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                      <TrendingDown className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">From</p>
-                      <p className="text-xl font-bold text-emerald-500">${lowestPrice}*</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-sky-500/20">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
-                      <Plane className="w-5 h-5 text-sky-500" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Direct</p>
-                      <p className="text-xl font-bold text-sky-500">
-                        {flights.filter(f => f.stops === 0).length}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-purple-500/20">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0">
-                      <Clock className="w-5 h-5 text-purple-500" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Fastest</p>
-                      <p className="text-xl font-bold text-purple-500">
-                        {fastestFlight?.duration.split(" ")[0] || "N/A"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-amber-500/20">
-                  <CardContent className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
-                      <Star className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">Airlines</p>
-                      <p className="text-xl font-bold text-amber-500">
-                        {new Set(flights.map(f => f.airlineCode)).size}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Loading State with Skeleton */}
+              {isLoading && <FlightResultsSkeleton />}
 
-              {/* Loading State */}
-              {isLoading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="relative inline-flex">
-                      <div className="w-16 h-16 rounded-full bg-sky-500/20 animate-ping absolute" />
-                      <div className="w-16 h-16 rounded-full bg-sky-500/30 flex items-center justify-center relative">
-                        <Plane className="w-8 h-8 text-sky-500 animate-pulse" />
+              {/* Quick Stats - Only show when not loading */}
+              {!isLoading && flights.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  <Card className="bg-gradient-to-r from-emerald-500/10 to-green-500/5 border-emerald-500/20">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                        <TrendingDown className="w-5 h-5 text-emerald-500" />
                       </div>
-                    </div>
-                    <p className="mt-4 text-muted-foreground">Searching 500+ airlines...</p>
-                  </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">From</p>
+                        <p className="text-xl font-bold text-emerald-500">${lowestPrice}*</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-r from-sky-500/10 to-blue-500/5 border-sky-500/20">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
+                        <Plane className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Direct</p>
+                        <p className="text-xl font-bold text-sky-500">
+                          {flights.filter(f => f.stops === 0).length}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-r from-purple-500/10 to-indigo-500/5 border-purple-500/20">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center shrink-0">
+                        <Clock className="w-5 h-5 text-purple-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Fastest</p>
+                        <p className="text-xl font-bold text-purple-500">
+                          {fastestFlight?.duration.split(" ")[0] || "N/A"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-amber-500/20">
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                        <Star className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Airlines</p>
+                        <p className="text-xl font-bold text-amber-500">
+                          {new Set(flights.map(f => f.airlineCode)).size}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               )}
 
               {/* Flight Results */}
-              <div className="space-y-4">
-                {flights.map((flight, index) => {
-                  const isBestPrice = flight.price === lowestPrice;
-                  const isFastest = flight === fastestFlight;
-                  const isSaved = savedFlights.includes(flight.id);
+              {!isLoading && (
+                <div className="space-y-4">
+                  {flights.map((flight, index) => {
+                    const isBestPrice = flight.price === lowestPrice;
+                    const isFastest = flight === fastestFlight;
+                    const isSaved = savedFlights.includes(flight.id);
 
-                  return (
-                    <Card
-                      key={flight.id}
-                      className={cn(
-                        "overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer group",
-                        "animate-in fade-in slide-in-from-bottom-4",
-                        isBestPrice && "ring-2 ring-emerald-500/50 shadow-emerald-500/20",
-                        isFastest && !isBestPrice && "ring-2 ring-purple-500/50"
-                      )}
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      {/* Top Badges */}
-                      {(isBestPrice || isFastest || flight.isRealPrice) && (
-                        <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
-                          {isBestPrice && (
-                            <Badge className="bg-emerald-500 text-white text-xs gap-1">
-                              <TrendingDown className="w-3 h-3" /> Best Price
-                            </Badge>
-                          )}
-                          {isFastest && !isBestPrice && (
-                            <Badge className="bg-purple-500 text-white text-xs gap-1">
-                              <Clock className="w-3 h-3" /> Fastest
-                            </Badge>
-                          )}
-                          {flight.isRealPrice && (
-                            <Badge className="bg-sky-500/20 text-sky-500 text-xs gap-1">
-                              <Zap className="w-3 h-3" /> Live Price
-                            </Badge>
-                          )}
-                        </div>
-                      )}
-
-                      <CardContent className="p-0" onClick={() => handleSelectFlight(flight)}>
-                        <div className="flex flex-col lg:flex-row">
-                          {/* Airline Info */}
-                          <div className="p-4 lg:p-6 flex items-center gap-4 lg:w-56 border-b lg:border-b-0 lg:border-r border-border/50">
-                            <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center overflow-hidden shadow-lg">
-                              <img
-                                src={getAirlineLogo(flight.airlineCode)}
-                                alt={flight.airline}
-                                className="w-10 h-10 object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${flight.airlineCode}&background=0ea5e9&color=fff&size=48`;
-                                }}
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-bold truncate">{flight.airline}</p>
-                              <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                {flight.amenities?.includes("wifi") && <Wifi className="w-3 h-3 text-muted-foreground" />}
-                                {flight.amenities?.includes("entertainment") && <Tv className="w-3 h-3 text-muted-foreground" />}
-                                {flight.amenities?.includes("meals") && <Utensils className="w-3 h-3 text-muted-foreground" />}
-                              </div>
-                            </div>
+                    return (
+                      <Card
+                        key={flight.id}
+                        className={cn(
+                          "overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer group",
+                          "animate-in fade-in slide-in-from-bottom-4",
+                          isBestPrice && "ring-2 ring-emerald-500/50 shadow-emerald-500/20",
+                          isFastest && !isBestPrice && "ring-2 ring-purple-500/50"
+                        )}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        {/* Top Badges */}
+                        {(isBestPrice || isFastest || flight.isRealPrice) && (
+                          <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
+                            {isBestPrice && (
+                              <Badge className="bg-emerald-500 text-white text-xs gap-1">
+                                <TrendingDown className="w-3 h-3" /> Best Price
+                              </Badge>
+                            )}
+                            {isFastest && !isBestPrice && (
+                              <Badge className="bg-purple-500 text-white text-xs gap-1">
+                                <Clock className="w-3 h-3" /> Fastest
+                              </Badge>
+                            )}
+                            {flight.isRealPrice && (
+                              <Badge className="bg-sky-500/20 text-sky-500 text-xs gap-1">
+                                <Zap className="w-3 h-3" /> Live Price
+                              </Badge>
+                            )}
                           </div>
+                        )}
 
-                          {/* Flight Times */}
-                          <div className="flex-1 p-4 lg:p-6">
-                            <div className="flex items-center justify-between">
-                              {/* Departure */}
-                              <div className="text-center">
-                                <p className="text-2xl lg:text-3xl font-bold">{flight.departure.time}</p>
-                                <p className="text-sm font-semibold text-sky-500">{flight.departure.code}</p>
-                                <p className="text-xs text-muted-foreground hidden sm:block">{flight.departure.city}</p>
+                        <CardContent className="p-0" onClick={() => handleSelectFlight(flight)}>
+                          <div className="flex flex-col lg:flex-row">
+                            {/* Airline Info */}
+                            <div className="p-4 lg:p-6 flex items-center gap-4 lg:w-56 border-b lg:border-b-0 lg:border-r border-border/50">
+                              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center overflow-hidden shadow-lg">
+                                <img
+                                  src={getAirlineLogo(flight.airlineCode)}
+                                  alt={flight.airline}
+                                  className="w-10 h-10 object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${flight.airlineCode}&background=0ea5e9&color=fff&size=48`;
+                                  }}
+                                />
                               </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold truncate">{flight.airline}</p>
+                                <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {flight.amenities?.includes("wifi") && <Wifi className="w-3 h-3 text-muted-foreground" />}
+                                  {flight.amenities?.includes("entertainment") && <Tv className="w-3 h-3 text-muted-foreground" />}
+                                  {flight.amenities?.includes("meals") && <Utensils className="w-3 h-3 text-muted-foreground" />}
+                                </div>
+                              </div>
+                            </div>
 
-                              {/* Duration & Stops */}
-                              <div className="flex-1 px-4 lg:px-8">
-                                <div className="relative flex items-center">
-                                  <div className="flex-1 h-0.5 bg-gradient-to-r from-sky-500/30 via-sky-500 to-sky-500/30 rounded-full" />
-                                  <div className="absolute left-1/2 -translate-x-1/2 bg-background px-2">
-                                    <div className="w-10 h-10 rounded-full bg-sky-500/10 border-2 border-sky-500/30 flex items-center justify-center">
-                                      <Plane className="w-5 h-5 text-sky-500 -rotate-45" />
+                            {/* Flight Times */}
+                            <div className="flex-1 p-4 lg:p-6">
+                              <div className="flex items-center justify-between">
+                                {/* Departure */}
+                                <div className="text-center">
+                                  <p className="text-2xl lg:text-3xl font-bold">{flight.departure.time}</p>
+                                  <p className="text-sm font-semibold text-sky-500">{flight.departure.code}</p>
+                                  <p className="text-xs text-muted-foreground hidden sm:block">{flight.departure.city}</p>
+                                </div>
+
+                                {/* Duration & Stops */}
+                                <div className="flex-1 px-4 lg:px-8">
+                                  <div className="relative flex items-center">
+                                    <div className="flex-1 h-0.5 bg-gradient-to-r from-sky-500/30 via-sky-500 to-sky-500/30 rounded-full" />
+                                    <div className="absolute left-1/2 -translate-x-1/2 bg-background px-2">
+                                      <div className="w-10 h-10 rounded-full bg-sky-500/10 border-2 border-sky-500/30 flex items-center justify-center">
+                                        <Plane className="w-5 h-5 text-sky-500 -rotate-45" />
+                                      </div>
                                     </div>
                                   </div>
+                                  <div className="flex justify-center mt-2 gap-3">
+                                    <Badge variant="outline" className="text-xs">
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {flight.duration}
+                                    </Badge>
+                                    <Badge 
+                                      variant="outline"
+                                      className={cn(
+                                        "text-xs",
+                                        flight.stops === 0 ? "text-emerald-500 border-emerald-500/50" : "text-amber-500 border-amber-500/50"
+                                      )}
+                                    >
+                                      {flight.stops === 0 ? "Nonstop" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
+                                    </Badge>
+                                  </div>
                                 </div>
-                                <div className="flex justify-center mt-2 gap-3">
-                                  <Badge variant="outline" className="text-xs">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {flight.duration}
-                                  </Badge>
-                                  <Badge 
-                                    variant="outline"
-                                    className={cn(
-                                      "text-xs",
-                                      flight.stops === 0 ? "text-emerald-500 border-emerald-500/50" : "text-amber-500 border-amber-500/50"
-                                    )}
-                                  >
-                                    {flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
-                                  </Badge>
+
+                                {/* Arrival */}
+                                <div className="text-center">
+                                  <p className="text-2xl lg:text-3xl font-bold">{flight.arrival.time}</p>
+                                  <p className="text-sm font-semibold text-sky-500">{flight.arrival.code}</p>
+                                  <p className="text-xs text-muted-foreground hidden sm:block">{flight.arrival.city}</p>
                                 </div>
                               </div>
+                            </div>
 
-                              {/* Arrival */}
+                            {/* Price & Actions */}
+                            <div className="p-4 lg:p-6 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-muted/20">
                               <div className="text-center">
-                                <p className="text-2xl lg:text-3xl font-bold">{flight.arrival.time}</p>
-                                <p className="text-sm font-semibold text-sky-500">{flight.arrival.code}</p>
-                                <p className="text-xs text-muted-foreground hidden sm:block">{flight.arrival.city}</p>
+                                <p className="text-xs text-muted-foreground">From</p>
+                                <p className="text-3xl lg:text-4xl font-bold text-sky-500">${flight.price.toLocaleString()}</p>
+                                <p className="text-[10px] text-muted-foreground">per person*</p>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <Button
+                                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]"
+                                  onClick={(e) => handleBookFlight(flight, e)}
+                                >
+                                  View Deal
+                                  <ExternalLink className="w-4 h-4" />
+                                </Button>
+                                <p className="text-[9px] text-muted-foreground text-center max-w-[120px] leading-tight">
+                                  Opens partner site
+                                </p>
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toggleSaveFlight(flight.id);
+                                    }}
+                                  >
+                                    <Heart className={cn("w-4 h-4", isSaved && "fill-red-500 text-red-500")} />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Share2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           </div>
-
-                          {/* Price & Actions */}
-                          <div className="p-4 lg:p-6 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-muted/20">
-                            <div className="text-center">
-                              <p className="text-xs text-muted-foreground">From</p>
-                              <p className="text-3xl lg:text-4xl font-bold text-sky-500">${flight.price}</p>
-                              <p className="text-[10px] text-muted-foreground">per person*</p>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <Button
-                                className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]"
-                                onClick={(e) => handleBookFlight(flight, e)}
-                              >
-                                View Deal
-                                <ExternalLink className="w-4 h-4" />
-                              </Button>
-                              <p className="text-[9px] text-muted-foreground text-center max-w-[120px] leading-tight">
-                                Opens partner site
-                              </p>
-                              <div className="flex items-center justify-center gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleSaveFlight(flight.id);
-                                  }}
-                                >
-                                  <Heart className={cn("w-4 h-4", isSaved && "fill-red-500 text-red-500")} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Share2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
 
               {flights.length === 0 && !isLoading && (
                 <NoFlightsFound
@@ -690,14 +745,14 @@ const FlightResults = () => {
                     setTimeFilter([]);
                     setMaxPrice(2000);
                   }}
-                  onModifySearch={() => navigate("/book-flight")}
-                  origin={fromCode}
-                  destination={toCode}
+                  onModifySearch={() => navigate("/flights")}
+                  origin={originIata}
+                  destination={destinationIata}
                 />
               )}
 
               {/* Price Disclaimer */}
-              {flights.length > 0 && (
+              {flights.length > 0 && !isLoading && (
                 <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
                   <p className="text-xs text-muted-foreground text-center">
                     *Prices are indicative and may change. Final price will be confirmed on our travel partner's website.
@@ -707,32 +762,32 @@ const FlightResults = () => {
               )}
 
               {/* Contextual Cross-Sell Banner */}
-              {flights.length > 0 && (
+              {flights.length > 0 && !isLoading && (
                 <div className="mt-8">
                   <ContextualCrossSell
-                    destination={destinationName}
-                    origin={fromCity.split(" (")[0]}
-                    checkIn={departDateStr}
-                    checkOut={returnDateStr}
+                    destination={destinationAirport?.city || destinationIata}
+                    origin={originAirport?.city || originIata}
+                    checkIn={departureDate || ""}
+                    checkOut={returnDate || ""}
                     variant="banner"
                   />
                 </div>
               )}
 
               {/* Cross-Sell Section - Hotels, Cars, Activities */}
-              {flights.length > 0 && (
+              {flights.length > 0 && !isLoading && (
                 <div className="mt-12">
                   <CrossSellSection 
-                    destination={destinationName}
-                    origin={fromCity.split(" (")[0]}
-                    checkIn={departDateStr}
-                    checkOut={returnDateStr}
+                    destination={destinationAirport?.city || destinationIata}
+                    origin={originAirport?.city || originIata}
+                    checkIn={departureDate || ""}
+                    checkOut={returnDate || ""}
                   />
                 </div>
               )}
 
               {/* Trending Deals Section */}
-              {flights.length > 0 && (
+              {flights.length > 0 && !isLoading && (
                 <TrendingDealsSection 
                   title="More Popular Routes"
                   subtitle="Deals travelers are booking now"
@@ -742,10 +797,10 @@ const FlightResults = () => {
               )}
 
               {/* Enhance Your Trip Section */}
-              {flights.length > 0 && (
+              {flights.length > 0 && !isLoading && (
                 <EnhanceYourTrip 
                   currentService="flights"
-                  destination={destinationName}
+                  destination={destinationAirport?.city || destinationIata}
                   className="mt-8"
                 />
               )}
@@ -755,18 +810,17 @@ const FlightResults = () => {
       </main>
 
       {/* Sticky Mobile CTA */}
-      {/* Sticky Mobile CTA */}
       <StickyBookingCTA 
         lowestPrice={lowestPrice}
         flightCount={flights.length}
-        origin={fromCode}
-        destination={toCode}
+        origin={originIata}
+        destination={destinationIata}
       />
 
       {/* Exit Intent Prompt (Desktop Only) */}
       <ExitIntentPrompt
-        origin={fromCode}
-        destination={toCode}
+        origin={originIata}
+        destination={destinationIata}
         lowestPrice={lowestPrice}
       />
 

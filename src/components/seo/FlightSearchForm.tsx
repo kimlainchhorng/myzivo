@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AirportAutocomplete from "@/components/flight/AirportAutocomplete";
+import { extractIataCode } from "@/lib/flightSearchParams";
 import { cn } from "@/lib/utils";
 
 interface FlightSearchFormProps {
@@ -50,14 +51,19 @@ export default function FlightSearchForm({
     setToCity(temp);
   };
 
+  // Extract IATA codes from city values
+  const fromIata = extractIataCode(fromCity);
+  const toIata = extractIataCode(toCity);
+
   const handleSearch = () => {
+    // Use extracted IATA codes as the URL parameter values
     const params = new URLSearchParams({
-      from: fromCity,
-      to: toCity,
+      from: fromIata || fromCity, // Use IATA if extracted, fallback to raw input
+      to: toIata || toCity,
       depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
       passengers,
       cabin: cabinClass,
-      tripType,
+      tripType: tripType === "multicity" ? "roundtrip" : tripType, // Multicity falls back to roundtrip
     });
     if (returnDate && tripType === "roundtrip") {
       params.set("return", format(returnDate, "yyyy-MM-dd"));
