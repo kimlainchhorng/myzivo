@@ -38,6 +38,8 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { TrustFeatureCards, OGImageMeta } from "@/components/marketing";
 import { SEOContentBlock, InternalLinkGrid } from "@/components/seo";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
+import CarCategoryTiles from "@/components/car/CarCategoryTiles";
+import { CarCategory } from "@/config/photos";
 
 /**
  * ZIVO CAR RENTAL - Top-Tier Car Search
@@ -73,6 +75,20 @@ const CarRentalBooking = () => {
     setTimeout(() => {
       document.getElementById('partner-selector')?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
+  };
+
+  const handleCategoryTileSelect = (category: CarCategory) => {
+    // Map category to match carCategories name format
+    const categoryMap: Record<CarCategory, string> = {
+      economy: "Economy",
+      compact: "Compact",
+      midsize: "Midsize",
+      suv: "SUV",
+      luxury: "Luxury",
+      van: "Full-size", // Map van to existing category
+    };
+    setSelectedCategory(categoryMap[category] || category);
+    setHasSearched(true);
   };
 
   const handleRentCar = (categoryName: string, e?: React.MouseEvent) => {
@@ -329,6 +345,12 @@ const CarRentalBooking = () => {
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (
           <>
+            {/* Car Category Photo Tiles */}
+            <CarCategoryTiles 
+              onSelect={handleCategoryTileSelect}
+              selectedCategory={null}
+            />
+            
             {/* SEO Content Block */}
             <SEOContentBlock serviceType="cars" className="bg-muted/5" />
             

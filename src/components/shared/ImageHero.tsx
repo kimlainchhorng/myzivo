@@ -68,19 +68,25 @@ export default function ImageHero({
       <div className="absolute inset-0">
         <img 
           src={content.image} 
-          alt="" 
+          alt={`ZIVO ${service.charAt(0).toUpperCase() + service.slice(1)} - ${content.subheadline}`}
           className="absolute inset-0 w-full h-full object-cover object-center"
           loading="eager"
         />
         {/* Gradient overlay for text readability */}
-        <div className={cn(
-          "absolute inset-0 bg-gradient-to-b",
-          content.overlayGradient
-        )} />
+        <div 
+          className={cn("absolute inset-0 bg-gradient-to-b", content.overlayGradient)} 
+          aria-hidden="true"
+        />
         {/* Additional vignette for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
+        <div 
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" 
+          aria-hidden="true"
+        />
         {/* Bottom fade to background */}
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" 
+          aria-hidden="true"
+        />
       </div>
 
       <div className="container mx-auto px-4 relative z-10 pt-8 sm:pt-16 lg:pt-20 pb-8">

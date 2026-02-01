@@ -82,14 +82,20 @@ export function ServiceHero({
         <div className="absolute inset-0">
           <img
             src={image}
-            alt=""
+            alt={`ZIVO ${service.charAt(0).toUpperCase() + service.slice(1)} - ${subtitle || title}`}
             className="w-full h-full object-cover"
             loading="eager"
           />
           {/* Gradient overlay */}
-          <div className={cn("absolute inset-0 bg-gradient-to-b", colors.gradient)} />
+          <div 
+            className={cn("absolute inset-0 bg-gradient-to-b", colors.gradient)} 
+            aria-hidden="true"
+          />
           {/* Vignette */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
+          <div 
+            className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" 
+            aria-hidden="true"
+          />
         </div>
       )}
 
