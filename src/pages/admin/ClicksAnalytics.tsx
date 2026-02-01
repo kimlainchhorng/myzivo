@@ -4,7 +4,7 @@
  * View and export affiliate click logs with filters
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { 
   Calendar, 
@@ -16,6 +16,8 @@ import {
   TrendingUp,
   Users,
   RefreshCw,
+  UserCircle,
+  PieChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,18 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  PieChart as RechartsPie, 
+  Pie, 
+  Cell, 
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { 
   getClickLogs, 
   exportLogsToCSV, 
@@ -77,6 +91,8 @@ const PARTNERS = [
   { value: 'airhelp', label: 'AirHelp' },
 ];
 
+const CHART_COLORS = ['#0ea5e9', '#f59e0b', '#8b5cf6', '#10b981', '#f43f5e', '#6366f1'];
+
 export default function ClicksAnalytics() {
   const [logs, setLogs] = useState<ClickLogEntry[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -101,7 +117,35 @@ export default function ClicksAnalytics() {
     uniqueSources: 0,
     topPartner: '',
     todayClicks: 0,
+    creatorClicks: 0,
   });
+  
+  // Computed chart data
+  const creatorBreakdown = useMemo(() => {
+    const creatorCounts = logs.reduce((acc, l) => {
+      const key = l.creator || 'Direct';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(creatorCounts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [logs]);
+  
+  const sourceBreakdown = useMemo(() => {
+    const sourceCounts = logs.reduce((acc, l) => {
+      const key = l.utm_source || 'Direct';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(sourceCounts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6);
+  }, [logs]);
   
   const fetchLogs = async () => {
     setLoading(true);
@@ -134,11 +178,14 @@ export default function ClicksAnalytics() {
         (l as any).created_at?.startsWith(today)
       ).length;
       
+      const creatorClicks = result.logs.filter(l => l.creator).length;
+      
       setStats({
         totalClicks: result.count,
         uniqueSources: sources.size,
         topPartner: topPartner ? topPartner[0] : 'N/A',
         todayClicks,
+        creatorClicks,
       });
     } catch (error) {
       console.error('Failed to fetch logs:', error);
@@ -212,7 +259,7 @@ export default function ClicksAnalytics() {
           </div>
           
           {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -244,12 +291,26 @@ export default function ClicksAnalytics() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Creator Clicks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <UserCircle className="w-5 h-5 text-violet-500" />
+                  <span className="text-2xl font-bold">{stats.creatorClicks}</span>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
                   Unique Sources
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-violet-500" />
+                  <Users className="w-5 h-5 text-sky-500" />
                   <span className="text-2xl font-bold">{stats.uniqueSources}</span>
                 </div>
               </CardContent>
@@ -266,6 +327,71 @@ export default function ClicksAnalytics() {
                   <ExternalLink className="w-5 h-5 text-amber-500" />
                   <span className="text-lg font-semibold capitalize">{stats.topPartner}</span>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Charts Row */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <PieChart className="w-4 h-4" />
+                  By Source
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {sourceBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <RechartsPie>
+                      <Pie
+                        data={sourceBreakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={70}
+                        paddingAngle={2}
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        labelLine={false}
+                      >
+                        {sourceBreakdown.map((_, index) => (
+                          <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPie>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
+                    No data available
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <UserCircle className="w-4 h-4" />
+                  Top Creators
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {creatorBreakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={creatorBreakdown} layout="vertical">
+                      <XAxis type="number" hide />
+                      <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[180px] flex items-center justify-center text-muted-foreground text-sm">
+                    No creator data
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

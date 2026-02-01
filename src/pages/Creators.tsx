@@ -61,10 +61,10 @@ const PLATFORMS = [
 ];
 
 const PRODUCTS = [
-  { value: "flights", label: "Flights", path: "/flights", icon: Plane, color: "sky" },
-  { value: "hotels", label: "Hotels", path: "/hotels", icon: Hotel, color: "amber" },
-  { value: "car-rental", label: "Car Rental", path: "/rent-car", icon: Car, color: "violet" },
-  { value: "extras", label: "Travel Extras", path: "/extras", icon: Sparkles, color: "teal" },
+  { value: "flights", label: "Flights", path: "/creators/flights", icon: Plane, color: "sky" },
+  { value: "hotels", label: "Hotels", path: "/creators/hotels", icon: Hotel, color: "amber" },
+  { value: "car-rental", label: "Car Rental", path: "/creators/car-rental", icon: Car, color: "violet" },
+  { value: "extras", label: "Travel Extras", path: "/creators/extras", icon: Sparkles, color: "emerald" },
 ];
 
 const PROMO_CAPTIONS = [
@@ -417,17 +417,27 @@ export default function Creators() {
                         Banner Assets
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
-                        {[1, 2, 3].map((i) => (
-                          <div 
-                            key={i}
-                            className="aspect-video rounded-lg bg-gradient-to-br from-primary/20 to-teal-500/20 border border-dashed border-primary/30 flex items-center justify-center"
-                          >
-                            <span className="text-xs text-muted-foreground">Coming Soon</span>
+                        <div className="aspect-video rounded-lg bg-gradient-to-br from-sky-600 to-sky-800 border flex items-center justify-center p-2">
+                          <div className="text-center text-white">
+                            <Plane className="w-5 h-5 mx-auto mb-1" />
+                            <span className="text-[10px] font-medium">Flights</span>
                           </div>
-                        ))}
+                        </div>
+                        <div className="aspect-video rounded-lg bg-gradient-to-br from-amber-600 to-amber-800 border flex items-center justify-center p-2">
+                          <div className="text-center text-white">
+                            <Hotel className="w-5 h-5 mx-auto mb-1" />
+                            <span className="text-[10px] font-medium">Hotels</span>
+                          </div>
+                        </div>
+                        <div className="aspect-video rounded-lg bg-gradient-to-br from-violet-600 to-violet-800 border flex items-center justify-center p-2">
+                          <div className="text-center text-white">
+                            <Car className="w-5 h-5 mx-auto mb-1" />
+                            <span className="text-[10px] font-medium">Car Rental</span>
+                          </div>
+                        </div>
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">
-                        Professional banners available soon. Contact us for custom assets.
+                        Right-click to save. Custom branded assets available upon request.
                       </p>
                     </div>
                   </CardContent>
