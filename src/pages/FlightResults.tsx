@@ -146,6 +146,7 @@ const FlightResults = () => {
   const convertedApiFlights: GeneratedFlight[] = useMemo(() => {
     return apiFlights.map((f: ApiFlightResult) => ({
       id: f.id,
+      proposalId: f.proposalId,  // Include proposal ID for clicks endpoint
       airline: f.airline,
       airlineCode: f.airlineCode,
       flightNumber: f.flightNumber,
@@ -278,6 +279,7 @@ const FlightResults = () => {
   // Convert to unified card format
   const flightCards: FlightCardData[] = flights.map((flight) => ({
     id: flight.id,
+    proposalId: (flight as any).proposalId,  // Include proposal ID for clicks endpoint
     airline: flight.airline,
     airlineCode: flight.airlineCode,
     airlineLogo: flight.logo || getAirlineLogo(flight.airlineCode),
@@ -299,8 +301,12 @@ const FlightResults = () => {
     isFastest: flight === fastestFlight,
   }));
 
-  const handleViewDeal = (flight: FlightCardData) => {
-    // Build tracking params for /out redirect
+  const handleViewDeal = async (flight: FlightCardData) => {
+    // Import toast for notifications
+    const { toast } = await import("@/hooks/use-toast");
+    const { supabase } = await import("@/integrations/supabase/client");
+    
+    // Build fallback tracking params for /out redirect
     const outParams = new URLSearchParams({
       origin: originIata,
       destination: destinationIata,
@@ -328,6 +334,7 @@ const FlightResults = () => {
     if (utmCampaign) outParams.set('utm_campaign', utmCampaign);
     if (creator) outParams.set('creator', creator);
     
+    // Track affiliate click for analytics
     trackAffiliateClick({
       flightId: flight.id,
       airline: flight.airline,
@@ -344,7 +351,45 @@ const FlightResults = () => {
       serviceType: 'flights',
     });
     
-    // Open /out redirect which logs and redirects to partner (new tab)
+    // Try to get fresh booking link via clicks endpoint (reprice on click)
+    if (apiResponse?.searchId && apiResponse?.resultsUrl && flight.proposalId) {
+      toast({
+        title: "Checking latest price...",
+        description: "Please wait while we confirm availability.",
+        duration: 3000,
+      });
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('search-flights', {
+          body: {
+            action: 'getBookingLink',
+            searchId: apiResponse.searchId,
+            resultsUrl: apiResponse.resultsUrl,
+            proposalId: flight.proposalId
+          }
+        });
+        
+        if (data?.url) {
+          toast({
+            title: "Price updated — redirecting to live availability.",
+            duration: 2000,
+          });
+          
+          // Open partner URL directly
+          window.open(data.url, "_blank", "noopener,noreferrer");
+          return;
+        }
+      } catch (err) {
+        console.warn('[ViewDeal] Clicks endpoint failed, using fallback:', err);
+      }
+    }
+    
+    // Fallback: Open /out redirect which logs and redirects to partner
+    toast({
+      title: "Redirecting to partner...",
+      description: "Final pricing shown on partner site.",
+      duration: 3000,
+    });
     window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 

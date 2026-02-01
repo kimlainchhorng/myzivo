@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 
 export interface FlightCardData {
   id: string;
+  proposalId?: string;  // For clicks endpoint booking link generation
   airline: string;
   airlineCode: string;
   airlineLogo?: string;
@@ -113,7 +114,9 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold truncate text-sm">{flight.airline}</p>
+              <p className="font-semibold truncate text-sm">
+                {flight.airline} <span className="text-muted-foreground font-normal">({flight.airlineCode})</span>
+              </p>
               <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
               <p className="text-xs text-muted-foreground capitalize mt-0.5">{flight.cabinClass}</p>
             </div>
