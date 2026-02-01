@@ -158,13 +158,20 @@ export default function FlightResultCard({
                 "bg-white/95 dark:bg-muted/60",
                 category.borderColor
               )}>
-                <img 
+              <img 
                   src={flight.logo || getAirlineLogo(flight.airlineCode, 100)} 
                   alt={flight.airline}
                   className="w-12 h-12 object-contain"
                   onError={(e) => { 
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = `<span class="text-sm font-bold text-muted-foreground">${flight.airlineCode}</span>`;
+                    // Security: Validate airline code format before using in DOM
+                    const safeCode = /^[A-Z0-9]{2,3}$/.test(flight.airlineCode) 
+                      ? flight.airlineCode 
+                      : '??';
+                    const span = document.createElement('span');
+                    span.className = 'text-sm font-bold text-muted-foreground';
+                    span.textContent = safeCode;
+                    e.currentTarget.parentElement!.appendChild(span);
                   }}
                 />
               </div>
