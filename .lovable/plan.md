@@ -1,287 +1,246 @@
 
-# ZIVO Rides + Eats MVP Implementation Plan
+# ZIVO Rides + Eats MVP Continuation Plan
 
-## Executive Summary
+## Summary
 
-This plan transforms ZIVO Rides and ZIVO Eats from "Coming Soon" placeholders into fully functional MVP request/lead capture systems with a comprehensive Admin Dashboard. Users can submit ride requests and food orders, while admins can manage, assign, and track all requests.
-
----
-
-## Current State Analysis
-
-**What Exists:**
-- Database tables already exist for `drivers`, `trips`, `food_orders`, `restaurants`, `menu_items`
-- Admin components exist: `AdminRidesManagement.tsx` (real-time trip data), `AdminEatsManagement.tsx` (mock data only)
-- `/ride` and `/food` routes point to `RidesComingSoon.tsx` and `EatsComingSoon.tsx`
-- Extensive admin dashboard at `/admin` with 60+ modules (protected route)
-- Contact page exists with correct emails
-- Footer has contact info and affiliate disclosure
-
-**What Needs Building:**
-- Public-facing Rides request form
-- Public-facing Eats ordering flow (restaurant browsing, menu, cart, checkout)
-- Seed demo restaurant data
-- Enhanced admin modules for managing requests with status updates, assignment, notes
-- New database table for ride requests (separate from trips which are for accepted rides)
-- Update navigation and homepage
+This plan continues the implementation from Phase 1-2 (completed: database + Rides page) to build out:
+- Phase 3: ZIVO Eats public ordering flow (4 pages)
+- Phase 4: Admin dashboard enhancements for ride requests and food orders
+- Phase 5: Navigation and homepage updates
+- Phase 6: Contact information updates across the site
 
 ---
 
-## Implementation Phases
+## Current State (Completed in Previous Message)
 
-### Phase 1: Database Schema Updates
-
-**New Table: `ride_requests`**
-Separate from `trips` (which are for active/completed rides with drivers assigned)
-
-```text
-ride_requests:
-- id (UUID)
-- customer_name (TEXT)
-- customer_phone (TEXT) 
-- customer_email (TEXT)
-- pickup_address (TEXT)
-- pickup_lat (NUMERIC)
-- pickup_lng (NUMERIC)
-- dropoff_address (TEXT)
-- dropoff_lat (NUMERIC)
-- dropoff_lng (NUMERIC)
-- ride_type (enum: standard, xl, premium)
-- scheduled_at (TIMESTAMPTZ, nullable - null means "now")
-- notes (TEXT)
-- status (enum: new, contacted, assigned, en_route, completed, cancelled)
-- assigned_driver_id (UUID, FK to drivers)
-- admin_notes (TEXT)
-- created_at, updated_at
-
-RLS: Insert allowed for anyone (public form), Select/Update for authenticated admins
-```
-
-**Update `food_orders` for MVP:**
-Add fields if missing:
-- `customer_name`, `customer_phone`, `customer_email` (for guest checkout)
-- `preferred_time` (enum: asap, scheduled)
-- `admin_notes`
-- Update status enum: new, restaurant_confirmed, driver_assigned, out_for_delivery, delivered, cancelled
-
-**Seed Demo Restaurants:**
-Create 6-8 realistic demo restaurants with menu items for testing.
+1. **Database**: `ride_requests` table created with RLS policies
+2. **ZIVO Rides**: `/rides` page functional with form submission
+3. **Hooks**: `useRideRequests.ts` and `useEatsOrders.ts` created
+4. **Cart Context**: `CartContext.tsx` for Eats cart management
+5. **Demo Restaurants**: 8 restaurants with 40 menu items seeded
 
 ---
 
-### Phase 2: Public ZIVO Rides MVP
+## Phase 3: ZIVO Eats Public Flow
 
-**File: `src/pages/Rides.tsx`** (replaces RidesComingSoon)
+### 3A: Eats Landing Page (`/eats`)
+**Replace EatsComingSoon.tsx with full Eats.tsx**
 
-UI Components:
-1. Hero section with ZIVO Rides branding
-2. Request form with:
-   - Pickup address (text input with validation)
-   - Drop-off address
-   - Date/Time selector (Now / Schedule picker)
-   - Ride type dropdown (Standard / XL / Premium)
-   - Customer name, phone, email
-   - Optional notes
-3. "Request Ride" CTA button
-4. Confirmation page/modal after submission
+- Hero section with ZIVO Eats branding (orange/amber theme)
+- Delivery address input field
+- "Find Restaurants" CTA button
+- Popular restaurants preview section
+- How It Works section (3 steps)
 
-Key Design Decisions:
-- Mobile-first form with large inputs and sticky CTA
-- No fake ETAs or driver availability claims
-- Clear messaging: "Request received. We'll match you with available drivers."
-- Form validation with Zod
+### 3B: Restaurant Listing Page (`/eats/restaurants`)
+**New file: EatsRestaurants.tsx**
 
----
+- Header with delivery address (editable)
+- Restaurant grid with cards showing:
+  - Restaurant image/logo
+  - Name, cuisine type
+  - Rating, prep time estimate
+  - "Order Now" button
+- Filter by cuisine type (optional)
+- Empty state for no restaurants
 
-### Phase 3: Public ZIVO Eats MVP
+### 3C: Restaurant Menu Page (`/eats/restaurant/:id`)
+**New file: EatsRestaurantMenu.tsx**
 
-**Multi-step ordering flow:**
-
-**Step 1: Address Entry** (`/eats`)
-- Delivery address input
-- "Find Restaurants" button
-
-**Step 2: Restaurant List** (`/eats/restaurants`)
-- Grid of seeded demo restaurants
-- Filter by cuisine type
-- Each card shows: name, cuisine, rating, prep time, image
-
-**Step 3: Restaurant Menu** (`/eats/restaurant/:id`)
 - Restaurant header with details
-- Menu categories and items
-- Add to cart functionality (client-side state)
+- Menu organized by category
+- Menu item cards with:
+  - Name, description, price
+  - "Add to Cart" button
+- Floating cart indicator (item count + total)
+- Cart drawer/sidebar for viewing items
 
-**Step 4: Cart & Checkout** (`/eats/checkout`)
-- Cart summary with items, quantities, totals
-- Checkout form:
+### 3D: Checkout Page (`/eats/checkout`)
+**New file: EatsCheckout.tsx**
+
+- Order summary (items, quantities, prices)
+- Customer info form:
   - Name, phone, email
-  - Delivery address (pre-filled from Step 1)
+  - Delivery address (pre-filled)
   - Delivery instructions
   - Preferred time: ASAP / Schedule
-- "Place Order Request" button
-- Confirmation: "Order request received. A partner will confirm shortly."
+- "Place Order Request" CTA
+- Success confirmation modal/page
 
-Key Design Decisions:
-- No payment capture (MVP)
-- No delivery tracking promises
-- Professional restaurant imagery using placeholder patterns
-- Cart state via React Context
+### 3E: Supporting Components
+**New files in src/components/eats/**
+
+- `RestaurantCard.tsx` - Restaurant listing card
+- `MenuItemCard.tsx` - Menu item with add button
+- `CartDrawer.tsx` - Slide-out cart panel
+- `OrderSummary.tsx` - Checkout order summary
 
 ---
 
-### Phase 4: Admin Dashboard Enhancements
+## Phase 4: Admin Dashboard Enhancements
 
-**4A: `/admin/rides` - Ride Requests Management**
+### 4A: Admin Ride Requests (`AdminRidesManagement.tsx`)
+**Transform from trips-based to ride_requests-based**
 
-Enhanced `AdminRidesManagement.tsx`:
-- Table view of all ride requests with search/filter
-- Status filter: All / New / Contacted / Assigned / En Route / Completed / Cancelled
-- Columns: ID, Customer, Phone, Pickup → Dropoff, Type, Status, Created, Actions
+Current state: Uses `useTrips()` for existing trips table
+New state: Add a "Ride Requests" tab using `useRideRequests()`
+
+Updates:
+- Add "Ride Requests" tab alongside "Live Rides"
+- Table showing: ID, Customer, Phone, Pickup, Dropoff, Type, Status, Created
+- Status filter dropdown (New, Contacted, Assigned, etc.)
 - Row actions:
   - View details (slide-out panel)
   - Update status dropdown
   - Assign driver (modal with driver list)
-  - Add internal notes
-  - Send message (opens mailto: link)
-- Real-time data from Supabase
+  - Add admin notes
+  - Contact (mailto: link)
+- Real-time refresh from Supabase
 
-**4B: `/admin/eats-orders` - Food Orders Management**
+### 4B: Admin Eats Orders (`AdminEatsManagement.tsx`)
+**Replace mock data with real Supabase queries**
 
-Enhanced `AdminEatsManagement.tsx`:
-- Replace mock data with real Supabase queries
-- Table view of all orders
-- Status filter: All / New / Restaurant Confirmed / Driver Assigned / Out for Delivery / Delivered / Cancelled
-- Columns: Order ID, Customer, Restaurant, Items, Total, Status, Created, Actions
+Updates:
+- Replace `mockOrders` with `useFoodOrders()` hook
+- Table showing: Order ID, Customer, Restaurant, Items, Total, Status, Created
+- Status filter: New, Confirmed, Driver Assigned, Out for Delivery, Delivered, Cancelled
 - Row actions:
   - View order details
   - Update status
-  - Assign restaurant (if multi-vendor)
-  - Assign delivery driver
+  - Assign driver (if applicable)
   - Add admin notes
   - Contact customer
 
-**4C: `/admin/drivers` - Driver Management**
+### 4C: Driver Management Enhancement
+**Update AdminDriverManagement.tsx if needed**
 
-Enhance existing `AdminDriverManagement.tsx`:
-- CRUD for drivers
-- Fields: Name, Phone, Email, City, Vehicle Type, Status (Active/Inactive)
-- Assignment history view
+- Ensure CRUD operations work
+- Add "Assign to Request" action
 
-**4D: `/admin/restaurants` - Restaurant Management**
+### 4D: Restaurant Management Enhancement
+**Update AdminRestaurantManagement.tsx if needed**
 
-Enhance existing `AdminRestaurantManagement.tsx`:
-- CRUD for restaurants
-- Fields: Name, City, Phone, Email, Status, Menu Items
-- Link to menu item editor (basic CRUD)
+- Basic CRUD for restaurants
+- Menu items management link
 
 ---
 
-### Phase 5: Navigation & Homepage Updates
+## Phase 5: Navigation and Homepage Updates
 
-**Navigation Updates:**
+### 5A: Mega Menu Updates (`megaMenuData.ts`)
+- Change ZIVO Rides: Remove "Soon" badge, update href to `/rides`
+- Change ZIVO Eats: Remove "Soon" badge, update href to `/eats`
+- Keep descriptions updated for active services
 
-Update `megaMenuData.ts`:
-- Change ZIVO Rides from "Coming Soon" to active link `/rides`
-- Change ZIVO Eats from "Coming Soon" to active link `/eats`
-- Remove "Soon" badge
+### 5B: Footer Updates (`Footer.tsx`)
+- Change "Rides (Coming Soon)" to "Rides" with href `/rides`
+- Change "Eats (Coming Soon)" to "Eats" with href `/eats`
+- Remove "ZIVO Rides and ZIVO Eats are planned services" disclaimer
+- Add contact section with emails:
+  - info@hizivo.com
+  - payment@hizivo.com
+- Keep affiliate disclosure text
 
-Update header to include Help/Support link to `/contact`.
+### 5C: Homepage Service Cards (`ServiceCards.tsx`)
+**Expand from 3 cards to 6 cards**
 
-**Homepage Updates:**
+Add:
+- ZIVO Rides: "Request a ride in your area" → `/rides`
+- ZIVO Eats: "Order food from local restaurants" → `/eats`
+- Extras: "Airport transfers, insurance & more" → `/extras`
 
-Update `ServiceCards.tsx` or add new section:
-- 6-card grid: Flights, Hotels, Car Rental, Rides, Eats, Extras
-- Each card with icon, description, CTA
-- Rides: "Request a Ride" → `/rides`
-- Eats: "Order Food" → `/eats`
-
-Update mobile homepage (`Index.tsx`):
-- Update quick services grid to show active Rides/Eats
+### 5D: Header Help Link
+- Add Help/Support icon-link to `/contact` in desktop actions
+- Already has Help Center in user dropdown (line 118)
 
 ---
 
-### Phase 6: Contact & Footer Updates
+## Phase 6: Contact Updates
 
-**Contact Page** (`/contact`) - Already correct with:
-- info@hizivo.com
-- payment@hizivo.com  
-- kimlain@hizivo.com
+### 6A: Contact Page (`Contact.tsx`)
+**Already correct** - Has all three emails:
+- info@hizivo.com (Support)
+- payment@hizivo.com (Billing)
+- kimlain@hizivo.com (Business)
 - ZIVO LLC business info
 
-**Footer** - Already has:
-- Contact email
-- Affiliate disclosure text
+### 6B: Organization Schema (`OrganizationSchema.tsx`)
+Update to include:
+- name: "ZIVO LLC"
+- email: "info@hizivo.com"
+- contactPoint array with all emails
 
-**Organization Schema** (`OrganizationSchema.tsx`):
-- Add email: info@hizivo.com
-- Add contactPoint with emails
+### 6C: index.html Organization Schema
+Already includes contactPoint with emails - confirm consistency
 
 ---
 
-## Technical Architecture
+## File Changes Summary
 
-### New Files to Create:
+### New Files (8 files)
 ```text
-src/pages/Rides.tsx                    - Public ride request form
-src/pages/Eats.tsx                     - Eats entry (address input)
-src/pages/EatsRestaurants.tsx          - Restaurant listing
-src/pages/EatsRestaurantMenu.tsx       - Single restaurant menu
-src/pages/EatsCheckout.tsx             - Cart & checkout
-src/contexts/CartContext.tsx           - Eats cart state
-src/hooks/useRideRequests.ts           - Ride requests query/mutation
-src/hooks/useEatsOrders.ts             - Food orders query/mutation
-src/components/rides/RideRequestForm.tsx
-src/components/eats/RestaurantCard.tsx
-src/components/eats/MenuItemCard.tsx
-src/components/eats/CartDrawer.tsx
-supabase/migrations/XXXX_ride_requests.sql
-supabase/migrations/XXXX_seed_restaurants.sql
+src/pages/Eats.tsx                         - Eats landing page
+src/pages/EatsRestaurants.tsx              - Restaurant listing
+src/pages/EatsRestaurantMenu.tsx           - Restaurant menu
+src/pages/EatsCheckout.tsx                 - Checkout page
+src/components/eats/RestaurantCard.tsx     - Restaurant card component
+src/components/eats/MenuItemCard.tsx       - Menu item component
+src/components/eats/CartDrawer.tsx         - Cart slide-out panel
+src/components/eats/OrderSummary.tsx       - Order summary component
 ```
 
-### Files to Modify:
+### Modified Files (8 files)
 ```text
-src/App.tsx                            - Add new routes
-src/pages/AdminDashboard.tsx           - Already has tabs
-src/components/admin/AdminRidesManagement.tsx - Enhance for requests
-src/components/admin/AdminEatsManagement.tsx  - Real data
-src/components/admin/AdminDriverManagement.tsx
-src/components/admin/AdminRestaurantManagement.tsx
-src/components/navigation/megaMenuData.ts
-src/components/home/ServiceCards.tsx
-src/components/seo/OrganizationSchema.tsx
+src/App.tsx                                - Add Eats routes
+src/components/admin/AdminRidesManagement.tsx - Ride requests tab
+src/components/admin/AdminEatsManagement.tsx  - Real data integration
+src/components/navigation/megaMenuData.ts     - Active Rides/Eats links
+src/components/Footer.tsx                     - Update services, add contacts
+src/components/home/ServiceCards.tsx          - 6 service cards
+src/components/Header.tsx                     - Help link
+src/components/seo/OrganizationSchema.tsx     - Add emails
 ```
 
 ---
 
-## Compliance & UX Standards
+## Technical Details
 
-**MVP Rules Enforced:**
-- No credit card collection
-- No fake ETAs or guaranteed availability
+### App.tsx Route Additions
+```text
+/eats                    → Eats.tsx
+/eats/restaurants        → EatsRestaurants.tsx
+/eats/restaurant/:id     → EatsRestaurantMenu.tsx
+/eats/checkout           → EatsCheckout.tsx
+```
+
+### CartProvider Integration
+Wrap Eats routes with CartProvider in App.tsx to maintain cart state across pages.
+
+### MVP Compliance Reminders
+- No payment capture fields
+- No delivery time guarantees
 - Clear "request received" messaging
 - Partner/vendor confirmation language
-
-**Form UX:**
-- Mobile-first with h-12 inputs, gap-4 spacing
-- Sticky CTAs on mobile
-- Loading states during submission
-- Toast notifications for success/error
-
-**Admin Security:**
-- All admin routes protected via `ProtectedRoute requireAdmin`
-- RLS policies restrict ride_requests to admin-only viewing
+- Mobile-first form design with large inputs
 
 ---
 
-## Estimated Scope
+## Implementation Order
 
-| Phase | Components | Complexity |
-|-------|------------|------------|
-| Phase 1: Database | 2 migrations | Low |
-| Phase 2: Rides | 2 pages, 1 form | Medium |
-| Phase 3: Eats | 4 pages, 4 components, 1 context | High |
-| Phase 4: Admin | 4 enhanced modules | Medium |
-| Phase 5: Nav/Home | 3 file updates | Low |
-| Phase 6: Contact | Already done | None |
+1. **Eats Pages** (Phase 3A-3E): Create all Eats flow pages
+2. **Admin Enhancements** (Phase 4A-4B): Update admin modules
+3. **Navigation/Footer** (Phase 5): Update megaMenu, footer, homepage
+4. **Contact/SEO** (Phase 6): Update schema with emails
 
-**Recommended Approach:** Implement in phases across multiple prompts to ensure quality and manageable changes for the large project.
+---
+
+## Expected Outcome
+
+After implementation:
+- Users can submit ride requests at `/rides` (already done)
+- Users can browse restaurants and submit food orders at `/eats`
+- Admin can view and manage ride requests at `/admin` (Rides tab)
+- Admin can view and manage food orders at `/admin` (Eats tab)
+- Navigation shows active Rides and Eats links
+- Homepage displays all 6 services
+- Contact information is consistent across the site
