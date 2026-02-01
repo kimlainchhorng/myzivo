@@ -1,265 +1,289 @@
 
-# Performance & Core Web Vitals Optimization for ZIVO
+# Premium Homepage Redesign for ZIVO
+
+## Overview
+
+This plan redesigns the ZIVO homepage into a **premium, conversion-focused layout** with clear user flows into each service, no clutter or duplicated blocks, and a mobile-first approach using the established PHOTO style.
+
+---
 
 ## Current State Analysis
 
-### What Already Works Well
-1. **Route-level code splitting** - 80+ pages use `React.lazy()` for dynamic imports
-2. **Native lazy loading** - Most images use `loading="lazy"` attribute
-3. **PWA with service worker caching** - Mapbox, fonts, and static assets cached
-4. **LazyLoadSection component** - IntersectionObserver-based section loading
-5. **Skeleton loaders** - Basic skeletons exist for cards and lists
+### What Exists Today
+1. **Desktop**: Uses `DesktopHomePage` with NavBar → HeroSection → ServicesGrid → ExtrasSection → TrustSection → Footer
+2. **Mobile**: Completely different component (`AppHome`) with different structure
+3. **Hero**: Center-aligned, full-background image with 3 CTAs (Flights/Hotels/Cars only)
+4. **ServicesGrid**: 6 premium photo cards with "Live" badges
+5. **ExtrasSection**: 5 icon-based cards for extras
+6. **TrustSection**: 4 trust icons + "How ZIVO Works" disclosure
 
-### Critical Performance Issues Identified
-1. **No responsive images** - Missing `srcset`/`sizes` attributes (0 matches found)
-2. **No image preloading** - Hero images not preloaded (0 matches found)
-3. **No explicit dimensions** - Images lack `width`/`height` causing CLS
-4. **JPG format only** - No WebP conversion (32 JPG files in assets)
-5. **No blur placeholders** - Images pop in without smooth transitions
-6. **Unsplash images lack optimization** - Using default quality (q=80)
-7. **Hero images loaded lazily** - Should be `loading="eager"` with preload
+### Issues to Fix
+1. Hero is **center-aligned** (spec requires left text + right photo)
+2. Hero **missing Rides & Eats CTAs** (only shows travel services)
+3. Hero copy doesn't match spec ("Your Travel, Simplified" vs "ZIVO — Travel, Rides & Eats in One Place")
+4. **No "How It Works" section** (3-step flow with partner disclosure)
+5. **No Popular Destinations section** on homepage
+6. ExtrasSection shows only 5 items (spec wants 6)
+7. **Different mobile layout** - AppHome is completely separate (needs unification)
+8. TrustSection has 4 items (spec wants simpler 3-bullet trust strip)
+9. **Missing exact footer disclosure text**
 
 ---
 
-## Implementation Plan
-
-### Phase 1: Enhanced OptimizedImage Component
-
-**File: `src/components/shared/OptimizedImage.tsx`**
-
-Add responsive image support with srcset, explicit dimensions, and blur placeholder:
+## New Section Structure
 
 ```text
-New Props:
-- width: number (required for CLS prevention)
-- height: number (required for CLS prevention)
-- sizes?: string (responsive sizes attribute)
-- srcSet?: { src: string; width: number }[] (responsive sources)
-- blurDataURL?: string (optional blur placeholder)
-- quality?: number (for Unsplash URL optimization)
-
-Features to add:
-- Generate srcset automatically for Unsplash URLs
-- Add width/height to prevent layout shift
-- Implement blur-up placeholder effect
-- Support WebP format detection
+DESKTOP HOMEPAGE FLOW
+=====================
+1. NavBar (existing - keep)
+2. Hero Section (REDESIGN - split layout)
+3. Services Grid (UPDATE - 6 cards with revised CTAs)
+4. How It Works (NEW - 3 steps)
+5. Popular Destinations (NEW - 8 tiles)
+6. ZIVO More / Extras (UPDATE - 6 items)
+7. Trust & Support (UPDATE - 3 bullets)
+8. Footer (UPDATE - exact disclosure text)
 ```
 
-### Phase 2: Create PerformantHeroImage Component
+---
 
-**File: `src/components/shared/PerformantHeroImage.tsx`**
+## Phase 1: Redesign Hero Section
 
-Specialized hero image component with:
-- Always `loading="eager"`
-- Preload link injection via `useEffect`
-- Fixed dimensions (16:9 aspect ratio)
-- Critical-path optimization
-- Blur placeholder while loading
+**File: `src/components/home/HeroSection.tsx`**
 
-### Phase 3: Create useImagePreload Hook
-
-**File: `src/hooks/useImagePreload.ts`**
-
-Custom hook that:
-- Injects `<link rel="preload" as="image">` into document head
-- Supports responsive preload with `imagesrcset`
-- Cleans up on unmount
-- Only preloads above-fold images
-
-### Phase 4: Update Photo Configuration
-
-**File: `src/config/photos.ts`**
-
-Add optimization metadata:
+### New Layout: Split Hero (Text Left, Photo Right)
 
 ```text
-Changes:
-- Add width/height for each image
-- Add srcset configurations for responsive sizes
-- Optimize Unsplash URLs with q=75 instead of q=80
-- Add smaller breakpoints: 320, 640, 1024, 1440
-- Include blur placeholder data URLs
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│   Left Column (50%)           │   Right Column (50%)            │
+│                               │                                 │
+│   ZIVO — Travel, Rides &      │   [Premium Hero Photo]          │
+│   Eats in One Place           │   16:9 with dark overlay        │
+│                               │   hero-homepage.jpg             │
+│   Search flights, hotels,     │                                 │
+│   and car rentals. Request    │                                 │
+│   rides and food delivery     │                                 │
+│   — all from one platform.    │                                 │
+│                               │                                 │
+│   [Search Flights] [Hotels]   │                                 │
+│   [Rent Car] [Rides] [Eats]   │                                 │
+│                               │                                 │
+│   Trust: Bookings for travel  │                                 │
+│   are completed on partner    │                                 │
+│   sites.                      │                                 │
+│                               │                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Phase 5: Update Hero Components
+### Content Changes
 
-**Files to modify:**
-- `src/components/home/HeroSection.tsx`
-- `src/components/shared/ImageHero.tsx`
-- `src/components/shared/ServiceHero.tsx`
+**Headline:** "ZIVO — Travel, Rides & Eats in One Place"
 
-Changes:
-- Add explicit width/height (1920x1080)
-- Add preload for hero image
-- Ensure `loading="eager"`
-- Add fetchpriority="high" attribute
+**Subtext:** "Search flights, hotels, and car rentals. Request rides and food delivery — all from one platform."
 
-### Phase 6: Optimize ServicesGrid
+**Primary CTAs (row 1):**
+- "Search Flights" → /flights (bg-flights)
+- "Search Hotels" → /hotels (bg-hotels)
+
+**Secondary CTAs (row 2):**
+- "Rent a Car" → /rent-car (bg-cars)
+- "Request a Ride" → /rides (bg-rides)
+- "Order Food" → /eats (bg-eats)
+
+**Trust Line:** "Bookings for travel are completed on partner sites."
+
+### Mobile Layout
+- Single column, stacked
+- Photo at top (shorter height, 40vh)
+- Content below with CTAs stacked vertically
+- 2-column CTA grid for secondary buttons
+
+---
+
+## Phase 2: Update Services Grid
 
 **File: `src/components/home/ServicesGrid.tsx`**
 
-Changes:
-- Add width/height to service card images (400x300)
-- Use srcset for responsive loading
-- Keep `loading="lazy"` for below-fold cards
-- Add skeleton placeholder with matching aspect ratio
+### Card Content Updates
 
-### Phase 7: Optimize DestinationCardsGrid
+| Card | Description | CTA |
+|------|-------------|-----|
+| Flights | "Compare flight options worldwide" | "Search Flights" |
+| Hotels | "Find hotels and compare rates" | "Search Hotels" |
+| Car Rental | "Compare rental cars in minutes" | "Rent a Car" |
+| Rides | "Request local rides and airport pickup" | "Request Ride" |
+| Eats | "Order meals from local restaurants" | "Order Food" |
+| Extras | "Transfers, activities, eSIM, and more" | "Explore Extras" |
 
-**File: `src/components/shared/DestinationCardsGrid.tsx`**
+### Layout Changes
+- Keep 4:3 photo cards with icon overlay
+- Remove "Live" badges (redundant)
+- Update description text to match spec
+- Update CTA button text to match spec
 
-Changes:
-- Update Unsplash URLs to use optimized quality (q=75)
-- Add srcset for responsive 1:1 images
-- Add explicit dimensions (400x400)
-- Reduce initial grid to 4 items, "Load more" for rest
-
-### Phase 8: Add Image Skeleton Components
-
-**File: `src/components/shared/SkeletonLoaders.tsx`**
-
-Add new skeleton types:
-- `SkeletonHeroImage` - Full-width hero placeholder
-- `SkeletonServiceCard` - 4:3 card with shimmer
-- `SkeletonDestinationTile` - 1:1 tile placeholder
-
-### Phase 9: Vite Build Optimization
-
-**File: `vite.config.ts`**
-
-Add optimizations:
-
-```text
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-        'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-popover', ...],
-        'vendor-charts': ['recharts'],
-        'vendor-forms': ['react-hook-form', 'zod', '@hookform/resolvers'],
-        'vendor-map': ['mapbox-gl'],
-      },
-    },
-  },
-  cssCodeSplit: true,
-  sourcemap: false,
-  minify: 'terser',
-  terserOptions: {
-    compress: {
-      drop_console: true,
-      drop_debugger: true,
-    },
-  },
-},
-```
-
-### Phase 10: PWA Cache Optimization
-
-**File: `vite.config.ts` (workbox config)**
-
-Add image caching strategy:
-
-```text
-runtimeCaching: [
-  // Existing entries...
-  {
-    urlPattern: /^https:\/\/images\.unsplash\.com\/.*/i,
-    handler: "CacheFirst",
-    options: {
-      cacheName: "unsplash-images",
-      expiration: {
-        maxEntries: 100,
-        maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-      },
-      cacheableResponse: {
-        statuses: [0, 200],
-      },
-    },
-  },
-  {
-    urlPattern: /\.(jpg|jpeg|png|webp|avif)$/i,
-    handler: "CacheFirst",
-    options: {
-      cacheName: "local-images",
-      expiration: {
-        maxEntries: 60,
-        maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-      },
-    },
-  },
-],
-```
-
-### Phase 11: Defer Non-Critical Scripts
-
-**File: `index.html`**
-
-Changes:
-- Move Travelpayouts script to bottom of body
-- Add `defer` attribute to non-critical scripts
-- Remove render-blocking resources
-
-### Phase 12: Add Performance Monitoring Utilities
-
-**File: `src/lib/performance.ts`**
-
-Create utilities for:
-- Web Vitals tracking (LCP, CLS, INP)
-- Image load timing measurement
-- Performance entry observer
+### Mobile: 2-column grid (already correct)
 
 ---
 
-## Technical Implementation Details
+## Phase 3: Create "How It Works" Section
 
-### Responsive Image srcset Strategy
+**File: `src/components/home/HowItWorks.tsx`** (NEW)
 
-For heroes (16:9):
+### 3-Step Flow
+
 ```text
-srcset="
-  /image.jpg?w=320 320w,
-  /image.jpg?w=640 640w,
-  /image.jpg?w=1024 1024w,
-  /image.jpg?w=1440 1440w,
-  /image.jpg?w=1920 1920w
-"
-sizes="100vw"
+┌─────────────────────────────────────────────────────────────────┐
+│                    HOW IT WORKS                                 │
+│                                                                 │
+│   ┌───────────┐     ┌───────────────┐     ┌─────────────────┐  │
+│   │     1     │     │      2        │     │       3         │  │
+│   │  Search   │ ─── │   Compare     │ ─── │    Book on      │  │
+│   │    or     │     │   Options     │     │   Partner Site  │  │
+│   │  Request  │     │               │     │  (or Confirm    │  │
+│   │           │     │               │     │   with ZIVO)    │  │
+│   └───────────┘     └───────────────┘     └─────────────────┘  │
+│                                                                 │
+│   "ZIVO may earn a commission when users book through          │
+│    partner links."                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-For cards (4:3):
+### Component Structure
+- 3 columns on desktop, 1 column stack on mobile
+- Circle icon with step number
+- Step title + brief description
+- Small disclosure text below
+
+---
+
+## Phase 4: Create Popular Destinations Section
+
+**File: `src/components/home/PopularDestinations.tsx`** (NEW)
+
+### 8 Destination Tiles (1:1)
+
+Use destination photos from `src/config/photos.ts`:
+1. New York
+2. Los Angeles
+3. Miami
+4. Las Vegas
+5. Paris
+6. Tokyo
+7. London
+8. Dubai
+
+### Layout
+- 8-column grid on desktop (lg)
+- 4-column grid on tablet (md)
+- 2-column grid on mobile (sm)
+- Each tile: square image with city name overlay
+- Clicking navigates to /hotels (hotel-focused)
+
+### CTA
+- "Explore Hotels" → /hotels button below grid
+
+---
+
+## Phase 5: Update Extras Section (ZIVO More)
+
+**File: `src/components/home/ExtrasSection.tsx`**
+
+### Update to 6 Items
+
+| Item | Icon | Description |
+|------|------|-------------|
+| Activities | Ticket | "Tours and activities" |
+| Tickets | Ticket | "Attractions and museums" |
+| Transfers | Bus | "Airport transfers" |
+| eSIM | Smartphone | "Stay connected abroad" |
+| Luggage Storage | Briefcase | "Store bags while exploring" |
+| Flight Compensation | Shield | "Claim for delays" |
+
+### Layout Changes
+- 6-column grid on desktop (xl)
+- 3-column on tablet (lg)
+- 2-column on mobile
+- Keep simple icon-based cards (no photos needed)
+
+---
+
+## Phase 6: Simplify Trust Section
+
+**File: `src/components/home/TrustSection.tsx`**
+
+### New 3-Bullet Format
+
+Replace 4 trust icons + disclosure box with simpler:
+
 ```text
-srcset="
-  /image.jpg?w=200 200w,
-  /image.jpg?w=400 400w,
-  /image.jpg?w=600 600w
-"
-sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px"
+┌─────────────────────────────────────────────────────────────────┐
+│                       TRUST & SUPPORT                           │
+│                                                                 │
+│   ✓ Secure partner checkout                                    │
+│   ✓ Mobile-first experience                                    │
+│   ✓ Support: info@hizivo.com                                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Unsplash URL Optimization
+### Layout
+- Single row on desktop
+- Stacked on mobile
+- Clean, minimal design
+- No disclosure box (moved to HowItWorks section)
 
-Current: `?w=400&h=400&fit=crop&q=80`
-Optimized: `?w=400&h=400&fit=crop&q=75&fm=webp&auto=format`
+---
 
-The `fm=webp&auto=format` parameters tell Unsplash to:
-- Serve WebP if browser supports it
-- Fall back to JPEG otherwise
+## Phase 7: Update Footer Disclosure
 
-### CLS Prevention Pattern
+**File: `src/components/Footer.tsx`**
 
-All images must have:
-```html
-<img 
-  src="..."
-  width="1920"
-  height="1080"
-  alt="..."
-  style="aspect-ratio: 16/9"
-/>
-```
+### Update Disclosure Text (Lines 229-234)
 
-This ensures the browser reserves space before image loads.
+Current:
+> "ZIVO is a travel search engine. We may earn a commission when you book through our partner links..."
+
+Replace with exact spec text:
+> "ZIVO may earn a commission when users book through partner links.
+> Bookings are completed on partner websites."
+
+### Ensure Required Links Present
+- Privacy ✓
+- Terms ✓
+- Affiliate Disclosure ✓
+- Partners ✓
+- Creators ✓
+- Contact ✓
+
+---
+
+## Phase 8: Unify Mobile Experience
+
+**File: `src/pages/Index.tsx`**
+
+### Current Issue
+Desktop renders `DesktopHomePage`, mobile renders completely different `AppHome`.
+
+### Solution Options
+
+**Option A (Recommended):** Keep separate but align content
+- Update `AppHome` to match new desktop structure
+- Same sections, mobile-optimized layout
+- Consistent messaging and CTAs
+
+**Option B:** Single responsive component
+- Merge into one component with responsive breakpoints
+- More code complexity but single source of truth
+
+### Mobile Layout Rules
+- Hero CTAs stack vertically (2 rows)
+- Services grid: 2 columns
+- How It Works: vertical stack
+- Destinations: 2-column grid, horizontal scroll optional
+- No giant blocks repeated
+- Sticky search button: optional (not required)
 
 ---
 
@@ -267,50 +291,67 @@ This ensures the browser reserves space before image loads.
 
 | File | Purpose |
 |------|---------|
-| `src/components/shared/PerformantHeroImage.tsx` | Optimized hero image with preload |
-| `src/hooks/useImagePreload.ts` | Preload link injection hook |
-| `src/lib/performance.ts` | Web Vitals tracking utilities |
+| `src/components/home/HowItWorks.tsx` | 3-step how it works section |
+| `src/components/home/PopularDestinations.tsx` | 8 destination tiles |
 
 ## Files to Modify
 
 | File | Key Changes |
 |------|-------------|
-| `src/components/shared/OptimizedImage.tsx` | Add srcset, dimensions, blur placeholder |
-| `src/components/shared/SkeletonLoaders.tsx` | Add image-specific skeletons |
-| `src/components/home/HeroSection.tsx` | Add preload, dimensions, fetchpriority |
-| `src/components/shared/ImageHero.tsx` | Add preload, dimensions |
-| `src/components/shared/ServiceHero.tsx` | Add preload, dimensions |
-| `src/components/home/ServicesGrid.tsx` | Add dimensions to card images |
-| `src/components/shared/DestinationCardsGrid.tsx` | Optimize Unsplash URLs, add dimensions |
-| `src/config/photos.ts` | Add dimensions and srcset configs |
-| `vite.config.ts` | Add build optimizations and image caching |
-| `index.html` | Defer scripts, add preconnect hints |
+| `src/components/home/HeroSection.tsx` | Split layout, new copy, 5 CTAs |
+| `src/components/home/ServicesGrid.tsx` | Updated descriptions, CTA text, remove badges |
+| `src/components/home/ExtrasSection.tsx` | 6 items, updated icons/labels |
+| `src/components/home/TrustSection.tsx` | Simplified 3-bullet format |
+| `src/components/Footer.tsx` | Exact disclosure text |
+| `src/pages/Index.tsx` | Add HowItWorks and PopularDestinations |
+| `src/pages/app/AppHome.tsx` | Align with new desktop structure |
 
 ---
 
-## Performance Targets
+## Technical Implementation Details
 
-| Metric | Current (Estimated) | Target |
-|--------|---------------------|--------|
-| LCP | > 3.5s | < 2.5s |
-| CLS | > 0.15 | < 0.1 |
-| INP | Unknown | < 200ms |
-| FCP | > 2s | < 1.8s |
-| TTI | > 5s | < 3.8s |
+### Hero Split Layout CSS
+
+```text
+Desktop (lg+):
+- grid grid-cols-2
+- Left: text + CTAs
+- Right: relative image container with overlay
+
+Tablet (md):
+- Same split but smaller text
+
+Mobile (sm):
+- Stack: photo on top (40vh), content below
+- CTAs in 2-column grid
+```
+
+### CTA Button Styles
+
+```text
+Primary (row 1):
+- h-12 px-6 text-base font-semibold rounded-xl
+- bg-flights / bg-hotels
+
+Secondary (row 2):
+- h-11 px-5 text-sm font-medium rounded-xl
+- bg-cars / bg-rides / bg-eats
+```
+
+### Destination Tile Hover Effect
+- Scale 1.05 on hover
+- Gradient overlay darkens slightly
+- City name stays visible
 
 ---
 
 ## Expected Outcomes
 
 After implementation:
-- Hero images preloaded and render instantly
-- All images have explicit dimensions (zero CLS from images)
-- Responsive srcset serves appropriate sizes for device
-- WebP format auto-served via Unsplash
-- Unsplash images cached for 30 days via service worker
-- Local assets cached for 1 year
-- Bundle split into logical chunks (vendor, charts, map)
-- Console logs stripped in production
-- Non-critical scripts deferred
-- Skeleton loaders match final image dimensions
-- Mobile 3G/4G experience significantly improved
+- Clean, premium travel-tech homepage
+- Clear user flow into each service (5 CTAs in hero, 6 service cards)
+- No clutter or duplicated blocks
+- Consistent desktop and mobile experience
+- Proper affiliate disclosure in multiple locations
+- All required footer links present
+- Mobile-first, fast, premium look
