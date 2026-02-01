@@ -14,16 +14,11 @@ import OrganizationSchema from "@/components/seo/OrganizationSchema";
 import { InternalLinkGrid } from "@/components/seo";
 import { getCityFromCode, formatRouteTitle } from "@/utils/seoUtils";
 import { Badge } from "@/components/ui/badge";
-import { Plane, Shield, Clock, Globe, TrendingUp } from "lucide-react";
+import { Plane, Shield, Clock, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
  * Dynamic SEO landing page for flights
- * Supports routes:
- * - /flights (main page)
- * - /flights/from-{city} (departure city)
- * - /flights/to-{city} (destination city)
- * - /flights/{from}-{to} (specific route)
  */
 const FlightLanding = () => {
   const { fromCity, toCity, route } = useParams<{ 
@@ -33,7 +28,7 @@ const FlightLanding = () => {
   }>();
   const navigate = useNavigate();
 
-  // Parse route parameter (e.g., "los-angeles-new-york" or "lax-jfk")
+  // Parse route parameter
   let from = "";
   let to = "";
   
@@ -53,10 +48,9 @@ const FlightLanding = () => {
   const { title, description, h1 } = formatRouteTitle(from, to);
 
   const trustBadges = [
-    { icon: Shield, text: "Secure Booking", color: "text-emerald-500" },
-    { icon: Globe, text: "500+ Airlines", color: "text-sky-500" },
-    { icon: Clock, text: "24/7 Support", color: "text-amber-500" },
-    { icon: TrendingUp, text: "Real-Time Prices", color: "text-purple-500" },
+    { icon: Shield, text: "Secure Booking" },
+    { icon: Globe, text: "500+ Airlines" },
+    { icon: Clock, text: "24/7 Support" },
   ];
 
   const handleSearch = (searchParams: URLSearchParams) => {
@@ -75,25 +69,23 @@ const FlightLanding = () => {
 
       <main className="pt-16">
         {/* Hero Section with Search */}
-        <section className="relative min-h-[60vh] flex items-center overflow-hidden">
+        <section className="relative py-16 sm:py-24 overflow-hidden">
           {/* Background */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-sky-950 to-blue-950" />
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-500/20 via-blue-500/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-background to-transparent" />
-          </div>
+          <div className="absolute inset-0 bg-flights-light" />
 
-          <div className="container mx-auto px-4 relative z-10 py-12">
+          <div className="container mx-auto px-4 relative z-10">
             {/* Page Title */}
-            <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <Badge className="mb-4 px-4 py-2 bg-sky-500/20 text-sky-400 border-sky-500/40 gap-2 backdrop-blur-xl">
-                <Plane className="w-4 h-4" />
-                ZIVO Flights — Search & Compare
-              </Badge>
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 leading-tight text-white">
+            <div className="text-center mb-10 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-flights/10 border border-flights/20 text-sm font-medium mb-6">
+                <Plane className="w-4 h-4 text-flights" />
+                <span className="text-muted-foreground">Search & Compare Flights</span>
+              </div>
+              
+              <h1 className="text-display mb-4">
                 {h1}
               </h1>
-              <p className="text-lg text-white/70 max-w-xl mx-auto">
+              
+              <p className="text-body-lg text-muted-foreground mb-8">
                 {from && to 
                   ? `Compare prices from 500+ airlines for your trip from ${from} to ${to}.`
                   : from 
@@ -105,14 +97,14 @@ const FlightLanding = () => {
               </p>
 
               {/* Trust Badges */}
-              <div className="flex flex-wrap justify-center gap-3 mt-6">
+              <div className="flex flex-wrap justify-center gap-4">
                 {trustBadges.map((item) => (
                   <div
                     key={item.text}
-                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 backdrop-blur-xl border border-white/10"
+                    className="flex items-center gap-2 text-sm text-muted-foreground"
                   >
-                    <item.icon className={cn("w-4 h-4", item.color)} />
-                    <span className="text-sm text-white/80">{item.text}</span>
+                    <item.icon className="w-4 h-4 text-flights" />
+                    <span>{item.text}</span>
                   </div>
                 ))}
               </div>

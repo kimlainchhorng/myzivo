@@ -63,47 +63,46 @@ export default function CarRentalLanding() {
       <SEOHead title={pageTitle} description={pageDescription} />
       <Header />
       
-      <main>
+      <main className="pt-16">
         {/* Hero Section */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-emerald-500/10 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-emerald-500/15 to-teal-500/10 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-cars-light" />
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-sm font-medium mb-6">
-                <CarFront className="w-4 h-4 text-emerald-400" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cars/10 border border-cars/20 text-sm font-medium mb-6">
+                <CarFront className="w-4 h-4 text-cars" />
                 <span className="text-muted-foreground">Compare car rental prices</span>
               </div>
               
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-display mb-4">
                 {formattedLocation ? (
-                  <>Car Rental in <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">{formattedLocation}</span></>
+                  <>Car Rental in <span className="text-cars">{formattedLocation}</span></>
                 ) : (
-                  <>Find the <span className="bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">Best Rental Car Deals</span></>
+                  <>Find the <span className="text-cars">Best Rental Car Deals</span></>
                 )}
               </h1>
               
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-body-lg text-muted-foreground mb-8">
                 Compare prices from Hertz, Enterprise, Avis, Budget and more. No booking fees on ZIVO.
               </p>
 
               {/* Search Form */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
                 <div className="flex-1 relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-400" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cars" />
                   <Input
                     type="text"
                     placeholder="Pick-up location"
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
-                    className="pl-12 h-14 text-lg rounded-2xl bg-card border-border/50 focus:border-emerald-500/50"
+                    className="pl-12 h-14 text-base rounded-xl"
                   />
                 </div>
                 <Button 
                   onClick={handleSearch}
                   size="lg" 
-                  className="h-14 px-8 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold"
+                  className="h-14 px-8 rounded-xl bg-cars hover:bg-cars/90 text-white font-semibold"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Cars
@@ -112,10 +111,10 @@ export default function CarRentalLanding() {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-10">
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
                 <div key={badge.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <badge.icon className="w-4 h-4 text-emerald-400" />
+                  <badge.icon className="w-4 h-4 text-cars" />
                   <span>{badge.text}</span>
                 </div>
               ))}
