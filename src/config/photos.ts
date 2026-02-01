@@ -12,6 +12,9 @@ import heroRides from "@/assets/hero-rides.jpg";
 import heroEats from "@/assets/hero-eats.jpg";
 import heroHomepage from "@/assets/hero-homepage.jpg";
 import heroExtras from "@/assets/hero-extras.jpg";
+import heroBeachResort from "@/assets/hero-beach-resort.jpg";
+import heroHotelRoom from "@/assets/hero-hotel-room.jpg";
+import heroRoadTrip from "@/assets/hero-road-trip.jpg";
 
 // Import service card assets
 import serviceFlights from "@/assets/service-flights.jpg";
@@ -20,6 +23,39 @@ import serviceCars from "@/assets/service-cars.jpg";
 import serviceRides from "@/assets/service-rides.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
 import serviceExtras from "@/assets/service-extras.jpg";
+
+// Import destination assets (local AI-generated)
+import destParis from "@/assets/dest-paris.jpg";
+import destDubai from "@/assets/dest-dubai.jpg";
+import destNewYork from "@/assets/dest-newyork.jpg";
+import destTokyo from "@/assets/dest-tokyo.jpg";
+import destLondon from "@/assets/dest-london.jpg";
+import destBali from "@/assets/dest-bali.jpg";
+import destBarcelona from "@/assets/dest-barcelona.jpg";
+import destRome from "@/assets/dest-rome.jpg";
+import destSydney from "@/assets/dest-sydney.jpg";
+import destSingapore from "@/assets/dest-singapore.jpg";
+import destSantorini from "@/assets/dest-santorini.jpg";
+import destMiami from "@/assets/dest-miami.jpg";
+import destIstanbul from "@/assets/dest-istanbul.jpg";
+import destAmsterdam from "@/assets/dest-amsterdam.jpg";
+
+// Import lifestyle assets
+import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
+import lifestyleFamily from "@/assets/lifestyle-family.jpg";
+import lifestyleBusiness from "@/assets/lifestyle-business.jpg";
+import lifestyleSolo from "@/assets/lifestyle-solo.jpg";
+
+// Import extras category assets
+import extrasActivities from "@/assets/extras-activities.jpg";
+import extrasMuseums from "@/assets/extras-museums.jpg";
+import extrasTransfers from "@/assets/extras-transfers.jpg";
+import extrasEsim from "@/assets/extras-esim.jpg";
+import extrasLuggage from "@/assets/extras-luggage.jpg";
+import extrasAudiotours from "@/assets/extras-audiotours.jpg";
+import extrasCompensation from "@/assets/extras-compensation.jpg";
+import extrasRadar from "@/assets/extras-radar.jpg";
+import extrasTickets from "@/assets/extras-tickets.jpg";
 
 // ============================================
 // SERVICE TYPES
@@ -163,49 +199,49 @@ export const carCategoryPhotos: Record<CarCategory, { src: string; alt: string; 
 };
 
 // ============================================
-// DESTINATION PHOTOS (Unsplash URLs - 1:1 square)
-// All images use cool/neutral tones + WebP optimization
+// DESTINATION PHOTOS (Local AI-generated - 1:1 square)
+// Premium travel photography with consistent styling
 // ============================================
 export const destinationPhotos: Record<DestinationCity, { src: string; alt: string; city: string; country: string; width: number; height: number }> = {
   "new-york": {
-    src: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destNewYork,
     alt: "New York, USA - Manhattan skyline at dusk",
     city: "New York",
     country: "USA",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   london: {
-    src: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destLondon,
     alt: "London, United Kingdom - Tower Bridge at sunset",
     city: "London",
     country: "United Kingdom",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   paris: {
-    src: "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destParis,
     alt: "Paris, France - Eiffel Tower with city view",
     city: "Paris",
     country: "France",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   tokyo: {
-    src: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destTokyo,
     alt: "Tokyo, Japan - City skyline at night",
     city: "Tokyo",
     country: "Japan",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   dubai: {
-    src: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destDubai,
     alt: "Dubai, UAE - Burj Khalifa and modern skyline",
     city: "Dubai",
     country: "UAE",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "los-angeles": {
     src: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
@@ -216,12 +252,12 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     height: 400,
   },
   miami: {
-    src: "https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destMiami,
     alt: "Miami, Florida - Beach skyline view",
     city: "Miami",
     country: "Florida",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "las-vegas": {
     src: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
@@ -296,36 +332,91 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     height: 400,
   },
   "barcelona": {
-    src: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destBarcelona,
     alt: "Barcelona, Spain - City view with Sagrada Familia",
     city: "Barcelona",
     country: "Spain",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "singapore": {
-    src: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destSingapore,
     alt: "Singapore - Marina Bay Sands skyline",
     city: "Singapore",
     country: "Singapore",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "sydney": {
-    src: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destSydney,
     alt: "Sydney, Australia - Opera House harbor view",
     city: "Sydney",
     country: "Australia",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "amsterdam": {
-    src: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destAmsterdam,
     alt: "Amsterdam, Netherlands - Canal houses",
     city: "Amsterdam",
     country: "Netherlands",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
+  },
+};
+
+// ============================================
+// LIFESTYLE PHOTOS (for marketing sections)
+// ============================================
+export const lifestylePhotos = {
+  travelers: {
+    src: lifestyleTravelers,
+    alt: "Happy travelers exploring the world with ZIVO",
+  },
+  family: {
+    src: lifestyleFamily,
+    alt: "Family vacation - traveling together with ZIVO",
+  },
+  business: {
+    src: lifestyleBusiness,
+    alt: "Business travel made easy with ZIVO",
+  },
+  solo: {
+    src: lifestyleSolo,
+    alt: "Solo adventure - explore the world with ZIVO",
+  },
+};
+
+// ============================================
+// EXTRAS CATEGORY PHOTOS
+// ============================================
+export const extrasCategoryPhotos = {
+  activities: { src: extrasActivities, alt: "Tours and activities" },
+  museums: { src: extrasMuseums, alt: "Museums and attractions" },
+  transfers: { src: extrasTransfers, alt: "Airport transfers" },
+  esim: { src: extrasEsim, alt: "eSIM and mobile connectivity" },
+  luggage: { src: extrasLuggage, alt: "Luggage storage services" },
+  audiotours: { src: extrasAudiotours, alt: "Audio tours and guides" },
+  compensation: { src: extrasCompensation, alt: "Flight compensation" },
+  radar: { src: extrasRadar, alt: "Travel comparison and search" },
+  tickets: { src: extrasTickets, alt: "Event tickets and shows" },
+};
+
+// ============================================
+// ADDITIONAL HERO PHOTOS
+// ============================================
+export const additionalHeroPhotos = {
+  beachResort: {
+    src: heroBeachResort,
+    alt: "Tropical beach resort getaway",
+  },
+  hotelRoom: {
+    src: heroHotelRoom,
+    alt: "Luxury hotel room interior",
+  },
+  roadTrip: {
+    src: heroRoadTrip,
+    alt: "Scenic road trip adventure",
   },
 };
 

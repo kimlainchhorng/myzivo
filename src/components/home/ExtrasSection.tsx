@@ -1,56 +1,50 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Ticket, 
-  Bus, 
-  Smartphone, 
-  Briefcase, 
-  Shield,
-  ArrowRight 
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { extrasCategoryPhotos } from "@/config/photos";
 
 const extras = [
   {
     id: "activities",
     title: "Activities",
-    description: "Tours and activities",
-    icon: Ticket,
+    description: "Tours and adventures",
+    image: extrasCategoryPhotos.activities.src,
     href: "/extras",
   },
   {
-    id: "tickets",
+    id: "museums",
     title: "Tickets",
-    description: "Attractions and museums",
-    icon: Ticket,
+    description: "Attractions & museums",
+    image: extrasCategoryPhotos.museums.src,
     href: "/extras",
   },
   {
     id: "transfers",
     title: "Transfers",
-    description: "Airport transfers",
-    icon: Bus,
+    description: "Airport pickups",
+    image: extrasCategoryPhotos.transfers.src,
     href: "/extras",
   },
   {
     id: "esim",
     title: "eSIM",
-    description: "Stay connected abroad",
-    icon: Smartphone,
+    description: "Stay connected",
+    image: extrasCategoryPhotos.esim.src,
     href: "/extras",
   },
   {
     id: "luggage",
     title: "Luggage Storage",
-    description: "Store bags while exploring",
-    icon: Briefcase,
+    description: "Store bags safely",
+    image: extrasCategoryPhotos.luggage.src,
     href: "/extras",
   },
   {
     id: "compensation",
-    title: "Flight Compensation",
+    title: "Compensation",
     description: "Claim for delays",
-    icon: Shield,
+    image: extrasCategoryPhotos.compensation.src,
     href: "/extras",
   },
 ];
@@ -62,14 +56,14 @@ export default function ExtrasSection() {
         {/* Section Header */}
         <div className="text-center mb-8">
           <h2 className="text-xl sm:text-2xl font-bold mb-2">
-            ZIVO More
+            ZIVO Extras
           </h2>
           <p className="text-muted-foreground text-sm">
             Everything you need to complete your trip
           </p>
         </div>
 
-        {/* Extras Grid - 6 items */}
+        {/* Extras Grid - 6 items with photos */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 max-w-5xl mx-auto">
           {extras.map((extra) => (
             <Link
@@ -77,16 +71,23 @@ export default function ExtrasSection() {
               to={extra.href}
               className="group"
             >
-              <Card className="h-full border hover:border-primary/30 hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                <CardContent className="p-4 text-center">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                    <extra.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  
-                  <h3 className="font-semibold text-sm mb-1">
+              <Card className="h-full border overflow-hidden hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+                {/* Photo Header */}
+                <div className="relative h-20 sm:h-24 overflow-hidden">
+                  <img
+                    src={extra.image}
+                    alt={extra.title}
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                </div>
+                
+                <CardContent className="p-3 text-center">
+                  <h3 className="font-semibold text-sm mb-0.5">
                     {extra.title}
                   </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">
                     {extra.description}
                   </p>
                 </CardContent>

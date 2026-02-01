@@ -13,6 +13,9 @@ export { default as heroCars } from "./hero-cars.jpg";
 export { default as heroRides } from "./hero-rides.jpg";
 export { default as heroEats } from "./hero-eats.jpg";
 export { default as heroExtras } from "./hero-extras.jpg";
+export { default as heroBeachResort } from "./hero-beach-resort.jpg";
+export { default as heroHotelRoom } from "./hero-hotel-room.jpg";
+export { default as heroRoadTrip } from "./hero-road-trip.jpg";
 
 // ==========================================
 // SERVICE CARD IMAGES (4:3 aspect ratio)
@@ -23,6 +26,45 @@ export { default as serviceCars } from "./service-cars.jpg";
 export { default as serviceRides } from "./service-rides.jpg";
 export { default as serviceEats } from "./service-eats.jpg";
 export { default as serviceExtras } from "./service-extras.jpg";
+
+// ==========================================
+// DESTINATION IMAGES (1:1 square)
+// ==========================================
+export { default as destParis } from "./dest-paris.jpg";
+export { default as destDubai } from "./dest-dubai.jpg";
+export { default as destNewYork } from "./dest-newyork.jpg";
+export { default as destTokyo } from "./dest-tokyo.jpg";
+export { default as destLondon } from "./dest-london.jpg";
+export { default as destBali } from "./dest-bali.jpg";
+export { default as destBarcelona } from "./dest-barcelona.jpg";
+export { default as destRome } from "./dest-rome.jpg";
+export { default as destSydney } from "./dest-sydney.jpg";
+export { default as destSingapore } from "./dest-singapore.jpg";
+export { default as destSantorini } from "./dest-santorini.jpg";
+export { default as destMiami } from "./dest-miami.jpg";
+export { default as destIstanbul } from "./dest-istanbul.jpg";
+export { default as destAmsterdam } from "./dest-amsterdam.jpg";
+
+// ==========================================
+// LIFESTYLE IMAGES
+// ==========================================
+export { default as lifestyleTravelers } from "./lifestyle-travelers.jpg";
+export { default as lifestyleFamily } from "./lifestyle-family.jpg";
+export { default as lifestyleBusiness } from "./lifestyle-business.jpg";
+export { default as lifestyleSolo } from "./lifestyle-solo.jpg";
+
+// ==========================================
+// EXTRAS CATEGORY IMAGES
+// ==========================================
+export { default as extrasActivities } from "./extras-activities.jpg";
+export { default as extrasMuseums } from "./extras-museums.jpg";
+export { default as extrasTransfers } from "./extras-transfers.jpg";
+export { default as extrasEsim } from "./extras-esim.jpg";
+export { default as extrasLuggage } from "./extras-luggage.jpg";
+export { default as extrasAudiotours } from "./extras-audiotours.jpg";
+export { default as extrasCompensation } from "./extras-compensation.jpg";
+export { default as extrasRadar } from "./extras-radar.jpg";
+export { default as extrasTickets } from "./extras-tickets.jpg";
 
 // ==========================================
 // AD CAMPAIGN IMAGES
