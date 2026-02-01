@@ -43,6 +43,9 @@ const footerLinks = {
     { name: "Ground Transport", href: "/ground-transport", icon: Train },
     { name: "Package Delivery", href: "/package-delivery", icon: Package },
   ],
+  driver: [
+    { name: "Become a Driver", href: "https://zivodriver.com", external: true },
+  ],
   contact: [
     { name: "info@hizivo.com", href: "mailto:info@hizivo.com" },
     { name: "payment@hizivo.com", href: "mailto:payment@hizivo.com" },
@@ -273,6 +276,18 @@ const Footer = () => {
                     </Link>
                   </li>
                 ))}
+                {/* Become a Driver Link */}
+                <li>
+                  <a
+                    href="https://zivodriver.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-rides hover:text-rides/80 transition-colors font-medium flex items-center gap-1"
+                  >
+                    <Car className="w-4 h-4" />
+                    Become a Driver
+                  </a>
+                </li>
               </ul>
             </div>
 
