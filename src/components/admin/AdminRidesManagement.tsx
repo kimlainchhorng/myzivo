@@ -8,18 +8,21 @@ import {
   MapPin, Navigation, Clock, DollarSign, Users, Car, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
   Search, Filter, RefreshCw, Eye, Phone, MessageSquare,
-  Loader2, Mail, FileText
+  Loader2, Mail, FileText, RefreshCcw, CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTrips, useTripStats, type Trip } from "@/hooks/useTrips";
 import { useRideRequests, useUpdateRideRequest, type RideRequest, type RideRequestStatus } from "@/hooks/useRideRequests";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
+import { RefundDialog } from "./RefundDialog";
+import { getPaymentStatusBadge, getRefundStatusBadge } from "@/hooks/usePaymentAdmin";
 
 export default function AdminRidesManagement() {
   const [activeTab, setActiveTab] = useState("requests");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<RideRequestStatus | "all">("all");
+  const [refundRequest, setRefundRequest] = useState<RideRequest | null>(null);
 
   const { data: trips, isLoading: tripsLoading, refetch: refetchTrips } = useTrips();
   const { data: tripStats, isLoading: statsLoading, refetch: refetchStats } = useTripStats();
@@ -275,6 +278,7 @@ export default function AdminRidesManagement() {
                       index={i} 
                       getStatusBadge={getStatusBadge}
                       onStatusUpdate={handleStatusUpdate}
+                      onRefund={(r) => setRefundRequest(r)}
                     />
                   ))}
                 </div>
@@ -395,23 +399,39 @@ export default function AdminRidesManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Refund Dialog */}
+      {refundRequest && (
+        <RefundDialog
+          open={!!refundRequest}
+          onOpenChange={(open) => !open && setRefundRequest(null)}
+          type="ride"
+          id={refundRequest.id}
+          amount={refundRequest.quoted_total || 0}
+          customerName={refundRequest.customer_name}
+        />
+      )}
     </div>
   );
 }
 
-// Ride Request Card for MVP
+// Ride Request Card for MVP with Payment Info
 function RideRequestCard({ 
   request, 
   index, 
   getStatusBadge,
-  onStatusUpdate
+  onStatusUpdate,
+  onRefund
 }: { 
   request: RideRequest; 
   index: number; 
   getStatusBadge: (status: string | null) => string;
   onStatusUpdate: (id: string, status: RideRequestStatus) => void;
+  onRefund: (request: RideRequest) => void;
 }) {
   const formatAddress = (address: string) => address.length > 30 ? address.substring(0, 27) + "..." : address;
+  const paymentBadge = getPaymentStatusBadge(request.payment_status);
+  const refundBadge = getRefundStatusBadge(request.refund_status);
 
   return (
     <div 
@@ -450,6 +470,23 @@ function RideRequestCard({
           <Badge variant="outline" className="capitalize">{request.ride_type}</Badge>
         </div>
         <div className="flex items-center gap-3">
+          {/* Payment Info */}
+          <div className="text-right min-w-[80px]">
+            <p className="font-bold text-lg">
+              {request.quoted_total ? `$${request.quoted_total.toFixed(2)}` : "--"}
+            </p>
+            <div className="flex items-center gap-1 justify-end">
+              <Badge variant="outline" className={cn("text-[10px]", paymentBadge.className)}>
+                <CreditCard className="h-3 w-3 mr-1" />
+                {paymentBadge.label}
+              </Badge>
+              {refundBadge && (
+                <Badge variant="outline" className={cn("text-[10px]", refundBadge.className)}>
+                  {refundBadge.label}
+                </Badge>
+              )}
+            </div>
+          </div>
           <Select 
             value={request.status} 
             onValueChange={(v) => onStatusUpdate(request.id, v as RideRequestStatus)}
@@ -477,14 +514,34 @@ function RideRequestCard({
                 <Mail className="h-4 w-4" />
               </a>
             </Button>
+            {/* Refund Button - only show if paid and not refunded */}
+            {request.payment_status === "paid" && request.refund_status !== "refunded" && (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="h-8 w-8 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                onClick={() => onRefund(request)}
+                title="Process Refund"
+              >
+                <RefreshCcw className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
-      {request.notes && (
-        <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
-          <strong>Notes:</strong> {request.notes}
-        </div>
-      )}
+      {/* Notes and Stripe Info */}
+      <div className="mt-3 pt-3 border-t flex flex-wrap gap-4 text-sm text-muted-foreground">
+        {request.notes && (
+          <div>
+            <strong>Notes:</strong> {request.notes}
+          </div>
+        )}
+        {request.stripe_payment_intent_id && (
+          <div className="font-mono text-xs">
+            <strong>Stripe:</strong> {request.stripe_payment_intent_id.slice(0, 20)}...
+          </div>
+        )}
+      </div>
     </div>
   );
 }
