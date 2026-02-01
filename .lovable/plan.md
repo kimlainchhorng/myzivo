@@ -1,245 +1,292 @@
 
-# Fix /flights/results to Display Live Flight Prices
+
+# Implementation Plan: Proper Aviasales Flight Search API Integration
 
 ## Overview
 
-The flight results page is currently not displaying live prices from the Aviasales/Travelpayouts API due to authentication issues. The edge function is returning a **403 "access denied"** error, which indicates the MD5 signature generation is incorrect. This plan fixes the API integration to deliver real-time flight prices.
+This plan refactors the existing flight search implementation to properly follow the Aviasales API specification, including the critical **clicks endpoint** for generating booking links. The current implementation is functional but missing the proper deep link generation and some display polish.
 
 ---
 
-## Current State Analysis
+## Current State vs. Required State
 
-### Issues Identified
-
-1. **Signature Generation is Broken**
-   - The current `createSignature()` function uses a simple JavaScript hash, NOT proper MD5
-   - The API requires an actual MD5 hash of the token + marker + sorted parameter values
-   - Error in logs: `[API] Start search failed: 403 - access denied`
-
-2. **Request Structure Issues**
-   - Body includes `signature` field but must match exact API format
-   - Headers need proper token in `x-affiliate-user-id`
-   - The `x-signature` header may need proper MD5 calculation
-
-3. **Missing TRAVELPAYOUTS_MARKER Secret**
-   - Only `TRAVELPAYOUTS_API_TOKEN` is configured
-   - The marker (partner ID) should also be stored or hardcoded consistently
-
-### What's Already Correct
-- IATA codes are properly parsed via `parseFlightSearchParams()`
-- URL params use 3-letter codes (`from=MSY&to=PNH`)
-- UI components show "From $XXX" pricing
-- Fallback to whitelabel URL works
-- Caching strategy is correct (5-10 min)
+| Feature | Current | Required |
+|---------|---------|----------|
+| IATA Codes | Working (MSY, LAX, etc.) | No change |
+| Search Flow (POST /start) | Working | No change |
+| Polling (/results) | Working | Minor fixes |
+| Airline Name + IATA | Missing IATA display | Show "Qatar Airways (QR)" |
+| Airline Logo | Using CDN fallback | Use API URL + IATA fallback |
+| Clicks Endpoint | Not implemented | Add for booking links |
+| Reprice on Click | Not implemented | Add toast notification |
+| Price Display | Shows raw price | Show "From $XXX" |
 
 ---
 
-## Implementation Plan
+## Implementation Scope
 
-### Step 1: Fix MD5 Signature Generation
+### Phase 1: Edge Function - Add Clicks Endpoint
 
-Update `supabase/functions/search-flights/index.ts` to use proper MD5:
+Add a new endpoint handler to the edge function that generates booking links on demand.
 
-**Current (Broken):**
-```typescript
-// Uses a simple JavaScript hash - NOT MD5!
-let hash = 0;
-for (let i = 0; i < signatureString.length; i++) {
-  const char = signatureString.charCodeAt(i);
-  hash = ((hash << 5) - hash) + char;
-}
-```
+**New Endpoint:**
+- `POST /search-flights` with `action: 'getBookingLink'`
+- Calls: `https://[results_url]/searches/[search_id]/clicks/[proposal_id]`
+- Returns the partner booking URL with click tracking
 
-**Fixed (Proper MD5):**
-```typescript
-import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
-import { encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
-
-async function createMd5Signature(input: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = await crypto.subtle.digest("MD5", data);
-  return encodeHex(new Uint8Array(hashBuffer));
-}
-```
-
-### Step 2: Fix Signature String Construction
-
-According to the API docs, the signature must:
-1. Sort ALL parameter values alphabetically (including nested)
-2. Join values with colons
-3. Prepend the API token
-4. Calculate MD5
-
-**Fix the signature building:**
-```typescript
-function buildSignatureString(token: string, marker: string, params: SearchParams): string {
-  // Sorted alphabetically as per API requirements
-  const values: string[] = [];
-  
-  // Top-level params (alphabetical)
-  values.push('USD');           // currency_code
-  values.push('en-us');         // locale
-  values.push(marker);          // marker
-  values.push('US');            // market_code
-  
-  // search_params.directions (array, each object sorted)
-  for (const dir of params.directions) {
-    values.push(dir.date);
-    values.push(dir.destination);
-    values.push(dir.origin);
-  }
-  
-  // search_params.passengers (sorted: adults, children, infants)
-  values.push(String(params.passengers.adults));
-  values.push(String(params.passengers.children));
-  values.push(String(params.passengers.infants));
-  
-  // search_params.trip_class
-  values.push(params.trip_class);
-  
-  // Build final string: token:value1:value2:...
-  return `${token}:${values.join(':')}`;
-}
-```
-
-### Step 3: Update Request Headers
-
-According to the API documentation, headers must include:
-- `x-real-host` - Your website address
-- `x-user-ip` - User's IP address
-- `x-signature` - MD5 signature
-- `x-affiliate-user-id` - API token
-- `Content-Type: application/json`
-
-### Step 4: Fix Request Body Structure
-
-The body should match the exact API format:
+**Response Format:**
 ```json
 {
-  "signature": "MD5_HASH",
-  "marker": "618730",
-  "locale": "en-us",
-  "currency_code": "USD",
-  "market_code": "US",
-  "search_params": {
-    "trip_class": "Y",
-    "passengers": { "adults": 1, "children": 0, "infants": 0 },
-    "directions": [
-      { "origin": "MSY", "destination": "PNH", "date": "2026-02-03" },
-      { "origin": "PNH", "destination": "MSY", "date": "2026-02-24" }
-    ]
-  }
+  "url": "https://agency.com/booking?...",
+  "agentId": 70,
+  "clickId": "2603625159552466848",
+  "expireAt": 1689958526
 }
 ```
 
-### Step 5: Add Booking Link Generation
+### Phase 2: Edge Function - Store and Return Search Metadata
 
-When user clicks "View Deal", we need to get the booking URL from the API:
-```
-POST https://[results_url]/searches/[search_id]/clicks/[proposal_id]
-```
+Modify the response to include essential metadata for booking link generation:
 
-This returns the actual partner booking URL with affiliate tracking.
+- `searchId` - Required for clicks endpoint
+- `resultsUrl` - Required for clicks endpoint  
+- Each flight includes `proposalId` - Required for clicks endpoint
 
-### Step 6: Update Results Page Integration
+### Phase 3: Client Hook - Add Booking Link Generation
 
-Modify `FlightResults.tsx` to:
-- Store `search_id` and `results_url` from API response
-- Pass `proposal_id` to booking link generator
-- Show "Live Price" badge when `isRealPrice: true`
-- Handle loading states properly (30-60 second search time)
+Modify `useAviasalesFlightSearch.ts` to:
 
----
+1. Store `searchId` and `resultsUrl` from search response
+2. Add `getBookingLink(proposalId)` function that:
+   - Calls edge function with action: 'getBookingLink'
+   - Shows loading state
+   - Returns partner URL
 
-## Files to Create/Modify
+### Phase 4: UI - Display Formatting
 
-### Files Modified
+Update `FlightResultCard.tsx` and related components:
 
-| File | Changes |
-|------|---------|
-| `supabase/functions/search-flights/index.ts` | Fix MD5 signature, update request structure, add booking link endpoint |
-| `src/hooks/useAviasalesFlightSearch.ts` | Store search_id/results_url, add booking link generation |
-| `src/pages/FlightResults.tsx` | Update View Deal handler to use proper booking links |
+1. **Airline Display**: Show name + IATA code format
+   - Before: "Qatar Airways"
+   - After: "Qatar Airways (QR)"
+
+2. **Airline Logo**: 
+   - Primary: API CDN (`https://pics.avs.io/100/100/QR.png`)
+   - Fallback: Initials badge (already implemented)
+
+3. **Price Display**: Already shows "From $XXX" - no change needed
+
+### Phase 5: View Deal - Reprice on Click Flow
+
+When user clicks "View Deal":
+
+1. Show toast: "Checking latest price..."
+2. Call `getBookingLink(proposalId)` edge function
+3. The API returns the current booking URL with live price
+4. If price changed significantly (>5%), show toast: "Price updated — redirecting to live availability."
+5. If price unchanged, show: "Redirecting to partner..."
+6. Open partner URL in new tab
 
 ---
 
 ## Technical Details
 
-### Proper MD5 Signature Example
+### Edge Function Changes
 
-For search: MSY → PNH on 2026-02-03 with return 2026-02-24:
+**File: `supabase/functions/search-flights/index.ts`**
 
-**Input string:**
+Add action routing in the request handler:
+
+```typescript
+const { searchParams, action, searchId, resultsUrl, proposalId } = await req.json();
+
+if (action === 'getBookingLink') {
+  // Generate booking link via clicks endpoint
+  return await getBookingLink(searchId, resultsUrl, proposalId, token);
+}
+
+// Existing search flow
 ```
-TOKEN:USD:en-us:618730:US:2026-02-03:PNH:MSY:2026-02-24:MSY:PNH:1:0:0:Y
+
+New function for booking link:
+
+```typescript
+async function getBookingLink(
+  searchId: string,
+  resultsUrl: string,
+  proposalId: string,
+  token: string
+): Promise<Response> {
+  const baseUrl = resultsUrl.startsWith('http') ? resultsUrl : `https://${resultsUrl}`;
+  const clicksUrl = `${baseUrl}/searches/${searchId}/clicks/${proposalId}`;
+  
+  const response = await fetch(clicksUrl, {
+    method: 'GET',
+    headers: {
+      'x-affiliate-user-id': token,
+      'marker': AFFILIATE_MARKER
+    }
+  });
+  
+  const data = await response.json();
+  return new Response(JSON.stringify({
+    url: data.url,
+    agentId: data.agent_id,
+    clickId: data.str_click_id,
+    expireAt: data.expire_at_unix_sec
+  }), { headers: corsHeaders });
+}
 ```
 
-**MD5 hash:** (calculated from above)
+### Client Hook Changes
 
-### API Flow
+**File: `src/hooks/useAviasalesFlightSearch.ts`**
+
+Add booking link generation:
+
+```typescript
+export function useBookingLink() {
+  const getBookingLink = async (
+    searchId: string,
+    resultsUrl: string,
+    proposalId: string
+  ): Promise<{ url: string; priceChanged?: boolean }> => {
+    const { data, error } = await supabase.functions.invoke('search-flights', {
+      body: {
+        action: 'getBookingLink',
+        searchId,
+        resultsUrl,
+        proposalId
+      }
+    });
+    
+    if (error) throw error;
+    return { url: data.url, priceChanged: false };
+  };
+  
+  return { getBookingLink };
+}
+```
+
+### UI Component Changes
+
+**File: `src/components/results/FlightResultCard.tsx`**
+
+Update airline display (around line 115-117):
+
+```tsx
+// Current
+<p className="font-semibold truncate text-sm">{flight.airline}</p>
+<p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
+
+// Updated
+<p className="font-semibold truncate text-sm">
+  {flight.airline} <span className="text-muted-foreground">({flight.airlineCode})</span>
+</p>
+<p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
+```
+
+**File: `src/pages/FlightResults.tsx`**
+
+Update handleViewDeal to use the clicks endpoint:
+
+```typescript
+const handleViewDeal = async (flight: FlightCardData) => {
+  // Show loading toast
+  toast({
+    title: "Checking latest price...",
+    description: "Please wait while we confirm availability.",
+  });
+  
+  try {
+    // Get booking link from API (if we have search metadata)
+    if (apiResponse?.searchId && apiResponse?.resultsUrl && flight.proposalId) {
+      const { data } = await supabase.functions.invoke('search-flights', {
+        body: {
+          action: 'getBookingLink',
+          searchId: apiResponse.searchId,
+          resultsUrl: apiResponse.resultsUrl,
+          proposalId: flight.proposalId
+        }
+      });
+      
+      if (data?.url) {
+        toast({
+          title: "Price updated — redirecting to live availability.",
+          duration: 2000,
+        });
+        
+        // Track click then redirect
+        trackAffiliateClick({ ... });
+        window.open(data.url, "_blank", "noopener,noreferrer");
+        return;
+      }
+    }
+    
+    // Fallback to existing /out flow
+    // ... existing code ...
+  } catch (error) {
+    // Fallback on error
+    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
+  }
+};
+```
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/search-flights/index.ts` | Add getBookingLink action handler |
+| `src/hooks/useAviasalesFlightSearch.ts` | Add useBookingLink hook |
+| `src/pages/FlightResults.tsx` | Update handleViewDeal with clicks endpoint |
+| `src/components/results/FlightResultCard.tsx` | Display airline name + IATA code |
+
+---
+
+## Data Flow
 
 ```text
-1. User searches MSY → PNH
-   ↓
-2. Edge function calls /search/affiliate/start
-   ↓
-3. Receive search_id + results_url
-   ↓
-4. Poll /search/affiliate/results until is_over=true
-   ↓
-5. Transform & cache results (5-10 min TTL)
-   ↓
-6. Return enriched flight data to UI
-   ↓
-7. User clicks "View Deal"
-   ↓
-8. Call /searches/{search_id}/clicks/{proposal_id}
-   ↓
-9. Redirect to partner booking URL
+User clicks "View Deal"
+       ↓
+[Toast: "Checking latest price..."]
+       ↓
+Edge Function: POST /search-flights { action: 'getBookingLink' }
+       ↓
+Aviasales API: GET /searches/{search_id}/clicks/{proposal_id}
+       ↓
+Returns: { url: "https://partner.com/...", clickId: "...", expireAt: ... }
+       ↓
+[Toast: "Price updated — redirecting to live availability."]
+       ↓
+window.open(url, "_blank")
 ```
 
-### Error Handling
-
-- **403 Access Denied**: Signature is incorrect
-- **429 Rate Limit**: Show "Too many requests" message
-- **No results**: Show fallback whitelabel link
-- **Timeout**: Gracefully fall back to partner search
-
 ---
 
-## Caching Strategy (Already Correct)
-
-- `staleTime: 5 * 60 * 1000` (5 minutes)
-- `gcTime: 15 * 60 * 1000` (15 minutes)
-- Force refresh on Edit Search (invalidate cache)
-- In-memory cache in edge function: 10 minutes TTL
-
----
-
-## Testing Checklist
+## Validation Checklist
 
 After implementation:
 
-- [ ] Search MSY → PNH returns live prices
-- [ ] "Live Price" badge appears on results
-- [ ] Prices match partner site (within 10%)
-- [ ] "View Deal" opens partner booking page
-- [ ] UTM params preserved in redirect
-- [ ] Affiliate clicks logged to database
-- [ ] Fallback works if API fails
-- [ ] Loading skeleton shows during 30-60s search
-- [ ] Filters work on live results
-- [ ] Sorting works correctly
+- [ ] Search MSY → LAX returns live prices with searchId/resultsUrl
+- [ ] Airlines show as "Qatar Airways (QR)" format
+- [ ] Airline logos display from IATA code
+- [ ] Missing logos fall back to initials badge
+- [ ] "View Deal" fetches fresh booking link
+- [ ] Toast shows "Price updated" message
+- [ ] Partner site opens in new tab
+- [ ] Fallback to /out works if clicks endpoint fails
+- [ ] Click tracking still logs to database
 
 ---
 
-## Affiliate Compliance
+## Compliance Notes
 
-All existing compliance measures are preserved:
-- "From $XXX" price labeling ✓
-- "Prices are indicative..." disclaimer ✓
-- "View Deal" CTA (not "Book Now") ✓
-- Redirect through /out for tracking ✓
-- UTM/creator params preserved ✓
-- Partner booking page opens in new tab ✓
+All existing affiliate compliance measures remain intact:
+- "From $XXX" indicative pricing
+- "View Deal" CTA (not "Book Now")
+- Partner redirect toast notification
+- Affiliate disclosure visible
+- Opens in new tab with proper rel attributes
+
