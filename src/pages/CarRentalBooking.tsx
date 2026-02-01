@@ -1,16 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Car,
   Search,
   CalendarDays,
-  MapPin,
   Clock,
   User,
 } from "lucide-react";
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AirportAutocomplete, { getAirportByCode } from "@/components/car/AirportAutocomplete";
 import CarResultCardPro from "@/components/car/CarResultCardPro";
 import CarPartnerSelector from "@/components/car/CarPartnerSelector";
 import AffiliateRedirectNotice from "@/components/shared/AffiliateRedirectNotice";
@@ -40,10 +40,11 @@ import { SEOContentBlock, InternalLinkGrid } from "@/components/seo";
 import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 import CarCategoryTiles from "@/components/car/CarCategoryTiles";
 import { CarCategory } from "@/config/photos";
+import { Airport } from "@/data/airports";
 
 /**
  * ZIVO CAR RENTAL - Top-Tier Car Search
- * Expedia / Rentalcars quality
+ * Uses IATA codes for location handling
  */
 
 const carCategories = [
@@ -56,7 +57,12 @@ const carCategories = [
 ];
 
 const CarRentalBooking = () => {
-  const [pickupLocation, setPickupLocation] = useState("");
+  const navigate = useNavigate();
+  
+  // Location state with IATA code
+  const [selectedAirport, setSelectedAirport] = useState<Airport | null>(null);
+  const [pickupDisplayValue, setPickupDisplayValue] = useState("");
+  
   const [pickupDate, setPickupDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
   const [pickupTime, setPickupTime] = useState("10:00");
@@ -65,9 +71,29 @@ const CarRentalBooking = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  // Handle airport selection from autocomplete
+  const handleAirportChange = (airport: Airport | null, displayValue: string) => {
+    setSelectedAirport(airport);
+    setPickupDisplayValue(displayValue);
+  };
+
   const handleSearch = () => {
-    if (!pickupLocation.trim()) return;
-    setHasSearched(true);
+    // Get pickup code - either from selected airport or extract from display value
+    const pickupCode = selectedAirport?.code || pickupDisplayValue.match(/\(([A-Z]{3})\)/)?.[1];
+    
+    if (!pickupCode || !pickupDate || !returnDate) return;
+    
+    // Navigate to results page with proper URL params
+    const params = new URLSearchParams({
+      pickup: pickupCode,
+      pickup_date: format(pickupDate, 'yyyy-MM-dd'),
+      pickup_time: pickupTime,
+      dropoff_date: format(returnDate, 'yyyy-MM-dd'),
+      dropoff_time: returnTime,
+      age: driverAge,
+    });
+    
+    navigate(`/rent-car/results?${params.toString()}`);
   };
 
   const handleCategorySelect = (category: string) => {
@@ -78,7 +104,6 @@ const CarRentalBooking = () => {
   };
 
   const handleCategoryTileSelect = (category: CarCategory) => {
-    // Map category to match carCategories name format
     const categoryMap: Record<CarCategory, string> = {
       economy: "Economy",
       compact: "Compact",
@@ -96,8 +121,9 @@ const CarRentalBooking = () => {
     if (e) e.stopPropagation();
     
     const partner = carAffiliatePartners[0];
+    const pickupCode = selectedAirport?.code || pickupDisplayValue.match(/\(([A-Z]{3})\)/)?.[1] || '';
     const url = partner.urlTemplate({
-      pickupLocation: pickupLocation,
+      pickupLocation: pickupCode,
       pickupDate: pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined,
       returnDate: returnDate ? format(returnDate, "yyyy-MM-dd") : undefined,
       pickupTime,
@@ -108,7 +134,7 @@ const CarRentalBooking = () => {
   };
 
   const handleLocationSelect = (city: string) => {
-    setPickupLocation(city);
+    setPickupDisplayValue(city);
   };
 
   // Calculate days for pricing
@@ -131,19 +157,14 @@ const CarRentalBooking = () => {
           <BigSearchCard service="cars">
             {/* Main Search Fields */}
             <div className="space-y-4">
-              {/* Row 1: Location */}
+              {/* Row 1: Location - Airport Autocomplete */}
               <div>
                 <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500 pointer-events-none" />
-                  <Input
-                    value={pickupLocation}
-                    onChange={(e) => setPickupLocation(e.target.value)}
-                    placeholder="City, airport, or address"
-                    className="h-14 pl-11 text-base"
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  />
-                </div>
+                <AirportAutocomplete
+                  value={pickupDisplayValue}
+                  onChange={handleAirportChange}
+                  placeholder="Airport or city (e.g., LAX, Miami)"
+                />
               </div>
 
               {/* Row 2: Dates */}
@@ -254,7 +275,7 @@ const CarRentalBooking = () => {
             {/* Search Button - Big & Prominent */}
             <Button 
               onClick={handleSearch}
-              disabled={!pickupLocation.trim()}
+              disabled={!selectedAirport && !pickupDisplayValue.match(/\([A-Z]{3}\)/)}
               size="lg"
               className={cn(
                 "w-full h-14 font-bold text-lg mt-6",
@@ -274,7 +295,7 @@ const CarRentalBooking = () => {
           <section className="container mx-auto px-4 py-8">
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold">
-                Car Rentals in {pickupLocation}
+                Car Rentals in {selectedAirport?.city || pickupDisplayValue}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {carCategories.length} categories available • Compare prices across rental sites
@@ -282,7 +303,7 @@ const CarRentalBooking = () => {
             </div>
 
             <CarTopSearchCTA
-              pickupLocation={pickupLocation}
+              pickupLocation={selectedAirport?.code || pickupDisplayValue}
               pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
               returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
               pickupTime={pickupTime}
@@ -319,7 +340,7 @@ const CarRentalBooking = () => {
                   <div id="partner-selector">
                     <CarPartnerSelector
                       carName={selectedCategory}
-                      pickupLocation={pickupLocation}
+                      pickupLocation={selectedAirport?.code || pickupDisplayValue}
                       pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
                       returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
                       pickupTime={pickupTime}
@@ -362,7 +383,7 @@ const CarRentalBooking = () => {
             
             <TrustFeatureCards columns={4} />
             <TrustSection service="cars" />
-            <EnhanceYourTrip currentService="cars" destination={pickupLocation} />
+            <EnhanceYourTrip currentService="cars" destination={selectedAirport?.city || pickupDisplayValue} />
             
             {/* Internal Linking */}
             <InternalLinkGrid currentService="cars" />
@@ -374,7 +395,7 @@ const CarRentalBooking = () => {
         {/* Sticky CTA */}
         {hasSearched && (
           <CarStickyBookingCTA
-            pickupLocation={pickupLocation}
+            pickupLocation={selectedAirport?.code || pickupDisplayValue}
             pickupDate={pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined}
             returnDate={returnDate ? format(returnDate, "yyyy-MM-dd") : undefined}
             pickupTime={pickupTime}
