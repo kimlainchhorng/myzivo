@@ -4784,7 +4784,7 @@ export type Database = {
           logo_url: string | null
           name: string
           opening_hours: Json | null
-          owner_id: string
+          owner_id: string | null
           phone: string
           rating: number | null
           status: Database["public"]["Enums"]["partner_status"] | null
@@ -4807,7 +4807,7 @@ export type Database = {
           logo_url?: string | null
           name: string
           opening_hours?: Json | null
-          owner_id: string
+          owner_id?: string | null
           phone: string
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
@@ -4830,7 +4830,7 @@ export type Database = {
           logo_url?: string | null
           name?: string
           opening_hours?: Json | null
-          owner_id?: string
+          owner_id?: string | null
           phone?: string
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null

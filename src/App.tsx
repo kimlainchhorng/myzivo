@@ -16,7 +16,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
 // Lazy load all other pages for faster initial load
-const RidesComingSoon = lazy(() => import("./pages/RidesComingSoon"));
+const Rides = lazy(() => import("./pages/Rides"));
 const EatsComingSoon = lazy(() => import("./pages/EatsComingSoon"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
@@ -125,8 +125,9 @@ const App = () => (
                 
                 {/* Lazy loaded routes */}
                 <Route path="/food" element={<EatsComingSoon />} />
-                <Route path="/ride" element={<RidesComingSoon />} />
-                <Route path="/zivo-rides" element={<RidesComingSoon />} />
+                <Route path="/ride" element={<Rides />} />
+                <Route path="/rides" element={<Rides />} />
+                <Route path="/zivo-rides" element={<Rides />} />
                 <Route path="/zivo-eats" element={<EatsComingSoon />} />
                 <Route path="/book-flight" element={<FlightBooking />} />
                 
