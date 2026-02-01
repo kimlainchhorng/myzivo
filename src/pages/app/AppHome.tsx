@@ -1,11 +1,12 @@
 /**
  * App Home Screen - Mobile
- * Clean, premium mobile-first design
+ * Clean, app-like mobile home with quick actions and popular items
  */
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles,
-  ChevronRight, Shield, Star, Clock
+  ChevronRight, Shield, Star, Clock, MapPin, Bus, Smartphone, Ticket
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,20 +14,27 @@ import { cn } from "@/lib/utils";
 
 // Quick action cards (2 rows of 3)
 const quickActions = [
-  { id: "flights", label: "Flights", icon: Plane, href: "/travel?tab=flights", color: "bg-flights", textColor: "text-flights" },
-  { id: "hotels", label: "Hotels", icon: Hotel, href: "/travel?tab=hotels", color: "bg-hotels", textColor: "text-hotels" },
-  { id: "cars", label: "Car Rental", icon: CarFront, href: "/travel?tab=cars", color: "bg-cars", textColor: "text-cars" },
-  { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides", textColor: "text-rides" },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats", textColor: "text-eats" },
-  { id: "more", label: "More", icon: Sparkles, href: "/extras", color: "bg-more", textColor: "text-more" },
+  { id: "flights", label: "Flights", icon: Plane, href: "/travel?tab=flights", color: "bg-flights" },
+  { id: "hotels", label: "Hotels", icon: Hotel, href: "/travel?tab=hotels", color: "bg-hotels" },
+  { id: "cars", label: "Cars", icon: CarFront, href: "/travel?tab=cars", color: "bg-cars" },
+  { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides" },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats" },
+  { id: "more", label: "More", icon: Sparkles, href: "/more", color: "bg-more" },
 ];
 
 // Popular destinations
 const popularItems = [
   { id: 1, title: "New York", subtitle: "Flights from $99", emoji: "✈️", type: "flights" },
-  { id: 2, title: "Miami Beach", subtitle: "Hotels from $129", emoji: "🏨", type: "hotels" },
+  { id: 2, title: "Miami", subtitle: "Hotels from $129", emoji: "🏨", type: "hotels" },
   { id: 3, title: "Los Angeles", subtitle: "Cars from $35/day", emoji: "🚗", type: "cars" },
-  { id: 4, title: "Airport Transfer", subtitle: "From $25", emoji: "🚐", type: "extras" },
+  { id: 4, title: "Chicago", subtitle: "Flights from $79", emoji: "✈️", type: "flights" },
+];
+
+// Travel extras mini row
+const travelExtras = [
+  { id: "transfers", label: "Transfers", icon: Bus, href: "/extras?tab=transfers" },
+  { id: "activities", label: "Activities", icon: Ticket, href: "/extras?tab=activities" },
+  { id: "esim", label: "eSIM", icon: Smartphone, href: "/extras?tab=esim" },
 ];
 
 // Featured restaurants
@@ -39,6 +47,7 @@ const featuredRestaurants = [
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [city] = useState("Current Location");
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -48,18 +57,28 @@ const AppHome = () => {
   };
 
   return (
-    <AppLayout>
-      <div className="px-4 py-5 space-y-6 pb-24">
-        {/* Welcome Section */}
-        <div>
-          <p className="text-muted-foreground text-sm">
-            {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''} 👋
-          </p>
-          <h1 className="text-2xl font-bold">Where to today?</h1>
+    <AppLayout hideHeader>
+      <div className="space-y-6 pb-24">
+        {/* Header with Location */}
+        <div className="px-4 pt-4 safe-area-top">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-muted-foreground text-sm">
+                {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''} 👋
+              </p>
+              <h1 className="text-2xl font-bold">Where to today?</h1>
+            </div>
+            <button 
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted border border-border text-sm font-medium touch-manipulation active:scale-95"
+            >
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="max-w-[100px] truncate">{city}</span>
+            </button>
+          </div>
         </div>
 
         {/* Quick Actions Grid */}
-        <section>
+        <section className="px-4">
           <div className="grid grid-cols-3 gap-3">
             {quickActions.map((action) => (
               <button
@@ -80,15 +99,17 @@ const AppHome = () => {
         </section>
 
         {/* Trust Strip */}
-        <section className="py-3 px-4 rounded-2xl bg-muted border border-border">
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Shield className="w-4 h-4 text-primary" />
-            <span className="font-medium">Search & compare. Book on partner sites.</span>
+        <section className="px-4">
+          <div className="py-3 px-4 rounded-2xl bg-muted border border-border">
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Shield className="w-4 h-4 text-primary" />
+              <span className="font-medium">Compare & book with trusted partners</span>
+            </div>
           </div>
         </section>
 
         {/* Popular Destinations */}
-        <section>
+        <section className="px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg">Popular Now</h2>
             <button 
@@ -117,8 +138,25 @@ const AppHome = () => {
           </div>
         </section>
 
+        {/* Travel Extras Mini Row */}
+        <section className="px-4">
+          <h2 className="font-bold text-lg mb-3">Travel Extras</h2>
+          <div className="flex gap-2">
+            {travelExtras.map((extra) => (
+              <button
+                key={extra.id}
+                onClick={() => navigate(extra.href)}
+                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-muted border border-border text-sm font-medium touch-manipulation active:scale-[0.98]"
+              >
+                <extra.icon className="w-4 h-4 text-primary" />
+                {extra.label}
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Nearby Eats */}
-        <section>
+        <section className="px-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg flex items-center gap-2">
               <UtensilsCrossed className="w-4 h-4 text-eats" />
@@ -164,7 +202,7 @@ const AppHome = () => {
         </section>
 
         {/* Need a Ride CTA */}
-        <section>
+        <section className="px-4">
           <button
             onClick={() => navigate("/rides")}
             className="w-full p-4 rounded-2xl bg-rides-light border border-rides/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"

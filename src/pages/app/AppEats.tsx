@@ -287,7 +287,7 @@ const AppEats = () => {
             <div className="fixed bottom-20 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-border/50">
               <Button
                 onClick={() => setStep("cart")}
-                className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-eats to-orange-500"
+                className="w-full h-12 rounded-xl font-bold gap-2 bg-eats hover:bg-eats/90"
               >
                 <ShoppingBag className="w-5 h-5" />
                 View Cart ({cartCount}) • ${cartTotal.toFixed(2)}
@@ -357,7 +357,7 @@ const AppEats = () => {
 
               <Button
                 onClick={() => setStep("checkout")}
-                className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-eats to-orange-500"
+                className="w-full h-12 rounded-xl font-bold gap-2 bg-eats hover:bg-eats/90"
               >
                 Proceed to Checkout
                 <ChevronRight className="w-5 h-5" />
@@ -449,7 +449,7 @@ const AppEats = () => {
           <Button
             onClick={handleSubmit}
             disabled={!contactInfo.name || !contactInfo.phone || !address || isSubmitting}
-            className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-eats to-orange-500"
+            className="w-full h-12 rounded-xl font-bold gap-2 bg-eats hover:bg-eats/90"
           >
             {isSubmitting ? "Submitting..." : `Submit Order • $${cartTotal.toFixed(2)}`}
           </Button>
