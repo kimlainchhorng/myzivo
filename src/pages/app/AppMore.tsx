@@ -26,6 +26,8 @@ const supportItems = [
   { id: "help", name: "Help Center", icon: HelpCircle, href: "/help" },
   { id: "contact", name: "Contact Us", icon: Mail, href: "/contact" },
   { id: "how", name: "How It Works", icon: Award, href: "/how-it-works" },
+  { id: "partners", name: "Partners", icon: Users, href: "/partners" },
+  { id: "creators", name: "Creator Program", icon: Award, href: "/creators" },
 ];
 
 // Legal items
@@ -33,7 +35,6 @@ const legalItems = [
   { id: "privacy", name: "Privacy Policy", href: "/privacy" },
   { id: "terms", name: "Terms of Service", href: "/terms" },
   { id: "affiliate", name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
-  { id: "partners", name: "Our Partners", href: "/partners" },
 ];
 
 // Contact emails
@@ -48,8 +49,7 @@ const AppMore = () => {
   const { user, signOut } = useAuth();
 
   const handleExtraClick = (id: string) => {
-    // Navigate to extras page or specific extra
-    navigate(`/extras?tab=${id}`);
+    navigate('/extras');
   };
 
   return (
