@@ -11,17 +11,11 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import {
   Plane,
   Clock,
   TrendingDown,
   Star,
-  Sunrise,
-  Sunset,
-  Moon,
-  Sun,
   X,
   Zap,
   AlertCircle,
@@ -32,6 +26,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
 import { useAviasalesFlightSearch, buildWhitelabelUrl, type ApiFlightResult } from "@/hooks/useAviasalesFlightSearch";
+import { useFlightFilters, defaultFlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
 import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { trackAffiliateClick, trackPageView } from "@/lib/affiliateTracking";
@@ -61,7 +56,9 @@ import {
   ResultsBreadcrumbs,
   ResultsFAQ,
   FlightEditSearchForm,
-  useEditSearchModal,
+  DesktopFiltersSidebar,
+  FlightFiltersContent,
+  ActiveFiltersChips,
 } from "@/components/results";
 import { FlightSearchFormPro } from "@/components/search";
 
@@ -69,12 +66,19 @@ const FlightResults = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState<string>("price");
-  const [maxPrice, setMaxPrice] = useState(5000);
-  const [stopsFilter, setStopsFilter] = useState<number[]>([]);
-  const [timeFilter, setTimeFilter] = useState<string[]>([]);
-  const [airlineFilter, setAirlineFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [currency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
+
+  // Use unified filter hook with URL sync
+  const {
+    filters,
+    setFilters: updateFilters,
+    chips: filterChips,
+    activeCount: activeFilterCount,
+    hasActiveFilters,
+    removeFilter,
+    clearFilters,
+  } = useFlightFilters();
 
   // Parse and validate URL parameters using IATA codes
   const parsedParams = useMemo(() => parseFlightSearchParams(searchParams), [searchParams]);
@@ -190,25 +194,33 @@ const FlightResults = () => {
       combined.push(...uniqueGenerated.slice(0, 10 - convertedApiFlights.length));
     }
 
-    // Apply filters
-    let filtered = combined.filter(f => f.price <= maxPrice);
+    // Apply filters from unified hook
+    let filtered = combined.filter(f => f.price <= filters.maxPrice);
     
-    if (stopsFilter.length > 0) {
-      filtered = filtered.filter(f => stopsFilter.includes(f.stops));
+    if (filters.stops.length > 0) {
+      filtered = filtered.filter(f => filters.stops.includes(f.stops));
     }
 
-    if (airlineFilter.length > 0) {
-      filtered = filtered.filter(f => airlineFilter.includes(f.airlineCode));
+    if (filters.airlines.length > 0) {
+      filtered = filtered.filter(f => filters.airlines.includes(f.airlineCode));
     }
 
-    if (timeFilter.length > 0) {
+    if (filters.departureTime.length > 0) {
       filtered = filtered.filter(f => {
         const hour = parseInt(f.departure.time.split(":")[0]);
-        if (timeFilter.includes("morning") && hour >= 5 && hour < 12) return true;
-        if (timeFilter.includes("afternoon") && hour >= 12 && hour < 17) return true;
-        if (timeFilter.includes("evening") && hour >= 17 && hour < 21) return true;
-        if (timeFilter.includes("night") && (hour >= 21 || hour < 5)) return true;
+        if (filters.departureTime.includes("morning") && hour >= 5 && hour < 12) return true;
+        if (filters.departureTime.includes("afternoon") && hour >= 12 && hour < 17) return true;
+        if (filters.departureTime.includes("evening") && hour >= 17 && hour < 21) return true;
+        if (filters.departureTime.includes("night") && (hour >= 21 || hour < 5)) return true;
         return false;
+      });
+    }
+
+    // Filter by duration
+    if (filters.maxDuration < 24) {
+      filtered = filtered.filter(f => {
+        const hours = parseInt(f.duration.match(/(\d+)h/)?.[1] || "0");
+        return hours <= filters.maxDuration;
       });
     }
 
@@ -231,7 +243,7 @@ const FlightResults = () => {
           return 0;
       }
     });
-  }, [convertedApiFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, airlineFilter, isValid, isRealPrice]);
+  }, [convertedApiFlights, generatedFlights, sortBy, filters, isValid, isRealPrice]);
 
   // Get unique airlines from unfiltered flights for filter options
   const availableAirlines = useMemo(() => {
@@ -340,15 +352,6 @@ const FlightResults = () => {
     window.open(fallbackWhitelabelUrl, "_blank", "noopener,noreferrer");
   };
 
-  const handleClearFilters = () => {
-    setStopsFilter([]);
-    setTimeFilter([]);
-    setAirlineFilter([]);
-    setMaxPrice(5000);
-  };
-
-  const activeFilterCount = stopsFilter.length + timeFilter.length + airlineFilter.length + (maxPrice < 5000 ? 1 : 0);
-
   const formatDisplayDate = (dateStr: string) => {
     try {
       return format(parseISO(dateStr), "EEE, MMM d");
@@ -356,144 +359,6 @@ const FlightResults = () => {
       return dateStr;
     }
   };
-
-  // Filters content component for reuse in sidebar and sheet
-  const FiltersContent = () => (
-    <div className="space-y-6">
-      {/* Price Range */}
-      <div>
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <TrendingDown className="w-4 h-4 text-emerald-500" />
-          Max Price: {formatPrice(maxPrice)}
-        </h3>
-        <Slider
-          value={[maxPrice]}
-          onValueChange={(v) => setMaxPrice(v[0])}
-          min={100}
-          max={5000}
-          step={50}
-          className="py-2"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>{formatPrice(100)}</span>
-          <span>{formatPrice(5000)}</span>
-        </div>
-      </div>
-
-      {/* Stops */}
-      <div>
-        <h3 className="font-semibold mb-3">Stops</h3>
-        <div className="space-y-2">
-          {[
-            { value: 0, label: "Nonstop" },
-            { value: 1, label: "1 Stop" },
-            { value: 2, label: "2+ Stops" },
-          ].map(stop => (
-            <label key={stop.value} className="flex items-center gap-3 cursor-pointer group">
-              <Checkbox
-                checked={stopsFilter.includes(stop.value)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setStopsFilter(prev => [...prev, stop.value]);
-                  } else {
-                    setStopsFilter(prev => prev.filter(s => s !== stop.value));
-                  }
-                }}
-              />
-              <span className="flex-1 group-hover:text-foreground transition-colors text-sm">
-                {stop.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Airlines */}
-      {availableAirlines.length > 0 && (
-        <div>
-          <h3 className="font-semibold mb-3 flex items-center gap-2">
-            <Plane className="w-4 h-4 text-sky-500" />
-            Airlines
-          </h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {availableAirlines.map(airline => (
-              <label key={airline.code} className="flex items-center gap-3 cursor-pointer group">
-                <Checkbox
-                  checked={airlineFilter.includes(airline.code)}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setAirlineFilter(prev => [...prev, airline.code]);
-                    } else {
-                      setAirlineFilter(prev => prev.filter(a => a !== airline.code));
-                    }
-                  }}
-                />
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <img 
-                    src={getAirlineLogo(airline.code)}
-                    alt={airline.name}
-                    className="w-5 h-5 object-contain"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${airline.code}&background=0ea5e9&color=fff&size=24`;
-                    }}
-                  />
-                  <span className="group-hover:text-foreground transition-colors truncate text-sm">
-                    {airline.name}
-                  </span>
-                </div>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Departure Time */}
-      <div>
-        <h3 className="font-semibold mb-3">Departure Time</h3>
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { id: "morning", label: "Morning", icon: Sunrise, time: "5am-12pm" },
-            { id: "afternoon", label: "Afternoon", icon: Sun, time: "12pm-5pm" },
-            { id: "evening", label: "Evening", icon: Sunset, time: "5pm-9pm" },
-            { id: "night", label: "Night", icon: Moon, time: "9pm-5am" },
-          ].map(time => (
-            <button
-              key={time.id}
-              onClick={() => {
-                setTimeFilter(prev => 
-                  prev.includes(time.id) 
-                    ? prev.filter(t => t !== time.id)
-                    : [...prev, time.id]
-                );
-              }}
-              className={cn(
-                "p-3 rounded-xl border text-center transition-all",
-                timeFilter.includes(time.id)
-                  ? "bg-sky-500/20 border-sky-500/50 text-sky-500"
-                  : "bg-muted/50 border-border hover:border-sky-500/30"
-              )}
-            >
-              <time.icon className="w-5 h-5 mx-auto mb-1" />
-              <p className="text-xs font-medium">{time.label}</p>
-              <p className="text-[10px] text-muted-foreground">{time.time}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Clear Filters */}
-      {activeFilterCount > 0 && (
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={handleClearFilters}
-        >
-          <X className="w-4 h-4" />
-          Clear All Filters
-        </Button>
-      )}
-    </div>
-  );
 
   // Render validation error state
   if (!isValid && errors.length > 0) {
@@ -615,16 +480,18 @@ const FlightResults = () => {
           <div className="container mx-auto px-4">
             <ResultsContainer
               filters={
-                <div>
-                  <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
-                    <Star className="w-5 h-5 text-sky-500" />
-                    Filters
-                    {activeFilterCount > 0 && (
-                      <Badge className="bg-sky-500/20 text-sky-500 ml-2">{activeFilterCount}</Badge>
-                    )}
-                  </h2>
-                  <FiltersContent />
-                </div>
+                <DesktopFiltersSidebar
+                  activeCount={activeFilterCount}
+                  onClearAll={clearFilters}
+                  service="flights"
+                >
+                  <FlightFiltersContent
+                    filters={filters}
+                    onFilterChange={updateFilters}
+                    availableAirlines={availableAirlines}
+                    currency={currency}
+                  />
+                </DesktopFiltersSidebar>
               }
             >
               {/* Results Header */}
@@ -651,6 +518,15 @@ const FlightResults = () => {
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </div>
+                }
+                filterChips={
+                  <ActiveFiltersChips
+                    filters={filterChips}
+                    onRemove={removeFilter}
+                    onClearAll={clearFilters}
+                    service="flights"
+                    resultsCount={flightCards.length}
+                  />
                 }
               />
 
@@ -690,7 +566,8 @@ const FlightResults = () => {
               {!isLoading && flightCards.length === 0 && isValid && (
                 <EmptyResults
                   service="flights"
-                  onRetry={handleClearFilters}
+                  hasActiveFilters={hasActiveFilters}
+                  onClearFilters={clearFilters}
                   partnerCta={{
                     label: "Search All Partners",
                     onClick: handleViewAllOnPartner,
@@ -762,11 +639,17 @@ const FlightResults = () => {
         open={showFilters}
         onOpenChange={setShowFilters}
         onApply={() => {}}
-        onReset={handleClearFilters}
-        hasActiveFilters={activeFilterCount > 0}
+        onReset={clearFilters}
+        hasActiveFilters={hasActiveFilters}
         service="flights"
+        resultsCount={flightCards.length}
       >
-        <FiltersContent />
+        <FlightFiltersContent
+          filters={filters}
+          onFilterChange={updateFilters}
+          availableAirlines={availableAirlines}
+          currency={currency}
+        />
       </FiltersSheet>
 
       {/* Sticky Mobile CTA */}

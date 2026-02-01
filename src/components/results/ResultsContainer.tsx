@@ -31,7 +31,7 @@ export function ResultsContainer({ filters, children, className }: ResultsContai
   );
 }
 
-// Results header with count, sort, and filter trigger
+// Results header with count, sort, filter trigger, and chips slot
 interface ResultsHeaderProps {
   count: number;
   itemName: string;
@@ -39,6 +39,7 @@ interface ResultsHeaderProps {
   indicativePrice?: boolean;
   sortElement?: ReactNode;
   filterTrigger?: ReactNode;
+  filterChips?: ReactNode;
   className?: string;
 }
 
@@ -49,35 +50,41 @@ export function ResultsHeader({
   indicativePrice = false,
   sortElement,
   filterTrigger,
+  filterChips,
   className,
 }: ResultsHeaderProps) {
   return (
-    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5", className)}>
-      <div>
-        {isLoading ? (
-          <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-        ) : (
-          <>
-            <h2 className="text-lg font-semibold">
-              <span className="text-foreground">{count}</span>{" "}
-              <span className="text-muted-foreground">
-                {itemName}
-                {count !== 1 ? "s" : ""} found
-              </span>
-            </h2>
-            {indicativePrice && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                *Indicative prices – final price shown on partner site
-              </p>
-            )}
-          </>
-        )}
-      </div>
+    <div className={cn("mb-5", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          {isLoading ? (
+            <div className="h-6 w-32 bg-muted animate-pulse rounded" />
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold">
+                <span className="text-foreground">{count}</span>{" "}
+                <span className="text-muted-foreground">
+                  {itemName}
+                  {count !== 1 ? "s" : ""} found
+                </span>
+              </h2>
+              {indicativePrice && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  *Indicative prices – final price shown on partner site
+                </p>
+              )}
+            </>
+          )}
+        </div>
 
-      <div className="flex items-center gap-2">
-        {filterTrigger}
-        {sortElement}
+        <div className="flex items-center gap-2">
+          {filterTrigger}
+          {sortElement}
+        </div>
       </div>
+      
+      {/* Filter chips row */}
+      {filterChips}
     </div>
   );
 }
