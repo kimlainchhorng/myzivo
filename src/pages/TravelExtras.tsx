@@ -104,7 +104,12 @@ export default function TravelExtras() {
       serviceType: category,
     });
     
-    openPartnerLink(partner.trackingUrl);
+    openPartnerLink(partner.trackingUrl, {
+      partnerId: partner.id,
+      partnerName: partner.name,
+      product: category === 'car_rental' ? 'cars' : category,
+      pageSource: 'travel-extras',
+    });
   };
 
   return (

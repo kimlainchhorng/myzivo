@@ -32,7 +32,12 @@ export default function ActivitiesSection({ className = '', destination }: Activ
       serviceType: 'activities',
     });
     
-    openPartnerLink(partner.trackingUrl);
+    openPartnerLink(partner.trackingUrl, {
+      partnerId: partner.id,
+      partnerName: partner.name,
+      product: 'activities',
+      pageSource: 'activities-section',
+    });
   };
 
   const activityCards = [

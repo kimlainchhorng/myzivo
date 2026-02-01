@@ -623,7 +623,38 @@ export function getAffiliateLinkHealth(): Record<string, boolean> {
   return health;
 }
 
-// Helper to open any partner URL directly
-export function openPartnerLink(url: string): void {
+/**
+ * Open a partner link through the /out tracking route
+ * This ensures all clicks are logged with SubID tracking
+ */
+export function openPartnerLink(
+  url: string, 
+  options?: { 
+    partnerId?: string; 
+    partnerName?: string; 
+    product?: string; 
+    pageSource?: string;
+  }
+): void {
+  const { partnerId = 'partner', partnerName = 'Partner', product = 'general', pageSource = 'unknown' } = options || {};
+  
+  // Build the /out redirect URL
+  const params = new URLSearchParams({
+    partner: partnerId,
+    name: partnerName,
+    product,
+    page: pageSource,
+    url: url,
+  });
+  
+  const outboundUrl = `/out?${params.toString()}`;
+  window.open(outboundUrl, "_blank", "noopener,noreferrer");
+}
+
+/**
+ * Legacy function for direct partner link opening (bypasses tracking)
+ * Use openPartnerLink for tracked links
+ */
+export function openPartnerLinkDirect(url: string): void {
   window.open(url, "_blank", "noopener,noreferrer");
 }
