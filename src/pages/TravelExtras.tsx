@@ -39,6 +39,17 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import heroExtras from "@/assets/hero-extras.jpg";
 
+// Import partner thumbnail images
+import extrasActivities from "@/assets/extras-activities.jpg";
+import extrasMuseums from "@/assets/extras-museums.jpg";
+import extrasTransfers from "@/assets/extras-transfers.jpg";
+import extrasEsim from "@/assets/extras-esim.jpg";
+import extrasLuggage from "@/assets/extras-luggage.jpg";
+import extrasAudiotours from "@/assets/extras-audiotours.jpg";
+import extrasCompensation from "@/assets/extras-compensation.jpg";
+import extrasRadar from "@/assets/extras-radar.jpg";
+import extrasTickets from "@/assets/extras-tickets.jpg";
+
 // ============================================
 // EXTRAS PARTNERS REGISTRY - ALL 13 PARTNERS
 // ============================================
@@ -50,6 +61,7 @@ const EXTRAS_PARTNERS = [
     description: 'Book tours and attractions worldwide',
     icon: Ticket,
     logo: '🎟️',
+    thumbnail: extrasActivities,
     trackingUrl: 'https://klook.tpo.li/ToVcOax7',
     gradient: 'from-emerald-500/10 to-teal-500/10',
     borderHover: 'hover:border-emerald-500/50',
@@ -61,6 +73,7 @@ const EXTRAS_PARTNERS = [
     description: 'Skip-the-line museum tickets',
     icon: Ticket,
     logo: '🎫',
+    thumbnail: extrasMuseums,
     trackingUrl: 'https://tiqets.tpo.li/5fqrcQWZ',
     gradient: 'from-violet-500/10 to-purple-500/10',
     borderHover: 'hover:border-violet-500/50',
@@ -72,6 +85,7 @@ const EXTRAS_PARTNERS = [
     description: 'Fixed-price airport pickups',
     icon: Car,
     logo: '🚕',
+    thumbnail: extrasTransfers,
     trackingUrl: 'https://kiwitaxi.tpo.li/Bj6zghJH',
     gradient: 'from-amber-500/10 to-orange-500/10',
     borderHover: 'hover:border-amber-500/50',
@@ -83,6 +97,7 @@ const EXTRAS_PARTNERS = [
     description: 'Compare local transfer drivers',
     icon: Car,
     logo: '🚙',
+    thumbnail: extrasTransfers,
     trackingUrl: 'https://gettransfer.tpo.li/FbrIguyh',
     gradient: 'from-amber-500/10 to-orange-500/10',
     borderHover: 'hover:border-amber-500/50',
@@ -94,6 +109,7 @@ const EXTRAS_PARTNERS = [
     description: 'Instant eSIM for 190+ countries',
     icon: Wifi,
     logo: '📱',
+    thumbnail: extrasEsim,
     trackingUrl: 'https://airalo.tpo.li/zVRtp8Zt',
     gradient: 'from-cyan-500/10 to-blue-500/10',
     borderHover: 'hover:border-cyan-500/50',
@@ -105,6 +121,7 @@ const EXTRAS_PARTNERS = [
     description: 'Budget-friendly travel eSIM',
     icon: Wifi,
     logo: '📶',
+    thumbnail: extrasEsim,
     trackingUrl: 'https://yesim.tpo.li/OpjeHJgH',
     gradient: 'from-cyan-500/10 to-blue-500/10',
     borderHover: 'hover:border-cyan-500/50',
@@ -116,6 +133,7 @@ const EXTRAS_PARTNERS = [
     description: 'Global SIM card with data',
     icon: Globe,
     logo: '🌐',
+    thumbnail: extrasEsim,
     trackingUrl: 'https://drimsim.tpo.li/A9yKO5oA',
     gradient: 'from-sky-500/10 to-indigo-500/10',
     borderHover: 'hover:border-sky-500/50',
@@ -127,6 +145,7 @@ const EXTRAS_PARTNERS = [
     description: 'Store bags from $5.90/day',
     icon: Luggage,
     logo: '🧳',
+    thumbnail: extrasLuggage,
     trackingUrl: 'https://radicalstorage.tpo.li/4W0KR99h',
     gradient: 'from-purple-500/10 to-pink-500/10',
     borderHover: 'hover:border-purple-500/50',
@@ -138,6 +157,7 @@ const EXTRAS_PARTNERS = [
     description: 'Self-guided audio experiences',
     icon: Headphones,
     logo: '🎧',
+    thumbnail: extrasAudiotours,
     trackingUrl: 'https://wegotrip.tpo.li/QSrOpIdV',
     gradient: 'from-rose-500/10 to-pink-500/10',
     borderHover: 'hover:border-rose-500/50',
@@ -149,6 +169,7 @@ const EXTRAS_PARTNERS = [
     description: 'Claim up to €600 for delays',
     icon: Scale,
     logo: '⚖️',
+    thumbnail: extrasCompensation,
     trackingUrl: 'https://airhelp.tpo.li/7Z5saPi2',
     gradient: 'from-red-500/10 to-rose-500/10',
     borderHover: 'hover:border-red-500/50',
@@ -160,6 +181,7 @@ const EXTRAS_PARTNERS = [
     description: 'Free flight compensation check',
     icon: Plane,
     logo: '✈️',
+    thumbnail: extrasCompensation,
     trackingUrl: 'https://compensair.tpo.li/npsp8pm0',
     gradient: 'from-red-500/10 to-rose-500/10',
     borderHover: 'hover:border-red-500/50',
@@ -171,6 +193,7 @@ const EXTRAS_PARTNERS = [
     description: 'Compare all travel options',
     icon: Search,
     logo: '🔍',
+    thumbnail: extrasRadar,
     trackingUrl: 'https://searadar.tpo.li/iAbLlX9i',
     gradient: 'from-indigo-500/10 to-violet-500/10',
     borderHover: 'hover:border-indigo-500/50',
@@ -182,6 +205,7 @@ const EXTRAS_PARTNERS = [
     description: 'Concerts, sports, live events',
     icon: Ticket,
     logo: '🎭',
+    thumbnail: extrasTickets,
     trackingUrl: 'https://ticketnetwork.tpo.li/utk3u8Vr',
     gradient: 'from-fuchsia-500/10 to-pink-500/10',
     borderHover: 'hover:border-fuchsia-500/50',
@@ -224,14 +248,6 @@ export default function TravelExtras() {
       source: 'extras_page',
       ctaType: 'cross_sell',
       serviceType: serviceType,
-    });
-    
-    // Open through /out for tracking
-    openPartnerLink(partner.trackingUrl, {
-      partnerId: partner.id,
-      partnerName: partner.name,
-      product: 'extras',
-      pageSource: 'extras',
     });
     
     // Open through /out for tracking
@@ -314,37 +330,41 @@ export default function TravelExtras() {
                         style={{ animationDelay: `${index * 50}ms` }}
                         onClick={() => handlePartnerClick(partner)}
                       >
-                        <CardContent className="p-5">
-                          <div className="flex items-start gap-4">
-                            {/* Icon */}
-                            <div className={cn(
-                              "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 group-hover:scale-110 transition-transform",
-                              `bg-gradient-to-br ${partner.gradient}`
-                            )}>
+                        <CardContent className="p-0 overflow-hidden">
+                          {/* Thumbnail Image */}
+                          <div className="relative h-28 overflow-hidden">
+                            <img
+                              src={partner.thumbnail}
+                              alt={partner.category}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
+                            {/* Emoji Badge */}
+                            <div className="absolute bottom-2 left-3 w-10 h-10 rounded-lg bg-card/90 backdrop-blur-sm flex items-center justify-center text-xl shadow-lg border border-border/50">
                               {partner.logo}
                             </div>
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="p-4">
+                            <p className="text-[10px] text-muted-foreground mb-0.5 uppercase tracking-wide">
+                              {partner.category}
+                            </p>
+                            <h3 className="font-bold text-sm mb-1 group-hover:text-primary transition-colors">
+                              {partner.name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                              {partner.description}
+                            </p>
                             
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-muted-foreground mb-0.5">
-                                {partner.category}
-                              </p>
-                              <h3 className="font-bold text-sm mb-1 group-hover:text-primary transition-colors">
-                                {partner.name}
-                              </h3>
-                              <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                                {partner.description}
-                              </p>
-                              
-                              <Button 
-                                size="sm" 
-                                variant="outline"
-                                className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors touch-manipulation"
-                              >
-                                Explore
-                                <ExternalLink className="w-3 h-3" />
-                              </Button>
-                            </div>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="w-full gap-2 text-xs group-hover:bg-primary group-hover:text-primary-foreground transition-colors touch-manipulation"
+                            >
+                              Explore
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
