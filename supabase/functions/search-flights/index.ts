@@ -692,6 +692,65 @@ async function getSearchResults(
   return allData;
 }
 
+/**
+ * Get booking link via clicks endpoint
+ * This generates a tracked booking URL for a specific flight/proposal
+ */
+async function getBookingLink(
+  searchId: string,
+  resultsUrl: string,
+  proposalId: string,
+  token: string
+): Promise<Response> {
+  const marker = Deno.env.get('TRAVELPAYOUTS_MARKER') || AFFILIATE_MARKER;
+  
+  // Ensure URL has protocol
+  const baseUrl = resultsUrl.startsWith('http') ? resultsUrl : `https://${resultsUrl}`;
+  const clicksUrl = `${baseUrl}/searches/${searchId}/clicks/${proposalId}`;
+  
+  console.log(`[Clicks] Generating booking link: ${clicksUrl}`);
+  
+  try {
+    const response = await fetch(clicksUrl, {
+      method: 'GET',
+      headers: {
+        'x-affiliate-user-id': token,
+        'marker': marker,
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Clicks] Failed: ${response.status} - ${errorText}`);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate booking link' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const data = await response.json();
+    
+    console.log(`[Clicks] Success: agent=${data.agent_id}, clickId=${data.str_click_id}`);
+    
+    return new Response(
+      JSON.stringify({
+        url: data.url,
+        agentId: data.agent_id,
+        clickId: data.str_click_id,
+        expireAt: data.expire_at_unix_sec
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('[Clicks] Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to generate booking link' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -699,8 +758,32 @@ serve(async (req) => {
   }
   
   try {
-    const { searchParams: params } = await req.json() as { searchParams: FlightSearchParams };
+    const body = await req.json();
+    const { searchParams: params, action, searchId, resultsUrl, proposalId } = body;
     
+    // Get API token
+    const token = Deno.env.get('TRAVELPAYOUTS_API_TOKEN');
+    
+    // Handle getBookingLink action - for reprice on click
+    if (action === 'getBookingLink') {
+      if (!token) {
+        return new Response(
+          JSON.stringify({ error: 'API not configured' }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (!searchId || !resultsUrl || !proposalId) {
+        return new Response(
+          JSON.stringify({ error: 'Missing required parameters: searchId, resultsUrl, proposalId' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return await getBookingLink(searchId, resultsUrl, proposalId, token);
+    }
+    
+    // Default action: search
     // Get user IP from header or fallback
     const userIp = req.headers.get('x-user-ip') || 
                    req.headers.get('x-forwarded-for')?.split(',')[0] || 
@@ -746,9 +829,7 @@ serve(async (req) => {
       );
     }
     
-    // Get API token
-    const token = Deno.env.get('TRAVELPAYOUTS_API_TOKEN');
-    
+    // Check API token for search
     if (!token) {
       console.log('[Search] API token not configured, returning fallback');
       return new Response(

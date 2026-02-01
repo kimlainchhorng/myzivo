@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getAirlineByCode, getAirlineLogo } from "@/data/airlines";
@@ -292,4 +293,49 @@ export function useBookingDeepLink() {
   };
   
   return { generateLink };
+}
+
+/**
+ * Hook to get fresh booking link via clicks endpoint (reprice on click)
+ * Returns partner booking URL with live pricing
+ */
+export function useBookingLink() {
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const getBookingLink = async (
+    searchId: string,
+    resultsUrl: string,
+    proposalId: string
+  ): Promise<{ url: string | null; error?: string }> => {
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('search-flights', {
+        body: {
+          action: 'getBookingLink',
+          searchId,
+          resultsUrl,
+          proposalId
+        }
+      });
+      
+      if (error) {
+        console.error('[BookingLink] Error:', error);
+        return { url: null, error: 'Failed to get booking link' };
+      }
+      
+      if (data?.url) {
+        return { url: data.url };
+      }
+      
+      return { url: null, error: 'No booking URL returned' };
+    } catch (err) {
+      console.error('[BookingLink] Error:', err);
+      return { url: null, error: 'Network error' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return { getBookingLink, isLoading };
 }
