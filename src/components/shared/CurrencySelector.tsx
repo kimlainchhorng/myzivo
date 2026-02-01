@@ -1,97 +1,184 @@
-import { useState } from "react";
-import { DollarSign, ChevronDown, Check, Globe } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+/**
+ * ZIVO Currency Selector
+ * Global currency picker that syncs with CurrencyContext
+ */
 
-const currencies = [
-  { code: "USD", symbol: "$", name: "US Dollar", flag: "🇺🇸" },
-  { code: "EUR", symbol: "€", name: "Euro", flag: "🇪🇺" },
-  { code: "GBP", symbol: "£", name: "British Pound", flag: "🇬🇧" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen", flag: "🇯🇵" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar", flag: "🇦🇺" },
-  { code: "CAD", symbol: "C$", name: "Canadian Dollar", flag: "🇨🇦" },
-  { code: "CHF", symbol: "Fr", name: "Swiss Franc", flag: "🇨🇭" },
-  { code: "CNY", symbol: "¥", name: "Chinese Yuan", flag: "🇨🇳" },
-];
+import { useState } from "react";
+import { Check, ChevronDown, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface CurrencySelectorProps {
-  variant?: "dropdown" | "inline";
+  variant?: "dropdown" | "inline" | "compact";
+  className?: string;
 }
 
-const CurrencySelector = ({ variant = "dropdown" }: CurrencySelectorProps) => {
-  const [selected, setSelected] = useState(currencies[0]);
+const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorProps) => {
+  const { currency, currencyConfig, setCurrency, currencies } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Inline variant: horizontal button group
   if (variant === "inline") {
     return (
-      <div className="flex items-center gap-2 flex-wrap">
-        {currencies.slice(0, 6).map((currency) => (
+      <div className={cn("flex items-center gap-2 flex-wrap", className)}>
+        {currencies.slice(0, 6).map((curr) => (
           <button
-            key={currency.code}
-            onClick={() => setSelected(currency)}
-            className={`px-3 py-1.5 rounded-full text-sm transition-all ${
-              selected.code === currency.code
-                ? "bg-primary text-primary-foreground"
+            key={curr.code}
+            onClick={() => setCurrency(curr.code)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150",
+              currency === curr.code
+                ? "bg-primary text-primary-foreground shadow-md"
                 : "bg-muted hover:bg-muted/80"
-            }`}
+            )}
           >
-            {currency.flag} {currency.code}
+            {curr.flag} {curr.code}
           </button>
         ))}
       </div>
     );
   }
 
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-      >
-        <span className="text-lg">{selected.flag}</span>
-        <span className="font-medium">{selected.code}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute top-full right-0 mt-2 w-56 bg-card/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-xl z-50 overflow-hidden">
-            <div className="p-2 border-b border-border/50">
-              <p className="text-xs text-muted-foreground px-2">Select Currency</p>
-            </div>
-            <div className="max-h-64 overflow-y-auto p-1">
-              {currencies.map((currency) => (
+  // Compact variant: just flag + code, smaller touch target
+  if (variant === "compact") {
+    return (
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              "gap-1.5 px-2 h-8 text-muted-foreground hover:text-foreground",
+              className
+            )}
+          >
+            <span className="text-base">{currencyConfig.flag}</span>
+            <span className="text-xs font-medium">{currency}</span>
+            <ChevronDown className={cn(
+              "w-3 h-3 transition-transform duration-200",
+              isOpen && "rotate-180"
+            )} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-56 p-1 bg-card/95 backdrop-blur-xl border-border/50 shadow-xl" 
+          align="end"
+          sideOffset={8}
+        >
+          <ScrollArea className="max-h-72">
+            <div className="p-1">
+              {currencies.map((curr) => (
                 <button
-                  key={currency.code}
+                  key={curr.code}
                   onClick={() => {
-                    setSelected(currency);
+                    setCurrency(curr.code);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    selected.code === currency.code
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                    currency === curr.code
                       ? "bg-primary/10 text-primary"
                       : "hover:bg-muted"
-                  }`}
+                  )}
                 >
-                  <span className="text-lg">{currency.flag}</span>
+                  <span className="text-lg">{curr.flag}</span>
                   <div className="flex-1 text-left">
-                    <p className="font-medium">{currency.code}</p>
-                    <p className="text-xs text-muted-foreground">{currency.name}</p>
+                    <p className="font-medium text-sm">{curr.code}</p>
+                    <p className="text-xs text-muted-foreground">{curr.name}</p>
                   </div>
-                  {selected.code === currency.code && (
+                  {currency === curr.code && (
                     <Check className="w-4 h-4 text-primary" />
                   )}
                 </button>
               ))}
             </div>
+          </ScrollArea>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
+  // Default dropdown variant
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "gap-2 px-3 rounded-xl hover:bg-muted/50 transition-all duration-150",
+            className
+          )}
+        >
+          <span className="text-lg">{currencyConfig.flag}</span>
+          <span className="font-medium">{currency}</span>
+          <ChevronDown className={cn(
+            "w-4 h-4 text-muted-foreground transition-transform duration-200",
+            isOpen && "rotate-180"
+          )} />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-64 p-0 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl overflow-hidden" 
+        align="end"
+        sideOffset={8}
+      >
+        {/* Header */}
+        <div className="p-3 border-b border-border/50 bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Globe className="w-4 h-4 text-muted-foreground" />
+            <p className="text-sm font-medium">Select Currency</p>
           </div>
-        </>
-      )}
-    </div>
+        </div>
+        
+        {/* Currency list */}
+        <ScrollArea className="max-h-80">
+          <div className="p-2">
+            {currencies.map((curr) => (
+              <button
+                key={curr.code}
+                onClick={() => {
+                  setCurrency(curr.code);
+                  setIsOpen(false);
+                }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150",
+                  currency === curr.code
+                    ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                    : "hover:bg-muted"
+                )}
+              >
+                <span className="text-xl">{curr.flag}</span>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{curr.code}</p>
+                    <span className="text-xs text-muted-foreground">{curr.symbol}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{curr.name}</p>
+                </div>
+                {currency === curr.code && (
+                  <Check className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>
+        </ScrollArea>
+        
+        {/* Footer note */}
+        <div className="p-2 border-t border-border/50 bg-muted/20">
+          <p className="text-[10px] text-muted-foreground text-center">
+            Prices converted for display only
+          </p>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

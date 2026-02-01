@@ -16,6 +16,7 @@ import { megaMenuData, moreServicesData } from "./navigation/megaMenuData";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
+import CurrencySelector from "./shared/CurrencySelector";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -46,6 +47,9 @@ const Header = () => {
 
             {/* Desktop Actions - Enhanced */}
             <div className="hidden md:flex items-center gap-1.5">
+              {/* Currency Selector */}
+              <CurrencySelector variant="compact" />
+              
               {/* Search Button */}
               <Button 
                 variant="ghost" 

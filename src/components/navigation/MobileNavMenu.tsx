@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ArrowRight, X, Car } from "lucide-react";
+import { ChevronDown, ArrowRight, X, Car, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { megaMenuData, moreServicesData, MegaMenuData } from "./megaMenuData";
 import ZivoLogo from "@/components/ZivoLogo";
+import CurrencySelector from "@/components/shared/CurrencySelector";
 
 interface MobileNavMenuProps {
   isOpen: boolean;
@@ -200,6 +201,17 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
                 </div>
                 <ArrowRight className="w-5 h-5 text-rides" />
               </a>
+            </div>
+
+            {/* Currency Selector */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Currency</span>
+                </div>
+                <CurrencySelector variant="compact" />
+              </div>
             </div>
           </div>
         </ScrollArea>

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface FlightCardData {
   id: string;
@@ -40,7 +41,9 @@ interface FlightResultCardProps {
 }
 
 export function FlightResultCard({ flight, onViewDeal, className }: FlightResultCardProps) {
-  const currencySymbol = flight.currency === "EUR" ? "€" : flight.currency === "GBP" ? "£" : "$";
+  const { format, getDisplay } = useCurrency();
+  const baseCurrency = flight.currency || "USD";
+  const { formatted: formattedPrice, wasConverted } = getDisplay(flight.price, baseCurrency);
   
   const getAmenityIcon = (amenity: string) => {
     const lower = amenity.toLowerCase();
@@ -181,9 +184,14 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
             <div className="text-left lg:text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-500">
-                {currencySymbol}{flight.price.toLocaleString()}
+                {formattedPrice}
               </p>
               <p className="text-[10px] text-muted-foreground">per person*</p>
+              {wasConverted && (
+                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                  Converted from {baseCurrency}
+                </p>
+              )}
             </div>
 
             <Button

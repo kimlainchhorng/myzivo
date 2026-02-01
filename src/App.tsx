@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
@@ -141,6 +142,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <CurrencyProvider>
           <UTMProvider>
           <RealtimeSyncProvider>
             <Suspense fallback={<PageLoader />}>
@@ -290,6 +292,7 @@ const App = () => (
             </Suspense>
           </RealtimeSyncProvider>
           </UTMProvider>
+          </CurrencyProvider>
           <CookieConsent />
         </AuthProvider>
       </BrowserRouter>

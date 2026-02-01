@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface HotelCardData {
   id: string;
@@ -41,9 +42,13 @@ const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCardProps) {
+  const { format, getDisplay } = useCurrency();
   const ratingLabel = hotel.guestRating >= 9 ? "Exceptional" : 
                       hotel.guestRating >= 8 ? "Excellent" : 
                       hotel.guestRating >= 7 ? "Very Good" : "Good";
+
+  const { formatted: nightlyPrice, wasConverted } = getDisplay(hotel.pricePerNight, "USD");
+  const totalFormatted = hotel.totalPrice ? format(hotel.totalPrice, "USD") : null;
 
   return (
     <Card
@@ -147,13 +152,18 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
           <div className="sm:w-44 p-4 bg-gradient-to-br from-muted/30 to-muted/10 flex flex-col justify-center items-center sm:items-end border-t sm:border-t-0 sm:border-l border-border/50">
             <div className="text-center sm:text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
-              <p className="text-2xl font-bold text-amber-500">${hotel.pricePerNight}</p>
+              <p className="text-2xl font-bold text-amber-500">{nightlyPrice}</p>
               <p className="text-xs text-muted-foreground">
                 per night*
               </p>
-              {hotel.totalPrice && hotel.nights && (
+              {totalFormatted && hotel.nights && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  ${hotel.totalPrice} total ({hotel.nights} night{hotel.nights !== 1 ? "s" : ""})
+                  {totalFormatted} total ({hotel.nights} night{hotel.nights !== 1 ? "s" : ""})
+                </p>
+              )}
+              {wasConverted && (
+                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                  Converted from USD
                 </p>
               )}
             </div>
