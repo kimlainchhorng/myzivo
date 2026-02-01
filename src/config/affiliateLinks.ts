@@ -83,6 +83,12 @@ export const TRAVELPAYOUTS_DIRECT_LINKS = {
     subId: 'zivo_flights',
   },
   
+  // HOTELS (Hotellook)
+  hotels: {
+    primary: 'https://hotellook.tpo.li',
+    subId: 'zivo_hotels',
+  },
+  
   // CAR RENTAL
   cars: {
     economybookings: 'https://economybookings.tpo.li/J668L2lY',
@@ -418,7 +424,7 @@ export const AFFILIATE_LINKS: Record<string, AffiliateLink> = {
     fallbackUrl: TRAVELPAYOUTS_DIRECT_LINKS.flights.backup,
   },
   hotels: {
-    url: 'https://hotellook.tpo.li',
+    url: TRAVELPAYOUTS_DIRECT_LINKS.hotels.primary,
     name: "Hotellook",
     description: "Compare hotel prices across booking sites",
     subId: 'zivo_hotels',
