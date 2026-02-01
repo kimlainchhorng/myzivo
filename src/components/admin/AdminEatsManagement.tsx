@@ -8,13 +8,15 @@ import {
   Utensils, Store, ChefHat, Bike, Clock, DollarSign, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
   Search, Filter, RefreshCw, Eye, Star, Package,
-  Loader2, Phone, Mail
+  Loader2, Phone, Mail, CreditCard, RefreshCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFoodOrders, useUpdateFoodOrder } from "@/hooks/useEatsOrders";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import type { Database } from "@/integrations/supabase/types";
+import { RefundDialog } from "./RefundDialog";
+import { getPaymentStatusBadge, getRefundStatusBadge } from "@/hooks/usePaymentAdmin";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -22,6 +24,11 @@ export default function AdminEatsManagement() {
   const [activeTab, setActiveTab] = useState("orders");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [refundOrder, setRefundOrder] = useState<{
+    id: string;
+    amount: number;
+    customerName: string;
+  } | null>(null);
 
   const { data: foodOrders, isLoading, refetch } = useFoodOrders(statusFilter);
   const updateOrder = useUpdateFoodOrder();
@@ -270,8 +277,28 @@ export default function AdminEatsManagement() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="text-right">
+                        <div className="text-right min-w-[90px]">
                           <p className="font-bold text-lg">${(order.total_amount ?? 0).toFixed(2)}</p>
+                          {/* Payment status badges */}
+                          <div className="flex items-center gap-1 justify-end mt-1">
+                            {(() => {
+                              const paymentBadge = getPaymentStatusBadge((order as { payment_status?: string }).payment_status || null);
+                              const refundBadge = getRefundStatusBadge((order as { refund_status?: string }).refund_status || null);
+                              return (
+                                <>
+                                  <Badge variant="outline" className={cn("text-[10px]", paymentBadge.className)}>
+                                    <CreditCard className="h-3 w-3 mr-1" />
+                                    {paymentBadge.label}
+                                  </Badge>
+                                  {refundBadge && (
+                                    <Badge variant="outline" className={cn("text-[10px]", refundBadge.className)}>
+                                      {refundBadge.label}
+                                    </Badge>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </div>
                         </div>
                         <Select 
                           value={order.status || "pending"} 
@@ -302,6 +329,23 @@ export default function AdminEatsManagement() {
                               <a href={`mailto:${customer.email}`}>
                                 <Mail className="h-4 w-4" />
                               </a>
+                            </Button>
+                          )}
+                          {/* Refund Button - only show if paid and not refunded */}
+                          {(order as { payment_status?: string }).payment_status === "paid" && 
+                           (order as { refund_status?: string }).refund_status !== "refunded" && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-8 w-8 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                              onClick={() => setRefundOrder({
+                                id: order.id,
+                                amount: order.total_amount || 0,
+                                customerName: customer.name
+                              })}
+                              title="Process Refund"
+                            >
+                              <RefreshCcw className="h-4 w-4" />
                             </Button>
                           )}
                           <Button size="sm" variant="outline" className="gap-2">
@@ -356,6 +400,18 @@ export default function AdminEatsManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Refund Dialog */}
+      {refundOrder && (
+        <RefundDialog
+          open={!!refundOrder}
+          onOpenChange={(open) => !open && setRefundOrder(null)}
+          type="eats"
+          id={refundOrder.id}
+          amount={refundOrder.amount}
+          customerName={refundOrder.customerName}
+        />
+      )}
     </div>
   );
 }

@@ -24,6 +24,14 @@ export interface RideRequest {
   admin_notes: string | null;
   created_at: string;
   updated_at: string;
+  // Payment fields
+  quoted_total: number | null;
+  quoted_distance_miles: number | null;
+  quoted_duration_minutes: number | null;
+  stripe_payment_intent_id: string | null;
+  payment_status: "pending" | "paid" | "failed" | null;
+  refund_status: "requested" | "refunded" | null;
+  refunded_at: string | null;
 }
 
 export interface CreateRideRequestInput {
