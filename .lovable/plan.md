@@ -1,172 +1,165 @@
 
-# Plan: Consolidate Travel Extras Hub (/extras)
+
+# SEO-Friendly UI Elements for Travel Results Pages
 
 ## Overview
-Rebuild `/extras` as the exclusive, centralized hub for all travel add-on partner links. Remove scattered partner links from Flights, Hotels, and Cars pages while maintaining cross-sell navigation to the hub.
+
+This plan adds SEO-optimized **Breadcrumbs** and **FAQ sections** to all three travel results pages (`/flights/results`, `/hotels/results`, `/rent-car/results`) to improve Google indexing, reduce bounce rates, and provide clear navigation hierarchy.
 
 ---
 
-## Phase 1: Rebuild /extras Page (TravelExtras.tsx)
+## What Will Be Added
 
-### New Page Structure
+### 1. Clickable Breadcrumbs (Top of Results)
+A visual navigation trail that appears below the sticky search summary:
+- **Flights**: Home > Flights > Results
+- **Hotels**: Home > Hotels > Results  
+- **Cars**: Home > Car Rental > Results
 
-**A) Premium Hero Section**
-- Title: "ZIVO Extras"
-- Subtitle: "Tours, transfers, eSIM, luggage storage, and travel services — book on trusted partner sites."
-- Use existing `hero-extras.jpg` with gradient overlay
+Each breadcrumb is clickable and includes schema.org BreadcrumbList structured data for rich search results.
 
-**B) Optional City Input**
-- Add destination input field: "Traveling to (city)"
-- Store city for analytics tracking (pass as `utm_content` parameter)
+### 2. Collapsible FAQ Sections (Bottom of Results)
+Service-specific FAQ accordions with 5-6 questions each, designed to:
+- Answer common user questions about the search process
+- Include natural internal links to `/extras`, `/contact`, and related services
+- Inject JSON-LD FAQPage schema for Google rich snippets
 
-**C) Flat Partner Grid - All 13 Partners**
-
-| Partner | Icon | Description |
-|---------|------|-------------|
-| Activities & Tours (Klook) | Ticket | Book tours and attractions worldwide |
-| Museums & Attractions (Tiqets) | Ticket | Skip-the-line museum tickets |
-| Airport Transfers (KiwiTaxi) | Car | Fixed-price airport pickups |
-| Transfers Marketplace (GetTransfer) | Car | Compare local transfer drivers |
-| eSIM (Airalo) | Wifi | Instant eSIM for 190+ countries |
-| eSIM (Yesim) | Wifi | Budget-friendly travel eSIM |
-| SIM (Drimsim) | Globe | Global SIM card with data |
-| Luggage Storage (Radical Storage) | Luggage | Store bags from $5.90/day |
-| Audio Tours (WeGoTrip) | Headphones | Self-guided audio experiences |
-| Flight Compensation (AirHelp) | Scale | Claim up to €600 for delays |
-| Flight Compensation (Compensair) | Plane | Free flight compensation check |
-| Travel Radar (Searadar) | Search | Compare all travel options |
-| Tickets Marketplace (TicketNetwork) | Ticket | Concerts, sports, live events |
-
-Each card will include:
-- Clean icon and partner name
-- 1-line description
-- "Explore →" CTA button
-- Opens in NEW TAB via `/out` redirect
-- Hover tooltip: "You will be redirected to a partner site."
+### 3. Internal Cross-Linking
+FAQ answers will naturally reference:
+- `/extras` for transfers, tours, eSIM
+- `/contact` for support questions
+- Related travel services (Flights mentions Hotels, Hotels mentions Cars, etc.)
 
 ---
 
-## Phase 2: Add Partner Links Configuration
+## Implementation Steps
 
-### Partner URLs to Add to affiliateLinks.ts
+### Step 1: Create Shared Breadcrumb Navigation Component
+Create `src/components/results/ResultsBreadcrumbs.tsx`:
+- Combines visual breadcrumb UI with JSON-LD schema injection
+- Accepts service type and dynamically builds items
+- Uses existing `BreadcrumbSchema` for structured data
+- Uses existing shadcn/ui `Breadcrumb` components for consistent styling
 
-These new partners need to be added to support the full list:
+### Step 2: Create Results-Specific FAQ Component  
+Create `src/components/results/ResultsFAQ.tsx`:
+- Enhanced version of `TravelFAQ` optimized for results pages
+- Includes internal links in answers (using react-router `Link`)
+- Collapsed by default with smooth expand animation
+- Service-specific styling matching existing accent colors
 
+FAQ Content:
+
+**Flights FAQ:**
+- How does ZIVO find flight prices?
+- Are prices final?
+- Can I change my dates?
+- Do I book on ZIVO or another site?
+- Is my payment secure?
+- Need help with your trip? (links to /extras, /contact)
+
+**Hotels FAQ:**
+- How are hotel prices calculated?
+- Can I cancel my booking?
+- Are taxes included?
+- When do I pay?
+- Who provides customer support? (links to /contact)
+- Looking for more travel services? (links to /flights, /rent-car)
+
+**Cars FAQ:**
+- What is included in the rental price?
+- Do I need a credit card?
+- Can I pick up at the airport?
+- Is insurance included?
+- Who handles the rental?
+- Need extras for your trip? (links to /extras)
+
+### Step 3: Export New Components
+Update `src/components/results/index.ts` to export:
+- `ResultsBreadcrumbs`
+- `ResultsFAQ`
+
+### Step 4: Integrate into Flight Results Page
+Edit `src/pages/FlightResults.tsx`:
+- Add `ResultsBreadcrumbs` after the sticky summary section
+- Add `ResultsFAQ` at the bottom, before the footer
+- Ensure page remains indexable (no noindex tags)
+
+### Step 5: Integrate into Hotel Results Page
+Edit `src/pages/HotelResultsPage.tsx`:
+- Add `ResultsBreadcrumbs` after `StickySearchSummary`
+- Add `ResultsFAQ` before footer
+
+### Step 6: Integrate into Car Results Page
+Edit `src/pages/CarResultsPage.tsx`:
+- Add `ResultsBreadcrumbs` after `StickySearchSummary`
+- Add `ResultsFAQ` before footer
+
+---
+
+## Visual Design
+
+### Breadcrumbs
 ```text
-klook: https://klook.tpo.li/ToVcOax7
-yesim: (already exists) https://yesim.tpo.li/OpjeHJgH
-searadar: (already exists) https://searadar.tpo.li/iAbLlX9i
-ticketnetwork: (already exists) https://ticketnetwork.tpo.li/utk3u8Vr
-compensair: (already exists) https://compensair.tpo.li/npsp8pm0
++----------------------------------------------------------+
+|  Home  >  Flights  >  Results                            |
++----------------------------------------------------------+
 ```
+- Small, subtle text (text-sm, muted-foreground)
+- Located in a slim container below the sticky summary
+- Links use hover underline effect
 
-### Create EXTRAS_PARTNERS Registry
-
-A new flat array specifically for the /extras page with all 13 partners:
-
-```typescript
-const EXTRAS_PARTNERS = [
-  { id: 'klook', name: 'Klook', category: 'Activities & Tours', url: '...', icon: 'Ticket' },
-  { id: 'tiqets', name: 'Tiqets', category: 'Museums & Attractions', url: '...', icon: 'Ticket' },
-  // ... all 13 partners
-];
-```
-
----
-
-## Phase 3: Tracking Implementation
-
-All CTAs will use the existing `openPartnerLink()` function which:
-1. Opens `/out?partner=X&name=X&product=extras&page=extras&url=X`
-2. The `/out` page logs to `affiliate_click_logs` table
-3. Opens partner in new tab with proper rel attributes
-
-### Click Logging Format
-- `product`: "extras"
-- `page_source`: "extras"
-- `partner_id`: e.g., "klook", "tiqets"
-- SubID format: `extras.extras.klook.{utm_source}.{utm_campaign}.{creator}.{date}`
-
----
-
-## Phase 4: Replace Scattered Links on Travel Pages
-
-### Modify EnhanceYourTrip.tsx
-
-**Current behavior:**
-- Shows partner cards with direct "Book Transfer", "Rent a Car" CTAs
-- Each card opens `/out` to the partner site
-
-**New behavior:**
-- Show category preview cards (Transfers, Activities, eSIM, etc.)
-- All cards navigate internally to `/extras` page
-- Remove direct partner links from component
-- Add prominent "View All Extras →" CTA
-
-### Files to Update
-
-| File | Change |
-|------|--------|
-| `EnhanceYourTrip.tsx` | Convert to internal navigation only - link to `/extras` |
-| `AirportTransfersSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
-| `LuggageStorageSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
-| `TravelEsimSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
-| `FlightCompensationSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
-| `ActivitiesSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
-| `CrossSellBanner.tsx` (seo) | Update "Things To Do" to link to `/extras` |
-
----
-
-## Phase 5: Affiliate Disclosure
-
-### Footer Disclosure (Exact Text)
-```
-"ZIVO may earn a commission when users book through partner links.
-Bookings are completed on partner websites."
-```
-
-### Per-Card Hover Notice
-Tooltip on each card: "You will be redirected to a partner site."
-
----
-
-## Technical Summary
-
-### Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| `src/pages/TravelExtras.tsx` | **Major rewrite** - new hero, city input, flat 13-partner grid |
-| `src/config/affiliateLinks.ts` | Add Klook to registry; create EXTRAS_PARTNERS array |
-| `src/components/travel-extras/EnhanceYourTrip.tsx` | Replace partner links with internal `/extras` navigation |
-| `src/components/seo/CrossSellBanner.tsx` | Update "Things To Do" href to `/extras` |
-
-### Partner URL Registry (Final - 13 Partners)
-
+### FAQ Section
 ```text
-1. klook: https://klook.tpo.li/ToVcOax7
-2. tiqets: https://tiqets.tpo.li/5fqrcQWZ
-3. kiwitaxi: https://kiwitaxi.tpo.li/Bj6zghJH
-4. gettransfer: https://gettransfer.tpo.li/FbrIguyh
-5. airalo: https://airalo.tpo.li/zVRtp8Zt
-6. yesim: https://yesim.tpo.li/OpjeHJgH
-7. drimsim: https://drimsim.tpo.li/A9yKO5oA
-8. radicalstorage: https://radicalstorage.tpo.li/4W0KR99h
-9. wegotrip: https://wegotrip.tpo.li/QSrOpIdV
-10. airhelp: https://airhelp.tpo.li/7Z5saPi2
-11. compensair: https://compensair.tpo.li/npsp8pm0
-12. searadar: https://searadar.tpo.li/iAbLlX9i
-13. ticketnetwork: https://ticketnetwork.tpo.li/utk3u8Vr
++----------------------------------------------------------+
+|  [?] Frequently Asked Questions                          |
+|  -------------------------------------------------------- |
+|  > How does ZIVO find flight prices?                     |
+|    (collapsed by default)                                |
+|  > Are prices final?                                     |
+|  > Do I book on ZIVO or another site?                    |
+|  > Need help with your trip?                             |
+|    Answer includes: "Check out our travel extras..."     |
++----------------------------------------------------------+
 ```
+- Accordion style, collapsed by default
+- Service-specific accent colors (sky/amber/violet)
+- Smooth expand animation using existing Accordion component
 
 ---
 
-## Verification Checklist
+## Technical Details
 
-After implementation, we should verify:
-- [ ] Navigate to `/extras` - all 13 partner cards visible
-- [ ] Click each partner CTA - verify opens `/out?...` in new tab
-- [ ] Check `/admin/clicks` - verify clicks logged with product=extras, proper subid
-- [ ] Navigate to `/flights` results - verify no direct partner links (only "View Extras" link)
-- [ ] Test UTM flow: `/lp/flights?utm_source=google` → `/flights` → `/extras` → partner - verify tracking persists
-- [ ] City input stores value for analytics when partner clicked
+### Files Created
+| File | Purpose |
+|------|---------|
+| `src/components/results/ResultsBreadcrumbs.tsx` | Breadcrumb navigation + schema |
+| `src/components/results/ResultsFAQ.tsx` | FAQ accordion + schema + internal links |
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `src/components/results/index.ts` | Add exports for new components |
+| `src/pages/FlightResults.tsx` | Import and render breadcrumbs + FAQ |
+| `src/pages/HotelResultsPage.tsx` | Import and render breadcrumbs + FAQ |
+| `src/pages/CarResultsPage.tsx` | Import and render breadcrumbs + FAQ |
+
+### Dependencies Used
+- Existing: `BreadcrumbSchema`, `FAQSchema`, shadcn Accordion, Breadcrumb components
+- No new packages required
+
+### Indexing Compliance
+- All results pages remain indexable
+- No `noindex` meta tags added
+- Canonical URLs point to clean URLs (tracking params excluded)
+
+---
+
+## SEO Benefits
+
+1. **BreadcrumbList Schema**: Enables breadcrumb rich snippets in Google search results
+2. **FAQPage Schema**: Enables FAQ rich snippets showing questions directly in search results
+3. **Internal Links**: Improves crawlability and distributes page authority
+4. **Clear Hierarchy**: Helps search engines understand site structure
+5. **User Experience**: Reduces bounce rate with clear navigation and helpful content
+
