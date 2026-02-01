@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, ArrowRight } from "lucide-react";
+import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const services = [
@@ -41,6 +41,42 @@ const services = [
     iconColor: "text-violet-400",
     image: "🚗",
   },
+  {
+    id: "rides",
+    title: "Rides",
+    description: "Request a ride in your local area",
+    icon: Car,
+    href: "/rides",
+    gradient: "from-primary to-teal-500",
+    bgGradient: "from-primary/15 to-teal-500/10",
+    borderColor: "border-primary/30 hover:border-primary/60",
+    iconColor: "text-primary",
+    image: "🚖",
+  },
+  {
+    id: "eats",
+    title: "Eats",
+    description: "Order food from local restaurants",
+    icon: UtensilsCrossed,
+    href: "/eats",
+    gradient: "from-orange-500 to-red-500",
+    bgGradient: "from-orange-500/15 to-red-500/10",
+    borderColor: "border-orange-500/30 hover:border-orange-500/60",
+    iconColor: "text-orange-400",
+    image: "🍔",
+  },
+  {
+    id: "extras",
+    title: "Extras",
+    description: "Airport transfers, insurance & more",
+    icon: Sparkles,
+    href: "/extras",
+    gradient: "from-pink-500 to-rose-500",
+    bgGradient: "from-pink-500/15 to-rose-500/10",
+    borderColor: "border-pink-500/30 hover:border-pink-500/60",
+    iconColor: "text-pink-400",
+    image: "✨",
+  },
 ];
 
 export default function ServiceCards() {
@@ -61,7 +97,7 @@ export default function ServiceCards() {
         </div>
 
         {/* Service Cards Grid */}
-        <div className="grid sm:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {services.map((service, index) => (
             <Link
               key={service.id}

@@ -8,34 +8,52 @@ import {
   MapPin, Navigation, Clock, DollarSign, Users, Car, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
   Search, Filter, RefreshCw, Eye, Phone, MessageSquare,
-  Loader2
+  Loader2, Mail, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTrips, useTripStats, type Trip } from "@/hooks/useTrips";
+import { useRideRequests, useUpdateRideRequest, type RideRequest, type RideRequestStatus } from "@/hooks/useRideRequests";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
 
 export default function AdminRidesManagement() {
-  const [activeTab, setActiveTab] = useState("live");
+  const [activeTab, setActiveTab] = useState("requests");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<RideRequestStatus | "all">("all");
 
   const { data: trips, isLoading: tripsLoading, refetch: refetchTrips } = useTrips();
   const { data: tripStats, isLoading: statsLoading, refetch: refetchStats } = useTripStats();
+  const { data: rideRequests, isLoading: requestsLoading, refetch: refetchRequests } = useRideRequests(statusFilter);
+  const updateRideRequest = useUpdateRideRequest();
 
-  const isLoading = tripsLoading || statsLoading;
+  const isLoading = tripsLoading || statsLoading || requestsLoading;
 
   const handleRefresh = () => {
     refetchTrips();
     refetchStats();
+    refetchRequests();
   };
 
-  // Filter active rides (not completed or cancelled)
   const activeRides = trips?.filter(t => 
     ["requested", "accepted", "en_route", "arrived", "in_progress"].includes(t.status || "")
   ) || [];
 
-  // Filter pending requests
   const pendingRequests = trips?.filter(t => t.status === "requested") || [];
 
-  // Filter by search query
+  // Filter ride requests by search
+  const filteredRideRequests = rideRequests?.filter(request => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      request.id.toLowerCase().includes(query) ||
+      request.customer_name.toLowerCase().includes(query) ||
+      request.customer_phone.includes(query) ||
+      request.pickup_address.toLowerCase().includes(query) ||
+      request.dropoff_address.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  // Filter active rides by search
   const filteredActiveRides = activeRides.filter(ride => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
@@ -50,6 +68,9 @@ export default function AdminRidesManagement() {
 
   const getStatusBadge = (status: string | null) => {
     const styles = {
+      new: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+      contacted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      assigned: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
       requested: "bg-amber-500/10 text-amber-500 border-amber-500/20",
       accepted: "bg-blue-500/10 text-blue-500 border-blue-500/20",
       en_route: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
@@ -58,7 +79,11 @@ export default function AdminRidesManagement() {
       completed: "bg-green-500/10 text-green-500 border-green-500/20",
       cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
     };
-    return styles[status as keyof typeof styles] || styles.requested;
+    return styles[status as keyof typeof styles] || styles.new;
+  };
+
+  const handleStatusUpdate = (id: string, newStatus: RideRequestStatus) => {
+    updateRideRequest.mutate({ id, updates: { status: newStatus } });
   };
 
   const formatAddress = (address: string) => {
@@ -159,13 +184,22 @@ export default function AdminRidesManagement() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="bg-card/50 p-1 h-auto flex-wrap gap-1">
-          <TabsTrigger value="live" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+          <TabsTrigger value="requests" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <FileText className="h-4 w-4" />
+            Ride Requests
+            {(rideRequests?.length ?? 0) > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
+                {rideRequests?.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="live" className="gap-2">
             <Navigation className="h-4 w-4" />
             Live Rides
           </TabsTrigger>
-          <TabsTrigger value="requests" className="gap-2">
+          <TabsTrigger value="pending" className="gap-2">
             <Clock className="h-4 w-4" />
-            Pending Requests
+            Pending
             {pendingRequests.length > 0 && (
               <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
                 {pendingRequests.length}
@@ -181,6 +215,73 @@ export default function AdminRidesManagement() {
             Issues
           </TabsTrigger>
         </TabsList>
+
+        {/* Ride Requests Tab (MVP) */}
+        <TabsContent value="requests" className="mt-6">
+          {/* Search & Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search by name, phone, address..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as RideRequestStatus | "all")}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="assigned">Assigned</SelectItem>
+                <SelectItem value="en_route">En Route</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Ride Requests List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Ride Requests (MVP)
+                <Badge variant="outline" className="ml-2 text-primary border-primary/30">
+                  {filteredRideRequests.length} Requests
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {requestsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredRideRequests.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No ride requests found</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredRideRequests.map((request, i) => (
+                    <RideRequestCard 
+                      key={request.id} 
+                      request={request} 
+                      index={i} 
+                      getStatusBadge={getStatusBadge}
+                      onStatusUpdate={handleStatusUpdate}
+                    />
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="live" className="mt-6">
           {/* Search & Filters */}
@@ -238,12 +339,12 @@ export default function AdminRidesManagement() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="requests" className="mt-6">
+        <TabsContent value="pending" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5 text-amber-500" />
-                Pending Requests
+                Pending Requests (Legacy Trips)
                 <Badge variant="outline" className="ml-2 text-amber-500 border-amber-500/30">
                   {pendingRequests.length} Pending
                 </Badge>
@@ -298,7 +399,97 @@ export default function AdminRidesManagement() {
   );
 }
 
-// Separate component for ride cards
+// Ride Request Card for MVP
+function RideRequestCard({ 
+  request, 
+  index, 
+  getStatusBadge,
+  onStatusUpdate
+}: { 
+  request: RideRequest; 
+  index: number; 
+  getStatusBadge: (status: string | null) => string;
+  onStatusUpdate: (id: string, status: RideRequestStatus) => void;
+}) {
+  const formatAddress = (address: string) => address.length > 30 ? address.substring(0, 27) + "..." : address;
+
+  return (
+    <div 
+      className="p-4 rounded-xl border bg-card/50 hover:bg-muted/30 transition-all animate-in fade-in slide-in-from-bottom-2"
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-start lg:items-center gap-4 flex-wrap">
+          <div className="text-center min-w-[90px]">
+            <p className="font-mono text-xs font-bold text-muted-foreground">{request.id.slice(0, 8)}</p>
+            <Badge variant="outline" className={cn("text-[10px] mt-1", getStatusBadge(request.status))}>
+              {request.status}
+            </Badge>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {format(new Date(request.created_at), "MMM d, h:mm a")}
+            </p>
+          </div>
+          <div className="h-12 w-px bg-border hidden sm:block" />
+          <div className="min-w-[120px]">
+            <p className="font-medium">{request.customer_name}</p>
+            <p className="text-xs text-muted-foreground">{request.customer_phone}</p>
+            <p className="text-xs text-muted-foreground truncate max-w-[150px]">{request.customer_email}</p>
+          </div>
+          <div className="h-12 w-px bg-border hidden lg:block" />
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+              <span className="text-sm" title={request.pickup_address}>{formatAddress(request.pickup_address)}</span>
+            </div>
+            <span className="text-muted-foreground">→</span>
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4 text-red-500 shrink-0" />
+              <span className="text-sm" title={request.dropoff_address}>{formatAddress(request.dropoff_address)}</span>
+            </div>
+          </div>
+          <Badge variant="outline" className="capitalize">{request.ride_type}</Badge>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select 
+            value={request.status} 
+            onValueChange={(v) => onStatusUpdate(request.id, v as RideRequestStatus)}
+          >
+            <SelectTrigger className="w-32 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="contacted">Contacted</SelectItem>
+              <SelectItem value="assigned">Assigned</SelectItem>
+              <SelectItem value="en_route">En Route</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-1">
+            <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+              <a href={`tel:${request.customer_phone}`}>
+                <Phone className="h-4 w-4" />
+              </a>
+            </Button>
+            <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+              <a href={`mailto:${request.customer_email}`}>
+                <Mail className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+      {request.notes && (
+        <div className="mt-3 pt-3 border-t text-sm text-muted-foreground">
+          <strong>Notes:</strong> {request.notes}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Separate component for ride cards (legacy trips)
 function RideCard({ 
   ride, 
   index, 

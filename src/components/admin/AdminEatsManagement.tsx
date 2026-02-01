@@ -7,40 +7,80 @@ import { Input } from "@/components/ui/input";
 import { 
   Utensils, Store, ChefHat, Bike, Clock, DollarSign, 
   TrendingUp, AlertTriangle, CheckCircle, XCircle, 
-  Search, Filter, RefreshCw, Eye, Star, Package
+  Search, Filter, RefreshCw, Eye, Star, Package,
+  Loader2, Phone, Mail
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFoodOrders, useUpdateFoodOrder } from "@/hooks/useEatsOrders";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import type { Database } from "@/integrations/supabase/types";
 
-const mockOrders = [
-  { id: "FO001", customer: "Alice W.", restaurant: "Pizza Palace", status: "preparing", items: 3, total: 32.50, driver: "Tom K.", eta: "15 min" },
-  { id: "FO002", customer: "Bob R.", restaurant: "Sushi Garden", status: "out_for_delivery", items: 5, total: 67.00, driver: "Lisa M.", eta: "8 min" },
-  { id: "FO003", customer: "Carol S.", restaurant: "Burger Barn", status: "pending", items: 2, total: 18.99, driver: null, eta: "Pending" },
-];
-
-const mockEatsStats = {
-  activeOrders: 234,
-  completedToday: 1456,
-  avgPrepTime: "18 min",
-  avgDeliveryTime: "25 min",
-  topRestaurant: "Pizza Palace",
-  revenue: 45670,
-};
+type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
 export default function AdminEatsManagement() {
   const [activeTab, setActiveTab] = useState("orders");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const getStatusBadge = (status: string) => {
+  const { data: foodOrders, isLoading, refetch } = useFoodOrders(statusFilter);
+  const updateOrder = useUpdateFoodOrder();
+
+  // Calculate stats from real data
+  const stats = {
+    activeOrders: foodOrders?.filter(o => !["completed", "cancelled"].includes(o.status || "")).length ?? 0,
+    completedToday: foodOrders?.filter(o => {
+      const today = new Date().toDateString();
+      return o.status === "completed" && new Date(o.created_at).toDateString() === today;
+    }).length ?? 0,
+    revenue: foodOrders?.filter(o => o.status === "completed").reduce((sum, o) => sum + (o.total_amount || 0), 0) ?? 0,
+  };
+
+  const getStatusBadge = (status: string | null) => {
     const styles = {
       pending: "bg-amber-500/10 text-amber-500 border-amber-500/20",
       confirmed: "bg-blue-500/10 text-blue-500 border-blue-500/20",
       preparing: "bg-violet-500/10 text-violet-500 border-violet-500/20",
       ready: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+      driver_assigned: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
       out_for_delivery: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-      delivered: "bg-green-500/10 text-green-500 border-green-500/20",
+      completed: "bg-green-500/10 text-green-500 border-green-500/20",
       cancelled: "bg-red-500/10 text-red-500 border-red-500/20",
     };
     return styles[status as keyof typeof styles] || styles.pending;
+  };
+
+  const handleStatusUpdate = (id: string, newStatus: BookingStatus) => {
+    updateOrder.mutate({ id, updates: { status: newStatus } });
+  };
+
+  // Filter orders by search
+  const filteredOrders = foodOrders?.filter(order => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    const customerInfo = order.special_instructions || "";
+    return (
+      order.id.toLowerCase().includes(query) ||
+      customerInfo.toLowerCase().includes(query) ||
+      (order.restaurants as { name?: string })?.name?.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  // Parse customer info from special_instructions
+  const parseCustomerInfo = (specialInstructions: string | null) => {
+    if (!specialInstructions) return { name: "Unknown", phone: "", email: "" };
+    try {
+      const match = specialInstructions.match(/Customer Info: ({.*})/);
+      if (match) {
+        const info = JSON.parse(match[1]);
+        return {
+          name: info.customer_name || "Unknown",
+          phone: info.customer_phone || "",
+          email: info.customer_email || "",
+        };
+      }
+    } catch {}
+    return { name: "Unknown", phone: "", email: "" };
   };
 
   return (
@@ -53,24 +93,52 @@ export default function AdminEatsManagement() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">ZIVO Eats Management</h1>
-            <p className="text-muted-foreground">Manage food orders, restaurants & delivery</p>
+            <p className="text-muted-foreground">Manage food orders & restaurants</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <RefreshCw className="h-4 w-4" />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-2"
+          onClick={() => refetch()}
+          disabled={isLoading}
+        >
+          <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           Refresh
         </Button>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: "Active Orders", value: mockEatsStats.activeOrders, icon: Package, color: "text-eats", bg: "bg-eats/10" },
-          { label: "Completed Today", value: mockEatsStats.completedToday, icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
-          { label: "Avg Prep Time", value: mockEatsStats.avgPrepTime, icon: ChefHat, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { label: "Avg Delivery", value: mockEatsStats.avgDeliveryTime, icon: Bike, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { label: "Top Restaurant", value: mockEatsStats.topRestaurant, icon: Star, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-          { label: "Revenue Today", value: `$${(mockEatsStats.revenue / 1000).toFixed(1)}k`, icon: DollarSign, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+          { 
+            label: "Active Orders", 
+            value: isLoading ? "..." : stats.activeOrders, 
+            icon: Package, 
+            color: "text-eats", 
+            bg: "bg-eats/10" 
+          },
+          { 
+            label: "Completed Today", 
+            value: isLoading ? "..." : stats.completedToday, 
+            icon: CheckCircle, 
+            color: "text-green-500", 
+            bg: "bg-green-500/10" 
+          },
+          { 
+            label: "Total Orders", 
+            value: isLoading ? "..." : (foodOrders?.length ?? 0), 
+            icon: Utensils, 
+            color: "text-amber-500", 
+            bg: "bg-amber-500/10" 
+          },
+          { 
+            label: "Total Revenue", 
+            value: isLoading ? "..." : `$${stats.revenue.toLocaleString()}`, 
+            icon: DollarSign, 
+            color: "text-emerald-500", 
+            bg: "bg-emerald-500/10" 
+          },
         ].map((stat, i) => (
           <Card key={i} className="animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${i * 50}ms` }}>
             <CardContent className="p-4">
@@ -114,8 +182,8 @@ export default function AdminEatsManagement() {
         </TabsList>
 
         <TabsContent value="orders" className="mt-6">
-          {/* Search */}
-          <div className="flex items-center gap-4 mb-6">
+          {/* Search & Filters */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -125,10 +193,20 @@ export default function AdminEatsManagement() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filters
-            </Button>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="confirmed">Confirmed</SelectItem>
+                <SelectItem value="preparing">Preparing</SelectItem>
+                <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Orders List */}
@@ -136,57 +214,108 @@ export default function AdminEatsManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-eats" />
-                Live Orders
+                Food Orders
                 <Badge variant="outline" className="ml-2 text-eats border-eats/30">
-                  {mockOrders.length} Active
+                  {filteredOrders.length} Orders
                 </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredOrders.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No food orders found</p>
+                </div>
+              ) : (
               <div className="space-y-3">
-                {mockOrders.map((order, i) => (
+                {filteredOrders.map((order, i) => {
+                  const customer = parseCustomerInfo(order.special_instructions);
+                  const items = (order.items as { name: string; quantity: number }[]) || [];
+                  const itemCount = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+                  
+                  return (
                   <div 
                     key={order.id}
                     className="p-4 rounded-xl border bg-card/50 hover:bg-muted/30 transition-all animate-in fade-in slide-in-from-bottom-2"
-                    style={{ animationDelay: `${i * 80}ms` }}
+                    style={{ animationDelay: `${i * 60}ms` }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-center">
-                          <p className="font-mono text-sm font-bold">{order.id}</p>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex items-start lg:items-center gap-4 flex-wrap">
+                        <div className="text-center min-w-[90px]">
+                          <p className="font-mono text-xs font-bold">{order.id.slice(0, 8)}</p>
                           <Badge variant="outline" className={cn("text-[10px] mt-1", getStatusBadge(order.status))}>
-                            {order.status.replace("_", " ")}
+                            {(order.status || "pending").replace("_", " ")}
                           </Badge>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            {format(new Date(order.created_at), "MMM d, h:mm a")}
+                          </p>
                         </div>
-                        <div className="h-12 w-px bg-border" />
-                        <div>
-                          <p className="font-medium">{order.customer}</p>
-                          <p className="text-xs text-muted-foreground">Customer</p>
+                        <div className="h-12 w-px bg-border hidden sm:block" />
+                        <div className="min-w-[100px]">
+                          <p className="font-medium">{customer.name}</p>
+                          <p className="text-xs text-muted-foreground">{customer.phone}</p>
                         </div>
-                        <div>
-                          <p className="font-medium">{order.restaurant}</p>
-                          <p className="text-xs text-muted-foreground">{order.items} items</p>
+                        <div className="min-w-[120px]">
+                          <p className="font-medium">{(order.restaurants as { name?: string })?.name || "Unknown"}</p>
+                          <p className="text-xs text-muted-foreground">{itemCount} item{itemCount !== 1 ? 's' : ''}</p>
                         </div>
-                        <div className="h-12 w-px bg-border" />
-                        <div>
-                          <p className="font-medium">{order.driver || "Unassigned"}</p>
+                        <div className="h-12 w-px bg-border hidden lg:block" />
+                        <div className="min-w-[80px]">
+                          <p className="font-medium">{(order.drivers as { full_name?: string })?.full_name || "Unassigned"}</p>
                           <p className="text-xs text-muted-foreground">Driver</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="font-bold text-lg">${order.total.toFixed(2)}</p>
-                          <p className="text-xs text-muted-foreground">ETA: {order.eta}</p>
+                          <p className="font-bold text-lg">${(order.total_amount ?? 0).toFixed(2)}</p>
                         </div>
-                        <Button size="sm" variant="outline" className="gap-2">
-                          <Eye className="h-4 w-4" />
-                          View
-                        </Button>
+                        <Select 
+                          value={order.status || "pending"} 
+                          onValueChange={(v) => handleStatusUpdate(order.id, v as BookingStatus)}
+                        >
+                          <SelectTrigger className="w-32 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="confirmed">Confirmed</SelectItem>
+                            <SelectItem value="preparing">Preparing</SelectItem>
+                            <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="cancelled">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="flex items-center gap-1">
+                          {customer.phone && (
+                            <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+                              <a href={`tel:${customer.phone}`}>
+                                <Phone className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          {customer.email && (
+                            <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+                              <a href={`mailto:${customer.email}`}>
+                                <Mail className="h-4 w-4" />
+                              </a>
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline" className="gap-2">
+                            <Eye className="h-4 w-4" />
+                            View
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

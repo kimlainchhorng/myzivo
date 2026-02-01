@@ -321,10 +321,10 @@ export const moreServicesData: MegaMenuData = {
   },
   sections: [
     {
-      title: "Future Services",
+      title: "ZIVO Services",
       items: [
-        { icon: Car, label: "ZIVO Rides", description: "Transportation platform — Coming Soon", href: "/zivo-rides", color: "text-muted-foreground", badge: "Soon" },
-        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Food discovery — Coming Soon", href: "/zivo-eats", color: "text-muted-foreground", badge: "Soon" },
+        { icon: Car, label: "ZIVO Rides", description: "Request a ride in your area", href: "/rides", color: "text-primary" },
+        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "/eats", color: "text-eats" },
       ],
     },
     {
