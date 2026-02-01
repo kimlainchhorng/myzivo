@@ -119,7 +119,7 @@ const AppRides = () => {
             <Button
               onClick={handleFindRides}
               disabled={!pickup || !dropoff}
-              className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-primary to-teal-500"
+              className="w-full h-12 rounded-xl font-bold gap-2 bg-rides hover:bg-rides/90"
             >
               Find Rides
               <ArrowRight className="w-5 h-5" />
@@ -267,7 +267,7 @@ const AppRides = () => {
             <Button
               onClick={handleSubmit}
               disabled={!contactInfo.name || !contactInfo.phone || isSubmitting}
-              className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-primary to-teal-500"
+              className="w-full h-12 rounded-xl font-bold gap-2 bg-rides hover:bg-rides/90"
             >
               {isSubmitting ? "Submitting..." : "Request Ride"}
             </Button>

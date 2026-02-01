@@ -163,7 +163,12 @@ const AppTravel = () => {
 
           <Button
             onClick={handleSearch}
-            className="w-full h-12 rounded-xl font-bold gap-2 bg-gradient-to-r from-primary to-teal-500"
+            className={cn(
+              "w-full h-12 rounded-xl font-bold gap-2",
+              activeTab === "flights" && "bg-flights hover:bg-flights/90",
+              activeTab === "hotels" && "bg-hotels hover:bg-hotels/90",
+              activeTab === "cars" && "bg-cars hover:bg-cars/90"
+            )}
           >
             <Search className="w-5 h-5" />
             Search {activeTab === "flights" ? "Flights" : activeTab === "hotels" ? "Hotels" : "Cars"}

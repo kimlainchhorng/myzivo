@@ -20,48 +20,67 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
       manifest: {
-        name: "ZIVO - Your Ride, Your Way",
+        name: "ZIVO",
         short_name: "ZIVO",
-        description: "Book rides, order food, rent cars, book flights & hotels - all in one app",
-        theme_color: "#0D0D0F",
-        background_color: "#0D0D0F",
+        description: "Search flights, hotels, car rentals. Request rides and food delivery.",
+        theme_color: "#0F172A",
+        background_color: "#0F172A",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
         start_url: "/",
+        id: "com.zivo.app",
         icons: [
           {
             src: "/pwa-icons/icon-192x192.png",
             sizes: "192x192",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
+          },
+          {
+            src: "/pwa-icons/icon-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "maskable"
           },
           {
             src: "/pwa-icons/icon-512x512.png",
             sizes: "512x512",
             type: "image/png",
-            purpose: "any maskable"
+            purpose: "any"
+          },
+          {
+            src: "/pwa-icons/icon-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable"
           }
         ],
         categories: ["travel", "transportation", "food", "lifestyle"],
         shortcuts: [
           {
-            name: "Book a Ride",
-            short_name: "Ride",
-            url: "/ride",
+            name: "Search Flights",
+            short_name: "Flights",
+            url: "/travel?tab=flights",
+            icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
+          },
+          {
+            name: "Request Ride",
+            short_name: "Rides",
+            url: "/rides",
             icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
           },
           {
             name: "Order Food",
-            short_name: "Food",
-            url: "/food",
+            short_name: "Eats",
+            url: "/eats",
             icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
           }
         ]
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB limit
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.mapbox\.com\/.*/i,
@@ -71,6 +90,24 @@ export default defineConfig(({ mode }) => ({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 * 30
+              }
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "google-fonts-stylesheets"
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "google-fonts-webfonts",
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365
               }
             }
           }
