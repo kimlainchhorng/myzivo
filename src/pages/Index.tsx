@@ -6,6 +6,8 @@ import { OGImageMeta } from "@/components/marketing";
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
 import ServicesGrid from "@/components/home/ServicesGrid";
+import HowItWorksSimple from "@/components/home/HowItWorksSimple";
+import PopularDestinations from "@/components/home/PopularDestinations";
 import ExtrasSection from "@/components/home/ExtrasSection";
 import TrustSection from "@/components/home/TrustSection";
 
@@ -21,16 +23,22 @@ const DesktopHomePage = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* 1. Hero Section */}
+        {/* 1. Hero Section - Split layout */}
         <HeroSection />
         
         {/* 2. Services Grid (6 cards) */}
         <ServicesGrid />
         
-        {/* 3. ZIVO More / Extras */}
+        {/* 3. How It Works (3 steps) */}
+        <HowItWorksSimple />
+        
+        {/* 4. Popular Destinations */}
+        <PopularDestinations />
+        
+        {/* 5. ZIVO More / Extras */}
         <ExtrasSection />
         
-        {/* 4. Trust Section (How it works + disclosure) */}
+        {/* 6. Trust Section (3 bullets) */}
         <TrustSection />
       </main>
       

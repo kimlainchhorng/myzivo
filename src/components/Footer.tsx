@@ -228,8 +228,8 @@ const Footer = () => {
           {/* Affiliate Disclosure */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO is a travel search engine. We may earn a commission when you book through our partner links. 
-              Prices are provided by our partners and may vary. Your booking is made directly with the travel provider.
+              ZIVO may earn a commission when users book through partner links.
+              Bookings are completed on partner websites.
             </p>
           </div>
         </div>

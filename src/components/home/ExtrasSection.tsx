@@ -2,35 +2,41 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
+  Ticket, 
   Bus, 
-  Wifi, 
+  Smartphone, 
   Briefcase, 
-  Shield, 
-  Ticket,
+  Shield,
   ArrowRight 
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const extras = [
   {
+    id: "activities",
+    title: "Activities",
+    description: "Tours and activities",
+    icon: Ticket,
+    href: "/extras",
+  },
+  {
+    id: "tickets",
+    title: "Tickets",
+    description: "Attractions and museums",
+    icon: Ticket,
+    href: "/extras",
+  },
+  {
     id: "transfers",
-    title: "Airport Transfers",
-    description: "Book reliable airport pickups",
+    title: "Transfers",
+    description: "Airport transfers",
     icon: Bus,
     href: "/extras",
   },
   {
     id: "esim",
-    title: "Travel eSIM",
+    title: "eSIM",
     description: "Stay connected abroad",
-    icon: Wifi,
-    href: "/extras",
-  },
-  {
-    id: "activities",
-    title: "Activities & Tours",
-    description: "Discover local experiences",
-    icon: Ticket,
+    icon: Smartphone,
     href: "/extras",
   },
   {
@@ -43,7 +49,7 @@ const extras = [
   {
     id: "compensation",
     title: "Flight Compensation",
-    description: "Claim for delays/cancellations",
+    description: "Claim for delays",
     icon: Shield,
     href: "/extras",
   },
@@ -51,20 +57,20 @@ const extras = [
 
 export default function ExtrasSection() {
   return (
-    <section className="py-16 sm:py-20 bg-muted/30">
+    <section className="py-12 sm:py-16 bg-background">
       <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-heading-lg mb-3">
+        <div className="text-center mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-2">
             ZIVO More
           </h2>
-          <p className="text-muted-foreground text-body max-w-xl mx-auto">
-            Everything you need to make your trip complete
+          <p className="text-muted-foreground text-sm">
+            Everything you need to complete your trip
           </p>
         </div>
 
-        {/* Extras Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 max-w-6xl mx-auto">
+        {/* Extras Grid - 6 items */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 max-w-5xl mx-auto">
           {extras.map((extra) => (
             <Link
               key={extra.id}
@@ -72,12 +78,12 @@ export default function ExtrasSection() {
               className="group"
             >
               <Card className="h-full border hover:border-primary/30 hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                <CardContent className="p-5 text-center">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                <CardContent className="p-4 text-center">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <extra.icon className="w-5 h-5 text-primary" />
                   </div>
                   
-                  <h3 className="font-semibold text-sm mb-1.5">
+                  <h3 className="font-semibold text-sm mb-1">
                     {extra.title}
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
@@ -90,9 +96,9 @@ export default function ExtrasSection() {
         </div>
 
         {/* CTA */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-6">
           <Link to="/extras">
-            <Button variant="outline" className="rounded-xl gap-2">
+            <Button variant="outline" size="sm" className="rounded-xl gap-2">
               View All Extras
               <ArrowRight className="w-4 h-4" />
             </Button>

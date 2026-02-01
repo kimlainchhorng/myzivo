@@ -18,13 +18,14 @@ interface Service {
   borderHover: string;
   status: ServiceStatus;
   image: string;
+  cta: string;
 }
 
 const services: Service[] = [
   {
     id: "flights",
     title: "Flights",
-    description: "Compare prices from 500+ airlines worldwide",
+    description: "Compare flight options worldwide",
     icon: Plane,
     href: "/flights",
     color: "text-white",
@@ -32,11 +33,12 @@ const services: Service[] = [
     borderHover: "hover:border-flights/50",
     status: "live",
     image: serviceCardPhotos.flights.src,
+    cta: "Search Flights",
   },
   {
     id: "hotels",
     title: "Hotels",
-    description: "Best rates on hotels, resorts & vacation stays",
+    description: "Find hotels and compare rates",
     icon: Hotel,
     href: "/hotels",
     color: "text-white",
@@ -44,11 +46,12 @@ const services: Service[] = [
     borderHover: "hover:border-hotels/50",
     status: "live",
     image: serviceCardPhotos.hotels.src,
+    cta: "Search Hotels",
   },
   {
     id: "cars",
     title: "Car Rental",
-    description: "Compare rental prices from trusted partners",
+    description: "Compare rental cars in minutes",
     icon: CarFront,
     href: "/rent-car",
     color: "text-white",
@@ -56,11 +59,12 @@ const services: Service[] = [
     borderHover: "hover:border-cars/50",
     status: "live",
     image: serviceCardPhotos.cars.src,
+    cta: "Rent a Car",
   },
   {
     id: "rides",
     title: "Rides",
-    description: "Request a ride in your local area",
+    description: "Request local rides and airport pickup",
     icon: Car,
     href: "/rides",
     color: "text-white",
@@ -68,11 +72,12 @@ const services: Service[] = [
     borderHover: "hover:border-rides/50",
     status: "live",
     image: serviceCardPhotos.rides.src,
+    cta: "Request Ride",
   },
   {
     id: "eats",
     title: "Eats",
-    description: "Order food from local restaurants",
+    description: "Order meals from local restaurants",
     icon: UtensilsCrossed,
     href: "/eats",
     color: "text-white",
@@ -80,11 +85,12 @@ const services: Service[] = [
     borderHover: "hover:border-eats/50",
     status: "live",
     image: serviceCardPhotos.eats.src,
+    cta: "Order Food",
   },
   {
-    id: "more",
-    title: "More",
-    description: "Transfers, insurance & travel extras",
+    id: "extras",
+    title: "Extras",
+    description: "Transfers, activities, eSIM, and more",
     icon: Sparkles,
     href: "/extras",
     color: "text-white",
@@ -92,6 +98,7 @@ const services: Service[] = [
     borderHover: "hover:border-more/50",
     status: "live",
     image: serviceCardPhotos.extras.src,
+    cta: "Explore Extras",
   },
 ];
 
@@ -145,15 +152,6 @@ export default function ServicesGrid() {
                       <service.icon className="w-5 h-5 text-white" />
                     </div>
                   </div>
-                  
-                  {/* Status Badge */}
-                  <div className="absolute top-3 right-3">
-                    {service.status === "live" ? (
-                      <span className="badge-live">Live</span>
-                    ) : (
-                      <span className="badge-coming-soon">Coming Soon</span>
-                    )}
-                  </div>
                 </div>
 
                 <CardContent className="p-4">
@@ -176,11 +174,11 @@ export default function ServicesGrid() {
                       service.id === "cars" && "text-cars",
                       service.id === "rides" && "text-rides",
                       service.id === "eats" && "text-eats",
-                      service.id === "more" && "text-more",
+                      service.id === "extras" && "text-more",
                       "group-hover:gap-2.5 transition-all"
                     )}
                   >
-                    {service.status === "live" ? `Search ${service.title}` : "Learn More"}
+                    {service.cta}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </CardContent>
