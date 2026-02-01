@@ -21,31 +21,33 @@ export default function HeroSection() {
       <div className="relative z-10 container mx-auto px-4 py-20">
         <div className="max-w-3xl mx-auto text-center">
           {/* Main Headline */}
-          <h1 className="text-display-lg text-white mb-6">
-            Search & Compare{" "}
-            <span className="text-primary">Travel Worldwide</span>
+          <h1 className="text-display-lg text-white mb-4">
+            Your Travel, Simplified
           </h1>
+          <p className="text-xl sm:text-2xl text-white/90 mb-8">
+            Search & compare <span className="text-primary font-semibold">flights, hotels & cars</span> worldwide
+          </p>
           
-          <p className="text-body-lg text-white/80 mb-10 max-w-xl mx-auto">
+          <p className="text-body text-white/70 mb-10 max-w-xl mx-auto">
             Find the best deals on flights, hotels, and car rentals from trusted partners. No booking fees on ZIVO.
           </p>
 
-          {/* Primary CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link to="/book-flight">
+          {/* Primary CTAs - 3 main buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
+            <Link to="/flights">
               <Button
                 size="lg"
-                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-flights hover:bg-flights/90 text-white shadow-lg"
+                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-flights hover:bg-flights/90 text-white shadow-lg min-w-[180px]"
               >
                 <Plane className="w-5 h-5" />
                 Search Flights
               </Button>
             </Link>
             
-            <Link to="/book-hotel">
+            <Link to="/hotels">
               <Button
                 size="lg"
-                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-hotels hover:bg-hotels/90 text-white shadow-lg"
+                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-hotels hover:bg-hotels/90 text-white shadow-lg min-w-[180px]"
               >
                 <Hotel className="w-5 h-5" />
                 Search Hotels
@@ -55,7 +57,7 @@ export default function HeroSection() {
             <Link to="/rent-car">
               <Button
                 size="lg"
-                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-cars hover:bg-cars/90 text-white shadow-lg"
+                className="h-14 px-8 text-base font-semibold rounded-xl gap-3 bg-cars hover:bg-cars/90 text-white shadow-lg min-w-[180px]"
               >
                 <CarFront className="w-5 h-5" />
                 Rent a Car

@@ -14,12 +14,12 @@ import { cn } from "@/lib/utils";
 
 // Quick action cards (2 rows of 3)
 const quickActions = [
-  { id: "flights", label: "Flights", icon: Plane, href: "/travel?tab=flights", color: "bg-flights" },
-  { id: "hotels", label: "Hotels", icon: Hotel, href: "/travel?tab=hotels", color: "bg-hotels" },
-  { id: "cars", label: "Cars", icon: CarFront, href: "/travel?tab=cars", color: "bg-cars" },
+  { id: "flights", label: "Flights", icon: Plane, href: "/flights", color: "bg-flights" },
+  { id: "hotels", label: "Hotels", icon: Hotel, href: "/hotels", color: "bg-hotels" },
+  { id: "cars", label: "Cars", icon: CarFront, href: "/rent-car", color: "bg-cars" },
   { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides" },
   { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats" },
-  { id: "more", label: "More", icon: Sparkles, href: "/more", color: "bg-more" },
+  { id: "more", label: "Extras", icon: Sparkles, href: "/extras", color: "bg-more" },
 ];
 
 // Popular destinations
@@ -32,9 +32,9 @@ const popularItems = [
 
 // Travel extras mini row
 const travelExtras = [
-  { id: "transfers", label: "Transfers", icon: Bus, href: "/extras?tab=transfers" },
-  { id: "activities", label: "Activities", icon: Ticket, href: "/extras?tab=activities" },
-  { id: "esim", label: "eSIM", icon: Smartphone, href: "/extras?tab=esim" },
+  { id: "transfers", label: "Transfers", icon: Bus, href: "/extras" },
+  { id: "activities", label: "Activities", icon: Ticket, href: "/extras" },
+  { id: "esim", label: "eSIM", icon: Smartphone, href: "/extras" },
 ];
 
 // Featured restaurants
@@ -113,7 +113,7 @@ const AppHome = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-lg">Popular Now</h2>
             <button 
-              onClick={() => navigate("/travel")}
+              onClick={() => navigate("/flights")}
               className="text-sm text-primary font-semibold flex items-center gap-1"
             >
               See all
@@ -125,7 +125,7 @@ const AppHome = () => {
             {popularItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => navigate(`/travel?tab=${item.type}`)}
+                onClick={() => navigate(`/${item.type === 'flights' ? 'flights' : item.type === 'hotels' ? 'hotels' : 'rent-car'}`)}
                 className="flex-shrink-0 w-32 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.98] transition-transform"
               >
                 <div className="w-full aspect-square bg-muted rounded-xl flex items-center justify-center text-3xl mb-2">

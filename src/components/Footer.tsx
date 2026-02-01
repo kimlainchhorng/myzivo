@@ -1,14 +1,13 @@
+/**
+ * Footer - Clean, organized footer with proper IA
+ */
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
-  Plane,
-  Hotel,
-  CarFront,
-  Car,
-  UtensilsCrossed,
   Mail,
   ArrowRight,
   CheckCircle2,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,27 +16,24 @@ import ZivoLogo from "./ZivoLogo";
 
 const footerLinks = {
   travel: [
-    { name: "Flights", href: "/book-flight" },
-    { name: "Hotels", href: "/book-hotel" },
+    { name: "Flights", href: "/flights" },
+    { name: "Hotels", href: "/hotels" },
     { name: "Car Rental", href: "/rent-car" },
-    { name: "Things to Do", href: "/things-to-do" },
+    { name: "Extras", href: "/extras" },
   ],
   services: [
     { name: "ZIVO Rides", href: "/rides" },
     { name: "ZIVO Eats", href: "/eats" },
-    { name: "Travel Insurance", href: "/travel-insurance" },
-    { name: "Airport Transfers", href: "/airport-transfer" },
   ],
   company: [
     { name: "About ZIVO", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
+    { name: "Creators", href: "/creators" },
     { name: "Contact Us", href: "/contact" },
-    { name: "Become a Driver", href: "https://zivodriver.com", external: true },
   ],
   support: [
     { name: "Help Center", href: "/help" },
-    { name: "Safety Center", href: "/help#safety" },
     { name: "Accessibility", href: "/accessibility" },
   ],
   legal: [
@@ -46,6 +42,12 @@ const footerLinks = {
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
+
+const contactEmails = [
+  { label: "Support", email: "info@hizivo.com" },
+  { label: "Payments", email: "payment@hizivo.com" },
+  { label: "Business", email: "kimlain@hizivo.com" },
+];
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -108,15 +110,29 @@ const Footer = () => {
 
         {/* Main Footer Grid */}
         <div className="py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
             {/* Brand Column */}
-            <div className="col-span-2 md:col-span-4 lg:col-span-1 text-center lg:text-left mb-4 lg:mb-0">
+            <div className="col-span-2 text-center lg:text-left mb-4 lg:mb-0">
               <Link to="/" className="inline-block mb-4">
                 <ZivoLogo size="md" />
               </Link>
-              <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0">
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0 mb-4">
                 Search & compare flights, hotels, and car rentals from trusted partners.
               </p>
+              
+              {/* Contact Emails */}
+              <div className="space-y-1">
+                {contactEmails.map((contact) => (
+                  <a
+                    key={contact.email}
+                    href={`mailto:${contact.email}`}
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors justify-center lg:justify-start"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    {contact.email}
+                  </a>
+                ))}
+              </div>
             </div>
 
             {/* Travel */}
@@ -159,23 +175,12 @@ const Footer = () => {
               <ul className="space-y-2.5">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
-                    {link.external ? (
-                      <a
-                        href={link.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.name}
-                      </a>
-                    ) : (
-                      <Link
-                        to={link.href}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {link.name}
-                      </Link>
-                    )}
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.name}
+                    </Link>
                   </li>
                 ))}
               </ul>

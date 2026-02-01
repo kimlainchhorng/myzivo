@@ -1,7 +1,15 @@
+/**
+ * NavBar - Desktop Navigation
+ * Clean site map: Home | Travel ▾ | Rides | Eats | More ▾ | Contact
+ */
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, Menu, X, User, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { 
+  Plane, Hotel, CarFront, Car, UtensilsCrossed, 
+  Menu, X, User, ChevronDown, HelpCircle, Phone,
+  Sparkles, Users, Award, Mail, FileText, Shield
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
@@ -13,16 +21,51 @@ import {
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { label: "Flights", href: "/book-flight", icon: Plane },
-  { label: "Hotels", href: "/book-hotel", icon: Hotel },
-  { label: "Car Rental", href: "/rent-car", icon: CarFront },
+// Travel dropdown items
+const travelItems = [
+  { label: "Flights", description: "Compare 500+ airlines", href: "/flights", icon: Plane, color: "text-sky-500" },
+  { label: "Hotels", description: "2M+ accommodations", href: "/hotels", icon: Hotel, color: "text-amber-500" },
+  { label: "Car Rental", description: "500+ providers", href: "/rent-car", icon: CarFront, color: "text-violet-500" },
+];
+
+// More dropdown items
+const moreItems = [
+  { label: "Extras", description: "Transfers, eSIM, Tours & more", href: "/extras", icon: Sparkles, color: "text-primary" },
+  { label: "Partners", description: "Our travel partners", href: "/partners", icon: Users, color: "text-muted-foreground" },
+  { label: "Creators", description: "Creator program", href: "/creators", icon: Award, color: "text-muted-foreground" },
+  { label: "Help Center", description: "FAQs & support", href: "/help", icon: HelpCircle, color: "text-muted-foreground" },
+];
+
+// Legal items for More dropdown
+const legalItems = [
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms of Service", href: "/terms" },
+  { label: "Affiliate Disclosure", href: "/affiliate-disclosure" },
 ];
 
 export default function NavBar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [travelOpen, setTravelOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  
+  const travelRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (travelRef.current && !travelRef.current.contains(event.target as Node)) {
+        setTravelOpen(false);
+      }
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -39,20 +82,125 @@ export default function NavBar() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
+              {/* Travel Dropdown */}
+              <div ref={travelRef} className="relative">
+                <button
+                  onClick={() => setTravelOpen(!travelOpen)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium",
-                    "text-muted-foreground hover:text-foreground hover:bg-muted",
-                    "transition-colors duration-150"
+                    "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    travelOpen 
+                      ? "text-foreground bg-muted" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   )}
                 >
-                  <link.icon className="w-4 h-4" />
-                  {link.label}
-                </Link>
-              ))}
+                  <Plane className="w-4 h-4" />
+                  Travel
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", travelOpen && "rotate-180")} />
+                </button>
+                
+                {travelOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl p-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {travelItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onClick={() => setTravelOpen(false)}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <div className={cn("w-9 h-9 rounded-lg bg-muted flex items-center justify-center", item.color)}>
+                          <item.icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{item.label}</p>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Rides - Direct link */}
+              <Link
+                to="/rides"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Car className="w-4 h-4" />
+                Rides
+              </Link>
+
+              {/* Eats - Direct link */}
+              <Link
+                to="/eats"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <UtensilsCrossed className="w-4 h-4" />
+                Eats
+              </Link>
+
+              {/* More Dropdown */}
+              <div ref={moreRef} className="relative">
+                <button
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    moreOpen 
+                      ? "text-foreground bg-muted" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  More
+                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", moreOpen && "rotate-180")} />
+                </button>
+                
+                {moreOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-card border border-border rounded-xl shadow-xl p-2 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {moreItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onClick={() => setMoreOpen(false)}
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <div className={cn("w-9 h-9 rounded-lg bg-muted flex items-center justify-center", item.color)}>
+                          <item.icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{item.label}</p>
+                          <p className="text-xs text-muted-foreground">{item.description}</p>
+                        </div>
+                      </Link>
+                    ))}
+                    
+                    <div className="border-t border-border my-2" />
+                    
+                    <div className="px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Legal</p>
+                      <div className="flex flex-wrap gap-2">
+                        {legalItems.map((item) => (
+                          <Link
+                            key={item.href}
+                            to={item.href}
+                            onClick={() => setMoreOpen(false)}
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {item.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Contact - Direct link */}
+              <Link
+                to="/contact"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                Contact
+              </Link>
             </nav>
 
             {/* Desktop Auth */}
@@ -73,10 +221,10 @@ export default function NavBar() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 rounded-xl">
                     <DropdownMenuItem
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate("/profile")}
                       className="cursor-pointer"
                     >
-                      Dashboard
+                      My Profile
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => navigate("/trips")}
@@ -148,17 +296,64 @@ export default function NavBar() {
             </div>
 
             <nav className="p-4 space-y-1">
-              {navLinks.map((link) => (
+              {/* Travel Section */}
+              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Travel</p>
+              {travelItems.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
                 >
-                  <link.icon className="w-5 h-5 text-primary" />
+                  <link.icon className={cn("w-5 h-5", link.color)} />
                   {link.label}
                 </Link>
               ))}
+              
+              <div className="border-t border-border my-3" />
+              
+              {/* Services */}
+              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Services</p>
+              <Link
+                to="/rides"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+              >
+                <Car className="w-5 h-5 text-rides" />
+                Rides
+              </Link>
+              <Link
+                to="/eats"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+              >
+                <UtensilsCrossed className="w-5 h-5 text-eats" />
+                Eats
+              </Link>
+              
+              <div className="border-t border-border my-3" />
+              
+              {/* More */}
+              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">More</p>
+              {moreItems.slice(0, 4).map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+                >
+                  <link.icon className="w-5 h-5 text-muted-foreground" />
+                  {link.label}
+                </Link>
+              ))}
+              <Link
+                to="/contact"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
+              >
+                <Phone className="w-5 h-5 text-muted-foreground" />
+                Contact
+              </Link>
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-card">

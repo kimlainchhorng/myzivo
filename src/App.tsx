@@ -155,7 +155,7 @@ const App = () => (
                 <Route path="/eats/checkout" element={<EatsCheckout />} />
                 <Route path="/zivo-rides" element={<AppRides />} />
                 <Route path="/zivo-eats" element={<AppEats />} />
-                <Route path="/book-flight" element={<FlightBooking />} />
+                <Route path="/book-flight" element={<FlightLanding />} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />
@@ -169,7 +169,7 @@ const App = () => (
                 {/* SEO Hotel Landing Pages */}
                 <Route path="/hotels" element={<HotelLanding />} />
                 <Route path="/hotels/in-:city" element={<HotelLanding />} />
-                <Route path="/book-hotel" element={<HotelBooking />} />
+                <Route path="/book-hotel" element={<HotelLanding />} />
                 
                 {/* SEO Car Rental Landing Pages */}
                 <Route path="/car-rental" element={<CarRentalLanding />} />
