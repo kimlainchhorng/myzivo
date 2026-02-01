@@ -7,10 +7,10 @@
 import { ReactNode, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Pencil, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { EditSearchModal } from "./EditSearchModal";
 
 export type ServiceType = "flights" | "hotels" | "cars";
 
@@ -21,6 +21,7 @@ interface StickySearchSummaryProps {
   backLink: string;
   backLabel?: string;
   searchForm?: ReactNode;
+  onEditClick?: () => void;
   className?: string;
 }
 
@@ -29,16 +30,19 @@ const serviceColors = {
     gradient: "from-sky-950/40 to-background",
     accent: "text-sky-500",
     badge: "bg-sky-500/10 text-sky-500 border-sky-500/20",
+    button: "hover:bg-sky-500/10 hover:text-sky-500 hover:border-sky-500/50",
   },
   hotels: {
     gradient: "from-amber-950/40 to-background",
     accent: "text-amber-500",
     badge: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    button: "hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/50",
   },
   cars: {
     gradient: "from-violet-950/40 to-background",
     accent: "text-violet-500",
     badge: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+    button: "hover:bg-violet-500/10 hover:text-violet-500 hover:border-violet-500/50",
   },
 };
 
@@ -49,10 +53,19 @@ export function StickySearchSummary({
   backLink,
   backLabel = "New search",
   searchForm,
+  onEditClick,
   className,
 }: StickySearchSummaryProps) {
-  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const colors = serviceColors[service];
+
+  const handleEditClick = () => {
+    if (onEditClick) {
+      onEditClick();
+    } else {
+      setShowEditModal(true);
+    }
+  };
 
   return (
     <>
@@ -92,11 +105,11 @@ export function StickySearchSummary({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowEditSheet(true)}
-                className="gap-2"
+                onClick={handleEditClick}
+                className={cn("gap-2 transition-colors", colors.button)}
               >
                 <Pencil className="w-4 h-4" />
-                <span className="hidden sm:inline">Edit search</span>
+                <span className="hidden sm:inline">Edit Search</span>
                 <span className="sm:hidden">Edit</span>
               </Button>
             )}
@@ -104,16 +117,15 @@ export function StickySearchSummary({
         </div>
       </section>
 
-      {/* Edit Search Sheet (Mobile) */}
+      {/* Edit Search Modal (responsive: dialog on desktop, sheet on mobile) */}
       {searchForm && (
-        <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
-          <SheetContent side="bottom" className="h-auto max-h-[90vh] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Modify Search</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4">{searchForm}</div>
-          </SheetContent>
-        </Sheet>
+        <EditSearchModal
+          service={service}
+          open={showEditModal}
+          onOpenChange={setShowEditModal}
+        >
+          {searchForm}
+        </EditSearchModal>
       )}
     </>
   );

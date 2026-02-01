@@ -13,6 +13,10 @@ export { ResultCardSkeleton, ResultsSkeletonList } from "./ResultCardSkeleton";
 export { EmptyResults } from "./EmptyResults";
 export { RedirectNotice, IndicativePriceAlert, AffiliateDisclaimer } from "./AffiliateNotice";
 
+// Edit Search components
+export { EditSearchModal, EditSearchTrigger, useEditSearchModal } from "./EditSearchModal";
+export { FlightEditSearchForm, HotelEditSearchForm, CarEditSearchForm } from "./EditSearchForms";
+
 // SEO components
 export { ResultsBreadcrumbs } from "./ResultsBreadcrumbs";
 export { ResultsFAQ } from "./ResultsFAQ";

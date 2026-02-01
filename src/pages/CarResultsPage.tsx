@@ -31,6 +31,7 @@ import {
   AffiliateDisclaimer,
   ResultsBreadcrumbs,
   ResultsFAQ,
+  CarEditSearchForm,
 } from "@/components/results";
 import { useRealCarSearch, type CarResult } from "@/hooks/useRealCarSearch";
 import { getAirportByCode } from "@/components/car/AirportAutocomplete";
@@ -346,6 +347,12 @@ export default function CarResultsPage() {
           badges={[
             { label: `${formatDisplayDate(pickupDate)} – ${formatDisplayDate(dropoffDate)} (${days} day${days !== 1 ? "s" : ""})` },
           ]}
+          searchForm={
+            <CarEditSearchForm
+              onSearch={() => {}}
+              onCancel={() => {}}
+            />
+          }
         />
 
         {/* Partner CTAs */}
