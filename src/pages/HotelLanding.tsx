@@ -58,47 +58,46 @@ export default function HotelLanding() {
       <SEOHead title={pageTitle} description={pageDescription} />
       <Header />
       
-      <main>
+      <main className="pt-16">
         {/* Hero Section */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-radial from-amber-500/10 via-transparent to-transparent" />
-          <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-amber-500/15 to-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-hotels-light" />
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-sm font-medium mb-6">
-                <Hotel className="w-4 h-4 text-amber-400" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-hotels/10 border border-hotels/20 text-sm font-medium mb-6">
+                <Hotel className="w-4 h-4 text-hotels" />
                 <span className="text-muted-foreground">Compare hotel prices</span>
               </div>
               
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+              <h1 className="text-display mb-4">
                 {formattedCity ? (
-                  <>Hotels in <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{formattedCity}</span></>
+                  <>Hotels in <span className="text-hotels">{formattedCity}</span></>
                 ) : (
-                  <>Find the <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">Best Hotel Deals</span></>
+                  <>Find the <span className="text-hotels">Best Hotel Deals</span></>
                 )}
               </h1>
               
-              <p className="text-lg text-muted-foreground mb-8">
+              <p className="text-body-lg text-muted-foreground mb-8">
                 Compare prices from Booking.com, Expedia, Hotels.com and 500+ trusted partners. No booking fees on ZIVO.
               </p>
 
               {/* Search Form */}
               <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
                 <div className="flex-1 relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-400" />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-hotels" />
                   <Input
                     type="text"
                     placeholder="Where do you want to stay?"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    className="pl-12 h-14 text-lg rounded-2xl bg-card border-border/50 focus:border-amber-500/50"
+                    className="pl-12 h-14 text-base rounded-xl"
                   />
                 </div>
                 <Button 
                   onClick={handleSearch}
                   size="lg" 
-                  className="h-14 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold"
+                  className="h-14 px-8 rounded-xl bg-hotels hover:bg-hotels/90 text-white font-semibold"
                 >
                   <Search className="w-5 h-5 mr-2" />
                   Search Hotels
@@ -107,10 +106,10 @@ export default function HotelLanding() {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-6 mt-10">
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
                 <div key={badge.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <badge.icon className="w-4 h-4 text-amber-400" />
+                  <badge.icon className="w-4 h-4 text-hotels" />
                   <span>{badge.text}</span>
                 </div>
               ))}

@@ -1,27 +1,13 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
-  Car,
-  UtensilsCrossed,
   Plane,
   Hotel,
-  Package,
-  Train,
-  Ticket,
-  Shield,
-  Twitter,
-  Facebook,
-  Instagram,
-  Linkedin,
-  Youtube,
-  Apple,
+  CarFront,
+  Car,
+  UtensilsCrossed,
   Mail,
-  Phone,
-  MapPin,
-  ChevronRight,
-  Globe,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,30 +17,23 @@ import ZivoLogo from "./ZivoLogo";
 
 const footerLinks = {
   travel: [
-    { name: "Flights", href: "/book-flight", icon: Plane },
-    { name: "Hotels", href: "/book-hotel", icon: Hotel },
-    { name: "Car Rental", href: "/rent-car", icon: Car },
-    { name: "Things to Do", href: "/things-to-do", icon: Ticket },
+    { name: "Flights", href: "/book-flight" },
+    { name: "Hotels", href: "/book-hotel" },
+    { name: "Car Rental", href: "/rent-car" },
+    { name: "Things to Do", href: "/things-to-do" },
   ],
   services: [
-    { name: "ZIVO Rides", href: "/rides", icon: Car },
-    { name: "ZIVO Eats", href: "/eats", icon: UtensilsCrossed },
-    { name: "Travel Insurance", href: "/travel-insurance", icon: Shield },
-    { name: "Ground Transport", href: "/ground-transport", icon: Train },
-    { name: "Package Delivery", href: "/package-delivery", icon: Package },
-  ],
-  driver: [
-    { name: "Become a Driver", href: "https://zivodriver.com", external: true },
-  ],
-  contact: [
-    { name: "info@hizivo.com", href: "mailto:info@hizivo.com" },
-    { name: "payment@hizivo.com", href: "mailto:payment@hizivo.com" },
+    { name: "ZIVO Rides", href: "/rides" },
+    { name: "ZIVO Eats", href: "/eats" },
+    { name: "Travel Insurance", href: "/travel-insurance" },
+    { name: "Airport Transfers", href: "/airport-transfer" },
   ],
   company: [
     { name: "About ZIVO", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
+    { name: "Become a Driver", href: "https://zivodriver.com", external: true },
   ],
   support: [
     { name: "Help Center", href: "/help" },
@@ -68,22 +47,6 @@ const footerLinks = {
   ],
 };
 
-const socialLinks = [
-  { name: "Twitter", icon: Twitter, href: "#", gradient: "from-sky-400 to-blue-500" },
-  { name: "Facebook", icon: Facebook, href: "#", gradient: "from-blue-500 to-blue-600" },
-  { name: "Instagram", icon: Instagram, href: "#", gradient: "from-pink-500 to-rose-500" },
-  { name: "LinkedIn", icon: Linkedin, href: "#", gradient: "from-blue-600 to-blue-700" },
-  { name: "YouTube", icon: Youtube, href: "#", gradient: "from-red-500 to-red-600" },
-];
-
-const trustBadges = [
-  { icon: Shield, label: "Secure Payments" },
-  { icon: CheckCircle2, label: "Verified Drivers" },
-  { icon: Phone, label: "24/7 Support" },
-  { icon: Shield, label: "Insurance Coverage" },
-  { icon: Shield, label: "Privacy Protected" },
-];
-
 const Footer = () => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
@@ -96,53 +59,26 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gradient-to-b from-card/50 to-card border-t border-border relative overflow-hidden">
-      {/* Enhanced Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-primary/12 to-teal-500/12 rounded-full blur-3xl" />
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-eats/12 to-orange-500/8 rounded-full blur-3xl" />
-      <div className="absolute top-1/2 left-1/3 w-[350px] h-[350px] bg-gradient-radial from-violet-500/8 to-transparent rounded-full blur-3xl" />
-      
-      {/* Static floating elements */}
-      <div className="absolute top-24 right-[8%] text-4xl hidden lg:block opacity-20 animate-float">
-        ✨
-      </div>
-      <div className="absolute bottom-1/3 left-[5%] text-3xl hidden lg:block opacity-15 animate-float-delayed">
-        🌐
-      </div>
-
-      <div className="container mx-auto px-4 relative z-10">
+    <footer className="bg-muted/30 border-t border-border">
+      <div className="container mx-auto px-4">
         {/* Newsletter Section */}
-        <div className="py-12 sm:py-16 lg:py-24 border-b border-border">
-          <div 
-            className="grid lg:grid-cols-2 gap-10 items-center animate-in fade-in slide-in-from-bottom-4 duration-500"
-          >
+        <div className="py-12 border-b border-border">
+          <div className="grid lg:grid-cols-2 gap-8 items-center max-w-5xl mx-auto">
             <div className="text-center lg:text-left">
-              <div 
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-primary/15 to-eats/15 border border-primary/25 text-sm font-bold mb-5 shadow-lg shadow-primary/10 animate-in zoom-in-95 duration-300"
-              >
-                <Sparkles className="w-4 h-4 text-primary animate-spin" style={{ animationDuration: '3s' }} />
-                <span className="text-muted-foreground">Newsletter</span>
-              </div>
-              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3">
-                Stay in the{" "}
-                <span className="bg-gradient-to-r from-primary via-teal-400 to-eats bg-[length:200%_auto] animate-gradient bg-clip-text text-transparent">loop</span>
-              </h3>
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-                Get exclusive deals, travel tips, and updates delivered to your inbox.
+              <h3 className="text-heading mb-2">Stay Updated</h3>
+              <p className="text-muted-foreground text-body">
+                Get exclusive deals and travel tips delivered to your inbox.
               </p>
             </div>
-            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center group-focus-within:from-primary/30 group-focus-within:to-teal-400/20 transition-all">
-                  <Mail className="w-5 h-5 text-primary" />
-                </div>
+            <form onSubmit={handleNewsletterSubmit} className="flex gap-3">
+              <div className="flex-1 relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-16 h-14 text-base rounded-2xl bg-muted/50 border-border/50 focus:border-primary/50 shadow-lg"
+                  className="pl-12 h-12 rounded-xl"
                   required
                 />
               </div>
@@ -150,21 +86,19 @@ const Footer = () => {
                 type="submit" 
                 size="lg" 
                 className={cn(
-                  "h-14 px-10 rounded-2xl font-bold gap-2 transition-all duration-200 shadow-xl hover:scale-[1.03] active:scale-[0.97]",
-                  subscribed 
-                    ? "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30" 
-                    : "bg-gradient-to-r from-primary to-teal-400 shadow-primary/30"
+                  "h-12 px-6 rounded-xl font-semibold gap-2",
+                  subscribed && "bg-success"
                 )}
               >
                 {subscribed ? (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    Subscribed!
+                    Done!
                   </>
                 ) : (
                   <>
                     Subscribe
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </Button>
@@ -173,70 +107,28 @@ const Footer = () => {
         </div>
 
         {/* Main Footer Grid */}
-        <div className="py-12 sm:py-16 lg:py-20">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-6">
+        <div className="py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
             {/* Brand Column */}
-            <div className="col-span-2 sm:col-span-3 lg:col-span-2 text-center sm:text-left">
-              <Link to="/" className="inline-block mb-6 transition-transform duration-200 hover:scale-105">
-                <ZivoLogo size="lg" />
+            <div className="col-span-2 md:col-span-4 lg:col-span-1 text-center lg:text-left mb-4 lg:mb-0">
+              <Link to="/" className="inline-block mb-4">
+                <ZivoLogo size="md" />
               </Link>
-              <p className="text-base text-muted-foreground mb-6 max-w-sm mx-auto sm:mx-0">
-                The all-in-one super app for rides, food, flights, hotels, and more. Go anywhere.
-                Get anything. Travel everywhere.
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0">
+                Search & compare flights, hotels, and car rentals from trusted partners.
               </p>
-
-              {/* App Store Buttons */}
-              <div className="flex flex-wrap gap-3 mb-6 justify-center sm:justify-start">
-                <a
-                  href="#"
-                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <Apple className="w-7 h-7" />
-                  <div className="text-left">
-                    <p className="text-[10px] text-muted-foreground leading-none">Download on the</p>
-                    <p className="text-sm font-bold leading-tight">App Store</p>
-                  </div>
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-3 px-4 py-3 bg-muted/50 hover:bg-muted rounded-xl border border-border/50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3.609 1.814L13.792 12 3.609 22.186a.994.994 0 01-.609-.92V2.734a.99.99 0 01.609-.92zM14.961 13.169l2.652 2.652-9.156 5.211 6.504-7.863zm4.07-2.652l2.4 1.371a.997.997 0 010 1.724l-2.4 1.371L16.84 12l2.192-1.483zM8.457 3.968l9.156 5.211-2.652 2.652-6.504-7.863z" />
-                  </svg>
-                  <div className="text-left">
-                    <p className="text-[10px] text-muted-foreground leading-none">Get it on</p>
-                    <p className="text-sm font-bold leading-tight">Google Play</p>
-                  </div>
-                </a>
-              </div>
-
-              {/* Social Links */}
-              <div className="flex gap-2 sm:gap-3 justify-center sm:justify-start">
-                {socialLinks.map((social) => (
-                  <a
-                    key={social.name}
-                    href={social.href}
-                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-all duration-200 border border-border/50 hover:scale-110 hover:-translate-y-0.5 active:scale-95"
-                    aria-label={social.name}
-                  >
-                    <social.icon className="w-5 h-5" />
-                  </a>
-                ))}
-              </div>
             </div>
 
             {/* Travel */}
             <div>
-              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Travel</h4>
-              <ul className="space-y-3">
+              <h4 className="font-semibold text-sm mb-4">Travel</h4>
+              <ul className="space-y-2.5">
                 {footerLinks.travel.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <link.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
                       {link.name}
                     </Link>
                   </li>
@@ -246,15 +138,14 @@ const Footer = () => {
 
             {/* Services */}
             <div>
-              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Services</h4>
-              <ul className="space-y-3">
+              <h4 className="font-semibold text-sm mb-4">Services</h4>
+              <ul className="space-y-2.5">
                 {footerLinks.services.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      <link.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
                       {link.name}
                     </Link>
                   </li>
@@ -264,42 +155,41 @@ const Footer = () => {
 
             {/* Company */}
             <div>
-              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Company</h4>
-              <ul className="space-y-3">
+              <h4 className="font-semibold text-sm mb-4">Company</h4>
+              <ul className="space-y-2.5">
                 {footerLinks.company.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {link.name}
-                    </Link>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
-                {/* Become a Driver Link */}
-                <li>
-                  <a
-                    href="https://zivodriver.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-rides hover:text-rides/80 transition-colors font-medium flex items-center gap-1"
-                  >
-                    <Car className="w-4 h-4" />
-                    Become a Driver
-                  </a>
-                </li>
               </ul>
             </div>
 
             {/* Support */}
             <div>
-              <h4 className="font-display font-bold text-foreground mb-5 text-sm">Support</h4>
-              <ul className="space-y-3">
+              <h4 className="font-semibold text-sm mb-4">Support</h4>
+              <ul className="space-y-2.5">
                 {footerLinks.support.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
-                      className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {link.name}
                     </Link>
@@ -310,77 +200,32 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Legal Links Bar */}
-        <div className="py-6 border-t border-border">
-          <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center mb-4">
-            {footerLinks.legal.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                {link.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border">
-          <div className="flex flex-col gap-4">
-            {/* Contact & Disclosure */}
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Contact: <a href="mailto:info@hizivo.com" className="text-primary hover:underline">info@hizivo.com</a>
-                {" · "}
-                <a href="mailto:payment@hizivo.com" className="text-primary hover:underline">payment@hizivo.com</a>
-              </p>
-              <p className="text-xs text-muted-foreground font-medium">
-                ZIVO may earn a commission when users book through partner links.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Bookings are completed on partner websites.
-              </p>
-            </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} ZIVO LLC. All rights reserved.
+            </p>
             
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} ZIVO LLC. All rights reserved.
-              </p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
-                  <Globe className="w-4 h-4" />
-                  <span>English (US)</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-                <span className="text-border">|</span>
-                <button className="flex items-center gap-2 hover:text-foreground transition-colors px-3 py-2 rounded-lg hover:bg-muted/50">
-                  <MapPin className="w-4 h-4" />
-                  <span>United States</span>
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {footerLinks.legal.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {link.name}
+                </Link>
+              ))}
             </div>
           </div>
-        </div>
-
-        {/* Trust Badges */}
-        <div className="py-8 border-t border-border">
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
-            {trustBadges.map((badge, index) => (
-              <div
-                key={badge.label}
-                className="flex items-center gap-2.5 text-sm text-muted-foreground group cursor-default transition-all duration-200 hover:-translate-y-1 hover:scale-105 animate-in fade-in slide-in-from-bottom-2"
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
-              >
-                <div 
-                  className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/10 to-teal-400/10 flex items-center justify-center group-hover:from-primary/20 group-hover:to-teal-400/20 transition-all animate-pulse-slow"
-                  style={{ animationDelay: `${index * 300}ms` }}
-                >
-                  <badge.icon className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-medium group-hover:text-foreground transition-colors">{badge.label}</span>
-              </div>
-            ))}
+          
+          {/* Affiliate Disclosure */}
+          <div className="mt-6 pt-4 border-t border-border/50 text-center">
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              ZIVO is a travel search engine. We may earn a commission when you book through our partner links. 
+              Prices are provided by our partners and may vary. Your booking is made directly with the travel provider.
+            </p>
           </div>
         </div>
       </div>

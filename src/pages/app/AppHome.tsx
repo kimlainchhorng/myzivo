@@ -1,11 +1,11 @@
 /**
- * App Home Screen
- * Mobile-first home with quick actions, popular carousel, trust strip
+ * App Home Screen - Mobile
+ * Clean, premium mobile-first design
  */
 import { useNavigate } from "react-router-dom";
 import { 
-  Plane, Hotel, CarFront, Car, UtensilsCrossed, Ticket, Shield, Star, 
-  ChevronRight, Sparkles, Clock, MapPin
+  Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles,
+  ChevronRight, Shield, Star, Clock
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,28 +13,27 @@ import { cn } from "@/lib/utils";
 
 // Quick action cards (2 rows of 3)
 const quickActions = [
-  { id: "flights", label: "Flights", icon: Plane, href: "/travel?tab=flights", gradient: "from-sky-500 to-blue-600", bgColor: "bg-sky-500/15" },
-  { id: "hotels", label: "Hotels", icon: Hotel, href: "/travel?tab=hotels", gradient: "from-amber-500 to-orange-500", bgColor: "bg-amber-500/15" },
-  { id: "cars", label: "Car Rental", icon: CarFront, href: "/travel?tab=cars", gradient: "from-violet-500 to-purple-600", bgColor: "bg-violet-500/15" },
-  { id: "rides", label: "Rides", icon: Car, href: "/rides", gradient: "from-primary to-teal-400", bgColor: "bg-primary/15" },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", gradient: "from-eats to-orange-500", bgColor: "bg-eats/15" },
-  { id: "extras", label: "Extras", icon: Ticket, href: "/more", gradient: "from-pink-500 to-rose-500", bgColor: "bg-pink-500/15" },
+  { id: "flights", label: "Flights", icon: Plane, href: "/travel?tab=flights", color: "bg-flights", textColor: "text-flights" },
+  { id: "hotels", label: "Hotels", icon: Hotel, href: "/travel?tab=hotels", color: "bg-hotels", textColor: "text-hotels" },
+  { id: "cars", label: "Car Rental", icon: CarFront, href: "/travel?tab=cars", color: "bg-cars", textColor: "text-cars" },
+  { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides", textColor: "text-rides" },
+  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats", textColor: "text-eats" },
+  { id: "more", label: "More", icon: Sparkles, href: "/extras", color: "bg-more", textColor: "text-more" },
 ];
 
-// Popular destinations/services carousel
+// Popular destinations
 const popularItems = [
-  { id: 1, title: "New York", subtitle: "Flights from $99", image: "✈️", type: "flights" },
-  { id: 2, title: "Miami Beach", subtitle: "Hotels from $129/night", image: "🏨", type: "hotels" },
-  { id: 3, title: "Los Angeles", subtitle: "Cars from $35/day", image: "🚗", type: "cars" },
-  { id: 4, title: "Airport Transfer", subtitle: "From $25", image: "🚐", type: "extras" },
-  { id: 5, title: "City Tours", subtitle: "From $45", image: "🎫", type: "extras" },
+  { id: 1, title: "New York", subtitle: "Flights from $99", emoji: "✈️", type: "flights" },
+  { id: 2, title: "Miami Beach", subtitle: "Hotels from $129", emoji: "🏨", type: "hotels" },
+  { id: 3, title: "Los Angeles", subtitle: "Cars from $35/day", emoji: "🚗", type: "cars" },
+  { id: 4, title: "Airport Transfer", subtitle: "From $25", emoji: "🚐", type: "extras" },
 ];
 
 // Featured restaurants
 const featuredRestaurants = [
-  { id: 1, name: "Burger Joint", cuisine: "American", rating: 4.8, eta: "15-25 min", image: "🍔" },
-  { id: 2, name: "Sakura Sushi", cuisine: "Japanese", rating: 4.9, eta: "25-35 min", image: "🍣" },
-  { id: 3, name: "Pizza Palace", cuisine: "Italian", rating: 4.7, eta: "20-30 min", image: "🍕" },
+  { id: 1, name: "Burger Joint", cuisine: "American", rating: 4.8, eta: "15-25 min", emoji: "🍔" },
+  { id: 2, name: "Sakura Sushi", cuisine: "Japanese", rating: 4.9, eta: "25-35 min", emoji: "🍣" },
+  { id: 3, name: "Pizza Palace", cuisine: "Italian", rating: 4.7, eta: "20-30 min", emoji: "🍕" },
 ];
 
 const AppHome = () => {
@@ -50,55 +49,51 @@ const AppHome = () => {
 
   return (
     <AppLayout>
-      <div className="px-4 py-4 space-y-6">
+      <div className="px-4 py-5 space-y-6 pb-24">
         {/* Welcome Section */}
-        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+        <div>
           <p className="text-muted-foreground text-sm">
             {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''} 👋
           </p>
-          <h1 className="font-display text-2xl font-bold">Where to today?</h1>
+          <h1 className="text-2xl font-bold">Where to today?</h1>
         </div>
 
-        {/* Quick Action Cards - 2 rows */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-100">
+        {/* Quick Actions Grid */}
+        <section>
           <div className="grid grid-cols-3 gap-3">
-            {quickActions.map((action, index) => (
+            {quickActions.map((action) => (
               <button
                 key={action.id}
                 onClick={() => navigate(action.href)}
-                className="p-3 rounded-2xl bg-card border border-border/50 text-center touch-manipulation active:scale-[0.97] transition-transform hover:border-primary/30"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="p-4 rounded-2xl bg-card border border-border text-center touch-manipulation active:scale-[0.97] transition-transform"
               >
                 <div className={cn(
-                  "w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center mx-auto mb-2 shadow-lg",
-                  action.gradient
+                  "w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2",
+                  action.color
                 )}>
-                  <action.icon className="w-5 h-5 text-white" />
+                  <action.icon className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-xs">{action.label}</h3>
+                <h3 className="font-semibold text-sm">{action.label}</h3>
               </button>
             ))}
           </div>
         </section>
 
         {/* Trust Strip */}
-        <section className="py-3 px-4 rounded-2xl bg-muted/30 border border-border/50 animate-in fade-in duration-300 delay-200">
+        <section className="py-3 px-4 rounded-2xl bg-muted border border-border">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Shield className="w-4 h-4 text-primary" />
             <span className="font-medium">Search & compare. Book on partner sites.</span>
           </div>
         </section>
 
-        {/* Popular Now Carousel */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-300">
+        {/* Popular Destinations */}
+        <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display font-bold text-lg flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Popular Now
-            </h2>
+            <h2 className="font-bold text-lg">Popular Now</h2>
             <button 
               onClick={() => navigate("/travel")}
-              className="text-sm text-primary font-semibold flex items-center gap-1 touch-manipulation"
+              className="text-sm text-primary font-semibold flex items-center gap-1"
             >
               See all
               <ChevronRight className="w-4 h-4" />
@@ -106,33 +101,32 @@ const AppHome = () => {
           </div>
           
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-            {popularItems.map((item, index) => (
+            {popularItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => navigate(`/travel?tab=${item.type}`)}
-                className="flex-shrink-0 w-32 p-3 rounded-2xl bg-card border border-border/50 text-left touch-manipulation active:scale-[0.98] transition-transform"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className="flex-shrink-0 w-32 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.98] transition-transform"
               >
-                <div className="w-full aspect-square bg-muted/50 rounded-xl flex items-center justify-center text-3xl mb-2">
-                  {item.image}
+                <div className="w-full aspect-square bg-muted rounded-xl flex items-center justify-center text-3xl mb-2">
+                  {item.emoji}
                 </div>
                 <h4 className="font-bold text-sm truncate">{item.title}</h4>
-                <p className="text-[11px] text-muted-foreground truncate">{item.subtitle}</p>
+                <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
               </button>
             ))}
           </div>
         </section>
 
         {/* Nearby Eats */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-400">
+        <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display font-bold text-lg flex items-center gap-2">
+            <h2 className="font-bold text-lg flex items-center gap-2">
               <UtensilsCrossed className="w-4 h-4 text-eats" />
               Nearby Eats
             </h2>
             <button 
               onClick={() => navigate("/eats")}
-              className="text-sm text-eats font-semibold flex items-center gap-1 touch-manipulation"
+              className="text-sm text-eats font-semibold flex items-center gap-1"
             >
               See all
               <ChevronRight className="w-4 h-4" />
@@ -140,26 +134,26 @@ const AppHome = () => {
           </div>
           
           <div className="space-y-2">
-            {featuredRestaurants.map((restaurant, index) => (
+            {featuredRestaurants.map((restaurant) => (
               <button
                 key={restaurant.id}
                 onClick={() => navigate("/eats")}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 text-left touch-manipulation active:scale-[0.99] transition-transform"
+                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.99] transition-transform"
               >
-                <div className="w-14 h-14 bg-muted/50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                  {restaurant.image}
+                <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                  {restaurant.emoji}
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-sm truncate">{restaurant.name}</h4>
-                  <p className="text-xs text-muted-foreground truncate">{restaurant.cuisine}</p>
+                  <p className="text-xs text-muted-foreground">{restaurant.cuisine}</p>
                   <div className="flex items-center gap-3 mt-1">
                     <div className="flex items-center gap-1">
                       <Star className="w-3 h-3 fill-eats text-eats" />
-                      <span className="text-[11px] font-bold">{restaurant.rating}</span>
+                      <span className="text-xs font-bold">{restaurant.rating}</span>
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-3 h-3" />
-                      <span className="text-[11px]">{restaurant.eta}</span>
+                      <span className="text-xs">{restaurant.eta}</span>
                     </div>
                   </div>
                 </div>
@@ -170,19 +164,19 @@ const AppHome = () => {
         </section>
 
         {/* Need a Ride CTA */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-500">
+        <section>
           <button
             onClick={() => navigate("/rides")}
-            className="w-full p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-teal-500/5 border border-primary/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"
+            className="w-full p-4 rounded-2xl bg-rides-light border border-rides/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-rides flex items-center justify-center">
               <Car className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1 text-left">
-              <h3 className="font-bold">Need a Ride?</h3>
-              <p className="text-sm text-muted-foreground">Request now, pay later</p>
+              <h3 className="font-bold text-rides">Need a Ride?</h3>
+              <p className="text-sm text-muted-foreground">Request now</p>
             </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            <ChevronRight className="w-5 h-5 text-rides" />
           </button>
         </section>
       </div>
