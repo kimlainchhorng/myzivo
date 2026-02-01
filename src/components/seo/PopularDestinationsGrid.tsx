@@ -1,15 +1,77 @@
-import { Link } from "react-router-dom";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { MapPin, ArrowRight, Globe } from "lucide-react";
-import { popularDestinations } from "@/utils/seoUtils";
+/**
+ * POPULAR DESTINATIONS GRID (SEO)
+ * 1:1 photo tiles using destinationPhotos config
+ * Replaces emoji-based grids with real photos
+ */
 
-export default function PopularDestinationsGrid() {
+import { Link } from "react-router-dom";
+import { destinationPhotos, DestinationCity } from "@/config/photos";
+import { Globe, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+// Default destinations to display (ordered by priority)
+const defaultDestinations: DestinationCity[] = [
+  "new-york",
+  "los-angeles",
+  "miami",
+  "las-vegas",
+  "london",
+  "paris",
+  "tokyo",
+  "dubai",
+];
+
+// Trending cities get a badge
+const trendingCities: DestinationCity[] = ["new-york", "tokyo", "dubai", "miami"];
+
+interface PopularDestinationsGridProps {
+  service?: "flights" | "hotels" | "cars";
+  limit?: number;
+  className?: string;
+}
+
+const serviceRoutes = {
+  flights: (city: string) => `/flights/to-${city.toLowerCase().replace(/\s+/g, "-")}`,
+  hotels: (city: string) => `/hotels?destination=${encodeURIComponent(city)}`,
+  cars: (city: string) => `/car-rental/in-${city.toLowerCase().replace(/\s+/g, "-")}`,
+};
+
+const serviceColors = {
+  flights: {
+    accent: "text-sky-400",
+    badge: "bg-sky-500",
+    border: "hover:border-sky-500/50",
+    shadow: "hover:shadow-sky-500/20",
+  },
+  hotels: {
+    accent: "text-amber-400",
+    badge: "bg-amber-500",
+    border: "hover:border-amber-500/50",
+    shadow: "hover:shadow-amber-500/20",
+  },
+  cars: {
+    accent: "text-violet-400",
+    badge: "bg-violet-500",
+    border: "hover:border-violet-500/50",
+    shadow: "hover:shadow-violet-500/20",
+  },
+};
+
+export default function PopularDestinationsGrid({ 
+  service = "flights",
+  limit = 8,
+  className 
+}: PopularDestinationsGridProps) {
+  const destinations = defaultDestinations.slice(0, limit);
+  const colors = serviceColors[service];
+  const getRoute = serviceRoutes[service];
+
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", className)}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-emerald-400" />
+          <Globe className={cn("w-5 h-5", colors.accent)} />
           <h2 className="font-bold text-xl">Popular Destinations</h2>
         </div>
         <Badge variant="outline" className="text-xs">
@@ -18,35 +80,61 @@ export default function PopularDestinationsGrid() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-        {popularDestinations.map((dest) => {
-          const slug = dest.city.toLowerCase().replace(/\s+/g, "-");
+        {destinations.map((cityKey, index) => {
+          const destination = destinationPhotos[cityKey];
+          const isTrending = trendingCities.includes(cityKey);
           
           return (
             <Link
-              key={dest.code}
-              to={`/flights/to-${slug}`}
+              key={cityKey}
+              to={getRoute(destination.city)}
               className="group"
             >
-              <Card className="h-full border-border/50 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group-hover:-translate-y-1">
-                <CardContent className="p-4 text-center">
-                  <div className="text-4xl mb-2">{dest.image}</div>
-                  <h3 className="font-bold text-sm truncate">{dest.city}</h3>
-                  <p className="text-xs text-muted-foreground">{dest.country}</p>
-                </CardContent>
-              </Card>
+              <div className={cn(
+                "relative overflow-hidden rounded-xl aspect-square",
+                "border border-border/50 bg-card/50",
+                "transition-all duration-300 hover:-translate-y-1 hover:shadow-lg",
+                colors.border,
+                colors.shadow
+              )}>
+                {/* Photo */}
+                <img
+                  src={destination.src}
+                  alt={destination.alt}
+                  width={destination.width}
+                  height={destination.height}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                
+                {/* Overlay Gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+                
+                {/* Trending Badge */}
+                {isTrending && (
+                  <Badge className={cn(
+                    "absolute top-2 right-2 text-[10px] text-white border-0 shadow-lg",
+                    colors.badge
+                  )}>
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    Hot
+                  </Badge>
+                )}
+                
+                {/* Text Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-left">
+                  <h3 className={cn(
+                    "font-bold text-white text-sm truncate transition-colors",
+                    `group-hover:${colors.accent}`
+                  )}>
+                    {destination.city}
+                  </h3>
+                  <p className="text-xs text-white/70">{destination.country}</p>
+                </div>
+              </div>
             </Link>
           );
         })}
-      </div>
-
-      {/* Flexible Dates CTA */}
-      <div className="text-center pt-4">
-        <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary/10 border border-primary/20">
-          <MapPin className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium">
-            Flexible dates? <Link to="/flights" className="text-primary hover:underline">Compare prices across dates</Link>
-          </span>
-        </div>
       </div>
     </div>
   );
