@@ -89,6 +89,7 @@ const ClicksAnalytics = lazy(() => import("./pages/admin/ClicksAnalytics"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
+const TrackingTest = lazy(() => import("./pages/TrackingTest"));
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -264,6 +265,8 @@ const App = () => (
                 />
                 {/* Outbound redirect for affiliate tracking */}
                 <Route path="/out" element={<OutboundRedirect />} />
+                {/* Tracking test page (hidden from nav) */}
+                <Route path="/tracking-test" element={<TrackingTest />} />
                 {/* Ad Landing Pages - for paid traffic */}
                 <Route path="/ads/flights" element={<FlightsAdLanding />} />
                 <Route path="/ads/hotels" element={<HotelsAdLanding />} />
