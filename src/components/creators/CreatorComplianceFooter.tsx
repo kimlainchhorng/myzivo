@@ -25,10 +25,11 @@ export default function CreatorComplianceFooter() {
 
         {/* Links */}
         <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground mb-4">
-          <Link to="/about" className="hover:text-foreground">About</Link>
-          <Link to="/how-it-works" className="hover:text-foreground">How It Works</Link>
-          <Link to="/affiliate-disclosure" className="hover:text-foreground">Disclosure</Link>
-          <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
+          <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
+          <Link to="/how-it-works" className="hover:text-foreground transition-colors">How It Works</Link>
+          <Link to="/affiliate-disclosure" className="hover:text-foreground transition-colors">Disclosure</Link>
+          <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+          <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
         </div>
 
         {/* Copyright */}
