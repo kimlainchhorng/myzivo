@@ -28,8 +28,8 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_MAX = 100;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
-// Affiliate marker
-const AFFILIATE_MARKER = '618730';
+// Affiliate marker - must match the token holder's account
+const AFFILIATE_MARKER = '700031';
 
 interface FlightSearchParams {
   origin: string;
@@ -242,150 +242,225 @@ function transformApiResponse(
   searchId?: string
 ): FlightSearchResult {
   const flights: FlightResult[] = [];
-  const airlines: Record<string, AirlineInfo> = {};
+  const airlinesOutput: Record<string, AirlineInfo> = {};
   
-  // Extract airlines
-  const apiAirlines = (apiData.airlines || []) as Array<{
-    iata: string;
-    name: string;
-    is_lowcost?: boolean;
-  }>;
+  // Extract airlines - can be object or array
+  const apiAirlines = apiData.airlines;
+  const airlinesArray = Array.isArray(apiAirlines) 
+    ? apiAirlines 
+    : (apiAirlines ? Object.values(apiAirlines) : []);
   
-  for (const airline of apiAirlines) {
-    airlines[airline.iata] = {
-      iata: airline.iata,
-      name: airline.name,
-      isLowcost: airline.is_lowcost || false
+  for (const airline of airlinesArray) {
+    if (!airline || typeof airline !== 'object') continue;
+    const a = airline as Record<string, unknown>;
+    const iata = a.iata as string || '';
+    // Handle nested name format: { "en-US": { "default": "American Airlines" } }
+    let name = iata;
+    if (a.name) {
+      if (typeof a.name === 'string') {
+        name = a.name;
+      } else if (typeof a.name === 'object') {
+        const nameObj = a.name as Record<string, unknown>;
+        const enName = nameObj['en-US'] as Record<string, string>;
+        name = enName?.default || iata;
+      }
+    }
+    airlinesOutput[iata] = {
+      iata,
+      name,
+      isLowcost: Boolean(a.is_lowcost || a.isLowcost)
     };
   }
   
   // Extract flight legs
-  const flightLegs = (apiData.flight_legs || []) as Array<{
-    origin: string;
-    destination: string;
-    local_departure_date_time: string;
-    local_arrival_date_time: string;
-    operating_carrier_designator?: { carrier_code: string; number: string };
-    equipment?: { name?: string };
-    signature: string;
-  }>;
+  const flightLegs = (apiData.flight_legs || []) as Array<Record<string, unknown>>;
   
-  // Extract tickets and proposals
-  const tickets = (apiData.tickets || []) as Array<{
-    id: string;
-    segments: Array<{
-      flights: number[];
-      transfers?: Array<{ airport_change?: boolean }>;
-    }>;
-  }>;
+  // Extract tickets
+  const tickets = (apiData.tickets || []) as Array<Record<string, unknown>>;
   
-  const proposals = (apiData.proposals || []) as Array<{
-    id: string;
-    agent_id: string;
-    price: { currency: string; value: number };
-    price_per_person: { currency: string; value: number };
-    flight_terms?: Record<string, {
-      baggage?: { count?: number };
-      trip_class?: string;
-      seats_available?: number;
-    }>;
-  }>;
+  // Extract proposals - may be nested in tickets
+  let proposals: Array<Record<string, unknown>> = [];
+  if (Array.isArray(apiData.proposals)) {
+    proposals = apiData.proposals;
+  }
   
-  // Extract agents
-  const agents = (apiData.agents || []) as Array<{
-    id: string;
-    label: string;
-    gate_name: string;
-  }>;
+  // Extract agents - can be object or array  
+  const apiAgents = apiData.agents;
+  const agentsArray = Array.isArray(apiAgents)
+    ? apiAgents
+    : (apiAgents ? Object.values(apiAgents) : []);
   
-  const agentMap = new Map(agents.map(a => [a.id, a]));
+  const agentMap = new Map<string, Record<string, unknown>>();
+  for (const agent of agentsArray) {
+    if (agent && typeof agent === 'object') {
+      const a = agent as Record<string, unknown>;
+      agentMap.set(String(a.id), a);
+    }
+  }
   
-  // Process tickets with their best proposal
-  for (const ticket of tickets.slice(0, 50)) { // Limit to 50 results
-    // Find best proposal for this ticket
-    const ticketProposals = proposals.filter(p => p.id === ticket.id || 
-      Object.keys(p.flight_terms || {}).includes(ticket.id));
+  console.log(`[Transform] Processing ${tickets.length} tickets, ${proposals.length} proposals, ${flightLegs.length} legs`);
+  
+  // Process tickets with their proposals
+  let processedCount = 0;
+  for (const ticket of tickets.slice(0, 100)) { // Increase limit for more results
+    if (processedCount >= 50) break; // Cap at 50 results
+    
+    const ticketId = String(ticket.id || '');
+    const segments = (ticket.segments || []) as Array<Record<string, unknown>>;
+    
+    // Get proposals for this ticket - they can be nested in ticket or separate
+    let ticketProposals = (ticket.proposals || []) as Array<Record<string, unknown>>;
+    
+    // Also check global proposals that match this ticket
+    if (proposals.length > 0 && ticketProposals.length === 0) {
+      ticketProposals = proposals.filter(p => {
+        const terms = p.flight_terms as Record<string, unknown>;
+        return p.id === ticketId || (terms && Object.keys(terms).includes(ticketId));
+      });
+    }
     
     if (ticketProposals.length === 0) continue;
     
     // Sort by price and get cheapest
-    ticketProposals.sort((a, b) => a.price.value - b.price.value);
+    ticketProposals.sort((a, b) => {
+      const priceA = (a.price as Record<string, number>)?.value || 999999;
+      const priceB = (b.price as Record<string, number>)?.value || 999999;
+      return priceA - priceB;
+    });
     const bestProposal = ticketProposals[0];
     
-    // Get flight legs for this ticket
-    const allFlightIndices = ticket.segments.flatMap(s => s.flights);
-    if (allFlightIndices.length === 0) continue;
+    // Get flight indices from FIRST segment only (outbound journey)
+    const firstSegment = segments[0];
+    const firstSegFlights = (firstSegment?.flights || []) as number[];
     
-    const firstLeg = flightLegs[allFlightIndices[0]];
-    const lastLeg = flightLegs[allFlightIndices[allFlightIndices.length - 1]];
+    if (firstSegFlights.length === 0) continue;
     
-    if (!firstLeg || !lastLeg) continue;
+    const firstLeg = flightLegs[firstSegFlights[0]];
+    const lastOutboundLeg = flightLegs[firstSegFlights[firstSegFlights.length - 1]];
     
-    // Calculate total duration
-    const depTime = new Date(firstLeg.local_departure_date_time.replace(' ', 'T'));
-    const arrTime = new Date(lastLeg.local_arrival_date_time.replace(' ', 'T'));
+    if (!firstLeg || !lastOutboundLeg) continue;
+    
+    // Parse dates - only for outbound segment
+    const depDateStr = String(firstLeg.local_departure_date_time || '').replace(' ', 'T');
+    const arrDateStr = String(lastOutboundLeg.local_arrival_date_time || '').replace(' ', 'T');
+    
+    if (!depDateStr || !arrDateStr) continue;
+    
+    const depTime = new Date(depDateStr);
+    const arrTime = new Date(arrDateStr);
     const durationMinutes = Math.round((arrTime.getTime() - depTime.getTime()) / (1000 * 60));
     
-    // Count stops
-    const stops = Math.max(0, allFlightIndices.length - 1);
+    if (isNaN(durationMinutes) || durationMinutes < 0 || durationMinutes > 2880) continue; // Max 48 hours
+    
+    // Count stops for outbound
+    const stops = Math.max(0, firstSegFlights.length - 1);
     
     // Get stop cities
     const stopCities: string[] = [];
-    for (let i = 0; i < allFlightIndices.length - 1; i++) {
-      const leg = flightLegs[allFlightIndices[i]];
-      if (leg && leg.destination) {
-        stopCities.push(leg.destination);
+    for (let i = 0; i < firstSegFlights.length - 1; i++) {
+      const leg = flightLegs[firstSegFlights[i]];
+      if (leg?.destination) {
+        stopCities.push(String(leg.destination));
       }
     }
     
-    // Get airline info
-    const carrierCode = firstLeg.operating_carrier_designator?.carrier_code || 'XX';
-    const airlineInfo = airlines[carrierCode] || { iata: carrierCode, name: carrierCode, isLowcost: false };
+    // Get carrier info - handle different formats
+    const carrier = firstLeg.operating_carrier_designator;
+    let carrierCode = 'XX';
+    let flightNumberStr = '';
     
-    // Get agent info
-    const agent = agentMap.get(bestProposal.agent_id);
+    if (carrier) {
+      if (typeof carrier === 'object') {
+        const c = carrier as Record<string, string>;
+        carrierCode = c.carrier_code || c.airline || 'XX';
+        flightNumberStr = c.number || c.flight_number || '';
+      } else if (typeof carrier === 'string') {
+        // Format might be "AA1234"
+        const match = String(carrier).match(/^([A-Z]{2})(\d+)/);
+        if (match) {
+          carrierCode = match[1];
+          flightNumberStr = match[2];
+        }
+      }
+    }
     
-    // Get baggage info from flight terms
-    const flightTerms = bestProposal.flight_terms?.[ticket.id];
-    const baggageCount = flightTerms?.baggage?.count || 0;
+    // Fallback to marketing carrier if operating carrier not found
+    if (carrierCode === 'XX' && firstLeg.marketing_carrier_designator) {
+      const mc = firstLeg.marketing_carrier_designator as Record<string, string>;
+      carrierCode = mc.carrier_code || mc.airline || 'XX';
+      flightNumberStr = flightNumberStr || mc.number || '';
+    }
+    
+    const airlineInfo = airlinesOutput[carrierCode] || { iata: carrierCode, name: carrierCode, isLowcost: false };
+    
+    // Get price info
+    const priceData = bestProposal.price as Record<string, unknown>;
+    const pricePerPerson = bestProposal.price_per_person as Record<string, unknown>;
+    
+    // Get agent info - handle nested label format
+    const agentId = String(bestProposal.agent_id || '');
+    const agent = agentMap.get(agentId);
+    let agentName = '';
+    if (agent) {
+      const agentLabel = agent.label;
+      if (typeof agentLabel === 'string') {
+        agentName = agentLabel;
+      } else if (agentLabel && typeof agentLabel === 'object') {
+        // Format: { "en-US": { "default": "Agency Name" } }
+        const labelObj = agentLabel as Record<string, Record<string, string>>;
+        agentName = labelObj['en-US']?.default || String(agent.gate_name || agentId);
+      } else {
+        agentName = String(agent.gate_name || agentId);
+      }
+    }
+    
+    // Get baggage info
+    const flightTerms = bestProposal.flight_terms as Record<string, Record<string, unknown>> | undefined;
+    const termForTicket = flightTerms?.[ticketId];
+    const baggage = termForTicket?.baggage as Record<string, number> | undefined;
+    const baggageCount = baggage?.count || 0;
     
     flights.push({
-      id: ticket.id,
-      proposalId: bestProposal.id,
+      id: ticketId,
+      proposalId: String(bestProposal.id || ''),
       airline: airlineInfo.name,
       airlineCode: airlineInfo.iata,
-      flightNumber: `${carrierCode}${firstLeg.operating_carrier_designator?.number || ''}`,
+      flightNumber: `${carrierCode}${flightNumberStr}`,
       departure: {
-        time: parseTimeFromDatetime(firstLeg.local_departure_date_time),
+        time: parseTimeFromDatetime(String(firstLeg.local_departure_date_time)),
         city: searchParams.origin,
-        code: firstLeg.origin,
+        code: String(firstLeg.origin || searchParams.origin),
       },
       arrival: {
-        time: parseTimeFromDatetime(lastLeg.local_arrival_date_time),
+        time: parseTimeFromDatetime(String(lastOutboundLeg.local_arrival_date_time)),
         city: searchParams.destination,
-        code: lastLeg.destination,
+        code: String(lastOutboundLeg.destination || searchParams.destination),
       },
       duration: formatDuration(durationMinutes),
       stops,
       stopCities: stopCities.length > 0 ? stopCities : undefined,
-      price: bestProposal.price.value,
-      currency: bestProposal.price.currency,
-      pricePerPerson: bestProposal.price_per_person.value,
-      cabinClass: flightTerms?.trip_class || 'Y',
-      seatsAvailable: flightTerms?.seats_available,
+      price: Number(priceData?.value || 0),
+      currency: String(priceData?.currency || 'USD'),
+      pricePerPerson: Number(pricePerPerson?.value || priceData?.value || 0),
+      cabinClass: String(termForTicket?.trip_class || 'Y'),
+      seatsAvailable: termForTicket?.seats_available as number | undefined,
       baggageIncluded: baggageCount > 0 ? `${baggageCount} × 23kg` : 'Carry-on only',
       isRefundable: false,
-      agentId: bestProposal.agent_id,
-      agentName: agent?.label || agent?.gate_name,
+      agentId,
+      agentName: String(agent?.label || agent?.gate_name || ''),
     });
+    
+    processedCount++;
   }
+  
+  console.log(`[Transform] Created ${flights.length} flight results`);
   
   // Sort by price
   flights.sort((a, b) => a.price - b.price);
   
   return {
     flights,
-    airlines,
+    airlines: airlinesOutput,
     isRealPrice: true,
     searchId,
     currency: flights[0]?.currency || 'USD'
@@ -497,7 +572,9 @@ async function getSearchResults(
   resultsUrl: string,
   token: string
 ): Promise<Record<string, unknown> | null> {
-  const resultsEndpoint = `${resultsUrl}/search/affiliate/results`;
+  // Ensure URL has protocol
+  const baseUrl = resultsUrl.startsWith('http') ? resultsUrl : `https://${resultsUrl}`;
+  const resultsEndpoint = `${baseUrl}/search/affiliate/results`;
   
   let allData: Record<string, unknown> = {};
   let lastUpdateTimestamp = 0;
@@ -524,6 +601,13 @@ async function getSearchResults(
         })
       });
       
+      // Handle 304 (no new data) - this is expected during polling
+      if (response.status === 304) {
+        console.log(`[API] Poll ${attempts}: no new data (304)`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        continue;
+      }
+      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[API] Get results failed: ${response.status} - ${errorText}`);
@@ -534,20 +618,28 @@ async function getSearchResults(
       
       console.log(`[API] Poll ${attempts}: tickets=${(data.tickets || []).length}, is_over=${data.is_over}`);
       
-      // Merge results
+      // Merge results - handle both array and object formats
+      // Airlines can be array or object with iata codes as keys
       if (data.airlines) {
-        allData.airlines = [...(allData.airlines as unknown[] || []), ...data.airlines];
+        const airlinesArray = Array.isArray(data.airlines) 
+          ? data.airlines 
+          : Object.values(data.airlines);
+        allData.airlines = [...(allData.airlines as unknown[] || []), ...airlinesArray];
       }
+      // Agents can be array or object with ids as keys
       if (data.agents) {
-        allData.agents = [...(allData.agents as unknown[] || []), ...data.agents];
+        const agentsArray = Array.isArray(data.agents)
+          ? data.agents
+          : Object.values(data.agents);
+        allData.agents = [...(allData.agents as unknown[] || []), ...agentsArray];
       }
-      if (data.flight_legs) {
+      if (data.flight_legs && Array.isArray(data.flight_legs)) {
         allData.flight_legs = [...(allData.flight_legs as unknown[] || []), ...data.flight_legs];
       }
-      if (data.tickets) {
+      if (data.tickets && Array.isArray(data.tickets)) {
         allData.tickets = [...(allData.tickets as unknown[] || []), ...data.tickets];
       }
-      if (data.proposals) {
+      if (data.proposals && Array.isArray(data.proposals)) {
         allData.proposals = [...(allData.proposals as unknown[] || []), ...data.proposals];
       }
       
