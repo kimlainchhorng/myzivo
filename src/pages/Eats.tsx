@@ -16,10 +16,10 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import UserTestimonials from "@/components/shared/UserTestimonials";
 import CuisinePhotoGrid from "@/components/shared/CuisinePhotoGrid";
+import ImageHero from "@/components/shared/ImageHero";
 import { useRestaurants } from "@/hooks/useEatsOrders";
 import { cn } from "@/lib/utils";
 import { CartProvider, useCart } from "@/contexts/CartContext";
-import { heroPhotos, serviceOverlays } from "@/config/photos";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 
 function EatsContent() {
@@ -36,7 +36,6 @@ function EatsContent() {
   };
 
   const popularRestaurants = restaurants?.slice(0, 4) || [];
-  const heroImage = heroPhotos.eats;
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,83 +47,43 @@ function EatsContent() {
       <Header />
       
       <main className="pt-16">
-        {/* Hero Section with Photo Background */}
-        <section className="relative py-16 sm:py-24 overflow-hidden">
-          {/* Background Image */}
-          <div className="absolute inset-0">
-            <img
-              src={heroImage.src}
-              alt={heroImage.alt}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="eager"
-            />
-            {/* Gradient Overlay */}
-            <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.eats)} />
-            {/* Additional depth */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
-            {/* Bottom fade */}
-            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" />
-          </div>
-
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="max-w-3xl mx-auto text-center">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-semibold mb-6 text-white">
-                <Sparkles className="w-4 h-4 text-orange-400" />
-                Food Delivery
+        {/* Hero Section with ImageHero component */}
+        <ImageHero service="eats" icon={UtensilsCrossed}>
+          <div className="max-w-xl mx-auto">
+            {/* Address Input */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="flex-1 relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-orange-400" />
+                <Input
+                  type="text"
+                  placeholder="Enter your delivery address"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="pl-12 h-14 text-base rounded-2xl bg-card/95 backdrop-blur-sm border-border/50 focus:border-orange-500/50"
+                  onKeyDown={(e) => e.key === "Enter" && handleFindRestaurants()}
+                />
               </div>
-
-              {/* Icon */}
-              <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-eats to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-eats/30">
-                <UtensilsCrossed className="w-10 h-10 text-white" />
-              </div>
-
-              {/* Title */}
-              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-white">
-                ZIVO{" "}
-                <span className="bg-gradient-to-r from-eats to-orange-400 bg-clip-text text-transparent">
-                  Eats
-                </span>
-              </h1>
-              <p className="text-lg sm:text-xl text-white/80 mb-8 max-w-xl mx-auto">
-                Discover delicious food from local restaurants. Order now and we'll connect you with the best eats in your area.
-              </p>
-
-              {/* Address Input */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto mb-6">
-                <div className="flex-1 relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-eats" />
-                  <Input
-                    type="text"
-                    placeholder="Enter your delivery address"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    className="pl-12 h-14 text-base rounded-2xl bg-white/10 backdrop-blur-sm border-white/20 text-white placeholder:text-white/50 focus:border-eats/50"
-                    onKeyDown={(e) => e.key === "Enter" && handleFindRestaurants()}
-                  />
-                </div>
-                <Button
-                  onClick={handleFindRestaurants}
-                  size="lg"
-                  className="h-14 px-8 rounded-2xl font-bold gap-2 bg-gradient-to-r from-eats to-orange-500 shadow-lg shadow-eats/30 hover:shadow-eats/50"
-                >
-                  <Search className="w-5 h-5" />
-                  Find Restaurants
-                </Button>
-              </div>
-
-              <p className="text-sm text-white/60">
-                Or{" "}
-                <button
-                  onClick={() => navigate("/eats/restaurants")}
-                  className="text-eats hover:underline font-medium"
-                >
-                  browse all restaurants
-                </button>
-              </p>
+              <Button
+                onClick={handleFindRestaurants}
+                size="lg"
+                className="h-14 px-8 rounded-2xl font-bold gap-2 bg-gradient-to-r from-orange-500 to-amber-500 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
+              >
+                <Search className="w-5 h-5" />
+                Find Food
+              </Button>
             </div>
+
+            <p className="text-sm text-white/60 text-center">
+              Or{" "}
+              <button
+                onClick={() => navigate("/eats/restaurants")}
+                className="text-orange-400 hover:underline font-medium"
+              >
+                browse all restaurants
+              </button>
+            </p>
           </div>
-        </section>
+        </ImageHero>
 
         {/* Cuisine Photo Grid */}
         <CuisinePhotoGrid
