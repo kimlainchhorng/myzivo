@@ -1,213 +1,188 @@
 
-# UX/UI Enhancement Plan for ZIVO Travel Pages
+# Plan: Consolidate Travel Extras Hub (/extras)
 
 ## Overview
-
-After reviewing all 6 service pages (/flights, /hotels, /rent-car, /extras, /rides, /eats), I've identified key opportunities to add more visual richness, photography, and engagement elements to create a premium, conversion-optimized experience matching industry leaders like Google Flights, Booking.com, and Uber.
-
----
-
-## Current State Analysis
-
-| Page | Hero Image | Destination Photos | Testimonials | Visual Richness |
-|------|------------|-------------------|--------------|-----------------|
-| /flights | Gradient only (no photo) | Emoji-based destinations | None | Low |
-| /hotels | Full-width photo hero | Photo-based destinations | None | Medium |
-| /rent-car | Gradient only (no photo) | Emoji-based locations | None | Low |
-| /extras | Photo hero via ServiceHero | Partner emoji logos | None | Medium |
-| /rides | Gradient-only background | None | None | Low |
-| /eats | Gradient-only background | None | None | Low |
+Rebuild `/extras` as the exclusive, centralized hub for all travel add-on partner links. Remove scattered partner links from Flights, Hotels, and Cars pages while maintaining cross-sell navigation to the hub.
 
 ---
 
-## Enhancement Plan
+## Phase 1: Update Partner Configuration
 
-### 1. Flights Page (/flights) - FlightLanding.tsx
+### 1.1 Add Missing Partners to `affiliateLinks.ts`
+Add Klook to `ACTIVITY_PARTNERS` registry with the correct tracking URL from the user's list:
+- Klook: `https://klook.tpo.li/ToVcOax7`
 
-**Current Issues:**
-- No background photography (uses `bg-flights-light` gradient)
-- Popular destinations use emojis instead of photos
-- Missing testimonials and social proof
-- No airline partner logos
-
-**Additions:**
-- **Full-width hero image** using existing `hero-flights.jpg` asset with overlay gradient
-- **Photo-based Popular Destinations Grid** - Replace emoji destinations with 1:1 photo tiles
-- **Airline Partner Logos Section** - Visual trust indicators (Delta, United, AA, etc.)
-- **Customer Testimonials Carousel** - Add `UserTestimonials` component
-- **Featured Deals Gallery** - 3 photo-based deal cards with destination imagery
-
----
-
-### 2. Hotels Page (/hotels) - HotelsPage.tsx
-
-**Current Issues:**
-- Hero section is strong (already has photo)
-- Missing testimonials
-- Could use more lifestyle photography
-
-**Additions:**
-- **Room Type Photo Grid** - Photo cards for: Luxury Suite, Standard Room, Ocean View, Penthouse
-- **Hotel Experience Gallery** - Horizontal scroll with lifestyle photos: Pool, Spa, Restaurant, Lobby
-- **Customer Testimonials Section** - Integrate existing `UserTestimonials` component
-- **Property Type Photo Grid** - Visual cards: Resorts, Boutique Hotels, Villas, Apartments
+Verify all partners from user's list are properly configured:
+| Partner | Category | URL |
+|---------|----------|-----|
+| Klook | Activities | klook.tpo.li/ToVcOax7 |
+| Tiqets | Activities | tiqets.tpo.li/5fqrcQWZ |
+| Yesim | eSIM | yesim.tpo.li/OpjeHJgH |
+| Searadar | Travel Radar | searadar.tpo.li/iAbLlX9i |
+| TicketNetwork | Tickets | ticketnetwork.tpo.li/utk3u8Vr |
+| Compensair | Compensation | compensair.tpo.li/npsp8pm0 |
 
 ---
 
-### 3. Car Rental Page (/rent-car) - CarRentalLanding.tsx
+## Phase 2: Rebuild /extras Page
 
-**Current Issues:**
-- No hero photography (gradient only)
-- Car types use emojis instead of real car photos
-- Locations use emojis instead of destination photos
+### 2.1 Update `TravelExtras.tsx` Structure
 
-**Additions:**
-- **Full-width hero image** using existing `hero-cars.jpg` asset
-- **Photo-based Car Category Grid** - Use existing `carCategoryPhotos` config for: Economy, Compact, SUV, Luxury, Electric
-- **Destination Photo Tiles** - Replace emoji locations with destination photos using `destinationPhotos` config
-- **Rental Partner Logos** - Visual trust (Hertz, Enterprise, Avis, Budget)
-- **Customer Reviews Carousel** - Add testimonials for car rental experiences
+**A) Hero Section**
+- Title: "ZIVO Extras"
+- Subtitle: "Tours, transfers, eSIM, luggage storage, and travel services — book on trusted partner sites."
+- Use existing `hero-extras.jpg` asset
 
----
-
-### 4. Extras Page (/extras) - TravelExtras.tsx
-
-**Current Issues:**
-- Hero section is good (has photo)
-- Partner cards use emojis for logos
-- Could use more visual engagement
-
-**Additions:**
-- **Category Illustration Photos** - Add hero-style photos for each category section (Transfers, Activities, eSIM, Luggage, Compensation)
-- **Popular Activities Photo Carousel** - Horizontal scroll with activity destination photos
-- **Customer Success Stories** - Photo testimonials for flight compensation, etc.
-- **Visual Icons Enhancement** - Replace emoji partner logos with branded icon badges or photos
-
----
-
-### 5. Rides Page (/rides) - Rides.tsx
-
-**Current Issues:**
-- No hero photography (gradient background only)
-- No city/route imagery
-- Missing social proof and driver photos
-
-**Additions:**
-- **Full-width hero image** using existing `hero-rides.jpg` asset
-- **City Photo Grid** - Popular pickup cities with 1:1 photo tiles
-- **Vehicle Type Gallery** - Photo cards: Sedan, SUV, Premium, XL
-- **Driver Testimonials Section** - Social proof from drivers and riders
-- **Safety & Trust Photo Section** - Professional driver photos with verification badges
-- **How It Works with Photos** - Replace numbered circles with step-by-step imagery
-
----
-
-### 6. Eats Page (/eats) - Eats.tsx
-
-**Current Issues:**
-- No hero photography (gradient background only)
-- Restaurant cards have fallback placeholder
-- Missing food photography gallery
-
-**Additions:**
-- **Full-width hero image** using existing `hero-eats.jpg` asset
-- **Cuisine Category Photo Grid** - Photo tiles: Pizza, Sushi, Burgers, Tacos, Healthy, Asian
-- **Featured Restaurant Photos** - Enhanced cards with full-bleed food photography
-- **Customer Reviews with Food Photos** - Testimonials with dish imagery
-- **How It Works with Photos** - Replace step icons with food prep/delivery imagery
-- **Popular Dishes Carousel** - Horizontal scroll with food photography
-
----
-
-## New Shared Components to Create
-
-### A. PhotoDestinationGrid Component
-```text
-┌─────────────────────────────────────────────┐
-│  [NYC Photo]  [LA Photo]  [Miami Photo] ... │
-│   New York      LA          Miami           │
-│     USA         USA         Florida         │
-└─────────────────────────────────────────────┘
+**B) Optional City Input**
+Add a destination input at the top:
 ```
-- Reusable across Flights, Hotels, Cars
-- Uses existing `destinationPhotos` config
-- 1:1 aspect ratio with hover effects
+"Traveling to" [City input field]
+```
+Store city for analytics tracking (append as `utm_content` or store locally)
 
-### B. VehicleTypeGallery Component
-- Photo-based car/ride categories
-- Uses existing `carCategoryPhotos` config
-- 4:3 aspect ratio with specs overlay
+**C) Category Grid - All 13 Partners**
+Build a flat grid of partner cards (no grouped categories):
 
-### C. PartnerLogosStrip Component
-- Scrolling partner logos (airlines, hotels, car rentals)
-- Grayscale to color on hover
-- Trust-building visual element
+| Partner | Icon | Description |
+|---------|------|-------------|
+| Activities & Tours (Klook) | 🎟️ | Book tours and attractions worldwide |
+| Museums & Attractions (Tiqets) | 🎫 | Skip-the-line museum tickets |
+| Airport Transfers (KiwiTaxi) | 🚕 | Fixed-price airport pickups |
+| Transfers Marketplace (GetTransfer) | 🚙 | Compare local transfer drivers |
+| eSIM (Airalo) | 📱 | Instant eSIM for 190+ countries |
+| eSIM (Yesim) | 📶 | Budget-friendly travel eSIM |
+| SIM (Drimsim) | 🌐 | Global SIM card with data |
+| Luggage Storage (Radical Storage) | 🧳 | Store bags from $5.90/day |
+| Audio Tours (WeGoTrip) | 🎧 | Self-guided audio experiences |
+| Flight Compensation (AirHelp) | ⚖️ | Claim up to €600 for delays |
+| Flight Compensation (Compensair) | ✈️ | Free flight compensation check |
+| Travel Radar (Searadar) | 🔍 | Compare all travel options |
+| Tickets Marketplace (TicketNetwork) | 🎭 | Concerts, sports, live events |
 
-### D. CuisinePhotoGrid Component
-- Food category tiles for Eats
-- Uses existing `restaurantPhotos` config
-- Square tiles with category labels
+Each card includes:
+- Premium icon + partner logo/emoji
+- 1-line description
+- "Explore" CTA button
+- Opens in NEW TAB via `/out` redirect
+- Shows redirect notice on hover/before click
 
-### E. ExperienceGallery Component
-- Horizontal scroll lifestyle photos
-- For hotels (pool, spa) and extras (activities)
+### 2.2 Card Component Design
+```text
+┌─────────────────────────────────────┐
+│  🎟️  Activities & Tours             │
+│       Klook                          │
+│       Book tours and attractions     │
+│                                      │
+│  [Explore →]  Opens in new tab       │
+└─────────────────────────────────────┘
+```
 
----
-
-## New Photo Assets Required
-
-All images will use Unsplash optimized URLs with WebP format:
-
-**Flights:**
-- 8 destination city photos (already in `destinationPhotos` config)
-- 6 airline concept photos (business class, economy, boarding, etc.)
-
-**Hotels:**
-- 4 room type photos (luxury suite, standard, ocean view, penthouse)
-- 4 experience photos (pool, spa, restaurant, lobby)
-
-**Car Rental:**
-- Photos already exist in `carCategoryPhotos` config
-- 8 destination photos (already in `destinationPhotos` config)
-
-**Rides:**
-- 4 vehicle type photos (sedan, SUV, premium, XL)
-- 6 city photos for popular routes
-
-**Eats:**
-- 6 cuisine category photos (already in `restaurantPhotos` config)
-- Enhance restaurant card backgrounds
-
----
-
-## Implementation Priority
-
-| Priority | Enhancement | Pages Affected |
-|----------|-------------|----------------|
-| 1 | Add hero images to Flights, Cars, Rides, Eats | 4 pages |
-| 2 | Create PhotoDestinationGrid component | Flights, Hotels, Cars |
-| 3 | Add UserTestimonials to all pages | All 6 pages |
-| 4 | Create VehicleTypeGallery for cars/rides | Cars, Rides |
-| 5 | Add CuisinePhotoGrid for Eats | Eats |
-| 6 | Create PartnerLogosStrip component | Flights, Hotels, Cars |
-| 7 | Add experience galleries | Hotels, Extras |
+### 2.3 Tracking Implementation
+All CTAs use:
+```typescript
+openPartnerLink(partner.trackingUrl, {
+  partnerId: partner.id,
+  partnerName: partner.name,
+  product: 'extras',
+  pageSource: 'extras',
+});
+```
+- Opens `/out?partner=X&name=X&product=extras&page=extras&url=X`
+- Logs to `affiliate_click_logs` with proper subid
+- Opens partner in new tab with `rel="nofollow sponsored noopener noreferrer"`
 
 ---
 
-## Technical Approach
+## Phase 3: Replace Scattered Links on Travel Pages
 
-1. **Reuse existing components**: `ServiceHero`, `ImageHero`, `UserTestimonials`, `TrustIndicators`
-2. **Leverage existing photo configs**: `destinationPhotos`, `carCategoryPhotos`, `restaurantPhotos`, `heroPhotos`
-3. **Unsplash optimization**: All new URLs use `?w=SIZE&h=SIZE&fit=crop&q=75&fm=webp` format
-4. **Lazy loading**: All below-fold images use `loading="lazy"`
-5. **Consistent styling**: Dark premium theme with service-specific accent colors
+### 3.1 Modify `EnhanceYourTrip.tsx`
+Change from showing partner cards with direct CTAs to:
+- Show category preview cards (no direct partner links)
+- All cards link to `/extras` page
+- Add "View All Extras →" prominent CTA
+
+**Before:**
+```
+[Partner Card with Explore CTA] → /out → partner
+```
+
+**After:**
+```
+[Category Preview Card] → /extras (internal link)
+```
+
+### 3.2 Files to Update
+| File | Change |
+|------|--------|
+| `FlightResults.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
+| `HotelBooking.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
+| `CarRentalBooking.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
+| `CrossSellBanner.tsx` | Update "Things To Do" to link to `/extras` |
+
+### 3.3 Remove Unused Components
+Mark as deprecated (or remove if unused elsewhere):
+- `AirportTransfersSection.tsx` - partner links move to /extras
+- `LuggageStorageSection.tsx` - partner links move to /extras  
+- `TravelEsimSection.tsx` - partner links move to /extras
+- `FlightCompensationSection.tsx` - partner links move to /extras
+- `ActivitiesSection.tsx` - partner links move to /extras
 
 ---
 
-## Expected Impact
+## Phase 4: Affiliate Disclosure Footer
 
-- **Visual Richness**: Transform all pages to premium, photo-first design
-- **Trust & Conversion**: Partner logos and testimonials increase credibility
-- **Engagement**: Gallery sections encourage exploration
-- **Consistency**: Unified component library across all verticals
-- **Performance**: Optimized images with proper sizing and lazy loading
+### 4.1 Exact Disclosure Text
+At bottom of `/extras` page:
+```
+"ZIVO may earn a commission when users book through partner links.
+Bookings are completed on partner websites."
+```
+
+### 4.2 Per-Card Notice
+Add tooltip or small text on hover:
+```
+"You will be redirected to a partner site."
+```
+
+---
+
+## Technical Summary
+
+### Files to Create/Modify
+
+| File | Action |
+|------|--------|
+| `src/pages/TravelExtras.tsx` | **Major rewrite** - new structure with all 13 partners |
+| `src/config/affiliateLinks.ts` | Add Klook to ACTIVITY_PARTNERS |
+| `src/components/travel-extras/EnhanceYourTrip.tsx` | Replace partner links with `/extras` navigation |
+| `src/components/seo/CrossSellBanner.tsx` | Update "Things To Do" link to `/extras` |
+
+### Partner URL Registry (Final)
+```typescript
+const EXTRAS_PARTNERS = {
+  klook: 'https://klook.tpo.li/ToVcOax7',
+  tiqets: 'https://tiqets.tpo.li/5fqrcQWZ',
+  kiwitaxi: 'https://kiwitaxi.tpo.li/Bj6zghJH',
+  gettransfer: 'https://gettransfer.tpo.li/FbrIguyh',
+  airalo: 'https://airalo.tpo.li/zVRtp8Zt',
+  yesim: 'https://yesim.tpo.li/OpjeHJgH',
+  drimsim: 'https://drimsim.tpo.li/A9yKO5oA',
+  radicalstorage: 'https://radicalstorage.tpo.li/4W0KR99h',
+  wegotrip: 'https://wegotrip.tpo.li/QSrOpIdV',
+  airhelp: 'https://airhelp.tpo.li/7Z5saPi2',
+  compensair: 'https://compensair.tpo.li/npsp8pm0',
+  searadar: 'https://searadar.tpo.li/iAbLlX9i',
+  ticketnetwork: 'https://ticketnetwork.tpo.li/utk3u8Vr',
+};
+```
+
+---
+
+## Verification Checklist
+
+After implementation:
+- [ ] Navigate to `/extras` - verify all 13 partner cards visible
+- [ ] Click each partner CTA - verify opens `/out?...` in new tab
+- [ ] Check `/admin/clicks` - verify clicks logged with proper subid
+- [ ] Navigate to `/flights` results - verify no direct partner links (only "View Extras" link)
+- [ ] Test UTM flow: `/lp/flights?utm_source=google` → `/flights` → `/extras` → partner - verify tracking persists
