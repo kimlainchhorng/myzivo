@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
+import { UTMProvider } from "@/contexts/UTMContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import { Loader2 } from "lucide-react";
@@ -74,6 +75,10 @@ const Terms = lazy(() => import("./pages/Terms"));
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
 const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
+const ClicksAnalytics = lazy(() => import("./pages/admin/ClicksAnalytics"));
+
+// Outbound redirect page
+const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -118,6 +123,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <UTMProvider>
           <RealtimeSyncProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -220,6 +226,16 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/admin/clicks"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <ClicksAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Outbound redirect for affiliate tracking */}
+                <Route path="/out" element={<OutboundRedirect />} />
                 {/* Ad Landing Pages - for paid traffic */}
                 <Route path="/ads/flights" element={<FlightsAdLanding />} />
                 <Route path="/ads/hotels" element={<HotelsAdLanding />} />
@@ -236,6 +252,7 @@ const App = () => (
               </Routes>
             </Suspense>
           </RealtimeSyncProvider>
+          </UTMProvider>
           <CookieConsent />
         </AuthProvider>
       </BrowserRouter>

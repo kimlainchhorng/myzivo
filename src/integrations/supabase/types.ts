@@ -154,6 +154,81 @@ export type Database = {
           },
         ]
       }
+      affiliate_click_logs: {
+        Row: {
+          created_at: string
+          creator: string | null
+          destination_url: string
+          device_type: string | null
+          final_url: string
+          id: string
+          ip_address: unknown
+          page_source: string
+          partner_id: string
+          partner_name: string
+          product: string
+          referrer: string | null
+          session_id: string
+          subid: string
+          subid_components: Json | null
+          user_agent: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          created_at?: string
+          creator?: string | null
+          destination_url: string
+          device_type?: string | null
+          final_url: string
+          id?: string
+          ip_address?: unknown
+          page_source: string
+          partner_id: string
+          partner_name: string
+          product: string
+          referrer?: string | null
+          session_id: string
+          subid: string
+          subid_components?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          created_at?: string
+          creator?: string | null
+          destination_url?: string
+          device_type?: string | null
+          final_url?: string
+          id?: string
+          ip_address?: unknown
+          page_source?: string
+          partner_id?: string
+          partner_name?: string
+          product?: string
+          referrer?: string | null
+          session_id?: string
+          subid?: string
+          subid_components?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       airlines: {
         Row: {
           code: string

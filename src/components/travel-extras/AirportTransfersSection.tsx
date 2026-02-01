@@ -32,7 +32,12 @@ export default function AirportTransfersSection({ className = '', destination }:
       serviceType: 'transfers',
     });
     
-    openPartnerLink(partner.trackingUrl);
+    openPartnerLink(partner.trackingUrl, {
+      partnerId: partner.id,
+      partnerName: partner.name,
+      product: 'transfers',
+      pageSource: 'transfers-section',
+    });
   };
 
   const transferCards = TRANSFER_PARTNERS.map(partner => ({

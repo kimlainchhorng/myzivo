@@ -5,6 +5,8 @@ interface SEOHeadProps {
   description: string;
   canonical?: string;
   type?: 'website' | 'article';
+  /** Prevent search engines from indexing this page */
+  noIndex?: boolean;
 }
 
 /**
@@ -15,9 +17,22 @@ export default function SEOHead({
   title, 
   description, 
   canonical,
-  type = 'website' 
+  type = 'website',
+  noIndex = false 
 }: SEOHeadProps) {
   useEffect(() => {
+    // Handle noIndex
+    let robotsMeta = document.querySelector('meta[name="robots"]');
+    if (noIndex) {
+      if (!robotsMeta) {
+        robotsMeta = document.createElement('meta');
+        robotsMeta.setAttribute('name', 'robots');
+        document.head.appendChild(robotsMeta);
+      }
+      robotsMeta.setAttribute('content', 'noindex, nofollow');
+    } else if (robotsMeta) {
+      robotsMeta.remove();
+    }
     // Update document title
     document.title = title;
     
@@ -57,7 +72,7 @@ export default function SEOHead({
       const meta = document.querySelector('meta[name="description"]');
       if (meta) meta.setAttribute('content', defaultDesc);
     };
-  }, [title, description, canonical, type]);
+  }, [title, description, canonical, type, noIndex]);
   
   return null;
 }

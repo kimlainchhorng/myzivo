@@ -31,7 +31,12 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
       serviceType: 'esim',
     });
     
-    openPartnerLink(partner.trackingUrl);
+    openPartnerLink(partner.trackingUrl, {
+      partnerId: partner.id,
+      partnerName: partner.name,
+      product: 'esim',
+      pageSource: 'esim-section',
+    });
   };
 
   const esimCards = [

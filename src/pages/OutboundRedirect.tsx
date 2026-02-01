@@ -1,0 +1,169 @@
+/**
+ * ZIVO Outbound Redirect Page
+ * 
+ * All affiliate CTAs route through this page for tracking
+ * URL format: /out?partner=XXXX&name=NAME&product=PRODUCT&page=PAGE&url=ENCODED_URL
+ */
+
+import { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { ExternalLink, Loader2 } from "lucide-react";
+import { logOutboundClick } from "@/lib/outboundTracking";
+import SEOHead from "@/components/SEOHead";
+
+export default function OutboundRedirect() {
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState<'loading' | 'redirecting' | 'error'>('loading');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [countdown, setCountdown] = useState(1); // 1 second interstitial
+  const [partnerName, setPartnerName] = useState<string>('');
+  
+  useEffect(() => {
+    const partnerId = searchParams.get('partner');
+    const name = searchParams.get('name');
+    const product = searchParams.get('product');
+    const pageSource = searchParams.get('page');
+    const destinationUrl = searchParams.get('url');
+    
+    setPartnerName(name || 'Partner');
+    
+    // Validate required params
+    if (!partnerId || !destinationUrl) {
+      setStatus('error');
+      setErrorMessage('Missing required parameters');
+      return;
+    }
+    
+    // Decode URL if needed
+    let decodedUrl = destinationUrl;
+    try {
+      decodedUrl = decodeURIComponent(destinationUrl);
+    } catch {
+      // URL was not encoded
+    }
+    
+    // Log the click and get the final URL with SubID
+    const processRedirect = async () => {
+      setStatus('redirecting');
+      
+      const result = await logOutboundClick({
+        partnerId,
+        partnerName: name || partnerId,
+        product: product || 'general',
+        pageSource: pageSource || 'unknown',
+        destinationUrl: decodedUrl,
+      });
+      
+      // Countdown before redirect
+      let count = 1;
+      const timer = setInterval(() => {
+        count -= 0.1;
+        setCountdown(Math.max(0, count));
+        
+        if (count <= 0) {
+          clearInterval(timer);
+          // Open in new tab with security attributes
+          const newWindow = window.open(result.finalUrl, '_blank', 'noopener,noreferrer');
+          if (!newWindow) {
+            // Popup blocked - show link
+            setStatus('error');
+            setErrorMessage('Popup blocked. Click the link below to continue.');
+          }
+        }
+      }, 100);
+      
+      return () => clearInterval(timer);
+    };
+    
+    processRedirect();
+  }, [searchParams]);
+  
+  return (
+    <>
+      <SEOHead 
+        title="Redirecting - ZIVO"
+        description="You are being redirected to our trusted partner."
+        noIndex
+      />
+      
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          {/* Logo */}
+          <div className="flex justify-center">
+            <Link to="/" className="text-3xl font-bold bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
+              ZIVO
+            </Link>
+          </div>
+          
+          {status === 'loading' && (
+            <div className="space-y-4">
+              <Loader2 className="w-10 h-10 mx-auto text-primary animate-spin" />
+              <p className="text-muted-foreground">Preparing your redirect...</p>
+            </div>
+          )}
+          
+          {status === 'redirecting' && (
+            <div className="space-y-6">
+              {/* Interstitial Message */}
+              <div className="p-6 rounded-2xl bg-card border border-border shadow-lg">
+                <ExternalLink className="w-12 h-12 mx-auto text-primary mb-4" />
+                
+                <h1 className="text-xl font-semibold mb-2">
+                  Redirecting to {partnerName}
+                </h1>
+                
+                <p className="text-muted-foreground text-sm mb-4">
+                  You are leaving ZIVO to complete your booking on a partner website.
+                </p>
+                
+                {/* Progress bar */}
+                <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-100 ease-linear"
+                    style={{ width: `${(1 - countdown) * 100}%` }}
+                  />
+                </div>
+                
+                <p className="text-xs text-muted-foreground mt-3">
+                  Opening in a new tab...
+                </p>
+              </div>
+              
+              {/* Disclosure */}
+              <p className="text-xs text-muted-foreground px-4">
+                ZIVO may earn a commission when you book through partner links. 
+                This is at no extra cost to you.
+              </p>
+            </div>
+          )}
+          
+          {status === 'error' && (
+            <div className="space-y-4">
+              <div className="p-6 rounded-2xl bg-card border border-destructive/30 shadow-lg">
+                <p className="text-destructive font-medium mb-2">
+                  {errorMessage || 'Something went wrong'}
+                </p>
+                
+                {searchParams.get('url') && (
+                  <a
+                    href={decodeURIComponent(searchParams.get('url') || '')}
+                    target="_blank"
+                    rel="nofollow sponsored noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Click here to continue to partner site
+                  </a>
+                )}
+              </div>
+              
+              <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+                ← Return to ZIVO
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
