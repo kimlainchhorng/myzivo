@@ -344,11 +344,19 @@ const FlightResults = () => {
       serviceType: 'flights',
     });
     
-    // Open /out redirect which logs and redirects to partner
+    // Open /out redirect which logs and redirects to partner (new tab)
     window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   const handleViewAllOnPartner = () => {
+    // Toast notification for partner redirect
+    import("@/hooks/use-toast").then(({ toast }) => {
+      toast({
+        title: "Redirecting to partner...",
+        description: "Final pricing shown on partner site.",
+        duration: 3000,
+      });
+    });
     window.open(fallbackWhitelabelUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -442,16 +450,17 @@ const FlightResults = () => {
           }
         />
 
-        {/* Quick Stats */}
+        {/* Quick Stats & Trust Element */}
         {!isLoading && flights.length > 0 && (
           <section className="border-b border-border/50 py-4 bg-muted/10">
             <div className="container mx-auto px-4">
+              {/* Trust Element - REQUIRED */}
+              <p className="text-center text-xs text-muted-foreground mb-3">
+                <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
+                Compare prices from trusted partners. Booking completed on partner websites.
+              </p>
+              
               <div className="flex items-center justify-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 text-sm">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span className="text-muted-foreground">Compare trusted partners</span>
-                </div>
-                <span className="hidden sm:inline text-muted-foreground">•</span>
                 <div className="flex items-center gap-2 text-sm">
                   <TrendingDown className="w-4 h-4 text-emerald-500" />
                   <span>From <strong className="text-sky-500">{formatPrice(lowestPrice)}</strong></span>

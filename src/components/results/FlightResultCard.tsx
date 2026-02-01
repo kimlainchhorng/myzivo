@@ -1,15 +1,16 @@
 /**
  * Premium Flight Result Card
- * Unified design: Airline left, times center, price+CTA right
- * Mobile-first with clear visual hierarchy
+ * Meta-search affiliate card: Indicative pricing, partner redirect
+ * ZIVO is NOT an OTA - all bookings on partner sites
  */
 
-import { Plane, Clock, ExternalLink, Wifi, Utensils, Monitor, Luggage, Zap } from "lucide-react";
+import { Plane, Clock, ExternalLink, Wifi, Utensils, Monitor, Luggage, Zap, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { toast } from "@/hooks/use-toast";
 
 export interface FlightCardData {
   id: string;
@@ -32,6 +33,8 @@ export interface FlightCardData {
   isRealPrice?: boolean;
   isBestPrice?: boolean;
   isFastest?: boolean;
+  partnerName?: string;
+  priceUpdated?: boolean; // True if price differs >10% from cached
 }
 
 interface FlightResultCardProps {
@@ -65,11 +68,16 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
       )}
     >
       {/* Top badges row */}
-      {(flight.isBestPrice || flight.isFastest || flight.isRealPrice) && (
+      {(flight.isBestPrice || flight.isFastest || flight.isRealPrice || flight.priceUpdated) && (
         <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
-          {flight.isBestPrice && (
+          {flight.priceUpdated && (
+            <Badge className="bg-amber-500/20 text-amber-500 text-[10px] gap-1">
+              <AlertTriangle className="w-3 h-3" /> Price updated on partner site
+            </Badge>
+          )}
+          {flight.isBestPrice && !flight.priceUpdated && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              Best Price
+              Lowest Found
             </Badge>
           )}
           {flight.isFastest && !flight.isBestPrice && (
@@ -192,11 +200,22 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                   Converted from {baseCurrency}
                 </p>
               )}
+              {flight.partnerName && (
+                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                  via {flight.partnerName}
+                </p>
+              )}
             </div>
 
             <Button
               onClick={(e) => {
                 e.stopPropagation();
+                // Show redirect toast
+                toast({
+                  title: "Redirecting to partner...",
+                  description: "Final pricing shown on partner site.",
+                  duration: 3000,
+                });
                 onViewDeal(flight);
               }}
               className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white"
@@ -207,10 +226,10 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           </div>
         </div>
 
-        {/* Redirect notice */}
-        <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
-          <p className="text-[10px] text-muted-foreground">
-            Redirects to partner site to complete booking
+        {/* Affiliate disclaimer - REQUIRED */}
+        <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
+          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+            Prices are indicative and may change. Final price shown on partner site.
           </p>
         </div>
       </CardContent>
