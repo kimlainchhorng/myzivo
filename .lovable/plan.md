@@ -1,293 +1,245 @@
 
-# Global Currency Selector & Price Formatting System
+# Fix /flights/results to Display Live Flight Prices
 
 ## Overview
 
-This plan implements a comprehensive currency selection system across ZIVO with proper exchange rate handling, persistent preferences, and consistent locale-aware price formatting.
+The flight results page is currently not displaying live prices from the Aviasales/Travelpayouts API due to authentication issues. The edge function is returning a **403 "access denied"** error, which indicates the MD5 signature generation is incorrect. This plan fixes the API integration to deliver real-time flight prices.
 
 ---
 
 ## Current State Analysis
 
-### Existing Components
-- **`CurrencySelector.tsx`**: Basic dropdown with 8 currencies (USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY) but uses local state only
-- **`PriceDisplay.tsx`**: Hardcoded `$` symbol, no currency awareness
-- **Result Cards**: Hardcoded `$` symbols throughout (FlightResultCard, HotelResultCard, CarResultCard)
-- **`pricing.ts`**: Rides/Eats pricing engine uses `$` hardcoded
+### Issues Identified
 
-### Key Issues to Solve
-1. No global currency state management
-2. No exchange rate conversion logic
-3. Prices use hardcoded `$` symbols
-4. No locale-aware formatting (thousands separators, decimal places)
-5. No persistence across sessions
+1. **Signature Generation is Broken**
+   - The current `createSignature()` function uses a simple JavaScript hash, NOT proper MD5
+   - The API requires an actual MD5 hash of the token + marker + sorted parameter values
+   - Error in logs: `[API] Start search failed: 403 - access denied`
+
+2. **Request Structure Issues**
+   - Body includes `signature` field but must match exact API format
+   - Headers need proper token in `x-affiliate-user-id`
+   - The `x-signature` header may need proper MD5 calculation
+
+3. **Missing TRAVELPAYOUTS_MARKER Secret**
+   - Only `TRAVELPAYOUTS_API_TOKEN` is configured
+   - The marker (partner ID) should also be stored or hardcoded consistently
+
+### What's Already Correct
+- IATA codes are properly parsed via `parseFlightSearchParams()`
+- URL params use 3-letter codes (`from=MSY&to=PNH`)
+- UI components show "From $XXX" pricing
+- Fallback to whitelabel URL works
+- Caching strategy is correct (5-10 min)
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Currency Infrastructure
+### Step 1: Fix MD5 Signature Generation
 
-#### Step 1: Create Currency Configuration
-Create `src/config/currencies.ts`:
-- Define supported currencies with metadata:
+Update `supabase/functions/search-flights/index.ts` to use proper MD5:
 
-| Code | Symbol | Name | Decimals | Locale | Flag |
-|------|--------|------|----------|--------|------|
-| USD | $ | US Dollar | 2 | en-US | 🇺🇸 |
-| EUR | € | Euro | 2 | de-DE | 🇪🇺 |
-| GBP | £ | British Pound | 2 | en-GB | 🇬🇧 |
-| CAD | C$ | Canadian Dollar | 2 | en-CA | 🇨🇦 |
-| AUD | A$ | Australian Dollar | 2 | en-AU | 🇦🇺 |
-| JPY | ¥ | Japanese Yen | 0 | ja-JP | 🇯🇵 |
-| KRW | ₩ | South Korean Won | 0 | ko-KR | 🇰🇷 |
-| SGD | S$ | Singapore Dollar | 2 | en-SG | 🇸🇬 |
-| THB | ฿ | Thai Baht | 2 | th-TH | 🇹🇭 |
-| KHR | ៛ | Cambodian Riel | 0 | km-KH | 🇰🇭 |
-
-#### Step 2: Create Currency Context
-Create `src/contexts/CurrencyContext.tsx`:
-- Global state for selected currency
-- Exchange rates cache (24h TTL)
-- Persistence to localStorage + cookie
-- Conversion utilities
-- React context provider
-
-Key exports:
-- `CurrencyProvider` - Wraps app
-- `useCurrency()` - Hook to get current currency + format functions
-- `useFormattedPrice(amount, baseCurrency)` - Hook for converted display
-
-#### Step 3: Create Exchange Rate Hook
-Create `src/hooks/useExchangeRates.ts`:
-- Fetch rates from server-side edge function
-- Cache in memory with 24h expiry
-- Store rates relative to USD base
-- Fallback to static rates if API fails
-
-#### Step 4: Create FX Edge Function
-Create `supabase/functions/exchange-rates/index.ts`:
-- Fetch daily rates from free API (exchangerate-api.com or similar)
-- Cache in database table `exchange_rates`
-- Return cached rates if fresh (< 24h)
-- Secure server-side implementation
-
----
-
-### Phase 2: Price Formatting Utilities
-
-#### Step 5: Create Unified Price Formatter
-Create `src/lib/currency.ts`:
-
-```text
-Key functions:
-┌────────────────────────────────────────────────────────────┐
-│ formatPrice(amount, currency)                              │
-│   → Locale-aware formatting with proper symbol placement   │
-│   → Example: USD 1234.56 → "$1,234.56"                    │
-│   → Example: EUR 1234.56 → "€1.234,56"                    │
-│   → Example: JPY 12345 → "¥12,345"                        │
-├────────────────────────────────────────────────────────────┤
-│ convertPrice(amount, fromCurrency, toCurrency, rates)      │
-│   → Convert using provided exchange rates                  │
-│   → Returns raw number for internal use                    │
-├────────────────────────────────────────────────────────────┤
-│ formatConvertedPrice(amount, baseCurrency, targetCurrency) │
-│   → Convert and format in one call                         │
-│   → Returns formatted string                               │
-└────────────────────────────────────────────────────────────┘
+**Current (Broken):**
+```typescript
+// Uses a simple JavaScript hash - NOT MD5!
+let hash = 0;
+for (let i = 0; i < signatureString.length; i++) {
+  const char = signatureString.charCodeAt(i);
+  hash = ((hash << 5) - hash) + char;
+}
 ```
 
-#### Step 6: Update PriceDisplay Component
-Update `src/components/ui/price-display.tsx`:
-- Accept `currency` prop (defaults to context)
-- Accept `baseCurrency` prop for conversion
-- Use `useCurrency()` hook for formatting
-- Keep "From" prefix and "*" suffix for affiliate compliance
-- Add optional "Converted from USD" note
+**Fixed (Proper MD5):**
+```typescript
+import { crypto } from "https://deno.land/std@0.177.0/crypto/mod.ts";
+import { encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts";
 
----
-
-### Phase 3: UI Components
-
-#### Step 7: Upgrade CurrencySelector Component
-Rewrite `src/components/shared/CurrencySelector.tsx`:
-- Connect to CurrencyContext (not local state)
-- Use Radix Popover for accessible dropdown
-- Show flag + code + symbol
-- Animate selection changes
-- Mobile-optimized touch targets
-
-Desktop Header Integration:
-```text
-┌────────────────────────────────────────────────────┐
-│ [Logo]    Flights Hotels Cars Extras    🇺🇸 USD ▼ │
-└────────────────────────────────────────────────────┘
+async function createMd5Signature(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("MD5", data);
+  return encodeHex(new Uint8Array(hashBuffer));
+}
 ```
 
-Mobile Integration (in MobileNavMenu footer):
-```text
-┌────────────────────────────────────────────────────┐
-│ Currency: [🇺🇸 USD ▼]                             │
-│ [Log in]  [Sign up]                                │
-└────────────────────────────────────────────────────┘
+### Step 2: Fix Signature String Construction
+
+According to the API docs, the signature must:
+1. Sort ALL parameter values alphabetically (including nested)
+2. Join values with colons
+3. Prepend the API token
+4. Calculate MD5
+
+**Fix the signature building:**
+```typescript
+function buildSignatureString(token: string, marker: string, params: SearchParams): string {
+  // Sorted alphabetically as per API requirements
+  const values: string[] = [];
+  
+  // Top-level params (alphabetical)
+  values.push('USD');           // currency_code
+  values.push('en-us');         // locale
+  values.push(marker);          // marker
+  values.push('US');            // market_code
+  
+  // search_params.directions (array, each object sorted)
+  for (const dir of params.directions) {
+    values.push(dir.date);
+    values.push(dir.destination);
+    values.push(dir.origin);
+  }
+  
+  // search_params.passengers (sorted: adults, children, infants)
+  values.push(String(params.passengers.adults));
+  values.push(String(params.passengers.children));
+  values.push(String(params.passengers.infants));
+  
+  // search_params.trip_class
+  values.push(params.trip_class);
+  
+  // Build final string: token:value1:value2:...
+  return `${token}:${values.join(':')}`;
+}
 ```
 
-#### Step 8: Create Currency Change Indicator
-Create `src/components/shared/CurrencyBadge.tsx`:
-- Small badge showing current currency
-- Clickable to open selector
-- Used in result cards as subtle indicator
+### Step 3: Update Request Headers
 
----
+According to the API documentation, headers must include:
+- `x-real-host` - Your website address
+- `x-user-ip` - User's IP address
+- `x-signature` - MD5 signature
+- `x-affiliate-user-id` - API token
+- `Content-Type: application/json`
 
-### Phase 4: Integration Across Pages
+### Step 4: Fix Request Body Structure
 
-#### Step 9: Update Header
-Modify `src/components/Header.tsx`:
-- Add CurrencySelector to desktop actions (before user menu)
-- Subtle styling to not compete with CTA buttons
-
-#### Step 10: Update MobileNavMenu
-Modify `src/components/navigation/MobileNavMenu.tsx`:
-- Add currency selector above footer buttons
-- Use inline variant for quick selection
-
-#### Step 11: Update Flight Result Card
-Modify `src/components/results/FlightResultCard.tsx`:
-- Replace hardcoded `currencySymbol` logic
-- Use `useCurrency()` hook
-- Format: `formatPrice(flight.price, selectedCurrency)`
-- Add small "Converted from USD" text if applicable
-
-#### Step 12: Update Hotel Result Card
-Modify `src/components/results/HotelResultCard.tsx`:
-- Use `useCurrency()` hook
-- Format pricePerNight and totalPrice
-- Maintain "/night" suffix
-
-#### Step 13: Update Car Result Card
-Modify `src/components/results/CarResultCard.tsx`:
-- Use `useCurrency()` hook
-- Format pricePerDay and totalPrice
-- Maintain "/day" suffix
-
-#### Step 14: Update PriceDisplay Components
-Apply currency formatting to all price display areas:
-- Landing page "From" prices
-- Search result summaries
-- Cross-sell sections
-- Trending deals
-
----
-
-### Phase 5: URL & Persistence
-
-#### Step 15: Add Currency to URL Params
-Update URL handling to:
-- Append `&currency=EUR` to results URLs
-- Read currency from URL on page load (takes precedence)
-- Preserve during Edit Search and filter changes
-- Keep UTM params intact
-
-#### Step 16: Persistence Logic
-```text
-Priority order for currency selection:
-1. URL parameter (?currency=EUR)
-2. localStorage value
-3. Browser locale detection (navigator.language)
-4. Default: USD
+The body should match the exact API format:
+```json
+{
+  "signature": "MD5_HASH",
+  "marker": "618730",
+  "locale": "en-us",
+  "currency_code": "USD",
+  "market_code": "US",
+  "search_params": {
+    "trip_class": "Y",
+    "passengers": { "adults": 1, "children": 0, "infants": 0 },
+    "directions": [
+      { "origin": "MSY", "destination": "PNH", "date": "2026-02-03" },
+      { "origin": "PNH", "destination": "MSY", "date": "2026-02-24" }
+    ]
+  }
+}
 ```
 
+### Step 5: Add Booking Link Generation
+
+When user clicks "View Deal", we need to get the booking URL from the API:
+```
+POST https://[results_url]/searches/[search_id]/clicks/[proposal_id]
+```
+
+This returns the actual partner booking URL with affiliate tracking.
+
+### Step 6: Update Results Page Integration
+
+Modify `FlightResults.tsx` to:
+- Store `search_id` and `results_url` from API response
+- Pass `proposal_id` to booking link generator
+- Show "Live Price" badge when `isRealPrice: true`
+- Handle loading states properly (30-60 second search time)
+
 ---
 
-### Phase 6: App Provider Integration
+## Files to Create/Modify
 
-#### Step 17: Wire CurrencyProvider
-Modify `src/App.tsx`:
-- Add `CurrencyProvider` wrapper (inside Router, before UTMProvider)
-- Ensures currency available throughout app
+### Files Modified
+
+| File | Changes |
+|------|---------|
+| `supabase/functions/search-flights/index.ts` | Fix MD5 signature, update request structure, add booking link endpoint |
+| `src/hooks/useAviasalesFlightSearch.ts` | Store search_id/results_url, add booking link generation |
+| `src/pages/FlightResults.tsx` | Update View Deal handler to use proper booking links |
 
 ---
 
 ## Technical Details
 
-### Files Created
-| File | Purpose |
-|------|---------|
-| `src/config/currencies.ts` | Currency definitions and metadata |
-| `src/contexts/CurrencyContext.tsx` | Global currency state and formatting |
-| `src/hooks/useExchangeRates.ts` | FX rate fetching and caching |
-| `src/lib/currency.ts` | Formatting and conversion utilities |
-| `supabase/functions/exchange-rates/index.ts` | Server-side FX rate fetching |
-| `src/components/shared/CurrencyBadge.tsx` | Compact currency indicator |
+### Proper MD5 Signature Example
 
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add CurrencyProvider |
-| `src/components/Header.tsx` | Add CurrencySelector to desktop |
-| `src/components/navigation/MobileNavMenu.tsx` | Add CurrencySelector to mobile menu |
-| `src/components/shared/CurrencySelector.tsx` | Rewrite to use context |
-| `src/components/ui/price-display.tsx` | Add currency awareness |
-| `src/components/results/FlightResultCard.tsx` | Use currency formatting |
-| `src/components/results/HotelResultCard.tsx` | Use currency formatting |
-| `src/components/results/CarResultCard.tsx` | Use currency formatting |
+For search: MSY → PNH on 2026-02-03 with return 2026-02-24:
 
-### Database Table
-Create `exchange_rates` table:
-```text
-┌────────────────────────────────────────────────────────────┐
-│ Column         │ Type        │ Description                │
-├────────────────────────────────────────────────────────────┤
-│ id             │ uuid        │ Primary key                │
-│ base_currency  │ text        │ Always 'USD'               │
-│ target_currency│ text        │ EUR, GBP, etc.             │
-│ rate           │ decimal     │ Exchange rate              │
-│ fetched_at     │ timestamptz │ When rate was fetched      │
-└────────────────────────────────────────────────────────────┘
+**Input string:**
+```
+TOKEN:USD:en-us:618730:US:2026-02-03:PNH:MSY:2026-02-24:MSY:PNH:1:0:0:Y
 ```
 
+**MD5 hash:** (calculated from above)
+
+### API Flow
+
+```text
+1. User searches MSY → PNH
+   ↓
+2. Edge function calls /search/affiliate/start
+   ↓
+3. Receive search_id + results_url
+   ↓
+4. Poll /search/affiliate/results until is_over=true
+   ↓
+5. Transform & cache results (5-10 min TTL)
+   ↓
+6. Return enriched flight data to UI
+   ↓
+7. User clicks "View Deal"
+   ↓
+8. Call /searches/{search_id}/clicks/{proposal_id}
+   ↓
+9. Redirect to partner booking URL
+```
+
+### Error Handling
+
+- **403 Access Denied**: Signature is incorrect
+- **429 Rate Limit**: Show "Too many requests" message
+- **No results**: Show fallback whitelabel link
+- **Timeout**: Gracefully fall back to partner search
+
 ---
 
-## Formatting Examples
+## Caching Strategy (Already Correct)
 
-| Amount (USD) | EUR | GBP | JPY |
-|--------------|-----|-----|-----|
-| $1,234.56 | €1.142,03 | £971.23 | ¥185,184 |
-| $45.00 | €41,63 | £35.46 | ¥6,750 |
-| $2,500.00 | €2.312,50 | £1.968,75 | ¥375,000 |
-
----
-
-## Edge Cases Handled
-
-1. **API/Result prices in different currencies**: If API returns EUR prices, convert to user's selected currency
-2. **Zero exchange rates**: Fall back to static rates
-3. **New currency added**: Graceful fallback to USD formatting
-4. **SSR/Hydration**: Read from cookie for consistent initial render
-5. **Partner redirects**: Currency selection does NOT change partner URLs (they have their own FX)
-
----
-
-## Affiliate Compliance
-
-- Partner booking prices are NOT modified
-- Display prices are clearly marked as "indicative" / "From"
-- "Converted from USD" note shown when applicable
-- Sorting uses base price (USD) for consistency
-- Partner redirect still goes through /out unchanged
+- `staleTime: 5 * 60 * 1000` (5 minutes)
+- `gcTime: 15 * 60 * 1000` (15 minutes)
+- Force refresh on Edit Search (invalidate cache)
+- In-memory cache in edge function: 10 minutes TTL
 
 ---
 
 ## Testing Checklist
 
-- [ ] Change currency on results page → prices update instantly
-- [ ] Navigate to another product → currency persists
-- [ ] Open new session → last currency remembered
-- [ ] Partner redirect still works correctly
-- [ ] URL with `?currency=EUR` overrides localStorage
-- [ ] JPY/KRW show no decimals
-- [ ] EUR uses comma as decimal separator
-- [ ] Mobile selector works smoothly
-- [ ] Desktop dropdown closes on outside click
+After implementation:
+
+- [ ] Search MSY → PNH returns live prices
+- [ ] "Live Price" badge appears on results
+- [ ] Prices match partner site (within 10%)
+- [ ] "View Deal" opens partner booking page
+- [ ] UTM params preserved in redirect
+- [ ] Affiliate clicks logged to database
+- [ ] Fallback works if API fails
+- [ ] Loading skeleton shows during 30-60s search
+- [ ] Filters work on live results
+- [ ] Sorting works correctly
+
+---
+
+## Affiliate Compliance
+
+All existing compliance measures are preserved:
+- "From $XXX" price labeling ✓
+- "Prices are indicative..." disclaimer ✓
+- "View Deal" CTA (not "Book Now") ✓
+- Redirect through /out for tracking ✓
+- UTM/creator params preserved ✓
+- Partner booking page opens in new tab ✓
