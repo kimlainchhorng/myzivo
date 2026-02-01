@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "pk.eyJ1Ijoia2ltbGFpbiIsImEiOiJjbWp4aXZydHc0NmQyM2hwdnVxODBvOHFiIn0.rl7sFlnNFKJpOMC4D3sPgA";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 
 interface AdminLiveDriverMapProps {
   onDriverSelect?: (driver: OnlineDriver) => void;
@@ -49,6 +49,7 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
   const [selectedDriver, setSelectedDriver] = useState<OnlineDriver | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState<string>("_all");
+  const [mapError, setMapError] = useState<string | null>(null);
   
   const { data: onlineDrivers, isLoading, refetch } = useOnlineDrivers();
 
@@ -73,16 +74,26 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
+    if (!MAPBOX_TOKEN) {
+      setMapError("Map unavailable - configuration needed");
+      return;
+    }
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/dark-v11",
-      center: [-74.006, 40.7128], // NYC default
-      zoom: 11,
-    });
+    try {
+      mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: [-74.006, 40.7128], // NYC default
+        zoom: 11,
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+    } catch (error) {
+      console.error("Map initialization failed:", error);
+      setMapError("Failed to initialize map");
+    }
 
     return () => {
       map.current?.remove();
