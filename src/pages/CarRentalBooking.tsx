@@ -85,7 +85,8 @@ const CarRentalBooking = () => {
       midsize: "Midsize",
       suv: "SUV",
       luxury: "Luxury",
-      van: "Full-size", // Map van to existing category
+      van: "Full-size",
+      electric: "Electric",
     };
     setSelectedCategory(categoryMap[category] || category);
     setHasSearched(true);

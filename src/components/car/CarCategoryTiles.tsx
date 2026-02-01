@@ -16,7 +16,7 @@ interface CarCategoryTilesProps {
   className?: string;
 }
 
-const categoryOrder: CarCategory[] = ["economy", "compact", "midsize", "suv", "luxury", "van"];
+const categoryOrder: CarCategory[] = ["economy", "compact", "midsize", "suv", "luxury", "van", "electric"];
 
 const categoryPricing: Record<CarCategory, { priceFrom: number; popular?: boolean }> = {
   economy: { priceFrom: 25 },
@@ -25,6 +25,7 @@ const categoryPricing: Record<CarCategory, { priceFrom: number; popular?: boolea
   suv: { priceFrom: 55, popular: true },
   luxury: { priceFrom: 95 },
   van: { priceFrom: 65 },
+  electric: { priceFrom: 45, popular: true },
 };
 
 export default function CarCategoryTiles({

@@ -13,17 +13,29 @@ import heroEats from "@/assets/hero-eats.jpg";
 import heroHomepage from "@/assets/hero-homepage.jpg";
 import heroExtras from "@/assets/hero-extras.jpg";
 
+// Import service card assets
+import serviceFlights from "@/assets/service-flights.jpg";
+import serviceHotels from "@/assets/service-hotels.jpg";
+import serviceCars from "@/assets/service-cars.jpg";
+import serviceRides from "@/assets/service-rides.jpg";
+import serviceEats from "@/assets/service-eats.jpg";
+import serviceExtras from "@/assets/service-extras.jpg";
+
 // ============================================
 // SERVICE TYPES
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "extras";
-export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van";
+export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
 export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas";
 
 // ============================================
-// HERO PHOTOS
+// HERO PHOTOS (16:9)
 // ============================================
-export const heroPhotos: Record<ServiceType, { src: string; alt: string }> = {
+export const heroPhotos: Record<ServiceType | "homepage", { src: string; alt: string }> = {
+  homepage: {
+    src: heroHomepage,
+    alt: "ZIVO - Modern airport terminal with travelers, premium travel marketplace",
+  },
   flights: {
     src: heroFlights,
     alt: "ZIVO Flights - Airplane wing view with sunrise above clouds",
@@ -55,127 +67,136 @@ export const heroPhotos: Record<ServiceType, { src: string; alt: string }> = {
 // ============================================
 export const serviceCardPhotos: Record<ServiceType, { src: string; alt: string }> = {
   flights: {
-    src: heroFlights,
+    src: serviceFlights,
     alt: "ZIVO Flights - Compare prices from 500+ airlines worldwide",
   },
   hotels: {
-    src: heroHotels,
+    src: serviceHotels,
     alt: "ZIVO Hotels - Best rates on hotels, resorts and vacation stays",
   },
   cars: {
-    src: heroCars,
+    src: serviceCars,
     alt: "ZIVO Car Rental - Compare rental prices from trusted partners",
   },
   rides: {
-    src: heroRides,
+    src: serviceRides,
     alt: "ZIVO Rides - Request a ride in your local area",
   },
   eats: {
-    src: heroEats,
+    src: serviceEats,
     alt: "ZIVO Eats - Order food from local restaurants",
   },
   extras: {
-    src: heroHomepage,
+    src: serviceExtras,
     alt: "ZIVO Extras - Transfers, insurance and travel extras",
   },
 };
 
 // ============================================
 // CAR CATEGORY PHOTOS (Unsplash URLs - 4:3)
+// All images use cool/neutral tones
 // ============================================
 export const carCategoryPhotos: Record<CarCategory, { src: string; alt: string; label: string; passengers: number; bags: number }> = {
   economy: {
-    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=450&fit=crop&q=80",
     alt: "Economy rental car - Compact hatchback for city driving",
     label: "Economy",
     passengers: 4,
     bags: 2,
   },
   compact: {
-    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=450&fit=crop&q=80",
     alt: "Compact rental car - Small sedan for everyday travel",
     label: "Compact",
     passengers: 5,
     bags: 2,
   },
   midsize: {
-    src: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=450&fit=crop&q=80",
     alt: "Midsize rental car - Standard sedan for comfortable travel",
     label: "Midsize",
     passengers: 5,
     bags: 3,
   },
   suv: {
-    src: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&h=450&fit=crop&q=80",
     alt: "SUV rental - Crossover vehicle for family adventures",
     label: "SUV",
     passengers: 7,
     bags: 4,
   },
   luxury: {
-    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop&q=80",
     alt: "Luxury rental car - Premium sedan for executive travel",
     label: "Luxury",
     passengers: 5,
     bags: 3,
   },
   van: {
-    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=400&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop&q=80",
     alt: "Van rental - Minivan for group travel",
     label: "Van",
     passengers: 8,
     bags: 5,
   },
+  electric: {
+    src: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&h=450&fit=crop&q=80",
+    alt: "Electric car rental - Modern EV at charging station",
+    label: "Electric",
+    passengers: 5,
+    bags: 2,
+  },
 };
 
 // ============================================
-// DESTINATION PHOTOS (Unsplash URLs - 4:3)
+// DESTINATION PHOTOS (Unsplash URLs - 1:1 square)
+// All images use cool/neutral tones
 // ============================================
 export const destinationPhotos: Record<DestinationCity, { src: string; alt: string; city: string; country: string }> = {
   "new-york": {
-    src: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&h=300&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=400&h=400&fit=crop&q=80",
     alt: "New York, USA - Manhattan skyline at dusk",
     city: "New York",
     country: "USA",
   },
   london: {
-    src: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&h=300&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=400&h=400&fit=crop&q=80",
     alt: "London, United Kingdom - Tower Bridge at sunset",
     city: "London",
     country: "United Kingdom",
   },
   paris: {
-    src: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&h=300&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1431274172761-fca41d930114?w=400&h=400&fit=crop&q=80",
     alt: "Paris, France - Eiffel Tower with city view",
     city: "Paris",
     country: "France",
   },
   tokyo: {
-    src: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=300&fit=crop&q=80",
-    alt: "Tokyo, Japan - Shibuya crossing with neon lights",
+    src: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=400&h=400&fit=crop&q=80",
+    alt: "Tokyo, Japan - City skyline at night",
     city: "Tokyo",
     country: "Japan",
   },
   dubai: {
-    src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&h=400&fit=crop&q=80",
     alt: "Dubai, UAE - Burj Khalifa and modern skyline",
     city: "Dubai",
     country: "UAE",
   },
   "los-angeles": {
-    src: "https://images.unsplash.com/photo-1534190760961-74e8c1c5c3da?w=400&h=300&fit=crop&q=80",
-    alt: "Los Angeles, USA - Hollywood sign and palm trees",
+    src: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=80",
+    alt: "Los Angeles, USA - Downtown skyline at golden hour",
     city: "Los Angeles",
     country: "USA",
   },
   miami: {
-    src: "https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=400&h=300&fit=crop&q=80",
-    alt: "Miami, Florida - South Beach with ocean view",
+    src: "https://images.unsplash.com/photo-1506966953602-c20cc11f75e3?w=400&h=400&fit=crop&q=80",
+    alt: "Miami, Florida - Beach skyline view",
     city: "Miami",
     country: "Florida",
   },
   "las-vegas": {
-    src: "https://images.unsplash.com/photo-1605833556294-ea5c7a74f57d?w=400&h=300&fit=crop&q=80",
+    src: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=80",
     alt: "Las Vegas, Nevada - Strip lights at night",
     city: "Las Vegas",
     country: "Nevada",
@@ -200,7 +221,7 @@ export const serviceOverlays: Record<ServiceType, string> = {
 export const aspectRatios = {
   hero: "16:9",
   serviceCard: "4:3",
-  destinationTile: "4:3",
+  destinationTile: "1:1",
   carCategory: "4:3",
   restaurantThumb: "1:1",
 } as const;
@@ -209,8 +230,8 @@ export const aspectRatios = {
 // IMAGE SIZE CONSTRAINTS
 // ============================================
 export const imageSizes = {
-  hero: { maxWidth: 1920, maxHeight: 1080, maxFileSize: 200 }, // KB
-  serviceCard: { maxWidth: 400, maxHeight: 300, maxFileSize: 50 },
-  tile: { maxWidth: 400, maxHeight: 300, maxFileSize: 50 },
-  thumbnail: { maxWidth: 200, maxHeight: 200, maxFileSize: 25 },
+  hero: { maxWidth: 1920, maxHeight: 1080, maxFileSize: 250 }, // KB
+  serviceCard: { maxWidth: 768, maxHeight: 576, maxFileSize: 100 },
+  tile: { maxWidth: 400, maxHeight: 400, maxFileSize: 50 },
+  thumbnail: { maxWidth: 300, maxHeight: 300, maxFileSize: 30 },
 } as const;

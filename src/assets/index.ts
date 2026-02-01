@@ -4,7 +4,7 @@
  */
 
 // ==========================================
-// HERO BACKGROUNDS (Full-width page headers)
+// HERO BACKGROUNDS (Full-width page headers - 16:9)
 // ==========================================
 export { default as heroHomepage } from "./hero-homepage.jpg";
 export { default as heroFlights } from "./hero-flights.jpg";
@@ -12,6 +12,17 @@ export { default as heroHotels } from "./hero-hotels.jpg";
 export { default as heroCars } from "./hero-cars.jpg";
 export { default as heroRides } from "./hero-rides.jpg";
 export { default as heroEats } from "./hero-eats.jpg";
+export { default as heroExtras } from "./hero-extras.jpg";
+
+// ==========================================
+// SERVICE CARD IMAGES (4:3 aspect ratio)
+// ==========================================
+export { default as serviceFlights } from "./service-flights.jpg";
+export { default as serviceHotels } from "./service-hotels.jpg";
+export { default as serviceCars } from "./service-cars.jpg";
+export { default as serviceRides } from "./service-rides.jpg";
+export { default as serviceEats } from "./service-eats.jpg";
+export { default as serviceExtras } from "./service-extras.jpg";
 
 // ==========================================
 // AD CAMPAIGN IMAGES
@@ -53,13 +64,13 @@ export { default as zivoLogo } from "./zivo-logo.png";
 
 // ==========================================
 // SERVICE CARD THUMBNAILS (for homepage grid)
-// Uses existing hero images as card backgrounds
+// Uses dedicated 4:3 service card images
 // ==========================================
 export const serviceCardImages = {
-  flights: () => import("./hero-flights.jpg"),
-  hotels: () => import("./hero-hotels.jpg"),
-  cars: () => import("./hero-cars.jpg"),
-  rides: () => import("./hero-rides.jpg"),
-  eats: () => import("./hero-eats.jpg"),
-  extras: () => import("./hero-homepage.jpg"), // fallback
+  flights: () => import("./service-flights.jpg"),
+  hotels: () => import("./service-hotels.jpg"),
+  cars: () => import("./service-cars.jpg"),
+  rides: () => import("./service-rides.jpg"),
+  eats: () => import("./service-eats.jpg"),
+  extras: () => import("./service-extras.jpg"),
 } as const;
