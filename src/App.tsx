@@ -173,12 +173,14 @@ const App = () => (
                 
                 {/* SEO Hotel Landing Pages */}
                 <Route path="/hotels" element={<HotelLanding />} />
+                <Route path="/hotels/:city" element={<HotelLanding />} />
                 <Route path="/hotels/in-:city" element={<HotelLanding />} />
                 
                 {/* SEO Car Rental Landing Pages */}
                 <Route path="/car-rental" element={<CarRentalLanding />} />
                 <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
                 <Route path="/rent-car" element={<CarRentalBooking />} />
+                <Route path="/rent-car/:city" element={<CarRentalLanding />} />
                 
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trips" element={<TripHistory />} />

@@ -26,7 +26,7 @@ import serviceExtras from "@/assets/service-extras.jpg";
 // ============================================
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
-export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas";
+export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam";
 
 // ============================================
 // HERO PHOTOS (16:9)
@@ -228,6 +228,102 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     alt: "Las Vegas, Nevada - Strip lights at night",
     city: "Las Vegas",
     country: "Nevada",
+    width: 400,
+    height: 400,
+  },
+  "chicago": {
+    src: "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Chicago, USA - Skyline with river and architecture",
+    city: "Chicago",
+    country: "USA",
+    width: 400,
+    height: 400,
+  },
+  "dallas": {
+    src: "https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Dallas, Texas - Downtown skyline at night",
+    city: "Dallas",
+    country: "Texas",
+    width: 400,
+    height: 400,
+  },
+  "atlanta": {
+    src: "https://images.unsplash.com/photo-1575917649705-5b59aaa12e6b?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Atlanta, Georgia - Downtown skyline view",
+    city: "Atlanta",
+    country: "Georgia",
+    width: 400,
+    height: 400,
+  },
+  "san-francisco": {
+    src: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "San Francisco, USA - Golden Gate Bridge",
+    city: "San Francisco",
+    country: "USA",
+    width: 400,
+    height: 400,
+  },
+  "orlando": {
+    src: "https://images.unsplash.com/photo-1575089776834-8be34c8a652e?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Orlando, Florida - Theme park area skyline",
+    city: "Orlando",
+    country: "Florida",
+    width: 400,
+    height: 400,
+  },
+  "phoenix": {
+    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Phoenix, Arizona - Desert city skyline",
+    city: "Phoenix",
+    country: "Arizona",
+    width: 400,
+    height: 400,
+  },
+  "san-diego": {
+    src: "https://images.unsplash.com/photo-1538964173425-93c8e0a2a8a8?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "San Diego, California - Harbor and skyline",
+    city: "San Diego",
+    country: "California",
+    width: 400,
+    height: 400,
+  },
+  "cancun": {
+    src: "https://images.unsplash.com/photo-1552074284-5e84a3e70b0a?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Cancún, Mexico - Caribbean beach resort",
+    city: "Cancún",
+    country: "Mexico",
+    width: 400,
+    height: 400,
+  },
+  "barcelona": {
+    src: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Barcelona, Spain - City view with Sagrada Familia",
+    city: "Barcelona",
+    country: "Spain",
+    width: 400,
+    height: 400,
+  },
+  "singapore": {
+    src: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Singapore - Marina Bay Sands skyline",
+    city: "Singapore",
+    country: "Singapore",
+    width: 400,
+    height: 400,
+  },
+  "sydney": {
+    src: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Sydney, Australia - Opera House harbor view",
+    city: "Sydney",
+    country: "Australia",
+    width: 400,
+    height: 400,
+  },
+  "amsterdam": {
+    src: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    alt: "Amsterdam, Netherlands - Canal houses",
+    city: "Amsterdam",
+    country: "Netherlands",
     width: 400,
     height: 400,
   },

@@ -3,3 +3,6 @@ export { default as SEOContentBlock } from './SEOContentBlock';
 export { default as InternalLinkGrid } from './InternalLinkGrid';
 export { default as PopularRoutesGrid } from './PopularRoutesGrid';
 export { default as PopularDestinationsGrid } from './PopularDestinationsGrid';
+export { default as BreadcrumbSchema } from './BreadcrumbSchema';
+export { default as DestinationHero } from './DestinationHero';
+export { DestinationIntro, TravelTips, RelatedDestinations, DestinationFAQ, AffiliateDisclaimer } from './DestinationContent';
