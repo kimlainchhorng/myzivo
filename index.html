@@ -41,6 +41,9 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="manifest" href="/manifest.webmanifest" />
 
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://hizivo.com/" />
+
     <!-- Open Graph - Enhanced for Social Sharing -->
     <meta property="og:title" content="ZIVO - Compare Flights, Hotels & Car Rentals" />
     <meta property="og:description" content="Compare travel prices from 500+ trusted partners. Find the best deals on flights, hotels, and car rentals. No booking fees on ZIVO." />
@@ -61,6 +64,52 @@
     <meta name="twitter:description" content="Compare travel prices from 500+ trusted partners. No booking fees. Find the best deals." />
     <meta name="twitter:image" content="https://hizivo.com/og-image.png" />
     <meta name="twitter:image:alt" content="ZIVO - Compare Travel Prices" />
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ZIVO",
+      "legalName": "ZIVO LLC",
+      "url": "https://hizivo.com",
+      "logo": "https://hizivo.com/og-image.png",
+      "description": "ZIVO is a travel search and comparison platform helping users find flights, hotels, and car rentals from trusted partners.",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "email": "info@hizivo.com",
+          "contactType": "customer support"
+        },
+        {
+          "@type": "ContactPoint",
+          "email": "payment@hizivo.com",
+          "contactType": "billing support"
+        },
+        {
+          "@type": "ContactPoint",
+          "email": "kimlain@hizivo.com",
+          "contactType": "business inquiries"
+        }
+      ],
+      "sameAs": []
+    }
+    </script>
+
+    <!-- WebSite Schema with SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "ZIVO",
+      "url": "https://hizivo.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://hizivo.com/book-flight?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
 
   <body>

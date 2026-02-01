@@ -106,36 +106,22 @@ export const megaMenuData: MegaMenuData[] = [
     icon: Car,
     color: "text-rides",
     hoverColor: "hover:text-rides",
-    description: "Get where you need to go",
+    description: "Coming Soon — Ride discovery platform",
     mainAction: {
-      label: "Book a Ride",
+      label: "Coming Soon",
       href: "/ride",
     },
     sections: [
       {
-        title: "Ride Options",
+        title: "ZIVO Rides (Planned)",
         items: [
-          { icon: Car, label: "Economy", description: "Affordable everyday rides", href: "/ride?type=economy", color: "text-rides" },
-          { icon: Car, label: "Comfort", description: "Extra legroom & amenities", href: "/ride?type=comfort", color: "text-rides" },
-          { icon: Car, label: "Premium", description: "Luxury vehicles & top drivers", href: "/ride?type=premium", color: "text-rides" },
-          { icon: Users, label: "XL", description: "Rides for groups up to 6", href: "/ride?type=xl", color: "text-rides" },
-        ],
-      },
-      {
-        title: "More Services",
-        items: [
-          { icon: Briefcase, label: "Business", description: "Corporate travel solutions", href: "/ride?business=true", color: "text-muted-foreground" },
-          { icon: Clock, label: "Schedule Ahead", description: "Book rides in advance", href: "/ride?schedule=true", color: "text-muted-foreground" },
-          { icon: MapPin, label: "Hourly Rental", description: "Driver by the hour", href: "/ride?hourly=true", color: "text-muted-foreground" },
-          { icon: Package, label: "Package Delivery", description: "Send packages across town", href: "/package-delivery", color: "text-eats", badge: "New" },
+          { icon: Car, label: "Coming Soon", description: "Ride discovery platform in development", href: "/ride", color: "text-muted-foreground", badge: "Soon" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Rider Terms", description: "Terms of service for riders", href: "/terms-of-service#riders" },
-      { icon: ShieldCheck, label: "Safety Center", description: "Your safety is our priority", href: "/help#safety" },
-      { icon: HelpCircle, label: "Ride FAQ", description: "Common questions answered", href: "/help#rides" },
-      { icon: DollarSign, label: "Pricing", description: "Transparent fare breakdown", href: "/help#pricing" },
+      { icon: FileText, label: "About ZIVO", description: "Learn about our platform", href: "/about" },
+      { icon: HelpCircle, label: "Help Center", description: "Get support", href: "/help" },
     ],
   },
   {
@@ -144,36 +130,22 @@ export const megaMenuData: MegaMenuData[] = [
     icon: UtensilsCrossed,
     color: "text-eats",
     hoverColor: "hover:text-eats",
-    description: "Food delivered to your door",
+    description: "Coming Soon — Food discovery concept",
     mainAction: {
-      label: "Order Food",
+      label: "Coming Soon",
       href: "/food",
     },
     sections: [
       {
-        title: "Browse By",
+        title: "ZIVO Eats (Planned)",
         items: [
-          { icon: Utensils, label: "Restaurants", description: "Full menus from local spots", href: "/food", color: "text-eats" },
-          { icon: Coffee, label: "Coffee & Tea", description: "Your morning favorites", href: "/food?category=coffee", color: "text-eats" },
-          { icon: Wine, label: "Alcohol", description: "Beer, wine & spirits", href: "/food?category=alcohol", color: "text-eats" },
-          { icon: Package, label: "Grocery", description: "Essentials delivered fast", href: "/food?category=grocery", color: "text-eats" },
-        ],
-      },
-      {
-        title: "Partner With Us",
-        items: [
-          { icon: Building2, label: "Add Your Restaurant", description: "Grow your business with ZIVO", href: "/restaurant-registration", color: "text-muted-foreground" },
-          { icon: Truck, label: "Become a Courier", description: "Flexible delivery earnings", href: "/drive", color: "text-muted-foreground" },
-          { icon: Star, label: "Top Rated", description: "Highest rated restaurants", href: "/food?sort=rating", color: "text-muted-foreground" },
-          { icon: Zap, label: "Fast Delivery", description: "Under 30 minute delivery", href: "/food?filter=fast", color: "text-muted-foreground" },
+          { icon: UtensilsCrossed, label: "Coming Soon", description: "Food discovery concept in development", href: "/food", color: "text-muted-foreground", badge: "Soon" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Eats Terms", description: "Food delivery policies", href: "/terms-of-service#eats" },
-      { icon: ShieldCheck, label: "Food Safety", description: "Quality & hygiene standards", href: "/help#food-safety" },
-      { icon: HelpCircle, label: "Eats FAQ", description: "Order & delivery help", href: "/help#eats" },
-      { icon: DollarSign, label: "Fees & Pricing", description: "Delivery fees explained", href: "/help#eats-pricing" },
+      { icon: FileText, label: "About ZIVO", description: "Learn about our platform", href: "/about" },
+      { icon: HelpCircle, label: "Help Center", description: "Get support", href: "/help" },
     ],
   },
   {
