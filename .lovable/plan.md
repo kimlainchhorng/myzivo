@@ -6,143 +6,127 @@ Rebuild `/extras` as the exclusive, centralized hub for all travel add-on partne
 
 ---
 
-## Phase 1: Update Partner Configuration
+## Phase 1: Rebuild /extras Page (TravelExtras.tsx)
 
-### 1.1 Add Missing Partners to `affiliateLinks.ts`
-Add Klook to `ACTIVITY_PARTNERS` registry with the correct tracking URL from the user's list:
-- Klook: `https://klook.tpo.li/ToVcOax7`
+### New Page Structure
 
-Verify all partners from user's list are properly configured:
-| Partner | Category | URL |
-|---------|----------|-----|
-| Klook | Activities | klook.tpo.li/ToVcOax7 |
-| Tiqets | Activities | tiqets.tpo.li/5fqrcQWZ |
-| Yesim | eSIM | yesim.tpo.li/OpjeHJgH |
-| Searadar | Travel Radar | searadar.tpo.li/iAbLlX9i |
-| TicketNetwork | Tickets | ticketnetwork.tpo.li/utk3u8Vr |
-| Compensair | Compensation | compensair.tpo.li/npsp8pm0 |
-
----
-
-## Phase 2: Rebuild /extras Page
-
-### 2.1 Update `TravelExtras.tsx` Structure
-
-**A) Hero Section**
+**A) Premium Hero Section**
 - Title: "ZIVO Extras"
 - Subtitle: "Tours, transfers, eSIM, luggage storage, and travel services — book on trusted partner sites."
-- Use existing `hero-extras.jpg` asset
+- Use existing `hero-extras.jpg` with gradient overlay
 
 **B) Optional City Input**
-Add a destination input at the top:
-```
-"Traveling to" [City input field]
-```
-Store city for analytics tracking (append as `utm_content` or store locally)
+- Add destination input field: "Traveling to (city)"
+- Store city for analytics tracking (pass as `utm_content` parameter)
 
-**C) Category Grid - All 13 Partners**
-Build a flat grid of partner cards (no grouped categories):
+**C) Flat Partner Grid - All 13 Partners**
 
 | Partner | Icon | Description |
 |---------|------|-------------|
-| Activities & Tours (Klook) | 🎟️ | Book tours and attractions worldwide |
-| Museums & Attractions (Tiqets) | 🎫 | Skip-the-line museum tickets |
-| Airport Transfers (KiwiTaxi) | 🚕 | Fixed-price airport pickups |
-| Transfers Marketplace (GetTransfer) | 🚙 | Compare local transfer drivers |
-| eSIM (Airalo) | 📱 | Instant eSIM for 190+ countries |
-| eSIM (Yesim) | 📶 | Budget-friendly travel eSIM |
-| SIM (Drimsim) | 🌐 | Global SIM card with data |
-| Luggage Storage (Radical Storage) | 🧳 | Store bags from $5.90/day |
-| Audio Tours (WeGoTrip) | 🎧 | Self-guided audio experiences |
-| Flight Compensation (AirHelp) | ⚖️ | Claim up to €600 for delays |
-| Flight Compensation (Compensair) | ✈️ | Free flight compensation check |
-| Travel Radar (Searadar) | 🔍 | Compare all travel options |
-| Tickets Marketplace (TicketNetwork) | 🎭 | Concerts, sports, live events |
+| Activities & Tours (Klook) | Ticket | Book tours and attractions worldwide |
+| Museums & Attractions (Tiqets) | Ticket | Skip-the-line museum tickets |
+| Airport Transfers (KiwiTaxi) | Car | Fixed-price airport pickups |
+| Transfers Marketplace (GetTransfer) | Car | Compare local transfer drivers |
+| eSIM (Airalo) | Wifi | Instant eSIM for 190+ countries |
+| eSIM (Yesim) | Wifi | Budget-friendly travel eSIM |
+| SIM (Drimsim) | Globe | Global SIM card with data |
+| Luggage Storage (Radical Storage) | Luggage | Store bags from $5.90/day |
+| Audio Tours (WeGoTrip) | Headphones | Self-guided audio experiences |
+| Flight Compensation (AirHelp) | Scale | Claim up to €600 for delays |
+| Flight Compensation (Compensair) | Plane | Free flight compensation check |
+| Travel Radar (Searadar) | Search | Compare all travel options |
+| Tickets Marketplace (TicketNetwork) | Ticket | Concerts, sports, live events |
 
-Each card includes:
-- Premium icon + partner logo/emoji
+Each card will include:
+- Clean icon and partner name
 - 1-line description
-- "Explore" CTA button
+- "Explore →" CTA button
 - Opens in NEW TAB via `/out` redirect
-- Shows redirect notice on hover/before click
-
-### 2.2 Card Component Design
-```text
-┌─────────────────────────────────────┐
-│  🎟️  Activities & Tours             │
-│       Klook                          │
-│       Book tours and attractions     │
-│                                      │
-│  [Explore →]  Opens in new tab       │
-└─────────────────────────────────────┘
-```
-
-### 2.3 Tracking Implementation
-All CTAs use:
-```typescript
-openPartnerLink(partner.trackingUrl, {
-  partnerId: partner.id,
-  partnerName: partner.name,
-  product: 'extras',
-  pageSource: 'extras',
-});
-```
-- Opens `/out?partner=X&name=X&product=extras&page=extras&url=X`
-- Logs to `affiliate_click_logs` with proper subid
-- Opens partner in new tab with `rel="nofollow sponsored noopener noreferrer"`
+- Hover tooltip: "You will be redirected to a partner site."
 
 ---
 
-## Phase 3: Replace Scattered Links on Travel Pages
+## Phase 2: Add Partner Links Configuration
 
-### 3.1 Modify `EnhanceYourTrip.tsx`
-Change from showing partner cards with direct CTAs to:
-- Show category preview cards (no direct partner links)
-- All cards link to `/extras` page
-- Add "View All Extras →" prominent CTA
+### Partner URLs to Add to affiliateLinks.ts
 
-**Before:**
-```
-[Partner Card with Explore CTA] → /out → partner
-```
+These new partners need to be added to support the full list:
 
-**After:**
-```
-[Category Preview Card] → /extras (internal link)
+```text
+klook: https://klook.tpo.li/ToVcOax7
+yesim: (already exists) https://yesim.tpo.li/OpjeHJgH
+searadar: (already exists) https://searadar.tpo.li/iAbLlX9i
+ticketnetwork: (already exists) https://ticketnetwork.tpo.li/utk3u8Vr
+compensair: (already exists) https://compensair.tpo.li/npsp8pm0
 ```
 
-### 3.2 Files to Update
+### Create EXTRAS_PARTNERS Registry
+
+A new flat array specifically for the /extras page with all 13 partners:
+
+```typescript
+const EXTRAS_PARTNERS = [
+  { id: 'klook', name: 'Klook', category: 'Activities & Tours', url: '...', icon: 'Ticket' },
+  { id: 'tiqets', name: 'Tiqets', category: 'Museums & Attractions', url: '...', icon: 'Ticket' },
+  // ... all 13 partners
+];
+```
+
+---
+
+## Phase 3: Tracking Implementation
+
+All CTAs will use the existing `openPartnerLink()` function which:
+1. Opens `/out?partner=X&name=X&product=extras&page=extras&url=X`
+2. The `/out` page logs to `affiliate_click_logs` table
+3. Opens partner in new tab with proper rel attributes
+
+### Click Logging Format
+- `product`: "extras"
+- `page_source`: "extras"
+- `partner_id`: e.g., "klook", "tiqets"
+- SubID format: `extras.extras.klook.{utm_source}.{utm_campaign}.{creator}.{date}`
+
+---
+
+## Phase 4: Replace Scattered Links on Travel Pages
+
+### Modify EnhanceYourTrip.tsx
+
+**Current behavior:**
+- Shows partner cards with direct "Book Transfer", "Rent a Car" CTAs
+- Each card opens `/out` to the partner site
+
+**New behavior:**
+- Show category preview cards (Transfers, Activities, eSIM, etc.)
+- All cards navigate internally to `/extras` page
+- Remove direct partner links from component
+- Add prominent "View All Extras →" CTA
+
+### Files to Update
+
 | File | Change |
 |------|--------|
-| `FlightResults.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
-| `HotelBooking.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
-| `CarRentalBooking.tsx` | Keep `EnhanceYourTrip` but link to `/extras` |
-| `CrossSellBanner.tsx` | Update "Things To Do" to link to `/extras` |
-
-### 3.3 Remove Unused Components
-Mark as deprecated (or remove if unused elsewhere):
-- `AirportTransfersSection.tsx` - partner links move to /extras
-- `LuggageStorageSection.tsx` - partner links move to /extras  
-- `TravelEsimSection.tsx` - partner links move to /extras
-- `FlightCompensationSection.tsx` - partner links move to /extras
-- `ActivitiesSection.tsx` - partner links move to /extras
+| `EnhanceYourTrip.tsx` | Convert to internal navigation only - link to `/extras` |
+| `AirportTransfersSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
+| `LuggageStorageSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
+| `TravelEsimSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
+| `FlightCompensationSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
+| `ActivitiesSection.tsx` | Replace direct links with link to `/extras` (or deprecate) |
+| `CrossSellBanner.tsx` (seo) | Update "Things To Do" to link to `/extras` |
 
 ---
 
-## Phase 4: Affiliate Disclosure Footer
+## Phase 5: Affiliate Disclosure
 
-### 4.1 Exact Disclosure Text
-At bottom of `/extras` page:
+### Footer Disclosure (Exact Text)
 ```
 "ZIVO may earn a commission when users book through partner links.
 Bookings are completed on partner websites."
 ```
 
-### 4.2 Per-Card Notice
-Add tooltip or small text on hover:
-```
-"You will be redirected to a partner site."
-```
+### Per-Card Hover Notice
+Tooltip on each card: "You will be redirected to a partner site."
 
 ---
 
@@ -152,37 +136,37 @@ Add tooltip or small text on hover:
 
 | File | Action |
 |------|--------|
-| `src/pages/TravelExtras.tsx` | **Major rewrite** - new structure with all 13 partners |
-| `src/config/affiliateLinks.ts` | Add Klook to ACTIVITY_PARTNERS |
-| `src/components/travel-extras/EnhanceYourTrip.tsx` | Replace partner links with `/extras` navigation |
-| `src/components/seo/CrossSellBanner.tsx` | Update "Things To Do" link to `/extras` |
+| `src/pages/TravelExtras.tsx` | **Major rewrite** - new hero, city input, flat 13-partner grid |
+| `src/config/affiliateLinks.ts` | Add Klook to registry; create EXTRAS_PARTNERS array |
+| `src/components/travel-extras/EnhanceYourTrip.tsx` | Replace partner links with internal `/extras` navigation |
+| `src/components/seo/CrossSellBanner.tsx` | Update "Things To Do" href to `/extras` |
 
-### Partner URL Registry (Final)
-```typescript
-const EXTRAS_PARTNERS = {
-  klook: 'https://klook.tpo.li/ToVcOax7',
-  tiqets: 'https://tiqets.tpo.li/5fqrcQWZ',
-  kiwitaxi: 'https://kiwitaxi.tpo.li/Bj6zghJH',
-  gettransfer: 'https://gettransfer.tpo.li/FbrIguyh',
-  airalo: 'https://airalo.tpo.li/zVRtp8Zt',
-  yesim: 'https://yesim.tpo.li/OpjeHJgH',
-  drimsim: 'https://drimsim.tpo.li/A9yKO5oA',
-  radicalstorage: 'https://radicalstorage.tpo.li/4W0KR99h',
-  wegotrip: 'https://wegotrip.tpo.li/QSrOpIdV',
-  airhelp: 'https://airhelp.tpo.li/7Z5saPi2',
-  compensair: 'https://compensair.tpo.li/npsp8pm0',
-  searadar: 'https://searadar.tpo.li/iAbLlX9i',
-  ticketnetwork: 'https://ticketnetwork.tpo.li/utk3u8Vr',
-};
+### Partner URL Registry (Final - 13 Partners)
+
+```text
+1. klook: https://klook.tpo.li/ToVcOax7
+2. tiqets: https://tiqets.tpo.li/5fqrcQWZ
+3. kiwitaxi: https://kiwitaxi.tpo.li/Bj6zghJH
+4. gettransfer: https://gettransfer.tpo.li/FbrIguyh
+5. airalo: https://airalo.tpo.li/zVRtp8Zt
+6. yesim: https://yesim.tpo.li/OpjeHJgH
+7. drimsim: https://drimsim.tpo.li/A9yKO5oA
+8. radicalstorage: https://radicalstorage.tpo.li/4W0KR99h
+9. wegotrip: https://wegotrip.tpo.li/QSrOpIdV
+10. airhelp: https://airhelp.tpo.li/7Z5saPi2
+11. compensair: https://compensair.tpo.li/npsp8pm0
+12. searadar: https://searadar.tpo.li/iAbLlX9i
+13. ticketnetwork: https://ticketnetwork.tpo.li/utk3u8Vr
 ```
 
 ---
 
 ## Verification Checklist
 
-After implementation:
-- [ ] Navigate to `/extras` - verify all 13 partner cards visible
+After implementation, we should verify:
+- [ ] Navigate to `/extras` - all 13 partner cards visible
 - [ ] Click each partner CTA - verify opens `/out?...` in new tab
-- [ ] Check `/admin/clicks` - verify clicks logged with proper subid
+- [ ] Check `/admin/clicks` - verify clicks logged with product=extras, proper subid
 - [ ] Navigate to `/flights` results - verify no direct partner links (only "View Extras" link)
 - [ ] Test UTM flow: `/lp/flights?utm_source=google` → `/flights` → `/extras` → partner - verify tracking persists
+- [ ] City input stores value for analytics when partner clicked
