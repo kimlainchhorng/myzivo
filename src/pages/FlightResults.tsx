@@ -50,7 +50,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
-import { useRealFlightSearch } from "@/hooks/useRealFlightSearch";
+import { useAviasalesFlightSearch, buildWhitelabelUrl, type ApiFlightResult, type FlightSearchResponse } from "@/hooks/useAviasalesFlightSearch";
 import { getAirlineLogo } from "@/data/airlines";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { trackAffiliateClick, trackPageView } from "@/lib/affiliateTracking";
@@ -109,14 +109,29 @@ const FlightResults = () => {
     }
   }, [originIata, destinationIata, departureDate, isValid]);
 
-  // Fetch real flights using validated IATA codes
-  const { data: realFlights, isLoading, isError, error } = useRealFlightSearch({
+  // Fetch real flights using Aviasales API
+  const { 
+    data: apiResponse, 
+    isLoading, 
+    isError, 
+    error 
+  } = useAviasalesFlightSearch({
     origin: originIata,
     destination: destinationIata,
-    departureDate: departureDate || undefined,
+    departureDate: departureDate || '',
     returnDate: returnDate || undefined,
+    passengers,
+    cabinClass,
+    tripType,
     enabled: isValid,
   });
+  
+  // Extract data from API response
+  const apiFlights = apiResponse?.flights || [];
+  const isRealPrice = apiResponse?.isRealPrice || false;
+  const fallbackWhitelabelUrl = apiResponse?.whitelabelUrl || 
+    (isValid ? buildWhitelabelUrl({ origin: originIata, destination: destinationIata, departureDate: departureDate || '', returnDate, passengers, cabinClass, tripType }) : '');
+  const apiMessage = apiResponse?.message;
 
   // Generate fallback flights
   const generatedFlights = useMemo(() => {
@@ -124,19 +139,57 @@ const FlightResults = () => {
     return generateFlights(originIata, destinationIata, departDateParsed, 15);
   }, [originIata, destinationIata, departDateParsed, isValid]);
 
+  // Convert API flights to GeneratedFlight format for compatibility
+  const convertedApiFlights: GeneratedFlight[] = useMemo(() => {
+    return apiFlights.map((f: ApiFlightResult) => ({
+      id: f.id,
+      airline: f.airline,
+      airlineCode: f.airlineCode,
+      flightNumber: f.flightNumber,
+      departure: f.departure,
+      arrival: f.arrival,
+      duration: f.duration,
+      stops: f.stops,
+      stopCities: f.stopCities,
+      price: f.pricePerPerson || f.price,
+      class: f.cabinClass === 'C' ? 'Business' : f.cabinClass === 'F' ? 'First' : 'Economy',
+      amenities: [],
+      seatsLeft: f.seatsAvailable || 5,
+      category: 'full-service' as const,
+      alliance: 'Independent',
+      aircraft: 'Various',
+      onTimePerformance: 85,
+      carbonOffset: 0,
+      baggageIncluded: f.baggageIncluded || 'Check with airline',
+      refundable: f.isRefundable || false,
+      wifi: false,
+      entertainment: false,
+      meals: false,
+      legroom: '31"',
+      logo: f.logo || getAirlineLogo(f.airlineCode),
+      isRealPrice: isRealPrice,
+      currency: f.currency || 'USD',
+      agentName: f.agentName,
+    }));
+  }, [apiFlights, isRealPrice]);
+  
   // Combine and filter results
   const flights = useMemo(() => {
     if (!isValid) return [];
     
     const combined: GeneratedFlight[] = [];
     
-    if (realFlights && realFlights.length > 0) {
-      combined.push(...realFlights);
+    // Use API results first if available
+    if (convertedApiFlights.length > 0) {
+      combined.push(...convertedApiFlights);
     }
 
-    const realAirlineCodes = new Set((realFlights || []).map((f: GeneratedFlight) => f.airlineCode));
-    const uniqueGenerated = generatedFlights.filter((f) => !realAirlineCodes.has(f.airlineCode));
-    combined.push(...uniqueGenerated);
+    // Add generated flights as fallback only if no real prices
+    if (!isRealPrice) {
+      const realAirlineCodes = new Set(convertedApiFlights.map((f) => f.airlineCode));
+      const uniqueGenerated = generatedFlights.filter((f) => !realAirlineCodes.has(f.airlineCode));
+      combined.push(...uniqueGenerated.slice(0, 10 - convertedApiFlights.length));
+    }
 
     // Apply filters
     let filtered = combined.filter(f => f.price <= maxPrice);
@@ -179,11 +232,11 @@ const FlightResults = () => {
           return 0;
       }
     });
-  }, [realFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, airlineFilter, isValid]);
+  }, [convertedApiFlights, generatedFlights, sortBy, maxPrice, stopsFilter, timeFilter, airlineFilter, isValid, isRealPrice]);
 
   // Get unique airlines from unfiltered flights for filter options
   const availableAirlines = useMemo(() => {
-    const combined = [...(realFlights || []), ...generatedFlights];
+    const combined = [...convertedApiFlights, ...generatedFlights];
     const airlineMap = new Map<string, { code: string; name: string; count: number }>();
     
     combined.forEach(f => {
@@ -196,7 +249,7 @@ const FlightResults = () => {
     });
     
     return Array.from(airlineMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [realFlights, generatedFlights]);
+  }, [convertedApiFlights, generatedFlights]);
 
   // Format price with currency
   const formatPrice = (price: number) => {
@@ -380,6 +433,34 @@ const FlightResults = () => {
   const handleBookFlight = (flight: GeneratedFlight, e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // Build tracking params for /out redirect
+    const outParams = new URLSearchParams({
+      origin: originIata,
+      destination: destinationIata,
+      depart: departureDate || '',
+      passengers: String(passengers),
+      cabin: cabinClass,
+      airline: flight.airlineCode,
+      flightId: flight.id,
+      price: String(flight.price),
+      partner: 'aviasales',
+      product: 'flights',
+      source: 'result_card',
+    });
+    
+    if (returnDate) {
+      outParams.set('return', returnDate);
+    }
+    
+    // Add UTM params from current URL if present
+    const utmSource = searchParams.get('utm_source');
+    const utmCampaign = searchParams.get('utm_campaign');
+    const creator = searchParams.get('creator');
+    
+    if (utmSource) outParams.set('utm_source', utmSource);
+    if (utmCampaign) outParams.set('utm_campaign', utmCampaign);
+    if (creator) outParams.set('creator', creator);
+    
     trackAffiliateClick({
       flightId: flight.id,
       airline: flight.airline,
@@ -389,14 +470,15 @@ const FlightResults = () => {
       price: flight.price,
       passengers,
       cabinClass,
-      affiliatePartner: 'searadar',
-      referralUrl: AFFILIATE_LINKS.flights.url,
+      affiliatePartner: 'aviasales',
+      referralUrl: `/out?${outParams.toString()}`,
       source: 'result_card',
       ctaType: 'result_card',
       serviceType: 'flights',
     });
     
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+    // Open /out redirect which logs and redirects to partner
+    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   // Render validation error state
