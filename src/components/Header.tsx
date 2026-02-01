@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Bell, Search, Sparkles, ChevronDown, X } from "lucide-react";
+import { Menu, User, Bell, Search, Sparkles, ChevronDown, X, Car } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -108,8 +108,12 @@ const Header = () => {
                         Rewards & Promotions
                       </DropdownMenuItem>
                       <DropdownMenuSeparator className="my-2" />
-                      <DropdownMenuItem onClick={() => navigate("/driver")} className="cursor-pointer rounded-xl py-2.5 font-medium">
-                        Driver App
+                      <DropdownMenuItem 
+                        onClick={() => window.open("https://zivodriver.com", "_blank")} 
+                        className="cursor-pointer rounded-xl py-2.5 font-medium"
+                      >
+                        <Car className="w-4 h-4 mr-2 text-rides" />
+                        Become a Driver
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => navigate("/restaurant")} className="cursor-pointer rounded-xl py-2.5 font-medium">
                         Restaurant Dashboard
@@ -126,6 +130,15 @@ const Header = () => {
                 </>
               ) : (
                 <div className="flex items-center gap-2 ml-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => window.open("https://zivodriver.com", "_blank")}
+                    className="rounded-xl font-semibold text-rides hover:text-rides/80 gap-1.5"
+                  >
+                    <Car className="w-4 h-4" />
+                    Drive with us
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => navigate("/login")} className="rounded-xl font-semibold">
                     Log in
                   </Button>

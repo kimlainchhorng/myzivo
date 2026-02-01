@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, ArrowRight, X } from "lucide-react";
+import { ChevronDown, ArrowRight, X, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,15 +179,28 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
                   >
                     Trip History
                   </button>
-                  <button
-                    onClick={() => handleNavigate("/driver")}
-                    className="w-full text-left py-2 text-foreground font-medium"
-                  >
-                    Driver App
-                  </button>
                 </div>
               </div>
             )}
+
+            {/* Become a Driver Section */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <a
+                href="https://zivodriver.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-rides/10 to-teal-500/10 border border-rides/20 hover:bg-rides/20 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl gradient-rides flex items-center justify-center">
+                  <Car className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <span className="font-semibold text-foreground block">Become a Driver</span>
+                  <span className="text-xs text-muted-foreground">Earn money on your schedule</span>
+                </div>
+                <ArrowRight className="w-5 h-5 text-rides" />
+              </a>
+            </div>
           </div>
         </ScrollArea>
 

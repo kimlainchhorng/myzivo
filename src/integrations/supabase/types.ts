@@ -2484,7 +2484,10 @@ export type Database = {
       food_orders: {
         Row: {
           created_at: string | null
+          customer_email: string | null
           customer_id: string
+          customer_name: string | null
+          customer_phone: string | null
           delivered_at: string | null
           delivery_address: string
           delivery_fee: number | null
@@ -2495,6 +2498,7 @@ export type Database = {
           estimated_prep_time: number | null
           id: string
           items: Json
+          payment_status: string | null
           picked_up_at: string | null
           placed_at: string | null
           prepared_at: string | null
@@ -2502,6 +2506,8 @@ export type Database = {
           restaurant_id: string
           special_instructions: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_id: string | null
           subtotal: number
           tax: number | null
           total_amount: number
@@ -2509,7 +2515,10 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          customer_email?: string | null
           customer_id: string
+          customer_name?: string | null
+          customer_phone?: string | null
           delivered_at?: string | null
           delivery_address: string
           delivery_fee?: number | null
@@ -2520,6 +2529,7 @@ export type Database = {
           estimated_prep_time?: number | null
           id?: string
           items: Json
+          payment_status?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
           prepared_at?: string | null
@@ -2527,6 +2537,8 @@ export type Database = {
           restaurant_id: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_id?: string | null
           subtotal: number
           tax?: number | null
           total_amount: number
@@ -2534,7 +2546,10 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          customer_email?: string | null
           customer_id?: string
+          customer_name?: string | null
+          customer_phone?: string | null
           delivered_at?: string | null
           delivery_address?: string
           delivery_fee?: number | null
@@ -2545,6 +2560,7 @@ export type Database = {
           estimated_prep_time?: number | null
           id?: string
           items?: Json
+          payment_status?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
           prepared_at?: string | null
@@ -2552,6 +2568,8 @@ export type Database = {
           restaurant_id?: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_id?: string | null
           subtotal?: number
           tax?: number | null
           total_amount?: number
@@ -6165,6 +6183,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          customer_email: string | null
           customer_lat: number | null
           customer_lng: number | null
           customer_name: string | null
@@ -6185,10 +6204,13 @@ export type Database = {
           rider_id: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["trip_status"] | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_id: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_lat?: number | null
           customer_lng?: number | null
           customer_name?: string | null
@@ -6209,10 +6231,13 @@ export type Database = {
           rider_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_id?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          customer_email?: string | null
           customer_lat?: number | null
           customer_lng?: number | null
           customer_name?: string | null
@@ -6233,6 +6258,8 @@ export type Database = {
           rider_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_id?: string | null
         }
         Relationships: [
           {
