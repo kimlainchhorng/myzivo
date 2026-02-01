@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ServiceHero } from "@/components/shared/ServiceHero";
+import heroRides from "@/assets/hero-rides.jpg";
 
 type RideStep = "request" | "options" | "confirm" | "processing" | "success";
 
@@ -151,20 +153,22 @@ const AppRides = () => {
         else if (step === "processing") setStep("confirm");
       }}
     >
+      {/* Hero Section - only show on request step */}
+      {step === "request" && (
+        <ServiceHero
+          service="rides"
+          title="Request a Ride"
+          subtitle="Book your ride with trusted local drivers"
+          icon={Car}
+          image={heroRides}
+          compact
+        />
+      )}
+
       <div className="p-4 space-y-4">
         {/* Step: Request */}
         {step === "request" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-3xl bg-rides flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <Car className="w-8 h-8 text-white" />
-              </div>
-              <h1 className="font-display text-2xl font-bold mb-2">Request a Ride</h1>
-              <p className="text-muted-foreground text-sm">
-                Enter your pickup and drop-off locations
-              </p>
-            </div>
-
             <div className="space-y-3">
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 bg-rides rounded-full" />

@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { useEatsZones } from "@/hooks/useZonePricing";
 import { calculateEatsFare, formatCurrency, DEFAULT_EATS_ZONE, EatsPriceBreakdown as BreakdownType } from "@/lib/pricing";
 import { EatsPriceBreakdown } from "@/components/pricing/EatsPriceBreakdown";
+import { ServiceHero } from "@/components/shared/ServiceHero";
+import heroEats from "@/assets/hero-eats.jpg";
 
 type EatsStep = "restaurants" | "menu" | "cart" | "checkout" | "processing" | "submitted";
 
@@ -225,6 +227,18 @@ const AppEats = () => {
         ) : undefined
       }
     >
+      {/* Hero Section - only show on restaurants step */}
+      {step === "restaurants" && (
+        <ServiceHero
+          service="eats"
+          title="Order Food"
+          subtitle="Delicious meals from local restaurants"
+          icon={UtensilsCrossed}
+          image={heroEats}
+          compact
+        />
+      )}
+
       {/* Step: Restaurants */}
       {step === "restaurants" && (
         <div className="space-y-4 animate-in fade-in duration-200">
