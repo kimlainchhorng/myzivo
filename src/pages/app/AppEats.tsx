@@ -1,12 +1,12 @@
 /**
  * App Eats Screen
- * MVP flow: Restaurants -> Menu -> Cart -> Checkout -> Submitted
+ * MVP flow with payment: Restaurants -> Menu -> Cart -> Checkout -> Success
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { 
   UtensilsCrossed, Search, MapPin, Star, Clock, Plus, Minus, 
-  ShoppingBag, ChevronRight, ChevronLeft, CheckCircle2, User, Phone, Mail, X
+  ShoppingBag, ChevronRight, ChevronLeft, CheckCircle2, User, Phone, Mail, X, CreditCard, Loader2
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type EatsStep = "restaurants" | "menu" | "cart" | "checkout" | "submitted";
 
@@ -62,6 +64,7 @@ const menuCategories = [
 
 const AppEats = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState<EatsStep>("restaurants");
   const [selectedRestaurant, setSelectedRestaurant] = useState<typeof restaurants[0] | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -69,6 +72,21 @@ const AppEats = () => {
   const [address, setAddress] = useState("");
   const [contactInfo, setContactInfo] = useState({ name: "", phone: "", email: "", notes: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+
+  // Check for success return from Stripe
+  useEffect(() => {
+    const sessionId = searchParams.get("session_id");
+    const orderIdParam = searchParams.get("order_id");
+    if (sessionId && orderIdParam) {
+      setOrderId(orderIdParam);
+      setStep("submitted");
+      setCart([]);
+    }
+    if (searchParams.get("cancelled")) {
+      toast.error("Payment was cancelled");
+    }
+  }, [searchParams]);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);

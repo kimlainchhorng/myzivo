@@ -2503,6 +2503,8 @@ export type Database = {
           placed_at: string | null
           prepared_at: string | null
           rating: number | null
+          refund_status: string | null
+          refunded_at: string | null
           restaurant_id: string
           special_instructions: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
@@ -2534,6 +2536,8 @@ export type Database = {
           placed_at?: string | null
           prepared_at?: string | null
           rating?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
           restaurant_id: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -2565,6 +2569,8 @@ export type Database = {
           placed_at?: string | null
           prepared_at?: string | null
           rating?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
           restaurant_id?: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -3979,6 +3985,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          service_type: string
+          setting_key: string
+          setting_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          service_type: string
+          setting_key: string
+          setting_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          service_type?: string
+          setting_key?: string
+          setting_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -4931,6 +4967,117 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      ride_requests: {
+        Row: {
+          admin_notes: string | null
+          assigned_driver_id: string | null
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          distance_miles: number | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          estimated_fare_max: number | null
+          estimated_fare_min: number | null
+          id: string
+          notes: string | null
+          payment_amount: number | null
+          payment_currency: string | null
+          payment_status: string | null
+          pickup_address: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          refund_status: string | null
+          refunded_at: string | null
+          ride_type: string
+          scheduled_at: string | null
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_driver_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          distance_miles?: number | null
+          dropoff_address: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          estimated_fare_max?: number | null
+          estimated_fare_min?: number | null
+          id?: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_currency?: string | null
+          payment_status?: string | null
+          pickup_address: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          ride_type?: string
+          scheduled_at?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_driver_id?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          distance_miles?: number | null
+          dropoff_address?: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          estimated_fare_max?: number | null
+          estimated_fare_min?: number | null
+          id?: string
+          notes?: string | null
+          payment_amount?: number | null
+          payment_currency?: string | null
+          payment_status?: string | null
+          pickup_address?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          ride_type?: string
+          scheduled_at?: string | null
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_requests_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ride_requests_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       safety_alerts: {
         Row: {
