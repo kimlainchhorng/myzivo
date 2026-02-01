@@ -41,7 +41,7 @@ const FlightToHotelBridge = ({
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
 
   const handleContinueToHotels = () => {
-    navigate("/book-hotel");
+    navigate("/hotels");
   };
 
   return (
@@ -128,7 +128,7 @@ const FlightToHotelBridge = ({
           <Button
             variant="outline"
             className="flex-1"
-            onClick={() => navigate("/book-flight")}
+            onClick={() => navigate("/flights")}
           >
             Skip for now
           </Button>

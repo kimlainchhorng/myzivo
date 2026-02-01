@@ -109,40 +109,40 @@ export const megaMenuData: MegaMenuData[] = [
     description: "Search 500+ airlines worldwide",
     mainAction: {
       label: "Search Flights",
-      href: "/book-flight",
+      href: "/flights",
     },
     sections: [
       {
         title: "Cabin Classes",
         items: [
-          { icon: Armchair, label: "Economy", description: "Best value fares worldwide", href: "/book-flight?class=economy", color: "text-sky-500" },
-          { icon: Sparkles, label: "Premium Economy", description: "Extra space & comfort", href: "/book-flight?class=premium-economy", color: "text-sky-500" },
-          { icon: Crown, label: "Business Class", description: "Lie-flat seats & priority", href: "/book-flight?class=business", color: "text-amber-500" },
-          { icon: Star, label: "First Class", description: "Ultimate luxury experience", href: "/book-flight?class=first", color: "text-amber-500" },
+          { icon: Armchair, label: "Economy", description: "Best value fares worldwide", href: "/flights?class=economy", color: "text-sky-500" },
+          { icon: Sparkles, label: "Premium Economy", description: "Extra space & comfort", href: "/flights?class=premium-economy", color: "text-sky-500" },
+          { icon: Crown, label: "Business Class", description: "Lie-flat seats & priority", href: "/flights?class=business", color: "text-amber-500" },
+          { icon: Star, label: "First Class", description: "Ultimate luxury experience", href: "/flights?class=first", color: "text-amber-500" },
         ],
       },
       {
         title: "Flight Types",
         items: [
-          { icon: Route, label: "Round Trip", description: "Depart and return flights", href: "/book-flight?type=round", color: "text-sky-500" },
-          { icon: PlaneTakeoff, label: "One Way", description: "Single direction booking", href: "/book-flight?type=oneway", color: "text-sky-500" },
-          { icon: Globe, label: "Multi-City", description: "Multiple destinations", href: "/book-flight?type=multi", color: "text-sky-500" },
-          { icon: Compass, label: "Explore Anywhere", description: "Flexible destination search", href: "/book-flight?explore=true", color: "text-primary", badge: "New" },
+          { icon: Route, label: "Round Trip", description: "Depart and return flights", href: "/flights?type=round", color: "text-sky-500" },
+          { icon: PlaneTakeoff, label: "One Way", description: "Single direction booking", href: "/flights?type=oneway", color: "text-sky-500" },
+          { icon: Globe, label: "Multi-City", description: "Multiple destinations", href: "/flights?type=multi", color: "text-sky-500" },
+          { icon: Compass, label: "Explore Anywhere", description: "Flexible destination search", href: "/flights?explore=true", color: "text-primary", badge: "New" },
         ],
       },
       {
         title: "Travel Extras",
         items: [
           { icon: Shield, label: "Travel Insurance", description: "Protect your trip", href: "/travel-insurance", color: "text-emerald-500", badge: "Popular" },
-          { icon: BaggageClaim, label: "Extra Baggage", description: "Add checked bags", href: "/book-flight?addon=baggage", color: "text-sky-500" },
+          { icon: BaggageClaim, label: "Extra Baggage", description: "Add checked bags", href: "/flights?addon=baggage", color: "text-sky-500" },
           { icon: Car, label: "Airport Transfer", description: "Seamless pickup & drop", href: "/extras", color: "text-primary" },
-          { icon: Hotel, label: "Hotels + Flights", description: "Bundle & save up to 30%", href: "/book-flight?bundle=hotel", color: "text-amber-500", badge: "Save" },
+          { icon: Hotel, label: "Hotels + Flights", description: "Bundle & save up to 30%", href: "/flights?bundle=hotel", color: "text-amber-500", badge: "Save" },
         ],
       },
       {
         title: "Deals & Rewards",
         items: [
-          { icon: BadgePercent, label: "Flash Sales", description: "Limited-time flight deals", href: "/book-flight?deals=flash", color: "text-rose-500", badge: "Hot" },
+          { icon: BadgePercent, label: "Flash Sales", description: "Limited-time flight deals", href: "/flights?deals=flash", color: "text-rose-500", badge: "Hot" },
           { icon: TrendingUp, label: "Price Alerts", description: "Track price drops", href: "/profile?tab=alerts", color: "text-sky-500" },
           { icon: Award, label: "ZIVO Miles", description: "Earn & redeem points", href: "/profile?tab=miles", color: "text-primary" },
           { icon: Gift, label: "Gift Cards", description: "Give the gift of travel", href: "/promotions?type=giftcard", color: "text-pink-500" },
@@ -166,43 +166,43 @@ export const megaMenuData: MegaMenuData[] = [
     description: "500,000+ properties worldwide",
     mainAction: {
       label: "Search Hotels",
-      href: "/book-hotel",
+      href: "/hotels",
     },
     sections: [
       {
         title: "Stay Types",
         items: [
-          { icon: Hotel, label: "Hotels", description: "Verified quality stays", href: "/book-hotel", color: "text-amber-500" },
-          { icon: Building2, label: "Apartments", description: "Home away from home", href: "/book-hotel?type=apartment", color: "text-amber-500" },
-          { icon: TreePine, label: "Resorts", description: "All-inclusive getaways", href: "/book-hotel?type=resort", color: "text-emerald-500" },
-          { icon: Crown, label: "Luxury", description: "5-star premium properties", href: "/book-hotel?type=luxury", color: "text-amber-500" },
+          { icon: Hotel, label: "Hotels", description: "Verified quality stays", href: "/hotels", color: "text-amber-500" },
+          { icon: Building2, label: "Apartments", description: "Home away from home", href: "/hotels?type=apartment", color: "text-amber-500" },
+          { icon: TreePine, label: "Resorts", description: "All-inclusive getaways", href: "/hotels?type=resort", color: "text-emerald-500" },
+          { icon: Crown, label: "Luxury", description: "5-star premium properties", href: "/hotels?type=luxury", color: "text-amber-500" },
         ],
       },
       {
         title: "Unique Stays",
         items: [
-          { icon: Bed, label: "Boutique Hotels", description: "Unique local experiences", href: "/book-hotel?type=boutique", color: "text-pink-500" },
-          { icon: Mountain, label: "Villas & Cabins", description: "Private retreats", href: "/book-hotel?type=villa", color: "text-emerald-500" },
-          { icon: Waves, label: "Beach Resorts", description: "Oceanfront paradise", href: "/book-hotel?type=beach", color: "text-sky-500" },
-          { icon: Building, label: "City Center", description: "Heart of the action", href: "/book-hotel?location=city", color: "text-amber-500" },
+          { icon: Bed, label: "Boutique Hotels", description: "Unique local experiences", href: "/hotels?type=boutique", color: "text-pink-500" },
+          { icon: Mountain, label: "Villas & Cabins", description: "Private retreats", href: "/hotels?type=villa", color: "text-emerald-500" },
+          { icon: Waves, label: "Beach Resorts", description: "Oceanfront paradise", href: "/hotels?type=beach", color: "text-sky-500" },
+          { icon: Building, label: "City Center", description: "Heart of the action", href: "/hotels?location=city", color: "text-amber-500" },
         ],
       },
       {
         title: "Popular Destinations",
         items: [
-          { icon: Landmark, label: "New York", description: "The city that never sleeps", href: "/book-hotel?city=new-york", color: "text-sky-500" },
-          { icon: Palmtree, label: "Miami", description: "Sun, sand & nightlife", href: "/book-hotel?city=miami", color: "text-emerald-500" },
-          { icon: Sunrise, label: "Los Angeles", description: "Hollywood glamour", href: "/book-hotel?city=los-angeles", color: "text-orange-500" },
-          { icon: Sun, label: "Las Vegas", description: "Entertainment capital", href: "/book-hotel?city=las-vegas", color: "text-amber-500" },
+          { icon: Landmark, label: "New York", description: "The city that never sleeps", href: "/hotels?city=new-york", color: "text-sky-500" },
+          { icon: Palmtree, label: "Miami", description: "Sun, sand & nightlife", href: "/hotels?city=miami", color: "text-emerald-500" },
+          { icon: Sunrise, label: "Los Angeles", description: "Hollywood glamour", href: "/hotels?city=los-angeles", color: "text-orange-500" },
+          { icon: Sun, label: "Las Vegas", description: "Entertainment capital", href: "/hotels?city=las-vegas", color: "text-amber-500" },
         ],
       },
       {
         title: "Rewards & Savings",
         items: [
-          { icon: BadgePercent, label: "Last Minute Deals", description: "Up to 60% off tonight", href: "/book-hotel?deals=lastminute", color: "text-rose-500", badge: "Hot" },
+          { icon: BadgePercent, label: "Last Minute Deals", description: "Up to 60% off tonight", href: "/hotels?deals=lastminute", color: "text-rose-500", badge: "Hot" },
           { icon: Award, label: "Member Rewards", description: "Earn points every stay", href: "/profile?tab=rewards", color: "text-primary" },
           { icon: Heart, label: "Saved Hotels", description: "Your wishlist", href: "/profile?tab=saved", color: "text-pink-500" },
-          { icon: Users, label: "Group Bookings", description: "10+ rooms discounts", href: "/book-hotel?group=true", color: "text-muted-foreground" },
+          { icon: Users, label: "Group Bookings", description: "10+ rooms discounts", href: "/hotels?group=true", color: "text-muted-foreground" },
         ],
       },
     ],

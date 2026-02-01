@@ -84,7 +84,7 @@ function ServiceSection({
     <div>
       {showHeader && (
         <Link 
-          to={service === 'flights' ? '/book-flight' : service === 'hotels' ? '/book-hotel' : '/rent-car'}
+          to={service === 'flights' ? '/flights' : service === 'hotels' ? '/hotels' : '/rent-car'}
           className="flex items-center gap-2 mb-3 group"
         >
           <div className={cn("p-2 rounded-lg", data.bgColor)}>
@@ -148,7 +148,7 @@ export default function InternalLinkGrid({ currentService, className }: Internal
             {otherServices.map((service) => {
               const data = LINK_DATA[service];
               const Icon = data.icon;
-              const link = service === 'flights' ? '/book-flight' : service === 'hotels' ? '/book-hotel' : '/rent-car';
+              const link = service === 'flights' ? '/flights' : service === 'hotels' ? '/hotels' : '/rent-car';
               
               return (
                 <Link key={service} to={link}>

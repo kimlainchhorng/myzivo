@@ -9,6 +9,7 @@ import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CookieConsent from "./components/common/CookieConsent";
+import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { Loader2 } from "lucide-react";
 
 // Eager load critical pages
@@ -149,13 +150,17 @@ const App = () => (
                 <Route path="/food" element={<AppEats />} />
                 <Route path="/more" element={<AppMore />} />
                 
-                {/* Legacy routes for deep links */}
+                {/* Legacy routes - redirect with query params preserved */}
+                <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
+                <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
+                <Route path="/zivo-rides" element={<PreserveQueryRedirect to="/rides" />} />
+                <Route path="/zivo-eats" element={<PreserveQueryRedirect to="/eats" />} />
+                <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
+                
+                {/* Legacy deep links for Eats */}
                 <Route path="/eats/restaurants" element={<EatsRestaurants />} />
                 <Route path="/eats/restaurant/:id" element={<EatsRestaurantMenu />} />
                 <Route path="/eats/checkout" element={<EatsCheckout />} />
-                <Route path="/zivo-rides" element={<AppRides />} />
-                <Route path="/zivo-eats" element={<AppEats />} />
-                <Route path="/book-flight" element={<FlightLanding />} />
                 
                 {/* SEO Flight Landing Pages */}
                 <Route path="/flights" element={<FlightLanding />} />
@@ -169,7 +174,6 @@ const App = () => (
                 {/* SEO Hotel Landing Pages */}
                 <Route path="/hotels" element={<HotelLanding />} />
                 <Route path="/hotels/in-:city" element={<HotelLanding />} />
-                <Route path="/book-hotel" element={<HotelLanding />} />
                 
                 {/* SEO Car Rental Landing Pages */}
                 <Route path="/car-rental" element={<CarRentalLanding />} />
@@ -213,7 +217,6 @@ const App = () => (
                 <Route path="/experiences" element={<ThingsToDo />} />
                 <Route path="/travel-insurance" element={<TravelInsurance />} />
                 <Route path="/extras" element={<TravelExtras />} />
-                <Route path="/travel-extras" element={<TravelExtras />} />
                 <Route path="/install" element={<Install />} />
                 <Route
                   path="/admin"
