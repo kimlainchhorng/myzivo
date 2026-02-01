@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface CarCardData {
   id: string;
@@ -53,9 +54,13 @@ const categoryImages: Record<string, string> = {
 };
 
 export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps) {
+  const { format, getDisplay } = useCurrency();
   const categoryKey = car.category.toLowerCase().split(" ")[0];
   const carIcon = categoryImages[categoryKey] || "🚗";
   const isElectric = car.category.toLowerCase().includes("electric");
+  
+  const { formatted: dailyPrice, wasConverted } = getDisplay(car.pricePerDay, "USD");
+  const { formatted: totalPriceFormatted } = getDisplay(car.totalPrice, "USD");
 
   return (
     <Card
@@ -169,12 +174,17 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
             <div className="text-center sm:text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
               <p className="text-2xl font-bold text-violet-500">
-                ${car.pricePerDay}
+                {dailyPrice}
                 <span className="text-sm font-normal text-muted-foreground">/day</span>
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                ${car.totalPrice} total ({car.days} day{car.days !== 1 ? "s" : ""})
+                {totalPriceFormatted} total ({car.days} day{car.days !== 1 ? "s" : ""})
               </p>
+              {wasConverted && (
+                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
+                  Converted from USD
+                </p>
+              )}
             </div>
             <Button
               onClick={() => onViewDeal(car)}

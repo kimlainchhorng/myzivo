@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface HotelResult {
   id: string;
@@ -35,6 +36,9 @@ const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> 
 };
 
 export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardProps) {
+  const { format, getDisplay } = useCurrency();
+  const { formatted: nightlyPrice, wasConverted } = getDisplay(hotel.pricePerNight, "USD");
+  
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow border-border/50 bg-card/50">
       <CardContent className="p-0">
@@ -112,8 +116,11 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
             <div className="flex items-end justify-between mt-4 pt-4 border-t border-border/50">
               <div>
                 <p className="text-xs text-muted-foreground">From</p>
-                <p className="text-2xl font-bold text-hotels">${hotel.pricePerNight}</p>
+                <p className="text-2xl font-bold text-hotels">{nightlyPrice}</p>
                 <p className="text-xs text-muted-foreground">per night*</p>
+                {wasConverted && (
+                  <p className="text-[9px] text-muted-foreground/70">Converted from USD</p>
+                )}
               </div>
               <Button 
                 onClick={() => onViewDeal(hotel)}

@@ -2179,6 +2179,33 @@ export type Database = {
           },
         ]
       }
+      exchange_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          fetched_at: string
+          id: string
+          rate: number
+          target_currency: string
+        }
+        Insert: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          rate: number
+          target_currency: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          fetched_at?: string
+          id?: string
+          rate?: number
+          target_currency?: string
+        }
+        Relationships: []
+      }
       expense_categories: {
         Row: {
           budget_monthly: number | null
