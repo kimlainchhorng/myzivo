@@ -1,8 +1,12 @@
+/**
+ * NoHotelsFound Component
+ * LOCKED COMPLIANCE: Uses hotelCompliance.ts for all text
+ */
 import { Hotel, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { HOTEL_CTA_TEXT, HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
 interface NoHotelsFoundProps {
   onModifySearch?: () => void;
@@ -69,11 +73,11 @@ export default function NoHotelsFound({
             onClick={handleSearchPartner}
           >
             <Hotel className="w-5 h-5" />
-            Search All Hotels
+            {HOTEL_CTA_TEXT.viewDeal}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            {AFFILIATE_DISCLOSURE_TEXT.short}
+            {HOTEL_DISCLAIMERS.partnerBookingShort}
           </p>
         </div>
       </div>

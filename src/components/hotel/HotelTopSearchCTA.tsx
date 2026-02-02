@@ -1,9 +1,14 @@
+/**
+ * HotelTopSearchCTA Component
+ * LOCKED COMPLIANCE: Uses hotelCompliance.ts for all text
+ */
 import { ExternalLink, Hotel, Sparkles, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { HOTEL_CTA_TEXT, HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
 interface HotelTopSearchCTAProps {
   hotelCount?: number;
@@ -79,7 +84,7 @@ export default function HotelTopSearchCTA({
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            Prices are indicative and may change. Final price is shown on partner site.
+            {HOTEL_DISCLAIMERS.indicativePrice}
           </p>
         </div>
 
@@ -90,11 +95,11 @@ export default function HotelTopSearchCTA({
             onClick={handleSearchClick}
           >
             <Search className="w-4 h-4" />
-            View Hotel Deals
+            {HOTEL_CTA_TEXT.viewDeal}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">
-            You will be redirected to our trusted travel partner
+            {HOTEL_DISCLAIMERS.redirect}
           </p>
         </div>
       </div>
