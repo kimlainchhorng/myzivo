@@ -1,6 +1,8 @@
 /**
  * Traveler Info Form Component
  * Collects traveler details before partner handoff
+ * 
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
  */
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,8 +19,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { User, Mail, Phone, Shield, ExternalLink } from "lucide-react";
+import { User, Mail, Phone, Shield, ExternalLink, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { 
+  FLIGHT_CTA_TEXT, 
+  FLIGHT_CONSENT, 
+  FLIGHT_DISCLAIMERS 
+} from "@/config/flightCompliance";
 
 const travelerSchema = z.object({
   fullName: z
@@ -146,7 +153,7 @@ export default function TravelerInfoForm({
           )}
         />
 
-        {/* Consent Checkbox */}
+        {/* Consent Checkbox - LOCKED TEXT */}
         <FormField
           control={form.control}
           name="consentSharing"
@@ -160,10 +167,10 @@ export default function TravelerInfoForm({
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel className="text-sm font-medium">
-                  I agree to share my information with the booking partner
+                  {FLIGHT_CONSENT.checkboxLabel}
                 </FormLabel>
                 <FormDescription className="text-xs">
-                  Your details will be securely shared with our travel partner to complete your booking.{" "}
+                  {FLIGHT_CONSENT.privacy}{" "}
                   <Link to="/partner-disclosure" className="text-primary hover:underline">
                     Learn more
                   </Link>
@@ -174,19 +181,16 @@ export default function TravelerInfoForm({
           )}
         />
 
-        {/* Partner Disclosure */}
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-primary/5 border border-primary/10">
-          <Shield className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+        {/* Partner Disclosure - LOCKED TEXT */}
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+          <Shield className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground mb-1">Secure Partner Checkout</p>
-            <p>
-              You'll complete your booking securely with our licensed travel partner. 
-              ZIVO does not process payments directly.
-            </p>
+            <p>{FLIGHT_DISCLAIMERS.ticketing}</p>
           </div>
         </div>
 
-        {/* Submit Button */}
+        {/* Submit Button - LOCKED CTA */}
         <Button
           type="submit"
           size="lg"
@@ -194,21 +198,27 @@ export default function TravelerInfoForm({
           disabled={isLoading}
         >
           {isLoading ? (
-            "Processing..."
+            "Confirming availability..."
           ) : (
             <>
-              Continue to Secure Checkout
+              <Lock className="w-4 h-4" />
+              {FLIGHT_CTA_TEXT.primary}
               <ExternalLink className="w-4 h-4" />
             </>
           )}
         </Button>
 
+        {/* Compliance footer */}
+        <p className="text-[10px] text-center text-muted-foreground">
+          {FLIGHT_DISCLAIMERS.redirect}
+        </p>
+
         {/* Footer note */}
         <p className="text-xs text-center text-muted-foreground">
           By continuing, you agree to our{" "}
-          <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
-          {" "}and{" "}
-          <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+          <Link to="/terms" className="text-primary hover:underline">Terms</Link>,{" "}
+          <Link to="/privacy" className="text-primary hover:underline">Privacy</Link>, and{" "}
+          <Link to="/partner-disclosure" className="text-primary hover:underline">Partner Disclosure</Link>
         </p>
       </form>
     </Form>
