@@ -27,6 +27,12 @@ const footerLinks = {
     { name: "Move", href: "/move" },
     { name: "ZIVO Driver", href: "https://zivodriver.com", external: true },
   ],
+  p2pRental: [
+    { name: "Renter Terms", href: "/terms/renter" },
+    { name: "Owner Terms", href: "/terms/owner" },
+    { name: "Insurance & Protection", href: "/insurance" },
+    { name: "Damage Policy", href: "/damage-policy" },
+  ],
   company: [
     { name: "About Hizovo", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
@@ -110,7 +116,7 @@ const Footer = () => {
 
         {/* Main Footer Grid */}
         <div className="py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8">
             {/* Brand Column */}
             <div className="col-span-2 text-center lg:text-left mb-4 lg:mb-0">
               <Link to="/" className="inline-block mb-4">
@@ -182,6 +188,23 @@ const Footer = () => {
                         {link.name}
                       </Link>
                     )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* P2P Rental */}
+            <div>
+              <h4 className="font-semibold text-sm mb-4">P2P Rental</h4>
+              <ul className="space-y-2.5">
+                {footerLinks.p2pRental.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      to={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.name}
+                    </Link>
                   </li>
                 ))}
               </ul>

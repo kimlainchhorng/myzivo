@@ -504,14 +504,18 @@ export default function P2PVehicleDetail() {
                         setTermsAccepted(checked === true)
                       }
                     />
-                    <Label htmlFor="terms" className="text-sm cursor-pointer">
-                      I agree to the{" "}
-                      <Link to="/terms" className="text-primary underline">
-                        terms of service
+                    <Label htmlFor="terms" className="text-sm cursor-pointer leading-relaxed">
+                      By booking, you agree to the{" "}
+                      <Link to="/terms/renter" className="text-primary underline">
+                        Renter Terms of Service
                       </Link>{" "}
-                      and{" "}
-                      <Link to="/privacy" className="text-primary underline">
-                        privacy policy
+                      and acknowledge the{" "}
+                      <Link to="/insurance" className="text-primary underline">
+                        Insurance
+                      </Link>{" "}
+                      &{" "}
+                      <Link to="/damage-policy" className="text-primary underline">
+                        Damage Policy
                       </Link>
                     </Label>
                   </div>

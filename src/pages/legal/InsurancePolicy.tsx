@@ -68,10 +68,11 @@ const InsurancePolicy = () => {
 
         {/* Service Tabs */}
         <Tabs defaultValue="rides" className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="rides" className="text-xs sm:text-sm">Rides</TabsTrigger>
             <TabsTrigger value="eats" className="text-xs sm:text-sm">Eats</TabsTrigger>
             <TabsTrigger value="rental" className="text-xs sm:text-sm">Car Rental</TabsTrigger>
+            <TabsTrigger value="p2p" className="text-xs sm:text-sm">P2P Rental</TabsTrigger>
             <TabsTrigger value="flights" className="text-xs sm:text-sm">Flights</TabsTrigger>
             <TabsTrigger value="hotels" className="text-xs sm:text-sm">Hotels</TabsTrigger>
           </TabsList>
@@ -268,6 +269,104 @@ const InsurancePolicy = () => {
                     <li>• Lost income protection if vehicle is damaged</li>
                     <li>• $1,000,000 umbrella liability</li>
                   </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* P2P Car Rental Insurance */}
+          <TabsContent value="p2p">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Car className="h-5 w-5 text-primary" />
+                  ZIVO P2P Rental Protection
+                </CardTitle>
+                <CardDescription>Third-party commercial insurance for peer-to-peer rentals</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    ZIVO arranges third-party commercial insurance for all P2P car rentals. Coverage applies 
+                    only during the active rental period (from pickup to return).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-4">Coverage Included</h4>
+                  <div className="grid gap-4">
+                    <div className="p-4 border border-emerald-500/50 bg-emerald-500/5 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">Liability Protection</span>
+                        <Badge className="bg-emerald-500">$1,000,000</Badge>
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Bodily injury to third parties</li>
+                        <li>• Property damage liability</li>
+                        <li>• Legal defense costs</li>
+                      </ul>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">Physical Damage Protection</span>
+                        <Badge variant="outline">Included</Badge>
+                      </div>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Collision damage coverage</li>
+                        <li>• Comprehensive coverage (theft, vandalism, weather)</li>
+                        <li>• Deductible based on selected plan ($500-$2,000)</li>
+                      </ul>
+                    </div>
+                    <div className="p-4 border rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">Uninsured Motorist Coverage</span>
+                        <Badge variant="outline">Included</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Protection if the other driver is at fault and uninsured/underinsured
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3">Important Information</h4>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                      <span>Coverage is subject to insurer terms, conditions, and limits</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                      <span>Owner's personal auto insurance may NOT apply during rentals</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                      <span>All incidents must be reported immediately to ZIVO support</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
+                      <span>Claims are processed through our third-party insurer partner</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <p className="font-semibold text-warning mb-2">Disclaimer</p>
+                  <p className="text-sm text-muted-foreground">
+                    Insurance coverage is provided by third-party insurers and is subject to policy terms. 
+                    ZIVO does not act as an insurance provider. For complete coverage details and exclusions, 
+                    please review the policy documents provided at booking or contact our support team.
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
+                    For more information, see our{" "}
+                    <a href="/terms/renter" className="text-primary hover:underline">Renter Terms</a>,{" "}
+                    <a href="/terms/owner" className="text-primary hover:underline">Owner Terms</a>, and{" "}
+                    <a href="/damage-policy" className="text-primary hover:underline">Damage Policy</a>.
+                  </p>
                 </div>
               </CardContent>
             </Card>
