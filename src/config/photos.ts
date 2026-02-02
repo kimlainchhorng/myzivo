@@ -45,6 +45,12 @@ import destOrlando from "@/assets/dest-orlando.jpg";
 import destSanDiego from "@/assets/dest-sandiego.jpg";
 import destCancun from "@/assets/dest-cancun.jpg";
 import destPhoenix from "@/assets/dest-phoenix.jpg";
+import destLasVegas from "@/assets/dest-lasvegas.jpg";
+import destChicago from "@/assets/dest-chicago.jpg";
+import destLosAngeles from "@/assets/dest-losangeles.jpg";
+import destSanFrancisco from "@/assets/dest-sanfrancisco.jpg";
+import destDallas from "@/assets/dest-dallas.jpg";
+import destAtlanta from "@/assets/dest-atlanta.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -62,6 +68,28 @@ import extrasAudiotours from "@/assets/extras-audiotours.jpg";
 import extrasCompensation from "@/assets/extras-compensation.jpg";
 import extrasRadar from "@/assets/extras-radar.jpg";
 import extrasTickets from "@/assets/extras-tickets.jpg";
+
+// Import car category assets (local AI-generated)
+import carEconomy from "@/assets/car-economy.jpg";
+import carCompact from "@/assets/car-compact.jpg";
+import carMidsize from "@/assets/car-midsize.jpg";
+import carSuv from "@/assets/car-suv.jpg";
+import carLuxury from "@/assets/car-luxury.jpg";
+import carVan from "@/assets/car-van.jpg";
+import carElectric from "@/assets/car-electric.jpg";
+
+// Import hotel category assets (local AI-generated)
+import hotelLuxury from "@/assets/hotel-luxury.jpg";
+import hotelBudget from "@/assets/hotel-budget.jpg";
+import hotelApartment from "@/assets/hotel-apartment.jpg";
+import hotelResort from "@/assets/hotel-resort.jpg";
+import hotelBusiness from "@/assets/hotel-business.jpg";
+
+// Import cabin class assets (local AI-generated)
+import cabinEconomy from "@/assets/cabin-economy.jpg";
+import cabinPremiumEconomy from "@/assets/cabin-premium-economy.jpg";
+import cabinBusiness from "@/assets/cabin-business.jpg";
+import cabinFirst from "@/assets/cabin-first.jpg";
 
 // ============================================
 // SERVICE TYPES
@@ -143,72 +171,72 @@ export const serviceCardPhotos: Record<ServiceType, { src: string; alt: string }
 };
 
 // ============================================
-// CAR CATEGORY PHOTOS (Unsplash URLs - 4:3)
-// All images use cool/neutral tones + WebP optimization
+// CAR CATEGORY PHOTOS (Local AI-generated - 4:3)
+// All images use professional automotive photography
 // ============================================
 export const carCategoryPhotos: Record<CarCategory, { src: string; alt: string; label: string; passengers: number; bags: number; width: number; height: number }> = {
   economy: {
-    src: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carEconomy,
     alt: "Economy rental car - Compact hatchback for city driving",
     label: "Economy",
     passengers: 4,
     bags: 2,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   compact: {
-    src: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carCompact,
     alt: "Compact rental car - Small sedan for everyday travel",
     label: "Compact",
     passengers: 5,
     bags: 2,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   midsize: {
-    src: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carMidsize,
     alt: "Midsize rental car - Standard sedan for comfortable travel",
     label: "Midsize",
     passengers: 5,
     bags: 3,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   suv: {
-    src: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carSuv,
     alt: "SUV rental - Crossover vehicle for family adventures",
     label: "SUV",
     passengers: 7,
     bags: 4,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   luxury: {
-    src: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carLuxury,
     alt: "Luxury rental car - Premium sedan for executive travel",
     label: "Luxury",
     passengers: 5,
     bags: 3,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   van: {
-    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carVan,
     alt: "Van rental - Minivan for group travel",
     label: "Van",
     passengers: 8,
     bags: 5,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
   electric: {
-    src: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&h=450&fit=crop&q=75&fm=webp&auto=format",
+    src: carElectric,
     alt: "Electric car rental - Modern EV at charging station",
     label: "Electric",
     passengers: 5,
     bags: 2,
-    width: 600,
-    height: 450,
+    width: 768,
+    height: 576,
   },
 };
 
@@ -258,12 +286,12 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     height: 512,
   },
   "los-angeles": {
-    src: "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destLosAngeles,
     alt: "Los Angeles, USA - Downtown skyline at golden hour",
     city: "Los Angeles",
     country: "USA",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   miami: {
     src: destMiami,
@@ -274,44 +302,44 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     height: 512,
   },
   "las-vegas": {
-    src: "https://images.unsplash.com/photo-1581351721010-8cf859cb14a4?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destLasVegas,
     alt: "Las Vegas, Nevada - Strip lights at night",
     city: "Las Vegas",
     country: "Nevada",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "chicago": {
-    src: "https://images.unsplash.com/photo-1494522855154-9297ac14b55f?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destChicago,
     alt: "Chicago, USA - Skyline with river and architecture",
     city: "Chicago",
     country: "USA",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "dallas": {
-    src: "https://images.unsplash.com/photo-1545194445-dddb8f4487c6?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destDallas,
     alt: "Dallas, Texas - Downtown skyline at night",
     city: "Dallas",
     country: "Texas",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "atlanta": {
-    src: "https://images.unsplash.com/photo-1575917649705-5b59aaa12e6b?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destAtlanta,
     alt: "Atlanta, Georgia - Downtown skyline view",
     city: "Atlanta",
     country: "Georgia",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "san-francisco": {
-    src: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destSanFrancisco,
     alt: "San Francisco, USA - Golden Gate Bridge",
     city: "San Francisco",
     country: "USA",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "orlando": {
     src: destOrlando,
@@ -435,6 +463,67 @@ export const additionalHeroPhotos = {
 };
 
 // ============================================
+// HOTEL CATEGORY PHOTOS (Local AI-generated - 4:3)
+// ============================================
+export type HotelCategory = "luxury" | "budget" | "apartment" | "resort" | "business";
+
+export const hotelCategoryPhotos: Record<HotelCategory, { src: string; alt: string; label: string }> = {
+  luxury: {
+    src: hotelLuxury,
+    alt: "Luxury five-star hotel lobby",
+    label: "Luxury",
+  },
+  budget: {
+    src: hotelBudget,
+    alt: "Budget-friendly hotel room",
+    label: "Budget",
+  },
+  apartment: {
+    src: hotelApartment,
+    alt: "Vacation apartment rental",
+    label: "Apartment",
+  },
+  resort: {
+    src: hotelResort,
+    alt: "Beach resort with pool",
+    label: "Resort",
+  },
+  business: {
+    src: hotelBusiness,
+    alt: "Business hotel room",
+    label: "Business",
+  },
+};
+
+// ============================================
+// CABIN CLASS PHOTOS (Local AI-generated - 4:3)
+// ============================================
+export type CabinClass = "economy" | "premium_economy" | "business" | "first";
+
+export const cabinClassPhotos: Record<CabinClass, { src: string; alt: string; label: string }> = {
+  economy: {
+    src: cabinEconomy,
+    alt: "Economy class cabin interior",
+    label: "Economy",
+  },
+  premium_economy: {
+    src: cabinPremiumEconomy,
+    alt: "Premium economy class cabin",
+    label: "Premium Economy",
+  },
+  business: {
+    src: cabinBusiness,
+    alt: "Business class cabin with lie-flat seats",
+    label: "Business",
+  },
+  first: {
+    src: cabinFirst,
+    alt: "First class private suite",
+    label: "First Class",
+  },
+};
+
+// ============================================
 // OVERLAY GRADIENTS (by service)
 // ============================================
 export const serviceOverlays: Record<ServiceType, string> = {
@@ -455,6 +544,8 @@ export const aspectRatios = {
   serviceCard: "4:3",
   destinationTile: "1:1",
   carCategory: "4:3",
+  hotelCategory: "4:3",
+  cabinClass: "4:3",
   restaurantThumb: "1:1",
 } as const;
 
