@@ -177,6 +177,35 @@ export const buildAffiliateUrl = (params: {
   }
 };
 
+// Realistic commission rates based on industry standards
+// Flights: $3-$12 flat per booking (avg $6)
+// Hotels: 4% of booking value
+// Car Rentals: 2% of rental value
+const COMMISSION_RATES = {
+  flights: { type: 'flat', min: 3, max: 12, avg: 6 },
+  hotels: { type: 'percent', rate: 0.04 },
+  car_rental: { type: 'percent', rate: 0.02 },
+  activities: { type: 'percent', rate: 0.05 },
+  transfers: { type: 'percent', rate: 0.05 },
+  esim: { type: 'percent', rate: 0.12 },
+  luggage: { type: 'percent', rate: 0.08 },
+  compensation: { type: 'percent', rate: 0.25 },
+} as const;
+
+// Calculate commission for a single click based on service type
+const calculateClickCommission = (click: AffiliateClick): number => {
+  const serviceType = click.serviceType || 'flights';
+  const config = COMMISSION_RATES[serviceType as keyof typeof COMMISSION_RATES] || COMMISSION_RATES.flights;
+  
+  if (config.type === 'flat') {
+    // Flat fee per booking (flights)
+    return config.avg;
+  } else {
+    // Percentage of booking value
+    return click.price * config.rate;
+  }
+};
+
 // Analytics aggregation with enhanced metrics
 export const getAffiliateAnalytics = () => {
   const clicks = getAffiliateClicks();
@@ -193,8 +222,9 @@ export const getAffiliateAnalytics = () => {
   const weekClicks = clicks.filter(c => new Date(c.timestamp) >= thisWeekStart);
   const monthClicks = clicks.filter(c => new Date(c.timestamp) >= thisMonthStart);
 
-  const totalRevenue = clicks.reduce((sum, c) => sum + (c.price * c.passengers * 0.02), 0); // 2% commission estimate
-  const todayRevenue = todayClicks.reduce((sum, c) => sum + (c.price * c.passengers * 0.02), 0);
+  // Use realistic commission calculation
+  const totalRevenue = clicks.reduce((sum, c) => sum + calculateClickCommission(c), 0);
+  const todayRevenue = todayClicks.reduce((sum, c) => sum + calculateClickCommission(c), 0);
 
   const topAirlines = clicks.reduce((acc, c) => {
     acc[c.airline] = (acc[c.airline] || 0) + 1;
