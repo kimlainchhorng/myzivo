@@ -1,316 +1,510 @@
 
-# Invite-Only Owner Beta Mode - Implementation Plan
+# Invite-Only Renter Beta Mode - Implementation Plan
 
 ## Overview
-Add a controlled onboarding experience for early-stage launch by implementing an invite-only beta mode for car owners. This feature will allow admins to toggle beta mode, show appropriate messaging to applicants, and provide better review workflow tools.
+Implement a controlled renter beta system for the ZIVO P2P Car Rental Marketplace. This feature allows admins to control who can book cars through an invite-only waitlist system, ensuring platform safety during early-stage launch.
 
 ---
 
-## Database Changes
+## Database Schema Changes
 
-### New System Settings
-Add new entries to the existing `system_settings` table:
+### 1. New Table: `p2p_renter_waitlist`
+Store beta waitlist entries from public users.
 
-| Key | Value | Category | Description |
-|-----|-------|----------|-------------|
-| `p2p_owner_beta_mode` | `true` | `p2p` | Enable invite-only owner beta mode |
-| `p2p_beta_cities` | `["Los Angeles", "Miami"]` | `p2p` | Cities accepting beta applications |
-| `p2p_beta_message` | `"We are currently accepting a limited number of owners for our private beta. Applications are reviewed manually."` | `p2p` | Custom beta message to display |
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `full_name` | text | User's full name |
+| `email` | text | Email address (unique) |
+| `city` | text | Requested city |
+| `status` | text | pending / invited / joined / expired |
+| `created_at` | timestamp | When they joined waitlist |
 
-### Modify `car_owner_profiles` Table
-Add a notes field for admin review:
+### 2. New Table: `p2p_renter_invites`
+Track invitations sent to waitlisted users.
 
-```sql
-ALTER TABLE car_owner_profiles
-  ADD COLUMN admin_review_notes TEXT,
-  ADD COLUMN reviewed_by UUID REFERENCES auth.users(id),
-  ADD COLUMN reviewed_at TIMESTAMPTZ;
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `email` | text | Invited email |
+| `invite_code` | text | Unique invite code |
+| `expires_at` | timestamp | Invite expiration (optional) |
+| `used` | boolean | Whether invite was used |
+| `used_at` | timestamp | When invite was redeemed |
+| `created_by` | uuid | Admin who created invite |
+| `waitlist_id` | uuid | FK to waitlist entry (if from waitlist) |
+| `created_at` | timestamp | When invite was created |
+
+### 3. New System Settings
+Add to existing `system_settings` table:
+
+| Key | Value | Description |
+|-----|-------|-------------|
+| `p2p_renter_beta_mode` | `true` | Enable invite-only renter beta |
+| `p2p_renter_beta_city` | `"Los Angeles"` | Current beta city |
+| `p2p_renter_beta_message` | `"We're launching with limited spots..."` | Custom waitlist message |
+
+---
+
+## New Files to Create
+
+```text
+src/pages/beta/
+├── RenterWaitlist.tsx           - Public waitlist signup page
+
+src/pages/admin/modules/
+├── AdminRenterInvitesModule.tsx - Admin invite management panel
+
+src/hooks/
+├── useRenterBetaSettings.ts     - Hooks for renter beta settings
+├── useRenterWaitlist.ts         - Hooks for waitlist operations
+├── useRenterInvites.ts          - Hooks for invite management
+
+supabase/functions/
+├── send-renter-invite/          - Edge function to send invite emails
 ```
 
 ---
 
-## File Structure
+## Files to Modify
 
-### New Files to Create
-
-```text
-src/hooks/useP2PSettings.ts             - Hooks for P2P-specific settings
-```
-
-### Files to Modify
-
-```text
-src/pages/ListYourCar.tsx               - Add beta banner/badge
-src/pages/owner/OwnerApply.tsx          - Add beta messaging and city selection
-src/pages/admin/AdminPanel.tsx          - Add P2P Settings nav item
-src/pages/admin/modules/AdminP2POwnersModule.tsx - Add notes field and beta controls
-src/components/admin/AdminSystemSettings.tsx     - (optional) Add P2P category
-```
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Add `/beta/waitlist` route |
+| `src/pages/admin/AdminPanel.tsx` | Add "Renter Invites" nav item |
+| `src/hooks/useP2PSettings.ts` | Add renter beta settings queries |
+| `src/pages/p2p/P2PVehicleSearch.tsx` | Add beta mode check/redirect |
+| `src/pages/p2p/P2PVehicleDetail.tsx` | Block booking for non-invited users |
+| `src/pages/verify/RenterVerification.tsx` | Validate invite code at start |
+| `src/pages/verify/VerificationStatus.tsx` | Add "Beta User" badge display |
 
 ---
 
 ## Implementation Details
 
-### 1. useP2PSettings.ts Hook
+### 1. RenterWaitlist.tsx (Waitlist Page)
 
-Create a hook to fetch P2P-specific settings:
+**Route**: `/beta/waitlist`
+
+**Design**:
+- Headline: "Join the ZIVO Car Rental Beta"
+- Subtext: "We're launching in [CITY] with limited spots to ensure safety and quality."
+- Form fields: Full name, Email, City
+- Submit: Save to `p2p_renter_waitlist` table
+- Success: Show "Thanks! We'll invite you soon."
+
+```tsx
+// Form structure
+<Card className="max-w-md mx-auto">
+  <CardHeader>
+    <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full mb-4">
+      <Lock className="h-4 w-4" />
+      <span className="text-sm font-medium">Private Beta</span>
+    </div>
+    <CardTitle>Join the ZIVO Car Rental Beta</CardTitle>
+    <CardDescription>
+      {betaSettings?.betaMessage || 
+        `We're launching in ${betaSettings?.betaCity || "select cities"} with limited spots to ensure safety and quality.`}
+    </CardDescription>
+  </CardHeader>
+  <CardContent>
+    <form onSubmit={handleSubmit}>
+      <Input name="full_name" placeholder="Full Name" required />
+      <Input name="email" type="email" placeholder="Email" required />
+      <Input name="city" placeholder="Your City" required />
+      <Button type="submit">Join Waitlist</Button>
+    </form>
+  </CardContent>
+</Card>
+```
+
+### 2. AdminRenterInvitesModule.tsx (Admin Panel)
+
+**Features**:
+
+**Stats Cards**:
+- Waitlist Count
+- Invites Sent
+- Invites Used
+- Active Beta Renters
+
+**Waitlist Table**:
+| Column | Data |
+|--------|------|
+| Name | Full name |
+| Email | Email address |
+| City | Requested city |
+| Joined | Date |
+| Status | Badge |
+| Actions | Send Invite button |
+
+**Invites Table**:
+| Column | Data |
+|--------|------|
+| Email | Invited email |
+| Invite Code | Short code |
+| Expires | Date (if set) |
+| Used | Yes/No |
+| Created | Date |
+| Actions | Copy link, Revoke |
+
+**Admin Actions**:
+- Send invite to waitlist entry
+- Generate manual invite (for email not on waitlist)
+- Set expiration for invites
+- Revoke unused invites
+
+### 3. useRenterBetaSettings.ts
+
+Extend P2P settings for renter beta mode:
 
 ```typescript
-// Fetch P2P beta mode settings
-export function useP2PBetaSettings() {
+export function useRenterBetaSettings() {
   return useQuery({
-    queryKey: ["p2pBetaSettings"],
+    queryKey: ["renterBetaSettings"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("system_settings")
-        .select("*")
+        .select("key, value")
         .in("key", [
-          "p2p_owner_beta_mode",
-          "p2p_beta_cities",
-          "p2p_beta_message"
+          "p2p_renter_beta_mode",
+          "p2p_renter_beta_city", 
+          "p2p_renter_beta_message"
         ]);
       
-      if (error) throw error;
-      
-      // Parse and return settings object
       return {
-        betaMode: parseBoolean(findByKey(data, "p2p_owner_beta_mode")),
-        betaCities: parseArray(findByKey(data, "p2p_beta_cities")),
-        betaMessage: parseString(findByKey(data, "p2p_beta_message")),
+        betaMode: parseBoolean(findByKey(data, "p2p_renter_beta_mode")),
+        betaCity: parseString(findByKey(data, "p2p_renter_beta_city")),
+        betaMessage: parseString(findByKey(data, "p2p_renter_beta_message")),
       };
     },
   });
 }
 
-// Admin: Update beta settings
-export function useUpdateP2PBetaSetting() {
-  // ... mutation to update system_settings
+// Check if user has valid invite
+export function useRenterInviteStatus(email?: string) {
+  return useQuery({
+    queryKey: ["renterInviteStatus", email],
+    queryFn: async () => {
+      if (!email) return null;
+      
+      const { data } = await supabase
+        .from("p2p_renter_invites")
+        .select("*")
+        .eq("email", email.toLowerCase())
+        .eq("used", false)
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+      
+      return data;
+    },
+    enabled: !!email,
+  });
 }
 ```
 
----
+### 4. useRenterWaitlist.ts
 
-### 2. ListYourCar.tsx Updates
-
-Add a "Private Beta" banner when beta mode is enabled:
-
-```tsx
-// In Hero section, add after the "Earn up to $1,500/month" badge:
-{betaSettings?.betaMode && (
-  <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-full mb-4">
-    <Lock className="h-4 w-4" />
-    <span className="text-sm font-medium">Private Beta</span>
-  </div>
-)}
-
-// Add beta cities callout:
-{betaSettings?.betaMode && betaSettings.betaCities?.length > 0 && (
-  <Card className="bg-muted/50 border-amber-500/20 mb-8">
-    <CardContent className="py-4 text-center">
-      <p className="text-sm text-muted-foreground">
-        Currently accepting applications in:{" "}
-        <span className="font-medium text-foreground">
-          {betaSettings.betaCities.join(", ")}
-        </span>
-      </p>
-    </CardContent>
-  </Card>
-)}
-```
-
----
-
-### 3. OwnerApply.tsx Updates
-
-Add beta mode messaging in Step 1 (Personal Information):
-
-**Before the form, add beta alert card:**
-
-```tsx
-{betaSettings?.betaMode && (
-  <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
-    <CardContent className="py-4">
-      <div className="flex items-start gap-3">
-        <div className="p-2 rounded-full bg-amber-500/10">
-          <Lock className="h-5 w-5 text-amber-600" />
-        </div>
-        <div>
-          <h3 className="font-semibold flex items-center gap-2">
-            Private Beta
-            <Badge variant="outline" className="text-amber-600 border-amber-500/30">
-              Limited Access
-            </Badge>
-          </h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {betaSettings.betaMessage || 
-              "We are currently accepting a limited number of owners. Applications are reviewed manually."}
-          </p>
-          {betaSettings.betaCities?.length > 0 && (
-            <p className="text-sm text-muted-foreground mt-2">
-              <span className="font-medium">Available cities: </span>
-              {betaSettings.betaCities.join(", ")}
-            </p>
-          )}
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-)}
-```
-
-**In Step 4 (Complete), add pending review messaging:**
-
-```tsx
-{betaSettings?.betaMode && (
-  <div className="text-center text-muted-foreground mt-4">
-    <Clock className="h-6 w-6 mx-auto mb-2 text-amber-500" />
-    <p className="font-medium">Application Under Review</p>
-    <p className="text-sm">
-      Our team will review your application within 2-3 business days.
-      You'll receive an email once approved.
-    </p>
-  </div>
-)}
-```
-
----
-
-### 4. AdminP2POwnersModule.tsx Updates
-
-**Add Beta Mode Toggle Section at the top:**
-
-```tsx
-<Card className="mb-6">
-  <CardHeader>
-    <CardTitle className="flex items-center gap-2">
-      <Lock className="h-5 w-5" />
-      Owner Beta Mode
-    </CardTitle>
-    <CardDescription>
-      Control owner onboarding access
-    </CardDescription>
-  </CardHeader>
-  <CardContent className="space-y-4">
-    <div className="flex items-center justify-between">
-      <div>
-        <Label>Invite-Only Mode</Label>
-        <p className="text-sm text-muted-foreground">
-          When enabled, only approved owners can list vehicles
-        </p>
-      </div>
-      <Switch
-        checked={betaSettings?.betaMode}
-        onCheckedChange={(checked) => updateBetaSetting("p2p_owner_beta_mode", checked)}
-      />
-    </div>
-    
-    {betaSettings?.betaMode && (
-      <>
-        <Separator />
-        <div className="space-y-2">
-          <Label>Beta Cities (comma-separated)</Label>
-          <Input
-            placeholder="Los Angeles, Miami, Austin"
-            value={betaCitiesInput}
-            onChange={(e) => setBetaCitiesInput(e.target.value)}
-            onBlur={() => updateBetaSetting("p2p_beta_cities", parseCities(betaCitiesInput))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Beta Message</Label>
-          <Textarea
-            placeholder="Custom message for beta applicants..."
-            value={betaMessageInput}
-            onChange={(e) => setBetaMessageInput(e.target.value)}
-            onBlur={() => updateBetaSetting("p2p_beta_message", betaMessageInput)}
-            rows={3}
-          />
-        </div>
-      </>
-    )}
-  </CardContent>
-</Card>
-```
-
-**Add Notes Field in Owner Detail Modal:**
-
-```tsx
-// In the owner detail modal, add after Contact Info section:
-<div className="space-y-2">
-  <Label>Admin Review Notes</Label>
-  <Textarea
-    placeholder="Add notes about this application..."
-    value={reviewNotes}
-    onChange={(e) => setReviewNotes(e.target.value)}
-    rows={3}
-  />
-  <p className="text-xs text-muted-foreground">
-    Internal notes - not visible to the owner
-  </p>
-</div>
-
-// Update the approve/reject handlers to save notes:
-const handleApproveOwner = async (owner: AdminOwnerListItem) => {
-  await updateStatus.mutateAsync({ 
-    ownerId: owner.id, 
-    status: "verified",
-    adminNotes: reviewNotes,
+```typescript
+// Join waitlist
+export function useJoinWaitlist() {
+  return useMutation({
+    mutationFn: async ({ fullName, email, city }: WaitlistInput) => {
+      const { data, error } = await supabase
+        .from("p2p_renter_waitlist")
+        .insert({
+          full_name: fullName,
+          email: email.toLowerCase(),
+          city,
+          status: "pending",
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
   });
+}
+
+// Admin: Get waitlist entries
+export function useAdminWaitlist(status?: string) {
+  return useQuery({
+    queryKey: ["adminRenterWaitlist", status],
+    queryFn: async () => {
+      let query = supabase
+        .from("p2p_renter_waitlist")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (status && status !== "all") {
+        query = query.eq("status", status);
+      }
+      
+      return query;
+    },
+  });
+}
+```
+
+### 5. useRenterInvites.ts
+
+```typescript
+// Admin: Create invite
+export function useCreateRenterInvite() {
+  return useMutation({
+    mutationFn: async ({ email, expiresInDays, waitlistId }: CreateInviteInput) => {
+      const inviteCode = generateInviteCode(); // 8 char alphanumeric
+      
+      const { data, error } = await supabase
+        .from("p2p_renter_invites")
+        .insert({
+          email: email.toLowerCase(),
+          invite_code: inviteCode,
+          expires_at: expiresInDays 
+            ? addDays(new Date(), expiresInDays).toISOString() 
+            : null,
+          waitlist_id: waitlistId,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Update waitlist status if from waitlist
+      if (waitlistId) {
+        await supabase
+          .from("p2p_renter_waitlist")
+          .update({ status: "invited" })
+          .eq("id", waitlistId);
+      }
+      
+      return data;
+    },
+  });
+}
+
+// Admin: Send invite email
+export function useSendInviteEmail() {
+  return useMutation({
+    mutationFn: async ({ inviteId }: { inviteId: string }) => {
+      const response = await supabase.functions.invoke("send-renter-invite", {
+        body: { inviteId },
+      });
+      
+      if (response.error) throw response.error;
+      return response.data;
+    },
+  });
+}
+
+// Validate invite code
+export function useValidateInviteCode() {
+  return useMutation({
+    mutationFn: async ({ code }: { code: string }) => {
+      const { data, error } = await supabase
+        .from("p2p_renter_invites")
+        .select("*")
+        .eq("invite_code", code.toUpperCase())
+        .eq("used", false)
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (!data) throw new Error("Invalid or expired invite code");
+      
+      // Check expiration
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        throw new Error("Invite code has expired");
+      }
+      
+      return data;
+    },
+  });
+}
+
+// Mark invite as used
+export function useRedeemInvite() {
+  return useMutation({
+    mutationFn: async ({ inviteId }: { inviteId: string }) => {
+      const { error } = await supabase
+        .from("p2p_renter_invites")
+        .update({
+          used: true,
+          used_at: new Date().toISOString(),
+        })
+        .eq("id", inviteId);
+      
+      if (error) throw error;
+    },
+  });
+}
+```
+
+### 6. send-renter-invite Edge Function
+
+```typescript
+// supabase/functions/send-renter-invite/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const FROM_EMAIL = "ZIVO <noreply@hizivo.com>";
+const BASE_URL = "https://hizivo.com";
+
+serve(async (req) => {
+  const { inviteId } = await req.json();
+  
+  // Fetch invite details
+  const { data: invite } = await supabaseClient
+    .from("p2p_renter_invites")
+    .select("*, p2p_renter_waitlist(full_name)")
+    .eq("id", inviteId)
+    .single();
+  
+  const firstName = invite.p2p_renter_waitlist?.full_name?.split(" ")[0] || "there";
+  const inviteLink = `${BASE_URL}/verify/driver?invite=${invite.invite_code}`;
+  
+  // Send email via Resend
+  const emailHtml = `
+    <h1>You're Invited to ZIVO Car Rentals</h1>
+    <p>Hi ${firstName},</p>
+    <p>You're invited to join the ZIVO car rental beta in your city.</p>
+    <p>Book cars from local owners with insurance included.</p>
+    <p><a href="${inviteLink}">Get Started</a></p>
+    <p>— ZIVO Team</p>
+  `;
+  
+  await sendEmail(invite.email, "You're invited to try ZIVO Car Rentals", emailHtml);
+  
+  return new Response(JSON.stringify({ success: true }));
+});
+```
+
+### 7. P2P Search/Detail Page Integration
+
+**P2PVehicleSearch.tsx**:
+```tsx
+// Check beta mode at component level
+const { data: betaSettings } = useRenterBetaSettings();
+const { user } = useAuth();
+
+// If beta mode and not logged in, show waitlist banner
+{betaSettings?.betaMode && !user && (
+  <Card className="mb-6 bg-amber-500/5 border-amber-500/20">
+    <CardContent className="py-4">
+      <div className="flex items-center gap-4">
+        <Lock className="h-8 w-8 text-amber-500" />
+        <div>
+          <h3 className="font-semibold">Private Beta</h3>
+          <p className="text-sm text-muted-foreground">
+            ZIVO car rentals are currently invite-only.
+          </p>
+        </div>
+        <Button onClick={() => navigate("/beta/waitlist")} className="ml-auto">
+          Join Waitlist
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+)}
+```
+
+**P2PVehicleDetail.tsx booking check**:
+```tsx
+const handleBook = async () => {
+  // Existing login check
+  if (!user) {
+    navigate("/login", { state: { from: location } });
+    return;
+  }
+  
+  // Check beta mode
+  if (betaSettings?.betaMode) {
+    // Check if user has used an invite (is verified renter)
+    const { data: renterProfile } = await supabase
+      .from("renter_profiles")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    
+    if (!renterProfile) {
+      // Check for valid invite
+      const { data: invite } = await supabase
+        .from("p2p_renter_invites")
+        .select("id")
+        .eq("email", user.email?.toLowerCase())
+        .maybeSingle();
+      
+      if (!invite) {
+        toast.error("Car rentals are invite-only during beta. Join our waitlist!");
+        navigate("/beta/waitlist");
+        return;
+      }
+    }
+  }
+  
+  // Continue with existing verification check...
 };
 ```
 
-**Enhance the Owner Table to show review status:**
+### 8. RenterVerification.tsx Updates
+
+Add invite code handling:
 
 ```tsx
-// Add column for "Reviewed" date
-<TableHead>Reviewed</TableHead>
+// Get invite code from URL
+const [searchParams] = useSearchParams();
+const inviteCode = searchParams.get("invite");
 
-// In row:
-<TableCell>
-  {owner.reviewed_at ? (
-    <span className="text-sm">
-      {format(new Date(owner.reviewed_at), "MMM d, yyyy")}
-    </span>
-  ) : (
-    <Badge variant="outline" className="text-amber-600">
-      Pending
-    </Badge>
-  )}
-</TableCell>
+// Validate invite on mount
+useEffect(() => {
+  if (inviteCode && betaSettings?.betaMode) {
+    validateInvite.mutate({ code: inviteCode });
+  }
+}, [inviteCode]);
+
+// Show invite code input if beta mode and no code in URL
+{betaSettings?.betaMode && !inviteCode && !existingProfile && (
+  <Card className="mb-6">
+    <CardContent className="py-4">
+      <div className="space-y-4">
+        <Label>Invite Code</Label>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter your invite code"
+            value={manualInviteCode}
+            onChange={(e) => setManualInviteCode(e.target.value.toUpperCase())}
+            maxLength={8}
+          />
+          <Button 
+            onClick={() => validateInvite.mutate({ code: manualInviteCode })}
+            disabled={!manualInviteCode || validateInvite.isPending}
+          >
+            Verify
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Don't have an invite code? <Link to="/beta/waitlist">Join the waitlist</Link>
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+)}
 ```
 
----
+### 9. VerificationStatus.tsx Updates
 
-### 5. useAdminP2P.ts Hook Updates
+Add Beta User badge:
 
-Modify `useUpdateOwnerStatus` to include notes:
-
-```typescript
-mutationFn: async ({ 
-  ownerId, 
-  status,
-  adminNotes,
-}: { 
-  ownerId: string; 
-  status: CarOwnerStatus;
-  adminNotes?: string;
-}) => {
-  const { data, error } = await supabase
-    .from("car_owner_profiles")
-    .update({ 
-      status,
-      admin_review_notes: adminNotes,
-      reviewed_by: user?.id,
-      reviewed_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", ownerId)
-    .select()
-    .single();
-  
-  if (error) throw error;
-  return data;
-},
+```tsx
+{profile?.verification_status === "approved" && (
+  <div className="flex items-center gap-2 justify-center">
+    <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+      <Sparkles className="h-3 w-3 mr-1" />
+      Beta User
+    </Badge>
+  </div>
+)}
 ```
 
 ---
@@ -318,19 +512,71 @@ mutationFn: async ({
 ## Database Migration Summary
 
 ```sql
--- Add admin review columns to car_owner_profiles
-ALTER TABLE car_owner_profiles
-  ADD COLUMN IF NOT EXISTS admin_review_notes TEXT,
-  ADD COLUMN IF NOT EXISTS reviewed_by UUID,
-  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+-- Create waitlist table
+CREATE TABLE p2p_renter_waitlist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  city TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'invited', 'joined', 'expired')),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Insert P2P beta mode settings
+-- Create invites table
+CREATE TABLE p2p_renter_invites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT NOT NULL,
+  invite_code TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ,
+  used BOOLEAN DEFAULT false,
+  used_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id),
+  waitlist_id UUID REFERENCES p2p_renter_waitlist(id),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create indexes
+CREATE INDEX idx_renter_waitlist_email ON p2p_renter_waitlist(email);
+CREATE INDEX idx_renter_waitlist_status ON p2p_renter_waitlist(status);
+CREATE INDEX idx_renter_invites_code ON p2p_renter_invites(invite_code);
+CREATE INDEX idx_renter_invites_email ON p2p_renter_invites(email);
+
+-- Insert beta settings
 INSERT INTO system_settings (key, value, description, category, is_public)
 VALUES 
-  ('p2p_owner_beta_mode', 'true', 'Enable invite-only owner beta mode', 'p2p', false),
-  ('p2p_beta_cities', '["Los Angeles", "Miami"]', 'Cities accepting beta applications', 'p2p', true),
-  ('p2p_beta_message', '"We are currently accepting a limited number of owners for our private beta. Applications are reviewed manually."', 'Custom beta message to display', 'p2p', true)
+  ('p2p_renter_beta_mode', 'true', 'Enable invite-only renter beta', 'p2p', false),
+  ('p2p_renter_beta_city', '"Los Angeles"', 'Current beta city', 'p2p', true),
+  ('p2p_renter_beta_message', '"We''re launching in select cities with limited spots to ensure safety and quality."', 'Waitlist message', 'p2p', true)
 ON CONFLICT (key) DO NOTHING;
+
+-- Enable RLS
+ALTER TABLE p2p_renter_waitlist ENABLE ROW LEVEL SECURITY;
+ALTER TABLE p2p_renter_invites ENABLE ROW LEVEL SECURITY;
+
+-- RLS: Anyone can insert to waitlist
+CREATE POLICY "Anyone can join waitlist"
+  ON p2p_renter_waitlist FOR INSERT
+  WITH CHECK (true);
+
+-- RLS: Admin can view all waitlist
+CREATE POLICY "Admin can view waitlist"
+  ON p2p_renter_waitlist FOR SELECT
+  USING (public.is_admin(auth.uid()));
+
+-- RLS: Admin can update waitlist
+CREATE POLICY "Admin can update waitlist"
+  ON p2p_renter_waitlist FOR UPDATE
+  USING (public.is_admin(auth.uid()));
+
+-- RLS: Admin full access to invites
+CREATE POLICY "Admin full access to invites"
+  ON p2p_renter_invites FOR ALL
+  USING (public.is_admin(auth.uid()));
+
+-- RLS: Users can check their own invite
+CREATE POLICY "Users can check own invite"
+  ON p2p_renter_invites FOR SELECT
+  USING (lower(email) = lower(auth.jwt()->>'email'));
 ```
 
 ---
@@ -338,63 +584,70 @@ ON CONFLICT (key) DO NOTHING;
 ## UI/UX Flow
 
 ```text
-Owner visits /list-your-car
+Public User wants to rent a car
+         │
+         ▼
+   Beta Mode Active?
+         │
+    Yes ─┼─ No
+         │      │
+         ▼      ▼
+  Has Invite? ───── Normal Flow
+         │
+    No ──┼── Yes
+         │       │
+         ▼       ▼
+┌─────────────────────────────────────────┐
+│  /beta/waitlist                         │
+│                                         │
+│  "Join the ZIVO Car Rental Beta"        │
+│  Form: Name, Email, City                │
+│                                         │
+│  [Submit] → "Thanks! We'll invite you." │
+└─────────────────────────────────────────┘
+         │
+         ▼ (Admin sends invite)
+┌─────────────────────────────────────────┐
+│  User receives email with invite link   │
+│                                         │
+│  Link: /verify/driver?invite=ABC123     │
+└─────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────────────┐
-│  "Private Beta" badge visible           │
-│  Beta cities listed                     │
-│  Click "Get Started"                    │
-└────────────────┬────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────┐
-│  /owner/apply                           │
+│  /verify/driver                         │
 │                                         │
-│  Beta messaging card at top:            │
-│  "We are currently accepting a          │
-│   limited number of owners for our      │
-│   private beta in [CITY]. Applications  │
-│   are reviewed manually."               │
-│                                         │
-│  [Complete application steps...]        │
-└────────────────┬────────────────────────┘
-                 │
-                 ▼
-┌─────────────────────────────────────────┐
-│  Application Submitted                  │
-│                                         │
-│  "Application Under Review"             │
-│  "Our team will review within 2-3       │
-│   business days."                       │
-│                                         │
-│  Status: PENDING                        │
-└────────────────┬────────────────────────┘
-                 │
-                 ▼
-         Admin reviews in /admin → P2P Owners
-                 │
-                 ▼
-┌─────────────────────────────────────────┐
-│  Admin Review Panel                     │
-│                                         │
-│  [Beta Mode Toggle: ON/OFF]             │
-│  [Beta Cities: Input]                   │
-│  [Beta Message: Textarea]               │
-│                                         │
-│  Owner Detail Modal:                    │
-│  - All current fields                   │
-│  - Admin Notes textarea                 │
-│  - [Approve] [Reject] buttons           │
+│  Invite code validated ✓                │
+│  Complete driver verification           │
+│  License + Selfie upload                │
 └─────────────────────────────────────────┘
-                 │
-         ┌───────┴───────┐
-         │               │
-    Approved         Rejected
-         │               │
-         ▼               ▼
-   Owner can now    Owner notified
-   list vehicles    (future: email)
+         │
+         ▼
+   Admin approves verification
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  User can now book cars!                │
+│                                         │
+│  Shows "Beta User" badge                │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## Admin Panel Navigation Updates
+
+Add to `navItems` in AdminPanel.tsx:
+
+```typescript
+{ id: "renter-invites", label: "Renter Invites", icon: Mail }
+```
+
+Add module switch case:
+
+```typescript
+case "renter-invites":
+  return <AdminRenterInvitesModule />;
 ```
 
 ---
@@ -403,27 +656,47 @@ Owner visits /list-your-car
 
 | Action | File | Description |
 |--------|------|-------------|
-| Create | `src/hooks/useP2PSettings.ts` | Hooks for P2P beta settings |
-| Modify | `src/pages/ListYourCar.tsx` | Add Private Beta badge and cities callout |
-| Modify | `src/pages/owner/OwnerApply.tsx` | Add beta messaging card and pending review notice |
-| Modify | `src/pages/admin/modules/AdminP2POwnersModule.tsx` | Add beta mode toggle, notes field |
-| Modify | `src/hooks/useAdminP2P.ts` | Update mutation to include admin notes |
-| Modify | `src/types/p2p.ts` | Add admin review fields to types |
-| Database | Migration | Add columns and insert settings |
+| Create | `src/pages/beta/RenterWaitlist.tsx` | Public waitlist signup page |
+| Create | `src/pages/admin/modules/AdminRenterInvitesModule.tsx` | Admin invite management |
+| Create | `src/hooks/useRenterBetaSettings.ts` | Beta settings hooks (extend existing) |
+| Create | `src/hooks/useRenterWaitlist.ts` | Waitlist hooks |
+| Create | `src/hooks/useRenterInvites.ts` | Invite management hooks |
+| Create | `supabase/functions/send-renter-invite/` | Invite email edge function |
+| Modify | `src/App.tsx` | Add `/beta/waitlist` route |
+| Modify | `src/pages/admin/AdminPanel.tsx` | Add Renter Invites nav item |
+| Modify | `src/pages/p2p/P2PVehicleSearch.tsx` | Add beta banner for non-invited users |
+| Modify | `src/pages/p2p/P2PVehicleDetail.tsx` | Block booking for non-invited users |
+| Modify | `src/pages/verify/RenterVerification.tsx` | Add invite code validation |
+| Modify | `src/pages/verify/VerificationStatus.tsx` | Add Beta User badge |
+| Database | Migration | Create tables, settings, RLS policies |
 
 ---
 
 ## Security Considerations
 
-1. **RLS**: Beta settings with `is_public: true` can be read by anyone (needed for frontend display)
-2. **Admin-Only Updates**: Only admins can toggle beta mode or update settings
-3. **Notes Privacy**: `admin_review_notes` not exposed to owners via RLS policies
+1. **Invite Codes**: 8-character alphanumeric, unique per invite
+2. **Expiration**: Optional expiration date for invites
+3. **Single Use**: Invites marked as used after redemption
+4. **RLS**: Waitlist insert is public, all other operations admin-only
+5. **Email Validation**: Lowercase email comparison for consistency
+6. **Rate Limiting**: Consider adding rate limits to waitlist signup
 
 ---
 
-## Future Enhancements
+## Email Template
 
-1. **Email Notifications**: Notify owners when application is approved/rejected
-2. **Waitlist**: Add email capture for cities not yet in beta
-3. **Auto-Approval**: Option to auto-approve owners who meet certain criteria
-4. **Beta Invite Codes**: Generate unique invite codes for referrals
+**Subject**: You're invited to try ZIVO Car Rentals
+
+**Body**:
+```
+Hi {{name}},
+
+You're invited to join the ZIVO car rental beta in {{city}}.
+
+Book cars from local owners with insurance included.
+
+Get started here:
+{{invite_link}}
+
+— ZIVO Team
+```
