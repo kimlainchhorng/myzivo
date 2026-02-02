@@ -32,7 +32,7 @@ export default function EmailConsentCheckbox({
           disabled={disabled}
         />
         <Label htmlFor="email-consent" className="text-sm leading-tight cursor-pointer">
-          I agree to receive trip updates and share my info with the booking partner.{" "}
+          I agree to share my information with the booking partner.{" "}
           <Link to="/privacy" className="text-primary hover:underline">Privacy</Link>
         </Label>
       </div>
@@ -55,7 +55,7 @@ export default function EmailConsentCheckbox({
             className="text-sm font-medium leading-tight cursor-pointer flex items-center gap-2"
           >
             <Mail className="w-4 h-4 text-primary" />
-            I agree to receive trip updates and to share my information with the booking partner
+            I agree to share my information with the booking partner.
           </Label>
           <p className="text-xs text-muted-foreground">
             We'll send you booking confirmations and trip reminders. Your details will be shared 

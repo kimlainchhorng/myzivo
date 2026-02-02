@@ -148,7 +148,7 @@ export default function PartnerConsentModal({
                 htmlFor="consent"
                 className="text-sm font-medium leading-relaxed cursor-pointer"
               >
-                I agree to share my search details with the booking partner
+                I agree to share my information with the booking partner.
               </label>
               <p className="text-xs text-muted-foreground">
                 Your search criteria will be passed to {partnerName} to show relevant results. 
