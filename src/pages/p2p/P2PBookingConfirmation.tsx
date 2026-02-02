@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBookingDetail } from "@/hooks/useP2PBooking";
 import { useCreateP2PCheckout } from "@/hooks/useP2PPayment";
 import { toast } from "sonner";
+import CompletedBookingSection from "@/components/p2p/CompletedBookingSection";
 
 const statusConfig = {
   pending: {
@@ -285,13 +286,29 @@ export default function P2PBookingConfirmation() {
                       </p>
                     )}
                   </div>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      if (owner.email) {
+                        window.location.href = `mailto:${owner.email}?subject=ZIVO P2P Booking - ${booking.id.slice(0, 8).toUpperCase()}`;
+                      } else {
+                        toast.info("Contact support for host information");
+                      }
+                    }}
+                  >
                     <MessageCircle className="w-4 h-4" />
                     Message
                   </Button>
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Completed Booking Review Section */}
+          {booking.status === "completed" && (
+            <CompletedBookingSection booking={booking} />
           )}
 
           {/* Next Steps */}

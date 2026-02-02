@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { format, parseISO, isPast } from "date-fns";
 import {
   Car, Calendar, MapPin, Clock, CheckCircle, XCircle,
-  ChevronRight, Search, Filter
+  ChevronRight, Search, Filter, Star
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useRenterBookings, type BookingWithDetails } from "@/hooks/useP2PBooking";
+import { useBookingReview } from "@/hooks/useP2PReview";
 
 const statusBadges = {
   pending: { variant: "secondary" as const, label: "Pending Approval" },
@@ -149,7 +150,7 @@ export default function RenterTrips() {
                   {pastBookings.length > 0 ? (
                     <div className="space-y-4">
                       {pastBookings.map((booking) => (
-                        <BookingCard key={booking.id} booking={booking} />
+                        <BookingCard key={booking.id} booking={booking} showReviewStatus />
                       ))}
                     </div>
                   ) : (
@@ -170,65 +171,99 @@ export default function RenterTrips() {
   );
 }
 
-function BookingCard({ booking }: { booking: BookingWithDetails }) {
+function BookingCard({ booking, showReviewStatus }: { booking: BookingWithDetails; showReviewStatus?: boolean }) {
   const vehicle = booking.vehicle;
   const status = statusBadges[booking.status as keyof typeof statusBadges] || statusBadges.pending;
   const images = (vehicle?.images as string[]) || [];
+  
+  // Check review status for completed bookings
+  const { data: vehicleReview } = useBookingReview(
+    showReviewStatus && booking.status === "completed" ? booking.id : undefined,
+    "renter_to_vehicle"
+  );
+
+  const hasReviewed = !!vehicleReview;
+  const showReviewCTA = showReviewStatus && booking.status === "completed" && !hasReviewed;
 
   return (
-    <Link to={`/p2p/booking/${booking.id}/confirmation`}>
-      <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="flex gap-4">
-            {/* Vehicle Image */}
-            <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-lg bg-muted overflow-hidden shrink-0">
-              {images[0] ? (
-                <img
-                  src={images[0]}
-                  alt={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "Vehicle"}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Car className="w-8 h-8 text-muted-foreground/50" />
-                </div>
-              )}
-            </div>
-
-            {/* Details */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <h3 className="font-semibold truncate">
-                    {vehicle
-                      ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
-                      : "Vehicle"}
-                  </h3>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {vehicle?.location_city}, {vehicle?.location_state}
-                  </div>
-                </div>
-                <Badge variant={status.variant}>{status.label}</Badge>
+    <Card className="hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className="flex gap-4">
+          {/* Vehicle Image */}
+          <div className="w-24 h-20 sm:w-32 sm:h-24 rounded-lg bg-muted overflow-hidden shrink-0">
+            {images[0] ? (
+              <img
+                src={images[0]}
+                alt={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "Vehicle"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Car className="w-8 h-8 text-muted-foreground/50" />
               </div>
-
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {format(parseISO(booking.pickup_date), "MMM d")} -{" "}
-                  {format(parseISO(booking.return_date), "MMM d")}
-                </div>
-                <div className="font-medium text-foreground">
-                  ${booking.total_amount.toFixed(0)}
-                </div>
-              </div>
-            </div>
-
-            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 self-center" />
+            )}
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+
+          {/* Details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <h3 className="font-semibold truncate">
+                  {vehicle
+                    ? `${vehicle.year} ${vehicle.make} ${vehicle.model}`
+                    : "Vehicle"}
+                </h3>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {vehicle?.location_city}, {vehicle?.location_state}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <Badge variant={status.variant}>{status.label}</Badge>
+                {showReviewStatus && booking.status === "completed" && (
+                  hasReviewed ? (
+                    <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Reviewed
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs bg-amber-500/10 text-amber-600 border-amber-500/30">
+                      <Star className="w-3 h-3 mr-1" />
+                      Leave Review
+                    </Badge>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {format(parseISO(booking.pickup_date), "MMM d")} -{" "}
+                {format(parseISO(booking.return_date), "MMM d")}
+              </div>
+              <div className="font-medium text-foreground">
+                ${booking.total_amount.toFixed(0)}
+              </div>
+            </div>
+
+            {/* Quick Review CTA for completed trips */}
+            {showReviewCTA && (
+              <Link to={`/p2p/booking/${booking.id}/confirmation`}>
+                <Button size="sm" variant="outline" className="gap-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10">
+                  <Star className="w-4 h-4" />
+                  Leave a Review
+                </Button>
+              </Link>
+            )}
+          </div>
+
+          <Link to={`/p2p/booking/${booking.id}/confirmation`} className="shrink-0 self-center">
+            <ChevronRight className="w-5 h-5 text-muted-foreground" />
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
