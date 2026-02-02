@@ -1,6 +1,7 @@
-import { Zap, Car, MapPin, Clock, Battery, Leaf, ArrowRight, Check } from "lucide-react";
+import { Zap, Car, MapPin, Clock, Battery, Leaf, ArrowRight, Check, Users, Briefcase } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { brandedCarModels, getCarsByFuelType } from "@/config/photos";
 
 const evBenefits = [
   "Free charging at all locations",
@@ -9,11 +10,8 @@ const evBenefits = [
   "Extended range options",
 ];
 
-const evCars = [
-  { name: "Tesla Model 3", range: "358 mi", price: 89, charging: "Free Supercharging" },
-  { name: "Tesla Model Y", range: "330 mi", price: 109, charging: "Free Supercharging" },
-  { name: "BMW iX", range: "324 mi", price: 149, charging: "Free charging" },
-];
+// Get electric vehicles from branded models
+const evCars = getCarsByFuelType("electric");
 
 const CarElectricVehicles = () => {
   return (
@@ -52,24 +50,33 @@ const CarElectricVehicles = () => {
             <div className="space-y-4">
               {evCars.map((car) => (
                 <div
-                  key={car.name}
-                  className="p-4 bg-card/60 backdrop-blur-xl border border-green-500/20 rounded-xl flex items-center justify-between"
+                  key={car.id}
+                  className="p-4 bg-card/60 backdrop-blur-xl border border-green-500/20 rounded-xl flex items-center gap-4"
                 >
-                  <div>
-                    <h3 className="font-bold">{car.name}</h3>
+                  <img
+                    src={car.src}
+                    alt={car.alt}
+                    className="w-24 h-16 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-bold">{car.brand} {car.model}</h3>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                       <div className="flex items-center gap-1">
-                        <Battery className="w-3 h-3" />
-                        {car.range} range
+                        <Users className="w-3 h-3" />
+                        {car.passengers} seats
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" />
+                        {car.bags} bags
                       </div>
                       <div className="flex items-center gap-1">
                         <Zap className="w-3 h-3 text-green-400" />
-                        {car.charging}
+                        Electric
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold">${car.price}</p>
+                    <p className="text-2xl font-bold">${89 + evCars.indexOf(car) * 20}</p>
                     <p className="text-xs text-muted-foreground">/day</p>
                   </div>
                 </div>

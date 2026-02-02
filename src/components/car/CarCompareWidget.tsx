@@ -2,25 +2,19 @@ import { useState } from "react";
 import { Scale, X, Plus, Users, Briefcase, Fuel, Zap, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { brandedCarModels, BrandedCarModel } from "@/config/photos";
 
-interface CompareCar {
-  id: string;
-  name: string;
-  category: string;
-  image: string;
+interface CompareCar extends BrandedCarModel {
   price: number;
-  seats: number;
-  bags: number;
-  transmission: string;
-  fuel: string;
   features: string[];
 }
 
+// Extend branded models with pricing and features for comparison
 const sampleCars: CompareCar[] = [
-  { id: "1", name: "Toyota Camry", category: "Sedan", image: "🚗", price: 65, seats: 5, bags: 3, transmission: "Auto", fuel: "Hybrid", features: ["GPS", "Bluetooth", "Cruise Control"] },
-  { id: "2", name: "Tesla Model 3", category: "Electric", image: "⚡", price: 89, seats: 5, bags: 2, transmission: "Auto", fuel: "Electric", features: ["Autopilot", "Supercharger", "Premium Sound"] },
-  { id: "3", name: "Jeep Wrangler", category: "SUV", image: "🚙", price: 95, seats: 5, bags: 4, transmission: "Manual", fuel: "Gas", features: ["4WD", "Removable Top", "Off-Road"] },
-];
+  { ...brandedCarModels.find(c => c.id === "toyota-rav4")!, price: 65, features: ["GPS", "Bluetooth", "Cruise Control"] },
+  { ...brandedCarModels.find(c => c.id === "tesla-model3")!, price: 89, features: ["Autopilot", "Supercharger", "Premium Sound"] },
+  { ...brandedCarModels.find(c => c.id === "jeep-wrangler")!, price: 95, features: ["4WD", "Removable Top", "Off-Road"] },
+].filter(c => c.brand); // Filter out any undefined
 
 const CarCompareWidget = () => {
   const [compareList, setCompareList] = useState<CompareCar[]>(sampleCars.slice(0, 2));
@@ -58,13 +52,19 @@ const CarCompareWidget = () => {
               </button>
 
               <Badge className="mb-3" variant="secondary">{car.category}</Badge>
-              <div className="text-6xl text-center mb-4">{car.image}</div>
-              <h3 className="font-bold text-lg text-center mb-4">{car.name}</h3>
+              <div className="h-32 mb-4 rounded-lg overflow-hidden">
+                <img
+                  src={car.src}
+                  alt={car.alt}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <h3 className="font-bold text-lg text-center mb-4">{car.brand} {car.model}</h3>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span>{car.seats} seats</span>
+                  <span>{car.passengers} seats</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Briefcase className="w-4 h-4 text-muted-foreground" />
@@ -76,7 +76,7 @@ const CarCompareWidget = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Fuel className="w-4 h-4 text-muted-foreground" />
-                  <span>{car.fuel}</span>
+                  <span>{car.fuelType}</span>
                 </div>
               </div>
 
