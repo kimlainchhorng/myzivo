@@ -48,30 +48,32 @@ export default function FlightDetailStickyCTA({
   };
 
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
-      "bg-gradient-to-t from-background via-background/98 to-background/90 backdrop-blur-lg",
-      "border-t border-border/50 shadow-2xl shadow-black/20",
-      "safe-area-inset-bottom",
-      className
-    )}>
+    <div 
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
+        "bg-gradient-to-t from-background via-background/98 to-background/90 backdrop-blur-lg",
+        "border-t border-border/50 shadow-2xl shadow-black/20",
+        className
+      )}
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       <div className="container mx-auto px-4 py-3">
         {/* Consent Checkbox Row */}
         {consentRequired && (
-          <div className="flex items-center gap-2 mb-3 p-2 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-3 mb-3 p-3 bg-muted/30 rounded-xl border border-border/50">
             <Checkbox
               id="mobile-consent"
               checked={consentChecked}
               onCheckedChange={(val) => setConsentChecked(val === true)}
-              className="shrink-0"
+              className="shrink-0 w-5 h-5"
             />
             <label 
               htmlFor="mobile-consent" 
-              className="text-[11px] text-muted-foreground leading-tight cursor-pointer"
+              className="text-xs text-muted-foreground leading-snug cursor-pointer flex-1"
             >
               I agree to share my information with the booking partner.
             </label>
-            {consentChecked && <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />}
+            {consentChecked && <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />}
           </div>
         )}
 
@@ -89,28 +91,29 @@ export default function FlightDetailStickyCTA({
             </p>
           </div>
 
-          {/* CTA Button - Locked compliance text */}
+          {/* CTA Button - min-height 52px for thumb-friendliness */}
           <Button
             size="lg"
-            disabled={isLoading}
+            disabled={isLoading || (consentRequired && !consentChecked)}
             onClick={handleContinue}
             className={cn(
               "gap-2 text-white shadow-lg shadow-sky-500/30 shrink-0",
-              "min-h-[52px] px-6 touch-manipulation active:scale-[0.98]",
+              "min-h-[52px] px-5 touch-manipulation active:scale-[0.98]",
               "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
-              "text-base font-semibold",
-              consentRequired && !consentChecked && "opacity-70"
+              "text-sm sm:text-base font-semibold",
+              consentRequired && !consentChecked && "opacity-60"
             )}
           >
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Checking...
+                <span className="hidden sm:inline">Redirecting...</span>
               </>
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                {FLIGHT_CTA_TEXT.mobile}
+                <span className="hidden sm:inline">{FLIGHT_CTA_TEXT.mobile}</span>
+                <span className="sm:hidden">Checkout</span>
                 <ExternalLink className="w-4 h-4" />
               </>
             )}

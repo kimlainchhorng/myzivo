@@ -46,16 +46,17 @@ export default function FlightMobileResultsBar({
       "fixed bottom-0 left-0 right-0 z-50 lg:hidden",
       "bg-gradient-to-t from-background via-background to-background/95 backdrop-blur-lg",
       "border-t border-border/50 shadow-2xl shadow-black/10",
-      "safe-area-inset-bottom",
       className
-    )}>
+    )}
+    style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       <div className="container mx-auto px-4 py-3">
         <div className="flex gap-3">
           {/* Filter Button */}
           <Button
             variant="outline"
             onClick={onOpenFilters}
-            className="flex-1 h-12 rounded-xl gap-2 font-semibold relative touch-manipulation active:scale-[0.98]"
+            className="flex-1 h-12 min-h-[48px] rounded-xl gap-2 font-semibold relative touch-manipulation active:scale-[0.98]"
           >
             <SlidersHorizontal className="w-4 h-4" />
             Filter
@@ -71,18 +72,18 @@ export default function FlightMobileResultsBar({
             <SheetTrigger asChild>
               <Button
                 variant="outline"
-                className="flex-1 h-12 rounded-xl gap-2 font-semibold touch-manipulation active:scale-[0.98]"
+                className="flex-1 h-12 min-h-[48px] rounded-xl gap-2 font-semibold touch-manipulation active:scale-[0.98]"
               >
                 <ArrowUpDown className="w-4 h-4" />
                 Sort
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-3xl">
+            <SheetContent side="bottom" className="rounded-t-3xl" style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}>
               <SheetHeader className="pb-4">
                 <SheetTitle>Sort by</SheetTitle>
               </SheetHeader>
               
-              <div className="space-y-2 pb-safe">
+              <div className="space-y-2">
                 {sortOptions.map((option) => (
                   <button
                     key={option.value}
