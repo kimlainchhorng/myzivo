@@ -1,4 +1,4 @@
-import { ArrowLeft, Shield, Mail, Database, Share2, Settings, UserCheck } from "lucide-react";
+import { ArrowLeft, Shield, Mail, Database, Share2, Cookie, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -32,87 +32,111 @@ const Privacy = () => {
             <span className="text-sm font-medium text-primary">Legal</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
-          <p className="text-muted-foreground">
-            Effective Date: February 1, 2026
-          </p>
         </div>
 
         {/* Content */}
         <div className="space-y-8">
           {/* Introduction */}
           <section className="bg-card/50 rounded-2xl p-6 border border-border">
-            <p className="text-foreground leading-relaxed">
-              ZIVO collects information you provide (such as name, email, phone, and traveler details when applicable) and technical data (such as device/browser data, cookies, and analytics) to operate and improve the platform.
+            <p className="text-foreground leading-relaxed text-lg">
+              Hizivo respects your privacy.
             </p>
           </section>
 
-          {/* How We Use Data */}
+          {/* Information We Collect */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-sky-500/10">
                 <Database className="w-5 h-5 text-sky-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">How We Use Data</h2>
+              <h2 className="text-2xl font-bold text-foreground">Information We Collect</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Provide search and referral services
+                  Information you provide (name, email, phone, traveler details)
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Prevent fraud and secure the platform
-                </li>
-                <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Customer support
-                </li>
-                <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Analytics and performance improvements
+                  Technical data (device, browser, cookies, analytics)
                 </li>
               </ul>
             </div>
           </section>
 
-          {/* Sharing */}
+          {/* How We Use Information */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <UserCheck className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">How We Use Information</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  To provide search and referral services
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  To connect you with travel partners (with consent)
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  To improve platform performance and security
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  To respond to support inquiries
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* Information Sharing */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-amber-500/10">
                 <Share2 className="w-5 h-5 text-amber-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Sharing</h2>
+              <h2 className="text-2xl font-bold text-foreground">Information Sharing</h2>
             </div>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground leading-relaxed">
-                We may share required booking information with Travel Partners when you proceed to checkout (with consent where required).
-              </p>
-              <p className="text-foreground leading-relaxed">
-                We may share data with vendors who help us run the platform (analytics, hosting), under contracts.
+                We may share necessary information with travel partners when you choose to complete a booking. We do not sell personal data.
               </p>
             </div>
           </section>
 
-          {/* Your Choices */}
+          {/* Cookies */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <Settings className="w-5 h-5 text-emerald-500" />
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Cookie className="w-5 h-5 text-purple-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">Your Choices</h2>
+              <h2 className="text-2xl font-bold text-foreground">Cookies</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <ul className="space-y-3">
-                <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  You may request access or deletion of your data where applicable.
-                </li>
-                <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  You can manage cookies in your browser settings.
-                </li>
-              </ul>
+              <p className="text-foreground leading-relaxed">
+                We use cookies to operate and improve our services. You can control cookies via your browser settings.
+              </p>
+            </div>
+          </section>
+
+          {/* Your Rights */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-indigo-500/10">
+                <Shield className="w-5 h-5 text-indigo-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Your Rights</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed">
+                You may request access to or deletion of your personal information where applicable.
+              </p>
             </div>
           </section>
 
@@ -125,9 +149,6 @@ const Privacy = () => {
               <h2 className="text-2xl font-bold text-foreground">Contact</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground mb-4">
-                For questions regarding this Privacy Policy:
-              </p>
               <a 
                 href="mailto:support@hizivo.com" 
                 className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
