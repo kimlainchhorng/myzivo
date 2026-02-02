@@ -1,4 +1,4 @@
-import { ArrowLeft, Shield, Mail, Globe } from "lucide-react";
+import { ArrowLeft, Shield, Mail, Database, Share2, Settings, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -38,111 +38,103 @@ const Privacy = () => {
         </div>
 
         {/* Content */}
-        <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
+        <div className="space-y-8">
+          {/* Introduction */}
           <section className="bg-card/50 rounded-2xl p-6 border border-border">
             <p className="text-foreground leading-relaxed">
-              ZIVO ("we", "our", "us") operates the website{" "}
-              <a href="https://hizivo.com" className="text-primary hover:underline">
-                https://hizivo.com
-              </a>.
-            </p>
-            <p className="text-foreground leading-relaxed mt-4">
-              ZIVO is a travel search and comparison platform. We help users search and compare 
-              flights, hotels, car rentals, and travel services from third-party partners.
-            </p>
-            <p className="text-foreground leading-relaxed mt-4 font-semibold">
-              ZIVO does not sell tickets, process payments, or handle bookings.
+              ZIVO collects information you provide (such as name, email, phone, and traveler details when applicable) and technical data (such as device/browser data, cookies, and analytics) to operate and improve the platform.
             </p>
           </section>
 
+          {/* How We Use Data */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Information We Collect</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">We may collect limited information such as:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Device type and browser</li>
-                <li>Pages visited</li>
-                <li>Anonymous usage data</li>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-sky-500/10">
+                <Database className="w-5 h-5 text-sky-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">How We Use Data</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  Provide search and referral services
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  Prevent fraud and secure the platform
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  Customer support
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  Analytics and performance improvements
+                </li>
               </ul>
-              <p className="text-foreground mt-4 font-semibold">We do NOT collect:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Credit card information</li>
-                <li>Booking or payment details</li>
-                <li>Sensitive personal data</li>
+            </div>
+          </section>
+
+          {/* Sharing */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Share2 className="w-5 h-5 text-amber-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Sharing</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
+              <p className="text-foreground leading-relaxed">
+                We may share required booking information with Travel Partners when you proceed to checkout (with consent where required).
+              </p>
+              <p className="text-foreground leading-relaxed">
+                We may share data with vendors who help us run the platform (analytics, hosting), under contracts.
+              </p>
+            </div>
+          </section>
+
+          {/* Your Choices */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <Settings className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Your Choices</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  You may request access or deletion of your data where applicable.
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  You can manage cookies in your browser settings.
+                </li>
               </ul>
             </div>
           </section>
 
+          {/* Contact */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Cookies & Tracking</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">ZIVO may use cookies and tracking technologies to:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Improve user experience</li>
-                <li>Measure site performance</li>
-                <li>Track outbound clicks to travel partners</li>
-              </ul>
-              <p className="text-foreground mt-4">
-                Affiliate partners may use cookies to track bookings completed on their websites.
-              </p>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Contact</h2>
             </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Third-Party Partners</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">
-                When you click a link on ZIVO, you are redirected to a third-party website.
-                Each partner has its own privacy policy and terms.
-              </p>
-              <p className="text-foreground font-semibold">
-                ZIVO is not responsible for the privacy practices of third-party websites.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Affiliate Disclosure</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">
-                ZIVO may earn a commission when users book through partner links.
-                This does not affect the price you pay.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Data Security</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">
-                We take reasonable measures to protect website data.
-                However, no online platform can guarantee 100% security.
-              </p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Contact</h2>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground mb-4">
-                If you have questions about this Privacy Policy, contact us:
+                For questions regarding this Privacy Policy:
               </p>
-              <div className="flex flex-col gap-3">
-                <a 
-                  href="mailto:info@hizivo.com" 
-                  className="flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Mail className="w-4 h-4" />
-                  info@hizivo.com
-                </a>
-                <a 
-                  href="https://hizivo.com" 
-                  className="flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Globe className="w-4 h-4" />
-                  https://hizivo.com
-                </a>
-              </div>
+              <a 
+                href="mailto:support@hizivo.com" 
+                className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+              >
+                <Mail className="w-4 h-4" />
+                support@hizivo.com
+              </a>
             </div>
           </section>
         </div>
