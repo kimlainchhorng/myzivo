@@ -97,7 +97,7 @@ export default function HotelStickyBookingCTA({
 
         {/* Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {AFFILIATE_DISCLOSURE_TEXT.short}
+          {AFFILIATE_DISCLOSURE_TEXT.short} Booking completed on partner site.
         </p>
       </div>
     </div>

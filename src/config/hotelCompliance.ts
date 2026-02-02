@@ -22,11 +22,17 @@ export const HOTEL_CTA_TEXT = {
   /** Mobile sticky CTA */
   mobile: "Continue to checkout",
   
-  /** View deal variant (results page) */
-  viewDeal: "View Deal",
+  /** View deal variant (results page) - UPDATED FOR PARTNER CLARITY */
+  viewDeal: "View deal on partner site",
   
   /** Select hotel variant */
   select: "Select Hotel",
+  
+  /** Hero page CTA */
+  searchHotels: "Search Hotels",
+  
+  /** Helper text under CTA */
+  helperText: "Final booking completed on partner site.",
 } as const;
 
 // ============================================
@@ -49,11 +55,26 @@ export const HOTEL_DISCLAIMERS = {
   /** Price disclaimer */
   price: "Prices shown are estimates and may change. Final price confirmed on partner checkout.",
   
+  /** Price disclaimer - results page */
+  indicativePrice: "Indicative prices shown. Final price confirmed on partner site.",
+  
   /** Support disclaimer */
   support: "For hotel changes, cancellations, or refunds, please contact the booking partner listed in your confirmation email.",
   
+  /** Website support */
+  websiteSupport: "For website issues, contact support@hizivo.com.",
+  
   /** Payment disclaimer */
   payment: "Hizivo does not collect or process payments for hotels. All payments are handled by the booking partner.",
+  
+  /** Results trust copy */
+  resultsTrust: "Compare hotel deals from licensed travel partners.",
+  
+  /** Hero headline */
+  heroHeadline: "Compare Hotels Worldwide — Book Securely with Partners",
+  
+  /** Hero subheadline */
+  heroSubheadline: "Search real-time hotel prices and complete booking securely with licensed partners.",
 } as const;
 
 // ============================================

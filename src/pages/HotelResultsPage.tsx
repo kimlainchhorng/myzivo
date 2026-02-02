@@ -277,7 +277,7 @@ export default function HotelResultsPage() {
         {/* Breadcrumbs */}
         <ResultsBreadcrumbs service="hotels" />
 
-        {/* Sticky Search Summary */}
+        {/* Sticky Search Summary with City, Dates, Rooms/Guests, Modify */}
         <StickySearchSummary
           service="hotels"
           backLink="/hotels"
@@ -297,6 +297,15 @@ export default function HotelResultsPage() {
             />
           }
         />
+        
+        {/* Trust copy above results */}
+        <section className="py-3 border-b border-border/30 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Compare hotel deals from licensed travel partners.
+            </p>
+          </div>
+        </section>
 
         {/* Validation Errors */}
         {!isValid && (
@@ -379,10 +388,29 @@ export default function HotelResultsPage() {
 
                 {/* Redirect Notice */}
                 {hotelCards.length > 0 && !isLoading && <RedirectNotice service="hotels" className="mt-6" />}
+                
+                {/* Indicative prices disclaimer below results */}
+                {hotelCards.length > 0 && !isLoading && (
+                  <p className="text-center text-xs text-muted-foreground mt-4">
+                    Indicative prices shown. Final price confirmed on partner site.
+                  </p>
+                )}
               </ResultsContainer>
             </div>
           </section>
         )}
+
+        {/* Support Routing Section */}
+        <section className="py-6 bg-muted/20 border-y border-border/30">
+          <div className="container mx-auto px-4 max-w-2xl text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              For changes, cancellations, or refunds, contact the booking partner listed in your confirmation email.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              For website issues, contact <a href="mailto:support@hizivo.com" className="text-amber-500 hover:underline">support@hizivo.com</a>.
+            </p>
+          </div>
+        </section>
 
         {/* Driver Cross-Sell */}
         <section className="container mx-auto px-4 mt-8 max-w-4xl">

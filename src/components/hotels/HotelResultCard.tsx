@@ -126,9 +126,12 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
                 onClick={() => onViewDeal(hotel)}
                 className="bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2"
               >
-                View Deal
+                View deal on partner site
                 <ExternalLink className="w-4 h-4" />
               </Button>
+              <p className="text-[9px] text-muted-foreground mt-1.5 text-right">
+                Final price confirmed by partner.
+              </p>
             </div>
           </div>
         </div>

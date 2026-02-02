@@ -171,16 +171,20 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
               onClick={() => onViewDeal(hotel)}
               className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-white"
             >
-              View Deal
+              View deal on partner site
               <ExternalLink className="w-4 h-4" />
             </Button>
+            {/* Price confirmation micro-copy */}
+            <p className="text-[9px] text-muted-foreground mt-2 text-center">
+              Final price confirmed by partner.
+            </p>
           </div>
         </div>
 
-        {/* Redirect notice */}
+        {/* Redirect notice with booking handled by partner */}
         <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
           <p className="text-[10px] text-muted-foreground">
-            Redirects to partner site to complete booking
+            Booking handled by partner
           </p>
         </div>
       </CardContent>

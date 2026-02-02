@@ -145,11 +145,11 @@ export default function HotelsPage() {
       <main className="pt-16">
         {/* Hero Section */}
         <section className="relative overflow-hidden">
-          {/* Background Image */}
+          {/* Background Image - REAL hotel imagery */}
           <div className="absolute inset-0">
             <img
               src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&h=600&fit=crop&q=80&fm=webp"
-              alt=""
+              alt="Luxury hotel lobby with modern design"
               className="w-full h-full object-cover"
               loading="eager"
             />
@@ -164,12 +164,14 @@ export default function HotelsPage() {
                   <span className="text-white/80">Compare hotel prices</span>
                 </div>
                 
+                {/* NEW HEADLINE */}
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
-                  Search & Compare <span className="text-hotels">Hotels</span>
+                  Compare Hotels Worldwide — <span className="text-hotels">Book Securely with Partners</span>
                 </h1>
                 
+                {/* NEW SUBHEADLINE */}
                 <p className="text-lg text-white/70 mb-8">
-                  Find hotels worldwide and book securely on partner sites.
+                  Search real-time hotel prices and complete booking securely with licensed partners.
                 </p>
 
                 {/* Trust Badges */}
@@ -191,6 +193,19 @@ export default function HotelsPage() {
                 onSearch={handleSearch}
                 navigateOnSearch={false}
               />
+              
+              {/* Helper text under CTA */}
+              <p className="text-center text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Final booking completed on partner site.
+              </p>
+              
+              {/* Visible disclaimer near search */}
+              <div className="mt-6 max-w-2xl mx-auto">
+                <p className="text-center text-xs text-white/50">
+                  Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.
+                </p>
+              </div>
             </div>
           </div>
         </section>
