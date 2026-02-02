@@ -32,5 +32,9 @@ export { FlightResultCard, type FlightCardData } from "./FlightResultCard";
 export { HotelResultCard, type HotelCardData } from "./HotelResultCard";
 export { CarResultCard, type CarCardData } from "./CarResultCard";
 
+// Ramp-style components
+export { RampCarCard, type RampCarCardData } from "./RampCarCard";
+export { RampResultsLayout, RampResultsHeader, RampGlobalDisclaimer, RampIndicativeNotice } from "./RampResultsLayout";
+
 // API states
 export { default as ApiPendingNotice } from "./ApiPendingNotice";

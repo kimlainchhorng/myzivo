@@ -1,12 +1,12 @@
 /**
- * Car Rental Results Page - Unified Design
- * Uses shared results components for consistent UX
- * Integrates affiliate deep links with proper consent + tracking
+ * Car Rental Results Page - Ramp-Style Redesign
+ * Premium, enterprise-grade travel booking UI
+ * Always-visible pricing with clean card-based layout
  */
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Car, AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
+import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
@@ -16,29 +16,31 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   StickySearchSummary,
   FiltersSheet,
-  FiltersTrigger,
-  SortSelect,
-  carSortOptions,
-  ResultsContainer,
-  ResultsHeader,
   ResultsSkeletonList,
-  EmptyResults,
-  CarResultCard,
-  type CarCardData,
-  IndicativePriceAlert,
-  RedirectNotice,
-  AffiliateDisclaimer,
+  RampCarCard,
+  RampResultsLayout,
+  RampResultsHeader,
+  RampGlobalDisclaimer,
+  RampIndicativeNotice,
   ResultsBreadcrumbs,
   ResultsFAQ,
   CarEditSearchForm,
+  type RampCarCardData,
 } from "@/components/results";
 import { useRealCarSearch, type CarResult } from "@/hooks/useRealCarSearch";
 import { getAirportByCode } from "@/components/car/AirportAutocomplete";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
-import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
 import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
@@ -107,14 +109,12 @@ interface CarFilters {
   maxPrice: number;
   categories: string[];
   transmission: string[];
-  features: string[];
 }
 
 const defaultFilters: CarFilters = {
   maxPrice: 500,
   categories: [],
   transmission: [],
-  features: [],
 };
 
 export default function CarResultsPage() {
@@ -122,8 +122,6 @@ export default function CarResultsPage() {
   const [filters, setFilters] = useState<CarFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("price");
-  const [showConsentModal, setShowConsentModal] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<CarCardData | null>(null);
 
   const { isLoading, results, search, isRealPrice, getPartners } = useRealCarSearch();
 
@@ -179,11 +177,10 @@ export default function CarResultsPage() {
     }
   }, [results, filters, sortBy]);
 
-  // Convert to unified card format
-  const carCards: CarCardData[] = filteredResults.map((car: CarResult) => ({
+  // Convert to Ramp card format
+  const carCards: RampCarCardData[] = filteredResults.map((car: CarResult) => ({
     id: car.id,
     category: car.category,
-    categoryIcon: car.categoryIcon,
     company: car.company,
     seats: car.seats,
     bags: car.bags,
@@ -195,9 +192,10 @@ export default function CarResultsPage() {
     features: car.features,
     mileage: car.mileage,
     freeCancellation: car.features.some((f) => f.toLowerCase().includes("cancel")),
+    isBestDeal: filteredResults.indexOf(car) === 0 && car.pricePerDay === Math.min(...filteredResults.map(c => c.pricePerDay)),
   }));
 
-  const handleViewDeal = (car: CarCardData) => {
+  const handleViewDeal = (car: RampCarCardData) => {
     const outParams = new URLSearchParams({
       pickup: pickupCode,
       pickup_date: pickupDate,
@@ -267,12 +265,14 @@ export default function CarResultsPage() {
     ? `Compare ${results.length}+ car rental options in ${locationName}. ${pickupDate && dropoffDate ? `${days} days, ${formatDisplayDate(pickupDate)} - ${formatDisplayDate(dropoffDate)}.` : ""} Book securely on partner sites.`
     : "Search and compare car rental prices across booking sites.";
 
-  // Filters UI
+  // Filters UI Component
   const FiltersContent = () => (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Price Range */}
       <div>
-        <h3 className="font-semibold mb-3">Max Price: ${filters.maxPrice}/day</h3>
+        <Label className="text-sm font-semibold text-foreground mb-4 block">
+          Max Price: ${filters.maxPrice}/day
+        </Label>
         <Slider
           value={[filters.maxPrice]}
           onValueChange={(v) => setFilters((f) => ({ ...f, maxPrice: v[0] }))}
@@ -281,7 +281,7 @@ export default function CarResultsPage() {
           step={10}
           className="py-2"
         />
-        <div className="flex justify-between text-xs text-muted-foreground mt-1">
+        <div className="flex justify-between text-xs text-muted-foreground mt-2">
           <span>$20</span>
           <span>$500</span>
         </div>
@@ -289,10 +289,10 @@ export default function CarResultsPage() {
 
       {/* Car Categories */}
       <div>
-        <h3 className="font-semibold mb-3">Car Category</h3>
-        <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground mb-4 block">Car Category</Label>
+        <div className="space-y-3">
           {["Economy", "Compact", "Midsize", "SUV", "Luxury"].map((cat) => (
-            <label key={cat} className="flex items-center gap-3 cursor-pointer">
+            <label key={cat} className="flex items-center gap-3 cursor-pointer group">
               <Checkbox
                 checked={filters.categories.includes(cat)}
                 onCheckedChange={(checked) => {
@@ -303,7 +303,7 @@ export default function CarResultsPage() {
                   }
                 }}
               />
-              <span>{cat}</span>
+              <span className="text-sm text-foreground group-hover:text-primary transition-colors">{cat}</span>
             </label>
           ))}
         </div>
@@ -311,10 +311,10 @@ export default function CarResultsPage() {
 
       {/* Transmission */}
       <div>
-        <h3 className="font-semibold mb-3">Transmission</h3>
-        <div className="space-y-2">
+        <Label className="text-sm font-semibold text-foreground mb-4 block">Transmission</Label>
+        <div className="space-y-3">
           {["Automatic", "Manual"].map((trans) => (
-            <label key={trans} className="flex items-center gap-3 cursor-pointer">
+            <label key={trans} className="flex items-center gap-3 cursor-pointer group">
               <Checkbox
                 checked={filters.transmission.includes(trans)}
                 onCheckedChange={(checked) => {
@@ -325,12 +325,56 @@ export default function CarResultsPage() {
                   }
                 }}
               />
-              <span>{trans}</span>
+              <span className="text-sm text-foreground group-hover:text-primary transition-colors">{trans}</span>
             </label>
           ))}
         </div>
       </div>
+
+      {/* Reset Filters */}
+      {activeFilterCount > 0 && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setFilters(defaultFilters)}
+          className="w-full"
+        >
+          Clear all filters
+        </Button>
+      )}
     </div>
+  );
+
+  // Sort dropdown
+  const SortDropdown = () => (
+    <Select value={sortBy} onValueChange={setSortBy}>
+      <SelectTrigger className="w-[160px] bg-card border-border/60">
+        <SelectValue placeholder="Sort by" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="price">Lowest Price</SelectItem>
+        <SelectItem value="category">Category</SelectItem>
+        <SelectItem value="company">Company</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
+  // Mobile filter trigger
+  const MobileFilterTrigger = () => (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setShowFilters(true)}
+      className="gap-2"
+    >
+      <SlidersHorizontal className="w-4 h-4" />
+      Filters
+      {activeFilterCount > 0 && (
+        <span className="bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          {activeFilterCount}
+        </span>
+      )}
+    </Button>
   );
 
   return (
@@ -339,11 +383,11 @@ export default function CarResultsPage() {
       <Header />
 
       <main className="pt-16">
-        {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
-        <section className="border-b border-violet-500/20 py-2.5 bg-violet-500/5">
+        {/* Global Disclaimer Banner */}
+        <section className="border-b border-border/40 py-3 bg-muted/30">
           <div className="container mx-auto px-4">
-            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-violet-500" />
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
+              <ShieldCheck className="w-3.5 h-3.5 text-primary" />
               {CAR_DISCLAIMERS.partnerBooking}
             </p>
           </div>
@@ -358,7 +402,7 @@ export default function CarResultsPage() {
           backLink="/rent-car"
           title={
             <>
-              Car Rentals in <span className="text-violet-500">{locationName}</span>
+              Car Rentals in <span className="text-primary">{locationName}</span>
             </>
           }
           badges={[
@@ -372,8 +416,8 @@ export default function CarResultsPage() {
           }
         />
 
-        {/* Partner CTAs */}
-        <section className="border-b border-border/50 py-3 bg-muted/20">
+        {/* Partner Links Bar */}
+        <section className="border-b border-border/40 py-3 bg-card">
           <div className="container mx-auto px-4">
             <div className="flex flex-wrap gap-2">
               {getPartners()
@@ -384,7 +428,7 @@ export default function CarResultsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleComparePartners(partner.id)}
-                    className="gap-2"
+                    className="gap-2 border-border/60 hover:border-primary/40"
                   >
                     <span>{partner.logo}</span>
                     {partner.name}
@@ -399,7 +443,7 @@ export default function CarResultsPage() {
         {!isValid && (
           <section className="py-8">
             <div className="container mx-auto px-4">
-              <Alert variant="destructive" className="max-w-2xl mx-auto">
+              <Alert variant="destructive" className="max-w-2xl mx-auto rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   <p className="font-medium mb-2">Invalid search parameters:</p>
@@ -408,7 +452,7 @@ export default function CarResultsPage() {
                       <li key={i}>{error}</li>
                     ))}
                   </ul>
-                  <Link to="/rent-car" className="text-violet-500 underline mt-2 inline-block">
+                  <Link to="/rent-car" className="text-primary underline mt-2 inline-block">
                     Start a new search →
                   </Link>
                 </AlertDescription>
@@ -419,24 +463,21 @@ export default function CarResultsPage() {
 
         {/* Results Section */}
         {isValid && (
-          <section className="py-6">
+          <section className="py-8">
             <div className="container mx-auto px-4">
-              <ResultsContainer filters={<FiltersContent />}>
+              <RampResultsLayout filters={<FiltersContent />}>
                 {/* Results Header */}
-                <ResultsHeader
+                <RampResultsHeader
                   count={carCards.length}
                   itemName="car"
                   isLoading={isLoading}
-                  indicativePrice={!isRealPrice}
-                  filterTrigger={
-                    <FiltersTrigger onClick={() => setShowFilters(true)} activeCount={activeFilterCount} />
-                  }
-                  sortElement={<SortSelect value={sortBy} onValueChange={setSortBy} options={carSortOptions} />}
+                  filterTrigger={<MobileFilterTrigger />}
+                  sortElement={<SortDropdown />}
                 />
 
                 {/* Indicative Price Notice */}
-                {!isRealPrice && !isLoading && carCards.length > 0 && (
-                  <IndicativePriceAlert service="cars" className="mb-4" />
+                {!isLoading && carCards.length > 0 && (
+                  <RampIndicativeNotice className="mb-6" />
                 )}
 
                 {/* Loading State */}
@@ -446,46 +487,54 @@ export default function CarResultsPage() {
                 {!isLoading && carCards.length > 0 && (
                   <div className="space-y-4">
                     {carCards.map((car) => (
-                      <CarResultCard key={car.id} car={car} onViewDeal={handleViewDeal} />
+                      <RampCarCard key={car.id} car={car} onViewDeal={handleViewDeal} />
                     ))}
                   </div>
                 )}
 
-                {/* No Results */}
+                {/* Empty State with Fallback */}
                 {!isLoading && carCards.length === 0 && isValid && (
-                  <EmptyResults
-                    service="cars"
-                    partnerCta={{
-                      label: "Search on EconomyBookings",
-                      onClick: () => handleComparePartners("economybookings"),
-                    }}
-                  />
+                  <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-3xl">🚗</span>
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Searching partner inventory...</h3>
+                    <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
+                      Estimated prices shown while we compare live partner availability.
+                    </p>
+                    <Button
+                      onClick={() => handleComparePartners("economybookings")}
+                      className="gap-2"
+                    >
+                      Search on EconomyBookings
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
+                  </div>
                 )}
 
-                {/* Redirect Notice */}
-                {carCards.length > 0 && !isLoading && <RedirectNotice service="cars" className="mt-6" />}
-              </ResultsContainer>
+                {/* Global Disclosure */}
+                {carCards.length > 0 && !isLoading && (
+                  <RampGlobalDisclaimer className="mt-8" />
+                )}
+              </RampResultsLayout>
             </div>
           </section>
         )}
 
         {/* Driver Cross-Sell */}
-        <section className="container mx-auto px-4 mt-8 max-w-4xl">
+        <section className="container mx-auto px-4 py-8 max-w-4xl">
           <DriverCrossSell source="cars" variant="full" />
         </section>
 
         {/* FAQ Section */}
         <ResultsFAQ service="cars" />
-
-        {/* Affiliate Disclaimer */}
-        <AffiliateDisclaimer />
       </main>
 
       {/* Mobile Filters Sheet */}
       <FiltersSheet
         open={showFilters}
         onOpenChange={setShowFilters}
-        onApply={() => {}}
+        onApply={() => setShowFilters(false)}
         onReset={() => setFilters(defaultFilters)}
         hasActiveFilters={activeFilterCount > 0}
         service="cars"

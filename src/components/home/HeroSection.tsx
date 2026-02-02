@@ -31,10 +31,13 @@ export default function HeroSection() {
         {/* Content below */}
         <div className="px-4 py-8 bg-background">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
-            Compare Flights from 500+ Airlines — Book Securely with Partners
+            Book travel with clarity and confidence.
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mb-6">
-            Find real-time prices, compare options, and complete your booking securely with licensed travel partners.
+          <p className="text-muted-foreground text-sm sm:text-base mb-4">
+            Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
+          </p>
+          <p className="text-xs text-muted-foreground/80 mb-6">
+            Indicative prices shown · Final price confirmed before payment
           </p>
 
           {/* Primary CTA - Flights */}
@@ -87,10 +90,13 @@ export default function HeroSection() {
         <div className="flex items-center px-8 xl:px-16 py-16 bg-background">
           <div className="max-w-xl">
             <h1 className="text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight">
-              Compare Flights from 500+ Airlines — Book Securely with Partners
+              Book travel with clarity and confidence.
             </h1>
-            <p className="text-lg text-muted-foreground mb-8">
-              Find real-time prices, compare options, and complete your booking securely with licensed travel partners.
+            <p className="text-lg text-muted-foreground mb-4">
+              Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
+            </p>
+            <p className="text-sm text-muted-foreground/80 mb-8">
+              Indicative prices shown · Final price confirmed before payment
             </p>
 
             {/* Primary CTA - Flights */}
