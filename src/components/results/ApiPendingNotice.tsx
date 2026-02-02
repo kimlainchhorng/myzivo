@@ -210,7 +210,7 @@ export default function ApiPendingNotice({
           </div>
           
           <h2 className="text-xl sm:text-2xl font-bold mb-2">
-            No direct results available — here are live deals from our trusted travel partners
+            Comparing live deals from licensed travel partners
           </h2>
           
           <p className="text-muted-foreground max-w-xl mx-auto text-sm">
@@ -331,8 +331,8 @@ export default function ApiPendingNotice({
                           deal.partnerKey === "jetradar" && "bg-purple-500 hover:bg-purple-600"
                         )}
                       >
-                        <span className="hidden sm:inline">Continue to secure partner checkout</span>
-                        <span className="sm:hidden">Partner checkout</span>
+                        <span className="hidden sm:inline">Continue to secure booking</span>
+                        <span className="sm:hidden">Continue</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Button>
                     </div>

@@ -25,9 +25,9 @@ interface EmptyResultsProps {
 const serviceConfig = {
   flights: {
     icon: Plane,
-    title: "No flights found",
+    title: "Comparing live deals from licensed travel partners",
     titleFiltered: "No flights match your filters",
-    message: "We couldn't find any flights matching your search.",
+    message: "We're searching partner sites for the best available prices.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
       "Try nearby airports (e.g., EWR instead of JFK)",
