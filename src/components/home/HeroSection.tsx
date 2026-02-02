@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Package } from "lucide-react";
+import { Plane, Hotel, CarFront, ArrowRight, ExternalLink } from "lucide-react";
 import heroImage from "@/assets/hero-homepage.jpg";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
@@ -16,7 +16,7 @@ export default function HeroSection() {
         <div className="relative h-[40vh] overflow-hidden">
           <img
             src={heroImage}
-            alt="ZIVO - One Platform for Travel & Mobility"
+            alt="Compare flights from 500+ airlines"
             width={1920}
             height={1080}
             loading="eager"
@@ -30,37 +30,42 @@ export default function HeroSection() {
 
         {/* Content below */}
         <div className="px-4 py-8 bg-background">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">
-            One Platform for Travel & Mobility
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
+            Compare Flights from 500+ Airlines — Book Securely with Partners
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mb-6">
-            Flights, Hotels, Cars, Rides, Eats & Moving — all from one place.
+            Find real-time prices, compare options, and complete your booking securely with licensed travel partners.
           </p>
 
-          {/* Primary CTAs - Travel */}
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            <Link to="/flights">
+          {/* Primary CTA - Flights */}
+          <Link to="/flights" className="block mb-3">
+            <Button
+              size="lg"
+              className="w-full h-14 text-base font-semibold rounded-xl gap-2 bg-flights hover:bg-flights/90 text-white shadow-lg"
+            >
+              <Plane className="w-5 h-5" />
+              Search Flights
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+
+          {/* Secondary CTA - Hotels & Cars */}
+          <div className="flex gap-2 mb-4">
+            <Link to="/hotels" className="flex-1">
               <Button
+                variant="outline"
                 size="lg"
-                className="w-full h-12 text-xs font-semibold rounded-xl gap-1.5 bg-flights hover:bg-flights/90 text-white"
-              >
-                <Plane className="w-4 h-4" />
-                Flights
-              </Button>
-            </Link>
-            <Link to="/hotels">
-              <Button
-                size="lg"
-                className="w-full h-12 text-xs font-semibold rounded-xl gap-1.5 bg-hotels hover:bg-hotels/90 text-white"
+                className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-hotels/40 text-hotels hover:bg-hotels/10"
               >
                 <Hotel className="w-4 h-4" />
                 Hotels
               </Button>
             </Link>
-            <Link to="/rent-car">
+            <Link to="/rent-car" className="flex-1">
               <Button
+                variant="outline"
                 size="lg"
-                className="w-full h-12 text-xs font-semibold rounded-xl gap-1.5 bg-cars hover:bg-cars/90 text-white"
+                className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-cars/40 text-cars hover:bg-cars/10"
               >
                 <CarFront className="w-4 h-4" />
                 Cars
@@ -68,44 +73,11 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          {/* Secondary CTAs - Mobility */}
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            <Link to="/rides">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-10 text-xs font-medium rounded-xl gap-1.5 border-rides/30 text-rides hover:bg-rides/10"
-              >
-                <Car className="w-3.5 h-3.5" />
-                Rides
-              </Button>
-            </Link>
-            <Link to="/eats">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-10 text-xs font-medium rounded-xl gap-1.5 border-eats/30 text-eats hover:bg-eats/10"
-              >
-                <UtensilsCrossed className="w-3.5 h-3.5" />
-                Eats
-              </Button>
-            </Link>
-            <Link to="/move">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-10 text-xs font-medium rounded-xl gap-1.5 border-primary/30 text-primary hover:bg-primary/10"
-              >
-                <Package className="w-3.5 h-3.5" />
-                Move
-              </Button>
-            </Link>
+          {/* Helper Text */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Final booking completed on partner site.</span>
           </div>
-
-          {/* Trust Line */}
-          <p className="text-xs text-muted-foreground text-center">
-            Travel bookings completed on partner sites. Mobility services via ZIVO Driver.
-          </p>
         </div>
       </div>
 
@@ -115,78 +87,53 @@ export default function HeroSection() {
         <div className="flex items-center px-8 xl:px-16 py-16 bg-background">
           <div className="max-w-xl">
             <h1 className="text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight">
-              One Platform for Travel & Mobility
+              Compare Flights from 500+ Airlines — Book Securely with Partners
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Flights, Hotels, Cars, Rides, Eats & Moving — search, compare, and book all from one platform.
+              Find real-time prices, compare options, and complete your booking securely with licensed travel partners.
             </p>
 
-            {/* Primary CTAs - Travel */}
-            <div className="flex gap-3 mb-4">
-              <Link to="/flights">
-                <Button
-                  size="lg"
-                  className="h-12 px-5 text-base font-semibold rounded-xl gap-2 bg-flights hover:bg-flights/90 text-white shadow-lg"
-                >
-                  <Plane className="w-5 h-5" />
-                  Flights
-                </Button>
-              </Link>
+            {/* Primary CTA - Flights */}
+            <Link to="/flights">
+              <Button
+                size="lg"
+                className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 bg-flights hover:bg-flights/90 text-white shadow-xl mb-4"
+              >
+                <Plane className="w-6 h-6" />
+                Search Flights
+                <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+
+            {/* Secondary CTA - Hotels & Cars */}
+            <div className="flex gap-3 mb-6">
               <Link to="/hotels">
                 <Button
+                  variant="outline"
                   size="lg"
-                  className="h-12 px-5 text-base font-semibold rounded-xl gap-2 bg-hotels hover:bg-hotels/90 text-white shadow-lg"
+                  className="h-12 px-5 text-base font-medium rounded-xl gap-2 border-hotels/40 text-hotels hover:bg-hotels/10"
                 >
                   <Hotel className="w-5 h-5" />
-                  Hotels
+                  Compare Hotels
                 </Button>
               </Link>
               <Link to="/rent-car">
                 <Button
+                  variant="outline"
                   size="lg"
-                  className="h-12 px-5 text-base font-semibold rounded-xl gap-2 bg-cars hover:bg-cars/90 text-white shadow-lg"
+                  className="h-12 px-5 text-base font-medium rounded-xl gap-2 border-cars/40 text-cars hover:bg-cars/10"
                 >
                   <CarFront className="w-5 h-5" />
-                  Cars
+                  Find Rental Cars
                 </Button>
               </Link>
             </div>
 
-            {/* Secondary CTAs - Mobility */}
-            <div className="flex gap-3 mb-8">
-              <Link to="/rides">
-                <Button
-                  variant="outline"
-                  className="h-11 px-4 text-sm font-medium rounded-xl gap-2 border-rides/30 text-rides hover:bg-rides/10"
-                >
-                  <Car className="w-4 h-4" />
-                  Rides
-                </Button>
-              </Link>
-              <Link to="/eats">
-                <Button
-                  variant="outline"
-                  className="h-11 px-4 text-sm font-medium rounded-xl gap-2 border-eats/30 text-eats hover:bg-eats/10"
-                >
-                  <UtensilsCrossed className="w-4 h-4" />
-                  Eats
-                </Button>
-              </Link>
-              <Link to="/move">
-                <Button
-                  variant="outline"
-                  className="h-11 px-4 text-sm font-medium rounded-xl gap-2 border-primary/30 text-primary hover:bg-primary/10"
-                >
-                  <Package className="w-4 h-4" />
-                  Move
-                </Button>
-              </Link>
+            {/* Helper Text */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ExternalLink className="w-4 h-4" />
+              <span>Final booking completed on partner site.</span>
             </div>
-
-            {/* Trust Line */}
-            <p className="text-sm text-muted-foreground">
-              Travel bookings completed on partner sites. Mobility services via ZIVO Driver.
-            </p>
           </div>
         </div>
 
@@ -194,7 +141,7 @@ export default function HeroSection() {
         <div className="relative overflow-hidden">
           <img
             src={heroImage}
-            alt="ZIVO - Modern airport terminal, premium travel marketplace"
+            alt="Compare flights from 500+ airlines - ZIVO travel search"
             width={1920}
             height={1080}
             loading="eager"

@@ -6,17 +6,16 @@ import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 // Desktop components
 import NavBar from "@/components/home/NavBar";
 import HeroSection from "@/components/home/HeroSection";
-import ServicesGrid from "@/components/home/ServicesGrid";
+import PrimaryServicesSection from "@/components/home/PrimaryServicesSection";
 import HowItWorksSimple from "@/components/home/HowItWorksSimple";
-import PopularDestinations from "@/components/home/PopularDestinations";
+import AirlineTrustSection from "@/components/home/AirlineTrustSection";
+import PopularRoutesSection from "@/components/home/PopularRoutesSection";
 import ExtrasSection from "@/components/home/ExtrasSection";
-import TrustSection from "@/components/home/TrustSection";
-import OneAppSection from "@/components/home/OneAppSection";
 
 // Mobile app home
 import AppHome from "@/pages/app/AppHome";
 
-// Desktop version - Clean, premium layout
+// Desktop version - Clean, premium layout focused on Flights
 const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
@@ -25,29 +24,26 @@ const DesktopHomePage = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* 1. Hero Section - Split layout */}
+        {/* 1. Hero Section - Flights focused */}
         <HeroSection />
         
-        {/* Trust Bar - Below hero */}
-        <GlobalTrustBar />
+        {/* 2. Trust Bar - Real-time prices, no fees, secure checkout */}
+        <GlobalTrustBar showDisclaimer={true} />
         
-        {/* 2. Services Grid (6 cards) */}
-        <ServicesGrid />
+        {/* 3. Primary Services (Flights, Hotels, Cars) */}
+        <PrimaryServicesSection />
         
-        {/* 3. One App. Many Services. */}
-        <OneAppSection />
-        
-        {/* 4. How It Works (3 steps) */}
+        {/* 4. How ZIVO Works (3 steps) */}
         <HowItWorksSimple />
         
-        {/* 4. Popular Destinations */}
-        <PopularDestinations />
+        {/* 5. Popular Flight Routes */}
+        <PopularRoutesSection />
         
-        {/* 5. ZIVO More / Extras */}
+        {/* 6. Airline Trust Section */}
+        <AirlineTrustSection />
+        
+        {/* 7. ZIVO Extras */}
         <ExtrasSection />
-        
-        {/* 6. Trust Section (3 bullets) */}
-        <TrustSection />
       </main>
       
       <Footer />

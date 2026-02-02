@@ -32,12 +32,13 @@ const footerLinks = {
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
+    { name: "FAQ", href: "/faq" },
   ],
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
     { name: "Privacy Policy", href: "/privacy" },
-    { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Cookie Policy", href: "/cookies" },
+    { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
@@ -245,13 +246,14 @@ const Footer = () => {
           {/* Unified Partner Disclosure */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              ⚠️ Hizivo does not issue airline tickets. Flight bookings are completed with licensed airline partners.
-            </p>
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              ⚠️ Hotel and Car Rental bookings are completed with licensed third-party providers. Hizivo is not the merchant of record.
+              ⚠️ Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO may earn a commission when users book through partner links. Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
+              Hizivo does not issue airline tickets. Flight, Hotel, and Car Rental bookings are completed securely with licensed partners. 
+              ZIVO may earn a commission when users book through partner links.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
             </p>
           </div>
         </div>
