@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Plane,
   Building,
@@ -18,16 +18,35 @@ import {
   TrendingUp,
   FileText,
   Clock,
+  Users,
+  MousePointerClick,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+  CartesianGrid,
+  BarChart,
+  Bar,
+  Legend,
+} from "recharts";
 import {
   COMMISSION_RATES,
   AOV_ASSUMPTIONS,
   REVENUE_EXAMPLES,
   REVENUE_ASSUMPTIONS_META,
+  TRAFFIC_ASSUMPTIONS,
+  CONVERSION_RATES,
   formatCommissionRate,
   forecastRevenue,
-  calculateCommission,
+  calculateMonthlyProjection,
+  getAllMonthlyProjections,
+  getAnnualRunRate,
 } from "@/config/revenueAssumptions";
 
 const serviceIcons = {
@@ -48,12 +67,29 @@ const serviceBgColors = {
   cars: "bg-emerald-500/10",
 };
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 export default function AdminRevenueAssumptionsModule() {
   const [forecastInputs, setForecastInputs] = useState({
     flights: 100,
     hotels: 50,
     cars: 30,
   });
+
+  const projections = useMemo(() => getAllMonthlyProjections(), []);
+  const annualRunRate = useMemo(() => getAnnualRunRate(), []);
+  const month6 = useMemo(() => calculateMonthlyProjection(6), []);
+  const month12 = useMemo(() => calculateMonthlyProjection(12), []);
+
+  const chartData = useMemo(() => 
+    projections.map(p => ({
+      month: MONTH_NAMES[p.month - 1],
+      visits: p.visits,
+      flights: p.flights.revenue,
+      hotels: p.hotels.revenue,
+      cars: p.cars.revenue,
+      total: p.totalRevenue,
+    })), [projections]);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -202,12 +238,174 @@ export default function AdminRevenueAssumptionsModule() {
         </CardContent>
       </Card>
 
+      {/* Traffic & Conversion Assumptions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Traffic & Conversion Assumptions
+          </CardTitle>
+          <CardDescription>
+            Conservative traffic and conversion rate projections
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="p-4 rounded-lg border bg-muted/30">
+              <p className="text-sm text-muted-foreground mb-2">Traffic Growth</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">25K</span>
+                <span className="text-muted-foreground">→</span>
+                <span className="text-2xl font-bold">75K</span>
+                <span className="text-sm text-muted-foreground">visits/month</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Month 6 → Month 12</p>
+            </div>
+            <div className="p-4 rounded-lg border bg-muted/30">
+              <p className="text-sm text-muted-foreground mb-2">Partner Completion Rate</p>
+              <p className="text-2xl font-bold">65%</p>
+              <p className="text-xs text-muted-foreground mt-1">Of checkout clicks complete booking</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            {CONVERSION_RATES.map((rate) => {
+              const Icon = serviceIcons[rate.service];
+              return (
+                <div key={rate.service} className="p-4 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className={cn("h-4 w-4", serviceColors[rate.service])} />
+                    <span className="font-medium capitalize">{rate.service}</span>
+                  </div>
+                  <p className="text-2xl font-bold">{(rate.checkoutClickRate * 100).toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground">checkout click rate</p>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Monthly Projections Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            12-Month Revenue Projection
+          </CardTitle>
+          <CardDescription>
+            Projected monthly revenue by service category
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis dataKey="month" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+                <YAxis 
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                  formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                />
+                <Legend />
+                <Bar dataKey="flights" name="Flights" fill="hsl(200, 95%, 50%)" stackId="a" />
+                <Bar dataKey="hotels" name="Hotels" fill="hsl(262, 83%, 58%)" stackId="a" />
+                <Bar dataKey="cars" name="Cars" fill="hsl(152, 76%, 45%)" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Key Projections */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="bg-gradient-to-br from-sky-500/10 to-blue-500/5">
+          <CardContent className="p-6 text-center">
+            <Target className="h-8 w-8 text-sky-500 mx-auto mb-2" />
+            <p className="text-3xl font-bold text-sky-500">${month6.totalRevenue.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Month 6 Revenue</p>
+            <p className="text-xs text-muted-foreground mt-1">{month6.visits.toLocaleString()} visits</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/5">
+          <CardContent className="p-6 text-center">
+            <Target className="h-8 w-8 text-violet-500 mx-auto mb-2" />
+            <p className="text-3xl font-bold text-violet-500">${month12.totalRevenue.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">Month 12 Revenue</p>
+            <p className="text-xs text-muted-foreground mt-1">{month12.visits.toLocaleString()} visits</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/5">
+          <CardContent className="p-6 text-center">
+            <DollarSign className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+            <p className="text-3xl font-bold text-emerald-500">${(annualRunRate / 1000000).toFixed(1)}M</p>
+            <p className="text-sm text-muted-foreground">Annual Run Rate</p>
+            <p className="text-xs text-muted-foreground mt-1">At Month 12 scale</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Month 6 & 12 Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calculator className="h-5 w-5 text-primary" />
+            Detailed Projections
+          </CardTitle>
+          <CardDescription>
+            Month 6 and Month 12 revenue breakdown by service
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {[{ label: "Month 6", data: month6 }, { label: "Month 12", data: month12 }].map(({ label, data }) => (
+              <div key={label} className="p-4 rounded-lg border">
+                <h4 className="font-semibold mb-4">{label} ({data.visits.toLocaleString()} visits)</h4>
+                <div className="space-y-3">
+                  {(['flights', 'hotels', 'cars'] as const).map((service) => {
+                    const Icon = serviceIcons[service];
+                    const svc = data[service];
+                    return (
+                      <div key={service} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <Icon className={cn("h-4 w-4", serviceColors[service])} />
+                          <span className="capitalize">{service}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium">${svc.revenue.toLocaleString()}</span>
+                          <span className="text-muted-foreground text-xs ml-2">
+                            ({svc.bookings} bookings)
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <Separator />
+                  <div className="flex items-center justify-between font-semibold">
+                    <span>Total</span>
+                    <span className="text-emerald-500">${data.totalRevenue.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Calculation Examples */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-emerald-500" />
-            Calculation Examples
+            Commission Calculation Examples
           </CardTitle>
           <CardDescription>
             How commission is calculated for each service
@@ -235,83 +433,11 @@ export default function AdminRevenueAssumptionsModule() {
                     <p className="text-2xl font-bold text-emerald-500">
                       ${example.commission}
                     </p>
-                    <p className="text-xs text-muted-foreground">commission</p>
+                    <p className="text-xs text-muted-foreground">per booking</p>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Revenue Forecast Calculator */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5 text-primary" />
-            Revenue Forecast Calculator
-          </CardTitle>
-          <CardDescription>
-            Enter expected booking counts to estimate revenue
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            {(['flights', 'hotels', 'cars'] as const).map((service) => {
-              const Icon = serviceIcons[service];
-              const bookings = forecastInputs[service];
-              const forecast = forecastRevenue(service, bookings);
-              
-              return (
-                <div key={service} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Icon className={cn("h-4 w-4", serviceColors[service])} />
-                    <Label className="capitalize">{service} Bookings</Label>
-                  </div>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={bookings}
-                    onChange={(e) =>
-                      setForecastInputs((prev) => ({
-                        ...prev,
-                        [service]: parseInt(e.target.value) || 0,
-                      }))
-                    }
-                    className="w-full"
-                  />
-                  <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      {forecast.calculation}
-                    </p>
-                    <p className="text-lg font-bold text-emerald-500">
-                      ${forecast.revenue.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <Separator className="my-6" />
-
-          <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-emerald-500/10 to-green-500/5 border border-emerald-500/20">
-            <div>
-              <p className="text-sm text-muted-foreground">Total Estimated Revenue</p>
-              <p className="text-3xl font-bold text-emerald-500">
-                $
-                {(
-                  forecastRevenue('flights', forecastInputs.flights).revenue +
-                  forecastRevenue('hotels', forecastInputs.hotels).revenue +
-                  forecastRevenue('cars', forecastInputs.cars).revenue
-                ).toLocaleString()}
-              </p>
-            </div>
-            <div className="text-right text-sm text-muted-foreground">
-              <p>
-                {forecastInputs.flights + forecastInputs.hotels + forecastInputs.cars} total bookings
-              </p>
-            </div>
           </div>
         </CardContent>
       </Card>

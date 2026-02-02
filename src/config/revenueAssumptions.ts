@@ -100,6 +100,94 @@ export const AOV_ASSUMPTIONS: AOVAssumption[] = [
 ];
 
 // ============================================================================
+// TRAFFIC & CONVERSION ASSUMPTIONS (CONSERVATIVE)
+// ============================================================================
+
+export interface TrafficAssumption {
+  month: number;
+  visits: number;
+}
+
+export interface ConversionRate {
+  service: 'flights' | 'hotels' | 'cars';
+  checkoutClickRate: number; // % of visits that click to partner checkout
+  partnerCompletionRate: number; // % of clicks that complete booking with partner
+}
+
+export const TRAFFIC_ASSUMPTIONS: TrafficAssumption[] = [
+  { month: 1, visits: 5000 },
+  { month: 2, visits: 8000 },
+  { month: 3, visits: 12000 },
+  { month: 4, visits: 17000 },
+  { month: 5, visits: 21000 },
+  { month: 6, visits: 25000 },
+  { month: 7, visits: 32000 },
+  { month: 8, visits: 42000 },
+  { month: 9, visits: 52000 },
+  { month: 10, visits: 62000 },
+  { month: 11, visits: 68000 },
+  { month: 12, visits: 75000 },
+];
+
+export const CONVERSION_RATES: ConversionRate[] = [
+  { service: 'flights', checkoutClickRate: 0.07, partnerCompletionRate: 0.65 },
+  { service: 'hotels', checkoutClickRate: 0.04, partnerCompletionRate: 0.65 },
+  { service: 'cars', checkoutClickRate: 0.025, partnerCompletionRate: 0.65 },
+];
+
+// ============================================================================
+// MONTHLY PROJECTION CALCULATOR
+// ============================================================================
+
+export interface MonthlyProjection {
+  month: number;
+  visits: number;
+  flights: { clicks: number; bookings: number; revenue: number };
+  hotels: { clicks: number; bookings: number; revenue: number };
+  cars: { clicks: number; bookings: number; revenue: number };
+  totalRevenue: number;
+}
+
+export function calculateMonthlyProjection(month: number): MonthlyProjection {
+  const traffic = TRAFFIC_ASSUMPTIONS.find(t => t.month === month);
+  const visits = traffic?.visits ?? 0;
+
+  const flightRate = CONVERSION_RATES.find(c => c.service === 'flights')!;
+  const hotelRate = CONVERSION_RATES.find(c => c.service === 'hotels')!;
+  const carRate = CONVERSION_RATES.find(c => c.service === 'cars')!;
+
+  const flightClicks = Math.round(visits * flightRate.checkoutClickRate);
+  const flightBookings = Math.round(flightClicks * flightRate.partnerCompletionRate);
+  const flightRevenue = flightBookings * 6; // $6 per booking
+
+  const hotelClicks = Math.round(visits * hotelRate.checkoutClickRate);
+  const hotelBookings = Math.round(hotelClicks * hotelRate.partnerCompletionRate);
+  const hotelRevenue = hotelBookings * 32; // $32 per booking (4% of $800)
+
+  const carClicks = Math.round(visits * carRate.checkoutClickRate);
+  const carBookings = Math.round(carClicks * carRate.partnerCompletionRate);
+  const carRevenue = carBookings * 8; // $8 per booking (2% of $400)
+
+  return {
+    month,
+    visits,
+    flights: { clicks: flightClicks, bookings: flightBookings, revenue: flightRevenue },
+    hotels: { clicks: hotelClicks, bookings: hotelBookings, revenue: hotelRevenue },
+    cars: { clicks: carClicks, bookings: carBookings, revenue: carRevenue },
+    totalRevenue: flightRevenue + hotelRevenue + carRevenue,
+  };
+}
+
+export function getAllMonthlyProjections(): MonthlyProjection[] {
+  return TRAFFIC_ASSUMPTIONS.map(t => calculateMonthlyProjection(t.month));
+}
+
+export function getAnnualRunRate(): number {
+  const month12 = calculateMonthlyProjection(12);
+  return month12.totalRevenue * 12;
+}
+
+// ============================================================================
 // CALCULATION EXAMPLES (For documentation & admin display)
 // ============================================================================
 
@@ -219,13 +307,22 @@ export function forecastRevenue(
 // ============================================================================
 
 export const REVENUE_ASSUMPTIONS_META = {
-  version: '2.0',
+  version: '2.1',
   lastUpdated: '2026-02-02',
   updatedBy: 'Business Operations',
   notes: [
     'Conservative estimates aligned with affiliate/white-label partners',
     'Flights use fixed per-booking model (volume-driven)',
-    'Hotels and Cars use percentage commission model',
-    'AOV assumptions based on market research',
+    'Hotels = primary revenue engine (4% × $800 AOV = $32/booking)',
+    'Cars = incremental upside (2% × $400 AOV = $8/booking)',
+    'Month 6 target: ~$30K/month | Month 12 target: ~$93K/month',
+    'Annual run rate at scale: $1.1M–$1.2M gross commission',
+  ],
+  strategicNotes: [
+    'Flights = volume + traffic driver',
+    'Hotels = primary revenue engine',
+    'Cars = incremental upside',
+    'No inventory risk, no payment liability',
+    'Scales with SEO + mobile web + ads',
   ],
 };
