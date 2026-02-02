@@ -1,6 +1,7 @@
 /**
  * Admin Rides Module
  * Manage ride requests and live trips with full CRUD
+ * Region-scoped when a region is selected
  */
 import { useState } from "react";
 import { format } from "date-fns";
@@ -23,6 +24,7 @@ import { useDrivers } from "@/hooks/useDrivers";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useRegion } from "@/contexts/RegionContext";
 
 const requestStatusOptions: { value: RideRequestStatus; label: string; color: string }[] = [
   { value: "new", label: "New", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
@@ -44,6 +46,7 @@ const tripStatusOptions: { value: TripStatus; label: string; color: string }[] =
 ];
 
 export default function AdminRidesModule() {
+  const { selectedRegionId, selectedRegion } = useRegion();
   const [activeTab, setActiveTab] = useState<"requests" | "trips">("trips");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -56,14 +59,15 @@ export default function AdminRidesModule() {
   );
   const updateRideRequest = useUpdateRideRequest();
 
-  // Live Trips data
-  const { data: trips, isLoading: tripsLoading, refetch: refetchTrips } = useAdminTrips(
-    activeTab === "trips" ? (statusFilter as TripStatus | "all") : "all"
-  );
+  // Live Trips data - now region scoped
+  const { data: trips, isLoading: tripsLoading, refetch: refetchTrips } = useAdminTrips({
+    statusFilter: activeTab === "trips" ? (statusFilter as TripStatus | "all") : "all",
+    regionId: selectedRegionId,
+  });
   const updateTripStatus = useUpdateTripStatus();
   const createTestTrip = useCreateTestTrip();
 
-  const { data: drivers } = useDrivers();
+  const { data: drivers } = useDrivers({ regionId: selectedRegionId });
   const verifiedDrivers = drivers?.filter(d => d.status === "verified") || [];
 
   const isLoading = activeTab === "requests" ? requestsLoading : tripsLoading;

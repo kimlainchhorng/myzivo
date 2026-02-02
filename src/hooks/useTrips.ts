@@ -54,25 +54,43 @@ export const useTrips = () => {
 };
 
 // Admin hook - fetches all trips regardless of rider_id
-export const useAdminTrips = (statusFilter?: TripStatus | "all") => {
+export interface UseAdminTripsOptions {
+  statusFilter?: TripStatus | "all";
+  regionId?: string | null;
+}
+
+export const useAdminTrips = (statusFilterOrOptions?: TripStatus | "all" | UseAdminTripsOptions, regionId?: string | null) => {
+  // Handle both old API (statusFilter as first param) and new API (options object)
+  let options: UseAdminTripsOptions;
+  if (typeof statusFilterOrOptions === 'object' && statusFilterOrOptions !== null && !Array.isArray(statusFilterOrOptions)) {
+    options = statusFilterOrOptions;
+  } else {
+    options = { statusFilter: statusFilterOrOptions as TripStatus | "all", regionId };
+  }
+
   return useQuery({
-    queryKey: ["admin-trips", statusFilter],
+    queryKey: ["admin-trips", options.statusFilter, options.regionId],
     queryFn: async () => {
       let query = supabase
         .from("trips")
         .select(`
           *,
-          driver:drivers(full_name, email, avatar_url)
+          driver:drivers(full_name, email, avatar_url),
+          regions(id, name, city, state)
         `)
         .order("created_at", { ascending: false });
 
-      if (statusFilter && statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
+      if (options.statusFilter && options.statusFilter !== "all") {
+        query = query.eq("status", options.statusFilter);
+      }
+
+      if (options.regionId) {
+        query = query.eq("region_id", options.regionId);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Trip[];
+      return data as (Trip & { regions?: { id: string; name: string; city: string; state: string } | null })[];
     },
   });
 };

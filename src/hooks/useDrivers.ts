@@ -26,17 +26,27 @@ export type Driver = {
   updated_at: string;
 };
 
-export const useDrivers = () => {
+export interface UseDriversOptions {
+  regionId?: string | null;
+}
+
+export const useDrivers = (options?: UseDriversOptions) => {
   return useQuery({
-    queryKey: ["drivers"],
+    queryKey: ["drivers", options?.regionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("drivers")
-        .select("*")
+        .select("*, regions(id, name, city, state)")
         .order("created_at", { ascending: false });
 
+      // Filter by region if specified
+      if (options?.regionId) {
+        query = query.eq("region_id", options.regionId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return data as Driver[];
+      return data as (Driver & { regions?: { id: string; name: string; city: string; state: string } | null })[];
     },
   });
 };
