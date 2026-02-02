@@ -11,6 +11,7 @@ import {
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import OneAppSection from "@/components/home/OneAppSection";
 
 // Quick action cards (2 rows of 3)
 const quickActions = [
@@ -97,6 +98,9 @@ const AppHome = () => {
             ))}
           </div>
         </section>
+
+        {/* One App. Many Services. */}
+        <OneAppSection compact />
 
         {/* Trust Strip */}
         <section className="px-4">

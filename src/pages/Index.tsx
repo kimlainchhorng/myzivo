@@ -11,6 +11,7 @@ import HowItWorksSimple from "@/components/home/HowItWorksSimple";
 import PopularDestinations from "@/components/home/PopularDestinations";
 import ExtrasSection from "@/components/home/ExtrasSection";
 import TrustSection from "@/components/home/TrustSection";
+import OneAppSection from "@/components/home/OneAppSection";
 
 // Mobile app home
 import AppHome from "@/pages/app/AppHome";
@@ -33,7 +34,10 @@ const DesktopHomePage = () => {
         {/* 2. Services Grid (6 cards) */}
         <ServicesGrid />
         
-        {/* 3. How It Works (3 steps) */}
+        {/* 3. One App. Many Services. */}
+        <OneAppSection />
+        
+        {/* 4. How It Works (3 steps) */}
         <HowItWorksSimple />
         
         {/* 4. Popular Destinations */}
