@@ -21,8 +21,11 @@ const footerLinks = {
     { name: "Car Rental", href: "/rent-car" },
     { name: "Extras", href: "/extras" },
   ],
-  services: [
-    { name: "Rides / Eats / Move", href: "https://zivodriver.com", external: true },
+  mobility: [
+    { name: "Rides", href: "/rides" },
+    { name: "Eats", href: "/eats" },
+    { name: "Move", href: "/move" },
+    { name: "ZIVO Driver", href: "https://zivodriver.com", external: true },
   ],
   company: [
     { name: "About Hizovo", href: "/about" },
@@ -30,15 +33,12 @@ const footerLinks = {
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
   ],
-  support: [
-    { name: "Help Center", href: "/help" },
-    { name: "Accessibility", href: "/accessibility" },
-  ],
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Cookie Policy", href: "/cookies" },
+    { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
 
@@ -157,11 +157,11 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Services */}
+            {/* Mobility */}
             <div>
-              <h4 className="font-semibold text-sm mb-4">Services</h4>
+              <h4 className="font-semibold text-sm mb-4">Mobility</h4>
               <ul className="space-y-2.5">
-                {footerLinks.services.map((link) => (
+                {footerLinks.mobility.map((link) => (
                   <li key={link.name}>
                     {'external' in link && link.external ? (
                       <a
@@ -203,11 +203,11 @@ const Footer = () => {
               </ul>
             </div>
 
-            {/* Support */}
+            {/* Legal */}
             <div>
-              <h4 className="font-semibold text-sm mb-4">Support</h4>
+              <h4 className="font-semibold text-sm mb-4">Legal</h4>
               <ul className="space-y-2.5">
-                {footerLinks.support.map((link) => (
+                {footerLinks.legal.map((link) => (
                   <li key={link.name}>
                     <Link
                       to={link.href}
@@ -243,10 +243,12 @@ const Footer = () => {
           </div>
           
           {/* Affiliate Disclosure */}
-          <div className="mt-6 pt-4 border-t border-border/50 text-center">
+          <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO may earn a commission when users book through partner links.
-              Bookings are completed on partner websites.
+              Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              ZIVO may earn a commission when users book through partner links. Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
             </p>
           </div>
         </div>
