@@ -293,20 +293,20 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
           </div>
 
           {/* Price & CTA */}
-          <div className="lg:w-44 flex flex-row lg:flex-col items-center lg:items-end justify-between gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l-2 border-dashed border-border/50 lg:pl-6">
+          <div className="lg:w-48 flex flex-row lg:flex-col items-center lg:items-end justify-between gap-4 pt-4 lg:pt-0 border-t lg:border-t-0 lg:border-l-2 border-dashed border-border/50 lg:pl-6">
             <div className="text-right">
               {/* Badges */}
               <div className="flex items-center justify-end gap-1.5 mb-2">
                 {flight.isRealPrice && (
                   <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
                     <Check className="w-2.5 h-2.5 mr-1" />
-                    Real Price
+                    Live Price
                   </Badge>
                 )}
                 {flight.isLowest && (
                   <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
                     <Sparkles className="w-2.5 h-2.5 mr-1" />
-                    Best Deal
+                    Cheapest
                   </Badge>
                 )}
                 {flight.isFastest && (
@@ -317,13 +317,22 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                 )}
               </div>
               
+              {/* INDICATIVE PRICE LABEL */}
+              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wide mb-0.5">
+                {flight.isRealPrice ? "From" : "Estimated"}
+              </p>
               <div className="flex items-baseline gap-1 justify-end">
                 <span className={cn(
-                  "text-4xl font-bold",
+                  "text-3xl font-bold",
                   isSelected ? "text-sky-400" : isPremiumAirline ? "text-amber-400" : "text-sky-400"
                 )}>${flight.price}</span>
               </div>
               <p className="text-xs text-muted-foreground">per person • {flight.class}</p>
+              
+              {/* Indicative disclaimer */}
+              <p className="text-[9px] text-muted-foreground mt-1 leading-tight max-w-[130px] ml-auto">
+                Indicative price. Final price confirmed on partner checkout.
+              </p>
               
               {flight.seatsLeft && flight.seatsLeft <= 5 && (
                 <p className="text-xs text-orange-500 font-semibold mt-1 animate-pulse flex items-center justify-end gap-1">
@@ -341,7 +350,7 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                   onSelect?.();
                 }}
                 className={cn(
-                  "w-full lg:w-auto px-8 py-5 font-bold transition-all duration-300 rounded-xl gap-2",
+                  "w-full lg:w-auto px-6 py-5 font-bold transition-all duration-300 rounded-xl gap-2",
                   isSelected
                     ? "bg-sky-500 text-white shadow-lg shadow-sky-500/40"
                     : isPremiumAirline
@@ -356,14 +365,14 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                   </>
                 ) : (
                   <>
-                    Book Flight
+                    Continue
                     <ExternalLink className="w-4 h-4" />
                   </>
                 )}
               </Button>
               
-              <p className="text-[10px] text-muted-foreground text-center leading-tight">
-                {FLIGHT_DISCLAIMERS.ticketingShort}
+              <p className="text-[9px] text-muted-foreground text-center leading-tight max-w-[140px]">
+                Powered by licensed travel partners · Final price confirmed before payment
               </p>
             </div>
           </div>

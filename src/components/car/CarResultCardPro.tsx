@@ -207,19 +207,22 @@ export default function CarResultCardPro({
               {/* Footer: Price & CTA */}
               <div className="flex items-end justify-between pt-3 border-t border-border/50 mt-auto">
                 <div>
-                  <p className="text-xs text-muted-foreground">From</p>
+                  <p className="text-[10px] text-violet-500 font-medium uppercase tracking-wide">Estimated</p>
                   <div className="flex items-baseline gap-1">
                     <p className="text-xl sm:text-2xl font-bold">${pricePerDay}</p>
                     <span className="text-sm text-muted-foreground">* /day</span>
                   </div>
                   {totalPrice && daysCount && (
                     <p className="text-xs text-muted-foreground">
-                      ${totalPrice} total for {daysCount} days
+                      ~${totalPrice} total for {daysCount} days
                     </p>
                   )}
+                  <p className="text-[9px] text-muted-foreground mt-0.5 max-w-[120px] leading-tight">
+                    Indicative price. Final price confirmed on partner checkout.
+                  </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end gap-1.5">
                   <Button
                     onClick={handleBookClick}
                     className={cn(
@@ -228,14 +231,23 @@ export default function CarResultCardPro({
                       "shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40"
                     )}
                   >
-                    Rent Now
+                    Continue to secure booking
                     <ExternalLink className="w-4 h-4" />
                   </Button>
-                  <p className="text-[9px] text-muted-foreground">Opens partner site</p>
+                  <p className="text-[9px] text-muted-foreground text-right max-w-[140px] leading-tight">
+                    Powered by licensed travel partners · Final price confirmed before payment
+                  </p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Legal disclaimer */}
+        <div className="px-4 py-2 bg-muted/40 border-t border-border/30">
+          <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+          </p>
         </div>
       </CardContent>
     </Card>

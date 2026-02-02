@@ -233,9 +233,12 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           </div>
 
           {/* RIGHT: Price & CTA Section */}
-          <div className="p-4 lg:py-5 lg:px-5 lg:w-52 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
+          <div className="p-4 lg:py-5 lg:px-5 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
             <div className="text-left lg:text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
+              {/* INDICATIVE PRICE LABEL */}
+              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wide">
+                {flight.isRealPrice ? "From" : "Estimated"}
+              </p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-500">
                 {formattedPrice}
               </p>
@@ -250,9 +253,9 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                   via {flight.partnerName}
                 </p>
               )}
-              {/* Trust micro-copy */}
-              <p className="text-[9px] text-emerald-600 mt-1">
-                Final price confirmed by airline partner
+              {/* Indicative price disclaimer */}
+              <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">
+                Indicative price. Final price confirmed on partner checkout.
               </p>
             </div>
 
@@ -274,17 +277,17 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
               <ExternalLink className="w-4 h-4" />
             </Button>
             
-            {/* Booking handled micro-copy */}
-            <p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[140px]">
-              Powered by licensed travel partners
+            {/* Partner disclosure micro-copy */}
+            <p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[160px]">
+              Powered by licensed travel partners · Final price confirmed before payment
             </p>
           </div>
         </div>
 
-        {/* Affiliate disclaimer - REQUIRED */}
+        {/* Legal disclaimer - REQUIRED */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            You'll complete your booking securely on Hizovo with our licensed travel partner. Final price confirmed before payment.
+            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
           </p>
         </div>
       </CardContent>

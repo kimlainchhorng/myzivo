@@ -1,12 +1,21 @@
 /**
- * Empty Results State
- * Consistent empty state across all services
- * Premium design with helpful suggestions
+ * Empty Results State - Indicative Pricing Version
+ * NEVER show "0 results" - always show estimated prices
+ * Users must always see prices, clearly marked as indicative
  */
 
-import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX } from "lucide-react";
+import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, Star, Zap, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+interface IndicativePrice {
+  label: string;
+  price: number;
+  badge?: string;
+  badgeColor?: string;
+}
 
 interface EmptyResultsProps {
   service: "flights" | "hotels" | "cars";
@@ -20,41 +29,48 @@ interface EmptyResultsProps {
   onClearFilters?: () => void;
   hasActiveFilters?: boolean;
   className?: string;
+  // NEW: Mock indicative prices to always show
+  indicativePrices?: IndicativePrice[];
+  origin?: string;
+  destination?: string;
 }
 
 const serviceConfig = {
   flights: {
     icon: Plane,
-    title: "Comparing live deals from licensed travel partners",
+    title: "Estimated prices shown",
     titleFiltered: "No flights match your filters",
-    message: "We're searching partner sites for the best available prices.",
+    message: "We're comparing deals from our licensed travel partners.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
       "Try nearby airports (e.g., EWR instead of JFK)",
       "Use flexible dates (+/- 3 days)",
       "Consider fewer passengers",
-      "Check for alternative routes",
     ],
     suggestionsFiltered: [
       "Remove some filters",
       "Increase your price range",
       "Allow 1+ stops instead of nonstop only",
-      "Include more departure times",
     ],
     color: "text-sky-500",
     bg: "bg-sky-500",
     bgLight: "bg-sky-500/10",
+    defaultPrices: [
+      { label: "Cheapest", price: 248, badge: "💰 Best Price", badgeColor: "bg-emerald-500" },
+      { label: "Best Value", price: 312, badge: "⭐ Recommended", badgeColor: "bg-amber-500" },
+      { label: "Flexible", price: 389, badge: "✓ Refundable", badgeColor: "bg-sky-500" },
+    ],
   },
   hotels: {
     icon: Hotel,
-    title: "No hotels found",
+    title: "Estimated prices shown",
     titleFiltered: "No hotels match your filters",
-    message: "We couldn't find any hotels matching your criteria.",
+    message: "We're comparing deals from our trusted hotel partners.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
       "Try different dates",
       "Expand your search area",
-      "Adjust your filters",
+      "Adjust star rating",
     ],
     suggestionsFiltered: [
       "Remove some filters",
@@ -64,17 +80,22 @@ const serviceConfig = {
     color: "text-amber-500",
     bg: "bg-amber-500",
     bgLight: "bg-amber-500/10",
+    defaultPrices: [
+      { label: "Budget", price: 89, badge: "💰 Value", badgeColor: "bg-emerald-500" },
+      { label: "Comfort", price: 149, badge: "⭐ Popular", badgeColor: "bg-amber-500" },
+      { label: "Luxury", price: 279, badge: "✨ Premium", badgeColor: "bg-purple-500" },
+    ],
   },
   cars: {
     icon: Car,
-    title: "No cars available",
+    title: "Estimated prices shown",
     titleFiltered: "No cars match your filters",
-    message: "We couldn't find any cars matching your search.",
+    message: "We're comparing deals from our car rental partners.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
       "Try different dates or times",
       "Check nearby locations",
-      "Adjust your filters",
+      "Try different car categories",
     ],
     suggestionsFiltered: [
       "Remove some filters",
@@ -84,6 +105,11 @@ const serviceConfig = {
     color: "text-violet-500",
     bg: "bg-violet-500",
     bgLight: "bg-violet-500/10",
+    defaultPrices: [
+      { label: "Economy", price: 35, badge: "💰 Budget", badgeColor: "bg-emerald-500" },
+      { label: "Midsize", price: 52, badge: "⭐ Popular", badgeColor: "bg-amber-500" },
+      { label: "SUV", price: 78, badge: "🚐 Family", badgeColor: "bg-violet-500" },
+    ],
   },
 };
 
@@ -96,69 +122,153 @@ export function EmptyResults({
   onClearFilters,
   hasActiveFilters = false,
   className,
+  indicativePrices,
+  origin,
+  destination,
 }: EmptyResultsProps) {
   const config = serviceConfig[service];
   const Icon = hasActiveFilters ? FilterX : config.icon;
   const title = hasActiveFilters ? config.titleFiltered : config.title;
   const defaultMessage = hasActiveFilters ? config.messageFiltered : config.message;
   const suggestions = hasActiveFilters ? config.suggestionsFiltered : config.suggestions;
+  const prices = indicativePrices || config.defaultPrices;
 
+  // If filters are active, show filter-focused empty state (no mock prices)
+  if (hasActiveFilters) {
+    return (
+      <div className={cn("text-center py-16 px-6 bg-muted/20 rounded-2xl border border-border/50", className)}>
+        <div
+          className={cn(
+            "w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center",
+            config.bgLight
+          )}
+        >
+          <FilterX className={cn("w-10 h-10", config.color)} />
+        </div>
+        
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          {message || defaultMessage}
+        </p>
+
+        <div className="mb-8">
+          <p className="text-sm text-muted-foreground mb-3">Try the following:</p>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            {(suggestion ? [suggestion] : suggestions).map((s, i) => (
+              <li key={i}>• {s}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {onClearFilters && (
+            <Button
+              onClick={onClearFilters}
+              className={cn("gap-2 text-white font-semibold", config.bg)}
+            >
+              <FilterX className="w-4 h-4" />
+              Clear All Filters
+            </Button>
+          )}
+          
+          {onRetry && (
+            <Button variant="outline" onClick={onRetry} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Retry Search
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // DEFAULT: Show indicative prices - NEVER show "0 results"
   return (
-    <div className={cn("text-center py-16 px-6 bg-muted/20 rounded-2xl border border-border/50", className)}>
-      <div
-        className={cn(
-          "w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center",
-          config.bgLight
+    <div className={cn("space-y-6", className)}>
+      {/* Header with route info */}
+      <div className="text-center">
+        <div
+          className={cn(
+            "w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center",
+            config.bgLight
+          )}
+        >
+          <Icon className={cn("w-8 h-8", config.color)} />
+        </div>
+        
+        {origin && destination && (
+          <p className="text-sm text-muted-foreground mb-1">
+            {origin} → {destination}
+          </p>
         )}
-      >
-        <Icon className={cn("w-10 h-10", config.color)} />
-      </div>
-      
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-        {message || defaultMessage}
-      </p>
-
-      {/* Suggestions */}
-      <div className="mb-8">
-        <p className="text-sm text-muted-foreground mb-3">Try the following:</p>
-        <ul className="text-sm text-muted-foreground space-y-1">
-          {(suggestion ? [suggestion] : suggestions).map((s, i) => (
-            <li key={i}>• {s}</li>
-          ))}
-        </ul>
+        
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground text-sm max-w-lg mx-auto">
+          Live availability confirmed at checkout.
+        </p>
       </div>
 
-      {/* CTAs */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-        {/* Clear Filters - most prominent when filters are active */}
-        {hasActiveFilters && onClearFilters && (
-          <Button
-            onClick={onClearFilters}
-            className={cn("gap-2 text-white font-semibold", config.bg)}
+      {/* Indicative Price Cards - ALWAYS VISIBLE */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        {prices.map((item, idx) => (
+          <Card 
+            key={idx}
+            className={cn(
+              "overflow-hidden transition-all hover:shadow-lg cursor-pointer",
+              idx === 1 && "ring-2 ring-amber-500/50 shadow-lg"
+            )}
+            onClick={partnerCta?.onClick}
           >
-            <FilterX className="w-4 h-4" />
-            Clear All Filters
-          </Button>
-        )}
-        
-        {onRetry && (
-          <Button variant="outline" onClick={onRetry} className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Retry Search
-          </Button>
-        )}
-        
+            <CardContent className="p-4 text-center">
+              {item.badge && (
+                <Badge className={cn("text-white text-[10px] mb-3", item.badgeColor)}>
+                  {item.badge}
+                </Badge>
+              )}
+              <p className="text-sm text-muted-foreground mb-1">{item.label}</p>
+              <div className="mb-2">
+                <span className="text-[10px] text-amber-500 font-medium">Estimated</span>
+                <p className={cn("text-2xl font-bold", config.color)}>
+                  ${item.price}
+                </p>
+                <span className="text-xs text-muted-foreground">
+                  {service === "flights" ? "per person*" : service === "hotels" ? "per night*" : "per day*"}
+                </span>
+              </div>
+              <p className="text-[9px] text-muted-foreground leading-tight">
+                Indicative price. Final price confirmed on partner checkout.
+              </p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* CTA Section */}
+      <div className="text-center space-y-4">
         {partnerCta && (
           <Button
             onClick={partnerCta.onClick}
-            variant={hasActiveFilters ? "outline" : "default"}
-            className={cn("gap-2", !hasActiveFilters && `text-white font-semibold ${config.bg}`)}
+            size="lg"
+            className={cn("gap-2 text-white font-semibold px-8", config.bg)}
           >
-            {partnerCta.label}
+            {partnerCta.label || "Continue to secure booking"}
             <ExternalLink className="w-4 h-4" />
           </Button>
         )}
+
+        {onRetry && (
+          <div>
+            <Button variant="outline" onClick={onRetry} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh Results
+            </Button>
+          </div>
+        )}
+
+        {/* Legal disclaimer */}
+        <p className="text-[10px] text-muted-foreground max-w-lg mx-auto leading-relaxed">
+          Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+        </p>
       </div>
     </div>
   );
