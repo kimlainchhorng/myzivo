@@ -1,0 +1,135 @@
+/**
+ * Flight Partner Disclaimer Component
+ * 
+ * REQUIRED on all flight search, results, and detail pages
+ * Displays the locked compliance text from flightCompliance.ts
+ */
+
+import { Shield, ExternalLink, AlertCircle, Plane, Lock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { FLIGHT_DISCLAIMERS, FLIGHT_TRUST_BADGES } from "@/config/flightCompliance";
+
+interface FlightPartnerDisclaimerProps {
+  variant?: 'banner' | 'inline' | 'footer' | 'card' | 'minimal';
+  className?: string;
+}
+
+export default function FlightPartnerDisclaimer({
+  variant = 'banner',
+  className,
+}: FlightPartnerDisclaimerProps) {
+  // Minimal inline disclaimer
+  if (variant === 'minimal') {
+    return (
+      <p className={cn("text-xs text-muted-foreground flex items-center gap-1.5", className)}>
+        <Plane className="w-3 h-3 text-sky-500" />
+        {FLIGHT_DISCLAIMERS.ticketingShort}
+      </p>
+    );
+  }
+
+  // Inline disclaimer
+  if (variant === 'inline') {
+    return (
+      <div className={cn("flex items-center gap-2 text-xs text-muted-foreground", className)}>
+        <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+        <span>{FLIGHT_DISCLAIMERS.ticketing}</span>
+      </div>
+    );
+  }
+
+  // Footer disclaimer
+  if (variant === 'footer') {
+    return (
+      <div className={cn("py-4 border-t border-border/50 text-center", className)}>
+        <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+          {FLIGHT_DISCLAIMERS.footer}
+        </p>
+      </div>
+    );
+  }
+
+  // Card variant with full details
+  if (variant === 'card') {
+    return (
+      <div className={cn(
+        "p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-3",
+        className
+      )}>
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-500" />
+          <p className="font-medium text-sm">{FLIGHT_DISCLAIMERS.ticketingShort}</p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {FLIGHT_DISCLAIMERS.redirect}
+        </p>
+        <div className="flex flex-wrap gap-3 pt-2 border-t border-amber-500/20">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="w-3 h-3 text-emerald-500" />
+            <span>{FLIGHT_TRUST_BADGES.secureCheckout}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Shield className="w-3 h-3 text-sky-500" />
+            <span>{FLIGHT_TRUST_BADGES.licensedPartner}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default banner variant
+  return (
+    <div className={cn(
+      "flex items-center justify-center gap-2 p-3 rounded-xl",
+      "bg-amber-500/5 border border-amber-500/20",
+      "text-xs sm:text-sm text-muted-foreground",
+      className
+    )}>
+      <ExternalLink className="w-4 h-4 text-amber-500 shrink-0" />
+      <span>{FLIGHT_DISCLAIMERS.ticketing}</span>
+    </div>
+  );
+}
+
+/**
+ * Trust badges for flight checkout
+ */
+export function FlightTrustBadges({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex flex-wrap items-center gap-4 text-xs text-muted-foreground", className)}>
+      <span className="flex items-center gap-1.5">
+        <Lock className="w-3.5 h-3.5 text-emerald-500" />
+        {FLIGHT_TRUST_BADGES.secureCheckout}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Shield className="w-3.5 h-3.5 text-sky-500" />
+        {FLIGHT_TRUST_BADGES.transparentPricing}
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Plane className="w-3.5 h-3.5 text-amber-500" />
+        {FLIGHT_TRUST_BADGES.licensedPartner}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Payment disclaimer - shows that Hizivo doesn't handle payments
+ */
+export function FlightPaymentDisclaimer({ className }: { className?: string }) {
+  return (
+    <div className={cn(
+      "p-3 rounded-lg bg-muted/50 border border-border",
+      "text-xs text-muted-foreground",
+      className
+    )}>
+      <div className="flex items-start gap-2">
+        <Shield className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-foreground">{FLIGHT_DISCLAIMERS.payment}</p>
+          <p className="mt-1">{FLIGHT_DISCLAIMERS.support}</p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,8 +1,8 @@
-import { ExternalLink, Sparkles } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
-import { useCTAText, useCTAColor, useStickyCTA } from "@/hooks/useABTest";
+import { useCTAColor, useStickyCTA } from "@/hooks/useABTest";
 import { cn } from "@/lib/utils";
 
 interface StickyBookingCTAProps {
@@ -30,14 +30,12 @@ export default function StickyBookingCTA({
 }: StickyBookingCTAProps) {
   const { redirectWithParams, redirectSimple } = useFlightRedirect('sticky_booking_cta', 'sticky_cta');
   
-  // A/B Testing hooks
-  const { primaryText, trackClick: trackTextClick } = useCTAText('flights');
+  // A/B Testing hooks - use locked CTA text
   const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('flights');
   const { isSticky, trackClick: trackStickyClick } = useStickyCTA();
 
   const handleBookClick = () => {
     // Track A/B experiments
-    trackTextClick();
     trackColorClick();
     trackStickyClick();
     
@@ -86,7 +84,7 @@ export default function StickyBookingCTA({
             </p>
           </div>
 
-          {/* CTA Button - A/B tested text and color */}
+          {/* CTA Button - Locked compliance text */}
           <Button
             size="lg"
             className={cn(
@@ -95,15 +93,15 @@ export default function StickyBookingCTA({
             )}
             onClick={handleBookClick}
           >
-            <Sparkles className="w-4 h-4" />
-            {primaryText}
+            <Lock className="w-4 h-4" />
+            {FLIGHT_CTA_TEXT.mobile}
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Disclosure */}
+        {/* Compliance Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {AFFILIATE_DISCLOSURE_TEXT.short}
+          {FLIGHT_DISCLAIMERS.ticketingShort} {FLIGHT_DISCLAIMERS.redirect}
         </p>
       </div>
     </div>

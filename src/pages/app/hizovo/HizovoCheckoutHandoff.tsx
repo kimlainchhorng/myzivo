@@ -1,16 +1,23 @@
 /**
  * Hizovo Travel App - Checkout Handoff Screen
- * Redirects user to partner checkout (in-app browser or external)
+ * Redirects user to partner checkout (same-tab for mobile safety)
+ * 
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
  */
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   ExternalLink, Shield, Loader2, CheckCircle, 
-  ArrowRight, AlertCircle, RefreshCw
+  ArrowRight, AlertCircle, RefreshCw, Lock, Plane
 } from "lucide-react";
 import HizovoAppLayout from "@/components/app/HizovoAppLayout";
 import { Button } from "@/components/ui/button";
 import { getSearchSessionId, HIZOVO_TRACKING_PARAMS } from "@/config/trackingParams";
+import { 
+  FLIGHT_DISCLAIMERS, 
+  FLIGHT_CTA_TEXT, 
+  FLIGHT_TRACKING_PARAMS 
+} from "@/config/flightCompliance";
 
 const HizovoCheckoutHandoff = () => {
   const navigate = useNavigate();
@@ -20,13 +27,13 @@ const HizovoCheckoutHandoff = () => {
   const [status, setStatus] = useState<'preparing' | 'ready' | 'redirected' | 'error'>('preparing');
   const [countdown, setCountdown] = useState(3);
   
-  // Build partner checkout URL
+  // Build partner checkout URL with Duffel-compliant tracking
   const buildPartnerUrl = () => {
     const baseUrl = "https://book.duffel.com/checkout";
     const params = new URLSearchParams({
-      utm_source: HIZOVO_TRACKING_PARAMS.utm_source,
-      utm_medium: HIZOVO_TRACKING_PARAMS.utm_medium,
-      utm_campaign: HIZOVO_TRACKING_PARAMS.utm_campaign,
+      utm_source: FLIGHT_TRACKING_PARAMS.utm_source,
+      utm_medium: FLIGHT_TRACKING_PARAMS.utm_medium,
+      utm_campaign: FLIGHT_TRACKING_PARAMS.utm_campaign,
       subid: sessionId || getSearchSessionId(),
     });
     return `${baseUrl}?${params.toString()}`;
@@ -62,14 +69,9 @@ const HizovoCheckoutHandoff = () => {
     setStatus('redirected');
     const url = buildPartnerUrl();
     
-    // In a real app, this would open an in-app browser or external browser
-    // For demo, we'll simulate the redirect
-    window.open(url, '_blank', 'noopener,noreferrer');
-    
-    // After "redirect", show booking return option
-    setTimeout(() => {
-      // Navigate to trips or show return flow
-    }, 1000);
+    // SAME-TAB redirect for mobile safety (required by Duffel)
+    // This ensures better UX on mobile browsers
+    window.location.href = url;
   };
 
   const handleManualRedirect = () => {
@@ -166,12 +168,12 @@ const HizovoCheckoutHandoff = () => {
           </div>
         )}
 
-        {/* Partner Disclosure */}
-        <div className="w-full max-w-sm p-4 rounded-xl bg-primary/5 border border-primary/20 mb-6">
-          <div className="flex items-center gap-2 text-sm">
-            <Shield className="w-4 h-4 text-primary" />
+        {/* Partner Disclosure - LOCKED TEXT */}
+        <div className="w-full max-w-sm p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 mb-6">
+          <div className="flex items-start gap-2 text-sm">
+            <Plane className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
             <span className="text-muted-foreground">
-              Booking completed with our licensed travel partner
+              {FLIGHT_DISCLAIMERS.ticketing}
             </span>
           </div>
         </div>
@@ -183,7 +185,9 @@ const HizovoCheckoutHandoff = () => {
               className="w-full h-14 rounded-xl font-bold text-lg gap-2"
               onClick={handleManualRedirect}
             >
-              Open Checkout Now <ExternalLink className="w-5 h-5" />
+              <Lock className="w-5 h-5" />
+              {FLIGHT_CTA_TEXT.primary}
+              <ExternalLink className="w-5 h-5" />
             </Button>
           )}
           
