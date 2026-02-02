@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_searches: {
+        Row: {
+          checkout_initiated: boolean | null
+          checkout_initiated_at: string | null
+          created_at: string
+          email: string
+          email_sent: boolean | null
+          email_sent_at: string | null
+          id: string
+          search_params: Json
+          search_session_id: string
+          search_type: string
+          searched_at: string
+        }
+        Insert: {
+          checkout_initiated?: boolean | null
+          checkout_initiated_at?: string | null
+          created_at?: string
+          email: string
+          email_sent?: boolean | null
+          email_sent_at?: string | null
+          id?: string
+          search_params?: Json
+          search_session_id: string
+          search_type: string
+          searched_at?: string
+        }
+        Update: {
+          checkout_initiated?: boolean | null
+          checkout_initiated_at?: string | null
+          created_at?: string
+          email?: string
+          email_sent?: boolean | null
+          email_sent_at?: string | null
+          id?: string
+          search_params?: Json
+          search_session_id?: string
+          search_type?: string
+          searched_at?: string
+        }
+        Relationships: []
+      }
       achievement_definitions: {
         Row: {
           category: string
@@ -2112,6 +2154,132 @@ export type Database = {
           tax_rate?: number
           updated_at?: string
           zone_code?: string
+        }
+        Relationships: []
+      }
+      email_consents: {
+        Row: {
+          consent_text: string | null
+          consent_type: string
+          consented_at: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: unknown
+          is_active: boolean | null
+          metadata: Json | null
+          search_session_id: string | null
+          unsubscribed_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          consent_text?: string | null
+          consent_type?: string
+          consented_at?: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          metadata?: Json | null
+          search_session_id?: string | null
+          unsubscribed_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          consent_text?: string | null
+          consent_type?: string
+          consented_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: unknown
+          is_active?: boolean | null
+          metadata?: Json | null
+          search_session_id?: string | null
+          unsubscribed_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          booking_ref: string | null
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          partner_name: string | null
+          recipient_email: string
+          resend_id: string | null
+          search_session_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          booking_ref?: string | null
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          partner_name?: string | null
+          recipient_email: string
+          resend_id?: string | null
+          search_session_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          booking_ref?: string | null
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          partner_name?: string | null
+          recipient_email?: string
+          resend_id?: string | null
+          search_session_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          setting_key: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6098,14 +6266,18 @@ export type Database = {
       support_tickets: {
         Row: {
           assigned_to: string | null
+          auto_reply_sent: boolean | null
+          booking_ref: string | null
           category: string | null
           created_at: string | null
           description: string
           driver_id: string | null
           id: string
+          partner_name: string | null
           priority: string | null
           resolved_at: string | null
           restaurant_id: string | null
+          search_session_id: string | null
           status: string | null
           subject: string
           ticket_number: string
@@ -6114,14 +6286,18 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          auto_reply_sent?: boolean | null
+          booking_ref?: string | null
           category?: string | null
           created_at?: string | null
           description: string
           driver_id?: string | null
           id?: string
+          partner_name?: string | null
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
+          search_session_id?: string | null
           status?: string | null
           subject: string
           ticket_number: string
@@ -6130,14 +6306,18 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          auto_reply_sent?: boolean | null
+          booking_ref?: string | null
           category?: string | null
           created_at?: string | null
           description?: string
           driver_id?: string | null
           id?: string
+          partner_name?: string | null
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
+          search_session_id?: string | null
           status?: string | null
           subject?: string
           ticket_number?: string
