@@ -4223,6 +4223,66 @@ export type Database = {
           },
         ]
       }
+      launch_settings: {
+        Row: {
+          announcement_cities: string[] | null
+          announcement_enabled: boolean | null
+          announcement_text: string | null
+          created_at: string | null
+          daily_booking_limit_per_city: number | null
+          emergency_pause: boolean
+          emergency_pause_at: string | null
+          emergency_pause_by: string | null
+          emergency_pause_reason: string | null
+          enforce_supply_minimum: boolean | null
+          global_mode: string
+          id: string
+          min_owners_for_launch: number | null
+          min_vehicles_for_launch: number | null
+          mode_changed_at: string | null
+          mode_changed_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          announcement_cities?: string[] | null
+          announcement_enabled?: boolean | null
+          announcement_text?: string | null
+          created_at?: string | null
+          daily_booking_limit_per_city?: number | null
+          emergency_pause?: boolean
+          emergency_pause_at?: string | null
+          emergency_pause_by?: string | null
+          emergency_pause_reason?: string | null
+          enforce_supply_minimum?: boolean | null
+          global_mode?: string
+          id?: string
+          min_owners_for_launch?: number | null
+          min_vehicles_for_launch?: number | null
+          mode_changed_at?: string | null
+          mode_changed_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          announcement_cities?: string[] | null
+          announcement_enabled?: boolean | null
+          announcement_text?: string | null
+          created_at?: string | null
+          daily_booking_limit_per_city?: number | null
+          emergency_pause?: boolean
+          emergency_pause_at?: string | null
+          emergency_pause_by?: string | null
+          emergency_pause_reason?: string | null
+          enforce_supply_minimum?: boolean | null
+          global_mode?: string
+          id?: string
+          min_owners_for_launch?: number | null
+          min_vehicles_for_launch?: number | null
+          mode_changed_at?: string | null
+          mode_changed_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       login_sessions: {
         Row: {
           created_at: string
@@ -5320,9 +5380,12 @@ export type Database = {
       }
       p2p_launch_cities: {
         Row: {
+          bookings_today: number | null
           created_at: string | null
           created_by: string | null
+          daily_booking_limit: number | null
           id: string
+          last_booking_reset: string | null
           launch_status: Database["public"]["Enums"]["p2p_launch_status"] | null
           launched_at: string | null
           name: string
@@ -5331,9 +5394,12 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          bookings_today?: number | null
           created_at?: string | null
           created_by?: string | null
+          daily_booking_limit?: number | null
           id?: string
+          last_booking_reset?: string | null
           launch_status?:
             | Database["public"]["Enums"]["p2p_launch_status"]
             | null
@@ -5344,9 +5410,12 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          bookings_today?: number | null
           created_at?: string | null
           created_by?: string | null
+          daily_booking_limit?: number | null
           id?: string
+          last_booking_reset?: string | null
           launch_status?:
             | Database["public"]["Enums"]["p2p_launch_status"]
             | null

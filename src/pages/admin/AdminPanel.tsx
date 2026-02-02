@@ -42,10 +42,12 @@ import AdminRenterInvitesModule from "./modules/AdminRenterInvitesModule";
 import AdminCategoryPricingModule from "./modules/AdminCategoryPricingModule";
 import AdminRegionsModule from "./modules/AdminRegionsModule";
 import AdminBetaLaunchModule from "./modules/AdminBetaLaunchModule";
-
+import AdminPublicLaunchModule from "./modules/AdminPublicLaunchModule";
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "public-launch", label: "Public Launch", icon: Globe },
   { id: "beta-launch", label: "Beta Launch", icon: Rocket },
+  { id: "regions", label: "Regions", icon: MapPin },
   { id: "regions", label: "Regions", icon: Globe },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
@@ -139,6 +141,8 @@ export default function AdminPanel() {
     switch (activeModule) {
       case "dashboard":
         return <AdminOverview />;
+      case "public-launch":
+        return <AdminPublicLaunchModule />;
       case "beta-launch":
         return <AdminBetaLaunchModule />;
       case "regions":
