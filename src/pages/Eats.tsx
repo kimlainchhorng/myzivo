@@ -21,6 +21,7 @@ import { useRestaurants } from "@/hooks/useEatsOrders";
 import { cn } from "@/lib/utils";
 import { CartProvider, useCart } from "@/contexts/CartContext";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 function EatsContent() {
   const navigate = useNavigate();
@@ -244,6 +245,9 @@ function EatsContent() {
             </Button>
           </div>
         </section>
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="local" />
       </main>
 
       <Footer />

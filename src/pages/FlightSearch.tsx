@@ -12,6 +12,7 @@ import { TrustFeatureCards } from "@/components/marketing";
 import { OGImageMeta } from "@/components/marketing";
 import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/components/seo";
 import { FlightSearchFormPro } from "@/components/search";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -69,6 +70,9 @@ const FlightSearch = () => {
 
         {/* FAQ Section with Schema */}
         <TravelFAQ serviceType="flights" className="bg-muted/20" />
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="travel" />
       </main>
 
       <Footer />

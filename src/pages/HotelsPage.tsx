@@ -26,6 +26,7 @@ import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch"
 import { getCityBySlug, cityNameToSlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 const trustBadges = [
   { icon: Shield, text: "Secure booking with partners" },
@@ -339,6 +340,9 @@ export default function HotelsPage() {
             </p>
           </div>
         </section>
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="travel" />
       </main>
       
       <Footer />

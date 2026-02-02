@@ -14,6 +14,7 @@ import { InternalLinkGrid } from "@/components/seo";
 import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
 import { heroPhotos, serviceOverlays } from "@/config/photos";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 const trustBadges = [
   { icon: Shield, text: "Secure booking with partners" },
@@ -147,6 +148,9 @@ export default function CarRentalLanding() {
             </p>
           </div>
         </section>
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="travel" />
       </main>
       
       <Footer />

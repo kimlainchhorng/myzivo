@@ -11,6 +11,7 @@ import VehicleTypeGallery from "@/components/shared/VehicleTypeGallery";
 import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import ImageHero from "@/components/shared/ImageHero";
 import { cn } from "@/lib/utils";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 export default function Rides() {
   const [submitted, setSubmitted] = useState(false);
@@ -210,6 +211,9 @@ export default function Rides() {
 
         {/* Testimonials */}
         <UserTestimonials />
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="local" />
       </main>
 
       <Footer />
