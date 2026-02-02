@@ -204,10 +204,10 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
           </div>
 
           {/* RIGHT: Price & CTA */}
-          <div className="sm:w-44 p-4 bg-gradient-to-br from-muted/30 to-muted/10 flex flex-col justify-center items-center sm:items-end border-t sm:border-t-0 sm:border-l border-border/50">
-            <div className="text-center sm:text-right">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
-              <p className="text-2xl font-bold text-violet-500">
+          <div className="sm:w-48 p-4 flex flex-col justify-center items-end border-t sm:border-t-0 sm:border-l border-border/50">
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">From</p>
+              <p className="text-2xl font-bold text-primary">
                 {dailyPrice}
                 <span className="text-sm font-normal text-muted-foreground">/day</span>
               </p>
@@ -222,7 +222,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
             </div>
             <Button
               onClick={() => onViewDeal(car)}
-              className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 shadow-lg shadow-violet-500/20 hover:shadow-violet-500/30 text-white"
+              className="mt-3 w-full gap-2 font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-primary-foreground"
             >
               View Deal
               <ExternalLink className="w-4 h-4" />
