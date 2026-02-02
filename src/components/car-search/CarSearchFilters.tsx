@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CarMake, CarModel, CarSearchFilters as FilterTypes, fuelTypeOptions, transmissionOptions } from "@/types/carInventory";
+import { CarMake, CarModel, CarSearchFilters as FilterTypes, fuelTypeOptions, transmissionOptions, usStateOptions } from "@/types/carInventory";
 
 interface CarSearchFiltersProps {
   filters: FilterTypes;
@@ -230,16 +230,38 @@ export function CarSearchFilters({
             </Select>
           </div>
 
-          {/* Location */}
-          <div className="space-y-2 sm:col-span-2">
+          {/* Location City */}
+          <div className="space-y-2">
             <Label className="text-sm font-medium flex items-center gap-1">
-              <MapPin className="w-3 h-3" /> Location
+              <MapPin className="w-3 h-3" /> City
             </Label>
             <Input
-              placeholder="City or State"
-              value={filters.location || ""}
-              onChange={(e) => onFilterChange("location", e.target.value || null)}
+              placeholder="e.g. Los Angeles"
+              value={filters.locationCity || ""}
+              onChange={(e) => onFilterChange("locationCity", e.target.value || null)}
             />
+          </div>
+
+          {/* Location State */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> State
+            </Label>
+            <Select
+              value={filters.locationState || ""}
+              onValueChange={(value) => onFilterChange("locationState", value || null)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Any State" />
+              </SelectTrigger>
+              <SelectContent>
+                {usStateOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
