@@ -269,7 +269,7 @@ export default function LocationAutocomplete({
           <div className="overflow-y-auto max-h-64">
             {suggestions.map((option, index) => (
               <button
-                key={option.value}
+                key={`${option.value}-${index}`}
                 type="button"
                 onClick={() => handleSelect(option)}
                 className={cn(
