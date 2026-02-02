@@ -1,130 +1,117 @@
 
-# Next Update: P2P Booking Payment Integration + Traditional/P2P Car Rental Unified Entry Point
+# Next Update: P2P Booking Review Flow + Completed Trip States
 
 ## Overview
 
-The P2P car rental marketplace is fully functional but has two critical gaps:
-1. **Payment flow is incomplete** - The "Pay" button in P2PBookingConfirmation doesn't trigger the Stripe checkout
-2. **Traditional vs P2P car rentals need unified discovery** - Users on `/rent-car` page have no visibility into P2P options
+The P2P car rental marketplace now has working payment flows and discovery integration. However, the **post-booking experience** is incomplete. When a trip is completed, renters and owners have no way to leave reviews, and the booking confirmation page doesn't show appropriate states for completed trips.
 
-This update connects the payment flow and creates a unified car rental experience.
+This update adds the review flow and polishes the completed booking experience.
 
 ---
 
-## Current State Analysis
+## Current Gap Analysis
 
-### What's Working
-- P2P vehicle search, filtering, and detail pages
-- P2P booking creation (creates database entry correctly)
-- Owner onboarding multi-step wizard
-- Owner booking management (approve/reject)
-- Stripe Checkout edge function (`create-p2p-checkout`)
-- Payment hooks (`useP2PPayment.ts`)
-- Admin test data creation tools
-
-### What's Missing
-
-| Issue | Impact |
-|-------|--------|
-| P2PBookingConfirmation "Pay" button is static | Renters cannot complete payment |
-| `/rent-car` page has no P2P awareness | Users don't know P2P exists when searching |
-| No P2P promo section on CarResultsPage | Missed opportunity to show local owner options |
+| Area | Issue |
+|------|-------|
+| **P2PBookingConfirmation** | No "completed" status handling or review prompt |
+| **RenterTrips** | Completed trips show but no review CTA |
+| **OwnerBookings** | No way for owners to mark trip as complete |
+| **ReviewForm** | Exists but not integrated into booking flow |
+| **Message Button** | Owner contact button doesn't work (placeholder) |
 
 ---
 
-## Phase 1: Complete P2P Payment Flow
+## Phase 1: Completed Trip States in P2PBookingConfirmation
 
-### 1.1 Wire Up Payment Button in P2PBookingConfirmation
+### 1.1 Add Completed Trip UI
 
-The confirmation page shows a "Pay" button but it doesn't call the checkout mutation.
-
-**Current code (lines 316-319):**
-```text
-<Button className="gap-2">
-  <CreditCard className="w-4 h-4" />
-  Pay ${booking.total_amount.toFixed(2)}
-  <ArrowRight className="w-4 h-4" />
-</Button>
-```
-
-**Update to:**
-- Import `useCreateP2PCheckout` from `@/hooks/useP2PPayment`
-- Wire button onClick to call `createCheckout.mutate({ bookingId: booking.id })`
-- Show loading spinner during checkout creation
-- Handle payment return query params (success/cancelled)
-
-### 1.2 Add Payment Success/Cancel Handling
-
-When user returns from Stripe, show appropriate feedback:
-- `?payment=success` → Show success message, update UI
-- `?payment=cancelled` → Show info message, keep pay button visible
-
----
-
-## Phase 2: P2P Discovery on Traditional Car Rental Pages
-
-### 2.1 Add P2P Promotion Banner to CarRentalBooking
-
-On `/rent-car`, add a prominent banner encouraging P2P discovery:
+When `booking.status === "completed"`:
+- Show completion success banner
+- Display review prompts for vehicle and owner
+- Show trip summary and receipt download
 
 ```text
 +----------------------------------------------------------+
-|  🚗 Looking for something unique?                         |
-|  Rent directly from local owners in your area             |
-|  [Browse P2P Rentals →]                                   |
+|  ✓ Trip Completed                                         |
+|  Thank you for renting with ZIVO P2P                      |
++----------------------------------------------------------+
+
++----------------------------------------------------------+
+|  Leave a Review                                           |
+|  [★★★★★ Rate Vehicle]    [★★★★★ Rate Host]               |
 +----------------------------------------------------------+
 ```
 
-Location: Below the search form, before the category tiles.
+### 1.2 Integrate ReviewForm Component
 
-### 2.2 Add P2P Cross-Sell Section to CarResultsPage
-
-After showing traditional rental results, add a P2P section:
-
-```text
-+----------------------------------------------------------+
-|  Rent from Local Owners                                   |
-|  Skip the rental counter. Unique cars at better prices.   |
-|                                                           |
-|  [Show P2P Results for {location} →]                      |
-+----------------------------------------------------------+
-```
-
-Include quick stats if P2P vehicles exist in that location.
+Import and display `ReviewForm` for completed bookings:
+- Show vehicle review form (if not already reviewed)
+- Show owner review form (if not already reviewed)
+- Show existing reviews if already submitted
 
 ---
 
-## Phase 3: Quick P2P Vehicle Count Check
+## Phase 2: Owner "Complete Trip" Action
 
-### Create useP2PVehicleCount Hook
+### 2.1 Add Complete Trip Button to OwnerBookings
 
-A lightweight hook to check if P2P vehicles exist in a location:
+For "active" bookings, add ability to mark as completed:
 
-```typescript
-export function useP2PVehicleCount(city?: string) {
-  return useQuery({
-    queryKey: ["p2pVehicleCount", city],
-    queryFn: async () => {
-      let query = supabase
-        .from("p2p_vehicles")
-        .select("id", { count: "exact", head: true })
-        .eq("approval_status", "approved")
-        .eq("is_available", true);
-      
-      if (city) {
-        query = query.ilike("location_city", `%${city}%`);
-      }
-      
-      const { count } = await query;
-      return count || 0;
-    },
-    enabled: true,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
-}
+```text
++----------------------------------------------------------+
+| 🚗 2023 Tesla Model 3                                      |
+| Active Rental • Returns today                              |
+|                                                            |
+| [Mark as Completed]                                        |
++----------------------------------------------------------+
 ```
 
-This allows conditional rendering of P2P sections only when vehicles exist.
+### 2.2 Create useCompleteBooking Hook
+
+New mutation to update booking status to "completed":
+- Validates booking is currently "active"
+- Sets status to "completed"
+- Triggers payout eligibility (creates pending payout record)
+- Sends notification to renter
+
+---
+
+## Phase 3: Enhanced RenterTrips Page
+
+### 3.1 Add Review Status Indicators
+
+Show review status on each booking card:
+- "Leave Review" badge for completed trips without reviews
+- "Reviewed" badge for trips with reviews
+
+### 3.2 Add Quick Review Action
+
+On past trips tab, show inline review CTA:
+
+```text
++----------------------------------------------------------+
+| 2023 Tesla Model 3                                        |
+| Completed Dec 15-18                    $255.00            |
+|                                                            |
+| [Leave a Review ★]                     [View Details →]   |
++----------------------------------------------------------+
+```
+
+---
+
+## Phase 4: Create P2P Messaging Placeholder
+
+### 4.1 Wire Up Message Button
+
+Currently the "Message" button on P2PBookingConfirmation is non-functional.
+
+Options:
+A. **Quick fix**: Open email compose with owner email
+B. **Future**: Create P2P messaging table and chat modal
+
+For this update, implement Option A:
+- Button opens `mailto:` link if owner email available
+- Otherwise show toast: "Contact support for host information"
 
 ---
 
@@ -132,70 +119,81 @@ This allows conditional rendering of P2P sections only when vehicles exist.
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/p2p/P2PBookingConfirmation.tsx` | **Update** | Wire payment button to checkout hook, handle return params |
-| `src/pages/CarRentalBooking.tsx` | **Update** | Add P2P discovery banner below search |
-| `src/pages/CarResultsPage.tsx` | **Update** | Add P2P cross-sell section |
-| `src/hooks/useP2PBooking.ts` | **Update** | Add useP2PVehicleCount hook |
+| `src/pages/p2p/P2PBookingConfirmation.tsx` | **Update** | Add completed state UI with review forms |
+| `src/pages/owner/OwnerBookings.tsx` | **Update** | Add "Complete Trip" action for active bookings |
+| `src/pages/p2p/RenterTrips.tsx` | **Update** | Add review status badges and quick review CTA |
+| `src/hooks/useP2PBooking.ts` | **Update** | Add useCompleteBooking mutation |
 
 ---
 
 ## Technical Implementation Details
 
-### P2P Booking Confirmation Payment Flow
+### Complete Booking Hook
 
 ```text
-User clicks "Pay $X" button
-       ↓
-useCreateP2PCheckout.mutate({ bookingId })
-       ↓
-Edge function creates Stripe Checkout session
-       ↓
-User redirected to Stripe hosted checkout
-       ↓
-After payment, redirected back with query params
-       ↓
-Page shows success/cancelled state
+useCompleteBooking mutation:
+1. Verify booking.status === "active"
+2. Update p2p_bookings.status = "completed"
+3. Update p2p_bookings.completed_at = now()
+4. Create p2p_payouts record with status = "pending"
+5. Invalidate queries: ownerBookings, renterBookings, bookingDetail
 ```
 
-### P2P Discovery Components
+### Review Flow Integration
 
-**P2PDiscoveryBanner Component:**
-- Gradient background with car icon
-- "Browse P2P Rentals" CTA linking to `/p2p/search?city={location}`
-- Dismissible with local storage persistence
-
-**P2PResultsCrossSell Component:**
-- Shows after traditional results
-- Displays count of available P2P vehicles if > 0
-- Links to P2P search with location pre-filled
+```text
+P2PBookingConfirmation (completed):
+├── Show completion banner
+├── Check useBookingReview for existing vehicle review
+├── Check useBookingReview for existing owner review
+├── If not reviewed → Show ReviewForm components
+└── If reviewed → Show submitted reviews
+```
 
 ---
 
 ## User Flow After Implementation
 
-### Renter Payment Journey
-1. User books a P2P vehicle → Booking created as "pending" or "confirmed"
-2. If instant book or owner approves → Status becomes "confirmed"
-3. User visits booking confirmation page
-4. Clicks "Pay $X" button → Redirected to Stripe
-5. Completes payment → Redirected back with success
-6. Booking status updates to "paid"
+### Renter Completed Trip Journey
+1. Owner marks trip as completed
+2. Renter sees "completed" status on booking
+3. Review prompts appear on confirmation page
+4. Renter submits vehicle and/or owner review
+5. Reviews update vehicle/owner ratings
 
-### Car Rental Discovery Journey
-1. User visits `/rent-car` page
-2. Sees P2P discovery banner → Option to explore local owner rentals
-3. If user searches traditional → Results page shows P2P cross-sell
-4. User can switch to P2P search with one click
-5. Location context preserved across both flows
+### Owner Complete Trip Journey
+1. Renter returns vehicle
+2. Owner opens "Active" tab in OwnerBookings
+3. Clicks "Mark as Completed"
+4. Trip moves to History tab
+5. Payout becomes eligible for processing
 
 ---
 
 ## Testing Checklist
 
-1. Create test P2P booking via admin
-2. Navigate to booking confirmation page
-3. Click "Pay" button → Verify Stripe checkout opens
-4. Complete test payment → Verify redirect back with success
-5. Visit `/rent-car` → Verify P2P banner appears
-6. Search for cars → Verify P2P cross-sell on results page
-7. Click P2P links → Verify location is pre-filled in P2P search
+1. Create test booking and set status to "completed" via admin
+2. Navigate to booking confirmation → Verify review forms appear
+3. Submit vehicle review → Verify toast and review shows as submitted
+4. Submit owner review → Verify rating updates on owner profile
+5. Test "Complete Trip" button from owner bookings
+6. Verify completed trip appears in renter's past trips with review status
+7. Test message button opens mailto or shows fallback
+
+---
+
+## Design Considerations
+
+### Review Form Placement
+- Stack vertically on mobile
+- Side-by-side on desktop (vehicle left, owner right)
+- Collapsed state for already-reviewed sections
+
+### Completion Banner
+- Green gradient background
+- Checkmark icon with confetti animation (optional)
+- Clear CTA to leave reviews
+
+### Message Button Fallback
+- Until P2P messaging is built, use mailto
+- Track clicks for future feature prioritization
