@@ -245,7 +245,7 @@ const Footer = () => {
           {/* Affiliate Disclosure */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+              Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               ZIVO may earn a commission when users book through partner links. Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
