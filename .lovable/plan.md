@@ -1,57 +1,155 @@
 
-# Renter Verification (Driver License Flow) - Implementation Plan
+# Damage & Dispute Handling Workflow - Implementation Plan
 
 ## Overview
-Create a complete renter verification system for the ZIVO P2P Car Rental Marketplace that ensures only verified drivers can book cars. This includes a multi-step verification wizard for renters, document upload and review, admin verification panel, and checkout integration.
+Implement a comprehensive damage and dispute handling system for the ZIVO P2P Car Rental Marketplace. This system will enable renters and owners to report damage, allow admins to review and resolve disputes, integrate with insurance claims, and safely control payouts during dispute resolution.
 
 ---
 
-## Database Schema
+## Current System Analysis
 
-### New Tables Required
+### Existing Components (Already Implemented)
+| Component | File | Status |
+|-----------|------|--------|
+| Basic Dispute Filing | `DisputeForm.tsx` | Exists but limited |
+| Dispute Types | DB enum | damage, late_return, cancellation, refund, cleanliness, other |
+| Dispute Status | DB enum | open, investigating, resolved, closed |
+| Admin Disputes Module | `AdminP2PDisputesModule.tsx` | Basic review only |
+| Payout Dispute Check | `execute-p2p-payout/index.ts` | Blocks on active disputes |
 
-#### 1. `renter_profiles`
-Stores renter verification information and status.
+### Gaps to Fill
+1. **No dedicated damage report form with photo uploads**
+2. **No before/after photo comparison for owners**
+3. **No insurance claim tracking fields**
+4. **No explicit payout hold/release workflow tied to disputes**
+5. **No damage report status states (reported, under review, claim submitted, etc.)**
+6. **No renter-facing or owner-facing damage report pages**
+7. **No repair cost tracking or resolution amount recording**
+
+---
+
+## Database Schema Changes
+
+### 1. New Table: `p2p_damage_reports`
+Dedicated damage report tracking separate from general disputes.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `user_id` | uuid | Reference to auth.users |
-| `full_name` | text | Full legal name |
-| `date_of_birth` | date | Date of birth (21+) |
-| `license_number` | text | Driver license number |
-| `license_state` | text | License issuing state (2-letter) |
-| `license_expiration` | date | License expiration date |
-| `verification_status` | enum | pending / approved / rejected / suspended |
-| `rejection_reason` | text | Reason for rejection (if applicable) |
-| `reviewed_at` | timestamp | When admin reviewed |
-| `reviewed_by` | uuid | Admin who reviewed |
+| `booking_id` | uuid | FK to p2p_bookings |
+| `reported_by` | uuid | FK to auth.users |
+| `reporter_role` | text | 'renter' or 'owner' |
+| `description` | text | Damage description |
+| `date_noticed` | timestamp | When damage was noticed |
+| `estimated_repair_cost` | numeric | Owner's estimated cost |
+| `status` | enum | See below |
+| `priority` | text | low, medium, high, urgent |
+| `admin_notes` | text | Internal notes |
 | `created_at` | timestamp | Record created |
 | `updated_at` | timestamp | Last updated |
 
-#### 2. `renter_documents`
-Stores document uploads for renter verification.
+### 2. New Enum: `p2p_damage_status`
+```sql
+CREATE TYPE p2p_damage_status AS ENUM (
+  'reported',
+  'under_review', 
+  'info_requested',
+  'insurance_claim_submitted',
+  'resolved_owner_paid',
+  'resolved_renter_charged',
+  'closed_no_action'
+);
+```
+
+### 3. New Table: `p2p_damage_evidence`
+Photo evidence for damage reports.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `renter_id` | uuid | FK to renter_profiles |
-| `document_type` | enum | license_front / license_back / selfie |
-| `file_name` | text | Original file name |
-| `file_url` | text | Storage URL |
-| `file_size` | integer | File size in bytes |
-| `mime_type` | text | MIME type |
-| `status` | enum | pending / approved / rejected |
-| `reviewed_at` | timestamp | When admin reviewed |
-| `reviewed_by` | uuid | Admin who reviewed |
-| `notes` | text | Review notes |
+| `damage_report_id` | uuid | FK to p2p_damage_reports |
+| `image_url` | text | Storage URL |
+| `image_type` | text | 'damage', 'before', 'after' |
+| `uploaded_by` | uuid | FK to auth.users |
+| `caption` | text | Description of photo |
 | `created_at` | timestamp | Record created |
 
-#### 3. New Enums
+### 4. New Table: `p2p_insurance_claims`
+Insurance claim tracking (Phase 1 - Manual).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `damage_report_id` | uuid | FK to p2p_damage_reports |
+| `insurance_provider` | text | Provider name |
+| `claim_reference` | text | Claim reference number |
+| `coverage_decision` | text | approved, denied, partial |
+| `coverage_amount` | numeric | Amount covered |
+| `notes` | text | Decision notes |
+| `submitted_at` | timestamp | When claim submitted |
+| `resolved_at` | timestamp | When claim resolved |
+| `created_by` | uuid | Admin who created |
+
+### 5. New Table: `p2p_dispute_resolutions`
+Resolution tracking with payout adjustments.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `damage_report_id` | uuid | FK to p2p_damage_reports |
+| `decision` | text | owner_paid, renter_charged, no_action, partial |
+| `owner_payout_adjustment` | numeric | Amount to add/subtract from payout |
+| `renter_charge_amount` | numeric | Amount to charge renter |
+| `admin_notes` | text | Resolution notes |
+| `resolved_at` | timestamp | When resolved |
+| `resolved_by` | uuid | Admin who resolved |
+
+### 6. Modify `p2p_bookings` Table
+Add field to link damage reports and track payout hold status.
 
 ```sql
-CREATE TYPE renter_verification_status AS ENUM ('pending', 'approved', 'rejected', 'suspended');
-CREATE TYPE renter_document_type AS ENUM ('license_front', 'license_back', 'selfie');
+ALTER TABLE p2p_bookings 
+  ADD COLUMN damage_report_id UUID REFERENCES p2p_damage_reports(id),
+  ADD COLUMN payout_hold_reason TEXT,
+  ADD COLUMN payout_held_at TIMESTAMPTZ;
+```
+
+---
+
+## New Dispute/Damage Status Flow
+
+```text
+Damage Reported
+      │
+      ▼
+Under Review (Admin investigating)
+      │
+      ├─── Info Requested (Need more photos/details)
+      │         │
+      │         ▼
+      │    (User provides info)
+      │         │
+      └─────────┘
+      │
+      ▼
+┌─────────────────────────────────────┐
+│      Admin Decision Point           │
+├─────────────────────────────────────┤
+│ A) Submit Insurance Claim           │
+│ B) Approve Owner Compensation       │
+│ C) Charge Renter                    │
+│ D) Deny Claim / No Action           │
+└─────────────────────────────────────┘
+      │
+      ▼
+┌─────────────────────────────────────┐
+│     Resolution States               │
+├─────────────────────────────────────┤
+│ • Insurance Claim Submitted         │
+│ • Resolved – Owner Paid             │
+│ • Resolved – Renter Charged         │
+│ • Closed – No Action                │
+└─────────────────────────────────────┘
 ```
 
 ---
@@ -61,327 +159,418 @@ CREATE TYPE renter_document_type AS ENUM ('license_front', 'license_back', 'self
 ### New Files to Create
 
 ```text
-src/pages/verify/
-├── RenterVerification.tsx       - Multi-step verification wizard
-├── VerificationStatus.tsx       - Status page (pending/approved/rejected)
+src/pages/damage/
+├── ReportDamage.tsx              - Unified damage report page (renter/owner)
+├── DamageReportStatus.tsx        - View damage report status
+
+src/components/damage/
+├── DamageReportForm.tsx          - Multi-step damage report form
+├── DamageEvidenceUpload.tsx      - Photo upload for damage evidence
+├── DamageStatusBadge.tsx         - Status badge component
+├── DamageTimeline.tsx            - Timeline of events
 
 src/hooks/
-├── useRenterVerification.ts     - Hooks for renter verification
-
-src/components/verify/
-├── RenterDocumentUpload.tsx     - Document upload component for renters
-├── VerificationPromptModal.tsx  - Modal prompting unverified users
-
-src/pages/admin/modules/
-├── AdminRentersModule.tsx       - Admin panel for renter verification
+├── useDamageReport.ts            - Hooks for damage reports
 
 src/types/
-├── renter.ts                    - TypeScript types for renter verification
+├── damage.ts                     - TypeScript types for damage system
+
+src/pages/admin/modules/
+├── AdminDamageReportsModule.tsx  - Enhanced admin panel for damage
 ```
 
 ### Files to Modify
 
 ```text
-src/App.tsx                      - Add new routes for /verify/*
-src/pages/admin/AdminPanel.tsx   - Add "P2P Renters" nav item
-src/pages/p2p/P2PVehicleDetail.tsx - Add verification check before booking
-src/hooks/useP2PBooking.ts       - Add renter verification check in useCreateBooking
+src/pages/p2p/RenterTrips.tsx          - Add "Report Damage" button
+src/pages/owner/OwnerBookings.tsx      - Add "Report Damage" button
+src/components/p2p/DisputeForm.tsx     - Link to damage report for damage type
+src/hooks/useP2PDispute.ts             - Add damage-specific queries
+src/pages/admin/AdminPanel.tsx         - Add "Damage Reports" nav item
+supabase/functions/execute-p2p-payout/ - Enhanced dispute/damage checks
 ```
 
 ---
 
 ## Implementation Details
 
-### 1. Renter Verification Flow (RenterVerification.tsx)
+### 1. Renter Damage Report Flow
 
-Multi-step wizard with 4 steps:
+**Route**: `/booking/:id/report-damage`
 
-**Step 1: Driver Information**
-- Full legal name (auto-populated from auth if available)
-- Date of birth (must be 21+)
-- Driver license number
-- License issuing state (dropdown)
-- License expiration date (must be in future)
+**Steps**:
+1. Damage description (required, textarea)
+2. Date/time noticed (date picker)
+3. Photo uploads (min 1 required, max 10)
+4. Optional notes
+5. Submit and confirm
 
-Validation:
-```typescript
-const driverInfoSchema = z.object({
-  full_name: z.string().min(2).max(100),
-  date_of_birth: z.string().refine(val => calculateAge(val) >= 21, "Must be 21+"),
-  license_number: z.string().min(4).max(20),
-  license_state: z.string().length(2),
-  license_expiration: z.string().refine(val => new Date(val) > new Date(), "License must not be expired"),
-});
-```
+**On Submit**:
+- Create `p2p_damage_reports` record with `status = 'reported'`
+- Create `p2p_damage_evidence` records for photos
+- Update `p2p_bookings.damage_report_id`
+- Set `p2p_bookings.payout_hold_reason = 'damage_report_pending'`
+- Set `p2p_bookings.payout_held_at = now()`
+- Notify owner and admin (future: email)
 
-**Step 2: License Upload**
-- Upload license front image (required)
-- Upload license back image (required)
-- Clear image guidelines displayed
+### 2. Owner Damage Report Flow
 
-**Step 3: Selfie Verification**
-- Upload selfie photo
-- Guidelines: "Make sure your face is clearly visible and matches your license"
-- Placeholder for future automated KYC integration
+**Route**: `/owner/booking/:id/report-damage`
 
-**Step 4: Submission Complete**
-- Confirmation message
-- "Your verification is being reviewed"
-- Link to check verification status
+**Steps**:
+1. Damage description (required)
+2. Before photos (from vehicle listing)
+3. After photos (damage evidence, required)
+4. Estimated repair cost (optional, currency input)
+5. Submit
 
----
+**On Submit**:
+- Same as renter flow with `reporter_role = 'owner'`
+- Owner-reported damages typically have higher priority
 
-### 2. Verification Status Page (VerificationStatus.tsx)
+### 3. Damage Report Status Page
 
-Shows current verification status:
+**Route**: `/damage/:id/status`
 
-| State | Display |
-|-------|---------|
-| No profile | Redirect to /verify/driver |
-| Pending | "Verification in progress" with progress indicator |
-| Approved | Success message with checkmark, link to browse cars |
-| Rejected | Rejection reason displayed, option to resubmit documents |
-| Suspended | Contact support message |
+**Shows**:
+- Current status with badge
+- Timeline of events
+- Photos gallery
+- Resolution details (if resolved)
+- Next steps guidance
 
----
+### 4. Admin Damage Reports Module
 
-### 3. Verification Prompt Modal (VerificationPromptModal.tsx)
+**Route**: In Admin Panel → "Damage Reports" tab
 
-Triggered when unverified user attempts to book:
+**Features**:
 
-```text
-+------------------------------------------+
-|  🔒 Verification Required                |
-+------------------------------------------+
-|  To keep our community safe, we need     |
-|  to verify your driver's license before  |
-|  you can book a car.                     |
-|                                          |
-|  This helps protect both renters and     |
-|  vehicle owners on our platform.         |
-|                                          |
-|  [Cancel]          [Start Verification]  |
-+------------------------------------------+
-```
+**Dashboard Cards**:
+- Total Reports
+- Under Review
+- Pending Insurance
+- Resolved This Month
 
----
-
-### 4. useRenterVerification.ts Hooks
-
-```typescript
-// Fetch current user's renter profile
-useRenterProfile()
-
-// Create renter profile with initial info
-useCreateRenterProfile()
-
-// Update renter profile
-useUpdateRenterProfile()
-
-// Fetch renter's documents
-useRenterDocuments(renterId?: string)
-
-// Upload document
-useUploadRenterDocument()
-
-// Check if renter is verified (for booking flow)
-useIsRenterVerified()
-
-// Admin: Fetch all renters with filters
-useAdminRenters(status?: RenterVerificationStatus)
-
-// Admin: Update renter status
-useUpdateRenterStatus()
-
-// Admin: Update document status
-useUpdateRenterDocumentStatus()
-
-// Admin: Stats
-useAdminRenterStats()
-```
-
----
-
-### 5. Admin Renters Module (AdminRentersModule.tsx)
-
-Similar structure to AdminP2POwnersModule.tsx:
-
-**Header**
-- Title: "P2P Renters"
-- Description: "Manage renter verification and document review"
-
-**Stats Cards**
-- Total Renters
-- Pending Review
-- Verified
-- Suspended
-
-**Filters**
-- Search by name/email
-- Status filter dropdown
-
-**Renters Table**
+**Table Columns**:
 | Column | Data |
 |--------|------|
-| Renter | Name, city/state |
-| Contact | Email, phone |
-| License | Number, state, expiration |
-| Status | Verification status badge |
-| Documents | Count with approval indicators |
-| Submitted | Date |
+| ID | Short ID |
+| Booking | Vehicle + Dates |
+| Reporter | Name + Role badge |
+| Description | Truncated |
+| Status | Status badge |
+| Cost | Estimated repair cost |
+| Created | Date |
 | Actions | View button |
 
-**Renter Detail Modal**
-- Personal information display
-- License details with expiration warning if < 30 days
-- Document gallery with approve/reject buttons
-- Notes field for rejection reason
-- Action buttons: Approve, Reject, Suspend
+**Detail Modal/Page**:
 
----
+1. **Report Overview**
+   - Full description
+   - Date noticed
+   - Reporter info
+   - Estimated repair cost
 
-### 6. P2PVehicleDetail.tsx Integration
+2. **Booking Details**
+   - Vehicle info
+   - Renter profile
+   - Owner profile
+   - Trip dates
 
-Modify booking flow to check verification:
+3. **Evidence Gallery**
+   - Before photos (from listing)
+   - Damage photos
+   - After photos
+   - Zoom/expand view
+
+4. **Timeline**
+   - Report submitted
+   - Status changes
+   - Comments/notes
+
+5. **Insurance Claim Section** (if applicable)
+   - Provider name field
+   - Claim reference field
+   - Coverage decision notes
+   - Coverage amount
+
+6. **Resolution Section**
+   - Decision dropdown (owner_paid, renter_charged, no_action)
+   - Payout adjustment amount
+   - Renter charge amount
+   - Resolution notes
+
+**Admin Actions**:
+- Mark as "Under Review"
+- Request More Information
+- Submit Insurance Claim
+- Approve Owner Compensation
+- Charge Renter
+- Deny Claim
+- Release/Adjust Payout
+- Close Report
+
+### 5. useDamageReport.ts Hooks
 
 ```typescript
-// Before handleBook function
-const { data: renterProfile } = useRenterProfile();
-const [showVerificationModal, setShowVerificationModal] = useState(false);
+// Create damage report
+useCreateDamageReport()
 
-const handleBook = async () => {
-  if (!user) {
-    // ... existing login redirect
-  }
-  
-  // Check renter verification
-  if (!renterProfile || renterProfile.verification_status !== 'approved') {
-    setShowVerificationModal(true);
-    return;
-  }
-  
-  // Check license expiration
-  if (renterProfile.license_expiration && new Date(renterProfile.license_expiration) < new Date()) {
-    toast.error("Your license has expired. Please update your verification.");
-    navigate("/verify/status");
-    return;
-  }
-  
-  // ... existing booking logic
-};
+// Upload damage evidence
+useUploadDamageEvidence()
 
-// Add modal at bottom of component
-<VerificationPromptModal 
-  open={showVerificationModal}
-  onClose={() => setShowVerificationModal(false)}
-  onStartVerification={() => navigate("/verify/driver")}
-/>
+// Get damage report by ID
+useDamageReport(reportId: string)
+
+// Get damage reports for a booking
+useBookingDamageReports(bookingId: string)
+
+// Get user's damage reports
+useUserDamageReports()
+
+// Admin: Get all damage reports with filters
+useAdminDamageReports(status?: DamageStatus)
+
+// Admin: Update damage report status
+useUpdateDamageStatus()
+
+// Admin: Create insurance claim
+useCreateInsuranceClaim()
+
+// Admin: Resolve damage report
+useResolveDamageReport()
+
+// Admin: Stats
+useDamageReportStats()
+```
+
+### 6. Payout Logic Enhancement
+
+Modify `execute-p2p-payout/index.ts`:
+
+```typescript
+// Enhanced check for damage reports
+if (!force) {
+  // Check for active disputes
+  const { data: disputes } = await supabase
+    .from("p2p_disputes")
+    .select("id, status")
+    .in("booking_id", bookingIds)
+    .in("status", ["open", "investigating"]);
+
+  if (disputes && disputes.length > 0) {
+    throw new Error(`Cannot process: ${disputes.length} active dispute(s)`);
+  }
+
+  // Check for pending damage reports
+  const { data: damageReports } = await supabase
+    .from("p2p_damage_reports")
+    .select("id, status")
+    .in("booking_id", bookingIds)
+    .not("status", "in", "(resolved_owner_paid,resolved_renter_charged,closed_no_action)");
+
+  if (damageReports && damageReports.length > 0) {
+    throw new Error(`Cannot process: ${damageReports.length} pending damage report(s)`);
+  }
+}
+
+// Apply payout adjustments from resolved damage reports
+const { data: resolutions } = await supabase
+  .from("p2p_dispute_resolutions")
+  .select("owner_payout_adjustment")
+  .in("damage_report_id", damageReportIds)
+  .eq("decision", "owner_paid");
+
+// Calculate adjusted amount
+let adjustedAmount = payout.amount;
+for (const resolution of resolutions || []) {
+  adjustedAmount += resolution.owner_payout_adjustment || 0;
+}
+```
+
+### 7. RenterTrips.tsx Integration
+
+Add "Report Damage" button for completed trips:
+
+```typescript
+// In booking card for completed trips
+{booking.status === "completed" && !booking.damage_report_id && (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => navigate(`/booking/${booking.id}/report-damage`)}
+  >
+    <AlertTriangle className="w-4 h-4 mr-2" />
+    Report Damage
+  </Button>
+)}
+
+{booking.damage_report_id && (
+  <Button
+    variant="ghost"
+    size="sm"
+    onClick={() => navigate(`/damage/${booking.damage_report_id}/status`)}
+  >
+    <Eye className="w-4 h-4 mr-2" />
+    View Damage Report
+  </Button>
+)}
+```
+
+### 8. OwnerBookings.tsx Integration
+
+Similar pattern for owner's completed bookings:
+
+```typescript
+// In completed booking card
+<Button
+  variant="outline"
+  size="sm"
+  className="text-amber-600"
+  onClick={() => navigate(`/owner/booking/${booking.id}/report-damage`)}
+>
+  <Camera className="w-4 h-4 mr-2" />
+  Report Damage
+</Button>
 ```
 
 ---
 
-### 7. useP2PBooking.ts Integration
+## Checkout Integration
 
-Add server-side verification check in `useCreateBooking`:
+Add damage policy acknowledgment:
 
 ```typescript
-mutationFn: async ({ vehicleId, ... }) => {
-  if (!user) throw new Error("Must be logged in");
-  
-  // Check renter verification
-  const { data: renterProfile } = await supabase
-    .from("renter_profiles")
-    .select("verification_status, license_expiration")
-    .eq("user_id", user.id)
-    .single();
-  
-  if (!renterProfile || renterProfile.verification_status !== "approved") {
-    throw new Error("Please complete driver verification before booking");
-  }
-  
-  if (new Date(renterProfile.license_expiration) < new Date()) {
-    throw new Error("Your driver's license has expired. Please update your verification.");
-  }
-  
-  // ... existing booking logic
-};
+// In P2PBookingConfirmation.tsx or checkout flow
+<div className="p-4 rounded-lg border bg-muted/50">
+  <p className="text-sm text-muted-foreground">
+    By booking, you agree to the{" "}
+    <Link to="/damage-policy" className="text-primary underline">
+      Damage & Incident Policy
+    </Link>
+    . You may be charged for any damage that occurs during your rental period.
+  </p>
+</div>
 ```
-
----
-
-## Storage Bucket
-
-Use existing `p2p-documents` bucket for renter documents:
-- Files stored at: `{user_id}/renter/{document_type}_{timestamp}.{ext}`
-- Bucket is private (not public) - admin-only access
 
 ---
 
 ## RLS Policies
 
-### renter_profiles
+### p2p_damage_reports
 
 ```sql
--- Users can view their own profile
-CREATE POLICY "Users can view own renter profile"
-  ON renter_profiles FOR SELECT
-  USING (auth.uid() = user_id);
+-- Users can view reports they filed or are named in
+CREATE POLICY "Users can view own damage reports"
+  ON p2p_damage_reports FOR SELECT
+  USING (
+    auth.uid() = reported_by
+    OR EXISTS (
+      SELECT 1 FROM p2p_bookings b
+      WHERE b.id = p2p_damage_reports.booking_id
+      AND (b.renter_id = auth.uid() OR b.owner_id IN (
+        SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
+      ))
+    )
+  );
 
--- Users can insert their own profile
-CREATE POLICY "Users can create own renter profile"
-  ON renter_profiles FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
--- Users can update their own profile (limited fields)
-CREATE POLICY "Users can update own renter profile"
-  ON renter_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+-- Users can create reports for their bookings
+CREATE POLICY "Users can create damage reports"
+  ON p2p_damage_reports FOR INSERT
+  WITH CHECK (
+    auth.uid() = reported_by
+    AND EXISTS (
+      SELECT 1 FROM p2p_bookings b
+      WHERE b.id = booking_id
+      AND (b.renter_id = auth.uid() OR b.owner_id IN (
+        SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
+      ))
+    )
+  );
 
 -- Admin full access
-CREATE POLICY "Admin full access to renter profiles"
-  ON renter_profiles FOR ALL
+CREATE POLICY "Admin full access to damage reports"
+  ON p2p_damage_reports FOR ALL
   USING (public.is_admin(auth.uid()));
 ```
 
-### renter_documents
+### p2p_damage_evidence
 
 ```sql
--- Users can view their own documents
-CREATE POLICY "Users can view own renter documents"
-  ON renter_documents FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM renter_profiles rp 
-    WHERE rp.id = renter_documents.renter_id 
-    AND rp.user_id = auth.uid()
-  ));
+-- Users can view evidence for reports they have access to
+CREATE POLICY "Users can view damage evidence"
+  ON p2p_damage_evidence FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM p2p_damage_reports dr
+      WHERE dr.id = p2p_damage_evidence.damage_report_id
+      AND (
+        dr.reported_by = auth.uid()
+        OR EXISTS (
+          SELECT 1 FROM p2p_bookings b
+          WHERE b.id = dr.booking_id
+          AND (b.renter_id = auth.uid() OR b.owner_id IN (
+            SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
+          ))
+        )
+      )
+    )
+  );
 
--- Users can insert their own documents
-CREATE POLICY "Users can upload own renter documents"
-  ON renter_documents FOR INSERT
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM renter_profiles rp 
-    WHERE rp.id = renter_documents.renter_id 
-    AND rp.user_id = auth.uid()
-  ));
+-- Users can upload evidence to their own reports
+CREATE POLICY "Users can upload damage evidence"
+  ON p2p_damage_evidence FOR INSERT
+  WITH CHECK (
+    auth.uid() = uploaded_by
+    AND EXISTS (
+      SELECT 1 FROM p2p_damage_reports dr
+      WHERE dr.id = damage_report_id
+      AND dr.reported_by = auth.uid()
+    )
+  );
 
 -- Admin full access
-CREATE POLICY "Admin full access to renter documents"
-  ON renter_documents FOR ALL
+CREATE POLICY "Admin full access to damage evidence"
+  ON p2p_damage_evidence FOR ALL
   USING (public.is_admin(auth.uid()));
 ```
+
+### p2p_insurance_claims & p2p_dispute_resolutions
+
+```sql
+-- Admin only for insurance claims
+CREATE POLICY "Admin only insurance claims"
+  ON p2p_insurance_claims FOR ALL
+  USING (public.is_admin(auth.uid()));
+
+-- Admin only for resolutions
+CREATE POLICY "Admin only dispute resolutions"
+  ON p2p_dispute_resolutions FOR ALL
+  USING (public.is_admin(auth.uid()));
+```
+
+---
+
+## Storage
+
+Use existing `p2p-documents` bucket:
+- Path: `damage/{damage_report_id}/{type}_{timestamp}.{ext}`
+- Types: `damage`, `before`, `after`
+- Access: Private, admin can view all, users can view own
 
 ---
 
 ## Routes to Add (App.tsx)
 
 ```typescript
-// Renter Verification pages
-const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
-const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
+// Damage report pages
+const ReportDamage = lazy(() => import("./pages/damage/ReportDamage"));
+const DamageReportStatus = lazy(() => import("./pages/damage/DamageReportStatus"));
 
-// In Routes:
-<Route path="/verify/driver" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
-<Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
+// Routes:
+<Route path="/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage role="renter" /></ProtectedRoute>} />
+<Route path="/owner/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage role="owner" /></ProtectedRoute>} />
+<Route path="/damage/:reportId/status" element={<ProtectedRoute><DamageReportStatus /></ProtectedRoute>} />
 ```
 
 ---
@@ -389,49 +578,16 @@ const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"
 ## AdminPanel.tsx Updates
 
 Add new nav item:
+
 ```typescript
-{ id: "p2p-renters", label: "P2P Renters", icon: UserCheck }
+{ id: "damage-reports", label: "Damage Reports", icon: AlertTriangle }
 ```
 
 Add to switch statement:
+
 ```typescript
-case "p2p-renters":
-  return <AdminRentersModule />;
-```
-
----
-
-## Security Considerations
-
-1. **Document Storage**: Files stored in private `p2p-documents` bucket
-2. **RLS Policies**: Users can only access their own verification data
-3. **Admin-Only Review**: Only admins can view all documents and change verification status
-4. **Server-Side Validation**: Booking hook validates verification status server-side
-5. **License Expiration**: System checks expiration and blocks booking if expired
-6. **PII Protection**: License numbers and personal data protected by RLS
-
----
-
-## Helper Functions
-
-Add database function for checking renter verification:
-
-```sql
-CREATE OR REPLACE FUNCTION is_verified_renter(user_uuid uuid)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM renter_profiles 
-    WHERE user_id = user_uuid 
-    AND verification_status = 'approved'
-    AND license_expiration > CURRENT_DATE
-  );
-END;
-$$;
+case "damage-reports":
+  return <AdminDamageReportsModule />;
 ```
 
 ---
@@ -440,80 +596,127 @@ $$;
 
 | Action | File | Description |
 |--------|------|-------------|
-| Create | `src/types/renter.ts` | TypeScript types for renter verification |
-| Create | `src/hooks/useRenterVerification.ts` | Data hooks for renter verification |
-| Create | `src/components/verify/RenterDocumentUpload.tsx` | Document upload component |
-| Create | `src/components/verify/VerificationPromptModal.tsx` | Verification prompt modal |
-| Create | `src/pages/verify/RenterVerification.tsx` | Multi-step verification wizard |
-| Create | `src/pages/verify/VerificationStatus.tsx` | Verification status page |
-| Create | `src/pages/admin/modules/AdminRentersModule.tsx` | Admin verification panel |
-| Modify | `src/App.tsx` | Add verification routes |
-| Modify | `src/pages/admin/AdminPanel.tsx` | Add P2P Renters nav item |
-| Modify | `src/pages/p2p/P2PVehicleDetail.tsx` | Add verification check before booking |
-| Modify | `src/hooks/useP2PBooking.ts` | Add server-side verification check |
-| Database | Migration | Create tables, enums, RLS policies, functions |
+| Create | `src/types/damage.ts` | TypeScript types for damage system |
+| Create | `src/hooks/useDamageReport.ts` | Data hooks for damage reports |
+| Create | `src/components/damage/DamageReportForm.tsx` | Multi-step damage form |
+| Create | `src/components/damage/DamageEvidenceUpload.tsx` | Photo upload component |
+| Create | `src/components/damage/DamageStatusBadge.tsx` | Status badge component |
+| Create | `src/components/damage/DamageTimeline.tsx` | Event timeline component |
+| Create | `src/pages/damage/ReportDamage.tsx` | Damage report page |
+| Create | `src/pages/damage/DamageReportStatus.tsx` | Status view page |
+| Create | `src/pages/admin/modules/AdminDamageReportsModule.tsx` | Admin damage panel |
+| Modify | `src/App.tsx` | Add damage routes |
+| Modify | `src/pages/admin/AdminPanel.tsx` | Add Damage Reports nav item |
+| Modify | `src/pages/p2p/RenterTrips.tsx` | Add Report Damage button |
+| Modify | `src/pages/owner/OwnerBookings.tsx` | Add Report Damage button |
+| Modify | `supabase/functions/execute-p2p-payout/` | Enhanced damage checks |
+| Database | Migration | Create tables, enums, RLS policies |
 
 ---
 
-## UI/UX Flow Diagram
+## Database Migration Summary
 
-```text
-User clicks "Book Now" on vehicle
-           │
-           ▼
-    ┌─────────────────┐
-    │ Check if logged │
-    │      in?        │
-    └────────┬────────┘
-             │
-    No ──────┼────── Yes
-             │         │
-    ┌────────┘         ▼
-    │         ┌─────────────────┐
-    ▼         │ Check renter    │
- Login Page   │ verification    │
-              └────────┬────────┘
-                       │
-         Not Verified ─┼─ Verified
-                       │       │
-              ┌────────┘       │
-              ▼                ▼
-    ┌─────────────────┐   ┌─────────────────┐
-    │ Show Modal:     │   │ Continue to     │
-    │ "Start          │   │ Booking Flow    │
-    │  Verification"  │   │                 │
-    └────────┬────────┘   └─────────────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │ /verify/driver  │
-    │ Step 1: Info    │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │ Step 2: Upload  │
-    │ License Images  │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │ Step 3: Selfie  │
-    │                 │
-    └────────┬────────┘
-             │
-             ▼
-    ┌─────────────────┐
-    │ Step 4: Done    │
-    │ Status: Pending │
-    └────────┬────────┘
-             │
-             ▼
-    Admin reviews in /admin → P2P Renters
-             │
-    Approved─┼─Rejected
-             │      │
-             ▼      ▼
-    User can    User notified,
-    now book    can resubmit
+```sql
+-- Create damage status enum
+CREATE TYPE p2p_damage_status AS ENUM (
+  'reported',
+  'under_review',
+  'info_requested',
+  'insurance_claim_submitted',
+  'resolved_owner_paid',
+  'resolved_renter_charged',
+  'closed_no_action'
+);
+
+-- Create damage reports table
+CREATE TABLE p2p_damage_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id UUID NOT NULL REFERENCES p2p_bookings(id) ON DELETE CASCADE,
+  reported_by UUID NOT NULL REFERENCES auth.users(id),
+  reporter_role TEXT NOT NULL CHECK (reporter_role IN ('renter', 'owner')),
+  description TEXT NOT NULL,
+  date_noticed TIMESTAMPTZ NOT NULL,
+  estimated_repair_cost NUMERIC(10,2),
+  status p2p_damage_status DEFAULT 'reported',
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+  admin_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create damage evidence table
+CREATE TABLE p2p_damage_evidence (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  image_type TEXT NOT NULL CHECK (image_type IN ('damage', 'before', 'after')),
+  uploaded_by UUID NOT NULL REFERENCES auth.users(id),
+  caption TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create insurance claims table
+CREATE TABLE p2p_insurance_claims (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
+  insurance_provider TEXT NOT NULL,
+  claim_reference TEXT,
+  coverage_decision TEXT CHECK (coverage_decision IN ('pending', 'approved', 'denied', 'partial')),
+  coverage_amount NUMERIC(10,2),
+  notes TEXT,
+  submitted_at TIMESTAMPTZ DEFAULT now(),
+  resolved_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id)
+);
+
+-- Create dispute resolutions table
+CREATE TABLE p2p_dispute_resolutions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
+  decision TEXT NOT NULL CHECK (decision IN ('owner_paid', 'renter_charged', 'no_action', 'partial')),
+  owner_payout_adjustment NUMERIC(10,2) DEFAULT 0,
+  renter_charge_amount NUMERIC(10,2) DEFAULT 0,
+  admin_notes TEXT,
+  resolved_at TIMESTAMPTZ DEFAULT now(),
+  resolved_by UUID REFERENCES auth.users(id)
+);
+
+-- Add damage tracking to bookings
+ALTER TABLE p2p_bookings 
+  ADD COLUMN damage_report_id UUID REFERENCES p2p_damage_reports(id),
+  ADD COLUMN payout_hold_reason TEXT,
+  ADD COLUMN payout_held_at TIMESTAMPTZ;
+
+-- Create indexes
+CREATE INDEX idx_damage_reports_booking_id ON p2p_damage_reports(booking_id);
+CREATE INDEX idx_damage_reports_status ON p2p_damage_reports(status);
+CREATE INDEX idx_damage_evidence_report_id ON p2p_damage_evidence(damage_report_id);
+
+-- Enable RLS
+ALTER TABLE p2p_damage_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE p2p_damage_evidence ENABLE ROW LEVEL SECURITY;
+ALTER TABLE p2p_insurance_claims ENABLE ROW LEVEL SECURITY;
+ALTER TABLE p2p_dispute_resolutions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies (as detailed above)
 ```
+
+---
+
+## Security Considerations
+
+1. **Photo Storage**: Damage photos stored in private bucket
+2. **RLS**: Users can only view/create reports for their own bookings
+3. **Admin-Only Resolution**: Only admins can update status and resolve reports
+4. **Payout Protection**: Payouts automatically blocked when damage reports exist
+5. **Audit Trail**: All status changes tracked with timestamps
+
+---
+
+## Notifications (Future Enhancement)
+
+When implementing email notifications, trigger on:
+- Damage reported → Notify other party + admin
+- Status changed → Notify reporter
+- Info requested → Notify reporter
+- Resolved → Notify both parties
