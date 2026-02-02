@@ -1,8 +1,8 @@
 
-# First City Launch Checklist - Implementation Plan
+# Renter Verification (Driver License Flow) - Implementation Plan
 
 ## Overview
-Create a city-based launch checklist system that ensures ZIVO only goes live in specific cities when all required checks (legal, insurance, payments, supply, operations, support) are complete. This is an admin-only feature for controlled geographic expansion.
+Create a complete renter verification system for the ZIVO P2P Car Rental Marketplace that ensures only verified drivers can book cars. This includes a multi-step verification wizard for renters, document upload and review, admin verification panel, and checkout integration.
 
 ---
 
@@ -10,62 +10,49 @@ Create a city-based launch checklist system that ensures ZIVO only goes live in 
 
 ### New Tables Required
 
-#### 1. `p2p_launch_cities`
-Stores each city ZIVO is preparing to launch or has launched.
+#### 1. `renter_profiles`
+Stores renter verification information and status.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `name` | text | City name (e.g., "Los Angeles") |
-| `state` | text | State code (e.g., "CA") |
-| `launch_status` | enum | draft / ready / live / paused |
-| `launched_at` | timestamp | When city went live |
-| `paused_at` | timestamp | When city was paused |
-| `created_by` | uuid | Admin who created |
+| `user_id` | uuid | Reference to auth.users |
+| `full_name` | text | Full legal name |
+| `date_of_birth` | date | Date of birth (21+) |
+| `license_number` | text | Driver license number |
+| `license_state` | text | License issuing state (2-letter) |
+| `license_expiration` | date | License expiration date |
+| `verification_status` | enum | pending / approved / rejected / suspended |
+| `rejection_reason` | text | Reason for rejection (if applicable) |
+| `reviewed_at` | timestamp | When admin reviewed |
+| `reviewed_by` | uuid | Admin who reviewed |
 | `created_at` | timestamp | Record created |
 | `updated_at` | timestamp | Last updated |
 
-#### 2. `p2p_launch_checklists`
-Stores checklist completion state for each city.
+#### 2. `renter_documents`
+Stores document uploads for renter verification.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | uuid | Primary key |
-| `city_id` | uuid | FK to p2p_launch_cities |
-| **Legal Section** | | |
-| `legal_renter_terms` | boolean | Renter Terms published |
-| `legal_owner_terms` | boolean | Owner Terms published |
-| `legal_insurance_disclosure` | boolean | Insurance Disclosure published |
-| `legal_damage_policy` | boolean | Damage Policy published |
-| `legal_privacy_policy` | boolean | Privacy Policy published |
-| **Insurance Section** | | |
-| `insurance_provider_name` | text | Insurance provider name |
-| `insurance_coverage_type` | text | Coverage type (Trip-based) |
-| `insurance_confirmation_ref` | text | Coverage confirmation reference |
-| `insurance_active` | boolean | Insurance coverage active |
-| **Payments Section** | | |
-| `payments_stripe_active` | boolean | Stripe Payments active |
-| `payments_connect_enabled` | boolean | Stripe Connect enabled |
-| `payments_test_payment` | boolean | Test payment completed |
-| `payments_test_payout` | boolean | Test payout completed |
-| **Operations Section** | | |
-| `ops_dispute_tested` | boolean | Dispute workflow tested |
-| `ops_damage_tested` | boolean | Damage reporting tested |
-| `ops_cancellation_tested` | boolean | Cancellation tested |
-| `ops_payout_delay_tested` | boolean | Payout delay logic tested |
-| **Support Section** | | |
-| `support_email` | text | Support email address |
-| `support_emergency_procedure` | text | Emergency contact procedure |
-| `support_confirmed` | boolean | Support process confirmed |
-| **Computed Supply** | | |
-| `min_approved_cars` | integer | Minimum cars required (default: 10) |
-| `min_approved_owners` | integer | Minimum owners required (default: 5) |
-| **Timestamps** | | |
-| `updated_at` | timestamp | Last checklist update |
-| `updated_by` | uuid | Admin who last updated |
+| `renter_id` | uuid | FK to renter_profiles |
+| `document_type` | enum | license_front / license_back / selfie |
+| `file_name` | text | Original file name |
+| `file_url` | text | Storage URL |
+| `file_size` | integer | File size in bytes |
+| `mime_type` | text | MIME type |
+| `status` | enum | pending / approved / rejected |
+| `reviewed_at` | timestamp | When admin reviewed |
+| `reviewed_by` | uuid | Admin who reviewed |
+| `notes` | text | Review notes |
+| `created_at` | timestamp | Record created |
 
-#### 3. New Enum: `p2p_launch_status`
-Values: `draft`, `ready`, `live`, `paused`
+#### 3. New Enums
+
+```sql
+CREATE TYPE renter_verification_status AS ENUM ('pending', 'approved', 'rejected', 'suspended');
+CREATE TYPE renter_document_type AS ENUM ('license_front', 'license_back', 'selfie');
+```
 
 ---
 
@@ -74,309 +61,377 @@ Values: `draft`, `ready`, `live`, `paused`
 ### New Files to Create
 
 ```text
-src/pages/admin/modules/AdminCityLaunchModule.tsx     - Main module UI
-src/hooks/useCityLaunch.ts                            - Data fetching hooks
-src/types/cityLaunch.ts                               - TypeScript types
+src/pages/verify/
+├── RenterVerification.tsx       - Multi-step verification wizard
+├── VerificationStatus.tsx       - Status page (pending/approved/rejected)
+
+src/hooks/
+├── useRenterVerification.ts     - Hooks for renter verification
+
+src/components/verify/
+├── RenterDocumentUpload.tsx     - Document upload component for renters
+├── VerificationPromptModal.tsx  - Modal prompting unverified users
+
+src/pages/admin/modules/
+├── AdminRentersModule.tsx       - Admin panel for renter verification
+
+src/types/
+├── renter.ts                    - TypeScript types for renter verification
 ```
 
 ### Files to Modify
 
 ```text
-src/pages/admin/AdminPanel.tsx                        - Add nav item + import module
-src/hooks/useP2PBooking.ts                            - Filter by live city status
+src/App.tsx                      - Add new routes for /verify/*
+src/pages/admin/AdminPanel.tsx   - Add "P2P Renters" nav item
+src/pages/p2p/P2PVehicleDetail.tsx - Add verification check before booking
+src/hooks/useP2PBooking.ts       - Add renter verification check in useCreateBooking
 ```
 
 ---
 
 ## Implementation Details
 
-### 1. AdminCityLaunchModule.tsx
+### 1. Renter Verification Flow (RenterVerification.tsx)
 
-The main admin UI with the following sections:
+Multi-step wizard with 4 steps:
+
+**Step 1: Driver Information**
+- Full legal name (auto-populated from auth if available)
+- Date of birth (must be 21+)
+- Driver license number
+- License issuing state (dropdown)
+- License expiration date (must be in future)
+
+Validation:
+```typescript
+const driverInfoSchema = z.object({
+  full_name: z.string().min(2).max(100),
+  date_of_birth: z.string().refine(val => calculateAge(val) >= 21, "Must be 21+"),
+  license_number: z.string().min(4).max(20),
+  license_state: z.string().length(2),
+  license_expiration: z.string().refine(val => new Date(val) > new Date(), "License must not be expired"),
+});
+```
+
+**Step 2: License Upload**
+- Upload license front image (required)
+- Upload license back image (required)
+- Clear image guidelines displayed
+
+**Step 3: Selfie Verification**
+- Upload selfie photo
+- Guidelines: "Make sure your face is clearly visible and matches your license"
+- Placeholder for future automated KYC integration
+
+**Step 4: Submission Complete**
+- Confirmation message
+- "Your verification is being reviewed"
+- Link to check verification status
+
+---
+
+### 2. Verification Status Page (VerificationStatus.tsx)
+
+Shows current verification status:
+
+| State | Display |
+|-------|---------|
+| No profile | Redirect to /verify/driver |
+| Pending | "Verification in progress" with progress indicator |
+| Approved | Success message with checkmark, link to browse cars |
+| Rejected | Rejection reason displayed, option to resubmit documents |
+| Suspended | Contact support message |
+
+---
+
+### 3. Verification Prompt Modal (VerificationPromptModal.tsx)
+
+Triggered when unverified user attempts to book:
+
+```text
++------------------------------------------+
+|  🔒 Verification Required                |
++------------------------------------------+
+|  To keep our community safe, we need     |
+|  to verify your driver's license before  |
+|  you can book a car.                     |
+|                                          |
+|  This helps protect both renters and     |
+|  vehicle owners on our platform.         |
+|                                          |
+|  [Cancel]          [Start Verification]  |
++------------------------------------------+
+```
+
+---
+
+### 4. useRenterVerification.ts Hooks
+
+```typescript
+// Fetch current user's renter profile
+useRenterProfile()
+
+// Create renter profile with initial info
+useCreateRenterProfile()
+
+// Update renter profile
+useUpdateRenterProfile()
+
+// Fetch renter's documents
+useRenterDocuments(renterId?: string)
+
+// Upload document
+useUploadRenterDocument()
+
+// Check if renter is verified (for booking flow)
+useIsRenterVerified()
+
+// Admin: Fetch all renters with filters
+useAdminRenters(status?: RenterVerificationStatus)
+
+// Admin: Update renter status
+useUpdateRenterStatus()
+
+// Admin: Update document status
+useUpdateRenterDocumentStatus()
+
+// Admin: Stats
+useAdminRenterStats()
+```
+
+---
+
+### 5. Admin Renters Module (AdminRentersModule.tsx)
+
+Similar structure to AdminP2POwnersModule.tsx:
 
 **Header**
-- Title: "City Launch Checklist"
-- Description: "Prepare cities for P2P marketplace launch"
-- "Add City" button (opens modal)
+- Title: "P2P Renters"
+- Description: "Manage renter verification and document review"
 
-**City List (Cards)**
-- Each city shows: Name, State, Status badge
-- Quick stats: Approved owners count, approved vehicles count
-- "View Checklist" button
+**Stats Cards**
+- Total Renters
+- Pending Review
+- Verified
+- Suspended
 
-**City Checklist View (Modal or Expanded Panel)**
+**Filters**
+- Search by name/email
+- Status filter dropdown
 
-Six collapsible sections:
+**Renters Table**
+| Column | Data |
+|--------|------|
+| Renter | Name, city/state |
+| Contact | Email, phone |
+| License | Number, state, expiration |
+| Status | Verification status badge |
+| Documents | Count with approval indicators |
+| Submitted | Date |
+| Actions | View button |
 
-1. **Legal & Compliance**
-   - 5 checkboxes (Renter Terms, Owner Terms, Insurance Disclosure, Damage Policy, Privacy Policy)
-   - Auto-check option: Link to verify page exists
-
-2. **Insurance Setup**
-   - Text fields: Provider name, Coverage type, Confirmation reference
-   - Checkbox: Insurance active for city
-
-3. **Payments & Payouts**
-   - 4 checkboxes (Stripe Payments, Connect enabled, Test payment, Test payout)
-   - Note: These are manual confirmations
-
-4. **Owner Supply (Minimum)**
-   - Display: Current approved owners in city vs. minimum (5)
-   - Display: Current approved vehicles in city vs. minimum (10)
-   - Status: Green checkmark or red warning
-   - This section auto-calculates from database
-
-5. **Operational Readiness**
-   - 4 checkboxes (Dispute workflow, Damage reporting, Cancellation, Payout delay)
-
-6. **Support & Contact**
-   - Text fields: Support email, Emergency procedure
-   - Checkbox: Support process confirmed
-
-**Launch Controls**
-- Progress indicator: X of 6 sections complete
-- "Mark City as LIVE" button (disabled until all sections complete)
-- Confirmation modal with warning text
-- "Pause City" button (for live cities)
+**Renter Detail Modal**
+- Personal information display
+- License details with expiration warning if < 30 days
+- Document gallery with approve/reject buttons
+- Notes field for rejection reason
+- Action buttons: Approve, Reject, Suspend
 
 ---
 
-### 2. useCityLaunch.ts Hooks
+### 6. P2PVehicleDetail.tsx Integration
+
+Modify booking flow to check verification:
 
 ```typescript
-// Fetch all cities with their checklist status
-useLaunchCities()
+// Before handleBook function
+const { data: renterProfile } = useRenterProfile();
+const [showVerificationModal, setShowVerificationModal] = useState(false);
 
-// Fetch single city with full checklist
-useCityChecklist(cityId: string)
+const handleBook = async () => {
+  if (!user) {
+    // ... existing login redirect
+  }
+  
+  // Check renter verification
+  if (!renterProfile || renterProfile.verification_status !== 'approved') {
+    setShowVerificationModal(true);
+    return;
+  }
+  
+  // Check license expiration
+  if (renterProfile.license_expiration && new Date(renterProfile.license_expiration) < new Date()) {
+    toast.error("Your license has expired. Please update your verification.");
+    navigate("/verify/status");
+    return;
+  }
+  
+  // ... existing booking logic
+};
 
-// Fetch owner/vehicle counts for a city
-useCitySupplyStats(city: string, state: string)
-
-// Create new city
-useCreateLaunchCity()
-
-// Update checklist items
-useUpdateCityChecklist()
-
-// Update city launch status
-useUpdateCityStatus()
+// Add modal at bottom of component
+<VerificationPromptModal 
+  open={showVerificationModal}
+  onClose={() => setShowVerificationModal(false)}
+  onStartVerification={() => navigate("/verify/driver")}
+/>
 ```
 
 ---
 
-### 3. City Supply Stats Query
+### 7. useP2PBooking.ts Integration
 
-For the "Owner Supply" section, query the database:
+Add server-side verification check in `useCreateBooking`:
+
+```typescript
+mutationFn: async ({ vehicleId, ... }) => {
+  if (!user) throw new Error("Must be logged in");
+  
+  // Check renter verification
+  const { data: renterProfile } = await supabase
+    .from("renter_profiles")
+    .select("verification_status, license_expiration")
+    .eq("user_id", user.id)
+    .single();
+  
+  if (!renterProfile || renterProfile.verification_status !== "approved") {
+    throw new Error("Please complete driver verification before booking");
+  }
+  
+  if (new Date(renterProfile.license_expiration) < new Date()) {
+    throw new Error("Your driver's license has expired. Please update your verification.");
+  }
+  
+  // ... existing booking logic
+};
+```
+
+---
+
+## Storage Bucket
+
+Use existing `p2p-documents` bucket for renter documents:
+- Files stored at: `{user_id}/renter/{document_type}_{timestamp}.{ext}`
+- Bucket is private (not public) - admin-only access
+
+---
+
+## RLS Policies
+
+### renter_profiles
 
 ```sql
--- Approved owners count for city
-SELECT COUNT(*) FROM car_owner_profiles
-WHERE city ILIKE '%Los Angeles%'
-AND state = 'CA'
-AND status = 'verified';
+-- Users can view their own profile
+CREATE POLICY "Users can view own renter profile"
+  ON renter_profiles FOR SELECT
+  USING (auth.uid() = user_id);
 
--- Approved vehicles count for city
-SELECT COUNT(*) FROM p2p_vehicles
-WHERE location_city ILIKE '%Los Angeles%'
-AND location_state = 'CA'
-AND approval_status = 'approved';
+-- Users can insert their own profile
+CREATE POLICY "Users can create own renter profile"
+  ON renter_profiles FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Users can update their own profile (limited fields)
+CREATE POLICY "Users can update own renter profile"
+  ON renter_profiles FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Admin full access
+CREATE POLICY "Admin full access to renter profiles"
+  ON renter_profiles FOR ALL
+  USING (public.is_admin(auth.uid()));
+```
+
+### renter_documents
+
+```sql
+-- Users can view their own documents
+CREATE POLICY "Users can view own renter documents"
+  ON renter_documents FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM renter_profiles rp 
+    WHERE rp.id = renter_documents.renter_id 
+    AND rp.user_id = auth.uid()
+  ));
+
+-- Users can insert their own documents
+CREATE POLICY "Users can upload own renter documents"
+  ON renter_documents FOR INSERT
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM renter_profiles rp 
+    WHERE rp.id = renter_documents.renter_id 
+    AND rp.user_id = auth.uid()
+  ));
+
+-- Admin full access
+CREATE POLICY "Admin full access to renter documents"
+  ON renter_documents FOR ALL
+  USING (public.is_admin(auth.uid()));
 ```
 
 ---
 
-### 4. Vehicle Search Filtering by Live City
+## Routes to Add (App.tsx)
 
-Modify `useP2PVehicleSearch` in `useP2PBooking.ts`:
+```typescript
+// Renter Verification pages
+const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
+const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
 
-When searching for vehicles:
-1. Check if the city is in a "live" launch status
-2. If city is not live, exclude those vehicles from results
-3. This ensures only vehicles in launched cities appear in search
-
-Implementation approach:
-- Join or subquery against `p2p_launch_cities` table
-- Filter by `launch_status = 'live'`
+// In Routes:
+<Route path="/verify/driver" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
+<Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
+```
 
 ---
 
-### 5. AdminPanel.tsx Updates
+## AdminPanel.tsx Updates
 
-Add new navigation item:
-
+Add new nav item:
 ```typescript
-{ id: "city-launch", label: "City Launch", icon: MapPin }
+{ id: "p2p-renters", label: "P2P Renters", icon: UserCheck }
 ```
 
 Add to switch statement:
-
 ```typescript
-case "city-launch":
-  return <AdminCityLaunchModule />;
+case "p2p-renters":
+  return <AdminRentersModule />;
 ```
-
----
-
-## UI Design
-
-### City Card Layout
-
-```text
-+------------------------------------------+
-|  Los Angeles, CA                [Draft]  |
-|                                          |
-|  Owners: 3/5     Vehicles: 7/10         |
-|                                          |
-|  [View Checklist]                        |
-+------------------------------------------+
-```
-
-### Checklist Section Layout
-
-```text
-+------------------------------------------+
-|  [v] Legal & Compliance            5/5   |
-|  [v] Insurance Setup               1/1   |
-|  [x] Payments & Payouts            2/4   |
-|  [v] Owner Supply                  Met   |
-|  [x] Operational Readiness         1/4   |
-|  [v] Support & Contact             1/1   |
-+------------------------------------------+
-|  Overall Progress: 4/6 sections          |
-|                                          |
-|  [Mark City as LIVE] (disabled)          |
-+------------------------------------------+
-```
-
-### Status Badges
-
-| Status | Color |
-|--------|-------|
-| Draft | Gray |
-| Ready | Yellow |
-| Live | Green |
-| Paused | Orange |
-
----
-
-## Launch Confirmation Modal
-
-When admin clicks "Mark City as LIVE":
-
-```text
-+------------------------------------------+
-|  Launch Los Angeles, CA                  |
-+------------------------------------------+
-|  You are about to enable public          |
-|  bookings for this city.                 |
-|                                          |
-|  This will:                              |
-|  - Make cars in this city searchable     |
-|  - Allow bookings and payments           |
-|  - Trigger live operations               |
-|                                          |
-|  [Cancel]            [Confirm Launch]    |
-+------------------------------------------+
-```
-
----
-
-## Failsafe: Pause City
-
-When a live city is paused:
-- `launch_status` changes to `paused`
-- `paused_at` timestamp is set
-- Vehicles in that city are hidden from search results
-- New bookings are blocked
-- Existing confirmed bookings remain valid
 
 ---
 
 ## Security Considerations
 
-- All operations require admin role (checked in hooks via `useAuth().isAdmin`)
-- RLS policies on new tables:
-  - SELECT: Admin only
-  - INSERT/UPDATE/DELETE: Admin only
-- No public access to launch configuration data
+1. **Document Storage**: Files stored in private `p2p-documents` bucket
+2. **RLS Policies**: Users can only access their own verification data
+3. **Admin-Only Review**: Only admins can view all documents and change verification status
+4. **Server-Side Validation**: Booking hook validates verification status server-side
+5. **License Expiration**: System checks expiration and blocks booking if expired
+6. **PII Protection**: License numbers and personal data protected by RLS
 
 ---
 
-## Database Migration Summary
+## Helper Functions
+
+Add database function for checking renter verification:
 
 ```sql
--- Create launch status enum
-CREATE TYPE p2p_launch_status AS ENUM ('draft', 'ready', 'live', 'paused');
-
--- Create cities table
-CREATE TABLE p2p_launch_cities (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  state TEXT NOT NULL,
-  launch_status p2p_launch_status DEFAULT 'draft',
-  launched_at TIMESTAMPTZ,
-  paused_at TIMESTAMPTZ,
-  created_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(name, state)
-);
-
--- Create checklists table
-CREATE TABLE p2p_launch_checklists (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  city_id UUID REFERENCES p2p_launch_cities(id) ON DELETE CASCADE UNIQUE,
-  -- Legal section
-  legal_renter_terms BOOLEAN DEFAULT false,
-  legal_owner_terms BOOLEAN DEFAULT false,
-  legal_insurance_disclosure BOOLEAN DEFAULT false,
-  legal_damage_policy BOOLEAN DEFAULT false,
-  legal_privacy_policy BOOLEAN DEFAULT false,
-  -- Insurance section
-  insurance_provider_name TEXT,
-  insurance_coverage_type TEXT DEFAULT 'Trip-based',
-  insurance_confirmation_ref TEXT,
-  insurance_active BOOLEAN DEFAULT false,
-  -- Payments section
-  payments_stripe_active BOOLEAN DEFAULT false,
-  payments_connect_enabled BOOLEAN DEFAULT false,
-  payments_test_payment BOOLEAN DEFAULT false,
-  payments_test_payout BOOLEAN DEFAULT false,
-  -- Operations section
-  ops_dispute_tested BOOLEAN DEFAULT false,
-  ops_damage_tested BOOLEAN DEFAULT false,
-  ops_cancellation_tested BOOLEAN DEFAULT false,
-  ops_payout_delay_tested BOOLEAN DEFAULT false,
-  -- Support section
-  support_email TEXT,
-  support_emergency_procedure TEXT,
-  support_confirmed BOOLEAN DEFAULT false,
-  -- Supply minimums
-  min_approved_cars INTEGER DEFAULT 10,
-  min_approved_owners INTEGER DEFAULT 5,
-  -- Metadata
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  updated_by UUID REFERENCES auth.users(id)
-);
-
--- RLS policies (admin only)
-ALTER TABLE p2p_launch_cities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE p2p_launch_checklists ENABLE ROW LEVEL SECURITY;
-
--- Policy: Admin can do everything
-CREATE POLICY "Admin full access to launch cities"
-  ON p2p_launch_cities FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM user_roles 
-    WHERE user_id = auth.uid() AND role = 'admin'
-  ));
-
-CREATE POLICY "Admin full access to launch checklists"
-  ON p2p_launch_checklists FOR ALL
-  USING (EXISTS (
-    SELECT 1 FROM user_roles 
-    WHERE user_id = auth.uid() AND role = 'admin'
-  ));
+CREATE OR REPLACE FUNCTION is_verified_renter(user_uuid uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM renter_profiles 
+    WHERE user_id = user_uuid 
+    AND verification_status = 'approved'
+    AND license_expiration > CURRENT_DATE
+  );
+END;
+$$;
 ```
 
 ---
@@ -385,21 +440,80 @@ CREATE POLICY "Admin full access to launch checklists"
 
 | Action | File | Description |
 |--------|------|-------------|
-| Create | `src/types/cityLaunch.ts` | TypeScript types for city launch |
-| Create | `src/hooks/useCityLaunch.ts` | Data hooks for city launch |
-| Create | `src/pages/admin/modules/AdminCityLaunchModule.tsx` | Main admin UI |
-| Modify | `src/pages/admin/AdminPanel.tsx` | Add nav item and module |
-| Modify | `src/hooks/useP2PBooking.ts` | Filter vehicles by live city |
-| Database | Migration | Create tables, enum, and RLS policies |
+| Create | `src/types/renter.ts` | TypeScript types for renter verification |
+| Create | `src/hooks/useRenterVerification.ts` | Data hooks for renter verification |
+| Create | `src/components/verify/RenterDocumentUpload.tsx` | Document upload component |
+| Create | `src/components/verify/VerificationPromptModal.tsx` | Verification prompt modal |
+| Create | `src/pages/verify/RenterVerification.tsx` | Multi-step verification wizard |
+| Create | `src/pages/verify/VerificationStatus.tsx` | Verification status page |
+| Create | `src/pages/admin/modules/AdminRentersModule.tsx` | Admin verification panel |
+| Modify | `src/App.tsx` | Add verification routes |
+| Modify | `src/pages/admin/AdminPanel.tsx` | Add P2P Renters nav item |
+| Modify | `src/pages/p2p/P2PVehicleDetail.tsx` | Add verification check before booking |
+| Modify | `src/hooks/useP2PBooking.ts` | Add server-side verification check |
+| Database | Migration | Create tables, enums, RLS policies, functions |
 
 ---
 
-## Technical Notes
+## UI/UX Flow Diagram
 
-1. **Legal Auto-Check**: Could add automatic verification by checking if legal page routes return 200, but manual checkboxes are safer for admin accountability.
-
-2. **Supply Stats**: Calculated live from `car_owner_profiles` and `p2p_vehicles` tables using city/state matching (case-insensitive).
-
-3. **Launch Status Flow**: `draft` -> (all checks complete) -> `ready` -> (admin confirms) -> `live` -> (admin pauses) -> `paused`
-
-4. **City Matching**: Uses `ILIKE` for flexible city name matching in supply stats query.
+```text
+User clicks "Book Now" on vehicle
+           │
+           ▼
+    ┌─────────────────┐
+    │ Check if logged │
+    │      in?        │
+    └────────┬────────┘
+             │
+    No ──────┼────── Yes
+             │         │
+    ┌────────┘         ▼
+    │         ┌─────────────────┐
+    ▼         │ Check renter    │
+ Login Page   │ verification    │
+              └────────┬────────┘
+                       │
+         Not Verified ─┼─ Verified
+                       │       │
+              ┌────────┘       │
+              ▼                ▼
+    ┌─────────────────┐   ┌─────────────────┐
+    │ Show Modal:     │   │ Continue to     │
+    │ "Start          │   │ Booking Flow    │
+    │  Verification"  │   │                 │
+    └────────┬────────┘   └─────────────────┘
+             │
+             ▼
+    ┌─────────────────┐
+    │ /verify/driver  │
+    │ Step 1: Info    │
+    └────────┬────────┘
+             │
+             ▼
+    ┌─────────────────┐
+    │ Step 2: Upload  │
+    │ License Images  │
+    └────────┬────────┘
+             │
+             ▼
+    ┌─────────────────┐
+    │ Step 3: Selfie  │
+    │                 │
+    └────────┬────────┘
+             │
+             ▼
+    ┌─────────────────┐
+    │ Step 4: Done    │
+    │ Status: Pending │
+    └────────┬────────┘
+             │
+             ▼
+    Admin reviews in /admin → P2P Renters
+             │
+    Approved─┼─Rejected
+             │      │
+             ▼      ▼
+    User can    User notified,
+    now book    can resubmit
+```
