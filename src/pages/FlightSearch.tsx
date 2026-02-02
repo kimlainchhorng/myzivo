@@ -14,7 +14,7 @@ import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/componen
 import { FlightSearchFormPro } from "@/components/search";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
-import { HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
+import { HowBookingWorks, FlightTrustBadgesBar, AirlineLogosCarousel } from "@/components/flight";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -39,30 +39,37 @@ const FlightSearch = () => {
           </BigSearchCard>
         </ImageHero>
 
-        {/* Trust/Compliance Banner - LOCKED DISCLAIMER */}
-        <section className="border-b border-border/50 py-3 bg-amber-500/5">
+        {/* Legal Disclaimer - HIGH VISIBILITY near search */}
+        <section className="border-b border-border/50 py-4 bg-amber-500/5">
           <div className="container mx-auto px-4">
-            <p className="text-center text-xs text-muted-foreground">
-              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-amber-500" />
+            <p className="text-center text-sm text-muted-foreground font-medium">
+              <ShieldCheck className="w-4 h-4 inline mr-1.5 text-amber-500" />
               {FLIGHT_DISCLAIMERS.ticketing}
             </p>
           </div>
         </section>
 
+        {/* How Booking Works - RIGHT AFTER SEARCH */}
+        <HowBookingWorks className="border-b border-border/50" />
+
         {/* SEO Content Block - H1 and intro for search engines */}
         <SEOContentBlock serviceType="flights" className="bg-muted/5" />
+
+        {/* Popular Routes Grid with clickable cards */}
+        <section className="container mx-auto px-4 py-10">
+          <PopularRoutesGrid />
+        </section>
 
         {/* Popular Destinations with Real Images */}
         <DestinationCardsGrid service="flights" />
 
-        {/* Popular Routes Grid for SEO */}
-        <PopularRoutesGrid />
+        {/* Airline Logos Section - Trust building */}
+        <section className="border-y border-border/30 bg-gradient-to-b from-muted/10 to-muted/5">
+          <AirlineLogosCarousel />
+        </section>
 
         {/* Trust Features */}
         <TrustFeatureCards columns={4} />
-
-        {/* How Booking Works */}
-        <HowBookingWorks />
 
         {/* Trust Badges */}
         <FlightTrustBadgesBar />

@@ -15,20 +15,20 @@ const steps = [
   {
     icon: Search,
     number: "1",
-    title: "Search flights",
+    title: "Search & compare flights",
     description: "Compare options from multiple airlines and partners",
   },
   {
     icon: MousePointerClick,
     number: "2",
-    title: "Choose an option",
+    title: "Choose the best option",
     description: "Select the best deal for your travel needs",
   },
   {
     icon: ShieldCheck,
     number: "3",
-    title: "Book securely",
-    description: "Complete booking with our trusted airline partner",
+    title: "Complete booking securely",
+    description: "Book securely with our airline partner",
   },
 ];
 

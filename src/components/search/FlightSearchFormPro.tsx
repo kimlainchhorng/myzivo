@@ -535,9 +535,14 @@ export default function FlightSearchFormPro({
           "disabled:opacity-50 disabled:cursor-not-allowed"
         )}
       >
-        <ExternalLink className="w-5 h-5 mr-2" />
-        View Live Results
+        <Search className="w-5 h-5 mr-2" />
+        Search Flights
       </Button>
+      
+      {/* Helper text below button */}
+      <p className="text-xs text-muted-foreground text-center mt-2">
+        Final booking completed on our airline partner's secure site.
+      </p>
 
       {/* Debug: Show built URL for testing */}
       {debugUrl && (
@@ -554,10 +559,6 @@ export default function FlightSearchFormPro({
         </div>
       )}
 
-      {/* Compliance notice */}
-      <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-3">
-        Live prices and final booking on partner site. We may earn a commission.
-      </p>
     </div>
   );
 }

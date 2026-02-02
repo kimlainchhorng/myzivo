@@ -3,7 +3,7 @@
  * Displays trust signals for compliance and user confidence
  */
 
-import { Shield, Eye, BadgeCheck, Lock } from "lucide-react";
+import { Shield, Eye, BadgeCheck, Lock, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface FlightTrustBadgesBarProps {
@@ -14,18 +14,23 @@ interface FlightTrustBadgesBarProps {
 const badges = [
   {
     icon: Lock,
-    label: "Secure partner checkout",
+    label: "Secure Partner Checkout",
     color: "text-emerald-500",
   },
   {
     icon: Eye,
-    label: "Transparent pricing",
+    label: "Real-Time Prices",
     color: "text-sky-500",
   },
   {
     icon: BadgeCheck,
-    label: "No hidden fees from Hizivo",
+    label: "No Hidden Fees from ZIVO",
     color: "text-amber-500",
+  },
+  {
+    icon: Smartphone,
+    label: "Mobile-Friendly Booking",
+    color: "text-purple-500",
   },
 ];
 
@@ -79,6 +84,7 @@ export default function FlightTrustBadgesBar({ className, variant = 'default' }:
                 badge.color === "text-emerald-500" && "bg-emerald-500/10",
                 badge.color === "text-sky-500" && "bg-sky-500/10",
                 badge.color === "text-amber-500" && "bg-amber-500/10",
+                badge.color === "text-purple-500" && "bg-purple-500/10",
               )}>
                 <badge.icon className={cn("w-4.5 h-4.5", badge.color)} />
               </div>
@@ -88,7 +94,7 @@ export default function FlightTrustBadgesBar({ className, variant = 'default' }:
         </div>
         {/* Footer trust note */}
         <p className="text-center text-[10px] text-muted-foreground mt-3">
-          No hidden fees from Hizivo • All bookings completed with licensed partners
+          No hidden fees from ZIVO • All bookings completed with licensed airline partners
         </p>
       </div>
     </div>
