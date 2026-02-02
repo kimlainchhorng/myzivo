@@ -59,6 +59,7 @@ import {
   DesktopFiltersSidebar,
   FlightFiltersContent,
   ActiveFiltersChips,
+  ApiPendingNotice,
 } from "@/components/results";
 import { FlightSearchFormPro } from "@/components/search";
 
@@ -495,17 +496,18 @@ const FlightResults = () => {
           }
         />
 
-        {/* Quick Stats & Trust Element */}
-        {!isLoading && flights.length > 0 && (
-          <section className="border-b border-border/50 py-4 bg-muted/10">
-            <div className="container mx-auto px-4">
-              {/* Trust Element - REQUIRED */}
-              <p className="text-center text-xs text-muted-foreground mb-3">
-                <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
-                Compare prices from trusted partners. Booking completed on partner websites.
-              </p>
-              
-              <div className="flex items-center justify-center gap-3 flex-wrap">
+        {/* Trust/Compliance Banner - Always show */}
+        <section className="border-b border-border/50 py-4 bg-muted/10">
+          <div className="container mx-auto px-4">
+            {/* Trust Element - REQUIRED */}
+            <p className="text-center text-xs text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
+              ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
+            </p>
+            
+            {/* Quick Stats - Only show when we have real prices */}
+            {!isLoading && isRealPrice && flights.length > 0 && (
+              <div className="flex items-center justify-center gap-3 flex-wrap mt-3">
                 <div className="flex items-center gap-2 text-sm">
                   <TrendingDown className="w-4 h-4 text-emerald-500" />
                   <span>From <strong className="text-sky-500">{formatPrice(lowestPrice)}</strong></span>
@@ -515,19 +517,15 @@ const FlightResults = () => {
                   <Clock className="w-4 h-4 text-purple-500" />
                   <span>Fastest: <strong className="text-purple-500">{fastestFlight?.duration.split(" ")[0] || "N/A"}</strong></span>
                 </div>
-                {flights.some(f => f.isRealPrice) && (
-                  <>
-                    <span className="hidden sm:inline text-muted-foreground">•</span>
-                    <Badge className="bg-sky-500/20 text-sky-500 text-xs gap-1">
-                      <Zap className="w-3 h-3" />
-                      Live Prices
-                    </Badge>
-                  </>
-                )}
+                <span className="hidden sm:inline text-muted-foreground">•</span>
+                <Badge className="bg-sky-500/20 text-sky-500 text-xs gap-1">
+                  <Zap className="w-3 h-3" />
+                  Live Prices
+                </Badge>
               </div>
-            </div>
-          </section>
-        )}
+            )}
+          </div>
+        </section>
 
         {/* Results Section */}
         <section className="py-6">
@@ -595,7 +593,17 @@ const FlightResults = () => {
                 />
               )}
 
-              {/* Indicative Price Notice */}
+              {/* API Pending Notice - Show when no real prices from API */}
+              {!isLoading && !isRealPrice && flightCards.length === 0 && isValid && (
+                <ApiPendingNotice
+                  whitelabelUrl={fallbackWhitelabelUrl}
+                  origin={originDisplay || originIata}
+                  destination={destinationDisplay || destinationIata}
+                  className="mb-6"
+                />
+              )}
+
+              {/* Indicative Price Notice (fallback prices) */}
               {!isRealPrice && !isLoading && flightCards.length > 0 && (
                 <IndicativePriceAlert service="flights" className="mb-4" />
               )}
@@ -603,8 +611,8 @@ const FlightResults = () => {
               {/* Loading State */}
               {isLoading && <ResultsSkeletonList count={6} variant="flight" />}
 
-              {/* Results */}
-              {!isLoading && flightCards.length > 0 && (
+              {/* Results - Only show if we have real API prices */}
+              {!isLoading && isRealPrice && flightCards.length > 0 && (
                 <div className="space-y-4">
                   {flightCards.map((flight) => (
                     <FlightResultCard 
@@ -616,16 +624,13 @@ const FlightResults = () => {
                 </div>
               )}
 
-              {/* No Results */}
-              {!isLoading && flightCards.length === 0 && isValid && (
-                <EmptyResults
-                  service="flights"
-                  hasActiveFilters={hasActiveFilters}
-                  onClearFilters={clearFilters}
-                  partnerCta={{
-                    label: "Search All Partners",
-                    onClick: handleViewAllOnPartner,
-                  }}
+              {/* Fallback notice when API is pending but we have generated flights */}
+              {!isLoading && !isRealPrice && flightCards.length > 0 && (
+                <ApiPendingNotice
+                  whitelabelUrl={fallbackWhitelabelUrl}
+                  origin={originDisplay || originIata}
+                  destination={destinationDisplay || destinationIata}
+                  className="mb-6"
                 />
               )}
 

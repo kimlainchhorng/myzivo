@@ -1,4 +1,4 @@
-import { Plane } from "lucide-react";
+import { Plane, ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -35,6 +35,16 @@ const FlightSearch = () => {
             <FlightSearchFormPro />
           </BigSearchCard>
         </ImageHero>
+
+        {/* Trust/Compliance Banner */}
+        <section className="border-b border-border/50 py-3 bg-muted/10">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
+              ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
+            </p>
+          </div>
+        </section>
 
         {/* SEO Content Block - H1 and intro for search engines */}
         <SEOContentBlock serviceType="flights" className="bg-muted/5" />
