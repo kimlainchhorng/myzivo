@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const APP_URLS = {
   main: "https://hizivo.com",
   restaurant: "https://zivorestaurant.lovable.app",
-  driver: "https://zivodriver.lovable.app",
+  driver: "https://zivo-driver-app.rork.app",
 } as const;
 
 export type AppType = keyof typeof APP_URLS;
