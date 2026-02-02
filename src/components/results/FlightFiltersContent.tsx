@@ -3,10 +3,12 @@
  * Reusable filter controls for flights
  */
 
-import { Plane, TrendingDown, Sunrise, Sun, Sunset, Moon, Clock } from "lucide-react";
+import { useState } from "react";
+import { Plane, TrendingDown, Sunrise, Sun, Sunset, Moon, Clock, X, ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { FlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
@@ -36,7 +38,10 @@ export function FlightFiltersContent({
   onFilterChange,
   availableAirlines = [],
   currency = "USD",
-}: FlightFiltersContentProps) {
+  onClearAll,
+}: FlightFiltersContentProps & { onClearAll?: () => void }) {
+  const [showAllAirlines, setShowAllAirlines] = useState(false);
+  
   const formatPrice = (price: number) => {
     const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£" };
     return `${symbols[currency] || "$"}${price.toLocaleString()}`;
@@ -63,15 +68,38 @@ export function FlightFiltersContent({
     onFilterChange({ departureTime: newTimes });
   };
 
+  // Check if any filters are active
+  const hasActiveFilters = filters.stops.length > 0 || 
+    filters.airlines.length > 0 || 
+    filters.departureTime.length > 0 || 
+    filters.maxPrice < 5000 ||
+    filters.maxDuration < 24;
+
   return (
     <div className="space-y-6">
+      {/* Clear Filters Button */}
+      {hasActiveFilters && onClearAll && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClearAll}
+          className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+        >
+          <X className="w-4 h-4" />
+          Clear all filters
+        </Button>
+      )}
+
       {/* Price Range */}
       <div>
         <Label className="text-sm font-semibold mb-3 flex items-center gap-2">
           <TrendingDown className="w-4 h-4 text-emerald-500" />
-          Max Price: {formatPrice(filters.maxPrice)}
+          Max Price
         </Label>
         <div className="px-1">
+          <div className="flex justify-center mb-2">
+            <span className="text-2xl font-bold text-sky-500">{formatPrice(filters.maxPrice)}</span>
+          </div>
           <Slider
             value={[filters.maxPrice]}
             onValueChange={(v) => onFilterChange({ maxPrice: v[0] })}
@@ -105,15 +133,18 @@ export function FlightFiltersContent({
         </div>
       </div>
 
-      {/* Airlines */}
+      {/* Airlines - Collapsible */}
       {availableAirlines.length > 0 && (
         <div>
           <Label className="text-sm font-semibold mb-3 flex items-center gap-2">
             <Plane className="w-4 h-4 text-sky-500" />
             Airlines
+            {filters.airlines.length > 0 && (
+              <span className="text-xs text-sky-500 font-normal">({filters.airlines.length} selected)</span>
+            )}
           </Label>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {availableAirlines.map((airline) => (
+          <div className="space-y-2">
+            {(showAllAirlines ? availableAirlines : availableAirlines.slice(0, 6)).map((airline) => (
               <label key={airline.code} className="flex items-center gap-3 cursor-pointer group">
                 <Checkbox
                   checked={filters.airlines.includes(airline.code)}
@@ -124,6 +155,7 @@ export function FlightFiltersContent({
                     src={getAirlineLogo(airline.code)}
                     alt={airline.name}
                     className="w-5 h-5 object-contain"
+                    loading="lazy"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${airline.code}&background=0ea5e9&color=fff&size=24`;
                     }}
@@ -136,6 +168,25 @@ export function FlightFiltersContent({
               </label>
             ))}
           </div>
+          
+          {availableAirlines.length > 6 && (
+            <button
+              onClick={() => setShowAllAirlines(!showAllAirlines)}
+              className="flex items-center gap-1 text-sm text-sky-500 hover:text-sky-400 mt-2 font-medium"
+            >
+              {showAllAirlines ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Show less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Show {availableAirlines.length - 6} more
+                </>
+              )}
+            </button>
+          )}
         </div>
       )}
 

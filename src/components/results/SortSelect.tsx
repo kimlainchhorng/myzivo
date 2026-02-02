@@ -28,10 +28,10 @@ interface SortSelectProps {
 
 // Flights: cheapest first, then duration-based options
 export const flightSortOptions: SortOption[] = [
-  { value: "price", label: "Cheapest First" },
-  { value: "best", label: "Best Value" },
-  { value: "duration", label: "Fastest" },
-  { value: "departure", label: "Departure Time" },
+  { value: "price", label: "Sort by: Cheapest" },
+  { value: "best", label: "Sort by: Best Value" },
+  { value: "duration", label: "Sort by: Fastest" },
+  { value: "departure", label: "Sort by: Departure" },
 ];
 
 // Hotels: value-focused, then ratings
