@@ -6,7 +6,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { 
   UtensilsCrossed, Search, Download, RefreshCw, Phone, Mail, Eye, 
-  Store, Package, Loader2, Clock, User, Bike
+  Store, Package, Loader2, Clock, User, Bike, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useFoodOrders, useUpdateFoodOrder } from "@/hooks/useEatsOrders";
+import { useFoodOrders, useUpdateFoodOrder, useCreateTestFoodOrder } from "@/hooks/useEatsOrders";
 import { useDrivers } from "@/hooks/useDrivers";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ export default function AdminEatsModule() {
   const { data: foodOrders, isLoading, refetch } = useFoodOrders(statusFilter);
   const { data: drivers } = useDrivers();
   const updateOrder = useUpdateFoodOrder();
+  const createTestOrder = useCreateTestFoodOrder();
 
   const filteredOrders = foodOrders?.filter(order => {
     if (!searchQuery) return true;
@@ -111,6 +112,15 @@ export default function AdminEatsModule() {
           <p className="text-muted-foreground">Manage all food orders</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => createTestOrder.mutate()}
+            disabled={createTestOrder.isPending}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            {createTestOrder.isPending ? "Creating..." : "Create Test Order"}
+          </Button>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
             <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
             Refresh

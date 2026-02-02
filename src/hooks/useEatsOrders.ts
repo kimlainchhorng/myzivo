@@ -258,6 +258,28 @@ export function useUpdateFoodOrder() {
         .single();
 
       if (error) throw error;
+
+      // Send driver notification if driver was assigned
+      if (updates.driver_id) {
+        try {
+          await fetch('https://slirphzzwcogdbkeicff.supabase.co/functions/v1/send-driver-notification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              driver_id: updates.driver_id,
+              title: 'New Food Order Assigned',
+              body: `You have a new delivery to pick up`,
+              data: { type: 'eats_order', order_id: id },
+            }),
+          });
+        } catch (e) {
+          console.warn('Failed to send driver notification:', e);
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
@@ -267,6 +289,71 @@ export function useUpdateFoodOrder() {
     onError: (error: Error) => {
       console.error("Error updating order:", error);
       toast.error("Failed to update order");
+    },
+  });
+}
+
+// Create a test food order for driver app testing
+export function useCreateTestFoodOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      // Get first active restaurant
+      const { data: restaurants } = await supabase
+        .from("restaurants")
+        .select("id, name")
+        .eq("status", "active")
+        .limit(1);
+
+      const restaurantId = restaurants?.[0]?.id;
+      if (!restaurantId) {
+        throw new Error("No active restaurants found. Please create a restaurant first.");
+      }
+
+      const testItems = [
+        { menu_item_id: "test-1", name: "Test Burger", quantity: 1, price: 12.99 },
+        { menu_item_id: "test-2", name: "French Fries", quantity: 2, price: 4.99 },
+      ];
+      const subtotal = testItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const deliveryFee = 3.99;
+      const total = subtotal + deliveryFee;
+
+      const customerInfo = JSON.stringify({
+        customer_name: "Test Customer",
+        customer_phone: "+1 (555) 123-4567",
+        customer_email: "test@example.com",
+        preferred_time: "asap",
+      });
+
+      const { data, error } = await supabase
+        .from("food_orders")
+        .insert({
+          restaurant_id: restaurantId,
+          customer_id: "00000000-0000-0000-0000-000000000000",
+          items: testItems,
+          subtotal,
+          delivery_fee: deliveryFee,
+          total_amount: total,
+          delivery_address: "789 Park Ave, New York, NY 10021",
+          delivery_lat: 40.7731,
+          delivery_lng: -73.9654,
+          special_instructions: `Test order\n---\nCustomer Info: ${customerInfo}`,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["food-orders"] });
+      toast.success(`Test order created: ${data.id.slice(0, 8)}...`);
+    },
+    onError: (error: Error) => {
+      console.error("Error creating test order:", error);
+      toast.error(error.message || "Failed to create test order");
     },
   });
 }
