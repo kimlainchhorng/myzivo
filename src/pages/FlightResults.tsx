@@ -29,7 +29,7 @@ import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import CrossSellSection from "@/components/flight/CrossSellSection";
-import { QuickStatsBar, HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
+import { QuickStatsBar, HowBookingWorks, FlightTrustBadgesBar, FlightMobileResultsBar } from "@/components/flight";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
@@ -739,12 +739,13 @@ const FlightResults = () => {
         />
       </FiltersSheet>
 
-      {/* Sticky Mobile CTA */}
-      <StickyBookingCTA 
-        lowestPrice={lowestPrice}
-        flightCount={flights.length}
-        origin={originIata}
-        destination={destinationIata}
+      {/* Mobile Sticky Filter + Sort Bar */}
+      <FlightMobileResultsBar
+        currentSort={sortBy}
+        onSortChange={setSortBy}
+        onOpenFilters={() => setShowFilters(true)}
+        filterCount={activeFilterCount}
+        show={!isLoading && flights.length > 0}
       />
 
       {/* Exit Intent Prompt (Desktop Only) */}

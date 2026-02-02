@@ -110,6 +110,7 @@ export { default as FlightTrustBadgesBar } from './FlightTrustBadgesBar';
 export { default as BookingSupportPanel } from './BookingSupportPanel';
 export { default as FlightDetailStickyCTA } from './FlightDetailStickyCTA';
 export { default as FlightEmptyState } from './FlightEmptyState';
+export { default as FlightMobileResultsBar } from './FlightMobileResultsBar';
 
 // Types
 export type { FlightFilters } from './FlightFilters';
