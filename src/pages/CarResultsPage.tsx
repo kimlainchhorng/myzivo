@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Car, AlertCircle, ExternalLink } from "lucide-react";
+import { Car, AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
@@ -40,6 +40,7 @@ import { getAirportByCode } from "@/components/car/AirportAutocomplete";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
 import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
+import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 // Parse and validate URL parameters
 interface ParsedSearchParams {
@@ -338,6 +339,16 @@ export default function CarResultsPage() {
       <Header />
 
       <main className="pt-16">
+        {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
+        <section className="border-b border-violet-500/20 py-2.5 bg-violet-500/5">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-500" />
+              {CAR_DISCLAIMERS.partnerBooking}
+            </p>
+          </div>
+        </section>
+
         {/* Breadcrumbs */}
         <ResultsBreadcrumbs service="cars" />
 

@@ -1,5 +1,5 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Hotel, Search, Star, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, ExternalLink } from "lucide-react";
+import { Hotel, Search, Star, MapPin, ArrowRight, Shield, Clock, CheckCircle, Sparkles, ExternalLink, ShieldCheck, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import TravelFAQ from "@/components/shared/TravelFAQ";
 import { InternalLinkGrid } from "@/components/seo";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { HOTEL_DISCLAIMERS, HOTEL_TRUST_BADGES } from "@/config/hotelCompliance";
 
 const popularCities = [
   { city: "New York", country: "USA", image: "🗽", hotels: 2450, avgPrice: 189 },
@@ -25,9 +26,9 @@ const popularCities = [
 ];
 
 const trustBadges = [
-  { icon: Shield, text: "Secure booking with partners" },
-  { icon: CheckCircle, text: "No booking fees on ZIVO" },
-  { icon: Clock, text: "24/7 customer support" },
+  { icon: ShieldCheck, text: HOTEL_TRUST_BADGES.secureCheckout },
+  { icon: CheckCircle, text: HOTEL_TRUST_BADGES.noHiddenFees },
+  { icon: Lock, text: HOTEL_TRUST_BADGES.dataEncrypted },
 ];
 
 export default function HotelLanding() {
@@ -179,23 +180,24 @@ export default function HotelLanding() {
         {/* FAQ Section with Schema */}
         <TravelFAQ serviceType="hotels" className="bg-muted/20" />
 
-        {/* Redirect Notice */}
-        <section className="py-6 bg-amber-500/5 border-y border-amber-500/20">
+        {/* Locked Disclaimer Banner */}
+        <section className="py-4 bg-amber-500/5 border-y border-amber-500/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <ExternalLink className="w-4 h-4 text-amber-500" />
-              <span>You will be redirected to our trusted travel partner to complete your booking.</span>
+              <ShieldCheck className="w-4 h-4 text-amber-500" />
+              <span className="font-medium">{HOTEL_DISCLAIMERS.partnerBooking}</span>
             </div>
           </div>
         </section>
 
         {/* Affiliate Disclaimer */}
         <section className="py-8 border-t border-border/50">
-          <div className="container mx-auto px-4 text-center">
+          <div className="container mx-auto px-4 text-center space-y-2">
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
+              ⚠️ {HOTEL_DISCLAIMERS.partnerBooking}
+            </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO may earn a commission when you book through our partner links at no extra cost to you. 
-              ZIVO does not sell hotel rooms directly. All bookings are completed on partner websites. 
-              Prices are indicative and subject to change.
+              {HOTEL_DISCLAIMERS.price} ZIVO may earn a commission when you book through partner links.
             </p>
           </div>
         </section>

@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { CarFront, Shield, Clock, CheckCircle, ExternalLink } from "lucide-react";
+import { CarFront, Shield, Clock, CheckCircle, ExternalLink, ShieldCheck, Lock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -15,11 +15,12 @@ import { CarSearchFormPro } from "@/components/search";
 import { cn } from "@/lib/utils";
 import { heroPhotos, serviceOverlays } from "@/config/photos";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
+import { CAR_DISCLAIMERS, CAR_TRUST_BADGES } from "@/config/carCompliance";
 
 const trustBadges = [
-  { icon: Shield, text: "Secure booking with partners" },
-  { icon: CheckCircle, text: "No booking fees on ZIVO" },
-  { icon: Clock, text: "Free cancellation available" },
+  { icon: ShieldCheck, text: CAR_TRUST_BADGES.secureCheckout },
+  { icon: CheckCircle, text: CAR_TRUST_BADGES.noHiddenFees },
+  { icon: Lock, text: CAR_TRUST_BADGES.dataEncrypted },
 ];
 
 export default function CarRentalLanding() {
@@ -129,22 +130,24 @@ export default function CarRentalLanding() {
         {/* FAQ Section with Schema */}
         <TravelFAQ serviceType="cars" />
 
-        {/* Redirect Notice */}
-        <section className="py-6 bg-violet-500/5 border-y border-violet-500/20">
+        {/* Locked Disclaimer Banner */}
+        <section className="py-4 bg-violet-500/5 border-y border-violet-500/20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <ExternalLink className="w-4 h-4 text-violet-500" />
-              <span>You will be redirected to our trusted travel partner to complete your booking.</span>
+              <ShieldCheck className="w-4 h-4 text-violet-500" />
+              <span className="font-medium">{CAR_DISCLAIMERS.partnerBooking}</span>
             </div>
           </div>
         </section>
 
         {/* Affiliate Disclaimer */}
         <section className="py-8 border-t border-border/50">
-          <div className="container mx-auto px-4 text-center">
+          <div className="container mx-auto px-4 text-center space-y-2">
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
+              ⚠️ {CAR_DISCLAIMERS.partnerBooking}
+            </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              *Prices are indicative and subject to change. ZIVO may earn a commission when you book through our partner links at no extra cost to you. 
-              ZIVO does not rent cars directly. All bookings are completed on partner websites.
+              {CAR_DISCLAIMERS.price} {CAR_DISCLAIMERS.insurance}
             </p>
           </div>
         </section>

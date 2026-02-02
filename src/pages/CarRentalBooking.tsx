@@ -12,6 +12,7 @@ import {
   CalendarDays,
   Clock,
   User,
+  ShieldCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -41,6 +42,7 @@ import { carAffiliatePartners } from "@/data/carAffiliatePartners";
 import CarCategoryTiles from "@/components/car/CarCategoryTiles";
 import { CarCategory } from "@/config/photos";
 import { Airport } from "@/data/airports";
+import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 /**
  * ZIVO CAR RENTAL - Top-Tier Car Search
@@ -152,6 +154,16 @@ const CarRentalBooking = () => {
       <Header />
       
       <main className="pb-32 lg:pb-20">
+        {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
+        <section className="border-b border-violet-500/20 py-2.5 bg-violet-500/5">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-500" />
+              {CAR_DISCLAIMERS.partnerBooking}
+            </p>
+          </div>
+        </section>
+
         {/* Hero with Big Search */}
         <ImageHero service="cars" icon={Car}>
           <BigSearchCard service="cars">
@@ -354,11 +366,13 @@ const CarRentalBooking = () => {
               </div>
             </div>
 
-            {/* Price Disclaimer */}
-            <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+            {/* Price Disclaimer - LOCKED TEXT */}
+            <div className="mt-6 p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
+              <p className="text-xs text-muted-foreground text-center font-medium mb-1">
+                ⚠️ {CAR_DISCLAIMERS.partnerBooking}
+              </p>
               <p className="text-xs text-muted-foreground text-center">
-                *Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
-                ZIVO may earn a commission when you book through partner links.
+                {CAR_DISCLAIMERS.price} {CAR_DISCLAIMERS.insurance}
               </p>
             </div>
           </section>
