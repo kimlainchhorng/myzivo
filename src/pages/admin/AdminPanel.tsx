@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, Percent, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -36,6 +36,7 @@ import AdminMoveModule from "./modules/AdminMoveModule";
 import AdminCityLaunchModule from "./modules/AdminCityLaunchModule";
 import AdminRentersModule from "./modules/AdminRentersModule";
 import AdminDamageReportsModule from "./modules/AdminDamageReportsModule";
+import AdminRenterInvitesModule from "./modules/AdminRenterInvitesModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -44,6 +45,7 @@ const navItems = [
   { id: "move", label: "Move Deliveries", icon: CarFront },
   { id: "city-launch", label: "City Launch", icon: MapPin },
   { id: "p2p-owners", label: "P2P Owners", icon: CarFront },
+  { id: "renter-invites", label: "Renter Invites", icon: Mail },
   { id: "p2p-renters", label: "P2P Renters", icon: Users },
   { id: "p2p-vehicles", label: "P2P Vehicles", icon: Car },
   { id: "p2p-payouts", label: "P2P Payouts", icon: DollarSign },
@@ -147,6 +149,8 @@ export default function AdminPanel() {
         return <AdminP2PCommissionModule />;
       case "p2p-disputes":
         return <AdminP2PDisputesModule />;
+      case "renter-invites":
+        return <AdminRenterInvitesModule />;
       case "p2p-renters":
         return <AdminRentersModule />;
       case "damage-reports":

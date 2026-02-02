@@ -94,6 +94,8 @@ const RenterTrips = lazy(() => import("./pages/p2p/RenterTrips"));
 // Renter Verification pages
 const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
 const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
+// Beta pages
+const RenterWaitlist = lazy(() => import("./pages/beta/RenterWaitlist"));
 // Damage Report pages
 const ReportDamage = lazy(() => import("./pages/damage/ReportDamage"));
 const DamageReportStatus = lazy(() => import("./pages/damage/DamageReportStatus"));
@@ -301,6 +303,9 @@ const App = () => (
                 {/* Renter Verification Routes */}
                 <Route path="/verify/driver" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
                 <Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
+                
+                {/* Beta Routes */}
+                <Route path="/beta/waitlist" element={<RenterWaitlist />} />
                 
                 {/* Damage Report Routes */}
                 <Route path="/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
