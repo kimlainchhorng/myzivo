@@ -102,6 +102,10 @@ const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilitySta
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const CancellationPolicy = lazy(() => import("./pages/legal/CancellationPolicy"));
 const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
+// P2P Legal pages
+const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
+const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
+const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -289,8 +293,11 @@ const App = () => (
                 <Route path="/p2p/my-trips" element={<ProtectedRoute><RenterTrips /></ProtectedRoute>} />
                 
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
-                <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/insurance" element={<InsurancePolicy />} />
+                {/* P2P Legal Pages */}
+                <Route path="/terms/renter" element={<RenterTerms />} />
+                <Route path="/terms/owner" element={<OwnerTerms />} />
+                <Route path="/damage-policy" element={<DamagePolicy />} />
                 <Route path="/accessibility" element={<AccessibilityStatement />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
                 <Route path="/partner-disclosure" element={<PartnerDisclosure />} />
