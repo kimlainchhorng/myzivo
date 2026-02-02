@@ -2,42 +2,34 @@ import { useState } from "react";
 import { Scale, Check, X, Star, Users, Briefcase, Fuel, Gauge, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { brandedCarModels, BrandedCarModel } from "@/config/photos";
 
-const sampleCars = [
+interface ComparisonCar extends BrandedCarModel {
+  rating: number;
+  price: number;
+  features: string[];
+}
+
+const sampleCars: ComparisonCar[] = [
   {
-    id: 1,
-    name: "Tesla Model 3",
-    image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400",
+    ...brandedCarModels.find(c => c.id === "tesla-model3")!,
     rating: 4.9,
     price: 89,
-    category: "Electric",
-    seats: 5,
-    bags: 2,
     features: ["autopilot", "supercharger", "premium", "unlimited"],
   },
   {
-    id: 2,
-    name: "BMW X5",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400",
+    ...brandedCarModels.find(c => c.id === "bmw-3series")!,
     rating: 4.7,
     price: 129,
-    category: "SUV",
-    seats: 7,
-    bags: 4,
     features: ["gps", "premium", "unlimited", "insurance"],
   },
   {
-    id: 3,
-    name: "Mercedes C-Class",
-    image: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400",
+    ...brandedCarModels.find(c => c.id === "mercedes-cclass")!,
     rating: 4.8,
     price: 99,
-    category: "Luxury",
-    seats: 5,
-    bags: 3,
     features: ["gps", "premium", "leather"],
   },
-];
+].filter(c => c.brand);
 
 const allFeatures = [
   { key: "autopilot", label: "Autopilot/ADAS" },
@@ -75,8 +67,8 @@ const CarComparisonWidget = () => {
               >
                 <div className="relative h-48">
                   <img
-                    src={car.image}
-                    alt={car.name}
+                    src={car.src}
+                    alt={car.alt}
                     className="w-full h-full object-cover"
                   />
                   <Badge className="absolute top-3 right-3 bg-black/60 text-white border-0">
@@ -89,12 +81,12 @@ const CarComparisonWidget = () => {
                 </div>
 
                 <div className="p-4">
-                  <h3 className="font-bold text-lg mb-2">{car.name}</h3>
+                  <h3 className="font-bold text-lg mb-2">{car.brand} {car.model}</h3>
                   
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1">
                       <Users className="w-4 h-4" />
-                      {car.seats}
+                      {car.passengers}
                     </div>
                     <div className="flex items-center gap-1">
                       <Briefcase className="w-4 h-4" />
@@ -102,7 +94,7 @@ const CarComparisonWidget = () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <Gauge className="w-4 h-4" />
-                      Auto
+                      {car.transmission}
                     </div>
                   </div>
 

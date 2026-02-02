@@ -78,6 +78,28 @@ import carLuxury from "@/assets/car-luxury.jpg";
 import carVan from "@/assets/car-van.jpg";
 import carElectric from "@/assets/car-electric.jpg";
 
+// Import BRANDED car model assets (real brand logos)
+import carToyotaCorolla from "@/assets/car-toyota-corolla.jpg";
+import carTeslaModel3 from "@/assets/car-tesla-model3.jpg";
+import carTeslaModelY from "@/assets/car-tesla-modely.jpg";
+import carBmw3Series from "@/assets/car-bmw-3series.jpg";
+import carMercedesCClass from "@/assets/car-mercedes-cclass.jpg";
+import carJeepWrangler from "@/assets/car-jeep-wrangler.jpg";
+import carHondaCrv from "@/assets/car-honda-crv.jpg";
+import carAudiA4 from "@/assets/car-audi-a4.jpg";
+import carToyotaRav4 from "@/assets/car-toyota-rav4.jpg";
+import carFordMustang from "@/assets/car-ford-mustang.jpg";
+import carPorsche911 from "@/assets/car-porsche-911.jpg";
+import carHyundaiTucson from "@/assets/car-hyundai-tucson.jpg";
+import carChevroletSuburban from "@/assets/car-chevrolet-suburban.jpg";
+import carNissanAltima from "@/assets/car-nissan-altima.jpg";
+import carKiaSportage from "@/assets/car-kia-sportage.jpg";
+import carVolkswagenGolf from "@/assets/car-volkswagen-golf.jpg";
+import carLexusEs from "@/assets/car-lexus-es.jpg";
+import carVolvoXc90 from "@/assets/car-volvo-xc90.jpg";
+import carRangeRover from "@/assets/car-range-rover.jpg";
+import carToyotaSienna from "@/assets/car-toyota-sienna.jpg";
+
 // Import hotel category assets (local AI-generated)
 import hotelLuxury from "@/assets/hotel-luxury.jpg";
 import hotelBudget from "@/assets/hotel-budget.jpg";
@@ -558,3 +580,289 @@ export const imageSizes = {
   tile: { maxWidth: 400, maxHeight: 400, maxFileSize: 50 },
   thumbnail: { maxWidth: 300, maxHeight: 300, maxFileSize: 30 },
 } as const;
+
+// ============================================
+// BRANDED CAR MODELS (with logos & real vehicles)
+// ============================================
+export type CarBrand = 
+  | "toyota" | "honda" | "nissan" | "mazda" | "subaru" | "hyundai" | "kia"
+  | "ford" | "chevrolet" | "volkswagen" | "bmw" | "mercedes" | "audi"
+  | "lexus" | "volvo" | "porsche" | "jaguar" | "land-rover" | "jeep"
+  | "tesla" | "rivian" | "lucid" | "polestar";
+
+export interface BrandedCarModel {
+  id: string;
+  brand: string;
+  model: string;
+  category: CarCategory;
+  src: string;
+  alt: string;
+  fuelType: "gas" | "hybrid" | "electric";
+  passengers: number;
+  bags: number;
+  transmission: "auto" | "manual";
+}
+
+export const brandedCarModels: BrandedCarModel[] = [
+  // Economy / Compact
+  {
+    id: "toyota-corolla",
+    brand: "Toyota",
+    model: "Corolla",
+    category: "compact",
+    src: carToyotaCorolla,
+    alt: "Toyota Corolla - Reliable compact sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "nissan-altima",
+    brand: "Nissan",
+    model: "Altima",
+    category: "midsize",
+    src: carNissanAltima,
+    alt: "Nissan Altima - Comfortable midsize sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "volkswagen-golf",
+    brand: "Volkswagen",
+    model: "Golf",
+    category: "compact",
+    src: carVolkswagenGolf,
+    alt: "Volkswagen Golf - European compact hatchback",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  // SUVs
+  {
+    id: "toyota-rav4",
+    brand: "Toyota",
+    model: "RAV4",
+    category: "suv",
+    src: carToyotaRav4,
+    alt: "Toyota RAV4 - Popular compact SUV",
+    fuelType: "hybrid",
+    passengers: 5,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "honda-crv",
+    brand: "Honda",
+    model: "CR-V",
+    category: "suv",
+    src: carHondaCrv,
+    alt: "Honda CR-V - Reliable family SUV",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "hyundai-tucson",
+    brand: "Hyundai",
+    model: "Tucson",
+    category: "suv",
+    src: carHyundaiTucson,
+    alt: "Hyundai Tucson - Modern compact SUV",
+    fuelType: "hybrid",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "kia-sportage",
+    brand: "Kia",
+    model: "Sportage",
+    category: "suv",
+    src: carKiaSportage,
+    alt: "Kia Sportage - Stylish compact SUV",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "jeep-wrangler",
+    brand: "Jeep",
+    model: "Wrangler",
+    category: "suv",
+    src: carJeepWrangler,
+    alt: "Jeep Wrangler - Iconic off-road SUV",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  {
+    id: "chevrolet-suburban",
+    brand: "Chevrolet",
+    model: "Suburban",
+    category: "suv",
+    src: carChevroletSuburban,
+    alt: "Chevrolet Suburban - Full-size family SUV",
+    fuelType: "gas",
+    passengers: 8,
+    bags: 5,
+    transmission: "auto",
+  },
+  // Luxury
+  {
+    id: "bmw-3series",
+    brand: "BMW",
+    model: "3 Series",
+    category: "luxury",
+    src: carBmw3Series,
+    alt: "BMW 3 Series - Premium German sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "mercedes-cclass",
+    brand: "Mercedes-Benz",
+    model: "C-Class",
+    category: "luxury",
+    src: carMercedesCClass,
+    alt: "Mercedes-Benz C-Class - Elegant luxury sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "audi-a4",
+    brand: "Audi",
+    model: "A4",
+    category: "luxury",
+    src: carAudiA4,
+    alt: "Audi A4 - Refined German luxury",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "lexus-es",
+    brand: "Lexus",
+    model: "ES",
+    category: "luxury",
+    src: carLexusEs,
+    alt: "Lexus ES - Japanese luxury sedan",
+    fuelType: "hybrid",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "volvo-xc90",
+    brand: "Volvo",
+    model: "XC90",
+    category: "luxury",
+    src: carVolvoXc90,
+    alt: "Volvo XC90 - Premium Scandinavian SUV",
+    fuelType: "hybrid",
+    passengers: 7,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "range-rover",
+    brand: "Land Rover",
+    model: "Range Rover Sport",
+    category: "luxury",
+    src: carRangeRover,
+    alt: "Range Rover Sport - British luxury SUV",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 4,
+    transmission: "auto",
+  },
+  // Sports / Performance
+  {
+    id: "ford-mustang",
+    brand: "Ford",
+    model: "Mustang",
+    category: "luxury",
+    src: carFordMustang,
+    alt: "Ford Mustang - American muscle car",
+    fuelType: "gas",
+    passengers: 4,
+    bags: 2,
+    transmission: "auto",
+  },
+  {
+    id: "porsche-911",
+    brand: "Porsche",
+    model: "911",
+    category: "luxury",
+    src: carPorsche911,
+    alt: "Porsche 911 - Iconic sports car",
+    fuelType: "gas",
+    passengers: 2,
+    bags: 1,
+    transmission: "auto",
+  },
+  // Electric
+  {
+    id: "tesla-model3",
+    brand: "Tesla",
+    model: "Model 3",
+    category: "electric",
+    src: carTeslaModel3,
+    alt: "Tesla Model 3 - Popular electric sedan",
+    fuelType: "electric",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  {
+    id: "tesla-modely",
+    brand: "Tesla",
+    model: "Model Y",
+    category: "electric",
+    src: carTeslaModelY,
+    alt: "Tesla Model Y - Electric crossover SUV",
+    fuelType: "electric",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  // Vans
+  {
+    id: "toyota-sienna",
+    brand: "Toyota",
+    model: "Sienna",
+    category: "van",
+    src: carToyotaSienna,
+    alt: "Toyota Sienna - Hybrid family minivan",
+    fuelType: "hybrid",
+    passengers: 8,
+    bags: 5,
+    transmission: "auto",
+  },
+];
+
+// Helper function to get cars by category
+export const getCarsByCategory = (category: CarCategory): BrandedCarModel[] => {
+  return brandedCarModels.filter(car => car.category === category);
+};
+
+// Helper function to get cars by fuel type
+export const getCarsByFuelType = (fuelType: "gas" | "hybrid" | "electric"): BrandedCarModel[] => {
+  return brandedCarModels.filter(car => car.fuelType === fuelType);
+};
+
+// Helper function to get car by ID
+export const getCarById = (id: string): BrandedCarModel | undefined => {
+  return brandedCarModels.find(car => car.id === id);
+};
