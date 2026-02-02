@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { 
   Car, Search, Check, X, Eye, Loader2, 
-  Calendar, MapPin, DollarSign, Users, ExternalLink
+  Calendar, MapPin, DollarSign, Users, ExternalLink, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAdminVehicles, useUpdateVehicleStatus } from "@/hooks/useP2PVehicle";
+import { useCreateTestVehicle } from "@/hooks/useAdminP2PTestData";
 import type { P2PVehicle } from "@/types/p2p";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ export default function AdminP2PVehiclesModule() {
     search: search || undefined,
   });
   const updateStatus = useUpdateVehicleStatus();
+  const createTestVehicle = useCreateTestVehicle();
 
   const stats = {
     total: vehicles?.length || 0,
@@ -84,9 +86,22 @@ export default function AdminP2PVehiclesModule() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">P2P Vehicles</h1>
-        <p className="text-muted-foreground">Review and manage vehicle listings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">P2P Vehicles</h1>
+          <p className="text-muted-foreground">Review and manage vehicle listings</p>
+        </div>
+        <Button
+          onClick={() => createTestVehicle.mutate()}
+          disabled={createTestVehicle.isPending}
+        >
+          {createTestVehicle.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4 mr-2" />
+          )}
+          Create Test Vehicle
+        </Button>
       </div>
 
       {/* Stats Cards */}
