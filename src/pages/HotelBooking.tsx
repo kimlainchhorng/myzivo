@@ -15,6 +15,7 @@ import {
   Loader2,
   AlertCircle,
   MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,7 @@ import { hotelAffiliatePartners } from "@/data/hotelAffiliatePartners";
 import HotelImageShowcase from "@/components/hotel/HotelImageShowcase";
 import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
 import HotelInspirationalBanner from "@/components/hotel/HotelInspirationalBanner";
+import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
 /**
  * ZIVO HOTELS - Top-Tier Hotel Search
@@ -104,6 +106,16 @@ const HotelBooking = () => {
       <Header />
       
       <main className="pb-32 lg:pb-20">
+        {/* Hotel Disclaimer Banner - LOCKED TEXT */}
+        <section className="border-b border-amber-500/20 py-2.5 bg-amber-500/5">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              {HOTEL_DISCLAIMERS.partnerBooking}
+            </p>
+          </div>
+        </section>
+
         {/* Hero with Big Search */}
         <ImageHero service="hotels" icon={Hotel}>
           <BigSearchCard service="hotels">
@@ -317,11 +329,13 @@ const HotelBooking = () => {
                   </div>
                 </div>
 
-                {/* Price Disclaimer */}
-                <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50">
+                {/* Price Disclaimer - LOCKED TEXT */}
+                <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
+                  <p className="text-xs text-muted-foreground text-center font-medium mb-1">
+                    ⚠️ {HOTEL_DISCLAIMERS.partnerBooking}
+                  </p>
                   <p className="text-xs text-muted-foreground text-center">
-                    Prices shown are indicative and may vary. Final price will be confirmed on our travel partner's website.
-                    ZIVO may earn a commission when you book through partner links.
+                    {HOTEL_DISCLAIMERS.price} ZIVO may earn a commission when you book through partner links.
                   </p>
                 </div>
               </>

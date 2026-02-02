@@ -2,7 +2,7 @@
  * Partner Consent Modal
  * 
  * Shows disclosure and collects consent before redirecting to partner checkout
- * Required when collecting traveler email/phone
+ * Uses LOCKED compliance text from config files
  */
 
 import { useState } from "react";
@@ -17,11 +17,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ExternalLink, Shield, Info, Loader2 } from "lucide-react";
+import { ExternalLink, Shield, Info, Loader2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSearchSessionId } from "@/config/trackingParams";
 import { logPartnerRedirect } from "@/lib/partnerRedirectLog";
 import { logOutboundClick } from "@/lib/outboundTracking";
+import { FLIGHT_CONSENT } from "@/config/flightCompliance";
+import { HOTEL_CONSENT } from "@/config/hotelCompliance";
+import { CAR_CONSENT } from "@/config/carCompliance";
 
 export interface PartnerConsentModalProps {
   open: boolean;
@@ -102,6 +105,22 @@ export default function PartnerConsentModal({
     cars: "car rental",
   };
 
+  // Get the appropriate consent text based on product
+  const getConsentText = () => {
+    switch (product) {
+      case 'flights':
+        return FLIGHT_CONSENT;
+      case 'hotels':
+        return HOTEL_CONSENT;
+      case 'cars':
+        return CAR_CONSENT;
+      default:
+        return FLIGHT_CONSENT;
+    }
+  };
+
+  const consentText = getConsentText();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -136,7 +155,7 @@ export default function PartnerConsentModal({
             </ul>
           </div>
 
-          {/* Consent Checkbox */}
+          {/* Consent Checkbox - LOCKED TEXT */}
           <div className="flex items-start gap-3 pt-2">
             <Checkbox
               id="consent"
@@ -148,10 +167,10 @@ export default function PartnerConsentModal({
                 htmlFor="consent"
                 className="text-sm font-medium leading-relaxed cursor-pointer"
               >
-                I agree to share my information with the booking partner.
+                {consentText.checkboxLabel}
               </label>
               <p className="text-xs text-muted-foreground">
-                Your search criteria will be passed to {partnerName} to show relevant results. 
+                {consentText.description}{" "}
                 View our{" "}
                 <a href="/privacy" target="_blank" className="underline hover:text-primary">
                   Privacy Policy
@@ -186,8 +205,8 @@ export default function PartnerConsentModal({
               </>
             ) : (
               <>
-                <Shield className="w-4 h-4" />
-                Continue to {partnerName}
+                <Lock className="w-4 h-4" />
+                Continue to secure checkout
                 <ExternalLink className="w-4 h-4" />
               </>
             )}

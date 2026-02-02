@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { Hotel, AlertCircle, ExternalLink } from "lucide-react";
+import { Hotel, AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
@@ -39,6 +39,7 @@ import { getCityBySlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
 import { buildOutRedirectUrl, buildBookingDeepLink } from "@/lib/partnerDeepLinks";
+import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
 // Parse and validate URL parameters
 interface ParsedSearchParams {
@@ -263,6 +264,16 @@ export default function HotelResultsPage() {
       <Header />
 
       <main className="pt-16">
+        {/* Hotel Disclaimer Banner - LOCKED TEXT */}
+        <section className="border-b border-amber-500/20 py-2.5 bg-amber-500/5">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              {HOTEL_DISCLAIMERS.partnerBooking}
+            </p>
+          </div>
+        </section>
+
         {/* Breadcrumbs */}
         <ResultsBreadcrumbs service="hotels" />
 
