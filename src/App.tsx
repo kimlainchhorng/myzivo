@@ -51,6 +51,9 @@ const FlightResults = lazy(() => import("./pages/FlightResults"));
 const FlightDetails = lazy(() => import("./pages/FlightDetails"));
 const FlightLive = lazy(() => import("./pages/FlightLive"));
 const FlightTravelerInfo = lazy(() => import("./pages/FlightTravelerInfo"));
+const FlightCheckout = lazy(() => import("./pages/FlightCheckout"));
+const FlightConfirmation = lazy(() => import("./pages/FlightConfirmation"));
+const FlightTerms = lazy(() => import("./pages/legal/FlightTerms"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
 const EmbeddedCheckout = lazy(() => import("./pages/EmbeddedCheckout"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
@@ -250,6 +253,9 @@ const App = () => (
                 <Route path="/flights/live" element={<FlightLive />} />
                 <Route path="/flights/details/:id" element={<FlightDetails />} />
                 <Route path="/flights/traveler" element={<FlightTravelerInfo />} />
+                <Route path="/flights/checkout" element={<FlightCheckout />} />
+                <Route path="/flights/confirmation/:bookingId" element={<FlightConfirmation />} />
+                <Route path="/legal/flight-terms" element={<FlightTerms />} />
                 <Route path="/booking/duffel-checkout" element={<DuffelCheckout />} />
                 <Route path="/checkout" element={<EmbeddedCheckout />} />
                 

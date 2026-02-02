@@ -53,3 +53,9 @@ verify_jwt = true
 
 [functions.send-renter-invite]
 verify_jwt = true
+
+[functions.create-flight-checkout]
+verify_jwt = false
+
+[functions.issue-flight-ticket]
+verify_jwt = false
