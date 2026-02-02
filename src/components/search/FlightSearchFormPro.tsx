@@ -195,7 +195,7 @@ export default function FlightSearchFormPro({
     return `${base}?${urlParams.toString()}`;
   };
 
-  // Handle search - navigate to internal results page (tracks internally + shows API/fallback)
+  // Handle search - open white label URL directly (API access pending)
   const handleSearch = () => {
     if (!validate()) return;
 
@@ -203,27 +203,25 @@ export default function FlightSearchFormPro({
     const fromCode = fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
     const toCode = toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
 
-    // Build search params for internal results page
-    const params = new URLSearchParams({
-      from: fromCode.toUpperCase(),
-      to: toCode.toUpperCase(),
-      depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
-      passengers: String(passengers),
-      cabin: cabin,
-      tripType: tripType,
-    });
-
-    if (tripType === "roundtrip" && returnDate) {
-      params.set("return", format(returnDate, "yyyy-MM-dd"));
-    }
-
-    // Navigate to results page (handles white label fallback internally)
-    if (navigateOnSearch) {
-      navigate(`/flights/results?${params.toString()}`);
-    }
+    // Build and open white label URL directly (new tab)
+    const whitelabelUrl = buildWhitelabelUrl(fromCode, toCode);
+    window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
     
-    // Call optional callback
-    onSearch?.(params);
+    // Call optional callback with search params for tracking
+    if (onSearch) {
+      const params = new URLSearchParams({
+        from: fromCode.toUpperCase(),
+        to: toCode.toUpperCase(),
+        depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
+        passengers: String(passengers),
+        cabin: cabin,
+        tripType: tripType,
+      });
+      if (tripType === "roundtrip" && returnDate) {
+        params.set("return", format(returnDate, "yyyy-MM-dd"));
+      }
+      onSearch(params);
+    }
   };
 
   // Check if form is valid for enabling button
