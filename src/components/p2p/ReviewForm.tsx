@@ -81,9 +81,13 @@ export default function ReviewForm({
   const [accuracy, setAccuracy] = useState(5);
   const [value, setValue] = useState(5);
   const [condition, setCondition] = useState(5);
+  // Owner-to-renter specific ratings
+  const [vehicleCare, setVehicleCare] = useState(5);
+  const [timeliness, setTimeliness] = useState(5);
 
   const isVehicleReview = reviewType === "renter_to_vehicle";
   const isOwnerReview = reviewType === "renter_to_owner";
+  const isRenterReview = reviewType === "owner_to_renter";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,9 +102,11 @@ export default function ReviewForm({
       accuracy: isVehicleReview ? accuracy : undefined,
       value: isVehicleReview ? value : undefined,
       condition: isVehicleReview ? condition : undefined,
-      communication: isOwnerReview ? communication : undefined,
+      communication: (isOwnerReview || isRenterReview) ? communication : undefined,
+      vehicleCare: isRenterReview ? vehicleCare : undefined,
+      timeliness: isRenterReview ? timeliness : undefined,
       vehicleId: isVehicleReview ? vehicleId : undefined,
-      revieweeId: isOwnerReview ? revieweeId : undefined,
+      revieweeId: (isOwnerReview || isRenterReview) ? revieweeId : undefined,
     });
 
     onSuccess?.();
@@ -149,10 +155,14 @@ export default function ReviewForm({
         <CardTitle className="text-lg">
           {isVehicleReview
             ? `Review ${vehicleName || "the vehicle"}`
+            : isRenterReview
+            ? `Review ${ownerName || "your renter"}`
             : `Review ${ownerName || "your host"}`}
         </CardTitle>
         <CardDescription>
-          Share your experience to help other renters
+          {isRenterReview
+            ? "Share your experience with this renter"
+            : "Share your experience to help other renters"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -174,6 +184,14 @@ export default function ReviewForm({
 
           {isOwnerReview && (
             <RatingInput label="Communication" value={communication} onChange={setCommunication} />
+          )}
+
+          {isRenterReview && (
+            <div className="grid grid-cols-2 gap-4">
+              <RatingInput label="Communication" value={communication} onChange={setCommunication} />
+              <RatingInput label="Vehicle Care" value={vehicleCare} onChange={setVehicleCare} />
+              <RatingInput label="Timeliness" value={timeliness} onChange={setTimeliness} />
+            </div>
           )}
 
           <div className="space-y-2">
