@@ -1,6 +1,7 @@
 /**
  * Hotel Results Page - Unified Design
  * Uses shared results components for consistent UX
+ * Integrates affiliate deep links with proper consent + tracking
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -36,6 +37,8 @@ import {
 import { useRealHotelSearch, buildBookingUrl } from "@/hooks/useRealHotelSearch";
 import { getCityBySlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
+import { buildOutRedirectUrl, buildBookingDeepLink } from "@/lib/partnerDeepLinks";
 
 // Parse and validate URL parameters
 interface ParsedSearchParams {
@@ -103,6 +106,8 @@ export default function HotelResultsPage() {
   const [filters, setFilters] = useState<HotelFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("price");
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<HotelCardData | null>(null);
 
   const { isLoading, results, search, applyFilters, isRealPrice } = useRealHotelSearch();
 
@@ -163,6 +168,26 @@ export default function HotelResultsPage() {
   }));
 
   const handleViewDeal = (hotel: HotelCardData) => {
+    // Store selected hotel and show consent modal
+    setSelectedHotel(hotel);
+    setShowConsentModal(true);
+  };
+
+  const handleConsentConfirm = () => {
+    if (!selectedHotel) return;
+    
+    // Build the deep link with tracking
+    const deepLinkUrl = buildBookingDeepLink({
+      destination: cityName,
+      checkIn,
+      checkOut,
+      adults,
+      rooms,
+      hotelId: selectedHotel.id,
+      hotelName: selectedHotel.name,
+    });
+
+    // Build /out redirect URL for tracking
     const outParams = new URLSearchParams({
       city: citySlug,
       cityName: cityName,
@@ -170,9 +195,9 @@ export default function HotelResultsPage() {
       checkout: checkOut,
       adults: String(adults),
       rooms: String(rooms),
-      hotelId: hotel.id,
-      hotelName: hotel.name,
-      price: String(hotel.pricePerNight),
+      hotelId: selectedHotel.id,
+      hotelName: selectedHotel.name,
+      price: String(selectedHotel.pricePerNight),
       partner: "booking",
       product: "hotels",
       source: "result_card",
@@ -186,13 +211,15 @@ export default function HotelResultsPage() {
     if (utmCampaign) outParams.set("utm_campaign", utmCampaign);
     if (creator) outParams.set("creator", creator);
 
+    outParams.set("url", deepLinkUrl);
+
     trackAffiliateClick({
-      flightId: hotel.id,
+      flightId: selectedHotel.id,
       airline: "Booking.com",
       airlineCode: "HOTEL",
       origin: "ZIVO",
       destination: cityName,
-      price: hotel.pricePerNight,
+      price: selectedHotel.pricePerNight,
       passengers: adults,
       cabinClass: "standard",
       affiliatePartner: "booking",
@@ -201,8 +228,6 @@ export default function HotelResultsPage() {
       ctaType: "result_card",
       serviceType: "hotels",
     });
-
-    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 
   const handleViewAllOnPartner = () => {
@@ -371,6 +396,36 @@ export default function HotelResultsPage() {
       >
         <HotelFiltersComponent filters={filters} onFilterChange={handleFilterChange} />
       </FiltersSheet>
+
+      {/* Partner Consent Modal */}
+      <PartnerConsentModal
+        open={showConsentModal}
+        onOpenChange={setShowConsentModal}
+        partnerName="Booking.com"
+        partnerId="booking"
+        product="hotels"
+        destinationUrl={selectedHotel ? buildBookingDeepLink({
+          destination: cityName,
+          checkIn,
+          checkOut,
+          adults,
+          rooms,
+          hotelId: selectedHotel.id,
+          hotelName: selectedHotel.name,
+        }) : "https://www.booking.com"}
+        searchParams={{
+          citySlug,
+          cityName,
+          checkIn,
+          checkOut,
+          adults,
+          rooms,
+          hotelId: selectedHotel?.id,
+          hotelName: selectedHotel?.name,
+          pricePerNight: selectedHotel?.pricePerNight,
+        }}
+        onConfirm={handleConsentConfirm}
+      />
 
       <Footer />
     </div>
