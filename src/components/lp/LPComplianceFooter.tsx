@@ -1,11 +1,13 @@
 /**
- * ZIVO Ad Landing Page Compliance Footer
+ * HIZIVO Ad Landing Page Compliance Footer
  * 
- * Compact footer with required affiliate disclosure and legal links.
+ * Required footer for all ad landing pages (/lp/*)
+ * Includes locked disclaimers for Google & Meta ad compliance
  */
 
-import { Shield, ExternalLink } from "lucide-react";
+import { Shield, ExternalLink, Lock, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 export default function LPComplianceFooter() {
   return (
@@ -17,9 +19,12 @@ export default function LPComplianceFooter() {
             <Shield className="w-4 h-4 text-emerald-500" />
             <span className="text-sm font-medium text-foreground">Affiliate Disclosure</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            ZIVO may earn a commission when users book through partner links.
-            Bookings are completed on partner websites.
+          <p className="text-xs text-muted-foreground mb-2">
+            Hizivo may earn a commission when users book through partner links.
+            All bookings are completed on partner websites.
+          </p>
+          <p className="text-xs text-muted-foreground font-medium">
+            ⚠️ {FLIGHT_DISCLAIMERS.ticketing}
           </p>
         </div>
 
@@ -30,9 +35,15 @@ export default function LPComplianceFooter() {
             Compare options from trusted partners
           </span>
           <span>•</span>
-          <span>Secure booking on partner sites</span>
+          <span className="flex items-center gap-1">
+            <Lock className="w-3 h-3" />
+            Secure booking on partner sites
+          </span>
           <span>•</span>
-          <span>Support: info@hizivo.com</span>
+          <span className="flex items-center gap-1">
+            <Mail className="w-3 h-3" />
+            support@hizivo.com
+          </span>
         </div>
 
         {/* Legal Links */}
@@ -46,8 +57,8 @@ export default function LPComplianceFooter() {
           <Link to="/affiliate-disclosure" className="hover:text-foreground transition-colors">
             Affiliate Disclosure
           </Link>
-          <Link to="/partners" className="hover:text-foreground transition-colors">
-            Partners
+          <Link to="/partner-disclosure" className="hover:text-foreground transition-colors">
+            Partner Disclosure
           </Link>
           <Link to="/contact" className="hover:text-foreground transition-colors">
             Contact
@@ -56,7 +67,7 @@ export default function LPComplianceFooter() {
 
         {/* Copyright */}
         <div className="text-center text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} ZIVO LLC. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Hizivo LLC. All rights reserved.</p>
         </div>
       </div>
     </footer>
