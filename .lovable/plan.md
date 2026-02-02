@@ -1,128 +1,163 @@
 
-# Completed: Driver App Features Removed
+# Next Update: Customer-Facing Eats & Rides Flow Completion + Admin Test Data Tools
 
 ## Overview
 
-Since you have your driver app at **zivo-driver-app.rork.app**, we'll remove the driver-facing application code from this Lovable project while **keeping the admin driver management** capabilities (which manage drivers through the shared Supabase database).
+This update focuses on completing the customer-facing flows for Rides and Eats services, plus adding test data creation tools across admin modules to facilitate end-to-end testing with the external Rork driver app.
 
 ---
 
-## What Gets Removed
+## Current State Analysis
 
-### Pages
-| File | Reason |
-|------|--------|
-| `src/pages/DriverApp.tsx` | Full driver app interface (823 lines) |
-| `src/pages/DriverRegistration.tsx` | Driver signup form (596 lines) |
+### Completed Features
+- **RiderApp.tsx**: Full customer booking flow with location search, fare estimation, vehicle selection, trip creation, and live tracking
+- **EatsCheckout.tsx**: Complete checkout flow with contact info, delivery details, and order submission
+- **Admin Modules**: AdminRidesModule, AdminEatsModule, AdminMoveModule with status management and driver assignment
 
-### Components
-| File | Reason |
-|------|--------|
-| `src/components/driver/ActiveTripPanel.tsx` | Active trip UI for drivers |
-| `src/components/driver/DriverEarningsTab.tsx` | Earnings display for drivers |
-| `src/components/driver/DriverPayoutsTab.tsx` | Payout history for drivers |
-| `src/components/driver/DriverTripCard.tsx` | Trip cards for driver app |
-| `src/components/driver/EatsDeliveryPanel.tsx` | Eats delivery UI |
-| `src/components/driver/JobRequestModal.tsx` | Job request popup |
-| `src/components/driver/MoveDeliveryPanel.tsx` | Move delivery UI |
-| `src/components/driver/ProofOfDelivery.tsx` | Photo/signature capture |
-| `src/components/driver/ServiceToggles.tsx` | Service enable/disable toggles |
+### Gaps Identified
 
-### Hooks (Driver App-Specific)
-| File | Reason |
-|------|--------|
-| `src/hooks/useDriverApp.ts` | Driver app data hooks |
-| `src/hooks/useDriverState.ts` | Persistent driver state (Capacitor Preferences) |
-| `src/hooks/useJobDispatch.ts` | Real-time job dispatch |
-
-### Services (Native Mobile)
-| File | Reason |
-|------|--------|
-| `src/services/LocationService.ts` | GPS tracking service |
-| `src/services/PushNotificationService.ts` | Push notifications |
+| Area | Issue |
+|------|-------|
+| **Admin Eats** | No "Create Test Order" button for testing driver app integration |
+| **Admin Rides** | No "Create Test Trip" button for testing driver assignment |
+| **Admin Move** | Has test delivery button (added in last update) |
+| **RiderApp** | Trips table uses `trips` but admin uses `ride_requests` - two separate tables causing data disconnect |
+| **EatsRestaurants/Menu** | Uses mock data instead of real database restaurants |
+| **Driver Notifications** | When admin assigns driver, no push notification is sent |
 
 ---
 
-## What Gets Kept
+## Phase 1: Unify Rides Data Flow
 
-### Admin Modules (For Backend Management)
-- **AdminDriversModule.tsx** - Manage drivers, status, verify documents
-- **AdminMoveModule.tsx** - Manage package deliveries  
-- **AdminRidesModule.tsx** - Manage ride requests
-- **AdminEatsModule.tsx** - Manage food orders
+### Problem
+The `RiderApp.tsx` creates entries in the `trips` table, but `AdminRidesModule.tsx` reads from `ride_requests` table. These are separate tables with no connection.
 
-These modules interact with the shared Supabase database, so your Rork driver app will see the same data.
+### Solution
+Modify AdminRidesModule to also show trips from the `trips` table, or create a unified view. For MVP, we'll add a "Live Trips" tab to AdminRidesModule.
 
-### Shared Hooks (Used by Admin)
-- `src/hooks/useDrivers.ts` - Driver CRUD for admin
-- `src/hooks/useDriverDocuments.ts` - Document verification
-- `src/hooks/useDriverEarnings.ts` - Earnings calculations
-- `src/hooks/useOnlineDrivers.ts` - Online driver tracking for admin maps
-
-### Edge Functions
-All driver-related edge functions remain since your Rork app uses them:
-- `send-driver-notification` - Push notifications
-- Payout processing functions
+**AdminRidesModule.tsx Updates:**
+- Add tabs: "Ride Requests" | "Live Trips"
+- "Ride Requests" shows manual form submissions
+- "Live Trips" shows trips created from RiderApp (from `trips` table)
+- Both tabs support status updates and driver assignment
 
 ---
 
-## Route Changes
+## Phase 2: Admin Test Data Creation Tools
 
-**App.tsx modifications:**
+### 2.1 Add "Create Test Trip" to AdminRidesModule
+
+Button that creates a test trip in the `trips` table:
 ```text
-Remove:
-- /driver route (DriverApp)
-- /drive route (DriverRegistration)
-
-Keep:
-- All other routes unchanged
+- rider_id: Admin's user ID (or placeholder)
+- pickup: "123 Main St, New York, NY"
+- dropoff: "456 Broadway, New York, NY"
+- fare_amount: $25.00
+- distance_km: 5.2
+- duration_minutes: 18
+- status: "requested"
 ```
 
----
+This trip will appear in the driver app's job queue.
 
-## Marketing Pages Update
+### 2.2 Add "Create Test Order" to AdminEatsModule
 
-The marketing pages (Rides, Eats, Move) already redirect to external URLs. We'll verify they still point to the correct destination:
-
-| Page | Current Behavior |
-|------|-----------------|
-| `/rides` | Links to zivodriver.com (update to zivo-driver-app.rork.app) |
-| `/eats` | Links to zivodriver.com (update to zivo-driver-app.rork.app) |
-| `/move` | Links to zivodriver.com (update to zivo-driver-app.rork.app) |
-
----
-
-## Cross-App Navigation Update
-
-Update `useCrossAppAuth.ts` to point to your Rork app:
-
+Button that creates a test food order:
 ```text
-APP_URLS:
-  driver: "https://zivo-driver-app.rork.app"  (was zivodriver.lovable.app)
+- restaurant_id: First active restaurant or placeholder
+- items: [{ name: "Test Burger", quantity: 1, price: 12.99 }]
+- delivery_address: "789 Park Ave, New York, NY"
+- total_amount: $16.98
+- status: "pending"
 ```
 
----
+### 2.3 Verify AdminMoveModule Test Button
 
-## Files Summary
-
-| Action | Count | Files |
-|--------|-------|-------|
-| **Delete** | 13 | DriverApp, DriverRegistration, 9 components, 3 hooks, 2 services |
-| **Modify** | 4 | App.tsx (routes), useCrossAppAuth.ts, Rides.tsx, Eats.tsx |
-| **Keep** | All | Admin modules, shared hooks, edge functions, database |
+Confirm the "Create Test Delivery" button added previously is functional.
 
 ---
 
-## Database Impact
+## Phase 3: Driver Notification on Assignment
 
-**None** - The `drivers` table and all related tables remain unchanged. Your Rork app connects to the same Supabase database.
+### Problem
+When an admin assigns a driver to a ride/order, the driver app doesn't receive a notification.
+
+### Solution
+After driver assignment, call the existing `send-driver-notification` edge function.
+
+**Files to Update:**
+- `useRideRequests.ts` - Add notification call after assignment
+- `useEatsOrders.ts` - Add notification call after assignment
 
 ---
 
-## Testing After Removal
+## Phase 4: Connect Restaurant Menu to Database
 
-1. Admin panel still loads and shows driver management
-2. Ride/Eats/Move marketing pages link to your Rork app
-3. Cross-app navigation button points to Rork app
-4. No broken imports or 404 errors
+### Problem
+`EatsRestaurants.tsx` and `EatsRestaurantMenu.tsx` use hardcoded mock data instead of the `restaurants` and `menu_items` tables.
 
+### Solution
+Connect these pages to the database using existing hooks:
+- Replace mock `featuredRestaurants` in FoodOrdering with `useRestaurants()` 
+- Replace mock `menuItems` with `useMenuItems(restaurantId)`
+- Keep current UI structure, just swap data source
+
+---
+
+## File Changes Summary
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/pages/admin/modules/AdminRidesModule.tsx` | **Update** | Add "Live Trips" tab + "Create Test Trip" button |
+| `src/pages/admin/modules/AdminEatsModule.tsx` | **Update** | Add "Create Test Order" button |
+| `src/hooks/useRideRequests.ts` | **Update** | Add test trip creation + notification trigger |
+| `src/hooks/useEatsOrders.ts` | **Update** | Add notification trigger on driver assignment |
+| `src/pages/EatsRestaurants.tsx` | **Update** | Connect to database instead of mock data |
+| `src/pages/EatsRestaurantMenu.tsx` | **Update** | Connect to database menu items |
+| `src/hooks/useTrips.ts` | **Update** | Add admin query hook for trips table |
+
+---
+
+## Technical Notes
+
+### Test Data Creation Pattern
+
+Each test data button follows this pattern:
+1. Generate realistic sample data with current timestamp
+2. Insert into appropriate table with correct foreign keys
+3. Show success toast with created ID
+4. Invalidate queries to refresh the table
+5. (Optional) Trigger driver notification
+
+### Trips Table Integration for Admin
+
+The trips table needs these admin operations:
+- Query all trips (not filtered by rider_id)
+- Update status
+- Assign driver_id
+
+---
+
+## Testing Plan
+
+After implementation:
+1. **Create Test Trip** → Verify appears in admin "Live Trips" → Check if Rork driver app shows job
+2. **Create Test Order** → Verify appears in admin Eats → Assign driver → Check Rork app
+3. **Create Test Delivery** → Same flow for Move service
+4. **Assign Driver** → Verify push notification is sent (check edge function logs)
+5. **Restaurant Data** → Verify EatsRestaurants page shows database restaurants
+
+---
+
+## Integration with Rork Driver App
+
+All test data created through admin will appear in the shared Supabase database. The Rork driver app at `zivo-driver-app.rork.app` reads from the same database, so:
+
+| Admin Action | Driver App Effect |
+|--------------|-------------------|
+| Create test trip (status: requested) | Appears in driver's available jobs |
+| Create test order (status: pending) | Appears when restaurant marks ready |
+| Assign driver | Driver receives push notification |
+| Update status | Real-time sync to driver app |
+
+This enables full end-to-end testing of the driver flows.
