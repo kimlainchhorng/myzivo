@@ -1,3 +1,7 @@
+/**
+ * HotelTrustIndicators Component
+ * LOCKED COMPLIANCE: Uses hotelCompliance.ts for all text
+ */
 import { Badge } from "@/components/ui/badge";
 import { 
   Shield, 
@@ -10,7 +14,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 interface HotelTrustIndicatorsProps {
   className?: string;
 }
@@ -131,10 +135,10 @@ export default function HotelTrustIndicators({ className }: HotelTrustIndicators
           </div>
         </div>
 
-        {/* Affiliate Disclosure */}
+        {/* Partner Disclosure - Locked Compliance */}
         <p className="text-center text-[10px] sm:text-xs text-muted-foreground mt-6 sm:mt-8 max-w-2xl mx-auto px-4">
-          ZIVO may earn a commission when you book through our partner links at no extra cost to you.{' '}
-          <a href="/affiliate-disclosure" className="text-amber-500 hover:underline">Learn more</a>
+          {HOTEL_DISCLAIMERS.partnerBookingShort}{' '}
+          <a href="/partner-disclosure" className="text-amber-500 hover:underline">Learn more</a>
         </p>
       </div>
     </section>
