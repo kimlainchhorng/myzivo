@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles, ArrowRight } from "lucide-react";
+import { Plane, Hotel, CarFront, Car, UtensilsCrossed, Package, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { serviceCardPhotos, ServiceType } from "@/config/photos";
 
-type ServiceStatus = "live" | "coming-soon";
+type ServiceStatus = "live" | "external";
 
 interface Service {
-  id: string;
+  id: ServiceType;
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -19,6 +19,7 @@ interface Service {
   status: ServiceStatus;
   image: string;
   cta: string;
+  external?: boolean;
 }
 
 const services: Service[] = [
@@ -64,15 +65,15 @@ const services: Service[] = [
   {
     id: "rides",
     title: "Rides",
-    description: "Request local rides and airport pickup",
+    description: "Request rides and airport pickup",
     icon: Car,
     href: "/rides",
     color: "text-white",
     bgColor: "bg-rides-light",
     borderHover: "hover:border-rides/50",
-    status: "live",
+    status: "external",
     image: serviceCardPhotos.rides.src,
-    cta: "Request Ride",
+    cta: "Learn More",
   },
   {
     id: "eats",
@@ -83,22 +84,22 @@ const services: Service[] = [
     color: "text-white",
     bgColor: "bg-eats-light",
     borderHover: "hover:border-eats/50",
-    status: "live",
+    status: "external",
     image: serviceCardPhotos.eats.src,
-    cta: "Order Food",
+    cta: "Learn More",
   },
   {
-    id: "extras",
-    title: "Extras",
-    description: "Transfers, activities, eSIM, and more",
-    icon: Sparkles,
-    href: "/extras",
+    id: "move",
+    title: "Move",
+    description: "Package delivery & moving services",
+    icon: Package,
+    href: "/move",
     color: "text-white",
-    bgColor: "bg-more-light",
-    borderHover: "hover:border-more/50",
-    status: "live",
-    image: serviceCardPhotos.extras.src,
-    cta: "Explore Extras",
+    bgColor: "bg-primary/10",
+    borderHover: "hover:border-primary/50",
+    status: "external",
+    image: serviceCardPhotos.move.src,
+    cta: "Learn More",
   },
 ];
 
@@ -132,7 +133,7 @@ export default function ServicesGrid() {
                 )}
               >
                 {/* Image Header */}
-                <div className="relative h-32 overflow-hidden" style={{ aspectRatio: "4/3" }}>
+                <div className="relative h-36 overflow-hidden" style={{ aspectRatio: "4/3" }}>
                   <img
                     src={service.image}
                     alt={`ZIVO ${service.title} - ${service.description}`}
@@ -156,6 +157,14 @@ export default function ServicesGrid() {
                       <service.icon className="w-5 h-5 text-white" />
                     </div>
                   </div>
+
+                  {/* External badge for mobility services */}
+                  {service.status === "external" && (
+                    <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-[10px] font-medium text-white flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3" />
+                      via ZIVO Driver
+                    </div>
+                  )}
                 </div>
 
                 <CardContent className="p-4">
@@ -178,7 +187,7 @@ export default function ServicesGrid() {
                       service.id === "cars" && "text-cars",
                       service.id === "rides" && "text-rides",
                       service.id === "eats" && "text-eats",
-                      service.id === "extras" && "text-more",
+                      service.id === "move" && "text-primary",
                       "group-hover:gap-2.5 transition-all"
                     )}
                   >
@@ -189,6 +198,16 @@ export default function ServicesGrid() {
               </Card>
             </Link>
           ))}
+        </div>
+
+        {/* Extras Link */}
+        <div className="text-center mt-8">
+          <Link to="/extras">
+            <Button variant="outline" className="rounded-xl gap-2">
+              Explore Travel Extras
+              <ArrowRight className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>

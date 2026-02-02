@@ -10,6 +10,7 @@ import heroHotels from "@/assets/hero-hotels.jpg";
 import heroCars from "@/assets/hero-cars.jpg";
 import heroRides from "@/assets/hero-rides.jpg";
 import heroEats from "@/assets/hero-eats.jpg";
+import heroMove from "@/assets/hero-move.jpg";
 import heroHomepage from "@/assets/hero-homepage.jpg";
 import heroExtras from "@/assets/hero-extras.jpg";
 import heroBeachResort from "@/assets/hero-beach-resort.jpg";
@@ -22,6 +23,7 @@ import serviceHotels from "@/assets/service-hotels.jpg";
 import serviceCars from "@/assets/service-cars.jpg";
 import serviceRides from "@/assets/service-rides.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
+import serviceMove from "@/assets/service-move.jpg";
 import serviceExtras from "@/assets/service-extras.jpg";
 
 // Import destination assets (local AI-generated)
@@ -64,7 +66,7 @@ import extrasTickets from "@/assets/extras-tickets.jpg";
 // ============================================
 // SERVICE TYPES
 // ============================================
-export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "extras";
+export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
 export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam";
 
@@ -96,6 +98,10 @@ export const heroPhotos: Record<ServiceType | "homepage", { src: string; alt: st
     src: heroEats,
     alt: "ZIVO Eats - Delicious meal spread with fresh ingredients",
   },
+  move: {
+    src: heroMove,
+    alt: "ZIVO Move - Package delivery and moving services",
+  },
   extras: {
     src: heroExtras,
     alt: "ZIVO Travel Extras - Travel accessories and essentials for your trip",
@@ -125,6 +131,10 @@ export const serviceCardPhotos: Record<ServiceType, { src: string; alt: string }
   eats: {
     src: serviceEats,
     alt: "ZIVO Eats - Order food from local restaurants",
+  },
+  move: {
+    src: serviceMove,
+    alt: "ZIVO Move - Package delivery and moving services",
   },
   extras: {
     src: serviceExtras,
@@ -433,6 +443,7 @@ export const serviceOverlays: Record<ServiceType, string> = {
   cars: "from-slate-950/90 via-violet-950/70 to-slate-950/60",
   rides: "from-slate-950/90 via-emerald-950/70 to-slate-950/60",
   eats: "from-slate-950/90 via-orange-950/70 to-slate-950/60",
+  move: "from-slate-950/90 via-teal-950/70 to-slate-950/60",
   extras: "from-slate-950/90 via-pink-950/70 to-slate-950/60",
 };
 

@@ -28,6 +28,7 @@ const AppMore = lazy(() => import("./pages/app/AppMore"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
+const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
 const EatsRestaurantMenu = lazy(() => import("./pages/EatsRestaurantMenu"));
@@ -179,10 +180,11 @@ const App = () => (
                 {/* App (Mobile-first) Routes */}
                 <Route path="/app" element={<AppHome />} />
                 <Route path="/travel" element={<AppTravel />} />
-                <Route path="/rides" element={<AppRides />} />
-                <Route path="/ride" element={<AppRides />} />
-                <Route path="/eats" element={<AppEats />} />
-                <Route path="/food" element={<AppEats />} />
+                <Route path="/rides" element={<Rides />} />
+                <Route path="/ride" element={<Rides />} />
+                <Route path="/eats" element={<Eats />} />
+                <Route path="/food" element={<Eats />} />
+                <Route path="/move" element={<Move />} />
                 <Route path="/more" element={<AppMore />} />
                 
                 {/* Legacy routes - redirect with query params preserved */}
