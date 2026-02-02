@@ -2,12 +2,13 @@
  * Flight Live Results Page
  * 
  * Embeds the partner white-label search in an iframe.
+ * Falls back to new tab if iframe is blocked.
  * URL params: origin, dest, depart, return (optional), passengers, cabin
  */
 
 import { useSearchParams } from "react-router-dom";
-import { AlertCircle, ExternalLink, ShieldCheck, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { AlertCircle, ExternalLink, ShieldCheck, Copy, Check, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -52,6 +53,8 @@ function buildWhitelabelUrl(params: URLSearchParams): string {
 export default function FlightLive() {
   const [searchParams] = useSearchParams();
   const [copied, setCopied] = useState(false);
+  const [iframeStatus, setIframeStatus] = useState<"loading" | "loaded" | "blocked">("loading");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const origin = searchParams.get("origin") || "";
   const dest = searchParams.get("dest") || "";
@@ -67,10 +70,46 @@ export default function FlightLive() {
   console.log("[FlightLive] Params:", Object.fromEntries(searchParams));
   console.log("[FlightLive] Built URL:", whitelabelUrl);
 
+  // Fallback: if iframe doesn't load within 5s, assume blocked
+  useEffect(() => {
+    if (!isValid) return;
+    
+    const timeout = setTimeout(() => {
+      if (iframeStatus === "loading") {
+        console.log("[FlightLive] Iframe timeout - assuming blocked");
+        setIframeStatus("blocked");
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isValid, iframeStatus]);
+
+  // Auto-open in new tab if blocked
+  useEffect(() => {
+    if (iframeStatus === "blocked" && whitelabelUrl) {
+      console.log("[FlightLive] Opening in new tab as fallback");
+      window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
+    }
+  }, [iframeStatus, whitelabelUrl]);
+
+  const handleIframeLoad = () => {
+    console.log("[FlightLive] Iframe loaded successfully");
+    setIframeStatus("loaded");
+  };
+
+  const handleIframeError = () => {
+    console.log("[FlightLive] Iframe error - blocked");
+    setIframeStatus("blocked");
+  };
+
   const handleCopyUrl = () => {
     navigator.clipboard.writeText(whitelabelUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpenNewTab = () => {
+    window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
   };
 
   if (!isValid) {
@@ -115,7 +154,7 @@ export default function FlightLive() {
             variant="outline"
             size="sm"
             className="gap-1.5"
-            onClick={() => window.open(whitelabelUrl, "_blank", "noopener,noreferrer")}
+            onClick={handleOpenNewTab}
           >
             <ExternalLink className="w-4 h-4" />
             Open in New Tab
@@ -126,7 +165,17 @@ export default function FlightLive() {
       {/* Debug Panel */}
       <div className="container mx-auto px-4 py-3 bg-muted/30 border-b">
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-medium text-muted-foreground">Debug: White-label URL</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-medium text-muted-foreground">Debug: White-label URL</p>
+            <span className={`text-xs px-2 py-0.5 rounded ${
+              iframeStatus === "loaded" ? "bg-emerald-500/20 text-emerald-500" :
+              iframeStatus === "blocked" ? "bg-amber-500/20 text-amber-500" :
+              "bg-sky-500/20 text-sky-500"
+            }`}>
+              {iframeStatus === "loaded" ? "✓ Loaded" :
+               iframeStatus === "blocked" ? "⚠ Blocked" : "Loading..."}
+            </span>
+          </div>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs bg-background p-2 rounded border overflow-x-auto whitespace-nowrap">
               {whitelabelUrl}
@@ -147,14 +196,42 @@ export default function FlightLive() {
         </div>
       </div>
 
-      {/* Iframe Container */}
+      {/* Iframe Container or Blocked Message */}
       <main className="flex-1 relative">
+        {iframeStatus === "loading" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-sky-500 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">Loading live results...</p>
+            </div>
+          </div>
+        )}
+
+        {iframeStatus === "blocked" && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
+            <div className="text-center max-w-md px-4">
+              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+              <h2 className="text-xl font-bold mb-2">Embedded View Unavailable</h2>
+              <p className="text-muted-foreground mb-4">
+                The partner site doesn't allow embedding. We've opened it in a new tab for you.
+              </p>
+              <Button onClick={handleOpenNewTab} className="gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Open Live Results
+              </Button>
+            </div>
+          </div>
+        )}
+
         <iframe
+          ref={iframeRef}
           src={whitelabelUrl}
           title="Live Flight Results"
           className="w-full h-full min-h-[600px] border-0"
           style={{ minHeight: "calc(100vh - 280px)" }}
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
         />
       </main>
 
