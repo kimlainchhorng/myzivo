@@ -1,13 +1,13 @@
 /**
- * NavBar - Desktop Navigation
- * Clean site map: Home | Travel ▾ | Rides | Eats | More ▾ | Contact
+ * NavBar - Hizovo Travel Desktop Navigation
+ * Clean OTA site map: Flights | Hotels | Cars | Help | Rides/Eats/Move (external)
  */
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
-  Plane, Hotel, CarFront, Car, UtensilsCrossed, 
-  Menu, X, User, ChevronDown, HelpCircle, Phone,
-  Sparkles, Users, Award, Mail, FileText, Shield
+  Plane, Hotel, CarFront, 
+  Menu, X, User, ChevronDown, HelpCircle, ExternalLink,
+  Sparkles, Users, Award
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,11 +21,11 @@ import {
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
 
-// Travel dropdown items
-const travelItems = [
-  { label: "Flights", description: "Compare 500+ airlines", href: "/flights", icon: Plane, color: "text-sky-500" },
-  { label: "Hotels", description: "2M+ accommodations", href: "/hotels", icon: Hotel, color: "text-amber-500" },
-  { label: "Car Rental", description: "500+ providers", href: "/rent-car", icon: CarFront, color: "text-violet-500" },
+// Main travel nav items (direct links, no dropdown)
+const mainNavItems = [
+  { label: "Flights", href: "/flights", icon: Plane, color: "text-sky-500" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, color: "text-amber-500" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, color: "text-violet-500" },
 ];
 
 // More dropdown items
@@ -33,32 +33,27 @@ const moreItems = [
   { label: "Extras", description: "Transfers, eSIM, Tours & more", href: "/extras", icon: Sparkles, color: "text-primary" },
   { label: "Partners", description: "Our travel partners", href: "/partners", icon: Users, color: "text-muted-foreground" },
   { label: "Creators", description: "Creator program", href: "/creators", icon: Award, color: "text-muted-foreground" },
-  { label: "Help Center", description: "FAQs & support", href: "/help", icon: HelpCircle, color: "text-muted-foreground" },
 ];
 
 // Legal items for More dropdown
 const legalItems = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
-  { label: "Affiliate Disclosure", href: "/affiliate-disclosure" },
+  { label: "Partner Disclosure", href: "/partner-disclosure" },
+  { label: "Cookies", href: "/cookies" },
 ];
 
 export default function NavBar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [travelOpen, setTravelOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   
-  const travelRef = useRef<HTMLDivElement>(null);
   const moreRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (travelRef.current && !travelRef.current.contains(event.target as Node)) {
-        setTravelOpen(false);
-      }
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
         setMoreOpen(false);
       }
@@ -82,60 +77,25 @@ export default function NavBar() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1">
-              {/* Travel Dropdown */}
-              <div ref={travelRef} className="relative">
-                <button
-                  onClick={() => setTravelOpen(!travelOpen)}
-                  className={cn(
-                    "flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                    travelOpen 
-                      ? "text-foreground bg-muted" 
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
+              {/* Main Travel Links - Direct navigation */}
+              {mainNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 >
-                  <Plane className="w-4 h-4" />
-                  Travel
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", travelOpen && "rotate-180")} />
-                </button>
-                
-                {travelOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-card border border-border rounded-xl shadow-xl p-2 animate-in fade-in slide-in-from-top-2 duration-150">
-                    {travelItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        onClick={() => setTravelOpen(false)}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <div className={cn("w-9 h-9 rounded-lg bg-muted flex items-center justify-center", item.color)}>
-                          <item.icon className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{item.label}</p>
-                          <p className="text-xs text-muted-foreground">{item.description}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  <item.icon className={cn("w-4 h-4", item.color)} />
+                  {item.label}
+                </Link>
+              ))}
 
-              {/* Rides - Direct link */}
+              {/* Help - Direct link */}
               <Link
-                to="/rides"
+                to="/help"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                <Car className="w-4 h-4" />
-                Rides
-              </Link>
-
-              {/* Eats - Direct link */}
-              <Link
-                to="/eats"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <UtensilsCrossed className="w-4 h-4" />
-                Eats
+                <HelpCircle className="w-4 h-4" />
+                Help
               </Link>
 
               {/* More Dropdown */}
@@ -193,14 +153,16 @@ export default function NavBar() {
                 )}
               </div>
 
-              {/* Contact - Direct link */}
-              <Link
-                to="/contact"
+              {/* Rides/Eats/Move - External link */}
+              <a
+                href="https://zivodriver.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
-                <Phone className="w-4 h-4" />
-                Contact
-              </Link>
+                Rides / Eats / Move
+                <ExternalLink className="w-3 h-3 opacity-50" />
+              </a>
             </nav>
 
             {/* Desktop Auth */}
@@ -298,44 +260,47 @@ export default function NavBar() {
             <nav className="p-4 space-y-1">
               {/* Travel Section */}
               <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Travel</p>
-              {travelItems.map((link) => (
+              {mainNavItems.map((item) => (
                 <Link
-                  key={link.href}
-                  to={link.href}
+                  key={item.href}
+                  to={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
                 >
-                  <link.icon className={cn("w-5 h-5", link.color)} />
-                  {link.label}
+                  <item.icon className={cn("w-5 h-5", item.color)} />
+                  {item.label}
                 </Link>
               ))}
               
               <div className="border-t border-border my-3" />
               
-              {/* Services */}
-              <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">Services</p>
+              {/* Help */}
               <Link
-                to="/rides"
+                to="/help"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
               >
-                <Car className="w-5 h-5 text-rides" />
-                Rides
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                Help Center
               </Link>
-              <Link
-                to="/eats"
+
+              {/* External Services */}
+              <a
+                href="https://zivodriver.com"
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
               >
-                <UtensilsCrossed className="w-5 h-5 text-eats" />
-                Eats
-              </Link>
+                <ExternalLink className="w-5 h-5 text-muted-foreground" />
+                Rides / Eats / Move
+              </a>
               
               <div className="border-t border-border my-3" />
               
               {/* More */}
               <p className="text-xs text-muted-foreground uppercase tracking-wider px-4 py-2">More</p>
-              {moreItems.slice(0, 4).map((link) => (
+              {moreItems.map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
@@ -346,14 +311,6 @@ export default function NavBar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                to="/contact"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium hover:bg-muted transition-colors"
-              >
-                <Phone className="w-5 h-5 text-muted-foreground" />
-                Contact
-              </Link>
             </nav>
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-card">
