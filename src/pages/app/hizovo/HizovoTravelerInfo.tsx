@@ -58,13 +58,16 @@ const HizovoTravelerInfo = () => {
       await logPartnerRedirect({
         partnerId: 'duffel',
         partnerName: 'Duffel',
-        product: 'flights',
-        pageSource: 'app-traveler-info',
-        destinationUrl: 'https://book.duffel.com/checkout',
+        searchType: 'flights',
+        redirectUrl: 'https://book.duffel.com/checkout',
+        checkoutMode: 'redirect',
         searchParams: {
           origin: flight?.from,
           destination: flight?.to,
           passengers: 1,
+        },
+        metadata: {
+          pageSource: 'app-traveler-info',
         }
       });
       
