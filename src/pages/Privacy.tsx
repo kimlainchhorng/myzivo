@@ -1,4 +1,4 @@
-import { ArrowLeft, Shield, Mail, Database, Share2, Cookie, UserCheck } from "lucide-react";
+import { ArrowLeft, Shield, Mail, Database, Share2, Cookie, UserCheck, CreditCard, Plane, Building2, Car } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -9,8 +9,8 @@ const Privacy = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Privacy Policy - ZIVO | Travel Search & Comparison"
-        description="Learn how ZIVO handles your data. We are a travel search platform that does not process payments or store sensitive information."
+        title="Privacy Policy - Hizivo | Travel Platform"
+        description="Learn how Hizivo handles your data for Hotels, Car Rentals (direct sale), and Flights (partner referral). We protect your information."
         canonical="https://hizivo.com/privacy"
       />
       
@@ -32,6 +32,9 @@ const Privacy = () => {
             <span className="text-sm font-medium text-primary">Legal</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Privacy Policy</h1>
+          <p className="text-muted-foreground">
+            Last updated: February 2, 2026
+          </p>
         </div>
 
         {/* Content */}
@@ -39,8 +42,33 @@ const Privacy = () => {
           {/* Introduction */}
           <section className="bg-card/50 rounded-2xl p-6 border border-border">
             <p className="text-foreground leading-relaxed text-lg">
-              Hizivo respects your privacy.
+              Hizivo respects your privacy. This policy explains how we collect, use, and protect your information when you use our travel platform.
             </p>
+          </section>
+
+          {/* Business Model Context */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <CreditCard className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">How We Operate</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed mb-4">
+                Hizivo operates a hybrid business model which affects how your data is handled:
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-foreground">
+                  <Building2 className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
+                  <span><strong>Hotels & Car Rentals:</strong> Hizivo is the merchant of record. We collect and process your payment and booking information directly.</span>
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <Plane className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
+                  <span><strong>Flights:</strong> We share your search criteria and traveler details with airline partners (with your consent) who process your payment and issue tickets.</span>
+                </li>
+              </ul>
+            </div>
           </section>
 
           {/* Information We Collect */}
@@ -55,11 +83,19 @@ const Privacy = () => {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Information you provide (name, email, phone, traveler details)
+                  <strong>Account Information:</strong> Name, email, phone number when you create an account
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Technical data (device, browser, cookies, analytics)
+                  <strong>Booking Information:</strong> Traveler/guest details, travel dates, preferences
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <strong>Payment Information:</strong> For Hotels & Car Rentals only, payment details are processed securely via Stripe/Adyen (we do not store full card numbers)
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <strong>Technical Data:</strong> Device information, browser type, IP address, cookies, analytics
                 </li>
               </ul>
             </div>
@@ -77,19 +113,23 @@ const Privacy = () => {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  To provide search and referral services
+                  To process and confirm your hotel and car rental bookings
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  To connect you with travel partners (with consent)
+                  To share traveler information with airline partners for flight bookings (with consent)
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  To improve platform performance and security
+                  To send booking confirmations and travel updates
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
-                  To respond to support inquiries
+                  To process refunds and handle customer support requests
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  To improve platform performance, security, and user experience
                 </li>
               </ul>
             </div>
@@ -103,9 +143,26 @@ const Privacy = () => {
               </div>
               <h2 className="text-2xl font-bold text-foreground">Information Sharing</h2>
             </div>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
               <p className="text-foreground leading-relaxed">
-                We may share necessary information with travel partners when you choose to complete a booking. We do not sell personal data.
+                We share your information only as necessary to provide our services:
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+                  <strong>Airline Partners (Flights):</strong> Traveler details shared with your consent for ticketing
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+                  <strong>Wholesaler APIs (Hotels/Cars):</strong> Booking details shared to confirm reservations
+                </li>
+                <li className="flex items-start gap-3 text-foreground">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
+                  <strong>Payment Processors:</strong> Stripe/Adyen for secure payment processing
+                </li>
+              </ul>
+              <p className="text-foreground leading-relaxed font-medium">
+                We do not sell personal data to third parties.
               </p>
             </div>
           </section>
@@ -120,7 +177,7 @@ const Privacy = () => {
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground leading-relaxed">
-                We use cookies to operate and improve our services. You can control cookies via your browser settings.
+                We use cookies to operate and improve our services, remember your preferences, and analyze usage. You can control cookies via your browser settings. See our <Link to="/cookies" className="text-primary hover:underline">Cookie Policy</Link> for details.
               </p>
             </div>
           </section>
@@ -134,8 +191,17 @@ const Privacy = () => {
               <h2 className="text-2xl font-bold text-foreground">Your Rights</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground leading-relaxed">
-                You may request access to or deletion of your personal information where applicable.
+              <p className="text-foreground leading-relaxed mb-4">
+                Depending on your location, you may have the right to:
+              </p>
+              <ul className="space-y-2 text-foreground">
+                <li>• Access the personal information we hold about you</li>
+                <li>• Request correction of inaccurate information</li>
+                <li>• Request deletion of your personal information</li>
+                <li>• Opt out of marketing communications</li>
+              </ul>
+              <p className="text-muted-foreground mt-4">
+                To exercise these rights, contact us at support@hizivo.com.
               </p>
             </div>
           </section>
@@ -149,6 +215,9 @@ const Privacy = () => {
               <h2 className="text-2xl font-bold text-foreground">Contact</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground mb-4">
+                For privacy-related questions:
+              </p>
               <a 
                 href="mailto:support@hizivo.com" 
                 className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
@@ -158,6 +227,21 @@ const Privacy = () => {
               </a>
             </div>
           </section>
+
+          {/* Related Links */}
+          <div className="flex flex-wrap gap-4 justify-center pt-8 border-t border-border">
+            <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              Terms of Service
+            </Link>
+            <span className="text-muted-foreground">•</span>
+            <Link to="/cookies" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              Cookie Policy
+            </Link>
+            <span className="text-muted-foreground">•</span>
+            <Link to="/partner-disclosure" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              Partner Disclosure
+            </Link>
+          </div>
         </div>
       </main>
 
