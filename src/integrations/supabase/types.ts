@@ -6223,6 +6223,119 @@ export type Database = {
         }
         Relationships: []
       }
+      renter_documents: {
+        Row: {
+          created_at: string | null
+          document_type: Database["public"]["Enums"]["renter_document_type"]
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          renter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: Database["public"]["Enums"]["renter_document_type"]
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          renter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: Database["public"]["Enums"]["renter_document_type"]
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          renter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renter_documents_renter_id_fkey"
+            columns: ["renter_id"]
+            isOneToOne: false
+            referencedRelation: "renter_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      renter_profiles: {
+        Row: {
+          created_at: string | null
+          date_of_birth: string
+          full_name: string
+          id: string
+          license_expiration: string
+          license_number: string
+          license_state: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          updated_at: string | null
+          user_id: string
+          verification_status:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Insert: {
+          created_at?: string | null
+          date_of_birth: string
+          full_name: string
+          id?: string
+          license_expiration: string
+          license_number: string
+          license_state: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_status?:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Update: {
+          created_at?: string | null
+          date_of_birth?: string
+          full_name?: string
+          id?: string
+          license_expiration?: string
+          license_number?: string
+          license_state?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_status?:
+            | Database["public"]["Enums"]["renter_verification_status"]
+            | null
+        }
+        Relationships: []
+      }
       reorder_rules: {
         Row: {
           auto_order: boolean | null
@@ -10504,6 +10617,7 @@ export type Database = {
       }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
+      is_verified_renter: { Args: { user_uuid: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_device_fingerprint?: string
@@ -10594,6 +10708,12 @@ export type Database = {
       p2p_vehicle_status: "pending" | "approved" | "rejected" | "suspended"
       partner_booking_status: "pending" | "returned" | "failed" | "timeout"
       partner_status: "pending" | "active" | "suspended" | "inactive"
+      renter_document_type: "license_front" | "license_back" | "selfie"
+      renter_verification_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "suspended"
       travel_booking_status:
         | "pending"
         | "redirected"
@@ -10812,6 +10932,13 @@ export const Constants = {
       p2p_vehicle_status: ["pending", "approved", "rejected", "suspended"],
       partner_booking_status: ["pending", "returned", "failed", "timeout"],
       partner_status: ["pending", "active", "suspended", "inactive"],
+      renter_document_type: ["license_front", "license_back", "selfie"],
+      renter_verification_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "suspended",
+      ],
       travel_booking_status: [
         "pending",
         "redirected",
