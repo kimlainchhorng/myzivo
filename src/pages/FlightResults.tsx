@@ -281,7 +281,7 @@ const FlightResults = () => {
     });
   }, [flights]);
 
-  // Convert to unified card format
+  // Convert to unified card format with badges
   const flightCards: FlightCardData[] = flights.map((flight) => ({
     id: flight.id,
     proposalId: (flight as any).proposalId,  // Include proposal ID for clicks endpoint
@@ -304,6 +304,7 @@ const FlightResults = () => {
     isRealPrice: (flight as any).isRealPrice,
     isBestPrice: flight.price === lowestPrice,
     isFastest: flight === fastestFlight,
+    isBestValue: flight === bestValueFlight && flight !== cheapestFlight && flight !== fastestFlight,
   }));
 
   const handleViewDeal = async (flight: FlightCardData) => {
@@ -510,14 +511,17 @@ const FlightResults = () => {
           }
         />
 
-        {/* Trust/Compliance Banner - Always show */}
-        <section className="border-b border-border/50 py-4 bg-muted/10">
+        {/* Trust Banner - Above Results */}
+        <section className="border-b border-border/50 py-4 bg-gradient-to-r from-sky-500/5 via-transparent to-sky-500/5">
           <div className="container mx-auto px-4">
-            {/* Trust Element - REQUIRED */}
-            <p className="text-center text-xs text-muted-foreground">
-              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
-              ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                Compare flights from licensed airline partners
+              </span>
+              <span className="hidden sm:inline text-border">•</span>
+              <span className="text-emerald-600 font-medium">No hidden fees from ZIVO</span>
+            </div>
           </div>
         </section>
 

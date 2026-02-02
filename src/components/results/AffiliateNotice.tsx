@@ -55,6 +55,11 @@ export function RedirectNotice({ service, className }: RedirectNoticeProps) {
         <p className="mt-1 text-xs opacity-75">
           Prices may vary. Final price shown on partner site.
         </p>
+        {service === "flights" && (
+          <p className="mt-2 text-xs font-medium text-foreground/80">
+            Hizivo does not issue airline tickets. Booking completed with airline partner.
+          </p>
+        )}
       </div>
     </div>
   );
