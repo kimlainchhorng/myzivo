@@ -136,7 +136,7 @@ const Profile = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="rounded-xl hover:bg-muted/50 -ml-2 touch-manipulation active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
