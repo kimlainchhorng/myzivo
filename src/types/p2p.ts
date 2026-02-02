@@ -6,7 +6,11 @@
 import type { Database } from "@/integrations/supabase/types";
 
 // Extract types from generated Supabase types
-export type CarOwnerProfile = Database["public"]["Tables"]["car_owner_profiles"]["Row"];
+export type CarOwnerProfile = Database["public"]["Tables"]["car_owner_profiles"]["Row"] & {
+  admin_review_notes?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+};
 export type CarOwnerProfileInsert = Database["public"]["Tables"]["car_owner_profiles"]["Insert"];
 export type CarOwnerProfileUpdate = Database["public"]["Tables"]["car_owner_profiles"]["Update"];
 

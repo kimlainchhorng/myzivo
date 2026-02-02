@@ -92,20 +92,26 @@ export function useAdminOwnerStats() {
 
 // Update owner status (admin only)
 export function useUpdateOwnerStatus() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async ({ 
       ownerId, 
-      status 
+      status,
+      adminNotes,
     }: { 
       ownerId: string; 
       status: CarOwnerStatus;
+      adminNotes?: string;
     }) => {
       const { data, error } = await supabase
         .from("car_owner_profiles")
         .update({ 
           status,
+          admin_review_notes: adminNotes,
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq("id", ownerId)

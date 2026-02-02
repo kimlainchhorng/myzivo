@@ -876,6 +876,7 @@ export type Database = {
       car_owner_profiles: {
         Row: {
           address: string | null
+          admin_review_notes: string | null
           bio: string | null
           city: string | null
           created_at: string | null
@@ -892,6 +893,8 @@ export type Database = {
           rating: number | null
           response_rate: number | null
           response_time_hours: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           ssn_last_four: string | null
           state: string | null
           status: Database["public"]["Enums"]["car_owner_status"] | null
@@ -906,6 +909,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          admin_review_notes?: string | null
           bio?: string | null
           city?: string | null
           created_at?: string | null
@@ -922,6 +926,8 @@ export type Database = {
           rating?: number | null
           response_rate?: number | null
           response_time_hours?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           ssn_last_four?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["car_owner_status"] | null
@@ -936,6 +942,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          admin_review_notes?: string | null
           bio?: string | null
           city?: string | null
           created_at?: string | null
@@ -952,6 +959,8 @@ export type Database = {
           rating?: number | null
           response_rate?: number | null
           response_time_hours?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           ssn_last_four?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["car_owner_status"] | null
