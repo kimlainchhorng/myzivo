@@ -4,7 +4,7 @@
  */
 
 import { useParams, Link, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import {
   CheckCircle, Clock, MapPin, Calendar, Car, User,
@@ -26,6 +26,7 @@ import { useCreateP2PCheckout } from "@/hooks/useP2PPayment";
 import { toast } from "sonner";
 import CompletedBookingSection from "@/components/p2p/CompletedBookingSection";
 import RenterReceipt from "@/components/p2p/RenterReceipt";
+import DisputeForm from "@/components/p2p/DisputeForm";
 
 const statusConfig = {
   pending: {
@@ -443,6 +444,13 @@ export default function P2PBookingConfirmation() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            )}
+            
+            {/* Dispute Form - Show for active/completed/paid bookings */}
+            {(booking.status === "active" || 
+              booking.status === "completed" || 
+              booking.payment_status === "captured") && (
+              <DisputeForm bookingId={booking.id} />
             )}
           </div>
         </div>

@@ -6,6 +6,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCarOwnerProfile, useOwnerStats } from "@/hooks/useCarOwner";
+import { useOwnerActivity } from "@/hooks/useOwnerActivity";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -15,12 +16,14 @@ import {
 import ZivoLogo from "@/components/ZivoLogo";
 import OwnerStatusBadge from "@/components/owner/OwnerStatusBadge";
 import OwnerStatsCards from "@/components/owner/OwnerStatsCards";
+import OwnerActivityFeed from "@/components/owner/OwnerActivityFeed";
 
 export default function OwnerDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile, isLoading: loadingProfile } = useCarOwnerProfile();
   const { data: stats, isLoading: loadingStats } = useOwnerStats();
+  const { data: activities, isLoading: loadingActivities } = useOwnerActivity(profile?.id);
 
   if (loadingProfile) {
     return (
@@ -261,19 +264,9 @@ export default function OwnerDashboard() {
           </Card>
         )}
 
-        {/* Recent Activity Placeholder */}
+        {/* Recent Activity Feed */}
         {isVerified && stats && stats.totalTrips > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest bookings and earnings</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Activity feed coming soon...
-              </p>
-            </CardContent>
-          </Card>
+          <OwnerActivityFeed activities={activities} isLoading={loadingActivities} />
         )}
       </main>
     </div>
