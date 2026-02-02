@@ -4,20 +4,21 @@
  */
 
 import { cn } from "@/lib/utils";
+import { getAirlineLogo } from "@/data/airlines";
 
 const airlines = [
-  { name: "American Airlines", code: "AA", color: "bg-red-600" },
-  { name: "Delta", code: "DL", color: "bg-blue-700" },
-  { name: "United", code: "UA", color: "bg-blue-900" },
-  { name: "Emirates", code: "EK", color: "bg-red-700" },
-  { name: "Lufthansa", code: "LH", color: "bg-yellow-500" },
-  { name: "British Airways", code: "BA", color: "bg-blue-800" },
-  { name: "Air France", code: "AF", color: "bg-blue-600" },
-  { name: "Qatar Airways", code: "QR", color: "bg-purple-800" },
-  { name: "Singapore Airlines", code: "SQ", color: "bg-amber-600" },
-  { name: "JetBlue", code: "B6", color: "bg-blue-500" },
-  { name: "Southwest", code: "WN", color: "bg-orange-500" },
-  { name: "Alaska Airlines", code: "AS", color: "bg-sky-600" },
+  { name: "American Airlines", code: "AA" },
+  { name: "Delta", code: "DL" },
+  { name: "United", code: "UA" },
+  { name: "Emirates", code: "EK" },
+  { name: "Lufthansa", code: "LH" },
+  { name: "British Airways", code: "BA" },
+  { name: "Air France", code: "AF" },
+  { name: "Qatar Airways", code: "QR" },
+  { name: "Singapore Airlines", code: "SQ" },
+  { name: "JetBlue", code: "B6" },
+  { name: "Southwest", code: "WN" },
+  { name: "Alaska Airlines", code: "AS" },
 ];
 
 export default function AirlineTrustSection() {
@@ -45,13 +46,20 @@ export default function AirlineTrustSection() {
                 "hover:border-primary/30 hover:shadow-md transition-all duration-200"
               )}
             >
-              {/* Airline Badge */}
-              <div className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold",
-                airline.color
-              )}>
+              {/* Airline Logo */}
+              <img
+                src={getAirlineLogo(airline.code, 32)}
+                alt={`${airline.name} logo`}
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  // Fallback to code if logo fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <span className="hidden w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
                 {airline.code}
-              </div>
+              </span>
               <span className="text-sm font-medium text-foreground/80 hidden sm:inline">
                 {airline.name}
               </span>
