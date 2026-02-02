@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Plane, Shield, Clock, Globe } from "lucide-react";
+import { Plane, Shield, Clock, Globe, ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -18,6 +18,7 @@ import PhotoDestinationGrid from "@/components/shared/PhotoDestinationGrid";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { formatRouteTitle } from "@/utils/seoUtils";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 /**
  * Dynamic SEO landing page for flights
@@ -93,6 +94,16 @@ const FlightLanding = () => {
             navigateOnSearch={true}
           />
         </ImageHero>
+
+        {/* Flight Disclaimer Banner - LOCKED TEXT (REQUIRED) */}
+        <section className="border-b border-amber-500/20 py-2.5 bg-amber-500/5">
+          <div className="container mx-auto px-4">
+            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
+              {FLIGHT_DISCLAIMERS.ticketing}
+            </p>
+          </div>
+        </section>
 
         {/* Trust Bar */}
         <GlobalTrustBar variant="compact" />
