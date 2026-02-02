@@ -22,14 +22,12 @@ const footerLinks = {
     { name: "Extras", href: "/extras" },
   ],
   services: [
-    { name: "ZIVO Rides", href: "/rides" },
-    { name: "ZIVO Eats", href: "/eats" },
+    { name: "Rides / Eats / Move", href: "https://zivodriver.com", external: true },
   ],
   company: [
-    { name: "About ZIVO", href: "/about" },
+    { name: "About Hizovo", href: "/about" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
-    { name: "Creators", href: "/creators" },
     { name: "Contact Us", href: "/contact" },
   ],
   support: [
@@ -39,7 +37,8 @@ const footerLinks = {
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
     { name: "Privacy Policy", href: "/privacy" },
-    { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
+    { name: "Partner Disclosure", href: "/partner-disclosure" },
+    { name: "Cookie Policy", href: "/cookies" },
   ],
 };
 
@@ -122,7 +121,7 @@ const Footer = () => {
               
               {/* Business Info Block */}
               <div className="p-3 rounded-xl bg-muted/30 border border-border/50 mb-4">
-                <p className="text-xs font-medium text-foreground mb-1">ZIVO LLC</p>
+                <p className="text-xs font-medium text-foreground mb-1">Hizovo Travel</p>
                 <p className="text-[10px] text-muted-foreground">Travel Search & Comparison Platform</p>
               </div>
               
@@ -164,12 +163,24 @@ const Footer = () => {
               <ul className="space-y-2.5">
                 {footerLinks.services.map((link) => (
                   <li key={link.name}>
-                    <Link
-                      to={link.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.name}
-                    </Link>
+                    {'external' in link && link.external ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                      >
+                        {link.name}
+                        <ExternalLink className="w-3 h-3 opacity-50" />
+                      </a>
+                    ) : (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {link.name}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

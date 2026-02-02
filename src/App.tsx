@@ -77,6 +77,7 @@ const CommunityGuidelines = lazy(() => import("./pages/legal/CommunityGuidelines
 const InsurancePolicy = lazy(() => import("./pages/legal/InsurancePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilityStatement"));
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -84,6 +85,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Partners = lazy(() => import("./pages/Partners"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
@@ -225,6 +227,7 @@ const App = () => (
                 <Route path="/insurance" element={<InsurancePolicy />} />
                 <Route path="/accessibility" element={<AccessibilityStatement />} />
                 <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                <Route path="/partner-disclosure" element={<PartnerDisclosure />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
@@ -232,6 +235,7 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
                 <Route path="/events" element={<Events />} />
