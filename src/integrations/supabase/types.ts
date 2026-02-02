@@ -895,7 +895,10 @@ export type Database = {
           ssn_last_four: string | null
           state: string | null
           status: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_currency: string | null
           stripe_account_id: string | null
+          stripe_charges_enabled: boolean | null
+          stripe_payouts_enabled: boolean | null
           total_trips: number | null
           updated_at: string | null
           user_id: string
@@ -922,7 +925,10 @@ export type Database = {
           ssn_last_four?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_currency?: string | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           total_trips?: number | null
           updated_at?: string | null
           user_id: string
@@ -949,7 +955,10 @@ export type Database = {
           ssn_last_four?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_currency?: string | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           total_trips?: number | null
           updated_at?: string | null
           user_id?: string
@@ -4490,6 +4499,8 @@ export type Database = {
           payment_status:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_eligible_at: string | null
+          payout_hold_reason: string | null
           payout_id: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
@@ -4539,6 +4550,8 @@ export type Database = {
           payment_status?:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_eligible_at?: string | null
+          payout_hold_reason?: string | null
           payout_id?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
@@ -4588,6 +4601,8 @@ export type Database = {
           payment_status?:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_eligible_at?: string | null
+          payout_hold_reason?: string | null
           payout_id?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
@@ -4746,7 +4761,11 @@ export type Database = {
           booking_ids: string[] | null
           created_at: string | null
           failed_reason: string | null
+          held_at: string | null
+          held_by: string | null
+          held_reason: string | null
           id: string
+          is_held: boolean | null
           net_amount: number
           notes: string | null
           owner_id: string
@@ -4764,7 +4783,11 @@ export type Database = {
           booking_ids?: string[] | null
           created_at?: string | null
           failed_reason?: string | null
+          held_at?: string | null
+          held_by?: string | null
+          held_reason?: string | null
           id?: string
+          is_held?: boolean | null
           net_amount: number
           notes?: string | null
           owner_id: string
@@ -4782,7 +4805,11 @@ export type Database = {
           booking_ids?: string[] | null
           created_at?: string | null
           failed_reason?: string | null
+          held_at?: string | null
+          held_by?: string | null
+          held_reason?: string | null
           id?: string
+          is_held?: boolean | null
           net_amount?: number
           notes?: string | null
           owner_id?: string
