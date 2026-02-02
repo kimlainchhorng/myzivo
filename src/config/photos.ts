@@ -39,6 +39,10 @@ import destSantorini from "@/assets/dest-santorini.jpg";
 import destMiami from "@/assets/dest-miami.jpg";
 import destIstanbul from "@/assets/dest-istanbul.jpg";
 import destAmsterdam from "@/assets/dest-amsterdam.jpg";
+import destOrlando from "@/assets/dest-orlando.jpg";
+import destSanDiego from "@/assets/dest-sandiego.jpg";
+import destCancun from "@/assets/dest-cancun.jpg";
+import destPhoenix from "@/assets/dest-phoenix.jpg";
 
 // Import lifestyle assets
 import lifestyleTravelers from "@/assets/lifestyle-travelers.jpg";
@@ -300,36 +304,36 @@ export const destinationPhotos: Record<DestinationCity, { src: string; alt: stri
     height: 400,
   },
   "orlando": {
-    src: "https://images.unsplash.com/photo-1575089776834-8be34c8a652e?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destOrlando,
     alt: "Orlando, Florida - Theme park area skyline",
     city: "Orlando",
     country: "Florida",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "phoenix": {
-    src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destPhoenix,
     alt: "Phoenix, Arizona - Desert city skyline",
     city: "Phoenix",
     country: "Arizona",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "san-diego": {
-    src: "https://images.unsplash.com/photo-1538964173425-93c8e0a2a8a8?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destSanDiego,
     alt: "San Diego, California - Harbor and skyline",
     city: "San Diego",
     country: "California",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "cancun": {
-    src: "https://images.unsplash.com/photo-1552074284-5e84a3e70b0a?w=400&h=400&fit=crop&q=75&fm=webp&auto=format",
+    src: destCancun,
     alt: "Cancún, Mexico - Caribbean beach resort",
     city: "Cancún",
     country: "Mexico",
-    width: 400,
-    height: 400,
+    width: 512,
+    height: 512,
   },
   "barcelona": {
     src: destBarcelona,

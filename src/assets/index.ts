@@ -44,6 +44,10 @@ export { default as destSantorini } from "./dest-santorini.jpg";
 export { default as destMiami } from "./dest-miami.jpg";
 export { default as destIstanbul } from "./dest-istanbul.jpg";
 export { default as destAmsterdam } from "./dest-amsterdam.jpg";
+export { default as destOrlando } from "./dest-orlando.jpg";
+export { default as destSanDiego } from "./dest-sandiego.jpg";
+export { default as destCancun } from "./dest-cancun.jpg";
+export { default as destPhoenix } from "./dest-phoenix.jpg";
 
 // ==========================================
 // LIFESTYLE IMAGES
