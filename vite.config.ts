@@ -33,16 +33,16 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
       manifest: {
-        name: "ZIVO",
-        short_name: "ZIVO",
-        description: "Search flights, hotels, car rentals. Request rides and food delivery.",
-        theme_color: "#0F172A",
-        background_color: "#0F172A",
+        name: "Hizovo Travel",
+        short_name: "Hizovo",
+        description: "Compare flights, hotels, and car rentals from trusted travel partners. Best prices, no booking fees.",
+        theme_color: "#0D0D0F",
+        background_color: "#0D0D0F",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
-        start_url: "/",
-        id: "com.zivo.app",
+        start_url: "/?source=pwa",
+        id: "com.hizovo.travel",
         icons: [
           {
             src: "/pwa-icons/icon-192x192.png",
@@ -69,24 +69,24 @@ export default defineConfig(({ mode }) => ({
             purpose: "maskable"
           }
         ],
-        categories: ["travel", "transportation", "food", "lifestyle"],
+        categories: ["travel", "lifestyle", "shopping"],
         shortcuts: [
           {
             name: "Search Flights",
             short_name: "Flights",
-            url: "/travel?tab=flights",
+            url: "/flights",
             icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
           },
           {
-            name: "Request Ride",
-            short_name: "Rides",
-            url: "/rides",
+            name: "Search Hotels",
+            short_name: "Hotels",
+            url: "/hotels",
             icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
           },
           {
-            name: "Order Food",
-            short_name: "Eats",
-            url: "/eats",
+            name: "Rent a Car",
+            short_name: "Cars",
+            url: "/cars",
             icons: [{ src: "/pwa-icons/icon-192x192.png", sizes: "192x192" }]
           }
         ]

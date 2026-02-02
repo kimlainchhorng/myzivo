@@ -11,6 +11,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
+import { PWAInstallPrompt } from "./components/mobile";
 import { Loader2 } from "lucide-react";
 
 // Eager load critical pages
@@ -105,10 +106,12 @@ const TravelHandoffPage = lazy(() => import("./pages/admin/TravelHandoffPage"));
 const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
 const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
+const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
 const TrackingTest = lazy(() => import("./pages/TrackingTest"));
+const Offline = lazy(() => import("./pages/Offline"));
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -338,11 +341,21 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                <Route
+                  path="/admin/mobile"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminMobile />
+                    </ProtectedRoute>
+                  }
+                />
                 {/* Public Support Pages */}
                 <Route path="/help" element={<Help />} />
                 <Route path="/support/travel-bookings" element={<TravelBookingsSupport />} />
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
                 <Route path="/partner/overview" element={<PartnerOverview />} />
+                {/* Offline fallback page for PWA */}
+                <Route path="/offline" element={<Offline />} />
                 {/* Outbound redirect for affiliate tracking */}
                 <Route path="/out" element={<OutboundRedirect />} />
                 {/* Tracking test page (hidden from nav) */}
@@ -372,6 +385,7 @@ const App = () => (
           </UTMProvider>
           </CurrencyProvider>
           <CookieConsent />
+          <PWAInstallPrompt />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
