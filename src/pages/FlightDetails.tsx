@@ -40,6 +40,9 @@ import {
   Award,
   Globe,
   Lock,
+  Phone,
+  Briefcase,
+  Package,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -47,15 +50,26 @@ import { getAirlineLogo } from "@/data/airlines";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { trackAffiliateClick, buildAffiliateUrl } from "@/lib/affiliateTracking";
 import { FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
-import { FlightDetailStickyCTA, HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
+import { 
+  FlightDetailStickyCTA, 
+  HowBookingWorks, 
+  FlightTrustBadgesBar,
+  FlightStickyHeader,
+  FlightItineraryTimeline,
+  FlightBookingSidebar,
+  FlightConsentCheckbox,
+} from "@/components/flight";
+import { toast } from "@/hooks/use-toast";
 
 const FlightDetails = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [flight, setFlight] = useState<GeneratedFlight | null>(null);
   const [searchParams, setSearchParams] = useState<any>(null);
-  const [selectedTab, setSelectedTab] = useState("overview");
+  const [selectedTab, setSelectedTab] = useState("itinerary");
   const [isSaved, setIsSaved] = useState(false);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     const storedFlight = sessionStorage.getItem("selectedFlight");
@@ -94,6 +108,18 @@ const FlightDetails = () => {
   }
 
   const handleBookNow = () => {
+    // Block if consent not given
+    if (!consentChecked) {
+      toast({
+        title: "Consent Required",
+        description: "Please agree to share your information with the booking partner before continuing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRedirecting(true);
+    
     trackAffiliateClick({
       userId: undefined,
       flightId: flight.id,
@@ -118,7 +144,12 @@ const FlightDetails = () => {
       cabinClass: searchParams?.cabinClass || "economy",
     });
     
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Redirect in same tab to avoid popup blockers
+    window.location.href = url;
+  };
+
+  const handleChangeFlight = () => {
+    navigate("/flights/results" + window.location.search);
   };
 
   const amenityList = flight.amenities || [];
@@ -144,6 +175,21 @@ const FlightDetails = () => {
     },
   };
 
+  // Sidebar baggage format
+  const sidebarBaggage = {
+    personalItem: true,
+    carryOn: true,
+    checkedBag: flight.price > 300,
+    checkedBagWeight: flight.price > 500 ? "2 x 23kg" : "1 x 23kg",
+  };
+
+  // Fare rules (estimate based on price)
+  const fareRules = {
+    changeable: true,
+    changeableFee: "Fee applies",
+    refundable: flight.price > 400,
+  };
+
   const passengerCount = parseInt(searchParams?.passengers || "1");
   const totalPrice = flight.price * passengerCount;
   const taxes = totalPrice * 0.12;
@@ -157,11 +203,36 @@ const FlightDetails = () => {
     { label: "Skytrax Rating", value: "4★", icon: Award },
   ];
 
+  // Build itinerary segment
+  const itinerarySegments = [{
+    airline: flight.airline,
+    airlineCode: flight.airlineCode,
+    flightNumber: flight.flightNumber,
+    departureTime: flight.departure.time,
+    arrivalTime: flight.arrival.time,
+    departureCode: flight.departure.code,
+    departureCity: flight.departure.city || flight.departure.code,
+    arrivalCode: flight.arrival.code,
+    arrivalCity: flight.arrival.city || flight.arrival.code,
+    duration: flight.duration,
+  }];
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {/* Sticky Flight Summary Header */}
+      <FlightStickyHeader
+        origin={flight.departure.code}
+        originCity={flight.departure.city}
+        destination={flight.arrival.code}
+        destinationCity={flight.arrival.city}
+        departDate={searchParams?.departDate || ""}
+        returnDate={searchParams?.returnDate}
+        passengers={passengerCount}
+        cabinClass={searchParams?.cabinClass || "economy"}
+        onChangeFlight={handleChangeFlight}
+      />
 
-      <main className="pt-20 pb-20">
+      <main className="pt-4 pb-32 lg:pb-20">
         {/* Hero Banner */}
         <div className="relative bg-gradient-to-r from-sky-950 via-blue-900 to-slate-900 py-8 mb-8">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-500/20 via-transparent to-transparent" />
@@ -292,9 +363,9 @@ const FlightDetails = () => {
               {/* Tabs Navigation */}
               <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-4 h-12">
-                  <TabsTrigger value="overview" className="gap-2">
-                    <Info className="w-4 h-4" />
-                    <span className="hidden sm:inline">Overview</span>
+                  <TabsTrigger value="itinerary" className="gap-2">
+                    <Plane className="w-4 h-4" />
+                    <span className="hidden sm:inline">Itinerary</span>
                   </TabsTrigger>
                   <TabsTrigger value="baggage" className="gap-2">
                     <Luggage className="w-4 h-4" />
@@ -310,7 +381,97 @@ const FlightDetails = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                {/* Overview Tab */}
+                {/* Itinerary Tab */}
+                <TabsContent value="itinerary" className="space-y-6 mt-6">
+                  {/* Timeline Layout */}
+                  <FlightItineraryTimeline
+                    segments={itinerarySegments}
+                    departDate={searchParams?.departDate}
+                    returnDate={searchParams?.returnDate}
+                  />
+
+                  {/* Layover Info */}
+                  {flight.stops > 0 && (
+                    <Card className="border-amber-500/30 bg-amber-500/5">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-amber-500">
+                          <MapPin className="w-5 h-5" />
+                          Connection Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                            <AlertCircle className="w-6 h-6 text-amber-500" />
+                          </div>
+                          <div>
+                            <p className="font-semibold">This flight has {flight.stops} stop{flight.stops > 1 ? "s" : ""}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Estimated layover: {Math.floor(Math.random() * 3) + 1}h {Math.floor(Math.random() * 50) + 10}m
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Connection details and gate information will be provided in your booking confirmation.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Airline Stats */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Award className="w-5 h-5 text-sky-500" />
+                        Airline Performance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {airlineFeatures.map((feature) => (
+                          <div key={feature.label} className="text-center p-4 rounded-xl bg-muted/50">
+                            <feature.icon className="w-6 h-6 mx-auto mb-2 text-sky-500" />
+                            <p className="text-2xl font-bold">{feature.value}</p>
+                            <p className="text-xs text-muted-foreground">{feature.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Quick Amenities Preview */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-sky-500" />
+                        What's Included
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
+                        {amenities.map((amenity) => (
+                          <div
+                            key={amenity.label}
+                            className={cn(
+                              "p-4 rounded-xl text-center transition-all",
+                              amenity.available
+                                ? "bg-emerald-500/10 border border-emerald-500/30"
+                                : "bg-muted/50 border border-border opacity-60"
+                            )}
+                          >
+                            <amenity.icon className={cn(
+                              "w-6 h-6 mx-auto mb-2",
+                              amenity.available ? "text-emerald-500" : "text-muted-foreground"
+                            )} />
+                            <p className="text-xs font-medium">{amenity.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Overview Tab - keeping old content */}
                 <TabsContent value="overview" className="space-y-6 mt-6">
                   {/* Layover Info */}
                   {flight.stops > 0 && (
@@ -575,94 +736,17 @@ const FlightDetails = () => {
               </Tabs>
             </div>
 
-            {/* Sidebar - Booking Summary */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-24 overflow-hidden shadow-xl">
-                <div className="h-2 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center justify-between">
-                    <span>Price Summary</span>
-                    <Badge className="bg-emerald-500/20 text-emerald-500">
-                      <Percent className="w-3 h-3 mr-1" />
-                      Best Deal
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Price Breakdown */}
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Flight × {passengerCount} ({cabinClassLabel})
-                      </span>
-                      <span className="font-medium">${totalPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Taxes & Fees</span>
-                      <span className="font-medium">${taxes.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-emerald-500">
-                      <span>Service Fee</span>
-                      <span>Free</span>
-                    </div>
-                    <Separator />
-                    <div className="flex justify-between text-xl font-bold">
-                      <span>Total</span>
-                      <span className="text-sky-500">${grandTotal.toFixed(2)}</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground text-right">
-                      ${(grandTotal / passengerCount).toFixed(2)} per person
-                    </p>
-                  </div>
-
-                  {/* Trust Badges */}
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="gap-1 text-xs">
-                      <Shield className="w-3 h-3" /> Secure
-                    </Badge>
-                    <Badge variant="outline" className="gap-1 text-xs">
-                      <Award className="w-3 h-3" /> Best Price
-                    </Badge>
-                    <Badge variant="outline" className="gap-1 text-xs">
-                      <Zap className="w-3 h-3" /> Instant
-                    </Badge>
-                  </div>
-
-                  {/* Info Note - LOCKED DISCLAIMER */}
-                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-muted-foreground">
-                        {FLIGHT_DISCLAIMERS.ticketing}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Book Button - LOCKED CTA TEXT */}
-                  <Button
-                    onClick={handleBookNow}
-                    size="lg"
-                    className="w-full h-14 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white font-bold text-lg shadow-xl shadow-sky-500/30 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Lock className="w-5 h-5" />
-                    {FLIGHT_CTA_TEXT.primary}
-                    <ExternalLink className="w-5 h-5" />
-                  </Button>
-
-                  <p className="text-xs text-center text-muted-foreground">
-                    ✓ Redirect to partner • ✓ Secure checkout
-                  </p>
-
-                  {/* Affiliate Disclosure */}
-                  <div className="pt-3 border-t border-border/50">
-                    <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-                      <a href="/affiliate-disclosure" className="underline hover:text-foreground">
-                        Affiliate Disclosure
-                      </a>: We may earn a commission when you book through our partners.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Sidebar - Booking Summary with Consent */}
+            <div className="lg:col-span-1 hidden lg:block">
+              <FlightBookingSidebar
+                basePrice={flight.price}
+                passengers={passengerCount}
+                cabinClass={searchParams?.cabinClass || "economy"}
+                baggage={sidebarBaggage}
+                fareRules={fareRules}
+                onContinue={handleBookNow}
+                isLoading={isRedirecting}
+              />
             </div>
           </div>
         </div>
@@ -672,14 +756,39 @@ const FlightDetails = () => {
 
         {/* Trust Badges */}
         <FlightTrustBadgesBar variant="compact" className="py-6 border-y border-border/50" />
+
+        {/* Support Notice - At Bottom */}
+        <section className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center p-6 bg-muted/30 rounded-2xl">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <Phone className="w-5 h-5 text-sky-500" />
+              <h3 className="font-semibold">Need Help with Your Booking?</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2">
+              {FLIGHT_DISCLAIMERS.support}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              For website issues, contact{" "}
+              <a href="mailto:info@hizivo.com" className="text-sky-500 hover:underline">
+                info@hizivo.com
+              </a>
+            </p>
+          </div>
+        </section>
       </main>
 
-      {/* Mobile Sticky CTA */}
+      {/* Mobile Sticky CTA with Consent */}
       <FlightDetailStickyCTA
         price={flight.price}
         currency="USD"
         passengers={passengerCount}
-        onContinue={handleBookNow}
+        onContinue={() => {
+          // For mobile CTA, the consent is handled inside the component
+          setConsentChecked(true);
+          handleBookNow();
+        }}
+        isLoading={isRedirecting}
+        consentRequired={true}
       />
 
       <Footer />
