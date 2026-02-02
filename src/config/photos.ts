@@ -99,6 +99,27 @@ import carLexusEs from "@/assets/car-lexus-es.jpg";
 import carVolvoXc90 from "@/assets/car-volvo-xc90.jpg";
 import carRangeRover from "@/assets/car-range-rover.jpg";
 import carToyotaSienna from "@/assets/car-toyota-sienna.jpg";
+// Additional branded car models
+import carMazdaCx5 from "@/assets/car-mazda-cx5.jpg";
+import carSubaruOutback from "@/assets/car-subaru-outback.jpg";
+import carFordExplorer from "@/assets/car-ford-explorer.jpg";
+import carHondaAccord from "@/assets/car-honda-accord.jpg";
+import carGenesisG80 from "@/assets/car-genesis-g80.jpg";
+import carCadillacEscalade from "@/assets/car-cadillac-escalade.jpg";
+import carDodgeCharger from "@/assets/car-dodge-charger.jpg";
+import carRivianR1s from "@/assets/car-rivian-r1s.jpg";
+import carLucidAir from "@/assets/car-lucid-air.jpg";
+import carPolestar2 from "@/assets/car-polestar-2.jpg";
+import carAlfaRomeoGiulia from "@/assets/car-alfa-romeo-giulia.jpg";
+import carJaguarFpace from "@/assets/car-jaguar-fpace.jpg";
+import carMaseratiGhibli from "@/assets/car-maserati-ghibli.jpg";
+import carBentleyContinental from "@/assets/car-bentley-continental.jpg";
+import carFerrari488 from "@/assets/car-ferrari-488.jpg";
+import carLamborghiniHuracan from "@/assets/car-lamborghini-huracan.jpg";
+import carAstonMartinDb11 from "@/assets/car-aston-martin-db11.jpg";
+import carMclaren720s from "@/assets/car-mclaren-720s.jpg";
+import carChryslerPacifica from "@/assets/car-chrysler-pacifica.jpg";
+import carFordF150 from "@/assets/car-ford-f150.jpg";
 
 // Import hotel category assets (local AI-generated)
 import hotelLuxury from "@/assets/hotel-luxury.jpg";
@@ -848,6 +869,252 @@ export const brandedCarModels: BrandedCarModel[] = [
     fuelType: "hybrid",
     passengers: 8,
     bags: 5,
+    transmission: "auto",
+  },
+  {
+    id: "chrysler-pacifica",
+    brand: "Chrysler",
+    model: "Pacifica",
+    category: "van",
+    src: carChryslerPacifica,
+    alt: "Chrysler Pacifica - Premium family minivan",
+    fuelType: "hybrid",
+    passengers: 7,
+    bags: 5,
+    transmission: "auto",
+  },
+  // Additional SUVs
+  {
+    id: "mazda-cx5",
+    brand: "Mazda",
+    model: "CX-5",
+    category: "suv",
+    src: carMazdaCx5,
+    alt: "Mazda CX-5 - Stylish Japanese crossover",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "subaru-outback",
+    brand: "Subaru",
+    model: "Outback",
+    category: "suv",
+    src: carSubaruOutback,
+    alt: "Subaru Outback - Adventure wagon crossover",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "ford-explorer",
+    brand: "Ford",
+    model: "Explorer",
+    category: "suv",
+    src: carFordExplorer,
+    alt: "Ford Explorer - American family SUV",
+    fuelType: "hybrid",
+    passengers: 7,
+    bags: 5,
+    transmission: "auto",
+  },
+  {
+    id: "jaguar-fpace",
+    brand: "Jaguar",
+    model: "F-PACE",
+    category: "luxury",
+    src: carJaguarFpace,
+    alt: "Jaguar F-PACE - British luxury SUV",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "cadillac-escalade",
+    brand: "Cadillac",
+    model: "Escalade",
+    category: "luxury",
+    src: carCadillacEscalade,
+    alt: "Cadillac Escalade - American luxury SUV",
+    fuelType: "gas",
+    passengers: 7,
+    bags: 5,
+    transmission: "auto",
+  },
+  // Additional Sedans
+  {
+    id: "honda-accord",
+    brand: "Honda",
+    model: "Accord",
+    category: "midsize",
+    src: carHondaAccord,
+    alt: "Honda Accord - Reliable midsize sedan",
+    fuelType: "hybrid",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "genesis-g80",
+    brand: "Genesis",
+    model: "G80",
+    category: "luxury",
+    src: carGenesisG80,
+    alt: "Genesis G80 - Korean luxury sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "alfa-romeo-giulia",
+    brand: "Alfa Romeo",
+    model: "Giulia",
+    category: "luxury",
+    src: carAlfaRomeoGiulia,
+    alt: "Alfa Romeo Giulia - Italian sports sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  {
+    id: "maserati-ghibli",
+    brand: "Maserati",
+    model: "Ghibli",
+    category: "luxury",
+    src: carMaseratiGhibli,
+    alt: "Maserati Ghibli - Italian luxury sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  // Performance / Sports
+  {
+    id: "dodge-charger",
+    brand: "Dodge",
+    model: "Charger",
+    category: "luxury",
+    src: carDodgeCharger,
+    alt: "Dodge Charger - American muscle sedan",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  // Exotic / Supercars
+  {
+    id: "ferrari-488",
+    brand: "Ferrari",
+    model: "488",
+    category: "luxury",
+    src: carFerrari488,
+    alt: "Ferrari 488 - Italian supercar",
+    fuelType: "gas",
+    passengers: 2,
+    bags: 1,
+    transmission: "auto",
+  },
+  {
+    id: "lamborghini-huracan",
+    brand: "Lamborghini",
+    model: "Huracán",
+    category: "luxury",
+    src: carLamborghiniHuracan,
+    alt: "Lamborghini Huracán - Italian supercar",
+    fuelType: "gas",
+    passengers: 2,
+    bags: 1,
+    transmission: "auto",
+  },
+  {
+    id: "mclaren-720s",
+    brand: "McLaren",
+    model: "720S",
+    category: "luxury",
+    src: carMclaren720s,
+    alt: "McLaren 720S - British supercar",
+    fuelType: "gas",
+    passengers: 2,
+    bags: 1,
+    transmission: "auto",
+  },
+  {
+    id: "aston-martin-db11",
+    brand: "Aston Martin",
+    model: "DB11",
+    category: "luxury",
+    src: carAstonMartinDb11,
+    alt: "Aston Martin DB11 - British grand tourer",
+    fuelType: "gas",
+    passengers: 4,
+    bags: 2,
+    transmission: "auto",
+  },
+  {
+    id: "bentley-continental",
+    brand: "Bentley",
+    model: "Continental GT",
+    category: "luxury",
+    src: carBentleyContinental,
+    alt: "Bentley Continental GT - Ultra luxury coupe",
+    fuelType: "gas",
+    passengers: 4,
+    bags: 2,
+    transmission: "auto",
+  },
+  // Additional Electric
+  {
+    id: "rivian-r1s",
+    brand: "Rivian",
+    model: "R1S",
+    category: "electric",
+    src: carRivianR1s,
+    alt: "Rivian R1S - Electric adventure SUV",
+    fuelType: "electric",
+    passengers: 7,
+    bags: 4,
+    transmission: "auto",
+  },
+  {
+    id: "lucid-air",
+    brand: "Lucid",
+    model: "Air",
+    category: "electric",
+    src: carLucidAir,
+    alt: "Lucid Air - Luxury electric sedan",
+    fuelType: "electric",
+    passengers: 5,
+    bags: 3,
+    transmission: "auto",
+  },
+  {
+    id: "polestar-2",
+    brand: "Polestar",
+    model: "2",
+    category: "electric",
+    src: carPolestar2,
+    alt: "Polestar 2 - Scandinavian electric fastback",
+    fuelType: "electric",
+    passengers: 5,
+    bags: 2,
+    transmission: "auto",
+  },
+  // Trucks
+  {
+    id: "ford-f150",
+    brand: "Ford",
+    model: "F-150",
+    category: "suv",
+    src: carFordF150,
+    alt: "Ford F-150 - American pickup truck",
+    fuelType: "gas",
+    passengers: 5,
+    bags: 6,
     transmission: "auto",
   },
 ];
