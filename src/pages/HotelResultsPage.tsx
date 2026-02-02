@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Hotel, AlertCircle, ExternalLink } from "lucide-react";
+import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -346,6 +347,11 @@ export default function HotelResultsPage() {
             </div>
           </section>
         )}
+
+        {/* Driver Cross-Sell */}
+        <section className="container mx-auto px-4 mt-8 max-w-4xl">
+          <DriverCrossSell source="hotels" variant="full" />
+        </section>
 
         {/* FAQ Section */}
         <ResultsFAQ service="hotels" />

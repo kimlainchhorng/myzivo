@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Car, AlertCircle, ExternalLink } from "lucide-react";
+import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -451,6 +452,11 @@ export default function CarResultsPage() {
             </div>
           </section>
         )}
+
+        {/* Driver Cross-Sell */}
+        <section className="container mx-auto px-4 mt-8 max-w-4xl">
+          <DriverCrossSell source="cars" variant="full" />
+        </section>
 
         {/* FAQ Section */}
         <ResultsFAQ service="cars" />
