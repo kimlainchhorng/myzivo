@@ -94,14 +94,14 @@ export default function StickyBookingCTA({
             onClick={handleBookClick}
           >
             <Lock className="w-4 h-4" />
-            {FLIGHT_CTA_TEXT.mobile}
+            {FLIGHT_CTA_TEXT.primary}
             <ExternalLink className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Compliance Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {FLIGHT_DISCLAIMERS.ticketingShort} {FLIGHT_DISCLAIMERS.redirect}
+          {FLIGHT_DISCLAIMERS.redirect}
         </p>
       </div>
     </div>

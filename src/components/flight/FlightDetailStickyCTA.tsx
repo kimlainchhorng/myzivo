@@ -107,13 +107,13 @@ export default function FlightDetailStickyCTA({
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span className="hidden sm:inline">Redirecting...</span>
+                <span className="hidden sm:inline">Confirming availability...</span>
               </>
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                <span className="hidden sm:inline">{FLIGHT_CTA_TEXT.mobile}</span>
-                <span className="sm:hidden">Checkout</span>
+                <span className="hidden sm:inline">{FLIGHT_CTA_TEXT.primary}</span>
+                <span className="sm:hidden">Continue</span>
                 <ExternalLink className="w-4 h-4" />
               </>
             )}
@@ -124,7 +124,7 @@ export default function FlightDetailStickyCTA({
         <div className="flex items-center justify-center gap-2 mt-2">
           <Lock className="w-3 h-3 text-emerald-500" />
           <p className="text-[9px] text-muted-foreground leading-tight">
-            Secure checkout handled by our airline partner
+            Powered by licensed travel partners · Final price confirmed before payment
           </p>
         </div>
       </div>

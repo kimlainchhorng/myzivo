@@ -72,9 +72,9 @@ export default function NoFlightsFound({
         <Plane className="w-10 h-10 text-sky-500" />
       </div>
       
-      <h3 className="text-xl sm:text-2xl font-bold mb-2">No flights found</h3>
+      <h3 className="text-xl sm:text-2xl font-bold mb-2">Comparing live deals</h3>
       <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-        We couldn't find flights matching your criteria. Try adjusting your filters or search directly with our partner for more options.
+        We're searching licensed travel partners for the best options. Try adjusting your filters or explore deals below.
       </p>
 
       <div className="flex flex-col sm:flex-row justify-center gap-3 mb-6">
@@ -103,11 +103,11 @@ export default function NoFlightsFound({
             onClick={handleSearchPartner}
           >
             <Plane className="w-5 h-5" />
-            View Deals with Our Travel Partner
+            Continue to secure booking
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            {AFFILIATE_DISCLOSURE_TEXT.short}
+            Powered by licensed travel partners · Final price confirmed before payment
           </p>
         </div>
       </div>
