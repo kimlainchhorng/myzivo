@@ -1,6 +1,7 @@
 /**
  * Car Rental Results Page - Unified Design
  * Uses shared results components for consistent UX
+ * Integrates affiliate deep links with proper consent + tracking
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -37,6 +38,8 @@ import {
 import { useRealCarSearch, type CarResult } from "@/hooks/useRealCarSearch";
 import { getAirportByCode } from "@/components/car/AirportAutocomplete";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import PartnerConsentModal from "@/components/checkout/PartnerConsentModal";
+import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 
 // Parse and validate URL parameters
 interface ParsedSearchParams {
@@ -118,6 +121,8 @@ export default function CarResultsPage() {
   const [filters, setFilters] = useState<CarFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState("price");
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<CarCardData | null>(null);
 
   const { isLoading, results, search, isRealPrice, getPartners } = useRealCarSearch();
 
