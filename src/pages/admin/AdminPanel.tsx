@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, Percent, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin, Mail
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin, Mail, Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
+import { RegionProvider } from "@/contexts/RegionContext";
+import { RegionSelector } from "@/components/admin/RegionSelector";
 
 // Admin modules
 import AdminOverview from "./modules/AdminOverview";
@@ -38,9 +40,11 @@ import AdminRentersModule from "./modules/AdminRentersModule";
 import AdminDamageReportsModule from "./modules/AdminDamageReportsModule";
 import AdminRenterInvitesModule from "./modules/AdminRenterInvitesModule";
 import AdminCategoryPricingModule from "./modules/AdminCategoryPricingModule";
+import AdminRegionsModule from "./modules/AdminRegionsModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "regions", label: "Regions", icon: Globe },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
   { id: "move", label: "Move Deliveries", icon: CarFront },
@@ -133,6 +137,8 @@ export default function AdminPanel() {
     switch (activeModule) {
       case "dashboard":
         return <AdminOverview />;
+      case "regions":
+        return <AdminRegionsModule />;
       case "rides":
         return <AdminRidesModule />;
       case "eats":
@@ -179,42 +185,52 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 border-r border-border/50 bg-card flex-col">
-        <NavContent />
-      </aside>
+    <RegionProvider>
+      <div className="min-h-screen bg-background flex">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex w-64 border-r border-border/50 bg-card flex-col">
+          <NavContent />
+        </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Mobile Header */}
-        <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-5 h-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0 w-64">
-              <NavContent />
-            </SheetContent>
-          </Sheet>
-          
-          <div className="flex items-center gap-2">
-            <ZivoLogo size="sm" />
-            <Badge variant="outline" className="text-[10px]">Admin</Badge>
-          </div>
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Desktop Header with Region Selector */}
+          <header className="hidden md:flex h-12 border-b border-border/50 items-center justify-between px-6 bg-background/95">
+            <RegionSelector />
+            <Button variant="ghost" size="icon">
+              <Bell className="w-5 h-5" />
+            </Button>
+          </header>
 
-          <Button variant="ghost" size="icon">
-            <Bell className="w-5 h-5" />
-          </Button>
-        </header>
+          {/* Mobile Header */}
+          <header className="md:hidden sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 py-3 flex items-center justify-between">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-64">
+                <NavContent />
+              </SheetContent>
+            </Sheet>
+            
+            <div className="flex items-center gap-2">
+              <ZivoLogo size="sm" />
+              <Badge variant="outline" className="text-[10px]">Admin</Badge>
+            </div>
 
-        {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
-          {renderModule()}
-        </main>
+            <Button variant="ghost" size="icon">
+              <Bell className="w-5 h-5" />
+            </Button>
+          </header>
+
+          {/* Page Content */}
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
+            {renderModule()}
+          </main>
+        </div>
       </div>
-    </div>
+    </RegionProvider>
   );
 }

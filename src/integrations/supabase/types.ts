@@ -1513,6 +1513,7 @@ export type Database = {
           created_at: string
           driver_id: string
           id: string
+          region_id: string | null
           started_at: string | null
           status: string
           total_distance_km: number | null
@@ -1523,6 +1524,7 @@ export type Database = {
           created_at?: string
           driver_id: string
           id?: string
+          region_id?: string | null
           started_at?: string | null
           status?: string
           total_distance_km?: number | null
@@ -1533,6 +1535,7 @@ export type Database = {
           created_at?: string
           driver_id?: string
           id?: string
+          region_id?: string | null
           started_at?: string | null
           status?: string
           total_distance_km?: number | null
@@ -1551,6 +1554,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_batches_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -2382,6 +2392,7 @@ export type Database = {
       }
       drivers: {
         Row: {
+          allowed_regions: string[] | null
           apns_token: string | null
           avatar_url: string | null
           created_at: string
@@ -2393,12 +2404,14 @@ export type Database = {
           email: string
           fcm_token: string | null
           full_name: string
+          home_city: string | null
           id: string
           is_online: boolean | null
           license_number: string
           move_enabled: boolean | null
           phone: string
           rating: number | null
+          region_id: string | null
           rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
           total_trips: number | null
@@ -2409,6 +2422,7 @@ export type Database = {
           vehicle_type: string
         }
         Insert: {
+          allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -2420,12 +2434,14 @@ export type Database = {
           email: string
           fcm_token?: string | null
           full_name: string
+          home_city?: string | null
           id?: string
           is_online?: boolean | null
           license_number: string
           move_enabled?: boolean | null
           phone: string
           rating?: number | null
+          region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           total_trips?: number | null
@@ -2436,6 +2452,7 @@ export type Database = {
           vehicle_type: string
         }
         Update: {
+          allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
           created_at?: string
@@ -2447,12 +2464,14 @@ export type Database = {
           email?: string
           fcm_token?: string | null
           full_name?: string
+          home_city?: string | null
           id?: string
           is_online?: boolean | null
           license_number?: string
           move_enabled?: boolean | null
           phone?: string
           rating?: number | null
+          region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           total_trips?: number | null
@@ -2462,7 +2481,15 @@ export type Database = {
           vehicle_plate?: string
           vehicle_type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "drivers_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       eats_zones: {
         Row: {
@@ -3153,6 +3180,7 @@ export type Database = {
           rating: number | null
           refund_status: string | null
           refunded_at: string | null
+          region_id: string | null
           restaurant_id: string
           special_instructions: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
@@ -3199,6 +3227,7 @@ export type Database = {
           rating?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          region_id?: string | null
           restaurant_id: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -3245,6 +3274,7 @@ export type Database = {
           rating?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          region_id?: string | null
           restaurant_id?: string
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
@@ -3269,6 +3299,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
           {
@@ -6438,6 +6475,229 @@ export type Database = {
           },
         ]
       }
+      region_bonuses: {
+        Row: {
+          bonus_amount: number
+          bonus_type: string
+          created_at: string | null
+          description: string | null
+          ends_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          region_id: string
+          service_type: string | null
+          starts_at: string
+          target_value: number
+        }
+        Insert: {
+          bonus_amount: number
+          bonus_type: string
+          created_at?: string | null
+          description?: string | null
+          ends_at: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          region_id: string
+          service_type?: string | null
+          starts_at: string
+          target_value: number
+        }
+        Update: {
+          bonus_amount?: number
+          bonus_type?: string
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          region_id?: string
+          service_type?: string | null
+          starts_at?: string
+          target_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_bonuses_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      region_change_logs: {
+        Row: {
+          action: string
+          changed_by: string | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          new_region_id: string | null
+          old_region_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          changed_by?: string | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          new_region_id?: string | null
+          old_region_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          new_region_id?: string | null
+          old_region_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_change_logs_new_region_id_fkey"
+            columns: ["new_region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "region_change_logs_old_region_id_fkey"
+            columns: ["old_region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      region_settings: {
+        Row: {
+          broadcast_timeout_seconds: number | null
+          config: Json | null
+          created_at: string | null
+          default_commission_pct: number | null
+          dispatch_mode: string | null
+          eats_commission_pct: number | null
+          eats_enabled: boolean | null
+          id: string
+          max_dispatch_radius_km: number | null
+          max_surge_multiplier: number | null
+          minimum_payout_amount: number | null
+          move_commission_pct: number | null
+          move_enabled: boolean | null
+          payout_schedule: string | null
+          region_id: string
+          rides_enabled: boolean | null
+          surge_enabled: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          broadcast_timeout_seconds?: number | null
+          config?: Json | null
+          created_at?: string | null
+          default_commission_pct?: number | null
+          dispatch_mode?: string | null
+          eats_commission_pct?: number | null
+          eats_enabled?: boolean | null
+          id?: string
+          max_dispatch_radius_km?: number | null
+          max_surge_multiplier?: number | null
+          minimum_payout_amount?: number | null
+          move_commission_pct?: number | null
+          move_enabled?: boolean | null
+          payout_schedule?: string | null
+          region_id: string
+          rides_enabled?: boolean | null
+          surge_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          broadcast_timeout_seconds?: number | null
+          config?: Json | null
+          created_at?: string | null
+          default_commission_pct?: number | null
+          dispatch_mode?: string | null
+          eats_commission_pct?: number | null
+          eats_enabled?: boolean | null
+          id?: string
+          max_dispatch_radius_km?: number | null
+          max_surge_multiplier?: number | null
+          minimum_payout_amount?: number | null
+          move_commission_pct?: number | null
+          move_enabled?: boolean | null
+          payout_schedule?: string | null
+          region_id?: string
+          rides_enabled?: boolean | null
+          surge_enabled?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "region_settings_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: true
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regions: {
+        Row: {
+          city: string
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          disabled_at: string | null
+          disabled_reason: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          state: string
+          timezone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          state: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          state?: string
+          timezone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       rental_cars: {
         Row: {
           category: string
@@ -8778,6 +9038,7 @@ export type Database = {
           pickup_lat: number
           pickup_lng: number
           rating: number | null
+          region_id: string | null
           rider_id: string | null
           service_type: string | null
           started_at: string | null
@@ -8806,6 +9067,7 @@ export type Database = {
           pickup_lat: number
           pickup_lng: number
           rating?: number | null
+          region_id?: string | null
           rider_id?: string | null
           service_type?: string | null
           started_at?: string | null
@@ -8834,6 +9096,7 @@ export type Database = {
           pickup_lat?: number
           pickup_lng?: number
           rating?: number | null
+          region_id?: string | null
           rider_id?: string | null
           service_type?: string | null
           started_at?: string | null
@@ -8854,6 +9117,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trips_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
