@@ -540,8 +540,9 @@ async function startSearch(
   const signatureString = buildSignatureString(token, marker, requestParams);
   const signature = await createMd5Signature(signatureString);
   
-  console.log(`[API] Signature string: ${signatureString.replace(token, 'TOKEN')}`);
-  console.log(`[API] MD5 signature: ${signature}`);
+  // SECURE LOGGING: Never log tokens, signatures, or full request bodies
+  console.log(`[API] Starting search: ${params.origin} → ${params.destination}`);
+  console.log(`[API] Marker: ***${marker.slice(-3)} | Token: ${token ? 'present' : 'missing'}`);
   
   // Build final request body
   const searchBody = {
@@ -549,9 +550,6 @@ async function startSearch(
     marker,
     ...requestParams
   };
-  
-  console.log(`[API] Starting search: ${params.origin} → ${params.destination}`);
-  console.log(`[API] Request body:`, JSON.stringify(searchBody, null, 2));
   
   try {
     const response = await fetch('https://tickets-api.travelpayouts.com/search/affiliate/start', {
@@ -569,7 +567,13 @@ async function startSearch(
     const responseText = await response.text();
     
     if (!response.ok) {
-      console.error(`[API] Start search failed: ${response.status} - ${responseText}`);
+      console.error(`[API] Start search failed: ${response.status}`);
+      
+      // Specific 403 handling - API access not enabled yet
+      if (response.status === 403) {
+        console.log('[API] 403 Forbidden - Flight Search API access pending. Contact support@travelpayouts.com');
+      }
+      
       return null;
     }
     

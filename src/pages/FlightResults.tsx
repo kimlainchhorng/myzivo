@@ -50,7 +50,6 @@ import {
   EmptyResults,
   FlightResultCard,
   type FlightCardData,
-  IndicativePriceAlert,
   RedirectNotice,
   AffiliateDisclaimer,
   ResultsBreadcrumbs,
@@ -178,26 +177,19 @@ const FlightResults = () => {
     }));
   }, [apiFlights, isRealPrice]);
   
-  // Combine and filter results
+  // Combine and filter results - ONLY use real API prices, never fake/generated
   const flights = useMemo(() => {
     if (!isValid) return [];
     
-    const combined: GeneratedFlight[] = [];
-    
-    // Use API results first if available
-    if (convertedApiFlights.length > 0) {
-      combined.push(...convertedApiFlights);
-    }
-
-    // Add generated flights as fallback only if no real prices
-    if (!isRealPrice) {
-      const realAirlineCodes = new Set(convertedApiFlights.map((f) => f.airlineCode));
-      const uniqueGenerated = generatedFlights.filter((f) => !realAirlineCodes.has(f.airlineCode));
-      combined.push(...uniqueGenerated.slice(0, 10 - convertedApiFlights.length));
+    // PHASE 1 FIX: Only use real API prices - never show fake/generated prices
+    // If API returns no real prices (403/pending), return empty array
+    // The ApiPendingNotice component will handle the fallback UI
+    if (!isRealPrice || convertedApiFlights.length === 0) {
+      return [];
     }
 
     // Apply filters from unified hook
-    let filtered = combined.filter(f => f.price <= filters.maxPrice);
+    let filtered = convertedApiFlights.filter(f => f.price <= filters.maxPrice);
     
     if (filters.stops.length > 0) {
       filtered = filtered.filter(f => filters.stops.includes(f.stops));
@@ -245,7 +237,7 @@ const FlightResults = () => {
           return 0;
       }
     });
-  }, [convertedApiFlights, generatedFlights, sortBy, filters, isValid, isRealPrice]);
+  }, [convertedApiFlights, sortBy, filters, isValid, isRealPrice]);
 
   // Get unique airlines from unfiltered flights for filter options
   const availableAirlines = useMemo(() => {
@@ -593,8 +585,11 @@ const FlightResults = () => {
                 />
               )}
 
-              {/* API Pending Notice - Show when no real prices from API */}
-              {!isLoading && !isRealPrice && flightCards.length === 0 && isValid && (
+              {/* Loading State */}
+              {isLoading && <ResultsSkeletonList count={6} variant="flight" />}
+
+              {/* API Pending Notice - Show prominently when no real prices from API */}
+              {!isLoading && (!isRealPrice || flightCards.length === 0) && isValid && (
                 <ApiPendingNotice
                   whitelabelUrl={fallbackWhitelabelUrl}
                   origin={originDisplay || originIata}
@@ -602,14 +597,6 @@ const FlightResults = () => {
                   className="mb-6"
                 />
               )}
-
-              {/* Indicative Price Notice (fallback prices) */}
-              {!isRealPrice && !isLoading && flightCards.length > 0 && (
-                <IndicativePriceAlert service="flights" className="mb-4" />
-              )}
-
-              {/* Loading State */}
-              {isLoading && <ResultsSkeletonList count={6} variant="flight" />}
 
               {/* Results - Only show if we have real API prices */}
               {!isLoading && isRealPrice && flightCards.length > 0 && (
@@ -622,16 +609,6 @@ const FlightResults = () => {
                     />
                   ))}
                 </div>
-              )}
-
-              {/* Fallback notice when API is pending but we have generated flights */}
-              {!isLoading && !isRealPrice && flightCards.length > 0 && (
-                <ApiPendingNotice
-                  whitelabelUrl={fallbackWhitelabelUrl}
-                  origin={originDisplay || originIata}
-                  destination={destinationDisplay || destinationIata}
-                  className="mb-6"
-                />
               )}
 
               {/* Redirect Notice */}
