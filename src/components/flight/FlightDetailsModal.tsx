@@ -1,3 +1,7 @@
+/**
+ * FlightDetailsModal Component
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ */
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +15,8 @@ import {
 import { cn } from '@/lib/utils';
 import { getAirlineLogo } from '@/data/airlines';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from '@/config/affiliateLinks';
+import { AFFILIATE_LINKS } from '@/config/affiliateLinks';
+import { FLIGHT_DISCLAIMERS } from '@/config/flightCompliance';
 import type { GeneratedFlight } from '@/data/flightGenerator';
 import { useState } from 'react';
 
@@ -358,8 +363,8 @@ export default function FlightDetailsModal({
         <div className="flex flex-col gap-3">
           {/* Affiliate disclosure */}
           <p className="text-xs text-muted-foreground text-center px-2">
-            {AFFILIATE_DISCLOSURE_TEXT.short}{' '}
-            <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+            {FLIGHT_DISCLAIMERS.ticketingShort}{' '}
+            <a href="/partner-disclosure" className="text-sky-500 hover:underline">Learn more</a>
           </p>
           
           <div className="flex gap-3">
