@@ -125,10 +125,10 @@ export default function TravelerInfoPage() {
   const offerData = getMockOfferData(serviceType, searchParams);
 
   // Pre-fill form with user data if logged in
-  const defaultFormValues: Partial<TravelerFormData> = {
-    fullName: user?.user_metadata?.full_name || undefined,
-    email: user?.email || undefined,
-    phone: user?.user_metadata?.phone || undefined,
+  const defaultFormValues = {
+    fullName: user?.user_metadata?.full_name as string | undefined,
+    email: user?.email,
+    phone: user?.user_metadata?.phone as string | undefined,
   };
 
   const handleSubmit = async (data: TravelerFormData) => {
@@ -169,7 +169,12 @@ export default function TravelerInfoPage() {
       const booking = await createBooking.mutateAsync({
         offerId: offerId || crypto.randomUUID(),
         serviceType,
-        travelerInfo: data,
+        travelerInfo: {
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          consentSharing: true,
+        },
         partnerRedirectUrl: redirectUrl,
       });
 
