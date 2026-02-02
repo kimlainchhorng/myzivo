@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import SEOHead from "@/components/SEOHead";
 import { cn } from "@/lib/utils";
+import { BookingSupportPanel } from "@/components/flight";
 
 const serviceConfig = {
   flights: {
@@ -403,6 +404,9 @@ export default function TravelTrips() {
                     )}
                   </TabsContent>
                 </Tabs>
+
+                {/* Support Panel - Required for dispute reduction */}
+                <BookingSupportPanel variant="compact" className="mt-8" />
               </>
             )}
           </div>
