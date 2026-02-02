@@ -138,16 +138,16 @@ export function validateTripType(value: string | null): TripType {
 export function parseFlightSearchParams(searchParams: URLSearchParams): ParsedFlightSearchParams {
   const errors: string[] = [];
   
-  // Extract and validate origin
-  const fromRaw = searchParams.get('from') || '';
+  // Extract and validate origin - support both 'from' and 'origin' params
+  const fromRaw = searchParams.get('from') || searchParams.get('origin') || '';
   const originIata = extractIataCode(fromRaw);
   
   if (!originIata) {
     errors.push('Invalid origin airport. Please use a valid 3-letter IATA code.');
   }
   
-  // Extract and validate destination
-  const toRaw = searchParams.get('to') || '';
+  // Extract and validate destination - support both 'to' and 'dest' params
+  const toRaw = searchParams.get('to') || searchParams.get('dest') || searchParams.get('destination') || '';
   const destinationIata = extractIataCode(toRaw);
   
   if (!destinationIata) {
