@@ -1,144 +1,130 @@
 
-# Next Update: P2P Marketplace Discovery + Admin Overview Integration
+# Next Update: P2P Booking Payment Integration + Traditional/P2P Car Rental Unified Entry Point
 
 ## Overview
 
-The P2P car rental marketplace infrastructure is complete with test data tools, but it's **hidden from users**. This update integrates P2P rentals into the main user experience and admin dashboard, making the marketplace discoverable while adding key stats to admin overview.
+The P2P car rental marketplace is fully functional but has two critical gaps:
+1. **Payment flow is incomplete** - The "Pay" button in P2PBookingConfirmation doesn't trigger the Stripe checkout
+2. **Traditional vs P2P car rentals need unified discovery** - Users on `/rent-car` page have no visibility into P2P options
+
+This update connects the payment flow and creates a unified car rental experience.
 
 ---
 
-## Current Gap Analysis
+## Current State Analysis
 
-| Area | Issue |
-|------|-------|
-| **Homepage** | P2P not mentioned - only shows traditional car rentals |
-| **Mobile App Home** | Quick actions link to `/rent-car` (traditional), not P2P |
-| **Admin Overview** | No P2P stats (owners, vehicles, bookings) |
-| **Navigation** | No "Rent from Owners" option anywhere |
-| **ExtrasSection** | Lists services but missing P2P |
+### What's Working
+- P2P vehicle search, filtering, and detail pages
+- P2P booking creation (creates database entry correctly)
+- Owner onboarding multi-step wizard
+- Owner booking management (approve/reject)
+- Stripe Checkout edge function (`create-p2p-checkout`)
+- Payment hooks (`useP2PPayment.ts`)
+- Admin test data creation tools
+
+### What's Missing
+
+| Issue | Impact |
+|-------|--------|
+| P2PBookingConfirmation "Pay" button is static | Renters cannot complete payment |
+| `/rent-car` page has no P2P awareness | Users don't know P2P exists when searching |
+| No P2P promo section on CarResultsPage | Missed opportunity to show local owner options |
 
 ---
 
-## Phase 1: Admin Overview P2P Stats Integration
+## Phase 1: Complete P2P Payment Flow
 
-### Add P2P Stats Cards to AdminOverview.tsx
+### 1.1 Wire Up Payment Button in P2PBookingConfirmation
 
-New stats row showing:
-- Total P2P Owners (pending/verified)
-- Total P2P Vehicles (pending/approved)  
-- Total P2P Bookings (pending/active/completed)
-- P2P Revenue (sum of platform_fee from bookings)
+The confirmation page shows a "Pay" button but it doesn't call the checkout mutation.
 
+**Current code (lines 316-319):**
 ```text
-+---------------------+  +---------------------+  +---------------------+
-| 👤 P2P Owners       |  | 🚗 P2P Vehicles     |  | 📅 P2P Bookings     |
-|   3 verified        |  |   8 approved        |  |   12 total          |
-|   1 pending         |  |   2 pending review  |  |   2 active          |
-+---------------------+  +---------------------+  +---------------------+
+<Button className="gap-2">
+  <CreditCard className="w-4 h-4" />
+  Pay ${booking.total_amount.toFixed(2)}
+  <ArrowRight className="w-4 h-4" />
+</Button>
 ```
 
-### Add P2P Activity to Recent Activity Feed
+**Update to:**
+- Import `useCreateP2PCheckout` from `@/hooks/useP2PPayment`
+- Wire button onClick to call `createCheckout.mutate({ bookingId: booking.id })`
+- Show loading spinner during checkout creation
+- Handle payment return query params (success/cancelled)
 
-Include P2P bookings alongside rides and eats in the combined activity feed.
+### 1.2 Add Payment Success/Cancel Handling
 
----
-
-## Phase 2: Homepage P2P Discovery
-
-### 2.1 Add P2P Card to ExtrasSection
-
-Add a card for "Rent from Local Owners" in the ExtrasSection component:
-
-```text
-Card Details:
-- Title: "Rent from Local Owners"
-- Description: "Skip the rental counter. Book unique cars directly from people in your area."
-- Icon: CarFront with UserCircle overlay
-- Link: /p2p/search
-- Badge: "NEW" or "P2P"
-```
-
-### 2.2 Update PrimaryServicesSection Car Rental Card
-
-Modify the Car Rentals card to include a secondary CTA for P2P:
-
-```text
-Current: "Find Rental Cars" → /rent-car
-Add: "Or rent from local owners →" link to /p2p/search
-```
+When user returns from Stripe, show appropriate feedback:
+- `?payment=success` → Show success message, update UI
+- `?payment=cancelled` → Show info message, keep pay button visible
 
 ---
 
-## Phase 3: Mobile App Home P2P Integration
+## Phase 2: P2P Discovery on Traditional Car Rental Pages
 
-### 3.1 Add P2P Quick Action
+### 2.1 Add P2P Promotion Banner to CarRentalBooking
 
-Replace or add to quick actions grid in AppHome.tsx:
-
-Option A: Replace "Extras" with "P2P Cars"
-Option B: Add 4th row with P2P card
+On `/rent-car`, add a prominent banner encouraging P2P discovery:
 
 ```text
-{ id: "p2p", label: "P2P Cars", icon: CarFront, href: "/p2p/search", color: "bg-primary" }
++----------------------------------------------------------+
+|  🚗 Looking for something unique?                         |
+|  Rent directly from local owners in your area             |
+|  [Browse P2P Rentals →]                                   |
++----------------------------------------------------------+
 ```
 
-### 3.2 Add P2P Section Below Featured Restaurants
+Location: Below the search form, before the category tiles.
 
-New section: "Rent from Local Owners"
-- Horizontal scroll of featured P2P vehicles (if any exist)
-- CTA: "Browse all →" linking to /p2p/search
-- Empty state: "Be the first to list your car" → /list-your-car
+### 2.2 Add P2P Cross-Sell Section to CarResultsPage
+
+After showing traditional rental results, add a P2P section:
+
+```text
++----------------------------------------------------------+
+|  Rent from Local Owners                                   |
+|  Skip the rental counter. Unique cars at better prices.   |
+|                                                           |
+|  [Show P2P Results for {location} →]                      |
++----------------------------------------------------------+
+```
+
+Include quick stats if P2P vehicles exist in that location.
 
 ---
 
-## Phase 4: Create useAdminP2PStats Hook
+## Phase 3: Quick P2P Vehicle Count Check
 
-New hook for admin P2P statistics:
+### Create useP2PVehicleCount Hook
+
+A lightweight hook to check if P2P vehicles exist in a location:
 
 ```typescript
-export function useAdminP2PStats() {
+export function useP2PVehicleCount(city?: string) {
   return useQuery({
-    queryKey: ["adminP2PStats"],
+    queryKey: ["p2pVehicleCount", city],
     queryFn: async () => {
-      // Count owners by status
-      const { count: totalOwners } = await supabase
-        .from("car_owner_profiles")
-        .select("*", { count: "exact", head: true });
-      
-      const { count: pendingOwners } = await supabase
-        .from("car_owner_profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-      
-      // Count vehicles by approval status
-      const { count: totalVehicles } = await supabase
+      let query = supabase
         .from("p2p_vehicles")
-        .select("*", { count: "exact", head: true });
+        .select("id", { count: "exact", head: true })
+        .eq("approval_status", "approved")
+        .eq("is_available", true);
       
-      const { count: approvedVehicles } = await supabase
-        .from("p2p_vehicles")
-        .select("*", { count: "exact", head: true })
-        .eq("approval_status", "approved");
+      if (city) {
+        query = query.ilike("location_city", `%${city}%`);
+      }
       
-      // Count bookings
-      const { count: totalBookings } = await supabase
-        .from("p2p_bookings")
-        .select("*", { count: "exact", head: true });
-      
-      const { count: activeBookings } = await supabase
-        .from("p2p_bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active");
-
-      return {
-        owners: { total: totalOwners || 0, pending: pendingOwners || 0 },
-        vehicles: { total: totalVehicles || 0, approved: approvedVehicles || 0 },
-        bookings: { total: totalBookings || 0, active: activeBookings || 0 },
-      };
+      const { count } = await query;
+      return count || 0;
     },
+    enabled: true,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
 ```
+
+This allows conditional rendering of P2P sections only when vehicles exist.
 
 ---
 
@@ -146,57 +132,70 @@ export function useAdminP2PStats() {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useAdminP2PStats.ts` | **Create** | New hook for P2P statistics |
-| `src/pages/admin/modules/AdminOverview.tsx` | **Update** | Add P2P stats cards and activity |
-| `src/components/home/ExtrasSection.tsx` | **Update** | Add P2P card |
-| `src/components/home/PrimaryServicesSection.tsx` | **Update** | Add P2P link under Car Rentals |
-| `src/pages/app/AppHome.tsx` | **Update** | Add P2P section for mobile |
+| `src/pages/p2p/P2PBookingConfirmation.tsx` | **Update** | Wire payment button to checkout hook, handle return params |
+| `src/pages/CarRentalBooking.tsx` | **Update** | Add P2P discovery banner below search |
+| `src/pages/CarResultsPage.tsx` | **Update** | Add P2P cross-sell section |
+| `src/hooks/useP2PBooking.ts` | **Update** | Add useP2PVehicleCount hook |
+
+---
+
+## Technical Implementation Details
+
+### P2P Booking Confirmation Payment Flow
+
+```text
+User clicks "Pay $X" button
+       ↓
+useCreateP2PCheckout.mutate({ bookingId })
+       ↓
+Edge function creates Stripe Checkout session
+       ↓
+User redirected to Stripe hosted checkout
+       ↓
+After payment, redirected back with query params
+       ↓
+Page shows success/cancelled state
+```
+
+### P2P Discovery Components
+
+**P2PDiscoveryBanner Component:**
+- Gradient background with car icon
+- "Browse P2P Rentals" CTA linking to `/p2p/search?city={location}`
+- Dismissible with local storage persistence
+
+**P2PResultsCrossSell Component:**
+- Shows after traditional results
+- Displays count of available P2P vehicles if > 0
+- Links to P2P search with location pre-filled
 
 ---
 
 ## User Flow After Implementation
 
-### Desktop User Journey
-1. User lands on homepage
-2. Sees Car Rentals card with "Or rent from local owners" link
-3. Clicks to browse `/p2p/search`
-4. Views available vehicles from verified owners
-5. Books directly from owner
+### Renter Payment Journey
+1. User books a P2P vehicle → Booking created as "pending" or "confirmed"
+2. If instant book or owner approves → Status becomes "confirmed"
+3. User visits booking confirmation page
+4. Clicks "Pay $X" button → Redirected to Stripe
+5. Completes payment → Redirected back with success
+6. Booking status updates to "paid"
 
-### Mobile User Journey  
-1. User opens app on mobile
-2. Sees P2P section below quick actions
-3. Browses featured P2P vehicles
-4. Taps to view details and book
-
-### Admin Journey
-1. Admin opens dashboard
-2. Sees P2P stats alongside Rides/Eats/Clicks
-3. Can quickly see pending owners/vehicles needing review
-4. Clicks to navigate to respective P2P modules
-
----
-
-## Design Considerations
-
-### P2P Branding
-- Use primary color for P2P elements
-- Badge: "P2P" or "From Owners"
-- Icon: Car with user indicator
-
-### Empty State Handling
-When no P2P vehicles exist, show:
-- "No cars available yet"
-- CTA: "List your car and be the first to earn"
-- Link to /list-your-car
+### Car Rental Discovery Journey
+1. User visits `/rent-car` page
+2. Sees P2P discovery banner → Option to explore local owner rentals
+3. If user searches traditional → Results page shows P2P cross-sell
+4. User can switch to P2P search with one click
+5. Location context preserved across both flows
 
 ---
 
 ## Testing Checklist
 
-1. Create test owner via admin → Verify stats update
-2. Create test vehicle via admin → Verify appears in P2P search
-3. Create test booking via admin → Verify in admin overview activity
-4. Mobile: Verify P2P section renders correctly
-5. Desktop: Verify ExtrasSection shows P2P card
-6. Click all P2P navigation links → Verify correct routing
+1. Create test P2P booking via admin
+2. Navigate to booking confirmation page
+3. Click "Pay" button → Verify Stripe checkout opens
+4. Complete test payment → Verify redirect back with success
+5. Visit `/rent-car` → Verify P2P banner appears
+6. Search for cars → Verify P2P cross-sell on results page
+7. Click P2P links → Verify location is pre-filled in P2P search
