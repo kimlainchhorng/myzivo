@@ -497,16 +497,6 @@ const FlightResults = () => {
       <Header />
 
       <main className="pt-16 pb-24 lg:pb-8">
-        {/* Flight Disclaimer Banner - LOCKED TEXT */}
-        <section className="border-b border-amber-500/20 py-2.5 bg-amber-500/5">
-          <div className="container mx-auto px-4">
-            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
-              {FLIGHT_DISCLAIMERS.ticketing}
-            </p>
-          </div>
-        </section>
-
         {/* Breadcrumbs */}
         <ResultsBreadcrumbs service="flights" />
 
