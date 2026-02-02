@@ -1,4 +1,4 @@
-import { ArrowLeft, FileText, Mail, Globe } from "lucide-react";
+import { ArrowLeft, FileText, Mail, Shield, ExternalLink, Ban, Scale, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -9,8 +9,8 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Terms & Conditions - ZIVO | Travel Search Platform"
-        description="Read the terms and conditions for using ZIVO, a travel search and comparison platform. We do not sell tickets or process payments."
+        title="Terms of Service - ZIVO | Travel Search Platform"
+        description="Read the terms of service for using ZIVO, a travel search and comparison platform. We do not sell tickets or process payments."
         canonical="https://hizivo.com/terms"
       />
       
@@ -31,134 +31,115 @@ const Terms = () => {
             <FileText className="w-4 h-4 text-primary" />
             <span className="text-sm font-medium text-primary">Legal</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms & Conditions</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
           <p className="text-muted-foreground">
             Effective Date: February 1, 2026
           </p>
         </div>
 
         {/* Content */}
-        <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
+        <div className="space-y-8">
+          {/* Introduction */}
           <section className="bg-card/50 rounded-2xl p-6 border border-border">
             <p className="text-foreground leading-relaxed">
-              Welcome to ZIVO (
-              <a href="https://hizivo.com" className="text-primary hover:underline">
-                https://hizivo.com
-              </a>
-              ).
-            </p>
-            <p className="text-foreground leading-relaxed mt-4">
-              By using this website, you agree to the following terms.
+              By using ZIVO, you agree to these Terms. ZIVO provides an online platform to search and compare travel options and, where available, links you to third-party providers to complete purchases.
             </p>
           </section>
 
+          {/* No Travel Seller Relationship */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Service Description</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">
-                ZIVO is a travel search and comparison platform.
-                We provide tools to search and compare travel options from third-party partners.
-              </p>
-              <p className="text-foreground font-semibold mt-4">ZIVO does NOT:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Sell travel products</li>
-                <li>Process payments</li>
-                <li>Issue tickets</li>
-                <li>Act as a travel agency</li>
-              </ul>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-sky-500/10">
+                <Shield className="w-5 h-5 text-sky-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">No Travel Seller Relationship</h2>
             </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Third-Party Bookings</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground">
-                All bookings and payments are completed on third-party partner websites.
-              </p>
-              <p className="text-foreground font-semibold mt-4">ZIVO is not responsible for:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Pricing changes</li>
-                <li>Booking availability</li>
-                <li>Cancellations or refunds</li>
-                <li>Customer service provided by partners</li>
-              </ul>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">No Guarantees</h2>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground">
-                Prices, availability, and travel details may change at any time.
-                ZIVO does not guarantee accuracy of pricing or availability.
+              <p className="text-foreground leading-relaxed">
+                ZIVO does not sell travel, issue tickets, or process travel payments unless explicitly stated. Travel purchases are completed with third-party Travel Partners who are the merchant of record.
               </p>
             </div>
           </section>
 
+          {/* Third-Party Services */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Affiliate Relationships</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <ExternalLink className="w-5 h-5 text-amber-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Third-Party Services</h2>
+            </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground">
-                ZIVO may earn commissions when users book through partner links.
-                This does not increase the cost to users.
+              <p className="text-foreground leading-relaxed">
+                Your use of Travel Partner websites/services is governed by their terms. ZIVO is not responsible for Travel Partner content, availability, pricing, service delivery, or booking fulfillment.
               </p>
             </div>
           </section>
 
+          {/* Accuracy of Information */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Limitation of Liability</h2>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <p className="text-foreground font-semibold">ZIVO is not liable for:</p>
-              <ul className="list-disc list-inside text-foreground space-y-2 ml-4">
-                <li>Travel disruptions</li>
-                <li>Booking issues</li>
-                <li>Partner service quality</li>
-                <li>Losses resulting from third-party services</li>
-              </ul>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-emerald-500/10">
+                <AlertTriangle className="w-5 h-5 text-emerald-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Accuracy of Information</h2>
             </div>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Website Use</h2>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground">
-                You agree not to misuse this website or attempt unauthorized access.
+              <p className="text-foreground leading-relaxed">
+                ZIVO displays information provided by third parties. We strive to keep it accurate, but we do not guarantee prices, availability, or completeness.
               </p>
             </div>
           </section>
 
+          {/* Prohibited Use */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Changes to Terms</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-red-500/10">
+                <Ban className="w-5 h-5 text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Prohibited Use</h2>
+            </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground">
-                ZIVO may update these Terms at any time.
-                Continued use of the site indicates acceptance of updated terms.
+              <p className="text-foreground leading-relaxed">
+                You agree not to misuse the platform, attempt unauthorized access, scrape content at scale, or violate any laws.
               </p>
             </div>
           </section>
 
+          {/* Limitation of Liability */}
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-4">Contact</h2>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-purple-500/10">
+                <Scale className="w-5 h-5 text-purple-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Limitation of Liability</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed">
+                To the maximum extent permitted by law, ZIVO will not be liable for indirect or consequential damages or losses related to travel bookings completed with Travel Partners.
+              </p>
+            </div>
+          </section>
+
+          {/* Contact */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Mail className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">Contact</h2>
+            </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground mb-4">
                 For questions regarding these Terms:
               </p>
-              <div className="flex flex-col gap-3">
-                <a 
-                  href="mailto:info@hizivo.com" 
-                  className="flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Mail className="w-4 h-4" />
-                  info@hizivo.com
-                </a>
-                <a 
-                  href="https://hizivo.com" 
-                  className="flex items-center gap-2 text-primary hover:underline"
-                >
-                  <Globe className="w-4 h-4" />
-                  https://hizivo.com
-                </a>
-              </div>
+              <a 
+                href="mailto:support@hizivo.com" 
+                className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+              >
+                <Mail className="w-4 h-4" />
+                support@hizivo.com
+              </a>
             </div>
           </section>
         </div>
