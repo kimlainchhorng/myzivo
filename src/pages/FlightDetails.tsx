@@ -80,7 +80,7 @@ const FlightDetails = () => {
               </div>
               <h2 className="text-2xl font-bold mb-3">Flight not found</h2>
               <p className="text-muted-foreground mb-6">This flight may have expired or been removed. Please search for flights again.</p>
-              <Button onClick={() => navigate("/book-flight")} size="lg" className="gap-2">
+              <Button onClick={() => navigate("/flights")} size="lg" className="gap-2">
                 <Plane className="w-5 h-5" />
                 Search Flights
               </Button>

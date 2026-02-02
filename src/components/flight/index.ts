@@ -101,6 +101,7 @@ export type { QuickStat } from './QuickStatsBar';
 
 // Compliance Components (LOCKED TEXT - DO NOT MODIFY)
 export { default as FlightConsentCheckbox } from './FlightConsentCheckbox';
+export { default as FlightConsentGate } from './FlightConsentGate';
 export { default as FlightPartnerDisclaimer, FlightTrustBadges, FlightPaymentDisclaimer } from './FlightPartnerDisclaimer';
 
 // Types
