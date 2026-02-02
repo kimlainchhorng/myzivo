@@ -91,6 +91,14 @@ const P2PVehicleSearch = lazy(() => import("./pages/p2p/P2PVehicleSearch"));
 const P2PVehicleDetail = lazy(() => import("./pages/p2p/P2PVehicleDetail"));
 const P2PBookingConfirmation = lazy(() => import("./pages/p2p/P2PBookingConfirmation"));
 const RenterTrips = lazy(() => import("./pages/p2p/RenterTrips"));
+// Renter Dashboard pages
+const RenterDashboard = lazy(() => import("./pages/renter/RenterDashboard"));
+const RenterBookings = lazy(() => import("./pages/renter/RenterBookings"));
+// Public pages
+const Cars = lazy(() => import("./pages/Cars"));
+const HowToRent = lazy(() => import("./pages/HowToRent"));
+// Owner Earnings
+const OwnerEarnings = lazy(() => import("./pages/owner/OwnerEarnings"));
 // Renter Verification pages
 const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
 const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
@@ -291,9 +299,19 @@ const App = () => (
                 <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
                 <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
                 <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
+                <Route path="/owner/earnings" element={<ProtectedRoute><OwnerEarnings /></ProtectedRoute>} />
                 <Route path="/owner/payouts" element={<ProtectedRoute><OwnerPayouts /></ProtectedRoute>} />
                 <Route path="/owner/stripe-connect/return" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
                 <Route path="/owner/stripe-connect/refresh" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
+                
+                {/* Public Car Routes */}
+                <Route path="/cars" element={<Cars />} />
+                <Route path="/rent" element={<HowToRent />} />
+                
+                {/* Renter Dashboard Routes */}
+                <Route path="/renter/dashboard" element={<ProtectedRoute><RenterDashboard /></ProtectedRoute>} />
+                <Route path="/renter/bookings" element={<ProtectedRoute><RenterBookings /></ProtectedRoute>} />
+                <Route path="/renter/verification" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
                 {/* P2P Car Rental - Renter Routes */}
                 <Route path="/p2p/search" element={<P2PVehicleSearch />} />
                 <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />
