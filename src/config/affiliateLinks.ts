@@ -494,8 +494,23 @@ export const AFFILIATE_LINKS: Record<string, AffiliateLink> = {
 } as const;
 
 // ============================================
-// DEEP LINK BUILDERS
+// DEEP LINK BUILDERS (with standardized Hizovo tracking)
 // ============================================
+
+import { 
+  getSearchSessionId, 
+  HIZOVO_TRACKING_PARAMS,
+  buildTrackedUrl,
+} from './trackingParams';
+
+/**
+ * Build standardized tracking query string
+ * utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid={searchSessionId}
+ */
+function getStandardTrackingParams(): string {
+  const sessionId = getSearchSessionId();
+  return `utm_source=${HIZOVO_TRACKING_PARAMS.utm_source}&utm_medium=${HIZOVO_TRACKING_PARAMS.utm_medium}&utm_campaign=${HIZOVO_TRACKING_PARAMS.utm_campaign}&subid=${sessionId}`;
+}
 
 export function buildFlightDeepLink(params: FlightDeepLinkParams, partnerId?: string): string {
   const partner = partnerId 
@@ -503,11 +518,11 @@ export function buildFlightDeepLink(params: FlightDeepLinkParams, partnerId?: st
     : getActivePartners('flights')[0];
   
   if (!partner) {
-    return AFFILIATE_LINKS.flights.url;
+    return buildTrackedUrl({ baseUrl: AFFILIATE_LINKS.flights.url });
   }
   
-  // Return direct tracking URL (deep links handled by partner)
-  return partner.trackingUrl;
+  // Add standardized tracking to partner URL
+  return buildTrackedUrl({ baseUrl: partner.trackingUrl });
 }
 
 export function buildHotelDeepLink(params: HotelDeepLinkParams, partnerId?: string): string {
@@ -516,10 +531,10 @@ export function buildHotelDeepLink(params: HotelDeepLinkParams, partnerId?: stri
     : getActivePartners('hotels')[0];
   
   if (!partner) {
-    return AFFILIATE_LINKS.hotels.url;
+    return buildTrackedUrl({ baseUrl: AFFILIATE_LINKS.hotels.url });
   }
   
-  return partner.trackingUrl;
+  return buildTrackedUrl({ baseUrl: partner.trackingUrl });
 }
 
 export function buildCarDeepLink(params: CarDeepLinkParams, partnerId?: string): string {
@@ -528,10 +543,10 @@ export function buildCarDeepLink(params: CarDeepLinkParams, partnerId?: string):
     : getActivePartners('cars')[0];
   
   if (!partner) {
-    return AFFILIATE_LINKS.cars.url;
+    return buildTrackedUrl({ baseUrl: AFFILIATE_LINKS.cars.url });
   }
   
-  return partner.trackingUrl;
+  return buildTrackedUrl({ baseUrl: partner.trackingUrl });
 }
 
 export function buildActivityDeepLink(params: ActivityDeepLinkParams, partnerId?: string): string {
@@ -540,10 +555,10 @@ export function buildActivityDeepLink(params: ActivityDeepLinkParams, partnerId?
     : getActivePartners('activities')[0];
   
   if (!partner) {
-    return AFFILIATE_LINKS.activities.url;
+    return buildTrackedUrl({ baseUrl: AFFILIATE_LINKS.activities.url });
   }
   
-  return partner.trackingUrl;
+  return buildTrackedUrl({ baseUrl: partner.trackingUrl });
 }
 
 // ============================================
@@ -602,11 +617,12 @@ export function selectBestPartner(
 
 export const AFFILIATE_DISCLOSURE_TEXT = {
   short: "You will be redirected to our trusted travel partner to complete your booking.",
-  full: "ZIVO may earn a commission when you book through our partner links at no extra cost to you.",
-  detailed: "ZIVO acts as a search and comparison platform. When you click a booking link, you will be redirected to our trusted travel partner to complete your booking. ZIVO may earn a commission at no additional cost to you.",
+  full: "Hizovo may earn a commission when you book through our partner links at no extra cost to you.",
+  detailed: "Hizovo acts as a search and comparison platform. When you click a booking link, you will be redirected to our trusted travel partner to complete your booking. Hizovo may earn a commission at no additional cost to you.",
   payment: "All bookings, payments, refunds, and changes are handled directly by our travel partners.",
   price: "Prices shown are indicative and may change. Final price will be confirmed on partner site.",
-  legal: "ZIVO is not responsible for the content, accuracy, or practices of partner websites.",
+  legal: "Hizovo is not responsible for the content, accuracy, or practices of partner websites.",
+  hizovo: "Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.",
 };
 
 // ============================================

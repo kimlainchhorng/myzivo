@@ -1,14 +1,24 @@
 /**
  * ╔═══════════════════════════════════════════════════════════════════════════╗
- * ║                    ZIVO AFFILIATE REGISTRY (CENTRAL)                       ║
+ * ║                   HIZOVO AFFILIATE REGISTRY (CENTRAL)                      ║
  * ║═══════════════════════════════════════════════════════════════════════════║
- * ║  ALL affiliate links for ZIVO travel services are managed HERE.            ║
+ * ║  ALL affiliate links for Hizovo travel services are managed HERE.          ║
  * ║  DO NOT hardcode affiliate URLs in components.                             ║
  * ║  DO NOT modify SubIDs without Business Operations approval.                ║
  * ║                                                                            ║
- * ║  See: src/docs/AFFILIATE_ARCHITECTURE.md for full documentation           ║
+ * ║  STANDARDIZED TRACKING PARAMS (use everywhere):                            ║
+ * ║    utm_source=hizovo                                                       ║
+ * ║    utm_medium=affiliate                                                    ║
+ * ║    utm_campaign=travel                                                     ║
+ * ║    subid={searchSessionId}                                                 ║
  * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
+
+import { 
+  getSearchSessionId, 
+  HIZOVO_TRACKING_PARAMS,
+  buildPartnerTrackedUrl,
+} from './trackingParams';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -41,16 +51,16 @@ export interface AffiliateConfig {
 
 /**
  * LOCKED SubIDs - DO NOT CHANGE without approval
- * - zivo_flights: Flight bookings (Searadar primary)
- * - zivo_hotels: Hotel bookings (Booking.com primary)
- * - zivo_cars: Car rentals (Rentalcars primary)
- * - zivo_activities: Tours & activities (Klook primary)
+ * - hizovo_flights: Flight bookings (Searadar primary)
+ * - hizovo_hotels: Hotel bookings (Booking.com primary)
+ * - hizovo_cars: Car rentals (Rentalcars primary)
+ * - hizovo_activities: Tours & activities (Klook primary)
  */
 export const SUBID_REGISTRY = {
-  flights: 'zivo_flights',
-  hotels: 'zivo_hotels',
-  cars: 'zivo_cars',
-  activities: 'zivo_activities',
+  flights: 'hizovo_flights',
+  hotels: 'hizovo_hotels',
+  cars: 'hizovo_cars',
+  activities: 'hizovo_activities',
 } as const;
 
 // Flight Partners (Priority order)
@@ -86,32 +96,42 @@ const ACTIVITY_PARTNERS: AffiliatePartner[] = [
 ];
 
 // ============================================================================
-// URL BUILDERS (Centralized URL generation)
+// URL BUILDERS (Centralized URL generation with standardized tracking)
 // ============================================================================
+
+/**
+ * Build standardized tracking query string
+ * utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid={searchSessionId}
+ */
+function getStandardTrackingParams(): string {
+  const sessionId = getSearchSessionId();
+  return `utm_source=${HIZOVO_TRACKING_PARAMS.utm_source}&utm_medium=${HIZOVO_TRACKING_PARAMS.utm_medium}&utm_campaign=${HIZOVO_TRACKING_PARAMS.utm_campaign}&subid=${sessionId}`;
+}
 
 function buildFlightUrl(partnerId: string, params: Record<string, any>): string {
   const { origin, destination, departDate, returnDate, passengers = 1, cabinClass = 'economy' } = params;
-  const subId = SUBID_REGISTRY.flights;
+  const trackingParams = getStandardTrackingParams();
   
   switch (partnerId) {
     case 'searadar':
-      return `https://searadar.tpo.li/iAbLlX9i?subid=${subId}`;
+      return `https://searadar.tpo.li/iAbLlX9i?${trackingParams}`;
     case 'skyscanner':
       const dateFormatted = departDate?.replace(/-/g, '').substring(2) || '';
       let url = `https://www.skyscanner.com/transport/flights/${origin?.toLowerCase()}/${destination?.toLowerCase()}/${dateFormatted}/`;
       if (returnDate) url += `${returnDate.replace(/-/g, '').substring(2)}/`;
-      return `${url}?adultsv2=${passengers}&cabinclass=${cabinClass}&utm_source=zivo&utm_medium=affiliate`;
+      return `${url}?adultsv2=${passengers}&cabinclass=${cabinClass}&${trackingParams}`;
     case 'kayak':
-      return `https://www.kayak.com/flights/${origin}-${destination}/${departDate || ''}${returnDate ? `/${returnDate}` : ''}/${passengers}adults?sort=bestflight_a&utm_source=zivo`;
+      return `https://www.kayak.com/flights/${origin}-${destination}/${departDate || ''}${returnDate ? `/${returnDate}` : ''}/${passengers}adults?sort=bestflight_a&${trackingParams}`;
     case 'google_flights':
-      return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departDate}&curr=USD`;
+      return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departDate}&curr=USD&${trackingParams}`;
     default:
-      return `https://searadar.tpo.li/iAbLlX9i?subid=${subId}`;
+      return `https://searadar.tpo.li/iAbLlX9i?${trackingParams}`;
   }
 }
 
 function buildHotelUrl(partnerId: string, params: Record<string, any>): string {
   const { destination, checkIn, checkOut, guests = 2, rooms = 1 } = params;
+  const trackingParams = getStandardTrackingParams();
   
   switch (partnerId) {
     case 'booking':
@@ -121,14 +141,14 @@ function buildHotelUrl(partnerId: string, params: Record<string, any>): string {
       if (checkOut) bookingParams.set('checkout', checkOut);
       bookingParams.set('group_adults', String(guests));
       bookingParams.set('no_rooms', String(rooms));
-      return `https://www.booking.com/searchresults.html?${bookingParams.toString()}`;
+      return `https://www.booking.com/searchresults.html?${bookingParams.toString()}&${trackingParams}`;
     case 'hotels':
       const hotelsParams = new URLSearchParams();
       hotelsParams.set('q-destination', destination || '');
       if (checkIn) hotelsParams.set('q-check-in', checkIn);
       if (checkOut) hotelsParams.set('q-check-out', checkOut);
       hotelsParams.set('q-room-0-adults', String(guests));
-      return `https://www.hotels.com/search.do?${hotelsParams.toString()}`;
+      return `https://www.hotels.com/search.do?${hotelsParams.toString()}&${trackingParams}`;
     case 'expedia':
       const expediaParams = new URLSearchParams();
       expediaParams.set('destination', destination || '');
@@ -136,16 +156,17 @@ function buildHotelUrl(partnerId: string, params: Record<string, any>): string {
       if (checkOut) expediaParams.set('endDate', checkOut);
       expediaParams.set('adults', String(guests));
       expediaParams.set('rooms', String(rooms));
-      return `https://www.expedia.com/Hotel-Search?${expediaParams.toString()}`;
+      return `https://www.expedia.com/Hotel-Search?${expediaParams.toString()}&${trackingParams}`;
     default:
       const defaultParams = new URLSearchParams();
       defaultParams.set('ss', destination || '');
-      return `https://www.booking.com/searchresults.html?${defaultParams.toString()}`;
+      return `https://www.booking.com/searchresults.html?${defaultParams.toString()}&${trackingParams}`;
   }
 }
 
 function buildCarUrl(partnerId: string, params: Record<string, any>): string {
   const { pickupLocation, pickupDate, returnDate, pickupTime = '10:00', returnTime = '10:00', driverAge = 25 } = params;
+  const trackingParams = getStandardTrackingParams();
   
   switch (partnerId) {
     case 'rentalcars':
@@ -156,33 +177,33 @@ function buildCarUrl(partnerId: string, params: Record<string, any>): string {
       rcParams.set('puTime', pickupTime);
       rcParams.set('doTime', returnTime);
       rcParams.set('driverAge', String(driverAge));
-      return `https://www.rentalcars.com/search?${rcParams.toString()}`;
+      return `https://www.rentalcars.com/search?${rcParams.toString()}&${trackingParams}`;
     case 'kayak_cars':
-      return `https://www.kayak.com/cars/${encodeURIComponent(pickupLocation || '')}/${pickupDate || ''}/${returnDate || ''}?sort=price_a&utm_source=zivo`;
+      return `https://www.kayak.com/cars/${encodeURIComponent(pickupLocation || '')}/${pickupDate || ''}/${returnDate || ''}?sort=price_a&${trackingParams}`;
     case 'expedia_cars':
       const expParams = new URLSearchParams();
       expParams.set('pickupLocation', pickupLocation || '');
       if (pickupDate) expParams.set('pickupDate', pickupDate);
       if (returnDate) expParams.set('dropoffDate', returnDate);
-      return `https://www.expedia.com/Cars?${expParams.toString()}`;
+      return `https://www.expedia.com/Cars?${expParams.toString()}&${trackingParams}`;
     default:
-      return `https://www.rentalcars.com/search?location=${encodeURIComponent(pickupLocation || '')}`;
+      return `https://www.rentalcars.com/search?location=${encodeURIComponent(pickupLocation || '')}&${trackingParams}`;
   }
 }
 
 function buildActivityUrl(partnerId: string, params: Record<string, any>): string {
-  const { destination, date } = params;
-  const subId = SUBID_REGISTRY.activities;
+  const { destination } = params;
+  const trackingParams = getStandardTrackingParams();
   
   switch (partnerId) {
     case 'klook':
-      return `https://klook.tpo.li/ToVcOax7?subid=${subId}`;
+      return `https://klook.tpo.li/ToVcOax7?${trackingParams}`;
     case 'viator':
-      return `https://www.viator.com/search/${encodeURIComponent(destination || '')}?pid=zivo`;
+      return `https://www.viator.com/search/${encodeURIComponent(destination || '')}?${trackingParams}`;
     case 'getyourguide':
-      return `https://www.getyourguide.com/s/?q=${encodeURIComponent(destination || '')}&partner_id=zivo`;
+      return `https://www.getyourguide.com/s/?q=${encodeURIComponent(destination || '')}&${trackingParams}`;
     default:
-      return `https://klook.tpo.li/ToVcOax7?subid=${subId}`;
+      return `https://klook.tpo.li/ToVcOax7?${trackingParams}`;
   }
 }
 
