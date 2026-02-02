@@ -1,155 +1,30 @@
 
-# Damage & Dispute Handling Workflow - Implementation Plan
+# Invite-Only Owner Beta Mode - Implementation Plan
 
 ## Overview
-Implement a comprehensive damage and dispute handling system for the ZIVO P2P Car Rental Marketplace. This system will enable renters and owners to report damage, allow admins to review and resolve disputes, integrate with insurance claims, and safely control payouts during dispute resolution.
+Add a controlled onboarding experience for early-stage launch by implementing an invite-only beta mode for car owners. This feature will allow admins to toggle beta mode, show appropriate messaging to applicants, and provide better review workflow tools.
 
 ---
 
-## Current System Analysis
+## Database Changes
 
-### Existing Components (Already Implemented)
-| Component | File | Status |
-|-----------|------|--------|
-| Basic Dispute Filing | `DisputeForm.tsx` | Exists but limited |
-| Dispute Types | DB enum | damage, late_return, cancellation, refund, cleanliness, other |
-| Dispute Status | DB enum | open, investigating, resolved, closed |
-| Admin Disputes Module | `AdminP2PDisputesModule.tsx` | Basic review only |
-| Payout Dispute Check | `execute-p2p-payout/index.ts` | Blocks on active disputes |
+### New System Settings
+Add new entries to the existing `system_settings` table:
 
-### Gaps to Fill
-1. **No dedicated damage report form with photo uploads**
-2. **No before/after photo comparison for owners**
-3. **No insurance claim tracking fields**
-4. **No explicit payout hold/release workflow tied to disputes**
-5. **No damage report status states (reported, under review, claim submitted, etc.)**
-6. **No renter-facing or owner-facing damage report pages**
-7. **No repair cost tracking or resolution amount recording**
+| Key | Value | Category | Description |
+|-----|-------|----------|-------------|
+| `p2p_owner_beta_mode` | `true` | `p2p` | Enable invite-only owner beta mode |
+| `p2p_beta_cities` | `["Los Angeles", "Miami"]` | `p2p` | Cities accepting beta applications |
+| `p2p_beta_message` | `"We are currently accepting a limited number of owners for our private beta. Applications are reviewed manually."` | `p2p` | Custom beta message to display |
 
----
-
-## Database Schema Changes
-
-### 1. New Table: `p2p_damage_reports`
-Dedicated damage report tracking separate from general disputes.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `booking_id` | uuid | FK to p2p_bookings |
-| `reported_by` | uuid | FK to auth.users |
-| `reporter_role` | text | 'renter' or 'owner' |
-| `description` | text | Damage description |
-| `date_noticed` | timestamp | When damage was noticed |
-| `estimated_repair_cost` | numeric | Owner's estimated cost |
-| `status` | enum | See below |
-| `priority` | text | low, medium, high, urgent |
-| `admin_notes` | text | Internal notes |
-| `created_at` | timestamp | Record created |
-| `updated_at` | timestamp | Last updated |
-
-### 2. New Enum: `p2p_damage_status`
-```sql
-CREATE TYPE p2p_damage_status AS ENUM (
-  'reported',
-  'under_review', 
-  'info_requested',
-  'insurance_claim_submitted',
-  'resolved_owner_paid',
-  'resolved_renter_charged',
-  'closed_no_action'
-);
-```
-
-### 3. New Table: `p2p_damage_evidence`
-Photo evidence for damage reports.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `damage_report_id` | uuid | FK to p2p_damage_reports |
-| `image_url` | text | Storage URL |
-| `image_type` | text | 'damage', 'before', 'after' |
-| `uploaded_by` | uuid | FK to auth.users |
-| `caption` | text | Description of photo |
-| `created_at` | timestamp | Record created |
-
-### 4. New Table: `p2p_insurance_claims`
-Insurance claim tracking (Phase 1 - Manual).
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `damage_report_id` | uuid | FK to p2p_damage_reports |
-| `insurance_provider` | text | Provider name |
-| `claim_reference` | text | Claim reference number |
-| `coverage_decision` | text | approved, denied, partial |
-| `coverage_amount` | numeric | Amount covered |
-| `notes` | text | Decision notes |
-| `submitted_at` | timestamp | When claim submitted |
-| `resolved_at` | timestamp | When claim resolved |
-| `created_by` | uuid | Admin who created |
-
-### 5. New Table: `p2p_dispute_resolutions`
-Resolution tracking with payout adjustments.
-
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `damage_report_id` | uuid | FK to p2p_damage_reports |
-| `decision` | text | owner_paid, renter_charged, no_action, partial |
-| `owner_payout_adjustment` | numeric | Amount to add/subtract from payout |
-| `renter_charge_amount` | numeric | Amount to charge renter |
-| `admin_notes` | text | Resolution notes |
-| `resolved_at` | timestamp | When resolved |
-| `resolved_by` | uuid | Admin who resolved |
-
-### 6. Modify `p2p_bookings` Table
-Add field to link damage reports and track payout hold status.
+### Modify `car_owner_profiles` Table
+Add a notes field for admin review:
 
 ```sql
-ALTER TABLE p2p_bookings 
-  ADD COLUMN damage_report_id UUID REFERENCES p2p_damage_reports(id),
-  ADD COLUMN payout_hold_reason TEXT,
-  ADD COLUMN payout_held_at TIMESTAMPTZ;
-```
-
----
-
-## New Dispute/Damage Status Flow
-
-```text
-Damage Reported
-      │
-      ▼
-Under Review (Admin investigating)
-      │
-      ├─── Info Requested (Need more photos/details)
-      │         │
-      │         ▼
-      │    (User provides info)
-      │         │
-      └─────────┘
-      │
-      ▼
-┌─────────────────────────────────────┐
-│      Admin Decision Point           │
-├─────────────────────────────────────┤
-│ A) Submit Insurance Claim           │
-│ B) Approve Owner Compensation       │
-│ C) Charge Renter                    │
-│ D) Deny Claim / No Action           │
-└─────────────────────────────────────┘
-      │
-      ▼
-┌─────────────────────────────────────┐
-│     Resolution States               │
-├─────────────────────────────────────┤
-│ • Insurance Claim Submitted         │
-│ • Resolved – Owner Paid             │
-│ • Resolved – Renter Charged         │
-│ • Closed – No Action                │
-└─────────────────────────────────────┘
+ALTER TABLE car_owner_profiles
+  ADD COLUMN admin_review_notes TEXT,
+  ADD COLUMN reviewed_by UUID REFERENCES auth.users(id),
+  ADD COLUMN reviewed_at TIMESTAMPTZ;
 ```
 
 ---
@@ -159,435 +34,367 @@ Under Review (Admin investigating)
 ### New Files to Create
 
 ```text
-src/pages/damage/
-├── ReportDamage.tsx              - Unified damage report page (renter/owner)
-├── DamageReportStatus.tsx        - View damage report status
-
-src/components/damage/
-├── DamageReportForm.tsx          - Multi-step damage report form
-├── DamageEvidenceUpload.tsx      - Photo upload for damage evidence
-├── DamageStatusBadge.tsx         - Status badge component
-├── DamageTimeline.tsx            - Timeline of events
-
-src/hooks/
-├── useDamageReport.ts            - Hooks for damage reports
-
-src/types/
-├── damage.ts                     - TypeScript types for damage system
-
-src/pages/admin/modules/
-├── AdminDamageReportsModule.tsx  - Enhanced admin panel for damage
+src/hooks/useP2PSettings.ts             - Hooks for P2P-specific settings
 ```
 
 ### Files to Modify
 
 ```text
-src/pages/p2p/RenterTrips.tsx          - Add "Report Damage" button
-src/pages/owner/OwnerBookings.tsx      - Add "Report Damage" button
-src/components/p2p/DisputeForm.tsx     - Link to damage report for damage type
-src/hooks/useP2PDispute.ts             - Add damage-specific queries
-src/pages/admin/AdminPanel.tsx         - Add "Damage Reports" nav item
-supabase/functions/execute-p2p-payout/ - Enhanced dispute/damage checks
+src/pages/ListYourCar.tsx               - Add beta banner/badge
+src/pages/owner/OwnerApply.tsx          - Add beta messaging and city selection
+src/pages/admin/AdminPanel.tsx          - Add P2P Settings nav item
+src/pages/admin/modules/AdminP2POwnersModule.tsx - Add notes field and beta controls
+src/components/admin/AdminSystemSettings.tsx     - (optional) Add P2P category
 ```
 
 ---
 
 ## Implementation Details
 
-### 1. Renter Damage Report Flow
+### 1. useP2PSettings.ts Hook
 
-**Route**: `/booking/:id/report-damage`
-
-**Steps**:
-1. Damage description (required, textarea)
-2. Date/time noticed (date picker)
-3. Photo uploads (min 1 required, max 10)
-4. Optional notes
-5. Submit and confirm
-
-**On Submit**:
-- Create `p2p_damage_reports` record with `status = 'reported'`
-- Create `p2p_damage_evidence` records for photos
-- Update `p2p_bookings.damage_report_id`
-- Set `p2p_bookings.payout_hold_reason = 'damage_report_pending'`
-- Set `p2p_bookings.payout_held_at = now()`
-- Notify owner and admin (future: email)
-
-### 2. Owner Damage Report Flow
-
-**Route**: `/owner/booking/:id/report-damage`
-
-**Steps**:
-1. Damage description (required)
-2. Before photos (from vehicle listing)
-3. After photos (damage evidence, required)
-4. Estimated repair cost (optional, currency input)
-5. Submit
-
-**On Submit**:
-- Same as renter flow with `reporter_role = 'owner'`
-- Owner-reported damages typically have higher priority
-
-### 3. Damage Report Status Page
-
-**Route**: `/damage/:id/status`
-
-**Shows**:
-- Current status with badge
-- Timeline of events
-- Photos gallery
-- Resolution details (if resolved)
-- Next steps guidance
-
-### 4. Admin Damage Reports Module
-
-**Route**: In Admin Panel → "Damage Reports" tab
-
-**Features**:
-
-**Dashboard Cards**:
-- Total Reports
-- Under Review
-- Pending Insurance
-- Resolved This Month
-
-**Table Columns**:
-| Column | Data |
-|--------|------|
-| ID | Short ID |
-| Booking | Vehicle + Dates |
-| Reporter | Name + Role badge |
-| Description | Truncated |
-| Status | Status badge |
-| Cost | Estimated repair cost |
-| Created | Date |
-| Actions | View button |
-
-**Detail Modal/Page**:
-
-1. **Report Overview**
-   - Full description
-   - Date noticed
-   - Reporter info
-   - Estimated repair cost
-
-2. **Booking Details**
-   - Vehicle info
-   - Renter profile
-   - Owner profile
-   - Trip dates
-
-3. **Evidence Gallery**
-   - Before photos (from listing)
-   - Damage photos
-   - After photos
-   - Zoom/expand view
-
-4. **Timeline**
-   - Report submitted
-   - Status changes
-   - Comments/notes
-
-5. **Insurance Claim Section** (if applicable)
-   - Provider name field
-   - Claim reference field
-   - Coverage decision notes
-   - Coverage amount
-
-6. **Resolution Section**
-   - Decision dropdown (owner_paid, renter_charged, no_action)
-   - Payout adjustment amount
-   - Renter charge amount
-   - Resolution notes
-
-**Admin Actions**:
-- Mark as "Under Review"
-- Request More Information
-- Submit Insurance Claim
-- Approve Owner Compensation
-- Charge Renter
-- Deny Claim
-- Release/Adjust Payout
-- Close Report
-
-### 5. useDamageReport.ts Hooks
+Create a hook to fetch P2P-specific settings:
 
 ```typescript
-// Create damage report
-useCreateDamageReport()
-
-// Upload damage evidence
-useUploadDamageEvidence()
-
-// Get damage report by ID
-useDamageReport(reportId: string)
-
-// Get damage reports for a booking
-useBookingDamageReports(bookingId: string)
-
-// Get user's damage reports
-useUserDamageReports()
-
-// Admin: Get all damage reports with filters
-useAdminDamageReports(status?: DamageStatus)
-
-// Admin: Update damage report status
-useUpdateDamageStatus()
-
-// Admin: Create insurance claim
-useCreateInsuranceClaim()
-
-// Admin: Resolve damage report
-useResolveDamageReport()
-
-// Admin: Stats
-useDamageReportStats()
-```
-
-### 6. Payout Logic Enhancement
-
-Modify `execute-p2p-payout/index.ts`:
-
-```typescript
-// Enhanced check for damage reports
-if (!force) {
-  // Check for active disputes
-  const { data: disputes } = await supabase
-    .from("p2p_disputes")
-    .select("id, status")
-    .in("booking_id", bookingIds)
-    .in("status", ["open", "investigating"]);
-
-  if (disputes && disputes.length > 0) {
-    throw new Error(`Cannot process: ${disputes.length} active dispute(s)`);
-  }
-
-  // Check for pending damage reports
-  const { data: damageReports } = await supabase
-    .from("p2p_damage_reports")
-    .select("id, status")
-    .in("booking_id", bookingIds)
-    .not("status", "in", "(resolved_owner_paid,resolved_renter_charged,closed_no_action)");
-
-  if (damageReports && damageReports.length > 0) {
-    throw new Error(`Cannot process: ${damageReports.length} pending damage report(s)`);
-  }
+// Fetch P2P beta mode settings
+export function useP2PBetaSettings() {
+  return useQuery({
+    queryKey: ["p2pBetaSettings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("system_settings")
+        .select("*")
+        .in("key", [
+          "p2p_owner_beta_mode",
+          "p2p_beta_cities",
+          "p2p_beta_message"
+        ]);
+      
+      if (error) throw error;
+      
+      // Parse and return settings object
+      return {
+        betaMode: parseBoolean(findByKey(data, "p2p_owner_beta_mode")),
+        betaCities: parseArray(findByKey(data, "p2p_beta_cities")),
+        betaMessage: parseString(findByKey(data, "p2p_beta_message")),
+      };
+    },
+  });
 }
 
-// Apply payout adjustments from resolved damage reports
-const { data: resolutions } = await supabase
-  .from("p2p_dispute_resolutions")
-  .select("owner_payout_adjustment")
-  .in("damage_report_id", damageReportIds)
-  .eq("decision", "owner_paid");
-
-// Calculate adjusted amount
-let adjustedAmount = payout.amount;
-for (const resolution of resolutions || []) {
-  adjustedAmount += resolution.owner_payout_adjustment || 0;
+// Admin: Update beta settings
+export function useUpdateP2PBetaSetting() {
+  // ... mutation to update system_settings
 }
-```
-
-### 7. RenterTrips.tsx Integration
-
-Add "Report Damage" button for completed trips:
-
-```typescript
-// In booking card for completed trips
-{booking.status === "completed" && !booking.damage_report_id && (
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => navigate(`/booking/${booking.id}/report-damage`)}
-  >
-    <AlertTriangle className="w-4 h-4 mr-2" />
-    Report Damage
-  </Button>
-)}
-
-{booking.damage_report_id && (
-  <Button
-    variant="ghost"
-    size="sm"
-    onClick={() => navigate(`/damage/${booking.damage_report_id}/status`)}
-  >
-    <Eye className="w-4 h-4 mr-2" />
-    View Damage Report
-  </Button>
-)}
-```
-
-### 8. OwnerBookings.tsx Integration
-
-Similar pattern for owner's completed bookings:
-
-```typescript
-// In completed booking card
-<Button
-  variant="outline"
-  size="sm"
-  className="text-amber-600"
-  onClick={() => navigate(`/owner/booking/${booking.id}/report-damage`)}
->
-  <Camera className="w-4 h-4 mr-2" />
-  Report Damage
-</Button>
 ```
 
 ---
 
-## Checkout Integration
+### 2. ListYourCar.tsx Updates
 
-Add damage policy acknowledgment:
+Add a "Private Beta" banner when beta mode is enabled:
 
-```typescript
-// In P2PBookingConfirmation.tsx or checkout flow
-<div className="p-4 rounded-lg border bg-muted/50">
-  <p className="text-sm text-muted-foreground">
-    By booking, you agree to the{" "}
-    <Link to="/damage-policy" className="text-primary underline">
-      Damage & Incident Policy
-    </Link>
-    . You may be charged for any damage that occurs during your rental period.
+```tsx
+// In Hero section, add after the "Earn up to $1,500/month" badge:
+{betaSettings?.betaMode && (
+  <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-full mb-4">
+    <Lock className="h-4 w-4" />
+    <span className="text-sm font-medium">Private Beta</span>
+  </div>
+)}
+
+// Add beta cities callout:
+{betaSettings?.betaMode && betaSettings.betaCities?.length > 0 && (
+  <Card className="bg-muted/50 border-amber-500/20 mb-8">
+    <CardContent className="py-4 text-center">
+      <p className="text-sm text-muted-foreground">
+        Currently accepting applications in:{" "}
+        <span className="font-medium text-foreground">
+          {betaSettings.betaCities.join(", ")}
+        </span>
+      </p>
+    </CardContent>
+  </Card>
+)}
+```
+
+---
+
+### 3. OwnerApply.tsx Updates
+
+Add beta mode messaging in Step 1 (Personal Information):
+
+**Before the form, add beta alert card:**
+
+```tsx
+{betaSettings?.betaMode && (
+  <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
+    <CardContent className="py-4">
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-full bg-amber-500/10">
+          <Lock className="h-5 w-5 text-amber-600" />
+        </div>
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            Private Beta
+            <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+              Limited Access
+            </Badge>
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            {betaSettings.betaMessage || 
+              "We are currently accepting a limited number of owners. Applications are reviewed manually."}
+          </p>
+          {betaSettings.betaCities?.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              <span className="font-medium">Available cities: </span>
+              {betaSettings.betaCities.join(", ")}
+            </p>
+          )}
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+)}
+```
+
+**In Step 4 (Complete), add pending review messaging:**
+
+```tsx
+{betaSettings?.betaMode && (
+  <div className="text-center text-muted-foreground mt-4">
+    <Clock className="h-6 w-6 mx-auto mb-2 text-amber-500" />
+    <p className="font-medium">Application Under Review</p>
+    <p className="text-sm">
+      Our team will review your application within 2-3 business days.
+      You'll receive an email once approved.
+    </p>
+  </div>
+)}
+```
+
+---
+
+### 4. AdminP2POwnersModule.tsx Updates
+
+**Add Beta Mode Toggle Section at the top:**
+
+```tsx
+<Card className="mb-6">
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <Lock className="h-5 w-5" />
+      Owner Beta Mode
+    </CardTitle>
+    <CardDescription>
+      Control owner onboarding access
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    <div className="flex items-center justify-between">
+      <div>
+        <Label>Invite-Only Mode</Label>
+        <p className="text-sm text-muted-foreground">
+          When enabled, only approved owners can list vehicles
+        </p>
+      </div>
+      <Switch
+        checked={betaSettings?.betaMode}
+        onCheckedChange={(checked) => updateBetaSetting("p2p_owner_beta_mode", checked)}
+      />
+    </div>
+    
+    {betaSettings?.betaMode && (
+      <>
+        <Separator />
+        <div className="space-y-2">
+          <Label>Beta Cities (comma-separated)</Label>
+          <Input
+            placeholder="Los Angeles, Miami, Austin"
+            value={betaCitiesInput}
+            onChange={(e) => setBetaCitiesInput(e.target.value)}
+            onBlur={() => updateBetaSetting("p2p_beta_cities", parseCities(betaCitiesInput))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Beta Message</Label>
+          <Textarea
+            placeholder="Custom message for beta applicants..."
+            value={betaMessageInput}
+            onChange={(e) => setBetaMessageInput(e.target.value)}
+            onBlur={() => updateBetaSetting("p2p_beta_message", betaMessageInput)}
+            rows={3}
+          />
+        </div>
+      </>
+    )}
+  </CardContent>
+</Card>
+```
+
+**Add Notes Field in Owner Detail Modal:**
+
+```tsx
+// In the owner detail modal, add after Contact Info section:
+<div className="space-y-2">
+  <Label>Admin Review Notes</Label>
+  <Textarea
+    placeholder="Add notes about this application..."
+    value={reviewNotes}
+    onChange={(e) => setReviewNotes(e.target.value)}
+    rows={3}
+  />
+  <p className="text-xs text-muted-foreground">
+    Internal notes - not visible to the owner
   </p>
 </div>
+
+// Update the approve/reject handlers to save notes:
+const handleApproveOwner = async (owner: AdminOwnerListItem) => {
+  await updateStatus.mutateAsync({ 
+    ownerId: owner.id, 
+    status: "verified",
+    adminNotes: reviewNotes,
+  });
+};
+```
+
+**Enhance the Owner Table to show review status:**
+
+```tsx
+// Add column for "Reviewed" date
+<TableHead>Reviewed</TableHead>
+
+// In row:
+<TableCell>
+  {owner.reviewed_at ? (
+    <span className="text-sm">
+      {format(new Date(owner.reviewed_at), "MMM d, yyyy")}
+    </span>
+  ) : (
+    <Badge variant="outline" className="text-amber-600">
+      Pending
+    </Badge>
+  )}
+</TableCell>
 ```
 
 ---
 
-## RLS Policies
+### 5. useAdminP2P.ts Hook Updates
 
-### p2p_damage_reports
-
-```sql
--- Users can view reports they filed or are named in
-CREATE POLICY "Users can view own damage reports"
-  ON p2p_damage_reports FOR SELECT
-  USING (
-    auth.uid() = reported_by
-    OR EXISTS (
-      SELECT 1 FROM p2p_bookings b
-      WHERE b.id = p2p_damage_reports.booking_id
-      AND (b.renter_id = auth.uid() OR b.owner_id IN (
-        SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
-      ))
-    )
-  );
-
--- Users can create reports for their bookings
-CREATE POLICY "Users can create damage reports"
-  ON p2p_damage_reports FOR INSERT
-  WITH CHECK (
-    auth.uid() = reported_by
-    AND EXISTS (
-      SELECT 1 FROM p2p_bookings b
-      WHERE b.id = booking_id
-      AND (b.renter_id = auth.uid() OR b.owner_id IN (
-        SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
-      ))
-    )
-  );
-
--- Admin full access
-CREATE POLICY "Admin full access to damage reports"
-  ON p2p_damage_reports FOR ALL
-  USING (public.is_admin(auth.uid()));
-```
-
-### p2p_damage_evidence
-
-```sql
--- Users can view evidence for reports they have access to
-CREATE POLICY "Users can view damage evidence"
-  ON p2p_damage_evidence FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM p2p_damage_reports dr
-      WHERE dr.id = p2p_damage_evidence.damage_report_id
-      AND (
-        dr.reported_by = auth.uid()
-        OR EXISTS (
-          SELECT 1 FROM p2p_bookings b
-          WHERE b.id = dr.booking_id
-          AND (b.renter_id = auth.uid() OR b.owner_id IN (
-            SELECT id FROM car_owner_profiles WHERE user_id = auth.uid()
-          ))
-        )
-      )
-    )
-  );
-
--- Users can upload evidence to their own reports
-CREATE POLICY "Users can upload damage evidence"
-  ON p2p_damage_evidence FOR INSERT
-  WITH CHECK (
-    auth.uid() = uploaded_by
-    AND EXISTS (
-      SELECT 1 FROM p2p_damage_reports dr
-      WHERE dr.id = damage_report_id
-      AND dr.reported_by = auth.uid()
-    )
-  );
-
--- Admin full access
-CREATE POLICY "Admin full access to damage evidence"
-  ON p2p_damage_evidence FOR ALL
-  USING (public.is_admin(auth.uid()));
-```
-
-### p2p_insurance_claims & p2p_dispute_resolutions
-
-```sql
--- Admin only for insurance claims
-CREATE POLICY "Admin only insurance claims"
-  ON p2p_insurance_claims FOR ALL
-  USING (public.is_admin(auth.uid()));
-
--- Admin only for resolutions
-CREATE POLICY "Admin only dispute resolutions"
-  ON p2p_dispute_resolutions FOR ALL
-  USING (public.is_admin(auth.uid()));
-```
-
----
-
-## Storage
-
-Use existing `p2p-documents` bucket:
-- Path: `damage/{damage_report_id}/{type}_{timestamp}.{ext}`
-- Types: `damage`, `before`, `after`
-- Access: Private, admin can view all, users can view own
-
----
-
-## Routes to Add (App.tsx)
+Modify `useUpdateOwnerStatus` to include notes:
 
 ```typescript
-// Damage report pages
-const ReportDamage = lazy(() => import("./pages/damage/ReportDamage"));
-const DamageReportStatus = lazy(() => import("./pages/damage/DamageReportStatus"));
-
-// Routes:
-<Route path="/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage role="renter" /></ProtectedRoute>} />
-<Route path="/owner/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage role="owner" /></ProtectedRoute>} />
-<Route path="/damage/:reportId/status" element={<ProtectedRoute><DamageReportStatus /></ProtectedRoute>} />
+mutationFn: async ({ 
+  ownerId, 
+  status,
+  adminNotes,
+}: { 
+  ownerId: string; 
+  status: CarOwnerStatus;
+  adminNotes?: string;
+}) => {
+  const { data, error } = await supabase
+    .from("car_owner_profiles")
+    .update({ 
+      status,
+      admin_review_notes: adminNotes,
+      reviewed_by: user?.id,
+      reviewed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ownerId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+},
 ```
 
 ---
 
-## AdminPanel.tsx Updates
+## Database Migration Summary
 
-Add new nav item:
+```sql
+-- Add admin review columns to car_owner_profiles
+ALTER TABLE car_owner_profiles
+  ADD COLUMN IF NOT EXISTS admin_review_notes TEXT,
+  ADD COLUMN IF NOT EXISTS reviewed_by UUID,
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
 
-```typescript
-{ id: "damage-reports", label: "Damage Reports", icon: AlertTriangle }
+-- Insert P2P beta mode settings
+INSERT INTO system_settings (key, value, description, category, is_public)
+VALUES 
+  ('p2p_owner_beta_mode', 'true', 'Enable invite-only owner beta mode', 'p2p', false),
+  ('p2p_beta_cities', '["Los Angeles", "Miami"]', 'Cities accepting beta applications', 'p2p', true),
+  ('p2p_beta_message', '"We are currently accepting a limited number of owners for our private beta. Applications are reviewed manually."', 'Custom beta message to display', 'p2p', true)
+ON CONFLICT (key) DO NOTHING;
 ```
 
-Add to switch statement:
+---
 
-```typescript
-case "damage-reports":
-  return <AdminDamageReportsModule />;
+## UI/UX Flow
+
+```text
+Owner visits /list-your-car
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  "Private Beta" badge visible           │
+│  Beta cities listed                     │
+│  Click "Get Started"                    │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│  /owner/apply                           │
+│                                         │
+│  Beta messaging card at top:            │
+│  "We are currently accepting a          │
+│   limited number of owners for our      │
+│   private beta in [CITY]. Applications  │
+│   are reviewed manually."               │
+│                                         │
+│  [Complete application steps...]        │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│  Application Submitted                  │
+│                                         │
+│  "Application Under Review"             │
+│  "Our team will review within 2-3       │
+│   business days."                       │
+│                                         │
+│  Status: PENDING                        │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+         Admin reviews in /admin → P2P Owners
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│  Admin Review Panel                     │
+│                                         │
+│  [Beta Mode Toggle: ON/OFF]             │
+│  [Beta Cities: Input]                   │
+│  [Beta Message: Textarea]               │
+│                                         │
+│  Owner Detail Modal:                    │
+│  - All current fields                   │
+│  - Admin Notes textarea                 │
+│  - [Approve] [Reject] buttons           │
+└─────────────────────────────────────────┘
+                 │
+         ┌───────┴───────┐
+         │               │
+    Approved         Rejected
+         │               │
+         ▼               ▼
+   Owner can now    Owner notified
+   list vehicles    (future: email)
 ```
 
 ---
@@ -596,127 +403,27 @@ case "damage-reports":
 
 | Action | File | Description |
 |--------|------|-------------|
-| Create | `src/types/damage.ts` | TypeScript types for damage system |
-| Create | `src/hooks/useDamageReport.ts` | Data hooks for damage reports |
-| Create | `src/components/damage/DamageReportForm.tsx` | Multi-step damage form |
-| Create | `src/components/damage/DamageEvidenceUpload.tsx` | Photo upload component |
-| Create | `src/components/damage/DamageStatusBadge.tsx` | Status badge component |
-| Create | `src/components/damage/DamageTimeline.tsx` | Event timeline component |
-| Create | `src/pages/damage/ReportDamage.tsx` | Damage report page |
-| Create | `src/pages/damage/DamageReportStatus.tsx` | Status view page |
-| Create | `src/pages/admin/modules/AdminDamageReportsModule.tsx` | Admin damage panel |
-| Modify | `src/App.tsx` | Add damage routes |
-| Modify | `src/pages/admin/AdminPanel.tsx` | Add Damage Reports nav item |
-| Modify | `src/pages/p2p/RenterTrips.tsx` | Add Report Damage button |
-| Modify | `src/pages/owner/OwnerBookings.tsx` | Add Report Damage button |
-| Modify | `supabase/functions/execute-p2p-payout/` | Enhanced damage checks |
-| Database | Migration | Create tables, enums, RLS policies |
-
----
-
-## Database Migration Summary
-
-```sql
--- Create damage status enum
-CREATE TYPE p2p_damage_status AS ENUM (
-  'reported',
-  'under_review',
-  'info_requested',
-  'insurance_claim_submitted',
-  'resolved_owner_paid',
-  'resolved_renter_charged',
-  'closed_no_action'
-);
-
--- Create damage reports table
-CREATE TABLE p2p_damage_reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  booking_id UUID NOT NULL REFERENCES p2p_bookings(id) ON DELETE CASCADE,
-  reported_by UUID NOT NULL REFERENCES auth.users(id),
-  reporter_role TEXT NOT NULL CHECK (reporter_role IN ('renter', 'owner')),
-  description TEXT NOT NULL,
-  date_noticed TIMESTAMPTZ NOT NULL,
-  estimated_repair_cost NUMERIC(10,2),
-  status p2p_damage_status DEFAULT 'reported',
-  priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
-  admin_notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Create damage evidence table
-CREATE TABLE p2p_damage_evidence (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
-  image_url TEXT NOT NULL,
-  image_type TEXT NOT NULL CHECK (image_type IN ('damage', 'before', 'after')),
-  uploaded_by UUID NOT NULL REFERENCES auth.users(id),
-  caption TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Create insurance claims table
-CREATE TABLE p2p_insurance_claims (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
-  insurance_provider TEXT NOT NULL,
-  claim_reference TEXT,
-  coverage_decision TEXT CHECK (coverage_decision IN ('pending', 'approved', 'denied', 'partial')),
-  coverage_amount NUMERIC(10,2),
-  notes TEXT,
-  submitted_at TIMESTAMPTZ DEFAULT now(),
-  resolved_at TIMESTAMPTZ,
-  created_by UUID REFERENCES auth.users(id)
-);
-
--- Create dispute resolutions table
-CREATE TABLE p2p_dispute_resolutions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  damage_report_id UUID NOT NULL REFERENCES p2p_damage_reports(id) ON DELETE CASCADE,
-  decision TEXT NOT NULL CHECK (decision IN ('owner_paid', 'renter_charged', 'no_action', 'partial')),
-  owner_payout_adjustment NUMERIC(10,2) DEFAULT 0,
-  renter_charge_amount NUMERIC(10,2) DEFAULT 0,
-  admin_notes TEXT,
-  resolved_at TIMESTAMPTZ DEFAULT now(),
-  resolved_by UUID REFERENCES auth.users(id)
-);
-
--- Add damage tracking to bookings
-ALTER TABLE p2p_bookings 
-  ADD COLUMN damage_report_id UUID REFERENCES p2p_damage_reports(id),
-  ADD COLUMN payout_hold_reason TEXT,
-  ADD COLUMN payout_held_at TIMESTAMPTZ;
-
--- Create indexes
-CREATE INDEX idx_damage_reports_booking_id ON p2p_damage_reports(booking_id);
-CREATE INDEX idx_damage_reports_status ON p2p_damage_reports(status);
-CREATE INDEX idx_damage_evidence_report_id ON p2p_damage_evidence(damage_report_id);
-
--- Enable RLS
-ALTER TABLE p2p_damage_reports ENABLE ROW LEVEL SECURITY;
-ALTER TABLE p2p_damage_evidence ENABLE ROW LEVEL SECURITY;
-ALTER TABLE p2p_insurance_claims ENABLE ROW LEVEL SECURITY;
-ALTER TABLE p2p_dispute_resolutions ENABLE ROW LEVEL SECURITY;
-
--- RLS Policies (as detailed above)
-```
+| Create | `src/hooks/useP2PSettings.ts` | Hooks for P2P beta settings |
+| Modify | `src/pages/ListYourCar.tsx` | Add Private Beta badge and cities callout |
+| Modify | `src/pages/owner/OwnerApply.tsx` | Add beta messaging card and pending review notice |
+| Modify | `src/pages/admin/modules/AdminP2POwnersModule.tsx` | Add beta mode toggle, notes field |
+| Modify | `src/hooks/useAdminP2P.ts` | Update mutation to include admin notes |
+| Modify | `src/types/p2p.ts` | Add admin review fields to types |
+| Database | Migration | Add columns and insert settings |
 
 ---
 
 ## Security Considerations
 
-1. **Photo Storage**: Damage photos stored in private bucket
-2. **RLS**: Users can only view/create reports for their own bookings
-3. **Admin-Only Resolution**: Only admins can update status and resolve reports
-4. **Payout Protection**: Payouts automatically blocked when damage reports exist
-5. **Audit Trail**: All status changes tracked with timestamps
+1. **RLS**: Beta settings with `is_public: true` can be read by anyone (needed for frontend display)
+2. **Admin-Only Updates**: Only admins can toggle beta mode or update settings
+3. **Notes Privacy**: `admin_review_notes` not exposed to owners via RLS policies
 
 ---
 
-## Notifications (Future Enhancement)
+## Future Enhancements
 
-When implementing email notifications, trigger on:
-- Damage reported → Notify other party + admin
-- Status changed → Notify reporter
-- Info requested → Notify reporter
-- Resolved → Notify both parties
+1. **Email Notifications**: Notify owners when application is approved/rejected
+2. **Waitlist**: Add email capture for cities not yet in beta
+3. **Auto-Approval**: Option to auto-approve owners who meet certain criteria
+4. **Beta Invite Codes**: Generate unique invite codes for referrals
