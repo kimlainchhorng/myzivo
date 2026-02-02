@@ -205,6 +205,12 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
 
           {/* RIGHT: Price & CTA */}
           <div className="sm:w-48 p-4 flex flex-col justify-center items-end border-t sm:border-t-0 sm:border-l border-border/50">
+            {/* Vehicle info */}
+            {brandedCar && (
+              <p className="text-xs text-muted-foreground text-right mb-2">
+                {brandedCar.brand} {brandedCar.model}
+              </p>
+            )}
             <div className="text-right">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">From</p>
               <p className="text-2xl font-bold text-primary">
