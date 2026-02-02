@@ -29,7 +29,7 @@ import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import CrossSellSection from "@/components/flight/CrossSellSection";
-import { QuickStatsBar } from "@/components/flight";
+import { QuickStatsBar, HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
@@ -707,6 +707,12 @@ const FlightResults = () => {
             </ResultsContainer>
           </div>
         </section>
+
+        {/* How Booking Works - Trust Section */}
+        <HowBookingWorks />
+
+        {/* Trust Badges */}
+        <FlightTrustBadgesBar />
 
         {/* FAQ Section */}
         <ResultsFAQ service="flights" />

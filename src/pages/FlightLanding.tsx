@@ -19,6 +19,7 @@ import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import { formatRouteTitle } from "@/utils/seoUtils";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
+import { HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
 
 /**
  * Dynamic SEO landing page for flights
@@ -134,6 +135,12 @@ const FlightLanding = () => {
 
         {/* Why Compare Section */}
         <WhyCompareSection />
+
+        {/* How Booking Works - Trust Section */}
+        <HowBookingWorks />
+
+        {/* Trust Badges */}
+        <FlightTrustBadgesBar />
 
         {/* How It Works */}
         <HowItWorksSection />

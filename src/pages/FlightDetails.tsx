@@ -47,6 +47,7 @@ import { getAirlineLogo } from "@/data/airlines";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { trackAffiliateClick, buildAffiliateUrl } from "@/lib/affiliateTracking";
 import { FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
+import { FlightDetailStickyCTA, HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
 
 const FlightDetails = () => {
   const navigate = useNavigate();
@@ -665,7 +666,21 @@ const FlightDetails = () => {
             </div>
           </div>
         </div>
+
+        {/* How Booking Works */}
+        <HowBookingWorks variant="horizontal" />
+
+        {/* Trust Badges */}
+        <FlightTrustBadgesBar variant="compact" className="py-6 border-y border-border/50" />
       </main>
+
+      {/* Mobile Sticky CTA */}
+      <FlightDetailStickyCTA
+        price={flight.price}
+        currency="USD"
+        passengers={passengerCount}
+        onContinue={handleBookNow}
+      />
 
       <Footer />
     </div>

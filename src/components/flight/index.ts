@@ -104,6 +104,13 @@ export { default as FlightConsentCheckbox } from './FlightConsentCheckbox';
 export { default as FlightConsentGate } from './FlightConsentGate';
 export { default as FlightPartnerDisclaimer, FlightTrustBadges, FlightPaymentDisclaimer } from './FlightPartnerDisclaimer';
 
+// UX/Trust Components
+export { default as HowBookingWorks } from './HowBookingWorks';
+export { default as FlightTrustBadgesBar } from './FlightTrustBadgesBar';
+export { default as BookingSupportPanel } from './BookingSupportPanel';
+export { default as FlightDetailStickyCTA } from './FlightDetailStickyCTA';
+export { default as FlightEmptyState } from './FlightEmptyState';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';

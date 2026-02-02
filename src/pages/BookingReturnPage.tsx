@@ -41,6 +41,7 @@ import {
   processBookingReturn,
   type BookingReturnResult 
 } from "@/lib/bookingReturnHandler";
+import { BookingSupportPanel } from "@/components/flight";
 
 type PageStatus = "loading" | "converted" | "failed" | "pending" | "unknown";
 
@@ -319,19 +320,11 @@ export default function BookingReturnPage() {
               </Card>
             )}
 
-            {/* Additional Help */}
-            <div className="mt-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Need help?{" "}
-                <Link to="/help" className="text-primary hover:underline">
-                  Visit our Help Center
-                </Link>{" "}
-                or{" "}
-                <Link to="/contact" className="text-primary hover:underline">
-                  Contact Support
-                </Link>
-              </p>
-            </div>
+            {/* Support Panel - REQUIRED */}
+            <BookingSupportPanel 
+              partnerName={partnerName}
+              className="mt-8"
+            />
           </div>
         </main>
 
