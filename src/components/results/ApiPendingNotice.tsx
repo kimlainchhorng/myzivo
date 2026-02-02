@@ -300,26 +300,54 @@ export default function ApiPendingNotice({
         </CardContent>
       </Card>
 
-      {/* Destination Images Strip */}
+      {/* Popular Destinations Gallery */}
       <Card className="border-border/30 overflow-hidden">
-        <CardContent className="p-3 sm:p-4">
-          <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider">
-            Popular destinations worldwide
-          </p>
+        <CardContent className="p-4 sm:p-6">
+          <div className="text-center mb-4">
+            <h3 className="font-semibold text-lg mb-1">Popular Destinations Worldwide</h3>
+            <p className="text-xs text-muted-foreground">
+              Compare flight prices to 500+ destinations
+            </p>
+          </div>
+          
+          {/* Large Featured Destinations Grid */}
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3 mb-4">
+            {Object.entries(destinationPhotos).slice(0, 16).map(([key, dest]) => (
+              <div key={key} className="relative group aspect-square">
+                <img
+                  src={dest.src}
+                  alt={dest.alt}
+                  className="w-full h-full rounded-xl object-cover border border-border/50 group-hover:border-sky-500/50 transition-all group-hover:scale-105"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-1.5 sm:p-2 text-center">
+                  <span className="text-[10px] sm:text-xs text-white font-semibold truncate block">{dest.city}</span>
+                  <span className="text-[8px] sm:text-[10px] text-white/70 truncate block">{dest.country}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Additional Destinations Row */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
-            {Object.entries(destinationPhotos).slice(0, 8).map(([key, dest]) => (
+            {Object.entries(destinationPhotos).slice(16).map(([key, dest]) => (
               <div key={key} className="shrink-0 relative group">
                 <img
                   src={dest.src}
                   alt={dest.alt}
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover border border-border/50 group-hover:border-sky-500/50 transition-colors"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-border/50 group-hover:border-sky-500/50 transition-all group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-1">
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-1 text-center">
                   <span className="text-[9px] text-white font-medium">{dest.city}</span>
                 </div>
               </div>
             ))}
+            <div className="shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-gradient-to-br from-sky-500/20 to-purple-500/20 border border-sky-500/30 flex items-center justify-center">
+              <span className="text-xs text-sky-400 font-medium text-center px-1">+500<br/>cities</span>
+            </div>
           </div>
         </CardContent>
       </Card>
