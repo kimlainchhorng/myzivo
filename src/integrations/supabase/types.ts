@@ -3132,61 +3132,118 @@ export type Database = {
       }
       flight_bookings: {
         Row: {
+          baggage_allowance: Json | null
+          base_fare: number | null
           booking_reference: string
           cabin_class: string
           created_at: string | null
           customer_id: string
+          fare_rules: Json | null
           flight_id: string
           id: string
+          itinerary_email_sent: boolean | null
+          offer_expires_at: string | null
+          offer_id: string | null
           passengers: Json
           payment_status: string | null
+          pnr: string | null
           price_per_passenger: number
+          refund_amount: number | null
+          refund_processed_at: string | null
+          refund_requested_at: string | null
+          refund_status: string | null
           return_flight_id: string | null
           seat_selection: Json | null
           special_requests: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
           subtotal: number
           taxes_fees: number | null
+          ticket_numbers: Json | null
+          ticketed_at: string | null
+          ticketing_error: string | null
+          ticketing_partner: string | null
+          ticketing_partner_order_id: string | null
+          ticketing_status: string | null
           total_amount: number
           total_passengers: number
           updated_at: string | null
         }
         Insert: {
+          baggage_allowance?: Json | null
+          base_fare?: number | null
           booking_reference: string
           cabin_class?: string
           created_at?: string | null
           customer_id: string
+          fare_rules?: Json | null
           flight_id: string
           id?: string
+          itinerary_email_sent?: boolean | null
+          offer_expires_at?: string | null
+          offer_id?: string | null
           passengers: Json
           payment_status?: string | null
+          pnr?: string | null
           price_per_passenger: number
+          refund_amount?: number | null
+          refund_processed_at?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string | null
           return_flight_id?: string | null
           seat_selection?: Json | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal: number
           taxes_fees?: number | null
+          ticket_numbers?: Json | null
+          ticketed_at?: string | null
+          ticketing_error?: string | null
+          ticketing_partner?: string | null
+          ticketing_partner_order_id?: string | null
+          ticketing_status?: string | null
           total_amount: number
           total_passengers: number
           updated_at?: string | null
         }
         Update: {
+          baggage_allowance?: Json | null
+          base_fare?: number | null
           booking_reference?: string
           cabin_class?: string
           created_at?: string | null
           customer_id?: string
+          fare_rules?: Json | null
           flight_id?: string
           id?: string
+          itinerary_email_sent?: boolean | null
+          offer_expires_at?: string | null
+          offer_id?: string | null
           passengers?: Json
           payment_status?: string | null
+          pnr?: string | null
           price_per_passenger?: number
+          refund_amount?: number | null
+          refund_processed_at?: string | null
+          refund_requested_at?: string | null
+          refund_status?: string | null
           return_flight_id?: string | null
           seat_selection?: Json | null
           special_requests?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
           subtotal?: number
           taxes_fees?: number | null
+          ticket_numbers?: Json | null
+          ticketed_at?: string | null
+          ticketing_error?: string | null
+          ticketing_partner?: string | null
+          ticketing_partner_order_id?: string | null
+          ticketing_status?: string | null
           total_amount?: number
           total_passengers?: number
           updated_at?: string | null
@@ -3204,6 +3261,118 @@ export type Database = {
             columns: ["return_flight_id"]
             isOneToOne: false
             referencedRelation: "flights"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_passengers: {
+        Row: {
+          booking_id: string
+          born_on: string
+          created_at: string | null
+          email: string
+          family_name: string
+          gender: string
+          given_name: string
+          id: string
+          nationality: string | null
+          passenger_index: number
+          passport_country: string | null
+          passport_expiry: string | null
+          passport_number: string | null
+          phone_number: string | null
+          ticket_number: string | null
+          title: string
+        }
+        Insert: {
+          booking_id: string
+          born_on: string
+          created_at?: string | null
+          email: string
+          family_name: string
+          gender: string
+          given_name: string
+          id?: string
+          nationality?: string | null
+          passenger_index: number
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone_number?: string | null
+          ticket_number?: string | null
+          title: string
+        }
+        Update: {
+          booking_id?: string
+          born_on?: string
+          created_at?: string | null
+          email?: string
+          family_name?: string
+          gender?: string
+          given_name?: string
+          id?: string
+          nationality?: string | null
+          passenger_index?: number
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone_number?: string | null
+          ticket_number?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_passengers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_ticketing_logs: {
+        Row: {
+          action: string
+          booking_id: string
+          created_at: string | null
+          created_by: string | null
+          error_message: string | null
+          id: string
+          partner: string
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+        }
+        Insert: {
+          action: string
+          booking_id: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          partner: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status: string
+        }
+        Update: {
+          action?: string
+          booking_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          error_message?: string | null
+          id?: string
+          partner?: string
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_ticketing_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
             referencedColumns: ["id"]
           },
         ]

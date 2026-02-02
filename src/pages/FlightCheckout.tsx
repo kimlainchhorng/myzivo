@@ -1,0 +1,401 @@
+/**
+ * Flight Checkout Page
+ * ZIVO Merchant-of-Record checkout with Stripe payment
+ * NO partner redirect - payment processed by ZIVO
+ */
+
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import SEOHead from '@/components/SEOHead';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import FlightPriceBreakdown from '@/components/flight/FlightPriceBreakdown';
+import {
+  Plane,
+  Clock,
+  Shield,
+  Lock,
+  CreditCard,
+  ChevronLeft,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Users,
+} from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from '@/hooks/useDuffelFlights';
+import { useCreateFlightCheckout, type FlightPassenger } from '@/hooks/useFlightBooking';
+import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS } from '@/config/flightMoRCompliance';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
+const FlightCheckout = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  
+  const offerId = searchParams.get('offer');
+  const passengerCount = parseInt(searchParams.get('passengers') || '1');
+  
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [passengersData, setPassengersData] = useState<FlightPassenger[]>([]);
+  
+  const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
+  const createCheckout = useCreateFlightCheckout();
+
+  // Load passenger data from session storage
+  useEffect(() => {
+    const stored = sessionStorage.getItem('flightPassengers');
+    if (stored) {
+      try {
+        setPassengersData(JSON.parse(stored));
+      } catch {
+        console.error('Failed to parse passenger data');
+      }
+    }
+  }, []);
+
+  const handlePayment = async () => {
+    if (!offer) {
+      toast({
+        title: 'Error',
+        description: 'Flight offer not found. Please go back and try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!termsAccepted) {
+      toast({
+        title: 'Terms Required',
+        description: 'Please accept the Terms and Conditions to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (passengersData.length === 0) {
+      toast({
+        title: 'Passenger Info Required',
+        description: 'Please provide passenger details before checkout.',
+        variant: 'destructive',
+      });
+      navigate(`/flights/traveler-info?offer=${offerId}&passengers=${passengerCount}`);
+      return;
+    }
+
+    try {
+      // Calculate price breakdown (estimate: 85% base, 15% taxes)
+      const baseFare = offer.price * 0.85;
+      const taxesFees = offer.price * 0.15;
+
+      const result = await createCheckout.mutateAsync({
+        offerId: offer.id,
+        passengers: passengersData,
+        totalAmount: offer.price * passengerCount,
+        baseFare,
+        taxesFees,
+        currency: offer.currency,
+        origin: offer.departure.code,
+        destination: offer.arrival.code,
+        departureDate: offer.departure.date,
+        cabinClass: offer.cabinClass,
+      });
+
+      // Redirect to Stripe Checkout
+      window.location.href = result.url;
+    } catch (error) {
+      // Error handled by mutation
+      console.error('Checkout error:', error);
+    }
+  };
+
+  // Loading state
+  if (offerLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4 flex items-center justify-center">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading checkout...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Error state
+  if (offerError || !offer) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEOHead title="Checkout Error – ZIVO" description="Unable to load checkout." />
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <Card className="max-w-lg mx-auto">
+              <CardContent className="p-8 text-center">
+                <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <h1 className="text-xl font-bold mb-2">Offer Expired</h1>
+                <p className="text-muted-foreground mb-6">
+                  This flight offer has expired. Please search again for current availability.
+                </p>
+                <Button onClick={() => navigate('/flights')} className="gap-2">
+                  <Plane className="w-4 h-4" />
+                  Search Flights
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const baseFare = offer.price * 0.85;
+  const taxesFees = offer.price * 0.15;
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={`Checkout – ${offer.departure.code} to ${offer.arrival.code} | ZIVO`}
+        description="Complete your flight booking securely with ZIVO."
+      />
+      <Header />
+
+      <main className="pt-20 pb-20">
+        <div className="container mx-auto px-4 max-w-5xl">
+          {/* Back button */}
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="mb-6 gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </Button>
+
+          <div className="grid lg:grid-cols-5 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Flight Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Plane className="w-5 h-5 text-primary" />
+                    Your Flight
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 mb-4">
+                    <img
+                      src={getDuffelAirlineLogo(offer.airlineCode)}
+                      alt={offer.airline}
+                      className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg'; }}
+                    />
+                    <div>
+                      <h3 className="font-semibold">{offer.airline}</h3>
+                      <p className="text-sm text-muted-foreground">{offer.flightNumber}</p>
+                    </div>
+                    <Badge className="ml-auto">{offer.cabinClass}</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between py-4">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{offer.departure.time}</p>
+                      <p className="text-sm font-medium text-primary">{offer.departure.code}</p>
+                      <p className="text-xs text-muted-foreground">{offer.departure.city}</p>
+                    </div>
+                    <div className="flex-1 px-4 text-center">
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Clock className="w-3 h-3" />
+                        {offer.duration}
+                      </div>
+                      <div className="h-px bg-border relative">
+                        <Plane className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-primary -rotate-45" />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {offer.stops === 0 ? 'Direct' : `${offer.stops} stop${offer.stops > 1 ? 's' : ''}`}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-bold">{offer.arrival.time}</p>
+                      <p className="text-sm font-medium text-primary">{offer.arrival.code}</p>
+                      <p className="text-xs text-muted-foreground">{offer.arrival.city}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 pt-4 border-t text-sm text-muted-foreground">
+                    <span>{format(parseISO(offer.departure.date), 'EEE, MMM d, yyyy')}</span>
+                    <span className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      {passengerCount} passenger{passengerCount > 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Passengers Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    Passengers
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {passengersData.length > 0 ? (
+                    <div className="space-y-3">
+                      {passengersData.map((p, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                          <div>
+                            <p className="font-medium">{p.given_name} {p.family_name}</p>
+                            <p className="text-sm text-muted-foreground">{p.email}</p>
+                          </div>
+                          <Badge variant="outline">Passenger {i + 1}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Alert>
+                      <AlertCircle className="w-4 h-4" />
+                      <AlertDescription>
+                        Passenger details are required.{' '}
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto"
+                          onClick={() => navigate(`/flights/traveler-info?offer=${offerId}&passengers=${passengerCount}`)}
+                        >
+                          Add passenger info
+                        </Button>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Terms and Conditions */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="terms"
+                      checked={termsAccepted}
+                      onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <label
+                        htmlFor="terms"
+                        className="text-sm font-medium leading-relaxed cursor-pointer"
+                      >
+                        {FLIGHT_MOR_DISCLAIMERS.termsCheckbox} *
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        By booking, you agree to the{' '}
+                        <a href={FLIGHT_LEGAL_LINKS.terms} className="text-primary hover:underline">Terms of Service</a>,{' '}
+                        <a href={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">Flight Terms</a>, and{' '}
+                        <a href={FLIGHT_LEGAL_LINKS.privacy} className="text-primary hover:underline">Privacy Policy</a>.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar - Price & Payment */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Price Breakdown */}
+              <FlightPriceBreakdown
+                baseFare={baseFare}
+                taxesFees={taxesFees}
+                passengers={passengerCount}
+                currency={offer.currency}
+              />
+
+              {/* Pay Button */}
+              <Card className="border-primary/30 bg-primary/5">
+                <CardContent className="p-6 space-y-4">
+                  <Button
+                    size="lg"
+                    className="w-full gap-2 text-lg h-14"
+                    onClick={handlePayment}
+                    disabled={createCheckout.isPending || !termsAccepted || passengersData.length === 0}
+                  >
+                    {createCheckout.isPending ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-5 h-5" />
+                        {FLIGHT_MOR_CTA.pay}
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Trust Badges */}
+                  <div className="flex items-center justify-center gap-4 pt-2">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Shield className="w-4 h-4 text-emerald-500" />
+                      <span>Secure</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                      <span>Stripe</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <span>Instant</span>
+                    </div>
+                  </div>
+
+                  {/* MoR Disclaimer */}
+                  <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
+                    {FLIGHT_MOR_DISCLAIMERS.sellerFull}
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* What Happens Next */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">What happens next?</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                    <p className="text-muted-foreground">Complete payment securely with Stripe</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                    <p className="text-muted-foreground">Receive instant booking confirmation</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                    <p className="text-muted-foreground">Get your e-ticket via email within minutes</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default FlightCheckout;

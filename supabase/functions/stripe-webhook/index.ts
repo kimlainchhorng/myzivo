@@ -111,6 +111,35 @@ serve(async (req) => {
           } else {
             console.log("P2P booking updated to captured:", metadata.booking_id);
           }
+        } else if (metadata.type === "flight") {
+          // Update flight booking payment status
+          const { error } = await supabase
+            .from("flight_bookings")
+            .update({
+              payment_status: "paid",
+              stripe_payment_intent_id: paymentIntentId,
+              ticketing_status: "processing",
+            })
+            .eq("stripe_checkout_session_id", session.id);
+
+          if (error) {
+            console.error("Error updating flight booking:", error);
+          } else {
+            console.log("Flight booking paid:", metadata.booking_id);
+            // Trigger ticketing via edge function
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/issue-flight-ticket`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${supabaseServiceKey}`,
+                },
+                body: JSON.stringify({ bookingId: metadata.booking_id }),
+              });
+            } catch (ticketErr) {
+              console.error("Error triggering ticketing:", ticketErr);
+            }
+          }
         }
         break;
       }
