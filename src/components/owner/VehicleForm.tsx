@@ -30,6 +30,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { VehicleImageUpload } from "./VehicleImageUpload";
+import { PricingHelper } from "./PricingHelper";
 
 const currentYear = new Date().getFullYear();
 
@@ -486,7 +487,16 @@ export function VehicleForm({
           <CardHeader>
             <CardTitle>Pricing</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
+          <CardContent className="space-y-4">
+            {/* Smart Pricing Helper */}
+            <PricingHelper
+              category={form.watch("category")}
+              currentPrice={form.watch("daily_rate") || 50}
+              city={form.watch("location_city")}
+              onSuggestedClick={(price) => form.setValue("daily_rate", price)}
+            />
+            
+            <div className="grid gap-4 md:grid-cols-3">
             <FormField
               control={form.control}
               name="daily_rate"
@@ -544,6 +554,7 @@ export function VehicleForm({
                 </FormItem>
               )}
             />
+            </div>
           </CardContent>
         </Card>
 

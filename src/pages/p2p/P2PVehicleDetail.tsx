@@ -437,9 +437,7 @@ export default function P2PVehicleDetail() {
                   {pricing && (
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span>
-                          ${pricing.dailyRate.toFixed(0)} × {pricing.totalDays} days
-                        </span>
+                        <span>Rental ({pricing.totalDays} days × ${pricing.dailyRate}/day)</span>
                         <span>${pricing.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between text-muted-foreground">
@@ -448,12 +446,15 @@ export default function P2PVehicleDetail() {
                       </div>
                       {insuranceAccepted && (
                         <div className="flex justify-between text-muted-foreground">
-                          <span>Insurance</span>
+                          <span className="flex items-center gap-1">
+                            <Shield className="w-3 h-3" />
+                            Insurance protection
+                          </span>
                           <span>${pricing.insuranceFee.toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-muted-foreground">
-                        <span>Taxes</span>
+                        <span>Taxes & fees</span>
                         <span>${pricing.taxes.toFixed(2)}</span>
                       </div>
                       <Separator />
@@ -462,6 +463,14 @@ export default function P2PVehicleDetail() {
                         <span>${pricing.totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
+                  )}
+
+                  {/* Insurance Included Badge */}
+                  {insuranceAccepted && (
+                    <Badge variant="secondary" className="gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 w-full justify-center py-2">
+                      <Shield className="w-4 h-4" />
+                      Insurance included during rental
+                    </Badge>
                   )}
 
                   {/* Insurance */}
