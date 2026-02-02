@@ -5585,6 +5585,69 @@ export type Database = {
           },
         ]
       }
+      search_sessions: {
+        Row: {
+          cabin_class: string | null
+          created_at: string
+          depart_date: string | null
+          destination: string | null
+          device_type: string | null
+          guests: number | null
+          id: string
+          ip_address: unknown
+          origin: string | null
+          passengers: number | null
+          return_date: string | null
+          rooms: number | null
+          search_params: Json | null
+          session_id: string
+          type: string
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cabin_class?: string | null
+          created_at?: string
+          depart_date?: string | null
+          destination?: string | null
+          device_type?: string | null
+          guests?: number | null
+          id?: string
+          ip_address?: unknown
+          origin?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          rooms?: number | null
+          search_params?: Json | null
+          session_id: string
+          type: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cabin_class?: string | null
+          created_at?: string
+          depart_date?: string | null
+          destination?: string | null
+          device_type?: string | null
+          guests?: number | null
+          id?: string
+          ip_address?: unknown
+          origin?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          rooms?: number | null
+          search_params?: Json | null
+          session_id?: string
+          type?: string
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string
