@@ -544,10 +544,10 @@ const FlightResults = () => {
               <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  Secure partner checkout
+                  ✓ Secure partner checkout
                 </span>
                 <span className="hidden sm:inline text-border">•</span>
-                <span className="text-emerald-600 font-medium">No hidden fees from ZIVO</span>
+                <span className="text-emerald-600 font-medium">✓ No hidden fees from ZIVO</span>
               </div>
             </div>
           </div>
