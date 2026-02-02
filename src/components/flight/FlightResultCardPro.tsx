@@ -192,9 +192,9 @@ export default function FlightResultCardPro({
               <ExternalLink className="w-4 h-4" />
             </Button>
             
-            {/* Trust micro-copy */}
-            <p className="text-[9px] text-muted-foreground text-center lg:text-right">
-              Secure partner checkout
+            {/* Compliance micro-copy - Required for Duffel/CJ */}
+            <p className="text-[9px] text-muted-foreground text-center lg:text-right leading-relaxed max-w-[180px]">
+              Indicative prices shown. Final price, availability, and booking terms confirmed on partner's secure checkout.
             </p>
           </div>
         </div>
