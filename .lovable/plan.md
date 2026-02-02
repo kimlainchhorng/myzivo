@@ -1,188 +1,49 @@
 
 
-# Flight Results White Label Integration Plan
+# Add "One App. Many Services" Value Proposition Section
 
 ## Overview
-
-Replace the redirect-only JetRadar flow with an embedded flight results experience that shows airline comparison, price tiers, and filters directly on `/flights/results`. Booking redirects will continue to partner sites with marker 700031.
-
-## Current State Analysis
-
-The codebase already has:
-- **Aviasales API integration** via edge function with search-poll-clicks flow
-- **FlightResultCard** components displaying airline, price, duration
-- **Filter system** (stops, airlines, price, departure time) with URL sync
-- **ApiPendingNotice** fallback when API returns 403 or no results
-- **White label URL builder** using marker 700031
-
-Current flow:
-1. User searches on `/flights` → navigates to `/flights/live` (iframe)
-2. Iframe embeds JetRadar white label
-3. If blocked, auto-opens in new tab
-
-**Issue**: The `/flights/live` iframe page bypasses our `/flights/results` page entirely, losing the embedded ZIVO experience with filters and cross-sell.
+Create a new marketing section that highlights ZIVO's multi-service platform offering with clean, impactful messaging. This will reinforce the unified platform value and add a new "package delivery" service mention.
 
 ---
 
-## Proposed Solution
+## Implementation Details
 
-### Part 1: Update Search Form Navigation
+### 1. Create New Component: `OneAppSection.tsx`
+**Location:** `src/components/home/OneAppSection.tsx`
 
-**File**: `src/components/search/FlightSearchFormPro.tsx`
+A premium, visually appealing section featuring:
+- **Headline:** "One app. Many services." with gradient styling
+- **Three service bullets** with appropriate icons:
+  - ✈️ Book flights, hotels, and rental cars worldwide
+  - 🚗 Get rides, food delivery, and local transport
+  - 📦 Move packages with trusted drivers
+- **Closing tagline:** "ZIVO connects you to the best travel partners and local service providers — all in one place."
+- **Visual treatment:** Glassmorphism cards with service icons, subtle animations
 
-Change the search handler to navigate to `/flights/results` instead of `/flights/live`:
+### 2. Design Specifications
+- **Layout:** Centered text layout with icon-led bullet points
+- **Colors:** Use existing service colors (flights, hotels, cars, rides, eats) for icons
+- **Typography:** `font-display` for headline, `text-muted-foreground` for supporting text
+- **Background:** Subtle gradient or muted background to distinguish from adjacent sections
+- **Animation:** Fade-in slide-up on scroll using existing patterns
 
+### 3. Integration Points
+
+**Desktop Homepage (`src/pages/Index.tsx`):**
+Place after the Services Grid section for reinforcement:
 ```text
-Current flow:  /flights → /flights/live (iframe embed)
-New flow:      /flights → /flights/results (API results with fallback)
+HeroSection → GlobalTrustBar → ServicesGrid → OneAppSection → HowItWorksSimple → ...
 ```
 
-The `/flights/results` page already handles both API results and fallback states.
-
-### Part 2: Add Quick Stats Comparison Bar
-
-**File**: `src/pages/FlightResults.tsx`
-
-Add a prominent comparison bar showing best deals when results are available:
-
-| Label | Display | Logic |
-|-------|---------|-------|
-| Cheapest option | $138 (Aviasales) | Lowest price flight |
-| Fastest option | $162 (JetRadar) | Shortest duration flight |
-| Best value | $149 (Kiwi) | Score = price + (duration_hours × 20) |
-
-This bar appears between the trust banner and results list.
-
-### Part 3: Enhance ApiPendingNotice Component
-
-**File**: `src/components/results/ApiPendingNotice.tsx`
-
-When the API is pending/blocked, show an enhanced notice with:
-- Partner logos showing example price ranges
-- Clear messaging about real-time prices
-- Primary CTA: "View Live Results" (opens white label in new tab)
-- Trust disclosure
-
-### Part 4: Partner Attribution on Result Cards
-
-**File**: `src/components/results/FlightResultCard.tsx`
-
-The card already supports `partnerName` and `agentName` fields. Ensure these display when available from the API response:
-- Format: "via Aviasales" or "via Kiwi.com"
-- Position: Below the price
+**Mobile Homepage (`src/pages/app/AppHome.tsx`):**
+Add a compact version below the Quick Actions Grid, above the Trust Strip.
 
 ---
 
-## Technical Implementation
-
-### 1. FlightSearchFormPro.tsx Changes
-
-Update `handleSearch()` to navigate to `/flights/results`:
-
-```text
-Before:
-  navigate(`/flights/live?${liveParams.toString()}`);
-
-After:
-  navigate(`/flights/results?${params.toString()}`);
-```
-
-The results page already parses these params and calls the API hook.
-
-### 2. FlightResults.tsx - Add QuickStats Component
-
-Create a new `QuickStatsBar` component above the results:
-
-```tsx
-{/* Quick Stats Comparison */}
-{!isLoading && isRealPrice && flights.length > 0 && (
-  <QuickStatsBar
-    cheapest={{ price: lowestPrice, partner: cheapestFlight?.agentName || "Aviasales" }}
-    fastest={{ price: fastestFlight?.price, duration: fastestFlight?.duration, partner: fastestFlight?.agentName || "JetRadar" }}
-    bestValue={{ price: bestValueFlight?.price, partner: bestValueFlight?.agentName || "Kiwi" }}
-  />
-)}
-```
-
-Design:
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  Compare prices from multiple airlines and trusted partners    │
-├───────────────────┬───────────────────┬───────────────────────┤
-│ ✈️ Cheapest       │ ⚡ Fastest         │ ⭐ Best value         │
-│ $138 (Aviasales)  │ $162 (JetRadar)   │ $149 (Kiwi)          │
-└───────────────────┴───────────────────┴───────────────────────┘
-│  Prices update in real time. Final booking on partner sites.  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### 3. ApiPendingNotice.tsx Enhancement
-
-When API is pending, show a more engaging fallback:
-
-```tsx
-<Card>
-  <div className="flex gap-4 justify-center">
-    <PartnerLogo name="Aviasales" />
-    <PartnerLogo name="JetRadar" />
-    <PartnerLogo name="Kiwi" />
-  </div>
-  
-  <h2>Compare prices from multiple airlines and trusted travel partners.</h2>
-  <p>Prices update in real time. Final booking is completed securely on partner websites.</p>
-  
-  <Button>View Live Results</Button>
-</Card>
-```
-
-### 4. Calculate Best Value Flight
-
-Add logic to determine "Best Value" using a weighted score:
-
-```typescript
-const bestValueFlight = useMemo(() => {
-  if (flights.length === 0) return null;
-  return flights.reduce((best, flight) => {
-    const hours = parseInt(flight.duration.match(/(\d+)h/)?.[1] || "0");
-    const bestHours = parseInt(best.duration.match(/(\d+)h/)?.[1] || "0");
-    const score = flight.price + (hours * 20);
-    const bestScore = best.price + (bestHours * 20);
-    return score < bestScore ? flight : best;
-  });
-}, [flights]);
-```
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/search/FlightSearchFormPro.tsx` | Change navigation from `/flights/live` to `/flights/results` |
-| `src/pages/FlightResults.tsx` | Add QuickStatsBar component, calculate best value flight |
-| `src/components/results/ApiPendingNotice.tsx` | Enhanced UI with partner logos and comparison messaging |
-| `src/components/results/FlightResultCard.tsx` | Ensure agent/partner name displays when available |
-
-### New Component
-
-| File | Description |
-|------|-------------|
-| `src/components/flight/QuickStatsBar.tsx` | Comparison bar showing Cheapest/Fastest/Best Value |
-
----
-
-## Validation Checklist
-
-After implementation:
-
-- [x] Search form navigates to `/flights/results` (not `/flights/live`)
-- [x] When API returns results: QuickStatsBar shows Cheapest/Fastest/Best Value
-- [x] Each flight card shows partner attribution when available
-- [x] When API is pending: Enhanced ApiPendingNotice with partner comparison messaging
-- [x] "View Live Results" opens white label URL with marker 700031 in new tab
-- [x] All filter functionality preserved (stops, airlines, price, time)
-- [x] Trust/compliance disclosures visible
-- [x] Cross-sell sections render below results
-
-## Status: COMPLETE ✅
+## Technical Notes
+- Component follows existing patterns from `WhyZivo.tsx` and `TrustSection.tsx`
+- Uses existing Lucide icons: `Plane`, `Hotel`, `CarFront`, `Car`, `UtensilsCrossed`, `Package`
+- Mobile-first responsive design with `sm:` and `lg:` breakpoints
+- No new dependencies required
 
