@@ -1,6 +1,18 @@
 /**
  * Booking Return Page
- * Handles callback from partner checkout
+ * 
+ * Handles callback from partner checkout at /booking/return
+ * 
+ * Partners send:
+ * - bookingRef (or confirmation_number, ref, orderId)
+ * - status (success, failed, pending)
+ * - subid (our search session ID)
+ * 
+ * On return we:
+ * 1. Read subid from URL
+ * 2. Match it to SearchSession
+ * 3. Save bookingRef
+ * 4. Mark as Converted
  */
 import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
@@ -9,24 +21,28 @@ import {
   XCircle,
   Loader2,
   Copy,
-  ExternalLink,
   Plane,
   Hotel,
   CarFront,
   ArrowRight,
   HelpCircle,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
-import { useUpdateBookingStatus, TravelServiceType } from "@/hooks/useTravelBookings";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import { cn } from "@/lib/utils";
+import { 
+  parseBookingReturnParams, 
+  processBookingReturn,
+  type BookingReturnResult 
+} from "@/lib/bookingReturnHandler";
 
-type BookingStatus = "success" | "failed" | "pending" | "loading";
+type PageStatus = "loading" | "converted" | "failed" | "pending" | "unknown";
 
 const serviceConfig = {
   flights: {
@@ -51,49 +67,36 @@ const serviceConfig = {
 
 export default function BookingReturnPage() {
   const [searchParams] = useSearchParams();
-  const updateStatus = useUpdateBookingStatus();
-
-  // Parse URL params
-  const bookingRef = searchParams.get("bookingRef") || searchParams.get("ref");
-  const status = searchParams.get("status") as BookingStatus | null;
-  const bookingId = searchParams.get("bookingId");
-  const serviceType = (searchParams.get("type") as TravelServiceType) || "flights";
-  const partnerName = searchParams.get("partner") || "our travel partner";
-
-  const [pageStatus, setPageStatus] = useState<BookingStatus>("loading");
+  const [pageStatus, setPageStatus] = useState<PageStatus>("loading");
+  const [result, setResult] = useState<BookingReturnResult | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const config = serviceConfig[serviceType];
-  const Icon = config.icon;
-
+  // Parse and process on mount
   useEffect(() => {
     const processReturn = async () => {
-      // If we have a booking ID, update its status
-      if (bookingId) {
-        try {
-          const newStatus = status === "success" ? "completed" : status === "failed" ? "failed" : "redirected";
-          await updateStatus.mutateAsync({
-            bookingId,
-            status: newStatus,
-            partnerBookingRef: bookingRef || undefined,
-          });
-        } catch (error) {
-          console.error("Failed to update booking status:", error);
-        }
-      }
+      // Parse URL params (handles various partner formats)
+      const params = parseBookingReturnParams(searchParams);
+      
+      console.log('[BookingReturn] URL params:', params);
 
-      // Determine page status
-      if (status === "success" || bookingRef) {
-        setPageStatus("success");
-      } else if (status === "failed") {
-        setPageStatus("failed");
-      } else {
-        setPageStatus("pending");
-      }
+      // Process the return and update database
+      const returnResult = await processBookingReturn(params);
+      
+      setResult(returnResult);
+      setPageStatus(returnResult.status);
     };
 
     processReturn();
-  }, [bookingId, status, bookingRef]);
+  }, [searchParams]);
+
+  // Determine service type from result or URL
+  const serviceType = (result?.searchSession?.type || searchParams.get('type') || 'flights') as keyof typeof serviceConfig;
+  const config = serviceConfig[serviceType] || serviceConfig.flights;
+  const Icon = config.icon;
+
+  // Extract data from result
+  const bookingRef = result?.bookingRef;
+  const partnerName = result?.redirectLog?.partnerName || searchParams.get('partner') || 'our travel partner';
 
   const handleCopyRef = () => {
     if (bookingRef) {
@@ -104,6 +107,7 @@ export default function BookingReturnPage() {
     }
   };
 
+  // Loading state
   if (pageStatus === "loading") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -118,7 +122,7 @@ export default function BookingReturnPage() {
   return (
     <>
       <SEOHead
-        title={pageStatus === "success" ? "Booking Confirmed - ZIVO" : "Booking Status - ZIVO"}
+        title={pageStatus === "converted" ? "Booking Confirmed - Hizovo" : "Booking Status - Hizovo"}
         description="View your booking confirmation and details."
         noIndex
       />
@@ -128,8 +132,8 @@ export default function BookingReturnPage() {
 
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 max-w-2xl">
-            {/* Success State */}
-            {pageStatus === "success" && (
+            {/* Converted/Success State */}
+            {pageStatus === "converted" && (
               <Card className="overflow-hidden">
                 {/* Success Header */}
                 <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-center text-white">
@@ -248,7 +252,7 @@ export default function BookingReturnPage() {
                 {/* Pending Header */}
                 <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 text-center text-white">
                   <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                    <Loader2 className="w-12 h-12 animate-spin" />
+                    <Clock className="w-12 h-12" />
                   </div>
                   <h1 className="text-2xl font-bold mb-2">Booking Pending</h1>
                   <p className="text-white/90">
@@ -271,6 +275,43 @@ export default function BookingReturnPage() {
                     <Button variant="outline" asChild className="flex-1">
                       <Link to="/">
                         Back to Home
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Unknown State */}
+            {pageStatus === "unknown" && (
+              <Card className="overflow-hidden">
+                {/* Unknown Header */}
+                <div className="bg-gradient-to-r from-gray-500 to-slate-500 p-8 text-center text-white">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
+                    <HelpCircle className="w-12 h-12" />
+                  </div>
+                  <h1 className="text-2xl font-bold mb-2">Booking Status Unknown</h1>
+                  <p className="text-white/90">
+                    We couldn't determine your booking status
+                  </p>
+                </div>
+
+                <CardContent className="p-6 space-y-6">
+                  <p className="text-center text-muted-foreground">
+                    Please check your email for a confirmation, or contact our support team for assistance.
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Button asChild className="flex-1">
+                      <Link to="/trips">
+                        Check My Trips
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="flex-1">
+                      <Link to="/help">
+                        <HelpCircle className="w-4 h-4 mr-2" />
+                        Get Help
                       </Link>
                     </Button>
                   </div>
