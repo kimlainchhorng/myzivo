@@ -608,6 +608,20 @@ const FlightResults = () => {
                   whitelabelUrl={fallbackWhitelabelUrl}
                   origin={originDisplay || originIata}
                   destination={destinationDisplay || destinationIata}
+                  departDate={departureDate || undefined}
+                  returnDate={returnDate || undefined}
+                  passengers={passengers}
+                  cabin={cabinClass}
+                  prices={
+                    isRealPrice && flights.length > 0 
+                      ? {
+                          cheapest: lowestPrice,
+                          bestValue: bestValueFlight?.price,
+                          flexible: fastestFlight?.price,
+                        }
+                      : undefined
+                  }
+                  currency={currency}
                   className="mb-6"
                 />
               )}
