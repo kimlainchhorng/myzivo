@@ -327,32 +327,44 @@ export const usePartnerConfigs = (serviceType?: TravelServiceType) => {
 export const useLogPartnerRedirect = () => {
   return useMutation({
     mutationFn: async ({
-      bookingId,
+      offerId,
       partnerId,
       partnerName,
-      serviceType,
+      searchType,
       redirectUrl,
-      redirectMode = 'redirect',
+      checkoutMode = 'redirect',
+      sessionId,
+      searchParams,
     }: {
-      bookingId?: string;
+      offerId?: string;
       partnerId: string;
-      partnerName?: string;
-      serviceType: TravelServiceType;
+      partnerName: string;
+      searchType: TravelServiceType;
       redirectUrl: string;
-      redirectMode?: CheckoutMode;
+      checkoutMode?: CheckoutMode;
+      sessionId?: string;
+      searchParams?: Record<string, unknown>;
     }) => {
-      const { error } = await supabase
-        .from('partner_redirect_logs')
-        .insert({
-          booking_id: bookingId || null,
-          partner_id: partnerId,
-          partner_name: partnerName,
-          service_type: serviceType,
-          redirect_url: redirectUrl,
-          redirect_mode: redirectMode,
+      const { data: userData } = await supabase.auth.getUser();
+      // Using type assertion as types may be stale after migration
+      const insertData = {
+        offer_id: offerId || null,
+        partner_id: partnerId,
+        partner_name: partnerName,
+        search_type: searchType,
+        redirect_url: redirectUrl,
+        checkout_mode: checkoutMode,
+        session_id: sessionId || null,
+        search_params: searchParams || null,
+        user_id: userData?.user?.id || null,
+        metadata: {
           user_agent: navigator.userAgent,
           referrer: document.referrer || null,
-        });
+        },
+      };
+      const { error } = await supabase
+        .from('partner_redirect_logs')
+        .insert([insertData] as never);
 
       if (error) throw error;
     },

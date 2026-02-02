@@ -180,12 +180,12 @@ export default function TravelerInfoPage() {
 
       // Log the redirect
       await logRedirect.mutateAsync({
-        bookingId: booking.id,
+        offerId: booking.id,
         partnerId: partner.partner_id,
         partnerName: partner.partner_name,
-        serviceType,
+        searchType: serviceType,
         redirectUrl,
-        redirectMode: partner.checkout_mode,
+        checkoutMode: partner.checkout_mode,
       });
 
       // Navigate to partner checkout via outbound page
