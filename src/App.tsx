@@ -85,6 +85,12 @@ const OwnerCars = lazy(() => import("./pages/owner/OwnerCars"));
 const AddVehicle = lazy(() => import("./pages/owner/AddVehicle"));
 const EditVehicle = lazy(() => import("./pages/owner/EditVehicle"));
 const VehicleAvailability = lazy(() => import("./pages/owner/VehicleAvailability"));
+const OwnerBookings = lazy(() => import("./pages/owner/OwnerBookings"));
+// P2P Renter pages
+const P2PVehicleSearch = lazy(() => import("./pages/p2p/P2PVehicleSearch"));
+const P2PVehicleDetail = lazy(() => import("./pages/p2p/P2PVehicleDetail"));
+const P2PBookingConfirmation = lazy(() => import("./pages/p2p/P2PBookingConfirmation"));
+const RenterTrips = lazy(() => import("./pages/p2p/RenterTrips"));
 // Legal pages - lazy load
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
@@ -274,6 +280,13 @@ const App = () => (
                 <Route path="/owner/cars/new" element={<ProtectedRoute><AddVehicle /></ProtectedRoute>} />
                 <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
                 <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
+                <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
+                
+                {/* P2P Car Rental - Renter Routes */}
+                <Route path="/p2p/search" element={<P2PVehicleSearch />} />
+                <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />
+                <Route path="/p2p/booking/:id/confirmation" element={<ProtectedRoute><P2PBookingConfirmation /></ProtectedRoute>} />
+                <Route path="/p2p/my-trips" element={<ProtectedRoute><RenterTrips /></ProtectedRoute>} />
                 
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
