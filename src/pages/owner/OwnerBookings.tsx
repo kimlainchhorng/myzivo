@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
 import {
   Car, Calendar, User, Clock, CheckCircle, XCircle,
-  ChevronRight, MessageCircle, AlertCircle
+  ChevronRight, MessageCircle, AlertCircle, Star
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -32,6 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCarOwnerProfile } from "@/hooks/useCarOwner";
 import { useOwnerBookings, useRespondToBooking, useCompleteBooking, type BookingWithDetails } from "@/hooks/useP2PBooking";
+import { useBookingReview } from "@/hooks/useP2PReview";
+import OwnerReviewDialog from "@/components/p2p/OwnerReviewDialog";
 
 export default function OwnerBookings() {
   const { data: profile } = useCarOwnerProfile();
@@ -43,6 +45,8 @@ export default function OwnerBookings() {
   const [selectedBooking, setSelectedBooking] = useState<BookingWithDetails | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [dialogAction, setDialogAction] = useState<"confirm" | "reject" | "complete" | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<BookingWithDetails | null>(null);
 
   // Filter bookings - use "active" instead of "in_progress" to match DB enum
   const pendingBookings = bookings?.filter((b) => b.status === "pending") || [];
@@ -71,6 +75,11 @@ export default function OwnerBookings() {
   const openDialog = (booking: BookingWithDetails, action: "confirm" | "reject" | "complete") => {
     setSelectedBooking(booking);
     setDialogAction(action);
+  };
+
+  const openReviewDialog = (booking: BookingWithDetails) => {
+    setReviewBooking(booking);
+    setReviewDialogOpen(true);
   };
 
   return (
@@ -203,7 +212,12 @@ export default function OwnerBookings() {
                   {completedBookings.length > 0 ? (
                     <div className="space-y-4">
                       {completedBookings.map((booking) => (
-                        <BookingCard key={booking.id} booking={booking} />
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          showReviewButton={booking.status === "completed"}
+                          onReview={() => openReviewDialog(booking)}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -290,6 +304,12 @@ export default function OwnerBookings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Owner Review Dialog */}
+      <OwnerReviewDialog
+        booking={reviewBooking}
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+      />
     </div>
   );
 }
@@ -386,13 +406,21 @@ function BookingCard({
   booking,
   isActive,
   onComplete,
+  showReviewButton,
+  onReview,
 }: {
   booking: BookingWithDetails;
   isActive?: boolean;
   onComplete?: () => void;
+  showReviewButton?: boolean;
+  onReview?: () => void;
 }) {
   const vehicle = booking.vehicle;
   const images = (vehicle?.images as string[]) || [];
+  const { data: existingReview } = useBookingReview(
+    showReviewButton ? booking.id : undefined,
+    "owner_to_renter"
+  );
 
   const statusBadges = {
     confirmed: { variant: "default" as const, label: "Confirmed" },
@@ -450,6 +478,21 @@ function BookingCard({
                 <CheckCircle className="w-4 h-4" />
                 Mark as Completed
               </Button>
+            )}
+
+            {/* Review button for completed bookings */}
+            {showReviewButton && onReview && (
+              existingReview ? (
+                <Badge variant="outline" className="gap-1">
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  Reviewed
+                </Badge>
+              ) : (
+                <Button size="sm" variant="outline" onClick={onReview} className="gap-2">
+                  <Star className="w-4 h-4" />
+                  Leave Review
+                </Button>
+              )
             )}
           </div>
 

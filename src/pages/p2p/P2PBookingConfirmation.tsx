@@ -4,7 +4,7 @@
  */
 
 import { useParams, Link, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   CheckCircle, Clock, MapPin, Calendar, Car, User,
@@ -19,10 +19,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBookingDetail } from "@/hooks/useP2PBooking";
 import { useCreateP2PCheckout } from "@/hooks/useP2PPayment";
 import { toast } from "sonner";
 import CompletedBookingSection from "@/components/p2p/CompletedBookingSection";
+import RenterReceipt from "@/components/p2p/RenterReceipt";
 
 const statusConfig = {
   pending: {
@@ -405,10 +408,42 @@ export default function P2PBookingConfirmation() {
                 View All Trips
               </Link>
             </Button>
-            <Button variant="outline" className="flex-1 gap-2">
-              <Download className="w-4 h-4" />
-              Download Receipt
-            </Button>
+            
+            {/* Receipt Sheet */}
+            {(booking.payment_status === "captured" || booking.status === "completed") ? (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" className="flex-1 gap-2">
+                    <Download className="w-4 h-4" />
+                    Download Receipt
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+                  <SheetHeader>
+                    <SheetTitle>Trip Receipt</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <RenterReceipt booking={booking} />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            ) : (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="flex-1">
+                      <Button variant="outline" className="w-full gap-2" disabled>
+                        <Download className="w-4 h-4" />
+                        Download Receipt
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Available after payment is completed</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         </div>
       </main>

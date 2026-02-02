@@ -20,6 +20,8 @@ interface CreateReviewData {
   accuracy?: number;
   value?: number;
   condition?: number;
+  vehicleCare?: number;
+  timeliness?: number;
   vehicleId?: string;
   revieweeId?: string;
 }
