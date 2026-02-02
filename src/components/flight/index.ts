@@ -96,6 +96,8 @@ export { default as FlightTestimonialsSection } from './FlightTestimonialsSectio
 export { default as FlightFeaturedDestinations } from './FlightFeaturedDestinations';
 export { default as FlightQuickActions } from './FlightQuickActions';
 export { default as FlightTrustIndicators } from './FlightTrustIndicators';
+export { default as QuickStatsBar } from './QuickStatsBar';
+export type { QuickStat } from './QuickStatsBar';
 
 // Types
 export type { FlightFilters } from './FlightFilters';

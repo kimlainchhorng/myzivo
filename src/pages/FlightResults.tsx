@@ -10,14 +10,9 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   Plane,
-  Clock,
-  TrendingDown,
-  Star,
   X,
-  Zap,
   AlertCircle,
   ShieldCheck,
   ExternalLink,
@@ -34,6 +29,7 @@ import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import CrossSellSection from "@/components/flight/CrossSellSection";
+import { QuickStatsBar } from "@/components/flight";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
@@ -263,11 +259,25 @@ const FlightResults = () => {
   };
 
   const lowestPrice = flights.length > 0 ? Math.min(...flights.map(f => f.price)) : 0;
+  const cheapestFlight = flights.length > 0 ? flights.find(f => f.price === lowestPrice) : null;
+  
   const fastestFlight = flights.length > 0 ? flights.reduce((a, b) => {
     const dA = parseInt(a.duration.match(/(\d+)h/)?.[1] || "99");
     const dB = parseInt(b.duration.match(/(\d+)h/)?.[1] || "99");
     return dA < dB ? a : b;
   }) : null;
+
+  // Calculate best value flight using weighted score: price + (duration_hours * 20)
+  const bestValueFlight = useMemo(() => {
+    if (flights.length === 0) return null;
+    return flights.reduce((best, flight) => {
+      const hours = parseInt(flight.duration.match(/(\d+)h/)?.[1] || "0");
+      const bestHours = parseInt(best.duration.match(/(\d+)h/)?.[1] || "0");
+      const score = flight.price + (hours * 20);
+      const bestScore = best.price + (bestHours * 20);
+      return score < bestScore ? flight : best;
+    });
+  }, [flights]);
 
   // Convert to unified card format
   const flightCards: FlightCardData[] = flights.map((flight) => ({
@@ -496,28 +506,32 @@ const FlightResults = () => {
               <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
               ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
             </p>
-            
-            {/* Quick Stats - Only show when we have real prices */}
-            {!isLoading && isRealPrice && flights.length > 0 && (
-              <div className="flex items-center justify-center gap-3 flex-wrap mt-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <TrendingDown className="w-4 h-4 text-emerald-500" />
-                  <span>From <strong className="text-sky-500">{formatPrice(lowestPrice)}</strong></span>
-                </div>
-                <span className="hidden sm:inline text-muted-foreground">•</span>
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-purple-500" />
-                  <span>Fastest: <strong className="text-purple-500">{fastestFlight?.duration.split(" ")[0] || "N/A"}</strong></span>
-                </div>
-                <span className="hidden sm:inline text-muted-foreground">•</span>
-                <Badge className="bg-sky-500/20 text-sky-500 text-xs gap-1">
-                  <Zap className="w-3 h-3" />
-                  Live Prices
-                </Badge>
-              </div>
-            )}
           </div>
         </section>
+
+        {/* Quick Stats Comparison Bar - Only show when we have real API prices */}
+        {!isLoading && isRealPrice && flights.length > 0 && (
+          <section className="py-4">
+            <div className="container mx-auto px-4">
+              <QuickStatsBar
+                cheapest={{
+                  price: lowestPrice,
+                  partner: (cheapestFlight as any)?.agentName || "Aviasales",
+                }}
+                fastest={{
+                  price: fastestFlight?.price || lowestPrice,
+                  partner: (fastestFlight as any)?.agentName || "JetRadar",
+                  duration: fastestFlight?.duration?.split(" ")[0] || "",
+                }}
+                bestValue={{
+                  price: bestValueFlight?.price || lowestPrice,
+                  partner: (bestValueFlight as any)?.agentName || "Kiwi",
+                }}
+                currency={currency}
+              />
+            </div>
+          </section>
+        )}
 
         {/* Results Section */}
         <section className="py-6">

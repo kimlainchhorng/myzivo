@@ -199,7 +199,7 @@ export default function FlightSearchFormPro({
   // State for debug URL
   const [debugUrl, setDebugUrl] = useState<string>("");
 
-  // Handle search - navigate to embedded live page
+  // Handle search - navigate to results page with API integration
   const handleSearch = () => {
     if (!validate()) return;
 
@@ -212,8 +212,8 @@ export default function FlightSearchFormPro({
     setDebugUrl(whitelabelUrl);
     console.log("[FlightSearch] Built white-label URL:", whitelabelUrl);
 
-    // Build internal live page URL
-    const liveParams = new URLSearchParams({
+    // Build results page URL params
+    const resultsParams = new URLSearchParams({
       origin: fromCode,
       dest: toCode,
       depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
@@ -221,15 +221,15 @@ export default function FlightSearchFormPro({
       cabin: cabin,
     });
     if (tripType === "roundtrip" && returnDate) {
-      liveParams.set("return", format(returnDate, "yyyy-MM-dd"));
+      resultsParams.set("return", format(returnDate, "yyyy-MM-dd"));
     }
 
-    // Navigate to embedded live results page
-    navigate(`/flights/live?${liveParams.toString()}`);
+    // Navigate to results page with API integration and fallback
+    navigate(`/flights/results?${resultsParams.toString()}`);
     
     // Call optional callback with search params for tracking
     if (onSearch) {
-      onSearch(liveParams);
+      onSearch(resultsParams);
     }
   };
 
