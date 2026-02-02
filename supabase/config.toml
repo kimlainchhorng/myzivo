@@ -50,3 +50,6 @@ verify_jwt = true
 
 [functions.execute-p2p-payout]
 verify_jwt = true
+
+[functions.send-renter-invite]
+verify_jwt = true

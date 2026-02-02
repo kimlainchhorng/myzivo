@@ -5174,6 +5174,77 @@ export type Database = {
           },
         ]
       }
+      p2p_renter_invites: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          expires_at: string | null
+          id: string
+          invite_code: string
+          used: boolean | null
+          used_at: string | null
+          waitlist_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          expires_at?: string | null
+          id?: string
+          invite_code: string
+          used?: boolean | null
+          used_at?: string | null
+          waitlist_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          expires_at?: string | null
+          id?: string
+          invite_code?: string
+          used?: boolean | null
+          used_at?: string | null
+          waitlist_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_renter_invites_waitlist_id_fkey"
+            columns: ["waitlist_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_renter_waitlist"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_renter_waitlist: {
+        Row: {
+          city: string
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          status: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          status?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       p2p_reviews: {
         Row: {
           accuracy: number | null
