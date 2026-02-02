@@ -3914,6 +3914,101 @@ export type Database = {
           },
         ]
       }
+      partner_checkout_config: {
+        Row: {
+          checkout_mode: Database["public"]["Enums"]["checkout_mode"]
+          checkout_url_template: string
+          created_at: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          partner_id: string
+          partner_name: string
+          priority: number
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          checkout_mode?: Database["public"]["Enums"]["checkout_mode"]
+          checkout_url_template: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          partner_id: string
+          partner_name: string
+          priority?: number
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          checkout_mode?: Database["public"]["Enums"]["checkout_mode"]
+          checkout_url_template?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          partner_id?: string
+          partner_name?: string
+          priority?: number
+          service_type?: Database["public"]["Enums"]["travel_service_type"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      partner_redirect_logs: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          ip_address: unknown
+          partner_id: string
+          partner_name: string | null
+          redirect_mode: Database["public"]["Enums"]["checkout_mode"]
+          redirect_url: string
+          referrer: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          user_agent: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          partner_id: string
+          partner_name?: string | null
+          redirect_mode?: Database["public"]["Enums"]["checkout_mode"]
+          redirect_url: string
+          referrer?: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          user_agent?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          partner_id?: string
+          partner_name?: string | null
+          redirect_mode?: Database["public"]["Enums"]["checkout_mode"]
+          redirect_url?: string
+          referrer?: string | null
+          service_type?: Database["public"]["Enums"]["travel_service_type"]
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_redirect_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "travel_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payouts: {
         Row: {
           amount: number
@@ -6470,6 +6565,133 @@ export type Database = {
           },
         ]
       }
+      travel_bookings: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          offer_id: string | null
+          partner_booking_ref: string | null
+          partner_redirect_url: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          status: Database["public"]["Enums"]["travel_booking_status"]
+          traveler_info: Json
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          offer_id?: string | null
+          partner_booking_ref?: string | null
+          partner_redirect_url?: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          status?: Database["public"]["Enums"]["travel_booking_status"]
+          traveler_info?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          offer_id?: string | null
+          partner_booking_ref?: string | null
+          partner_redirect_url?: string | null
+          service_type?: Database["public"]["Enums"]["travel_service_type"]
+          status?: Database["public"]["Enums"]["travel_booking_status"]
+          traveler_info?: Json
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_bookings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "travel_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_offers: {
+        Row: {
+          created_at: string
+          id: string
+          is_selected: boolean | null
+          offer_data: Json
+          partner_id: string
+          partner_name: string | null
+          price_amount: number | null
+          price_currency: string | null
+          search_session_id: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_selected?: boolean | null
+          offer_data?: Json
+          partner_id: string
+          partner_name?: string | null
+          price_amount?: number | null
+          price_currency?: string | null
+          search_session_id?: string | null
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_selected?: boolean | null
+          offer_data?: Json
+          partner_id?: string
+          partner_name?: string | null
+          price_amount?: number | null
+          price_currency?: string | null
+          search_session_id?: string | null
+          service_type?: Database["public"]["Enums"]["travel_service_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_offers_search_session_id_fkey"
+            columns: ["search_session_id"]
+            isOneToOne: false
+            referencedRelation: "travel_search_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_search_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          search_params: Json
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          search_params?: Json
+          service_type: Database["public"]["Enums"]["travel_service_type"]
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          search_params?: Json
+          service_type?: Database["public"]["Enums"]["travel_service_type"]
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       trip_messages: {
         Row: {
           content: string
@@ -8652,8 +8874,16 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "refunded"
+      checkout_mode: "redirect" | "iframe"
       driver_status: "pending" | "verified" | "rejected" | "suspended"
       partner_status: "pending" | "active" | "suspended" | "inactive"
+      travel_booking_status:
+        | "pending"
+        | "redirected"
+        | "completed"
+        | "failed"
+        | "cancelled"
+      travel_service_type: "flights" | "hotels" | "cars"
       trip_status:
         | "requested"
         | "accepted"
@@ -8800,8 +9030,17 @@ export const Constants = {
         "cancelled",
         "refunded",
       ],
+      checkout_mode: ["redirect", "iframe"],
       driver_status: ["pending", "verified", "rejected", "suspended"],
       partner_status: ["pending", "active", "suspended", "inactive"],
+      travel_booking_status: [
+        "pending",
+        "redirected",
+        "completed",
+        "failed",
+        "cancelled",
+      ],
+      travel_service_type: ["flights", "hotels", "cars"],
       trip_status: [
         "requested",
         "accepted",
