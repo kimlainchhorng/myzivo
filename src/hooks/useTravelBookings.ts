@@ -17,7 +17,7 @@ export interface TravelerInfo {
   fullName: string;
   email: string;
   phone: string;
-  consentSharing: boolean;
+  consentSharing: true;
 }
 
 export interface SearchParams {
@@ -474,11 +474,12 @@ export const usePartnerRedirectLogs = (limit = 100) => {
 export const parseTravelerInfo = (json: Json): TravelerInfo | null => {
   if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
   const obj = json as Record<string, unknown>;
+  if (!obj.consentSharing) return null;
   return {
     fullName: String(obj.fullName || ''),
     email: String(obj.email || ''),
     phone: String(obj.phone || ''),
-    consentSharing: Boolean(obj.consentSharing),
+    consentSharing: true,
   };
 };
 
