@@ -6,16 +6,16 @@
  */
 
 import { useSearchParams } from "react-router-dom";
-import { format, parse } from "date-fns";
-import { AlertCircle, ExternalLink, ShieldCheck } from "lucide-react";
+import { AlertCircle, ExternalLink, ShieldCheck, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 
-// Public config (safe to expose)
-const WL_BASE_URL = "https://search.jetradar.com/flights";
-const MARKER = "700031";
+// Read from env with fallbacks
+const WL_BASE_URL = import.meta.env.VITE_AVIASALES_WL_BASE_URL || "https://search.jetradar.com/flights";
+const MARKER = import.meta.env.VITE_TRAVELPAYOUTS_MARKER || "700031";
 
 const cabinMap: Record<string, string> = {
   economy: "Y",
@@ -51,6 +51,7 @@ function buildWhitelabelUrl(params: URLSearchParams): string {
 
 export default function FlightLive() {
   const [searchParams] = useSearchParams();
+  const [copied, setCopied] = useState(false);
 
   const origin = searchParams.get("origin") || "";
   const dest = searchParams.get("dest") || "";
@@ -62,8 +63,15 @@ export default function FlightLive() {
   const whitelabelUrl = isValid ? buildWhitelabelUrl(searchParams) : "";
 
   // Debug log
+  console.log("[FlightLive] ENV:", { WL_BASE_URL, MARKER });
   console.log("[FlightLive] Params:", Object.fromEntries(searchParams));
   console.log("[FlightLive] Built URL:", whitelabelUrl);
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(whitelabelUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (!isValid) {
     return (
@@ -115,9 +123,28 @@ export default function FlightLive() {
         </div>
       </div>
 
-      {/* Debug Link */}
-      <div className="container mx-auto px-4 py-2 text-xs text-muted-foreground">
-        Debug: <a href={whitelabelUrl} target="_blank" rel="noopener noreferrer" className="underline text-sky-500 break-all">{whitelabelUrl}</a>
+      {/* Debug Panel */}
+      <div className="container mx-auto px-4 py-3 bg-muted/30 border-b">
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium text-muted-foreground">Debug: White-label URL</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs bg-background p-2 rounded border overflow-x-auto whitespace-nowrap">
+              {whitelabelUrl}
+            </code>
+            <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="shrink-0">
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+            </Button>
+          </div>
+          <a 
+            href={whitelabelUrl} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-xs text-sky-500 hover:underline inline-flex items-center gap-1"
+          >
+            <ExternalLink className="w-3 h-3" />
+            Open live results directly
+          </a>
+        </div>
       </div>
 
       {/* Iframe Container */}
@@ -126,7 +153,7 @@ export default function FlightLive() {
           src={whitelabelUrl}
           title="Live Flight Results"
           className="w-full h-full min-h-[600px] border-0"
-          style={{ minHeight: "calc(100vh - 200px)" }}
+          style={{ minHeight: "calc(100vh - 280px)" }}
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
       </main>
