@@ -1,8 +1,14 @@
 /**
- * ZIVO Outbound Click Tracking
+ * Hizovo Outbound Click Tracking
  * 
  * Handles logging affiliate clicks to the database
  * and generating tracked redirect URLs
+ * 
+ * STANDARDIZED TRACKING PARAMS:
+ * utm_source=hizovo
+ * utm_medium=affiliate
+ * utm_campaign=travel
+ * subid={searchSessionId}
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +20,7 @@ import {
   type SubIDComponents 
 } from './subidGenerator';
 import { getDeviceType, getSessionId } from './affiliateTracking';
+import { HIZOVO_TRACKING_PARAMS, getSearchSessionId } from '@/config/trackingParams';
 
 export interface OutboundClickData {
   partnerId: string;
@@ -57,9 +64,17 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
   error?: string;
 }> {
   const utmParams = getPersistedUTMParams();
-  // Pass partnerId to include it in the SubID format
+  // Use standardized search session ID as subid
+  const searchSessionId = getSearchSessionId();
   const { subid, components } = generateSubID(data.product, data.pageSource, utmParams, data.partnerId);
-  const finalUrl = appendSubIDToURL(data.destinationUrl, subid, data.partnerId);
+  
+  // Build final URL with standardized Hizovo tracking params
+  const urlObj = new URL(data.destinationUrl);
+  urlObj.searchParams.set('utm_source', HIZOVO_TRACKING_PARAMS.utm_source);
+  urlObj.searchParams.set('utm_medium', HIZOVO_TRACKING_PARAMS.utm_medium);
+  urlObj.searchParams.set('utm_campaign', HIZOVO_TRACKING_PARAMS.utm_campaign);
+  urlObj.searchParams.set('subid', searchSessionId);
+  const finalUrl = urlObj.toString();
   
   const logEntry: ClickLogEntry = {
     session_id: getSessionId(),
@@ -67,11 +82,11 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
     partner_name: data.partnerName,
     product: data.product,
     page_source: data.pageSource,
-    subid,
+    subid: searchSessionId, // Use standardized format
     subid_components: components,
-    utm_source: utmParams.utm_source || undefined,
-    utm_medium: utmParams.utm_medium || undefined,
-    utm_campaign: utmParams.utm_campaign || undefined,
+    utm_source: HIZOVO_TRACKING_PARAMS.utm_source,
+    utm_medium: HIZOVO_TRACKING_PARAMS.utm_medium,
+    utm_campaign: HIZOVO_TRACKING_PARAMS.utm_campaign,
     utm_content: utmParams.utm_content || undefined,
     utm_term: utmParams.utm_term || undefined,
     creator: utmParams.creator || undefined,
@@ -101,17 +116,18 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
     return { success: false, finalUrl, subid, error: error.message };
   }
   
-  console.log('[OutboundTracking] Click logged:', {
+  console.log('[Hizovo Tracking] Click logged:', {
     logId: insertedLog?.id,
     partner: data.partnerId,
     product: data.product,
-    subid,
+    subid: searchSessionId,
+    trackingParams: `utm_source=${HIZOVO_TRACKING_PARAMS.utm_source}&utm_medium=${HIZOVO_TRACKING_PARAMS.utm_medium}&utm_campaign=${HIZOVO_TRACKING_PARAMS.utm_campaign}&subid=${searchSessionId}`,
   });
   
   return { 
     success: true, 
     finalUrl, 
-    subid,
+    subid: searchSessionId,
     logId: insertedLog?.id 
   };
 }

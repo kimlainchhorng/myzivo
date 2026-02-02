@@ -140,7 +140,7 @@ export const getAffiliateClicks = (): AffiliateClick[] => {
   }));
 };
 
-// Build affiliate URL with tracking params
+// Build affiliate URL with standardized Hizovo tracking params
 export const buildAffiliateUrl = (params: {
   origin: string;
   destination: string;
@@ -152,7 +152,9 @@ export const buildAffiliateUrl = (params: {
 }): string => {
   const { origin, destination, departDate, returnDate, passengers, cabinClass, partner = "skyscanner" } = params;
   
-  const trackingId = `zivo_${Date.now()}`;
+  // Import tracking params
+  const searchSessionId = getSessionId();
+  const trackingParams = `utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid=${searchSessionId}`;
   
   switch (partner) {
     case "skyscanner":
@@ -161,17 +163,17 @@ export const buildAffiliateUrl = (params: {
       if (returnDate) {
         url += `${returnDate.replace(/-/g, "").substring(2)}/`;
       }
-      url += `?adultsv2=${passengers}&cabinclass=${cabinClass}&ref=zivo&utm_source=zivo&utm_medium=affiliate&utm_campaign=flights`;
+      url += `?adultsv2=${passengers}&cabinclass=${cabinClass}&${trackingParams}`;
       return url;
       
     case "kayak":
-      return `https://www.kayak.com/flights/${origin}-${destination}/${departDate}${returnDate ? `/${returnDate}` : ""}/${passengers}adults?sort=bestflight_a&fs=cabin=${cabinClass}&utm_source=zivo&utm_medium=affiliate`;
+      return `https://www.kayak.com/flights/${origin}-${destination}/${departDate}${returnDate ? `/${returnDate}` : ""}/${passengers}adults?sort=bestflight_a&fs=cabin=${cabinClass}&${trackingParams}`;
       
     case "google_flights":
-      return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departDate}&curr=USD&utm_source=zivo`;
+      return `https://www.google.com/travel/flights?q=flights%20from%20${origin}%20to%20${destination}%20on%20${departDate}&curr=USD&${trackingParams}`;
       
     default:
-      return `https://www.skyscanner.com/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/${departDate.replace(/-/g, "").substring(2)}/?adultsv2=${passengers}`;
+      return `https://www.skyscanner.com/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/${departDate.replace(/-/g, "").substring(2)}/?adultsv2=${passengers}&${trackingParams}`;
   }
 };
 

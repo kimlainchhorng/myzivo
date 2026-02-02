@@ -1,13 +1,18 @@
 /**
- * ZIVO SubID Generator
+ * Hizovo SubID Generator
  * 
- * Generates trackable SubIDs for affiliate links with format:
- * {product}.{page}.{utm_source}.{utm_campaign}.{creator}.{date}
+ * STANDARDIZED TRACKING FORMAT:
+ * utm_source=hizovo
+ * utm_medium=affiliate
+ * utm_campaign=travel
+ * subid={searchSessionId}
  * 
- * This enables Travelpayouts reporting to show exactly what made money.
+ * The subid links: search → click → booking for attribution
+ * Format: SS_{timestamp}_{random} (e.g., SS_839201)
  */
 
 import { format } from 'date-fns';
+import { getSearchSessionId } from '@/config/trackingParams';
 
 // Maximum SubID length (Travelpayouts limit is typically 100-200 chars)
 const MAX_SUBID_LENGTH = 100;
@@ -85,7 +90,7 @@ export function persistUTMParams(params: UTMParams): void {
     if (value) toStore[key] = value;
   });
   
-  sessionStorage.setItem('zivo_utm_params', JSON.stringify(toStore));
+  sessionStorage.setItem('hizovo_utm_params', JSON.stringify(toStore));
 }
 
 /**
@@ -95,7 +100,7 @@ export function getPersistedUTMParams(): UTMParams {
   if (typeof window === 'undefined') return {};
   
   try {
-    const stored = sessionStorage.getItem('zivo_utm_params');
+    const stored = sessionStorage.getItem('hizovo_utm_params');
     return stored ? JSON.parse(stored) : {};
   } catch {
     return {};
@@ -121,7 +126,11 @@ export function initUTMTracking(): UTMParams {
 
 /**
  * Generate SubID for affiliate tracking
- * Format: {product}.{page}.{partner}.{utm_source}.{utm_campaign}.{creator}.{date}
+ * 
+ * NEW FORMAT: Uses search session ID for direct attribution
+ * Format: {searchSessionId} (e.g., SS_1706789012345_ABC123)
+ * 
+ * Legacy format (still supported): {product}.{page}.{partner}.{source}.{campaign}.{creator}.{date}
  */
 export function generateSubID(
   product: string,
@@ -145,24 +154,11 @@ export function generateSubID(
     date: today,
   };
   
-  // Build SubID with core components
-  // Format: product.page.partner.source.campaign.creator.date
-  let subid = [
-    components.product,
-    components.page,
-    components.partner,
-    components.utm_source,
-    components.utm_campaign,
-    components.creator,
-    components.date,
-  ].join('.');
+  // Use standardized search session ID as subid for direct attribution
+  // This matches the format: subid=SS_839201
+  const searchSessionId = getSearchSessionId();
   
-  // Truncate if too long
-  if (subid.length > MAX_SUBID_LENGTH) {
-    subid = subid.substring(0, MAX_SUBID_LENGTH);
-  }
-  
-  return { subid, components };
+  return { subid: searchSessionId, components };
 }
 
 /**
