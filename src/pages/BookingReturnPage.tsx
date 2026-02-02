@@ -445,6 +445,22 @@ export default function BookingReturnPage() {
               </p>
             </div>
 
+            {/* Cross-Sell CTA */}
+            <Card className="mt-4 border-primary/30 bg-primary/5">
+              <CardContent className="p-4 text-center">
+                <p className="font-semibold text-sm mb-2">Need a ride or delivery?</p>
+                <a 
+                  href="https://zivodriver.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
+                >
+                  Continue with ZIVO Driver
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </CardContent>
+            </Card>
+
             {/* Trust Icons */}
             <div className="flex flex-wrap justify-center gap-3 mt-6">
               <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
@@ -453,7 +469,7 @@ export default function BookingReturnPage() {
               </Badge>
               <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                No hidden fees from ZIVO
+                No hidden fees from Hizovo
               </Badge>
             </div>
           </div>

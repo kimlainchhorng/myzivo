@@ -424,9 +424,8 @@ const FlightTravelerInfo = () => {
               <Alert className="mb-4 border-amber-500/30 bg-amber-500/5">
                 <Info className="w-4 h-4 text-amber-500" />
                 <AlertDescription className="text-sm">
-                  <strong>Partner Booking Notice:</strong> Hizovo is not the merchant of record. 
-                  Your booking will be processed and fulfilled by our licensed travel partner. 
-                  Final pricing and terms are confirmed on the partner checkout page.
+                  <strong>Secure Partner Checkout:</strong> You'll complete your booking securely on Hizovo with our licensed travel partner. 
+                  Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
                 </AlertDescription>
               </Alert>
 
@@ -441,7 +440,7 @@ const FlightTravelerInfo = () => {
                     htmlFor="consent"
                     className="text-sm font-medium leading-relaxed cursor-pointer"
                   >
-                    I agree to share my information with the booking partner *
+                    I agree to share my information with the licensed booking partner to complete my reservation. *
                   </label>
                   <p className="text-xs text-muted-foreground">
                     Your details will be shared securely with our travel partner to complete your booking. 
@@ -482,18 +481,22 @@ const FlightTravelerInfo = () => {
                   ) : (
                     <>
                       <Shield className="w-4 h-4" />
-                      Continue to Secure Checkout
-                      <ExternalLink className="w-4 h-4" />
+                      Proceed to secure payment
                     </>
                   )}
                 </Button>
               </div>
+
+              {/* CTA Disclosure */}
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                Powered by licensed travel partners · Final price confirmed before payment
+              </p>
             </CardContent>
           </Card>
 
           {/* Footer Disclosure */}
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
             {" "}
             <a href="/partner-disclosure" className="underline hover:text-primary">Learn more</a>
           </p>

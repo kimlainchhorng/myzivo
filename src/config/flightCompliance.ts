@@ -1,8 +1,8 @@
 /**
- * ZIVO FLIGHTS - LOCKED COMPLIANCE TEXT
+ * HIZOVO TRAVEL - LOCKED COMPLIANCE TEXT
  * 
  * DO NOT MODIFY WITHOUT LEGAL APPROVAL
- * These texts are required for Duffel/airline partner compliance
+ * These texts are required for Duffel/CJ/airline partner compliance
  * 
  * Last Updated: February 2, 2026
  * Approved By: Legal/Compliance Team
@@ -14,19 +14,22 @@
 
 export const FLIGHT_CTA_TEXT = {
   /** Primary CTA button text - use on all flight booking buttons */
-  primary: "Continue to secure checkout",
+  primary: "Continue to secure booking",
   
   /** Secondary/alternative CTA text */
-  secondary: "Book with our partner",
+  secondary: "Continue to secure booking",
   
   /** Mobile sticky CTA */
-  mobile: "Continue to checkout",
+  mobile: "Continue to booking",
   
-  /** View deal variant (results page) */
-  viewDeal: "View Deal",
+  /** View deal variant (results page) - redirect to partner */
+  viewDeal: "Continue to secure booking",
   
   /** Select flight variant */
-  select: "Select Flight",
+  select: "Continue to secure booking",
+  
+  /** Traveler info to checkout */
+  proceedToPayment: "Proceed to secure payment",
 } as const;
 
 // ============================================
@@ -34,26 +37,32 @@ export const FLIGHT_CTA_TEXT = {
 // ============================================
 
 export const FLIGHT_DISCLAIMERS = {
-  /** Main ticketing disclaimer - REQUIRED on all flight pages */
-  ticketing: "Hizivo does not issue airline tickets. Flight bookings are completed with licensed airline partners.",
+  /** Main ticketing disclaimer - REQUIRED on all booking pages (GLOBAL) */
+  ticketing: "Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.",
   
   /** Shorter version for inline use */
-  ticketingShort: "Hizivo does not issue airline tickets.",
+  ticketingShort: "Hizovo does not issue tickets.",
   
   /** Footer disclaimer */
-  footer: "Hizivo is not the merchant of record for flights. All flight bookings, payments, and ticket issuance are handled by licensed airline partners.",
+  footer: "Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.",
   
-  /** Partner redirect notice */
-  redirect: "You will be redirected to our trusted airline partner to complete your booking securely.",
+  /** Partner redirect notice - under CTA buttons */
+  redirect: "Powered by licensed travel partners · Final price confirmed before payment",
   
   /** Price disclaimer */
-  price: "Prices shown are estimates and may change. Final price confirmed on partner checkout.",
+  price: "Indicative prices shown. Final price confirmed on partner checkout.",
   
   /** Support disclaimer */
-  support: "For flight changes, cancellations, or refunds, please contact the airline partner listed in your confirmation email.",
+  support: "For changes, cancellations, or refunds, please contact the booking partner listed in your confirmation email.",
   
   /** Payment disclaimer - CRITICAL for MoR compliance */
-  payment: "Hizivo does not collect or process payments for flights. All payments are handled by the airline partner.",
+  payment: "Hizovo does not collect or process payments for travel. All payments are handled by licensed travel partners.",
+  
+  /** Results page live deals notice */
+  liveDeals: "Comparing live deals from licensed travel partners",
+  
+  /** Detail page disclosure */
+  detailDisclosure: "You'll complete your booking securely on Hizovo with our licensed travel partner.",
 } as const;
 
 // ============================================
@@ -62,13 +71,13 @@ export const FLIGHT_DISCLAIMERS = {
 
 export const FLIGHT_CONSENT = {
   /** Checkbox label - REQUIRED before partner redirect */
-  checkboxLabel: "I agree to share my information with the booking partner.",
+  checkboxLabel: "I agree to share my information with the licensed booking partner to complete my reservation.",
   
   /** Full consent description */
-  description: "Your details will be securely transmitted to our licensed airline partner to complete your booking. By proceeding, you agree to the partner's terms and conditions.",
+  description: "Your details will be securely transmitted to our licensed travel partner to complete your booking. By proceeding, you agree to the partner's terms and conditions.",
   
   /** Privacy notice */
-  privacy: "Your data is encrypted and only shared with the booking partner. Hizivo does not store payment information.",
+  privacy: "Your data is encrypted and only shared with the booking partner. Hizovo does not store payment information.",
   
   /** Terms link text */
   termsLink: "View Partner Terms",
