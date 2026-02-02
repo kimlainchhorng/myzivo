@@ -131,23 +131,23 @@ export default function BookingReturnPage() {
       <div className="min-h-screen bg-background">
         <NavBar />
 
-        <main className="pt-24 pb-16">
-          <div className="container mx-auto px-4 max-w-2xl">
+        <main className="pt-20 sm:pt-24 pb-16 px-4">
+          <div className="container mx-auto max-w-2xl">
             {/* Converted/Success State */}
             {pageStatus === "converted" && (
               <Card className="overflow-hidden">
                 {/* Success Header */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-8 text-center text-white">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                    <CheckCircle2 className="w-12 h-12" />
+                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-6 sm:p-8 text-center text-white">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
+                    <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
-                  <h1 className="text-2xl font-bold mb-2">Booking Confirmed!</h1>
-                  <p className="text-white/90">
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">Booking Confirmed!</h1>
+                  <p className="text-white/90 text-sm sm:text-base">
                     Your booking has been successfully processed
                   </p>
                 </div>
 
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
                   {/* Service Badge */}
                   <div className="flex justify-center">
                     <Badge variant="outline" className={cn("gap-2 px-4 py-2", config.color)}>
@@ -161,13 +161,13 @@ export default function BookingReturnPage() {
                     <div className="text-center">
                       <p className="text-sm text-muted-foreground mb-2">Booking Reference</p>
                       <div className="inline-flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
-                        <span className="text-xl font-mono font-bold tracking-wider">
+                        <span className="text-lg sm:text-xl font-mono font-bold tracking-wider break-all">
                           {bookingRef}
                         </span>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-8 w-8 shrink-0"
                           onClick={handleCopyRef}
                         >
                           <Copy className={cn("w-4 h-4", copied && "text-green-500")} />
@@ -186,14 +186,14 @@ export default function BookingReturnPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="flex-1">
+                  <div className="flex flex-col gap-3">
+                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98]">
                       <Link to="/trips">
                         View My Trips
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Link>
                     </Button>
-                    <Button variant="outline" asChild className="flex-1">
+                    <Button variant="outline" asChild className="w-full h-12 touch-manipulation">
                       <Link to="/">
                         Back to Home
                       </Link>
@@ -323,8 +323,40 @@ export default function BookingReturnPage() {
             {/* Support Panel - REQUIRED */}
             <BookingSupportPanel 
               partnerName={partnerName}
-              className="mt-8"
+              className="mt-6 sm:mt-8"
             />
+
+            {/* Mobile Help Box */}
+            <Card className="mt-4 border-amber-500/30 bg-amber-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <HelpCircle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm mb-1">Need Help?</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      For changes, cancellations, or refunds, contact the airline partner listed in your confirmation email.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      For website issues: <a href="mailto:info@hizivo.com" className="text-sky-500 hover:underline">info@hizivo.com</a>
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Trust Icons */}
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
+              <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                Secure partner checkout
+              </Badge>
+              <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                No hidden fees from ZIVO
+              </Badge>
+            </div>
           </div>
         </main>
 

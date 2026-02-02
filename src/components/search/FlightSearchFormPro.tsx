@@ -7,6 +7,8 @@
  * - Passenger/cabin controls
  * - Clean URL submission (codes only)
  * - Mobile-first responsive design
+ * - Full-screen mobile date picker
+ * - Bottom-sheet passenger selector
  */
 
 import { useState, useEffect, useMemo } from "react";
@@ -36,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useAirportSearch } from "./hooks/useLocationSearch";
+import { MobileDatePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
 
 type TripType = "roundtrip" | "oneway";
 type CabinClass = "economy" | "premium" | "business" | "first";
@@ -92,6 +95,11 @@ export default function FlightSearchFormPro({
   const [passengers, setPassengers] = useState(initialPassengers);
   const [cabin, setCabin] = useState<CabinClass>(initialCabin);
   const [isPassengerOpen, setIsPassengerOpen] = useState(false);
+  
+  // Mobile sheet states
+  const [departSheetOpen, setDepartSheetOpen] = useState(false);
+  const [returnSheetOpen, setReturnSheetOpen] = useState(false);
+  const [passengerSheetOpen, setPassengerSheetOpen] = useState(false);
 
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -351,12 +359,15 @@ export default function FlightSearchFormPro({
             <Label className="text-xs text-muted-foreground mb-1.5 block">
               Departure <span className="text-destructive">*</span>
             </Label>
-            <Popover>
-              <PopoverTrigger asChild>
+            
+            {/* Mobile: Full-screen sheet */}
+            {isMobile ? (
+              <>
                 <Button
                   variant="outline"
+                  onClick={() => setDepartSheetOpen(true)}
                   className={cn(
-                    "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
+                    "w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation",
                     !departDate && "text-muted-foreground",
                     errors.depart && "border-destructive"
                   )}
@@ -364,24 +375,54 @@ export default function FlightSearchFormPro({
                   <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
                   {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={departDate}
-                  onSelect={(date) => {
+                <MobileDatePickerSheet
+                  open={departSheetOpen}
+                  onOpenChange={setDepartSheetOpen}
+                  selectedDate={departDate}
+                  onDateSelect={(date) => {
                     setDepartDate(date);
-                    // Auto-adjust return if needed
                     if (date && returnDate && isBefore(returnDate, date)) {
                       setReturnDate(addDays(date, 7));
                     }
                   }}
-                  disabled={(date) => isBefore(date, startOfToday())}
-                  initialFocus
-                  className="pointer-events-auto"
+                  label="Departure Date"
+                  accentColor="sky"
                 />
-              </PopoverContent>
-            </Popover>
+              </>
+            ) : (
+              /* Desktop: Popover */
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
+                      !departDate && "text-muted-foreground",
+                      errors.depart && "border-destructive"
+                    )}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
+                    {departDate ? format(departDate, "EEE, MMM d") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={departDate}
+                    onSelect={(date) => {
+                      setDepartDate(date);
+                      if (date && returnDate && isBefore(returnDate, date)) {
+                        setReturnDate(addDays(date, 7));
+                      }
+                    }}
+                    disabled={(date) => isBefore(date, startOfToday())}
+                    initialFocus
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+            
             {errors.depart && (
               <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
@@ -396,12 +437,15 @@ export default function FlightSearchFormPro({
               <Label className="text-xs text-muted-foreground mb-1.5 block">
                 Return <span className="text-destructive">*</span>
               </Label>
-              <Popover>
-                <PopoverTrigger asChild>
+              
+              {/* Mobile: Full-screen sheet */}
+              {isMobile ? (
+                <>
                   <Button
                     variant="outline"
+                    onClick={() => setReturnSheetOpen(true)}
                     className={cn(
-                      "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
+                      "w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation",
                       !returnDate && "text-muted-foreground",
                       errors.return && "border-destructive"
                     )}
@@ -409,18 +453,45 @@ export default function FlightSearchFormPro({
                     <CalendarIcon className="w-4 h-4 mr-2 text-orange-500" />
                     {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={returnDate}
-                    onSelect={setReturnDate}
-                    disabled={(date) => departDate ? isBefore(date, departDate) : isBefore(date, startOfToday())}
-                    initialFocus
-                    className="pointer-events-auto"
+                  <MobileDatePickerSheet
+                    open={returnSheetOpen}
+                    onOpenChange={setReturnSheetOpen}
+                    selectedDate={returnDate}
+                    onDateSelect={setReturnDate}
+                    label="Return Date"
+                    minDate={departDate}
+                    accentColor="orange"
                   />
-                </PopoverContent>
-              </Popover>
+                </>
+              ) : (
+                /* Desktop: Popover */
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl",
+                        !returnDate && "text-muted-foreground",
+                        errors.return && "border-destructive"
+                      )}
+                    >
+                      <CalendarIcon className="w-4 h-4 mr-2 text-orange-500" />
+                      {returnDate ? format(returnDate, "EEE, MMM d") : "Select date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={returnDate}
+                      onSelect={setReturnDate}
+                      disabled={(date) => departDate ? isBefore(date, departDate) : isBefore(date, startOfToday())}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+              
               {errors.return && (
                 <p className="text-xs text-destructive mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" />
@@ -433,92 +504,120 @@ export default function FlightSearchFormPro({
 
         {/* Row 3: Passengers & Cabin */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Passengers */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Passengers</Label>
-            <Popover open={isPassengerOpen} onOpenChange={setIsPassengerOpen}>
-              <PopoverTrigger asChild>
+          {/* Passengers & Cabin - Combined for mobile, separate for desktop */}
+          {isMobile ? (
+            <>
+              {/* Mobile: Single button opens combined sheet */}
+              <div className="col-span-2">
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Travelers & Cabin</Label>
                 <Button
                   variant="outline"
-                  className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
+                  onClick={() => setPassengerSheetOpen(true)}
+                  className="w-full h-12 justify-start text-left font-normal rounded-xl touch-manipulation"
                 >
                   <Users className="w-4 h-4 mr-2 text-purple-500" />
-                  {passengers} {passengers === 1 ? "Traveler" : "Travelers"}
+                  {passengers} {passengers === 1 ? "Traveler" : "Travelers"} • {cabin.charAt(0).toUpperCase() + cabin.slice(1)}
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-4" align="start">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">Adults</span>
-                  <div className="flex items-center gap-2">
+                <MobilePassengerCabinSheet
+                  open={passengerSheetOpen}
+                  onOpenChange={setPassengerSheetOpen}
+                  passengers={passengers}
+                  cabin={cabin}
+                  onPassengersChange={setPassengers}
+                  onCabinChange={setCabin}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Desktop: Separate popovers */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Passengers</Label>
+                <Popover open={isPassengerOpen} onOpenChange={setIsPassengerOpen}>
+                  <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPassengers(Math.max(1, passengers - 1))}
-                      disabled={passengers <= 1}
+                      className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
                     >
-                      <Minus className="w-3 h-3" />
+                      <Users className="w-4 h-4 mr-2 text-purple-500" />
+                      {passengers} {passengers === 1 ? "Traveler" : "Travelers"}
                     </Button>
-                    <span className="w-8 text-center font-semibold">{passengers}</span>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-4" align="start">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">Adults</span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setPassengers(Math.max(1, passengers - 1))}
+                          disabled={passengers <= 1}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-semibold">{passengers}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setPassengers(Math.min(9, passengers + 1))}
+                          disabled={passengers >= 9}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
                     <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPassengers(Math.min(9, passengers + 1))}
-                      disabled={passengers >= 9}
+                      className="w-full mt-4"
+                      size="sm"
+                      onClick={() => setIsPassengerOpen(false)}
                     >
-                      <Plus className="w-3 h-3" />
+                      Done
                     </Button>
-                  </div>
-                </div>
-                <Button
-                  className="w-full mt-4"
-                  size="sm"
-                  onClick={() => setIsPassengerOpen(false)}
-                >
-                  Done
-                </Button>
-              </PopoverContent>
-            </Popover>
-          </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
-          {/* Cabin Class */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1.5 block">Cabin</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
-                >
-                  <Crown className={cn(
-                    "w-4 h-4 mr-2",
-                    cabin === "first" ? "text-amber-500" :
-                    cabin === "business" ? "text-blue-500" : "text-emerald-500"
-                  )} />
-                  <span className="capitalize truncate">{cabin.replace("premium", "Premium Eco")}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48 p-2" align="start">
-                <div className="space-y-1">
-                  {cabinOptions.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setCabin(opt.value)}
-                      className={cn(
-                        "w-full px-3 py-2 text-left text-sm rounded-lg transition-colors",
-                        cabin === opt.value
-                          ? "bg-sky-500/15 text-sky-500 font-medium"
-                          : "hover:bg-muted"
-                      )}
+              {/* Cabin Class - Desktop */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1.5 block">Cabin</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-xl"
                     >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+                      <Crown className={cn(
+                        "w-4 h-4 mr-2",
+                        cabin === "first" ? "text-amber-500" :
+                        cabin === "business" ? "text-blue-500" : "text-emerald-500"
+                      )} />
+                      <span className="capitalize truncate">{cabin.replace("premium", "Premium Eco")}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2" align="start">
+                    <div className="space-y-1">
+                      {cabinOptions.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setCabin(opt.value)}
+                          className={cn(
+                            "w-full px-3 py-2 text-left text-sm rounded-lg transition-colors",
+                            cabin === opt.value
+                              ? "bg-sky-500/15 text-sky-500 font-medium"
+                              : "hover:bg-muted"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
