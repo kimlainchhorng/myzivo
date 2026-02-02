@@ -615,6 +615,50 @@ export type Database = {
           },
         ]
       }
+      booking_returns: {
+        Row: {
+          booking_ref: string | null
+          callback_params: Json | null
+          created_at: string
+          id: string
+          partner_name: string | null
+          redirect_log_id: string | null
+          session_id: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          booking_ref?: string | null
+          callback_params?: Json | null
+          created_at?: string
+          id?: string
+          partner_name?: string | null
+          redirect_log_id?: string | null
+          session_id: string
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          booking_ref?: string | null
+          callback_params?: Json | null
+          created_at?: string
+          id?: string
+          partner_name?: string | null
+          redirect_log_id?: string | null
+          session_id?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_returns_redirect_log_id_fkey"
+            columns: ["redirect_log_id"]
+            isOneToOne: false
+            referencedRelation: "partner_redirect_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       car_rentals: {
         Row: {
           actual_return_date: string | null
@@ -6840,6 +6884,51 @@ export type Database = {
           id?: string
           search_params?: Json
           service_type?: Database["public"]["Enums"]["travel_service_type"]
+          session_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      travelers: {
+        Row: {
+          consent_given: boolean
+          consent_given_at: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          full_name: string
+          id: string
+          nationality: string | null
+          passport_number: string | null
+          phone: string | null
+          session_id: string
+          user_id: string | null
+        }
+        Insert: {
+          consent_given?: boolean
+          consent_given_at?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          full_name: string
+          id?: string
+          nationality?: string | null
+          passport_number?: string | null
+          phone?: string | null
+          session_id: string
+          user_id?: string | null
+        }
+        Update: {
+          consent_given?: boolean
+          consent_given_at?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          nationality?: string | null
+          passport_number?: string | null
+          phone?: string | null
           session_id?: string
           user_id?: string | null
         }
