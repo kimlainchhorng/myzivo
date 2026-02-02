@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -13,7 +13,12 @@ import {
   Clock,
   User,
   ShieldCheck,
+  Users,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
+import { useP2PVehicleCount } from "@/hooks/useP2PBooking";
+import P2PDiscoveryBanner from "@/components/car/P2PDiscoveryBanner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -377,6 +382,9 @@ const CarRentalBooking = () => {
             </div>
           </section>
         )}
+
+        {/* P2P Discovery Banner */}
+        <P2PDiscoveryBanner city={selectedAirport?.city || pickupDisplayValue} />
 
         {/* Discovery Sections (shown when no search) */}
         {!hasSearched && (

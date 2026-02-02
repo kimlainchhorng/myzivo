@@ -3,11 +3,12 @@
  * Shows booking confirmation and next steps
  */
 
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import {
   CheckCircle, Clock, MapPin, Calendar, Car, User,
-  CreditCard, MessageCircle, ArrowRight, Download
+  CreditCard, MessageCircle, ArrowRight, Download, Loader2, XCircle
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -17,7 +18,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useBookingDetail } from "@/hooks/useP2PBooking";
+import { useCreateP2PCheckout } from "@/hooks/useP2PPayment";
+import { toast } from "sonner";
 
 const statusConfig = {
   pending: {
@@ -59,7 +63,26 @@ const statusConfig = {
 
 export default function P2PBookingConfirmation() {
   const { id } = useParams<{ id: string }>();
-  const { data: booking, isLoading } = useBookingDetail(id);
+  const [searchParams] = useSearchParams();
+  const { data: booking, isLoading, refetch } = useBookingDetail(id);
+  const createCheckout = useCreateP2PCheckout();
+
+  // Handle payment return query params
+  const paymentStatus = searchParams.get("payment");
+
+  useEffect(() => {
+    if (paymentStatus === "success") {
+      toast.success("Payment successful! Your booking is confirmed.");
+      refetch(); // Refresh booking data to get updated payment status
+    } else if (paymentStatus === "cancelled") {
+      toast.info("Payment was cancelled. You can try again when ready.");
+    }
+  }, [paymentStatus, refetch]);
+
+  const handlePayment = () => {
+    if (!booking?.id) return;
+    createCheckout.mutate({ bookingId: booking.id });
+  };
 
   if (isLoading) {
     return (
@@ -313,11 +336,45 @@ export default function P2PBookingConfirmation() {
                     <p className="text-sm text-muted-foreground mb-3">
                       Secure your booking by paying now
                     </p>
-                    <Button className="gap-2">
-                      <CreditCard className="w-4 h-4" />
-                      Pay ${booking.total_amount.toFixed(2)}
-                      <ArrowRight className="w-4 h-4" />
+                    {paymentStatus === "cancelled" && (
+                      <Alert className="mb-3 bg-amber-500/10 border-amber-500/20">
+                        <XCircle className="w-4 h-4 text-amber-500" />
+                        <AlertDescription className="text-amber-700 dark:text-amber-300">
+                          Payment was cancelled. Click below to try again.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <Button 
+                      onClick={handlePayment}
+                      disabled={createCheckout.isPending}
+                      className="gap-2"
+                    >
+                      {createCheckout.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Creating checkout...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4" />
+                          Pay ${booking.total_amount.toFixed(2)}
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </Button>
+                  </div>
+                </div>
+              )}
+              {booking.status === "confirmed" && (booking.payment_status === "captured" || booking.payment_status === "paid" as unknown) && (
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-emerald-600 dark:text-emerald-400">Payment complete!</p>
+                    <p className="text-sm text-muted-foreground">
+                      You're all set. Contact your host for pickup details.
+                    </p>
                   </div>
                 </div>
               )}

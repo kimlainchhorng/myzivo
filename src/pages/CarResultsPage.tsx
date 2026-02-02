@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal, RotateCcw } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
+import P2PResultsCrossSell from "@/components/car/P2PResultsCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -535,6 +536,11 @@ export default function CarResultsPage() {
             </div>
           </section>
         )}
+
+        {/* P2P Cross-Sell */}
+        <section className="container mx-auto px-4 py-8 max-w-4xl">
+          <P2PResultsCrossSell city={locationName} />
+        </section>
 
         {/* Driver Cross-Sell */}
         <section className="container mx-auto px-4 py-8 max-w-4xl">
