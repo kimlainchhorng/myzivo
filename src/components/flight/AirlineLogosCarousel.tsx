@@ -213,7 +213,7 @@ export default function AirlineLogosCarousel() {
     <div className="py-12 space-y-10 overflow-hidden">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold font-display">
-          Fly with the <span className="text-primary">World's Best</span> Airlines
+          Trusted by <span className="text-primary">Major Airlines</span> Worldwide
         </h2>
         <p className="text-muted-foreground">Compare and book flights from 60+ airlines worldwide</p>
       </div>

@@ -20,8 +20,8 @@ export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats";
 
 const heroContent = {
   flights: {
-    headline: "Search & Compare Flights Worldwide",
-    subheadline: "Compare prices from hundreds of airlines. No hidden fees. Book with confidence.",
+    headline: "Compare Flights from 500+ Airlines — Book Securely with Partners",
+    subheadline: "Find real-time prices, compare options, and complete your booking securely with licensed airline partners.",
     image: heroFlightsImg,
     overlayGradient: "from-slate-950/90 via-blue-950/80 to-slate-950/70",
     accentColor: "sky",
@@ -63,10 +63,10 @@ const heroContent = {
 
 const trustBadgesByService: Record<ServiceType, { icon: LucideIcon; text: string }[]> = {
   flights: [
-    { icon: Shield, text: "Secure & Trusted" },
-    { icon: Globe, text: "500+ Partners" },
+    { icon: Shield, text: "Secure Partner Checkout" },
     { icon: Zap, text: "Real-Time Prices" },
-    { icon: Headphones, text: "24/7 Support" },
+    { icon: Globe, text: "No Hidden Fees from ZIVO" },
+    { icon: Headphones, text: "Mobile-Friendly Booking" },
   ],
   hotels: [
     { icon: Shield, text: "Secure & Trusted" },
