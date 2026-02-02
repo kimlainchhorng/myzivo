@@ -701,6 +701,122 @@ export type Database = {
           },
         ]
       }
+      car_inventory: {
+        Row: {
+          created_at: string
+          fuel: string
+          id: string
+          image_url: string | null
+          location_city: string
+          location_state: string
+          make_id: string
+          mileage: number
+          model_id: string
+          price: number
+          transmission: string
+          trim: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          fuel: string
+          id?: string
+          image_url?: string | null
+          location_city: string
+          location_state: string
+          make_id: string
+          mileage: number
+          model_id: string
+          price: number
+          transmission: string
+          trim?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string
+          fuel?: string
+          id?: string
+          image_url?: string | null
+          location_city?: string
+          location_state?: string
+          make_id?: string
+          mileage?: number
+          model_id?: string
+          price?: number
+          transmission?: string
+          trim?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_inventory_make_id_fkey"
+            columns: ["make_id"]
+            isOneToOne: false
+            referencedRelation: "car_makes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "car_inventory_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "car_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      car_makes: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      car_models: {
+        Row: {
+          created_at: string
+          id: string
+          make_id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          make_id: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          make_id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_models_make_id_fkey"
+            columns: ["make_id"]
+            isOneToOne: false
+            referencedRelation: "car_makes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       car_rentals: {
         Row: {
           actual_return_date: string | null
