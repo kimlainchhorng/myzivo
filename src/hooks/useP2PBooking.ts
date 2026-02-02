@@ -586,3 +586,63 @@ export function useAdminP2PBookings(filters?: {
     },
   });
 }
+
+// Complete booking (mark as completed by owner)
+export function useCompleteBooking() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ bookingId }: { bookingId: string }) => {
+      // Verify booking is currently active
+      const { data: booking, error: fetchError } = await supabase
+        .from("p2p_bookings")
+        .select("status, owner_payout, owner_id, vehicle_id")
+        .eq("id", bookingId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (booking.status !== "active") {
+        throw new Error("Only active bookings can be marked as completed");
+      }
+
+      // Update booking status to completed
+      const { data, error } = await supabase
+        .from("p2p_bookings")
+        .update({
+          status: "completed",
+          completed_at: new Date().toISOString(),
+        })
+        .eq("id", bookingId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Create pending payout record (ignore if fails - payout can be created manually)
+      try {
+        const platformFee = booking.owner_payout * 0.03; // ~3% Stripe fee estimate
+        await supabase.from("p2p_payouts").insert({
+          owner_id: booking.owner_id,
+          amount: booking.owner_payout,
+          net_amount: booking.owner_payout - platformFee,
+          platform_fee: platformFee,
+          status: "pending",
+          booking_ids: [bookingId],
+        });
+      } catch (payoutError) {
+        console.error("Failed to create payout record:", payoutError);
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ownerBookings"] });
+      queryClient.invalidateQueries({ queryKey: ["renterBookings"] });
+      queryClient.invalidateQueries({ queryKey: ["bookingDetail"] });
+      toast.success("Trip marked as completed! Payout will be processed within 24 hours.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to complete booking");
+    },
+  });
+}

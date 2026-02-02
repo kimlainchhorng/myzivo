@@ -31,17 +31,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCarOwnerProfile } from "@/hooks/useCarOwner";
-import { useOwnerBookings, useRespondToBooking, type BookingWithDetails } from "@/hooks/useP2PBooking";
+import { useOwnerBookings, useRespondToBooking, useCompleteBooking, type BookingWithDetails } from "@/hooks/useP2PBooking";
 
 export default function OwnerBookings() {
   const { data: profile } = useCarOwnerProfile();
   const { data: bookings, isLoading } = useOwnerBookings(profile?.id);
   const respondToBooking = useRespondToBooking();
+  const completeBooking = useCompleteBooking();
 
   const [activeTab, setActiveTab] = useState("pending");
   const [selectedBooking, setSelectedBooking] = useState<BookingWithDetails | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [dialogAction, setDialogAction] = useState<"confirm" | "reject" | null>(null);
+  const [dialogAction, setDialogAction] = useState<"confirm" | "reject" | "complete" | null>(null);
 
   // Filter bookings - use "active" instead of "in_progress" to match DB enum
   const pendingBookings = bookings?.filter((b) => b.status === "pending") || [];
@@ -52,18 +53,22 @@ export default function OwnerBookings() {
   const handleAction = async () => {
     if (!selectedBooking || !dialogAction) return;
 
-    await respondToBooking.mutateAsync({
-      bookingId: selectedBooking.id,
-      action: dialogAction,
-      reason: dialogAction === "reject" ? rejectReason : undefined,
-    });
+    if (dialogAction === "complete") {
+      await completeBooking.mutateAsync({ bookingId: selectedBooking.id });
+    } else {
+      await respondToBooking.mutateAsync({
+        bookingId: selectedBooking.id,
+        action: dialogAction,
+        reason: dialogAction === "reject" ? rejectReason : undefined,
+      });
+    }
 
     setSelectedBooking(null);
     setDialogAction(null);
     setRejectReason("");
   };
 
-  const openDialog = (booking: BookingWithDetails, action: "confirm" | "reject") => {
+  const openDialog = (booking: BookingWithDetails, action: "confirm" | "reject" | "complete") => {
     setSelectedBooking(booking);
     setDialogAction(action);
   };
@@ -178,7 +183,12 @@ export default function OwnerBookings() {
                   {activeBookings.length > 0 ? (
                     <div className="space-y-4">
                       {activeBookings.map((booking) => (
-                        <BookingCard key={booking.id} booking={booking} isActive />
+                        <BookingCard
+                          key={booking.id}
+                          booking={booking}
+                          isActive
+                          onComplete={() => openDialog(booking, "complete")}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -251,10 +261,31 @@ export default function OwnerBookings() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleAction}
-              disabled={respondToBooking.isPending || !rejectReason.trim()}
+              disabled={respondToBooking.isPending || completeBooking.isPending || !rejectReason.trim()}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {respondToBooking.isPending ? "Rejecting..." : "Reject Booking"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Complete Trip Dialog */}
+      <AlertDialog open={dialogAction === "complete"} onOpenChange={() => setDialogAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Trip</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark this trip as completed? This will initiate the payout process for this booking.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleAction}
+              disabled={completeBooking.isPending}
+            >
+              {completeBooking.isPending ? "Completing..." : "Complete Trip"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -354,15 +385,18 @@ function BookingRequestCard({
 function BookingCard({
   booking,
   isActive,
+  onComplete,
 }: {
   booking: BookingWithDetails;
   isActive?: boolean;
+  onComplete?: () => void;
 }) {
   const vehicle = booking.vehicle;
   const images = (vehicle?.images as string[]) || [];
 
   const statusBadges = {
     confirmed: { variant: "default" as const, label: "Confirmed" },
+    active: { variant: "default" as const, label: "Active" },
     in_progress: { variant: "default" as const, label: "In Progress" },
     completed: { variant: "outline" as const, label: "Completed" },
     cancelled: { variant: "destructive" as const, label: "Cancelled" },
@@ -399,7 +433,7 @@ function BookingCard({
               <Badge variant={status.variant}>{status.label}</Badge>
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
               <div className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 {format(parseISO(booking.pickup_date), "MMM d")} -{" "}
@@ -409,9 +443,19 @@ function BookingCard({
                 ${booking.owner_payout.toFixed(0)} payout
               </div>
             </div>
+
+            {/* Complete Trip button for active bookings */}
+            {isActive && onComplete && (
+              <Button size="sm" onClick={onComplete} className="gap-2">
+                <CheckCircle className="w-4 h-4" />
+                Mark as Completed
+              </Button>
+            )}
           </div>
 
-          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 self-center" />
+          {!isActive && (
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 self-center" />
+          )}
         </div>
       </CardContent>
     </Card>
