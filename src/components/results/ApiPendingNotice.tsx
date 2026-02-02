@@ -1,11 +1,13 @@
 /**
  * API Pending Notice
  * 
- * Displayed when the Flight Search API is not enabled (403 errors).
+ * Displayed when the Flight Search API is not enabled (403 errors) or returns no results.
  * Provides white label CTA for live results on partner site.
+ * 
+ * COMPLIANCE: Contains required disclosure text for meta-search transparency.
  */
 
-import { ExternalLink, Loader2, ShieldCheck, Info } from "lucide-react";
+import { ExternalLink, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -30,15 +32,14 @@ export default function ApiPendingNotice({
   return (
     <Card className={cn("border-sky-500/30 bg-sky-500/5", className)}>
       <CardContent className="p-6 sm:p-8 text-center">
-        {/* Loading indicator */}
+        {/* Icon */}
         <div className="w-16 h-16 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4">
-          <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+          <ExternalLink className="w-8 h-8 text-sky-500" />
         </div>
 
-        <h2 className="text-xl font-bold mb-2">Live Flight Search Activating</h2>
+        <h2 className="text-xl font-bold mb-2">Live prices and availability open on our partner site.</h2>
         <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Our live price comparison is being activated. Click below for real-time prices 
-          from {origin} to {destination} on our partner site.
+          Click below to see real-time flight prices from {origin} to {destination} with our trusted partner.
         </p>
 
         {/* Primary CTA */}
@@ -56,11 +57,11 @@ export default function ApiPendingNotice({
           Live prices and final booking on partner site.
         </p>
 
-        {/* Trust element */}
+        {/* Trust element - REQUIRED compliance text */}
         <div className="mt-6 pt-6 border-t border-border/50">
           <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
+            ZIVO compares prices from third-party partners. Booking completed on partner sites.
           </p>
         </div>
       </CardContent>
