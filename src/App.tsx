@@ -89,6 +89,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Partners = lazy(() => import("./pages/Partners"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
 // Support pages
@@ -255,6 +256,7 @@ const App = () => (
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/faq" element={<FAQPage />} />
                 <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
