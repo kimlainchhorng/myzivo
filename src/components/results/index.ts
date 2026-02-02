@@ -35,6 +35,8 @@ export { CarResultCard, type CarCardData } from "./CarResultCard";
 // Ramp-style components
 export { RampCarCard, type RampCarCardData } from "./RampCarCard";
 export { RampResultsLayout, RampResultsHeader, RampGlobalDisclaimer, RampIndicativeNotice } from "./RampResultsLayout";
+export { CarPartnerTrustStrip } from "./CarPartnerTrustStrip";
+export { CarResultsSkeleton } from "./CarResultsSkeleton";
 
 // API states
 export { default as ApiPendingNotice } from "./ApiPendingNotice";

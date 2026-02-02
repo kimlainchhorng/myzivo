@@ -49,7 +49,7 @@ export function RampResultsHeader({
   filterTrigger 
 }: RampResultsHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <p className="text-lg font-semibold text-foreground">
           {isLoading ? (
@@ -61,8 +61,8 @@ export function RampResultsHeader({
           )}
         </p>
         {!isLoading && count > 0 && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            *Indicative prices – final price shown on partner site
+          <p className="text-xs text-muted-foreground mt-1">
+            Indicative prices shown — final price confirmed on partner site
           </p>
         )}
       </div>
