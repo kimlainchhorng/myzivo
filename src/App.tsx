@@ -91,6 +91,12 @@ const P2PVehicleSearch = lazy(() => import("./pages/p2p/P2PVehicleSearch"));
 const P2PVehicleDetail = lazy(() => import("./pages/p2p/P2PVehicleDetail"));
 const P2PBookingConfirmation = lazy(() => import("./pages/p2p/P2PBookingConfirmation"));
 const RenterTrips = lazy(() => import("./pages/p2p/RenterTrips"));
+// Renter Verification pages
+const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
+const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
+// Damage Report pages
+const ReportDamage = lazy(() => import("./pages/damage/ReportDamage"));
+const DamageReportStatus = lazy(() => import("./pages/damage/DamageReportStatus"));
 // Legal pages - lazy load
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
@@ -291,6 +297,15 @@ const App = () => (
                 <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />
                 <Route path="/p2p/booking/:id/confirmation" element={<ProtectedRoute><P2PBookingConfirmation /></ProtectedRoute>} />
                 <Route path="/p2p/my-trips" element={<ProtectedRoute><RenterTrips /></ProtectedRoute>} />
+                
+                {/* Renter Verification Routes */}
+                <Route path="/verify/driver" element={<ProtectedRoute><RenterVerification /></ProtectedRoute>} />
+                <Route path="/verify/status" element={<ProtectedRoute><VerificationStatus /></ProtectedRoute>} />
+                
+                {/* Damage Report Routes */}
+                <Route path="/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
+                <Route path="/owner/booking/:bookingId/report-damage" element={<ProtectedRoute><ReportDamage /></ProtectedRoute>} />
+                <Route path="/damage/:reportId/status" element={<ProtectedRoute><DamageReportStatus /></ProtectedRoute>} />
                 
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/insurance" element={<InsurancePolicy />} />

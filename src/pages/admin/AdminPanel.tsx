@@ -34,6 +34,8 @@ import AdminP2PDisputesModule from "./modules/AdminP2PDisputesModule";
 import AdminP2PCommissionModule from "./modules/AdminP2PCommissionModule";
 import AdminMoveModule from "./modules/AdminMoveModule";
 import AdminCityLaunchModule from "./modules/AdminCityLaunchModule";
+import AdminRentersModule from "./modules/AdminRentersModule";
+import AdminDamageReportsModule from "./modules/AdminDamageReportsModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -42,10 +44,12 @@ const navItems = [
   { id: "move", label: "Move Deliveries", icon: CarFront },
   { id: "city-launch", label: "City Launch", icon: MapPin },
   { id: "p2p-owners", label: "P2P Owners", icon: CarFront },
+  { id: "p2p-renters", label: "P2P Renters", icon: Users },
   { id: "p2p-vehicles", label: "P2P Vehicles", icon: Car },
   { id: "p2p-payouts", label: "P2P Payouts", icon: DollarSign },
   { id: "p2p-commission", label: "P2P Commission", icon: Percent },
   { id: "p2p-disputes", label: "P2P Disputes", icon: CarFront },
+  { id: "damage-reports", label: "Damage Reports", icon: CarFront },
   { id: "finance", label: "Finance", icon: DollarSign },
   { id: "revenue-assumptions", label: "Revenue Assumptions", icon: Calculator },
   { id: "drivers", label: "Drivers", icon: Users },
@@ -143,6 +147,10 @@ export default function AdminPanel() {
         return <AdminP2PCommissionModule />;
       case "p2p-disputes":
         return <AdminP2PDisputesModule />;
+      case "p2p-renters":
+        return <AdminRentersModule />;
+      case "damage-reports":
+        return <AdminDamageReportsModule />;
       case "finance":
         return <AdminFinanceModule />;
       case "revenue-assumptions":

@@ -4486,6 +4486,7 @@ export type Database = {
           cancelled_by: string | null
           created_at: string | null
           daily_rate: number
+          damage_report_id: string | null
           fuel_level_end: string | null
           fuel_level_start: string | null
           id: string
@@ -4500,6 +4501,7 @@ export type Database = {
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
           payout_eligible_at: string | null
+          payout_held_at: string | null
           payout_hold_reason: string | null
           payout_id: string | null
           pickup_confirmed_at: string | null
@@ -4537,6 +4539,7 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string | null
           daily_rate: number
+          damage_report_id?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
@@ -4551,6 +4554,7 @@ export type Database = {
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
           payout_eligible_at?: string | null
+          payout_held_at?: string | null
           payout_hold_reason?: string | null
           payout_id?: string | null
           pickup_confirmed_at?: string | null
@@ -4588,6 +4592,7 @@ export type Database = {
           cancelled_by?: string | null
           created_at?: string | null
           daily_rate?: number
+          damage_report_id?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
@@ -4602,6 +4607,7 @@ export type Database = {
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
           payout_eligible_at?: string | null
+          payout_held_at?: string | null
           payout_hold_reason?: string | null
           payout_id?: string | null
           pickup_confirmed_at?: string | null
@@ -4633,6 +4639,13 @@ export type Database = {
           vehicle_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "p2p_bookings_damage_report_id_fkey"
+            columns: ["damage_report_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_damage_reports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "p2p_bookings_owner_id_fkey"
             columns: ["owner_id"]
@@ -4692,6 +4705,138 @@ export type Database = {
         }
         Relationships: []
       }
+      p2p_damage_evidence: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          damage_report_id: string
+          id: string
+          image_type: string
+          image_url: string
+          uploaded_by: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          damage_report_id: string
+          id?: string
+          image_type: string
+          image_url: string
+          uploaded_by: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          damage_report_id?: string
+          id?: string
+          image_type?: string
+          image_url?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_damage_evidence_damage_report_id_fkey"
+            columns: ["damage_report_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_damage_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_damage_reports: {
+        Row: {
+          admin_notes: string | null
+          booking_id: string
+          created_at: string | null
+          date_noticed: string
+          description: string
+          estimated_repair_cost: number | null
+          id: string
+          priority: string | null
+          reported_by: string
+          reporter_role: string
+          status: Database["public"]["Enums"]["p2p_damage_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          booking_id: string
+          created_at?: string | null
+          date_noticed: string
+          description: string
+          estimated_repair_cost?: number | null
+          id?: string
+          priority?: string | null
+          reported_by: string
+          reporter_role: string
+          status?: Database["public"]["Enums"]["p2p_damage_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          booking_id?: string
+          created_at?: string | null
+          date_noticed?: string
+          description?: string
+          estimated_repair_cost?: number | null
+          id?: string
+          priority?: string | null
+          reported_by?: string
+          reporter_role?: string
+          status?: Database["public"]["Enums"]["p2p_damage_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_damage_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_dispute_resolutions: {
+        Row: {
+          admin_notes: string | null
+          damage_report_id: string
+          decision: string
+          id: string
+          owner_payout_adjustment: number | null
+          renter_charge_amount: number | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          damage_report_id: string
+          decision: string
+          id?: string
+          owner_payout_adjustment?: number | null
+          renter_charge_amount?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          damage_report_id?: string
+          decision?: string
+          id?: string
+          owner_payout_adjustment?: number | null
+          renter_charge_amount?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_dispute_resolutions_damage_report_id_fkey"
+            columns: ["damage_report_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_damage_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       p2p_disputes: {
         Row: {
           admin_notes: string | null
@@ -4750,6 +4895,53 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_insurance_claims: {
+        Row: {
+          claim_reference: string | null
+          coverage_amount: number | null
+          coverage_decision: string | null
+          created_by: string | null
+          damage_report_id: string
+          id: string
+          insurance_provider: string
+          notes: string | null
+          resolved_at: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          claim_reference?: string | null
+          coverage_amount?: number | null
+          coverage_decision?: string | null
+          created_by?: string | null
+          damage_report_id: string
+          id?: string
+          insurance_provider: string
+          notes?: string | null
+          resolved_at?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          claim_reference?: string | null
+          coverage_amount?: number | null
+          coverage_decision?: string | null
+          created_by?: string | null
+          damage_report_id?: string
+          id?: string
+          insurance_provider?: string
+          notes?: string | null
+          resolved_at?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_insurance_claims_damage_report_id_fkey"
+            columns: ["damage_report_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_damage_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -10669,6 +10861,14 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "disputed"
+      p2p_damage_status:
+        | "reported"
+        | "under_review"
+        | "info_requested"
+        | "insurance_claim_submitted"
+        | "resolved_owner_paid"
+        | "resolved_renter_charged"
+        | "closed_no_action"
       p2p_dispute_status: "open" | "investigating" | "resolved" | "closed"
       p2p_dispute_type:
         | "damage"
@@ -10887,6 +11087,15 @@ export const Constants = {
         "completed",
         "cancelled",
         "disputed",
+      ],
+      p2p_damage_status: [
+        "reported",
+        "under_review",
+        "info_requested",
+        "insurance_claim_submitted",
+        "resolved_owner_paid",
+        "resolved_renter_charged",
+        "closed_no_action",
       ],
       p2p_dispute_status: ["open", "investigating", "resolved", "closed"],
       p2p_dispute_type: [
