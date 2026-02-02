@@ -1,12 +1,13 @@
 /**
- * Car Rental Results Page - Ramp-Style Redesign
+ * Car Rental Results Page - Production Ready
  * Premium, enterprise-grade travel booking UI
  * Always-visible pricing with clean card-based layout
+ * Legally compliant with partner disclosures
  */
 
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { AlertCircle, ExternalLink, ShieldCheck, SlidersHorizontal, RotateCcw } from "lucide-react";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import { differenceInDays, format, parseISO } from "date-fns";
 import Header from "@/components/Header";
@@ -27,7 +28,6 @@ import {
 import {
   StickySearchSummary,
   FiltersSheet,
-  ResultsSkeletonList,
   RampCarCard,
   RampResultsLayout,
   RampResultsHeader,
@@ -36,12 +36,13 @@ import {
   ResultsBreadcrumbs,
   ResultsFAQ,
   CarEditSearchForm,
+  CarPartnerTrustStrip,
+  CarResultsSkeleton,
   type RampCarCardData,
 } from "@/components/results";
 import { useRealCarSearch, type CarResult } from "@/hooks/useRealCarSearch";
 import { getAirportByCode } from "@/components/car/AirportAutocomplete";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
-import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 // Parse and validate URL parameters
@@ -117,13 +118,16 @@ const defaultFilters: CarFilters = {
   transmission: [],
 };
 
+// Sort options
+type SortOption = "lowest" | "highest" | "best";
+
 export default function CarResultsPage() {
   const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState<CarFilters>(defaultFilters);
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState("price");
+  const [sortBy, setSortBy] = useState<SortOption>("lowest");
 
-  const { isLoading, results, search, isRealPrice, getPartners } = useRealCarSearch();
+  const { isLoading, results, search, getPartners } = useRealCarSearch();
 
   const parsed = useMemo(() => parseSearchParams(searchParams), [searchParams]);
   const { pickupCode, pickupLabel, pickupDate, pickupTime, dropoffDate, dropoffTime, driverAge, isValid, errors } = parsed;
@@ -165,17 +169,33 @@ export default function CarResultsPage() {
       filtered = filtered.filter((car) => filters.transmission.includes(car.transmission));
     }
 
-    // Sort
+    // Sort based on selected option
     switch (sortBy) {
-      case "category":
-        return filtered.sort((a, b) => a.category.localeCompare(b.category));
-      case "company":
-        return filtered.sort((a, b) => a.company.localeCompare(b.company));
-      case "price":
+      case "highest":
+        return filtered.sort((a, b) => b.pricePerDay - a.pricePerDay);
+      case "best":
+        // Best deal = combines price + features (has free cancellation, unlimited mileage)
+        return filtered.sort((a, b) => {
+          const aScore = a.pricePerDay - (a.features.length * 5);
+          const bScore = b.pricePerDay - (b.features.length * 5);
+          return aScore - bScore;
+        });
+      case "lowest":
       default:
         return filtered.sort((a, b) => a.pricePerDay - b.pricePerDay);
     }
   }, [results, filters, sortBy]);
+
+  // Find best deal for badge
+  const bestDealId = useMemo(() => {
+    if (filteredResults.length === 0) return null;
+    const sorted = [...filteredResults].sort((a, b) => {
+      const aScore = a.pricePerDay - (a.features.length * 5);
+      const bScore = b.pricePerDay - (b.features.length * 5);
+      return aScore - bScore;
+    });
+    return sorted[0]?.id;
+  }, [filteredResults]);
 
   // Convert to Ramp card format
   const carCards: RampCarCardData[] = filteredResults.map((car: CarResult) => ({
@@ -192,7 +212,8 @@ export default function CarResultsPage() {
     features: car.features,
     mileage: car.mileage,
     freeCancellation: car.features.some((f) => f.toLowerCase().includes("cancel")),
-    isBestDeal: filteredResults.indexOf(car) === 0 && car.pricePerDay === Math.min(...filteredResults.map(c => c.pricePerDay)),
+    theftProtection: car.features.some((f) => f.toLowerCase().includes("theft") || f.toLowerCase().includes("protection")),
+    isBestDeal: car.id === bestDealId,
   }));
 
   const handleViewDeal = (car: RampCarCardData) => {
@@ -238,12 +259,6 @@ export default function CarResultsPage() {
     window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
   };
 
-  const handleComparePartners = (partnerId: string) => {
-    const partner = getPartners().find((p) => p.id === partnerId);
-    if (!partner) return;
-    window.open(partner.trackingUrl, "_blank", "noopener,noreferrer");
-  };
-
   const formatDisplayDate = (dateStr: string) => {
     try {
       return format(parseISO(dateStr), "EEE, MMM d");
@@ -256,6 +271,8 @@ export default function CarResultsPage() {
   const locationName = airport?.city || pickupCode;
 
   const activeFilterCount = filters.categories.length + filters.transmission.length + (filters.maxPrice < 500 ? 1 : 0);
+
+  const resetFilters = () => setFilters(defaultFilters);
 
   const pageTitle = locationName
     ? `Car Rentals in ${locationName} | From $${carCards[0]?.pricePerDay || 25}/day | ZIVO`
@@ -331,30 +348,31 @@ export default function CarResultsPage() {
         </div>
       </div>
 
-      {/* Reset Filters */}
+      {/* Reset Filters Button - Always visible when filters active */}
       {activeFilterCount > 0 && (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setFilters(defaultFilters)}
-          className="w-full"
+          onClick={resetFilters}
+          className="w-full gap-2"
         >
-          Clear all filters
+          <RotateCcw className="w-4 h-4" />
+          Reset Filters
         </Button>
       )}
     </div>
   );
 
-  // Sort dropdown
+  // Sort dropdown with required options
   const SortDropdown = () => (
-    <Select value={sortBy} onValueChange={setSortBy}>
+    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
       <SelectTrigger className="w-[160px] bg-card border-border/60">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="price">Lowest Price</SelectItem>
-        <SelectItem value="category">Category</SelectItem>
-        <SelectItem value="company">Company</SelectItem>
+        <SelectItem value="lowest">Lowest Price</SelectItem>
+        <SelectItem value="highest">Highest Price</SelectItem>
+        <SelectItem value="best">Best Deal</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -383,7 +401,7 @@ export default function CarResultsPage() {
       <Header />
 
       <main className="pt-16">
-        {/* Global Disclaimer Banner */}
+        {/* Global Disclaimer Banner - TOP */}
         <section className="border-b border-border/40 py-3 bg-muted/30">
           <div className="container mx-auto px-4">
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
@@ -416,28 +434,8 @@ export default function CarResultsPage() {
           }
         />
 
-        {/* Partner Links Bar */}
-        <section className="border-b border-border/40 py-3 bg-card">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap gap-2">
-              {getPartners()
-                .slice(0, 3)
-                .map((partner) => (
-                  <Button
-                    key={partner.id}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleComparePartners(partner.id)}
-                    className="gap-2 border-border/60 hover:border-primary/40"
-                  >
-                    <span>{partner.logo}</span>
-                    {partner.name}
-                    <ExternalLink className="w-3 h-3" />
-                  </Button>
-                ))}
-            </div>
-          </div>
-        </section>
+        {/* Partner Trust Strip */}
+        <CarPartnerTrustStrip />
 
         {/* Validation Errors */}
         {!isValid && (
@@ -466,7 +464,7 @@ export default function CarResultsPage() {
           <section className="py-8">
             <div className="container mx-auto px-4">
               <RampResultsLayout filters={<FiltersContent />}>
-                {/* Results Header */}
+                {/* Results Header - "X cars found" */}
                 <RampResultsHeader
                   count={carCards.length}
                   itemName="car"
@@ -480,10 +478,10 @@ export default function CarResultsPage() {
                   <RampIndicativeNotice className="mb-6" />
                 )}
 
-                {/* Loading State */}
-                {isLoading && <ResultsSkeletonList count={5} variant="car" />}
+                {/* Loading State - Skeleton Cards */}
+                {isLoading && <CarResultsSkeleton count={5} />}
 
-                {/* Results */}
+                {/* Results Grid */}
                 {!isLoading && carCards.length > 0 && (
                   <div className="space-y-4">
                     {carCards.map((car) => (
@@ -492,8 +490,25 @@ export default function CarResultsPage() {
                   </div>
                 )}
 
-                {/* Empty State with Fallback */}
-                {!isLoading && carCards.length === 0 && isValid && (
+                {/* Empty State - No cars match filters */}
+                {!isLoading && carCards.length === 0 && results.length > 0 && (
+                  <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center">
+                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                      <SlidersHorizontal className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">No cars match your filters</h3>
+                    <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
+                      Try adjusting price or category to see more options.
+                    </p>
+                    <Button onClick={resetFilters} variant="outline" className="gap-2">
+                      <RotateCcw className="w-4 h-4" />
+                      Reset Filters
+                    </Button>
+                  </div>
+                )}
+
+                {/* Empty State - No results at all */}
+                {!isLoading && results.length === 0 && (
                   <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-3xl">🚗</span>
@@ -503,7 +518,7 @@ export default function CarResultsPage() {
                       Estimated prices shown while we compare live partner availability.
                     </p>
                     <Button
-                      onClick={() => handleComparePartners("economybookings")}
+                      onClick={() => window.open(getPartners()[0]?.trackingUrl, "_blank")}
                       className="gap-2"
                     >
                       Search on EconomyBookings
@@ -512,7 +527,7 @@ export default function CarResultsPage() {
                   </div>
                 )}
 
-                {/* Global Disclosure */}
+                {/* Global Disclosure - Bottom */}
                 {carCards.length > 0 && !isLoading && (
                   <RampGlobalDisclaimer className="mt-8" />
                 )}
@@ -535,7 +550,7 @@ export default function CarResultsPage() {
         open={showFilters}
         onOpenChange={setShowFilters}
         onApply={() => setShowFilters(false)}
-        onReset={() => setFilters(defaultFilters)}
+        onReset={resetFilters}
         hasActiveFilters={activeFilterCount > 0}
         service="cars"
       >

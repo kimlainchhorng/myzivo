@@ -1,10 +1,10 @@
 /**
  * Ramp-Style Car Rental Result Card
- * Premium, clean design with always-visible pricing
- * Follows enterprise-grade SaaS travel UI patterns
+ * Production-ready, high-conversion design with always-visible pricing
+ * Legally compliant with partner disclosures
  */
 
-import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle } from "lucide-react";
+import { Users, Briefcase, Snowflake, Cog, ExternalLink, CheckCircle, Shield, Fuel } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ export interface RampCarCardData {
   mileage?: string;
   fuelPolicy?: string;
   freeCancellation?: boolean;
+  theftProtection?: boolean;
   isBestDeal?: boolean;
 }
 
@@ -75,24 +76,37 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
   const { formatted: dailyPrice } = getDisplay(car.pricePerDay, "USD");
   const { formatted: totalPriceFormatted } = getDisplay(car.totalPrice, "USD");
 
+  // Determine if theft protection is available (mock logic)
+  const hasTheftProtection = car.theftProtection || car.features.some(f => 
+    f.toLowerCase().includes("theft") || f.toLowerCase().includes("protection")
+  );
+
   return (
     <div
       className={cn(
         "bg-card rounded-2xl border border-border/60",
         "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)]",
         "transition-all duration-300 ease-out",
-        "overflow-hidden",
+        "overflow-hidden group",
         className
       )}
     >
       <div className="flex flex-col sm:flex-row">
-        {/* Image Section */}
-        <div className="sm:w-56 h-44 sm:h-auto bg-muted/30 flex items-center justify-center p-6 relative">
+        {/* LEFT: Image & Category */}
+        <div className="sm:w-56 h-44 sm:h-auto bg-muted/30 flex flex-col items-center justify-center p-6 relative">
+          {/* Best Deal Badge */}
+          {car.isBestDeal && (
+            <Badge className="absolute top-3 left-3 bg-emerald-500 text-white border-0 text-[10px] font-semibold shadow-sm">
+              Best Deal
+            </Badge>
+          )}
+          
+          {/* Car Image */}
           {brandedCar ? (
             <img
               src={brandedCar.src}
-              alt={`${brandedCar.brand} ${brandedCar.model}`}
-              className="w-full h-full object-contain max-h-36"
+              alt={`${car.category} rental car`}
+              className="w-full h-full object-contain max-h-32 group-hover:scale-105 transition-transform duration-300"
               loading="lazy"
             />
           ) : (
@@ -101,116 +115,114 @@ export function RampCarCard({ car, onViewDeal, className }: RampCarCardProps) {
             </div>
           )}
           
-          {/* Brand badge */}
-          {brandedCar && (
-            <span className="absolute bottom-3 left-3 text-[11px] text-muted-foreground font-medium">
-              {brandedCar.brand}
-            </span>
-          )}
+          {/* Supplier name */}
+          <span className="absolute bottom-3 left-3 text-[11px] text-muted-foreground font-medium bg-background/80 px-2 py-0.5 rounded">
+            {car.company}
+          </span>
         </div>
 
-        {/* Details Section */}
+        {/* CENTER: Details */}
         <div className="flex-1 p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-semibold text-lg text-foreground">{car.category}</h3>
-                <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground border-border/60">
-                  or similar
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{car.company}</p>
-            </div>
-            
-            {car.isBestDeal && (
-              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-medium">
-                Best Deal
-              </Badge>
-            )}
+          {/* Category + "or similar" */}
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-lg text-foreground">{car.category}</h3>
+            <Badge variant="outline" className="text-[10px] font-normal text-muted-foreground border-border/60">
+              or similar
+            </Badge>
           </div>
+          
+          {/* Branded model name (if available) */}
+          {brandedCar && (
+            <p className="text-sm text-muted-foreground mb-3">
+              {brandedCar.brand} {brandedCar.model}
+            </p>
+          )}
 
-          {/* Specs Row */}
+          {/* Specs Row with Icons */}
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground mb-4">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" title="Seats">
               <Users className="w-4 h-4" />
-              <span>{car.seats} seats</span>
+              <span>{car.seats}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" title="Bags">
               <Briefcase className="w-4 h-4" />
-              <span>{car.bags} bags</span>
+              <span>{car.bags}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" title="Transmission">
               <Cog className="w-4 h-4" />
               <span>{car.transmission}</span>
             </div>
             {car.hasAC && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5" title="Air Conditioning">
                 <Snowflake className="w-4 h-4" />
                 <span>A/C</span>
               </div>
             )}
           </div>
 
-          {/* Features */}
+          {/* Feature Badges (Chips) */}
           <div className="flex flex-wrap gap-2">
             {car.freeCancellation && (
               <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-200 bg-emerald-50 gap-1 font-normal">
                 <CheckCircle className="w-3 h-3" />
-                Free Cancellation
+                Free cancellation
               </Badge>
             )}
             {car.mileage && (
-              <Badge variant="outline" className="text-xs font-normal border-border/60">
+              <Badge variant="outline" className="text-xs font-normal border-border/60 gap-1">
+                <Fuel className="w-3 h-3" />
                 {car.mileage}
               </Badge>
             )}
-            {car.features.slice(0, 2).map((feature, i) => (
-              <Badge key={i} variant="outline" className="text-xs font-normal border-border/60">
-                {feature}
+            {hasTheftProtection && (
+              <Badge variant="outline" className="text-xs font-normal border-border/60 gap-1">
+                <Shield className="w-3 h-3" />
+                Theft protection
               </Badge>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* Price Section - Always Visible */}
-        <div className="sm:w-52 p-5 sm:p-6 flex flex-col justify-between items-end border-t sm:border-t-0 sm:border-l border-border/40 bg-muted/20">
+        {/* RIGHT: Price Block - ALWAYS VISIBLE */}
+        <div className="sm:w-56 p-5 sm:p-6 flex flex-col justify-between items-end border-t sm:border-t-0 sm:border-l border-border/40 bg-muted/20">
           <div className="text-right w-full">
-            {/* Vehicle make/model */}
-            {brandedCar && (
-              <p className="text-xs text-muted-foreground mb-2">
-                {brandedCar.brand} {brandedCar.model}
-              </p>
-            )}
-            
-            {/* Price - Always Visible */}
+            {/* Price per day - Large & Bold */}
             <p className="text-2xl font-bold text-foreground">
               {dailyPrice}
-              <span className="text-sm font-normal text-muted-foreground">/day</span>
+              <span className="text-sm font-normal text-muted-foreground"> / day</span>
             </p>
+            
+            {/* Total price line */}
             <p className="text-sm text-muted-foreground mt-1">
               {totalPriceFormatted} total · {car.days} day{car.days !== 1 ? "s" : ""}
             </p>
             
-            {/* Indicative price notice */}
-            <p className="text-[10px] text-muted-foreground/70 mt-2 leading-tight">
-              Indicative price · Final price on partner site
+            {/* Indicative price disclaimer */}
+            <p className="text-[10px] text-muted-foreground/70 mt-3 leading-tight">
+              Indicative price — final price shown on partner site
             </p>
           </div>
           
+          {/* CTA Button */}
           <Button
             onClick={() => onViewDeal(car)}
-            className="mt-4 w-full gap-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground"
+            className="mt-4 w-full gap-2 font-medium bg-primary hover:bg-primary/90 text-primary-foreground h-11"
           >
             Continue to secure booking
             <ExternalLink className="w-3.5 h-3.5" />
           </Button>
+          
+          {/* Under CTA text */}
+          <p className="text-[9px] text-muted-foreground/60 mt-2 text-center w-full leading-tight">
+            Powered by licensed travel partners
+          </p>
         </div>
       </div>
       
       {/* Footer Disclosure */}
       <div className="px-5 py-2.5 bg-muted/30 border-t border-border/30">
         <p className="text-[10px] text-muted-foreground text-center">
-          Powered by licensed travel partners · Final price confirmed before payment
+          Final price confirmed before payment · Booking fulfilled by licensed partner
         </p>
       </div>
     </div>
