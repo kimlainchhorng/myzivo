@@ -1,3 +1,7 @@
+/**
+ * FlightTicketCard Component
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,7 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { getAirlineLogo as getCDNLogo } from "@/data/airlines";
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 interface FlightTicketCardProps {
   flight: {
@@ -358,7 +363,7 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
               </Button>
               
               <p className="text-[10px] text-muted-foreground text-center leading-tight">
-                {AFFILIATE_DISCLOSURE_TEXT.short}
+                {FLIGHT_DISCLAIMERS.ticketingShort}
               </p>
             </div>
           </div>

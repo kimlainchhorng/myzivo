@@ -1,7 +1,12 @@
+/**
+ * NoFlightsFound Component
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ */
 import { Plane, Search, ExternalLink, Hotel, Car, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
+import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { useNavigate } from "react-router-dom";
 
@@ -103,11 +108,11 @@ export default function NoFlightsFound({
             onClick={handleSearchPartner}
           >
             <Plane className="w-5 h-5" />
-            Continue to secure booking
+            {FLIGHT_CTA_TEXT.primary}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            Powered by licensed travel partners · Final price confirmed before payment
+            {FLIGHT_DISCLAIMERS.ticketingShort}
           </p>
         </div>
       </div>

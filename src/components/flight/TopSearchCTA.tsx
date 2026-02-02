@@ -1,7 +1,11 @@
+/**
+ * TopSearchCTA Component
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ */
 import { ExternalLink, Sparkles, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
 import { useCTAText, useCTAColor } from "@/hooks/useABTest";
 import { cn } from "@/lib/utils";
@@ -87,7 +91,7 @@ export default function TopSearchCTA({
             )}
           </div>
           <p className="text-sm text-muted-foreground">
-            Prices are indicative and may change. Final price is shown on partner site.
+            {FLIGHT_DISCLAIMERS.price}
           </p>
         </div>
 
@@ -105,7 +109,7 @@ export default function TopSearchCTA({
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">
-            {AFFILIATE_DISCLOSURE_TEXT.short}
+            {FLIGHT_DISCLAIMERS.ticketingShort}
           </p>
         </div>
       </div>

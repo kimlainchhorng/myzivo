@@ -1,3 +1,7 @@
+/**
+ * AffiliatePartnerSelector Component
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ */
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -5,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Check, Sparkles, Plane } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
-import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from '@/config/affiliateLinks';
+import { AFFILIATE_LINKS } from '@/config/affiliateLinks';
+import { FLIGHT_DISCLAIMERS } from '@/config/flightCompliance';
 
 interface AffiliatePartnerSelectorProps {
   origin: string;
@@ -119,8 +124,8 @@ export default function AffiliatePartnerSelector({
         <div className="flex items-start gap-2">
           <ExternalLink className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
           <p className="text-xs text-muted-foreground">
-            {AFFILIATE_DISCLOSURE_TEXT.short}{' '}
-            <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+            {FLIGHT_DISCLAIMERS.ticketingShort}{' '}
+            <a href="/partner-disclosure" className="text-sky-500 hover:underline">Learn more</a>
           </p>
         </div>
       </div>
