@@ -107,6 +107,7 @@ const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
 const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
+const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
