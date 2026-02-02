@@ -27,6 +27,12 @@ import {
   ArrowRight,
   HelpCircle,
   Clock,
+  Mail,
+  Search,
+  ShieldCheck,
+  ExternalLink,
+  Info,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,6 +48,7 @@ import {
   type BookingReturnResult 
 } from "@/lib/bookingReturnHandler";
 import { BookingSupportPanel } from "@/components/flight";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 type PageStatus = "loading" | "converted" | "failed" | "pending" | "unknown";
 
@@ -120,11 +127,31 @@ export default function BookingReturnPage() {
     );
   }
 
+  // Dynamic page title based on status
+  const getPageTitle = () => {
+    switch (pageStatus) {
+      case "converted":
+        return "You're booking with our airline partner";
+      case "pending":
+        return "Booking in progress";
+      case "failed":
+        return "Redirect complete";
+      default:
+        return "Redirect complete";
+    }
+  };
+
+  // Extract trip summary data from result (use searchSession fields directly)
+  const tripSummary = result?.searchSession ? {
+    origin: result.searchSession.origin,
+    destination: result.searchSession.destination,
+  } : null;
+
   return (
     <>
       <SEOHead
-        title={pageStatus === "converted" ? "Booking Confirmed - Hizovo" : "Booking Status - Hizovo"}
-        description="View your booking confirmation and details."
+        title={`${getPageTitle()} - Hizovo`}
+        description="Your flight booking redirect status with our airline partner."
         noIndex
       />
 
@@ -133,17 +160,36 @@ export default function BookingReturnPage() {
 
         <main className="pt-20 sm:pt-24 pb-16 px-4">
           <div className="container mx-auto max-w-2xl">
+            
+            {/* Explanation Info Box - Always visible at top */}
+            <Card className="mb-6 border-sky-500/30 bg-sky-500/5">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
+                    <Info className="w-5 h-5 text-sky-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm mb-1">Partner Checkout</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      You've been redirected to complete your booking securely with one of our licensed airline partners. 
+                      Your airline partner will send confirmation and ticket details by email.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Converted/Success State */}
             {pageStatus === "converted" && (
               <Card className="overflow-hidden">
-                {/* Success Header */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-6 sm:p-8 text-center text-white">
+                {/* Neutral Header - Not claiming ticket issuance */}
+                <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 sm:p-8 text-center text-white">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                    <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12" />
+                    <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
-                  <h1 className="text-xl sm:text-2xl font-bold mb-2">Booking Confirmed!</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">You're booking with our airline partner</h1>
                   <p className="text-white/90 text-sm sm:text-base">
-                    Your booking has been successfully processed
+                    Booking status will be confirmed by the airline partner
                   </p>
                 </div>
 
@@ -156,10 +202,32 @@ export default function BookingReturnPage() {
                     </Badge>
                   </div>
 
-                  {/* Booking Reference */}
+                  {/* Trip Summary (Read-Only) */}
+                  {tripSummary && (tripSummary.origin || tripSummary.destination) && (
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border/50">
+                      <p className="text-xs text-muted-foreground mb-3 font-medium">Trip Summary</p>
+                      <div className="space-y-3 text-sm">
+                        {/* Route */}
+                        {tripSummary.origin && tripSummary.destination && (
+                          <div className="flex items-center justify-center gap-2 font-semibold text-base">
+                            <span>{tripSummary.origin}</span>
+                            <Plane className="w-4 h-4 text-sky-500 rotate-90" />
+                            <span>{tripSummary.destination}</span>
+                          </div>
+                        )}
+                        {/* Partner */}
+                        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                          <span>Booking partner:</span>
+                          <Badge variant="secondary" className="text-xs">{partnerName}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Booking Reference - if available */}
                   {bookingRef && (
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Booking Reference</p>
+                      <p className="text-sm text-muted-foreground mb-2">Reference (if provided)</p>
                       <div className="inline-flex items-center gap-2 px-4 py-3 bg-muted rounded-xl">
                         <span className="text-lg sm:text-xl font-mono font-bold tracking-wider break-all">
                           {bookingRef}
@@ -173,38 +241,37 @@ export default function BookingReturnPage() {
                           <Copy className={cn("w-4 h-4", copied && "text-green-500")} />
                         </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Save this reference for your records
-                      </p>
                     </div>
                   )}
 
-                  {/* Partner Info */}
-                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <span>Booked via</span>
-                    <Badge variant="secondary">{partnerName}</Badge>
+                  {/* Status Message */}
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      Booking status will be confirmed by the airline partner. Please check your email for confirmation details.
+                    </p>
                   </div>
 
-                  {/* Actions */}
+                  {/* Safe Actions */}
                   <div className="flex flex-col gap-3">
-                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98]">
-                      <Link to="/trips">
-                        View My Trips
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
+                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                        <Mail className="w-4 h-4" />
+                        Check my email
+                      </a>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Plane className="w-4 h-4" />
+                        Back to Flights
                       </Link>
                     </Button>
-                    <Button variant="outline" asChild className="w-full h-12 touch-manipulation">
-                      <Link to="/">
-                        Back to Home
+                    <Button variant="ghost" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Search className="w-4 h-4" />
+                        Search another flight
                       </Link>
                     </Button>
                   </div>
-
-                  {/* Confirmation Note */}
-                  <p className="text-xs text-center text-muted-foreground">
-                    A confirmation email has been sent to your email address.
-                    Check your spam folder if you don't see it.
-                  </p>
                 </CardContent>
               </Card>
             )}
@@ -251,31 +318,42 @@ export default function BookingReturnPage() {
             {pageStatus === "pending" && (
               <Card className="overflow-hidden">
                 {/* Pending Header */}
-                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-8 text-center text-white">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                    <Clock className="w-12 h-12" />
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 sm:p-8 text-center text-white">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
+                    <Clock className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
-                  <h1 className="text-2xl font-bold mb-2">Booking Pending</h1>
-                  <p className="text-white/90">
-                    Waiting for confirmation from our partner
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">Booking in progress</h1>
+                  <p className="text-white/90 text-sm sm:text-base">
+                    Waiting for confirmation from airline partner
                   </p>
                 </div>
 
-                <CardContent className="p-6 space-y-6">
-                  <p className="text-center text-muted-foreground">
-                    Your booking is being processed. You'll receive an email confirmation once it's complete.
-                  </p>
+                <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+                  {/* Status Message */}
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      Booking status will be confirmed by the airline partner. Please check your email for confirmation details.
+                    </p>
+                  </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="flex-1">
-                      <Link to="/trips">
-                        Check Trip Status
+                  {/* Safe Actions */}
+                  <div className="flex flex-col gap-3">
+                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
+                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                        <Mail className="w-4 h-4" />
+                        Check my email
+                      </a>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Plane className="w-4 h-4" />
+                        Back to Flights
                       </Link>
                     </Button>
-                    <Button variant="outline" asChild className="flex-1">
-                      <Link to="/">
-                        Back to Home
+                    <Button variant="ghost" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Search className="w-4 h-4" />
+                        Search another flight
                       </Link>
                     </Button>
                   </div>
@@ -287,32 +365,42 @@ export default function BookingReturnPage() {
             {pageStatus === "unknown" && (
               <Card className="overflow-hidden">
                 {/* Unknown Header */}
-                <div className="bg-gradient-to-r from-gray-500 to-slate-500 p-8 text-center text-white">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
-                    <HelpCircle className="w-12 h-12" />
+                <div className="bg-gradient-to-r from-gray-500 to-slate-500 p-6 sm:p-8 text-center text-white">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
+                    <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
-                  <h1 className="text-2xl font-bold mb-2">Booking Status Unknown</h1>
-                  <p className="text-white/90">
-                    We couldn't determine your booking status
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">Redirect complete</h1>
+                  <p className="text-white/90 text-sm sm:text-base">
+                    Please check your email for booking confirmation
                   </p>
                 </div>
 
-                <CardContent className="p-6 space-y-6">
-                  <p className="text-center text-muted-foreground">
-                    Please check your email for a confirmation, or contact our support team for assistance.
-                  </p>
+                <CardContent className="p-4 sm:p-6 space-y-5 sm:space-y-6">
+                  {/* Status Message */}
+                  <div className="p-3 rounded-lg bg-muted/50 border border-border/50 text-center">
+                    <p className="text-xs text-muted-foreground">
+                      Booking status will be confirmed by the airline partner. Please check your email for confirmation details.
+                    </p>
+                  </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="flex-1">
-                      <Link to="/trips">
-                        Check My Trips
+                  {/* Safe Actions */}
+                  <div className="flex flex-col gap-3">
+                    <Button asChild className="w-full h-12 touch-manipulation active:scale-[0.98] gap-2">
+                      <a href="mailto:" target="_blank" rel="noopener noreferrer">
+                        <Mail className="w-4 h-4" />
+                        Check my email
+                      </a>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Plane className="w-4 h-4" />
+                        Back to Flights
                       </Link>
                     </Button>
-                    <Button variant="outline" asChild className="flex-1">
-                      <Link to="/help">
-                        <HelpCircle className="w-4 h-4 mr-2" />
-                        Get Help
+                    <Button variant="ghost" asChild className="w-full h-12 touch-manipulation gap-2">
+                      <Link to="/flights">
+                        <Search className="w-4 h-4" />
+                        Search another flight
                       </Link>
                     </Button>
                   </div>
@@ -326,7 +414,7 @@ export default function BookingReturnPage() {
               className="mt-6 sm:mt-8"
             />
 
-            {/* Mobile Help Box */}
+            {/* Support Routing - Highlighted */}
             <Card className="mt-4 border-amber-500/30 bg-amber-500/5">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
@@ -334,22 +422,33 @@ export default function BookingReturnPage() {
                     <HelpCircle className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-sm mb-1">Need Help?</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
-                      For changes, cancellations, or refunds, contact the airline partner listed in your confirmation email.
+                    <p className="font-semibold text-sm mb-2">Support Information</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed mb-2">
+                      <strong>For changes, cancellations, or refunds:</strong> Contact the airline partner listed in your confirmation email.
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      For website issues: <a href="mailto:info@hizivo.com" className="text-sky-500 hover:underline">info@hizivo.com</a>
+                    <p className="text-xs text-muted-foreground">
+                      <strong>For website issues:</strong> <a href="mailto:support@hizivo.com" className="text-sky-500 hover:underline">support@hizivo.com</a>
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Legal Disclaimer - REQUIRED */}
+            <div className="mt-4 p-4 rounded-xl bg-muted/30 border border-border/50 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <ShieldCheck className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-medium">Legal Notice</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {FLIGHT_DISCLAIMERS.ticketing}
+              </p>
+            </div>
+
             {/* Trust Icons */}
             <div className="flex flex-wrap justify-center gap-3 mt-6">
               <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                 Secure partner checkout
               </Badge>
               <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
