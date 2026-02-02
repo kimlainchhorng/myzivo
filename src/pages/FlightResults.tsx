@@ -281,6 +281,29 @@ const FlightResults = () => {
     });
   }, [flights]);
 
+  // Build flight summaries for ApiPendingNotice partner deal cards
+  const flightSummaries = useMemo(() => {
+    const buildSummary = (flight: GeneratedFlight | null) => {
+      if (!flight) return undefined;
+      return {
+        airline: flight.airline,
+        airlineCode: flight.airlineCode,
+        airlineLogo: flight.logo || getAirlineLogo(flight.airlineCode),
+        departureTime: flight.departure?.time,
+        arrivalTime: flight.arrival?.time,
+        duration: flight.duration,
+        stops: flight.stops,
+        stopCities: flight.stopCities,
+      };
+    };
+
+    return {
+      cheapest: buildSummary(cheapestFlight),
+      bestValue: buildSummary(bestValueFlight),
+      flexible: buildSummary(fastestFlight),
+    };
+  }, [cheapestFlight, bestValueFlight, fastestFlight]);
+
   // Convert to unified card format with badges
   const flightCards: FlightCardData[] = flights.map((flight) => ({
     id: flight.id,
@@ -514,13 +537,18 @@ const FlightResults = () => {
         {/* Trust Banner - Above Results */}
         <section className="border-b border-border/50 py-4 bg-gradient-to-r from-sky-500/5 via-transparent to-sky-500/5">
           <div className="container mx-auto px-4">
-            <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                Compare flights from licensed airline partners
-              </span>
-              <span className="hidden sm:inline text-border">•</span>
-              <span className="text-emerald-600 font-medium">No hidden fees from ZIVO</span>
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-sm font-medium text-foreground">
+                Compare flight options from licensed airline and travel partners
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  Secure partner checkout
+                </span>
+                <span className="hidden sm:inline text-border">•</span>
+                <span className="text-emerald-600 font-medium">No hidden fees from ZIVO</span>
+              </div>
             </div>
           </div>
         </section>
@@ -636,6 +664,11 @@ const FlightResults = () => {
                           bestValue: bestValueFlight?.price,
                           flexible: fastestFlight?.price,
                         }
+                      : undefined
+                  }
+                  flightSummaries={
+                    isRealPrice && flights.length > 0 
+                      ? flightSummaries
                       : undefined
                   }
                   currency={currency}
