@@ -81,6 +81,10 @@ const ListYourCar = lazy(() => import("./pages/ListYourCar"));
 const OwnerApply = lazy(() => import("./pages/owner/OwnerApply"));
 const OwnerDashboard = lazy(() => import("./pages/owner/OwnerDashboard"));
 const OwnerProfile = lazy(() => import("./pages/owner/OwnerProfile"));
+const OwnerCars = lazy(() => import("./pages/owner/OwnerCars"));
+const AddVehicle = lazy(() => import("./pages/owner/AddVehicle"));
+const EditVehicle = lazy(() => import("./pages/owner/EditVehicle"));
+const VehicleAvailability = lazy(() => import("./pages/owner/VehicleAvailability"));
 // Legal pages - lazy load
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
@@ -266,6 +270,10 @@ const App = () => (
                 <Route path="/owner/apply" element={<ProtectedRoute><OwnerApply /></ProtectedRoute>} />
                 <Route path="/owner/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
                 <Route path="/owner/profile" element={<ProtectedRoute><OwnerProfile /></ProtectedRoute>} />
+                <Route path="/owner/cars" element={<ProtectedRoute><OwnerCars /></ProtectedRoute>} />
+                <Route path="/owner/cars/new" element={<ProtectedRoute><AddVehicle /></ProtectedRoute>} />
+                <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
+                <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
                 
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
