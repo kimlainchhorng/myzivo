@@ -1,13 +1,13 @@
 /**
  * Admin P2P Payouts Module
- * Manage owner payouts and process pending payouts
+ * Manage owner payouts with execute, hold, and release controls
  */
 
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   DollarSign, Users, Clock, CheckCircle, XCircle,
-  Search, MoreHorizontal, RefreshCw, Send, Eye
+  Search, MoreHorizontal, RefreshCw, Send, Eye, Pause, Play, AlertTriangle
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -35,6 +35,11 @@ import {
   useProcessP2PPayout,
   getPayoutStatusBadge,
 } from "@/hooks/useP2PPayment";
+import {
+  useExecuteP2PPayout,
+  useHoldP2PPayout,
+  useReleaseP2PPayoutHold,
+} from "@/hooks/useStripeConnect";
 import { formatPrice } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -42,13 +47,18 @@ export default function AdminP2PPayoutsModule() {
   const { data: payouts, isLoading, refetch } = useAdminP2PPayouts();
   const updateStatus = useUpdatePayoutStatus();
   const processPayout = useProcessP2PPayout();
+  const executePayout = useExecuteP2PPayout();
+  const holdPayout = useHoldP2PPayout();
+  const releasePayout = useReleaseP2PPayoutHold();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedPayout, setSelectedPayout] = useState<any>(null);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [showHoldDialog, setShowHoldDialog] = useState(false);
   const [newStatus, setNewStatus] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [holdReason, setHoldReason] = useState("");
   const [stripeTransferId, setStripeTransferId] = useState("");
 
   // Calculate stats
@@ -57,6 +67,7 @@ export default function AdminP2PPayoutsModule() {
     pending: payouts?.filter((p) => p.status === "pending").length || 0,
     processing: payouts?.filter((p) => p.status === "processing").length || 0,
     completed: payouts?.filter((p) => p.status === "completed").length || 0,
+    held: payouts?.filter((p) => (p as any).is_held).length || 0,
     totalAmount: payouts?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0,
     pendingAmount:
       payouts
@@ -99,6 +110,37 @@ export default function AdminP2PPayoutsModule() {
   const handleProcessAllPending = async () => {
     try {
       await processPayout.mutateAsync({ processAllPending: true });
+      refetch();
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleExecutePayout = async (payout: any) => {
+    try {
+      await executePayout.mutateAsync({ payoutId: payout.id });
+      refetch();
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleHoldPayout = async () => {
+    if (!selectedPayout || !holdReason) return;
+    try {
+      await holdPayout.mutateAsync({ payoutId: selectedPayout.id, reason: holdReason });
+      setShowHoldDialog(false);
+      setSelectedPayout(null);
+      setHoldReason("");
+      refetch();
+    } catch (error) {
+      // Error handled by mutation
+    }
+  };
+
+  const handleReleasePayout = async (payout: any) => {
+    try {
+      await releasePayout.mutateAsync({ payoutId: payout.id });
       refetch();
     } catch (error) {
       // Error handled by mutation
