@@ -175,11 +175,11 @@ const bestValueFlight = useMemo(() => {
 
 After implementation:
 
-- [ ] Search form navigates to `/flights/results` (not `/flights/live`)
-- [ ] When API returns results: QuickStatsBar shows Cheapest/Fastest/Best Value
-- [ ] Each flight card shows partner attribution when available
-- [ ] When API is pending: Enhanced ApiPendingNotice with partner comparison messaging
-- [ ] "View Live Results" opens white label URL with marker 700031 in new tab
+- [x] Search form navigates to `/flights/results` (not `/flights/live`)
+- [x] When API returns results: QuickStatsBar shows Cheapest/Fastest/Best Value
+- [x] Each flight card shows partner attribution when available
+- [x] When API is pending: Enhanced ApiPendingNotice with partner comparison messaging
+- [x] "View Live Results" opens white label URL with marker 700031 in new tab
 - [ ] All filter functionality preserved (stops, airlines, price, time)
 - [ ] Trust/compliance disclosures visible
 - [ ] Cross-sell sections render below results
