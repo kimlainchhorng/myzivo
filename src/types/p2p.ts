@@ -85,7 +85,7 @@ export interface VehicleWithOwner extends P2PVehicle {
 }
 
 // Booking with partial vehicle/owner for list views
-export interface BookingWithDetails extends Omit<P2PBooking, 'vehicle' | 'owner'> {
+export interface BookingWithDetails extends P2PBooking {
   vehicle?: Partial<P2PVehicle> & {
     id: string;
     make: string;

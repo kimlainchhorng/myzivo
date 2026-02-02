@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useCarOwnerProfile } from "@/hooks/useCarOwner";
+import StripeConnectButton from "@/components/p2p/StripeConnectButton";
 import { useOwnerEarnings, useOwnerPayouts, getPayoutStatusBadge } from "@/hooks/useP2PPayment";
 import { formatPrice } from "@/lib/currency";
 import { Link } from "react-router-dom";
@@ -137,29 +138,27 @@ export default function OwnerPayouts() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {ownerProfile?.stripe_account_id ? (
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                  <div>
-                    <p className="font-medium">Stripe Connect Account</p>
-                    <p className="text-sm text-muted-foreground">
-                      Account ID: {ownerProfile.stripe_account_id.slice(0, 10)}...
-                    </p>
-                  </div>
-                  <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
-                    Connected
-                  </Badge>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Wallet className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    No payout account connected. Contact support to set up payouts.
+            {ownerProfile?.stripe_account_id && ownerProfile?.payout_enabled ? (
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                <div>
+                  <p className="font-medium">Stripe Connect Account</p>
+                  <p className="text-sm text-muted-foreground">
+                    Account ID: {ownerProfile.stripe_account_id.slice(0, 10)}...
                   </p>
-                  <Button variant="outline" disabled>
-                    Connect Bank Account (Coming Soon)
-                  </Button>
                 </div>
-              )}
+                <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                  Connected
+                </Badge>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Wallet className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  Connect your Stripe account to receive payouts directly to your bank.
+                </p>
+                <StripeConnectButton />
+              </div>
+            )}
             </CardContent>
           </Card>
 
