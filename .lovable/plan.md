@@ -1,288 +1,343 @@
 
+# Beta Launch Checklist Implementation Plan
 
-# ZIVO Website + Web App Finalization Plan
-
-## Executive Summary
-This plan consolidates and aligns the existing ZIVO platform into a unified, production-ready system with proper role-based access control, clear route organization, and beta/launch controls.
-
----
-
-## Phase 1: Public Website Routes
-
-### 1.1 Create `/cars` Route (Public Vehicle Browse)
-- Add new route `/cars` that renders a public-facing vehicle search page
-- Reuse existing `P2PVehicleSearch` component with modifications:
-  - Remove login-required features
-  - "Book Now" buttons redirect to login if not authenticated
-  - SEO-optimized metadata
-
-### 1.2 Create `/rent` Route (How It Works for Renters)
-- New marketing page explaining the rental process for renters
-- Sections: How to rent, verification process, insurance coverage, pricing transparency
-- CTAs redirect to login/signup with redirect state to `/renter/dashboard`
-
-### 1.3 Add Missing Website Routes
-Routes to add (all public, no login required):
-```text
-/cars              → Public vehicle browse
-/rent              → How renting works (for renters)
-/list-your-car     → Already exists ✓
-/insurance         → Already exists ✓
-/terms/renter      → Already exists ✓
-/terms/owner       → Already exists ✓
-/damage-policy     → Already exists ✓
-```
+## Overview
+Add a comprehensive day-by-day beta launch checklist that guides admins through a safe, controlled beta launch. This will be a new admin module accessible via the existing Admin Panel navigation.
 
 ---
 
-## Phase 2: Renter Web App Routes
+## Database Schema
 
-### 2.1 Create Renter Dashboard Structure
-New routes (all protected, require authentication):
-```text
-/renter/dashboard      → Main renter dashboard (bookings summary, verification status)
-/renter/bookings       → Full booking history (reuse RenterTrips logic)
-/renter/verification   → Redirect to /verify/driver
+### New Table: `beta_launch_status`
+Tracks the overall beta launch state and history.
+
+```sql
+CREATE TYPE beta_launch_state AS ENUM ('not_ready', 'ready_for_beta', 'beta_live', 'paused');
+
+CREATE TABLE beta_launch_status (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  status beta_launch_state NOT NULL DEFAULT 'not_ready',
+  activated_at TIMESTAMPTZ,
+  paused_at TIMESTAMPTZ,
+  notes TEXT,
+  activated_by UUID REFERENCES auth.users(id),
+  paused_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE beta_launch_status ENABLE ROW LEVEL SECURITY;
+
+-- Admin-only policies
+CREATE POLICY "Admins can read beta launch status"
+  ON beta_launch_status FOR SELECT TO authenticated
+  USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins can update beta launch status"
+  ON beta_launch_status FOR UPDATE TO authenticated
+  USING (public.is_admin(auth.uid()));
+
+-- Insert initial row
+INSERT INTO beta_launch_status (status, notes) 
+VALUES ('not_ready', 'Initial state');
 ```
 
-### 2.2 Renter Dashboard Page
-Create `src/pages/renter/RenterDashboard.tsx`:
-- Show verification status banner prominently if not verified
-- Quick stats: upcoming trips, past trips, saved cars
-- CTA to search cars or complete verification
-- Navigation to bookings and verification
+### New Table: `beta_launch_checklist`
+Stores the checklist state for each day's items.
 
-### 2.3 Renter Bookings Page
-Create `src/pages/renter/RenterBookings.tsx`:
-- Full booking management (extract logic from RenterTrips)
-- Filter by status (upcoming, active, past)
-- Booking details with vehicle/owner info
+```sql
+CREATE TABLE beta_launch_checklist (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  
+  -- Day 1: Platform Check
+  day1_homepage_loads BOOLEAN DEFAULT false,
+  day1_cars_page_loads BOOLEAN DEFAULT false,
+  day1_list_car_page_loads BOOLEAN DEFAULT false,
+  day1_login_works BOOLEAN DEFAULT false,
+  day1_owner_routing_works BOOLEAN DEFAULT false,
+  day1_renter_routing_works BOOLEAN DEFAULT false,
+  day1_admin_routing_works BOOLEAN DEFAULT false,
+  day1_footer_links_work BOOLEAN DEFAULT false,
+  day1_completed_at TIMESTAMPTZ,
+  day1_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 2: Payments & Insurance
+  day2_stripe_test_payment BOOLEAN DEFAULT false,
+  day2_stripe_connect_payout BOOLEAN DEFAULT false,
+  day2_commission_deducted BOOLEAN DEFAULT false,
+  day2_insurance_disclosure_visible BOOLEAN DEFAULT false,
+  day2_completed_at TIMESTAMPTZ,
+  day2_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 3: Owner Flow
+  day3_owner_signup_works BOOLEAN DEFAULT false,
+  day3_vehicle_upload_works BOOLEAN DEFAULT false,
+  day3_2018_rule_enforced BOOLEAN DEFAULT false,
+  day3_admin_approval_works BOOLEAN DEFAULT false,
+  day3_owner_dashboard_shows_data BOOLEAN DEFAULT false,
+  day3_completed_at TIMESTAMPTZ,
+  day3_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 4: Renter Flow
+  day4_renter_signup_works BOOLEAN DEFAULT false,
+  day4_license_verification_works BOOLEAN DEFAULT false,
+  day4_booking_blocked_without_verification BOOLEAN DEFAULT false,
+  day4_confirmation_email_works BOOLEAN DEFAULT false,
+  day4_completed_at TIMESTAMPTZ,
+  day4_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 5: Disputes & Failsafes
+  day5_damage_report_works BOOLEAN DEFAULT false,
+  day5_dispute_panel_loads BOOLEAN DEFAULT false,
+  day5_payout_hold_works BOOLEAN DEFAULT false,
+  day5_cancellation_works BOOLEAN DEFAULT false,
+  day5_completed_at TIMESTAMPTZ,
+  day5_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 6: City Launch Control
+  day6_city_status_live BOOLEAN DEFAULT false,
+  day6_only_live_city_cars_shown BOOLEAN DEFAULT false,
+  day6_non_live_cities_blocked BOOLEAN DEFAULT false,
+  day6_waitlist_shown_when_beta BOOLEAN DEFAULT false,
+  day6_completed_at TIMESTAMPTZ,
+  day6_completed_by UUID REFERENCES auth.users(id),
+  
+  -- Day 7: Beta Go Live
+  day7_first_renters_invited BOOLEAN DEFAULT false,
+  day7_bookings_enabled BOOLEAN DEFAULT false,
+  day7_first_transaction_monitored BOOLEAN DEFAULT false,
+  day7_support_contact_visible BOOLEAN DEFAULT false,
+  day7_completed_at TIMESTAMPTZ,
+  day7_completed_by UUID REFERENCES auth.users(id),
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
 
-### 2.4 Verification Gate Logic
-Update booking flow (`P2PVehicleDetail`, `P2PBookingConfirmation`):
-- Check `useIsRenterVerified()` before allowing booking
-- Show "Complete Verification First" banner with link to `/verify/driver`
-- Block booking confirmation if not verified
+-- Enable RLS
+ALTER TABLE beta_launch_checklist ENABLE ROW LEVEL SECURITY;
 
----
+-- Admin-only policies
+CREATE POLICY "Admins can read beta checklist"
+  ON beta_launch_checklist FOR SELECT TO authenticated
+  USING (public.is_admin(auth.uid()));
 
-## Phase 3: Owner Web App Enhancement
+CREATE POLICY "Admins can update beta checklist"
+  ON beta_launch_checklist FOR UPDATE TO authenticated
+  USING (public.is_admin(auth.uid()));
 
-### 3.1 Owner Routes (Already Exist - Minor Cleanup)
-Current routes are correct:
-```text
-/owner/dashboard     → OwnerDashboard ✓
-/owner/cars          → OwnerCars ✓
-/owner/bookings      → OwnerBookings ✓
-/owner/payouts       → OwnerPayouts ✓
+-- Insert initial row
+INSERT INTO beta_launch_checklist DEFAULT VALUES;
 ```
-
-### 3.2 Add Missing Owner Earnings Route
-Create `/owner/earnings` route:
-- Either create new `OwnerEarnings.tsx` or redirect to `/owner/payouts`
-- Show earnings breakdown, commission deductions, payout history
-
-### 3.3 Owner Status Gate
-Enhance `OwnerDashboard` and owner routes:
-- Already shows pending/rejected status ✓
-- Block vehicle creation until verified ✓
-- Add Stripe Connect requirement check before payout release
-
----
-
-## Phase 4: Admin Web App Routes
-
-### 4.1 Admin Route Mapping
-Current admin structure uses tabs in a single `/admin` route. For clarity, add dedicated URL routes:
-
-```text
-/admin                    → AdminDashboard (existing) ✓
-/admin/owners             → Navigate to P2P Owners tab
-/admin/renters            → Navigate to Renters tab
-/admin/cars               → Navigate to P2P Vehicles tab
-/admin/bookings           → Navigate to P2P Bookings tab
-/admin/payouts            → Navigate to P2P Payouts tab
-/admin/disputes           → Navigate to P2P Disputes tab
-/admin/launch-checklist   → Navigate to City Launch tab
-```
-
-### 4.2 Admin Deep Link Navigation
-Update `AdminDashboard.tsx` to:
-- Parse URL params to auto-select correct tab on load
-- Add URL sync when switching tabs (optional for UX)
-
----
-
-## Phase 5: Role-Based Route Protection
-
-### 5.1 Enhance ProtectedRoute Component
-Extend `ProtectedRoute.tsx` to support role-based access:
-
-```tsx
-type ProtectedRouteProps = {
-  children: React.ReactNode;
-  requireAdmin?: boolean;
-  requireOwner?: boolean;    // New: verified car owner
-  requireRenter?: boolean;   // New: any authenticated user (renter default)
-  allowAny?: boolean;        // New: any logged-in user
-};
-```
-
-### 5.2 Create Role Verification Hooks
-Extend `useUserAccess.ts` to include P2P roles:
-- `isVerifiedOwner`: Has verified `car_owner_profiles` entry
-- `isVerifiedRenter`: Has approved `renter_profiles` entry
-- Use existing `is_verified_car_owner()` and `is_verified_renter()` DB functions
-
-### 5.3 Apply Route Protection
-
-```tsx
-// Owner routes - require verified owner
-<Route path="/owner/dashboard" element={
-  <ProtectedRoute requireOwner>
-    <OwnerDashboard />
-  </ProtectedRoute>
-} />
-
-// Renter routes - require authentication (verification checked within pages)
-<Route path="/renter/dashboard" element={
-  <ProtectedRoute>
-    <RenterDashboard />
-  </ProtectedRoute>
-} />
-
-// Admin routes - require admin role (already implemented) ✓
-```
-
----
-
-## Phase 6: Auth Flow & Role-Based Redirect
-
-### 6.1 Post-Login Redirect Logic
-Update `AuthCallback.tsx` and login success handlers:
-
-```tsx
-// After successful login:
-const { isAdmin, isVerifiedOwner, isVerifiedRenter } = useUserAccess(user.id);
-
-if (isAdmin) {
-  navigate("/admin");
-} else if (isVerifiedOwner) {
-  navigate("/owner/dashboard");
-} else if (isVerifiedRenter) {
-  navigate("/renter/dashboard");
-} else {
-  navigate("/"); // Default to home for new users
-}
-```
-
-### 6.2 Preserve Intended Destination
-Keep existing `location.state.from` logic so users return to their intended page after login.
-
----
-
-## Phase 7: Global UI & Environment Badge
-
-### 7.1 Beta Badge Component
-Create `BetaEnvironmentBadge.tsx`:
-- Fetch `useP2PBetaSettings()`
-- If `betaMode === true`, show "Private Beta" badge in header
-- Consistent styling across website and web app
-
-### 7.2 Apply Badge to Headers
-- Add to `Header.tsx` (website)
-- Add to Owner dashboard header
-- Add to Renter dashboard header (when created)
-
-### 7.3 Consistent Layout
-- Public website: `Header` + content + `Footer` ✓
-- Web app dashboards: Custom header (with back nav) + content + no footer (app-style)
-
----
-
-## Phase 8: Launch Readiness Controls
-
-### 8.1 City-Based Launch Control
-Leverage existing `p2p_launch_cities` table:
-- Vehicles have `location_city` and `location_state`
-- Only show vehicles in "live" launch cities in search results
-- Block bookings for vehicles in non-live cities
-
-### 8.2 Renter Beta Gate
-Enhance `P2PVehicleSearch` and `P2PVehicleDetail`:
-
-```tsx
-const { data: betaSettings } = useRenterBetaSettings();
-
-if (betaSettings?.betaMode) {
-  // Check if user is on waitlist or has beta access
-  // If not, redirect to /beta/waitlist
-}
-```
-
-### 8.3 Waitlist Integration
-Current waitlist flow exists at `/beta/waitlist` ✓
-- Add admin control to grant beta access to specific users
-- Check `renter_waitlist` table for approved entries
 
 ---
 
 ## Files to Create
 
-| File | Description |
-|------|-------------|
-| `src/pages/Cars.tsx` | Public vehicle browse (wrapper for P2PVehicleSearch) |
-| `src/pages/HowToRent.tsx` | Marketing page for renter education |
-| `src/pages/renter/RenterDashboard.tsx` | Main renter dashboard |
-| `src/pages/renter/RenterBookings.tsx` | Full booking management |
-| `src/pages/owner/OwnerEarnings.tsx` | Earnings breakdown page |
-| `src/components/shared/BetaBadge.tsx` | Environment indicator component |
+### 1. `src/hooks/useBetaLaunchChecklist.ts`
+React Query hooks for managing the beta launch checklist.
+
+```typescript
+// Key exports:
+- useBetaLaunchStatus() - Fetch current beta status
+- useBetaChecklist() - Fetch checklist items
+- useUpdateChecklistItem() - Toggle individual items
+- useUpdateBetaStatus() - Change overall status
+- useBetaLaunchProgress() - Calculate completion percentage
+```
+
+### 2. `src/types/betaLaunch.ts`
+TypeScript types for the beta launch feature.
+
+```typescript
+export type BetaLaunchState = 'not_ready' | 'ready_for_beta' | 'beta_live' | 'paused';
+
+export interface BetaLaunchStatus {
+  id: string;
+  status: BetaLaunchState;
+  activated_at: string | null;
+  paused_at: string | null;
+  notes: string | null;
+}
+
+export interface BetaChecklist {
+  // Day 1-7 fields
+}
+
+export interface DayProgress {
+  day: number;
+  title: string;
+  description: string;
+  completed: number;
+  total: number;
+  isComplete: boolean;
+  completedAt?: string;
+  completedBy?: string;
+}
+```
+
+### 3. `src/pages/admin/modules/AdminBetaLaunchModule.tsx`
+Main admin module component with the full checklist UI.
+
+**Layout:**
+- Status banner at top (Not Ready / Ready for Beta / Beta Live / Paused)
+- Progress overview (7 days, completion %)
+- Day-by-day accordion sections with checkboxes
+- Action buttons: "Mark Beta as LIVE", "Pause Beta"
+- Notes/history section
+
+---
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add new routes, update protection |
-| `src/components/auth/ProtectedRoute.tsx` | Add owner/renter role checks |
-| `src/hooks/useUserAccess.ts` | Add P2P role detection |
-| `src/pages/AuthCallback.tsx` | Add role-based redirect |
-| `src/components/Header.tsx` | Add beta badge |
-| `src/pages/p2p/P2PVehicleDetail.tsx` | Add verification gate |
-| `src/pages/admin/AdminDashboard.tsx` | Add URL-based tab navigation |
+### 1. `src/pages/admin/AdminPanel.tsx`
+Add new navigation item and module rendering.
+
+```typescript
+// Add to navItems array:
+{ id: "beta-launch", label: "Beta Launch", icon: Rocket }
+
+// Add to renderModule switch:
+case "beta-launch":
+  return <AdminBetaLaunchModule />;
+```
+
+---
+
+## UI Component Structure
+
+### Status Banner
+Displays current beta state with color coding:
+- **Not Ready** - Gray/muted
+- **Ready for Beta** - Yellow/amber
+- **Beta Live** - Green
+- **Paused** - Orange/red
+
+### Day Cards (Accordion)
+Each day shows:
+- Day number and title
+- Progress indicator (3/5 items complete)
+- Expandable checklist items
+- Completion timestamp when all items checked
+
+### Checklist Items
+Each item is a checkbox with:
+- Item description
+- Optional tooltip/help text
+- Auto-saves on toggle
+- Shows who completed it (admin email)
+
+### Action Buttons
+- **Mark Beta as LIVE** - Only enabled when all 7 days complete
+- **Pause Beta** - Emergency stop, captures reason
+- **Resume Beta** - Restores from paused state
+
+---
+
+## Day-by-Day Checklist Details
+
+### Day 1: Platform Check
+| Item | Database Field |
+|------|----------------|
+| Website homepage loads correctly | `day1_homepage_loads` |
+| /cars page loads correctly | `day1_cars_page_loads` |
+| /list-your-car page loads correctly | `day1_list_car_page_loads` |
+| Login/signup works | `day1_login_works` |
+| Owner routes correctly to /owner/dashboard | `day1_owner_routing_works` |
+| Renter routes correctly to /renter/dashboard | `day1_renter_routing_works` |
+| Admin routes correctly to /admin | `day1_admin_routing_works` |
+| Footer legal links work (Terms, Privacy, etc.) | `day1_footer_links_work` |
+
+### Day 2: Payments & Insurance
+| Item | Database Field |
+|------|----------------|
+| Stripe test payment completed | `day2_stripe_test_payment` |
+| Stripe Connect owner payout tested | `day2_stripe_connect_payout` |
+| Commission deducted correctly (20%) | `day2_commission_deducted` |
+| Insurance disclosure visible at checkout | `day2_insurance_disclosure_visible` |
+
+### Day 3: Owner Flow Test
+| Item | Database Field |
+|------|----------------|
+| Owner signup works | `day3_owner_signup_works` |
+| Vehicle upload works | `day3_vehicle_upload_works` |
+| 2018+ rule enforced | `day3_2018_rule_enforced` |
+| Admin approval works | `day3_admin_approval_works` |
+| Owner dashboard shows car & earnings | `day3_owner_dashboard_shows_data` |
+
+### Day 4: Renter Flow Test
+| Item | Database Field |
+|------|----------------|
+| Renter signup works | `day4_renter_signup_works` |
+| Driver license verification works | `day4_license_verification_works` |
+| Booking blocked until verification approved | `day4_booking_blocked_without_verification` |
+| Booking confirmation email works | `day4_confirmation_email_works` |
+
+### Day 5: Disputes & Failsafes
+| Item | Database Field |
+|------|----------------|
+| Damage report submission works | `day5_damage_report_works` |
+| Admin dispute panel loads | `day5_dispute_panel_loads` |
+| Payout hold works when dispute exists | `day5_payout_hold_works` |
+| Booking cancellation works | `day5_cancellation_works` |
+
+### Day 6: City Launch Control
+| Item | Database Field |
+|------|----------------|
+| City launch status set to LIVE | `day6_city_status_live` |
+| Only LIVE city cars appear in search | `day6_only_live_city_cars_shown` |
+| Non-live cities blocked | `day6_non_live_cities_blocked` |
+| Waitlist shown when renter beta mode is ON | `day6_waitlist_shown_when_beta` |
+
+### Day 7: Beta Go Live
+| Item | Database Field |
+|------|----------------|
+| First renters invited | `day7_first_renters_invited` |
+| Bookings enabled | `day7_bookings_enabled` |
+| First transactions monitored | `day7_first_transaction_monitored` |
+| Support contact visible | `day7_support_contact_visible` |
+
+---
+
+## Route Structure
+
+No separate route needed. The beta launch checklist will be accessible as a module within the existing `/admin` route via the sidebar navigation, similar to other admin modules like "City Launch" and "Renter Invites".
+
+Optional: Add `/admin/beta-launch` as an alias that auto-selects this module.
 
 ---
 
 ## Technical Notes
 
-### Role Hierarchy
-```text
-Admin → Full access, can override all
-Owner → Access to owner portal (requires verified status for actions)
-Renter → Access to renter portal, booking requires verification
-Guest → Public pages only
+### Status Transitions
+```
+not_ready -> ready_for_beta (when all days complete)
+ready_for_beta -> beta_live (admin clicks "Mark Beta as LIVE")
+beta_live -> paused (admin clicks "Pause Beta")
+paused -> beta_live (admin clicks "Resume Beta")
 ```
 
-### Existing Database Functions to Use
-- `is_admin(user_uuid)` - Check admin role
-- `is_verified_car_owner(user_uuid)` - Check verified owner
-- `is_verified_renter(user_uuid)` - Check verified renter
+### Computed Progress
+The module will calculate overall progress by counting completed items across all 7 days. Each day can also show individual progress (e.g., "Day 1: 6/8 complete").
 
-### Security Considerations
-- All role checks happen server-side via RLS policies
-- Client-side checks are for UX only (show/hide UI)
-- Never trust client role state for authorization
+### Audit Trail
+Completion timestamps and user IDs are captured for each day to maintain an audit trail of who verified each section.
+
+### Integration with Existing Systems
+- Reads city launch status from `p2p_launch_cities` table
+- Reads beta mode from `system_settings` table  
+- Reads renter invite counts from `p2p_renter_invites` table
+- Can link to existing admin modules for quick access
 
 ---
 
-## Testing Checklist
+## Summary
 
-After implementation:
-1. Guest can browse `/cars` and `/rent` without login
-2. Login redirects to appropriate dashboard based on role
-3. Owner cannot access renter dashboard and vice versa
-4. Admin can access all areas
-5. Beta badge shows when beta mode is enabled
-6. Bookings blocked for non-verified renters
-7. Vehicles only show in live cities
-8. Waitlist page appears when renter beta mode is on
-
+This implementation adds a focused, day-by-day beta launch checklist that:
+1. Uses the existing admin panel infrastructure
+2. Stores checklist state in the database with proper RLS
+3. Provides clear status visibility (Not Ready / Ready / Live / Paused)
+4. Includes emergency pause functionality
+5. Maintains an audit trail of who completed each section
+6. Integrates with existing city launch and beta invite systems
