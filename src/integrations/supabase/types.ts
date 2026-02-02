@@ -1881,6 +1881,66 @@ export type Database = {
           },
         ]
       }
+      driver_notification_logs: {
+        Row: {
+          body: string | null
+          data: Json | null
+          delivered_at: string | null
+          driver_id: string
+          error_message: string | null
+          failed_at: string | null
+          id: string
+          notification_type: string
+          opened_at: string | null
+          platform: string | null
+          sent_at: string | null
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          driver_id: string
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          notification_type: string
+          opened_at?: string | null
+          platform?: string | null
+          sent_at?: string | null
+          title: string
+        }
+        Update: {
+          body?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          driver_id?: string
+          error_message?: string | null
+          failed_at?: string | null
+          id?: string
+          notification_type?: string
+          opened_at?: string | null
+          platform?: string | null
+          sent_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_notification_logs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_notification_logs_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_notifications: {
         Row: {
           action_url: string | null
@@ -2304,18 +2364,24 @@ export type Database = {
       }
       drivers: {
         Row: {
+          apns_token: string | null
           avatar_url: string | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
+          device_platform: string | null
           documents_verified: boolean | null
+          eats_enabled: boolean | null
           email: string
+          fcm_token: string | null
           full_name: string
           id: string
           is_online: boolean | null
           license_number: string
+          move_enabled: boolean | null
           phone: string
           rating: number | null
+          rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
           total_trips: number | null
           updated_at: string
@@ -2325,18 +2391,24 @@ export type Database = {
           vehicle_type: string
         }
         Insert: {
+          apns_token?: string | null
           avatar_url?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
+          device_platform?: string | null
           documents_verified?: boolean | null
+          eats_enabled?: boolean | null
           email: string
+          fcm_token?: string | null
           full_name: string
           id?: string
           is_online?: boolean | null
           license_number: string
+          move_enabled?: boolean | null
           phone: string
           rating?: number | null
+          rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           total_trips?: number | null
           updated_at?: string
@@ -2346,18 +2418,24 @@ export type Database = {
           vehicle_type: string
         }
         Update: {
+          apns_token?: string | null
           avatar_url?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
+          device_platform?: string | null
           documents_verified?: boolean | null
+          eats_enabled?: boolean | null
           email?: string
+          fcm_token?: string | null
           full_name?: string
           id?: string
           is_online?: boolean | null
           license_number?: string
+          move_enabled?: boolean | null
           phone?: string
           rating?: number | null
+          rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           total_trips?: number | null
           updated_at?: string
@@ -3035,6 +3113,9 @@ export type Database = {
           delivery_fee: number | null
           delivery_lat: number
           delivery_lng: number
+          delivery_photo_url: string | null
+          delivery_pin: string | null
+          delivery_pin_verified: boolean | null
           driver_id: string | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
@@ -3078,6 +3159,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_lat: number
           delivery_lng: number
+          delivery_photo_url?: string | null
+          delivery_pin?: string | null
+          delivery_pin_verified?: boolean | null
           driver_id?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -3121,6 +3205,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_lat?: number
           delivery_lng?: number
+          delivery_photo_url?: string | null
+          delivery_pin?: string | null
+          delivery_pin_verified?: boolean | null
           driver_id?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -4941,6 +5028,111 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      package_deliveries: {
+        Row: {
+          accepted_at: string | null
+          actual_payout: number | null
+          cancelled_at: string | null
+          created_at: string | null
+          customer_id: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          delivered_at: string | null
+          delivery_photo_url: string | null
+          delivery_speed: string | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_lat: number
+          dropoff_lng: number
+          estimated_payout: number | null
+          id: string
+          notes: string | null
+          package_contents: string | null
+          package_size: string | null
+          package_weight: number | null
+          picked_up_at: string | null
+          pickup_address: string
+          pickup_lat: number
+          pickup_lng: number
+          pickup_photo_url: string | null
+          signature_url: string | null
+          status: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          actual_payout?: number | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_photo_url?: string | null
+          delivery_speed?: string | null
+          driver_id?: string | null
+          dropoff_address: string
+          dropoff_lat: number
+          dropoff_lng: number
+          estimated_payout?: number | null
+          id?: string
+          notes?: string | null
+          package_contents?: string | null
+          package_size?: string | null
+          package_weight?: number | null
+          picked_up_at?: string | null
+          pickup_address: string
+          pickup_lat: number
+          pickup_lng: number
+          pickup_photo_url?: string | null
+          signature_url?: string | null
+          status?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          actual_payout?: number | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          delivered_at?: string | null
+          delivery_photo_url?: string | null
+          delivery_speed?: string | null
+          driver_id?: string | null
+          dropoff_address?: string
+          dropoff_lat?: number
+          dropoff_lng?: number
+          estimated_payout?: number | null
+          id?: string
+          notes?: string | null
+          package_contents?: string | null
+          package_size?: string | null
+          package_weight?: number | null
+          picked_up_at?: string | null
+          pickup_address?: string
+          pickup_lat?: number
+          pickup_lng?: number
+          pickup_photo_url?: string | null
+          signature_url?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "package_deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "package_deliveries_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
         ]
@@ -8001,6 +8193,7 @@ export type Database = {
           pickup_lng: number
           rating: number | null
           rider_id: string | null
+          service_type: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id: string | null
@@ -8028,6 +8221,7 @@ export type Database = {
           pickup_lng: number
           rating?: number | null
           rider_id?: string | null
+          service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
@@ -8055,6 +8249,7 @@ export type Database = {
           pickup_lng?: number
           rating?: number | null
           rider_id?: string | null
+          service_type?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
