@@ -4,7 +4,7 @@
  * ZIVO is NOT an OTA - all bookings on partner sites
  */
 
-import { Plane, Clock, ExternalLink, Wifi, Utensils, Monitor, Luggage, Zap, AlertTriangle } from "lucide-react";
+import { Plane, Clock, ExternalLink, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export interface FlightCardData {
   isRealPrice?: boolean;
   isBestPrice?: boolean;
   isFastest?: boolean;
+  isBestValue?: boolean;
   partnerName?: string;
   priceUpdated?: boolean; // True if price differs >10% from cached
 }
@@ -58,18 +59,31 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
     return null;
   };
 
+  // Parse baggage info for display
+  const getBaggageDisplay = () => {
+    const baggage = flight.baggageIncluded?.toLowerCase() || "";
+    return {
+      personalItem: true, // Always included
+      carryOn: baggage.includes("carry") || baggage.includes("cabin") || !baggage.includes("no"),
+      checkedBag: baggage.includes("check") || baggage.includes("23kg") || baggage.includes("included"),
+    };
+  };
+
+  const baggageInfo = getBaggageDisplay();
+
   return (
     <Card
       className={cn(
         "overflow-hidden transition-all duration-200",
         "hover:shadow-lg hover:shadow-sky-500/10 hover:border-sky-500/30",
         flight.isBestPrice && "ring-2 ring-emerald-500/50",
-        flight.isFastest && !flight.isBestPrice && "ring-2 ring-purple-500/50",
+        flight.isBestValue && !flight.isBestPrice && "ring-2 ring-amber-500/50",
+        flight.isFastest && !flight.isBestPrice && !flight.isBestValue && "ring-2 ring-purple-500/50",
         className
       )}
     >
       {/* Top badges row */}
-      {(flight.isBestPrice || flight.isFastest || flight.isRealPrice || flight.priceUpdated) && (
+      {(flight.isBestPrice || flight.isFastest || flight.isBestValue || flight.isRealPrice || flight.priceUpdated) && (
         <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {flight.priceUpdated && (
             <Badge className="bg-amber-500/20 text-amber-500 text-[10px] gap-1">
@@ -78,10 +92,15 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           )}
           {flight.isBestPrice && !flight.priceUpdated && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              Lowest Found
+              💰 Cheapest
             </Badge>
           )}
-          {flight.isFastest && !flight.isBestPrice && (
+          {flight.isBestValue && !flight.isBestPrice && (
+            <Badge className="bg-amber-500 text-white text-[10px] gap-1">
+              <Star className="w-3 h-3" /> Best Value
+            </Badge>
+          )}
+          {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
             <Badge className="bg-purple-500 text-white text-[10px] gap-1">
               <Clock className="w-3 h-3" /> Fastest
             </Badge>
@@ -114,9 +133,7 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold truncate text-sm">
-                {flight.airline} <span className="text-muted-foreground font-normal">({flight.airlineCode})</span>
-              </p>
+              <p className="font-semibold truncate text-sm">{flight.airline}</p>
               <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
               <p className="text-xs text-muted-foreground capitalize mt-0.5">{flight.cabinClass}</p>
             </div>
@@ -174,9 +191,34 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
               </p>
             )}
 
+            {/* Baggage Icons Row */}
+            <div className="flex items-center justify-center gap-4 mt-3">
+              <div className={cn(
+                "flex items-center gap-1 text-xs",
+                baggageInfo.personalItem ? "text-emerald-600" : "text-muted-foreground/50 line-through"
+              )}>
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Personal</span>
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 text-xs",
+                baggageInfo.carryOn ? "text-emerald-600" : "text-muted-foreground/50 line-through"
+              )}>
+                <Package className="w-3.5 h-3.5" />
+                <span>Carry-on</span>
+              </div>
+              <div className={cn(
+                "flex items-center gap-1 text-xs",
+                baggageInfo.checkedBag ? "text-emerald-600" : "text-muted-foreground/50 line-through"
+              )}>
+                <Luggage className="w-3.5 h-3.5" />
+                <span>Checked</span>
+              </div>
+            </div>
+
             {/* Amenities row */}
             {flight.amenities && flight.amenities.length > 0 && (
-              <div className="flex items-center justify-center gap-4 mt-3 text-muted-foreground">
+              <div className="flex items-center justify-center gap-4 mt-2 text-muted-foreground">
                 {flight.amenities.slice(0, 4).map((amenity, idx) => {
                   const icon = getAmenityIcon(amenity);
                   if (!icon) return null;
@@ -191,7 +233,7 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           </div>
 
           {/* RIGHT: Price & CTA Section */}
-          <div className="p-4 lg:py-5 lg:px-5 lg:w-48 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
+          <div className="p-4 lg:py-5 lg:px-5 lg:w-52 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
             <div className="text-left lg:text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-500">
@@ -209,8 +251,8 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                 </p>
               )}
               {/* Trust micro-copy */}
-              <p className="text-[9px] text-emerald-600 mt-1 hidden lg:block">
-                Final price confirmed by partner
+              <p className="text-[9px] text-emerald-600 mt-1">
+                Final price confirmed by airline partner
               </p>
             </div>
 

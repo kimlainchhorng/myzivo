@@ -1,14 +1,15 @@
 /**
  * Flight Empty State Component
  * Shown when no results match current search/filters
- * Suggests alternate dates and nearby airports
+ * Suggests alternate dates, nearby airports, and partner fallback
  */
 
-import { Plane, Calendar, MapPin, RefreshCw, ArrowRight } from "lucide-react";
+import { Plane, Calendar, MapPin, RefreshCw, ArrowRight, Users, ExternalLink, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 interface FlightEmptyStateProps {
   origin?: string;
@@ -37,6 +38,16 @@ const getNearbyAirports = (iata: string): { code: string; name: string }[] => {
     'SFO': [
       { code: 'OAK', name: 'Oakland' },
       { code: 'SJC', name: 'San Jose' },
+    ],
+    'MIA': [
+      { code: 'FLL', name: 'Fort Lauderdale' },
+      { code: 'PBI', name: 'Palm Beach' },
+    ],
+    'DFW': [
+      { code: 'DAL', name: 'Love Field' },
+    ],
+    'DEN': [
+      { code: 'COS', name: 'Colorado Springs' },
     ],
   };
   return nearby[iata] || [];
@@ -71,30 +82,67 @@ export default function FlightEmptyState({
   const nearbyDestination = getNearbyAirports(destination);
   const alternateDates = getAlternateDates();
 
+  const handleSearchPartner = () => {
+    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+  };
+
+  // Tips based on filter state
+  const tips = hasActiveFilters
+    ? [
+        "Remove some filters to see more options",
+        "Allow 1+ stops instead of nonstop only",
+        "Include more departure times",
+        "Increase your price range",
+      ]
+    : [
+        "Try nearby airports (e.g., EWR instead of JFK)",
+        "Use flexible dates (+/- 3 days)",
+        "Consider fewer passengers",
+        "Check for alternative routes with connections",
+      ];
+
   return (
     <Card className={cn("overflow-hidden", className)}>
       <CardContent className="p-8">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-6">
-            <Plane className="w-10 h-10 text-muted-foreground/50" />
+          <div className="w-20 h-20 rounded-2xl bg-sky-500/10 flex items-center justify-center mx-auto mb-6">
+            <Plane className="w-10 h-10 text-sky-500" />
           </div>
-          <h2 className="text-xl font-bold mb-2">No flights found</h2>
+          <h2 className="text-xl font-bold mb-2">
+            {hasActiveFilters ? "No flights match your filters" : "No flights found"}
+          </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             {hasActiveFilters 
-              ? "No flights match your current filters. Try adjusting your filters or search criteria."
-              : "We couldn't find any flights for your search. Try nearby airports or different dates."}
+              ? "Try adjusting your filters to see more results."
+              : `We couldn't find any flights${origin && destination ? ` from ${origin} to ${destination}` : ""}. Try the suggestions below.`}
           </p>
         </div>
 
         {/* Clear filters button */}
         {hasActiveFilters && onClearFilters && (
           <div className="flex justify-center mb-6">
-            <Button variant="outline" onClick={onClearFilters} className="gap-2">
+            <Button onClick={onClearFilters} className="gap-2 bg-sky-500 hover:bg-sky-600">
               <RefreshCw className="w-4 h-4" />
-              Clear all filters
+              Clear All Filters
             </Button>
           </div>
         )}
+
+        {/* Tips Section */}
+        <div className="bg-muted/30 rounded-xl p-5 max-w-lg mx-auto mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-5 h-5 text-amber-500" />
+            <h3 className="font-semibold text-sm">Tips to find more flights</h3>
+          </div>
+          <ul className="space-y-2">
+            {tips.map((tip, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                <span className="text-sky-500">•</span>
+                {tip}
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
           {/* Try alternate dates */}
@@ -102,7 +150,7 @@ export default function FlightEmptyState({
             <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="w-5 h-5 text-sky-500" />
-                <h3 className="font-semibold text-sm">Try alternate dates</h3>
+                <h3 className="font-semibold text-sm">Try flexible dates</h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 {alternateDates.map((date) => (
@@ -159,16 +207,34 @@ export default function FlightEmptyState({
           )}
         </div>
 
-        {/* New search CTA */}
-        <div className="flex justify-center mt-8">
+        {/* Action buttons */}
+        <div className="flex flex-wrap justify-center gap-3 mt-8">
           <Button 
             onClick={onNewSearch}
-            className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+            variant="outline"
+            className="gap-2"
           >
             <Plane className="w-4 h-4" />
-            New Search
-            <ArrowRight className="w-4 h-4" />
+            Modify Search
           </Button>
+        </div>
+
+        {/* Partner Fallback CTA */}
+        <div className="max-w-md mx-auto mt-8 p-5 rounded-xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
+          <p className="text-sm text-muted-foreground mb-3 text-center">
+            Search 728+ airlines with our trusted partner
+          </p>
+          <Button
+            onClick={handleSearchPartner}
+            className="w-full gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white min-h-[48px]"
+          >
+            <Plane className="w-4 h-4" />
+            Search Partner Site
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+          <p className="text-[10px] text-muted-foreground mt-2 text-center">
+            You will complete your booking on our partner's secure site.
+          </p>
         </div>
       </CardContent>
     </Card>
