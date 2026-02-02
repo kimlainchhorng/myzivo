@@ -30,6 +30,24 @@ const FlightLanding = () => {
   }>();
   const navigate = useNavigate();
 
+  // Map common SEO city slugs to valid IATA/city codes for partner search.
+  // (Aviasales/Jetradar supports city codes like NYC.)
+  const slugToIata: Record<string, string> = {
+    "new york": "NYC",
+    "new york city": "NYC",
+    "los angeles": "LAX",
+    "san francisco": "SFO",
+    "chicago": "CHI",
+    "miami": "MIA",
+    "atlanta": "ATL",
+    "dallas": "DFW",
+    "houston": "IAH",
+    "las vegas": "LAS",
+    "london": "LON",
+    "paris": "PAR",
+    "tokyo": "TYO",
+  };
+
   // Parse route parameter
   let from = "";
   let to = "";
@@ -49,9 +67,12 @@ const FlightLanding = () => {
   // Generate dynamic SEO content
   const { title, description, h1 } = formatRouteTitle(from, to);
 
-  // Extract IATA codes for pre-filling
-  const fromIata = from.match(/\(([A-Z]{3})\)/)?.[1] || from.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-  const toIata = to.match(/\(([A-Z]{3})\)/)?.[1] || to.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+  // Extract IATA/city codes for pre-filling (avoid generating invalid codes like "NEW").
+  const normalizeCityKey = (s: string) => s.trim().toLowerCase();
+  const fromIata =
+    from.match(/\(([A-Z]{3})\)/)?.[1] || slugToIata[normalizeCityKey(from)] || "";
+  const toIata =
+    to.match(/\(([A-Z]{3})\)/)?.[1] || slugToIata[normalizeCityKey(to)] || "";
 
   return (
     <div className="min-h-screen bg-background">
