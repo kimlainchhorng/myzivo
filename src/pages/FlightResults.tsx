@@ -607,7 +607,7 @@ const FlightResults = () => {
                       onClick={handleViewAllOnPartner}
                       className="hidden sm:flex bg-sky-500 hover:bg-sky-600 text-white gap-2"
                     >
-                      Search All Partners
+                      Continue to secure booking
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </div>

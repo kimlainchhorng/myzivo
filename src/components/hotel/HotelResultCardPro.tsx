@@ -212,21 +212,27 @@ export default function HotelResultCardPro({
                 <div>
                   {pricePerNight ? (
                     <>
-                      <p className="text-xs text-muted-foreground">From</p>
+                      <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wide">Estimated</p>
                       <p className="text-xl sm:text-2xl font-bold">
                         ${pricePerNight}
                         <span className="text-sm font-normal text-muted-foreground">* /night</span>
                       </p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 max-w-[120px] leading-tight">
+                        Indicative price. Final price confirmed on partner checkout.
+                      </p>
                     </>
                   ) : priceLevel ? (
                     <>
-                      <p className="text-xs text-muted-foreground">Price range</p>
+                      <p className="text-[10px] text-amber-500 font-medium">Estimated range</p>
                       <p className="text-lg font-bold text-amber-500">{priceLevel}</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5">
+                        Final price on partner site
+                      </p>
                     </>
                   ) : null}
                 </div>
 
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end gap-1.5">
                   <Button
                     onClick={handleBookClick}
                     className={cn(
@@ -235,10 +241,12 @@ export default function HotelResultCardPro({
                       "shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40"
                     )}
                   >
-                    View Deals
+                    Continue to secure booking
                     <ExternalLink className="w-4 h-4" />
                   </Button>
-                  <p className="text-[9px] text-muted-foreground">Opens partner site</p>
+                  <p className="text-[9px] text-muted-foreground text-right max-w-[140px] leading-tight">
+                    Powered by licensed travel partners · Final price confirmed before payment
+                  </p>
                 </div>
               </div>
             </div>
