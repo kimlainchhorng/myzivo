@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,12 +26,14 @@ import AdminClicksModule from "./modules/AdminClicksModule";
 import AdminCustomersModule from "./modules/AdminCustomersModule";
 import AdminSettingsModule from "./modules/AdminSettingsModule";
 import AdminFinanceModule from "./modules/AdminFinanceModule";
+import AdminRevenueAssumptionsModule from "./modules/AdminRevenueAssumptionsModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
   { id: "finance", label: "Finance", icon: DollarSign },
+  { id: "revenue-assumptions", label: "Revenue Assumptions", icon: Calculator },
   { id: "drivers", label: "Drivers", icon: Users },
   { id: "restaurants", label: "Restaurants", icon: Store },
   { id: "clicks", label: "Clicks", icon: MousePointerClick },
@@ -115,6 +117,8 @@ export default function AdminPanel() {
         return <AdminEatsModule />;
       case "finance":
         return <AdminFinanceModule />;
+      case "revenue-assumptions":
+        return <AdminRevenueAssumptionsModule />;
       case "drivers":
         return <AdminDriversModule />;
       case "restaurants":

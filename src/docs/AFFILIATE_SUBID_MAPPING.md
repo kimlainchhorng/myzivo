@@ -53,14 +53,30 @@ Activities: https://klook.tpo.li/ToVcOax7?subid=zivo_activities
 
 ---
 
-## Partner Commission Rates
+## Partner Commission Rates (Updated Feb 2, 2026)
 
-| Product | Partner | Commission Rate | Payment Terms |
-|---------|---------|-----------------|---------------|
-| Flights | Travelpayouts | Variable (0.5-3%) | Monthly, NET-30 |
-| Hotels | Travelpayouts | 4-8% | Monthly, NET-30 |
-| Car Rentals | Travelpayouts | 4-6% | Monthly, NET-30 |
-| Activities | Klook | 2-5% | Monthly, NET-30 |
+| Product | Commission Model | Rate | Base Case (Forecast) | Payment Terms |
+|---------|------------------|------|---------------------|---------------|
+| Flights | Fixed per booking | $3–$12 | $6 per booking | Monthly, NET-30 |
+| Hotels | Percentage | 4% | 4% of booking value | Monthly, NET-30 |
+| Car Rentals | Percentage | 2% | 2% of booking value | Monthly, NET-30 |
+| Activities | Percentage | 2-5% | 3% of booking value | Monthly, NET-30 |
+
+### Revenue Calculation Examples
+
+| Product | Booking Value | Calculation | Commission |
+|---------|--------------|-------------|------------|
+| Flights | N/A | Flat fee | $6 |
+| Hotels | $800 | $800 × 4% | $32 |
+| Car Rentals | $400 | $400 × 2% | $8 |
+
+### AOV Assumptions
+
+| Product | Min AOV | Max AOV | Base Case |
+|---------|---------|---------|-----------|
+| Flights | N/A | N/A | N/A (fixed per booking) |
+| Hotels | $700 | $900 | $800 |
+| Car Rentals | $300 | $450 | $400 |
 
 ---
 
