@@ -84,8 +84,26 @@ export interface VehicleWithOwner extends P2PVehicle {
   owner?: CarOwnerProfile;
 }
 
-// Booking with details
-export interface BookingWithDetails extends P2PBooking {
-  vehicle?: P2PVehicle;
-  owner?: CarOwnerProfile;
+// Booking with partial vehicle/owner for list views
+export interface BookingWithDetails extends Omit<P2PBooking, 'vehicle' | 'owner'> {
+  vehicle?: Partial<P2PVehicle> & {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    images?: unknown;
+    location_city?: string;
+    location_state?: string;
+    location_address?: string;
+    seats?: number;
+    transmission?: string;
+    fuel_type?: string;
+  };
+  owner?: Partial<CarOwnerProfile> & {
+    id: string;
+    full_name: string;
+    phone?: string;
+    email?: string;
+    rating?: number | null;
+  };
 }
