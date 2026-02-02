@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRenterProfile, useCreateRenterProfile } from "@/hooks/useRenterVerification";
 import RenterDocumentUpload from "@/components/verify/RenterDocumentUpload";
-import { US_STATES } from "@/types/renter";
+import { US_STATES, RenterProfileInput } from "@/types/renter";
 import type { RenterDocument } from "@/types/renter";
 
 // Validation schema for driver info
@@ -103,7 +103,14 @@ export default function RenterVerification() {
   const handleStep1Submit = async (data: DriverInfoForm) => {
     if (!profileId) {
       try {
-        const profile = await createProfile.mutateAsync(data);
+        const profileInput: RenterProfileInput = {
+          full_name: data.full_name,
+          date_of_birth: data.date_of_birth,
+          license_number: data.license_number,
+          license_state: data.license_state,
+          license_expiration: data.license_expiration,
+        };
+        const profile = await createProfile.mutateAsync(profileInput);
         setProfileId(profile.id);
         setStep(2);
       } catch {
