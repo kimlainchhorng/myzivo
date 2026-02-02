@@ -1,235 +1,193 @@
 
 
-# Implementation Plan: Proper Aviasales Flight Search API Integration
+# Phase 1 & 2: Aviasales White Label + API Fix Implementation
 
-## Overview
+## Current State Analysis
 
-This plan refactors the existing flight search implementation to properly follow the Aviasales API specification, including the critical **clicks endpoint** for generating booking links. The current implementation is functional but missing the proper deep link generation and some display polish.
+The codebase already has substantial implementation:
+- White label URL builder exists in both `FlightSearchFormPro.tsx` and `useAviasalesFlightSearch.ts`
+- `ApiPendingNotice` component displays fallback when API returns no results
+- Edge function has full search/poll/clicks flow implemented
+- Trust/compliance text is present
 
----
-
-## Current State vs. Required State
-
-| Feature | Current | Required |
-|---------|---------|----------|
-| IATA Codes | Working (MSY, LAX, etc.) | No change |
-| Search Flow (POST /start) | Working | No change |
-| Polling (/results) | Working | Minor fixes |
-| Airline Name + IATA | Missing IATA display | Show "Qatar Airways (QR)" |
-| Airline Logo | Using CDN fallback | Use API URL + IATA fallback |
-| Clicks Endpoint | Not implemented | Add for booking links |
-| Reprice on Click | Not implemented | Add toast notification |
-| Price Display | Shows raw price | Show "From $XXX" |
+**Key Issues to Fix:**
+1. **Search form opens white label in new tab but ALSO should still navigate to results page** for internal tracking
+2. **Results page hides all flight cards when API is pending** - currently shows nothing useful
+3. **Missing `TRAVELPAYOUTS_MARKER` secret** - only token is configured (confirmed via secrets check)
+4. **Edge function logs marker incorrectly** - logs full marker/token which is a security concern
+5. **Better 403 handling with specific messaging** needed
 
 ---
 
 ## Implementation Scope
 
-### Phase 1: Edge Function - Add Clicks Endpoint
+### Phase 1: Immediate White Label Flow (API Access Pending)
 
-Add a new endpoint handler to the edge function that generates booking links on demand.
+#### 1. Update `/flights` Search Form Behavior
 
-**New Endpoint:**
-- `POST /search-flights` with `action: 'getBookingLink'`
-- Calls: `https://[results_url]/searches/[search_id]/clicks/[proposal_id]`
-- Returns the partner booking URL with click tracking
+**File: `src/components/search/FlightSearchFormPro.tsx`**
 
-**Response Format:**
-```json
-{
-  "url": "https://agency.com/booking?...",
-  "agentId": 70,
-  "clickId": "2603625159552466848",
-  "expireAt": 1689958526
-}
+Change from "open white label only" to:
+- Build clean URL params with IATA codes
+- Navigate to `/flights/results` (internal page)
+- Show toast: "Searching for live prices..."
+
+This ensures internal tracking while the results page handles the white label fallback.
+
+#### 2. Update Results Page API Pending UX
+
+**File: `src/pages/FlightResults.tsx`**
+
+When API returns fallback (403 or no access):
+- Remove the "fake price" generated flight cards entirely 
+- Only show `ApiPendingNotice` component front-and-center
+- Ensure cross-sell sections still render below for engagement
+
+**Current problematic logic (lines 614-625):**
+```tsx
+{/* Results - Only show if we have real API prices */}
+{!isLoading && isRealPrice && flightCards.length > 0 && (...)}
 ```
 
-### Phase 2: Edge Function - Store and Return Search Metadata
+This is correct but the generated flights pollute the results. The fix is in the filtering logic that mixes API + generated flights.
 
-Modify the response to include essential metadata for booking link generation:
+#### 3. Improve ApiPendingNotice Component
 
-- `searchId` - Required for clicks endpoint
-- `resultsUrl` - Required for clicks endpoint  
-- Each flight includes `proposalId` - Required for clicks endpoint
+**File: `src/components/results/ApiPendingNotice.tsx`**
 
-### Phase 3: Client Hook - Add Booking Link Generation
+Update messaging to be clearer:
+- Headline: "Live prices and availability open on our partner site."
+- Button: "View Live Results"
+- Helper: "Live prices and final booking on partner site."
+- Disclosure: "ZIVO compares prices from third-party partners. Booking completed on partner sites."
 
-Modify `useAviasalesFlightSearch.ts` to:
+---
 
-1. Store `searchId` and `resultsUrl` from search response
-2. Add `getBookingLink(proposalId)` function that:
-   - Calls edge function with action: 'getBookingLink'
-   - Shows loading state
-   - Returns partner URL
+### Phase 2: Fix Travelpayouts API 403
 
-### Phase 4: UI - Display Formatting
+#### 1. Add Missing Secret
 
-Update `FlightResultCard.tsx` and related components:
+**Secret Required: `TRAVELPAYOUTS_MARKER`**
 
-1. **Airline Display**: Show name + IATA code format
-   - Before: "Qatar Airways"
-   - After: "Qatar Airways (QR)"
+Currently only `TRAVELPAYOUTS_API_TOKEN` is configured. The marker is hardcoded to `700031` in the edge function (line 32) but should be a secret for flexibility.
 
-2. **Airline Logo**: 
-   - Primary: API CDN (`https://pics.avs.io/100/100/QR.png`)
-   - Fallback: Initials badge (already implemented)
+Will add secret with value matching the partner account's marker ID.
 
-3. **Price Display**: Already shows "From $XXX" - no change needed
+#### 2. Secure Logging in Edge Function
 
-### Phase 5: View Deal - Reprice on Click Flow
+**File: `supabase/functions/search-flights/index.ts`**
 
-When user clicks "View Deal":
+Current logging exposes sensitive data:
+```typescript
+console.log(`[API] Signature string: ${signatureString.replace(token, 'TOKEN')}`);
+```
 
-1. Show toast: "Checking latest price..."
-2. Call `getBookingLink(proposalId)` edge function
-3. The API returns the current booking URL with live price
-4. If price changed significantly (>5%), show toast: "Price updated — redirecting to live availability."
-5. If price unchanged, show: "Redirecting to partner..."
-6. Open partner URL in new tab
+Change to only log:
+- Endpoint path
+- HTTP status code
+- Marker last 3 digits
+- Token present: true/false
+
+```typescript
+console.log(`[API] Request: /search/affiliate/start`);
+console.log(`[API] Status: ${response.status}`);
+console.log(`[API] Marker: ***${marker.slice(-3)}`);
+console.log(`[API] Token present: ${!!token}`);
+```
+
+#### 3. Add Graceful 403 Fallback
+
+When API returns 403:
+- Return `fallback: true` with clear message
+- Include white label URL
+- UI shows `ApiPendingNotice`
 
 ---
 
 ## Technical Details
 
-### Edge Function Changes
+### FlightSearchFormPro Changes
 
-**File: `supabase/functions/search-flights/index.ts`**
-
-Add action routing in the request handler:
-
+**Lines 198-209 - Replace:**
 ```typescript
-const { searchParams, action, searchId, resultsUrl, proposalId } = await req.json();
-
-if (action === 'getBookingLink') {
-  // Generate booking link via clicks endpoint
-  return await getBookingLink(searchId, resultsUrl, proposalId, token);
-}
-
-// Existing search flow
-```
-
-New function for booking link:
-
-```typescript
-async function getBookingLink(
-  searchId: string,
-  resultsUrl: string,
-  proposalId: string,
-  token: string
-): Promise<Response> {
-  const baseUrl = resultsUrl.startsWith('http') ? resultsUrl : `https://${resultsUrl}`;
-  const clicksUrl = `${baseUrl}/searches/${searchId}/clicks/${proposalId}`;
+const handleSearch = () => {
+  if (!validate()) return;
   
-  const response = await fetch(clicksUrl, {
-    method: 'GET',
-    headers: {
-      'x-affiliate-user-id': token,
-      'marker': AFFILIATE_MARKER
-    }
+  const fromCode = fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
+  const toCode = toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
+  
+  // Build search params for internal results page
+  const params = new URLSearchParams({
+    from: fromCode.toUpperCase(),
+    to: toCode.toUpperCase(),
+    depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
+    passengers: String(passengers),
+    cabin: cabin,
+    tripType: tripType,
   });
   
-  const data = await response.json();
-  return new Response(JSON.stringify({
-    url: data.url,
-    agentId: data.agent_id,
-    clickId: data.str_click_id,
-    expireAt: data.expire_at_unix_sec
-  }), { headers: corsHeaders });
-}
-```
-
-### Client Hook Changes
-
-**File: `src/hooks/useAviasalesFlightSearch.ts`**
-
-Add booking link generation:
-
-```typescript
-export function useBookingLink() {
-  const getBookingLink = async (
-    searchId: string,
-    resultsUrl: string,
-    proposalId: string
-  ): Promise<{ url: string; priceChanged?: boolean }> => {
-    const { data, error } = await supabase.functions.invoke('search-flights', {
-      body: {
-        action: 'getBookingLink',
-        searchId,
-        resultsUrl,
-        proposalId
-      }
-    });
-    
-    if (error) throw error;
-    return { url: data.url, priceChanged: false };
-  };
-  
-  return { getBookingLink };
-}
-```
-
-### UI Component Changes
-
-**File: `src/components/results/FlightResultCard.tsx`**
-
-Update airline display (around line 115-117):
-
-```tsx
-// Current
-<p className="font-semibold truncate text-sm">{flight.airline}</p>
-<p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
-
-// Updated
-<p className="font-semibold truncate text-sm">
-  {flight.airline} <span className="text-muted-foreground">({flight.airlineCode})</span>
-</p>
-<p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
-```
-
-**File: `src/pages/FlightResults.tsx`**
-
-Update handleViewDeal to use the clicks endpoint:
-
-```typescript
-const handleViewDeal = async (flight: FlightCardData) => {
-  // Show loading toast
-  toast({
-    title: "Checking latest price...",
-    description: "Please wait while we confirm availability.",
-  });
-  
-  try {
-    // Get booking link from API (if we have search metadata)
-    if (apiResponse?.searchId && apiResponse?.resultsUrl && flight.proposalId) {
-      const { data } = await supabase.functions.invoke('search-flights', {
-        body: {
-          action: 'getBookingLink',
-          searchId: apiResponse.searchId,
-          resultsUrl: apiResponse.resultsUrl,
-          proposalId: flight.proposalId
-        }
-      });
-      
-      if (data?.url) {
-        toast({
-          title: "Price updated — redirecting to live availability.",
-          duration: 2000,
-        });
-        
-        // Track click then redirect
-        trackAffiliateClick({ ... });
-        window.open(data.url, "_blank", "noopener,noreferrer");
-        return;
-      }
-    }
-    
-    // Fallback to existing /out flow
-    // ... existing code ...
-  } catch (error) {
-    // Fallback on error
-    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
+  if (tripType === "roundtrip" && returnDate) {
+    params.set("return", format(returnDate, "yyyy-MM-dd"));
   }
+  
+  // Navigate to results page (handles white label fallback internally)
+  navigate(`/flights/results?${params.toString()}`);
 };
+```
+
+### FlightResults Changes
+
+**Lines 181-198 - Fix flight mixing logic:**
+```typescript
+const flights = useMemo(() => {
+  if (!isValid) return [];
+  
+  // If we have real API prices, use ONLY those
+  if (isRealPrice && convertedApiFlights.length > 0) {
+    // Apply filters and return
+    let filtered = convertedApiFlights.filter(f => f.price <= filters.maxPrice);
+    // ... rest of filter logic
+    return filtered;
+  }
+  
+  // If no real prices (API pending), return empty array
+  // The ApiPendingNotice will handle the UI
+  return [];
+}, [convertedApiFlights, sortBy, filters, isValid, isRealPrice]);
+```
+
+This ensures no "fake" generated prices are ever shown.
+
+### Edge Function Secure Logging
+
+**Lines 543-544 and 553-554 - Replace:**
+```typescript
+// BEFORE (security risk):
+console.log(`[API] Signature string: ${signatureString.replace(token, 'TOKEN')}`);
+console.log(`[API] MD5 signature: ${signature}`);
+console.log(`[API] Request body:`, JSON.stringify(searchBody, null, 2));
+
+// AFTER (secure):
+console.log(`[API] Starting search: ${params.origin} → ${params.destination}`);
+console.log(`[API] Marker: ***${marker.slice(-3)} | Token: ${token ? 'present' : 'missing'}`);
+```
+
+### Edge Function 403 Handling
+
+**Lines 571-574 - Add specific 403 check:**
+```typescript
+if (!response.ok) {
+  const errorText = await response.text();
+  console.error(`[API] Start search failed: ${response.status}`);
+  
+  // Specific 403 handling - API access not enabled
+  if (response.status === 403) {
+    console.log('[API] 403 Forbidden - Flight Search API access pending');
+    // Return null to trigger fallback with clear message
+  }
+  
+  return null;
+}
 ```
 
 ---
@@ -238,30 +196,61 @@ const handleViewDeal = async (flight: FlightCardData) => {
 
 | File | Changes |
 |------|---------|
-| `supabase/functions/search-flights/index.ts` | Add getBookingLink action handler |
-| `src/hooks/useAviasalesFlightSearch.ts` | Add useBookingLink hook |
-| `src/pages/FlightResults.tsx` | Update handleViewDeal with clicks endpoint |
-| `src/components/results/FlightResultCard.tsx` | Display airline name + IATA code |
+| `src/components/search/FlightSearchFormPro.tsx` | Restore internal navigation, remove direct white label open |
+| `src/pages/FlightResults.tsx` | Remove generated flight mixing when API pending |
+| `src/components/results/ApiPendingNotice.tsx` | Update messaging per requirements |
+| `supabase/functions/search-flights/index.ts` | Secure logging, better 403 handling |
 
 ---
 
-## Data Flow
+## Secret Addition Required
 
+Add `TRAVELPAYOUTS_MARKER` secret with the partner marker ID value. This allows easy updates without code changes if the partner account changes.
+
+---
+
+## Travelpayouts Support Email (Ready to Send)
+
+**To:** support@travelpayouts.com  
+**Subject:** Request Aviasales Flight Search API access for hizivo.com
+
+**Body:**
 ```text
-User clicks "View Deal"
-       ↓
-[Toast: "Checking latest price..."]
-       ↓
-Edge Function: POST /search-flights { action: 'getBookingLink' }
-       ↓
-Aviasales API: GET /searches/{search_id}/clicks/{proposal_id}
-       ↓
-Returns: { url: "https://partner.com/...", clickId: "...", expireAt: ... }
-       ↓
-[Toast: "Price updated — redirecting to live availability."]
-       ↓
-window.open(url, "_blank")
+Hello Travelpayouts Team,
+
+Please enable Aviasales Flight Search API access for our account.
+
+Website: https://hizivo.com
+Business model: Meta-search (we compare prices and redirect users to partners for booking)
+We do not sell tickets directly.
+We show "From/Approx" prices and disclose that booking is completed on partner sites.
+
+We will use the API to display flight search results (airlines, schedules, prices) and redirect users via affiliate links.
+
+Thank you.
+Name: Kimlain
+Email: Kimlain@hizovo.com
 ```
+
+---
+
+## Phase 2 Airline Display (When API Enabled)
+
+Once API access is granted:
+
+1. **Airline display format:** `{airline.name} ({airline.airlineCode})`
+   - Example: "Qatar Airways (QR)"
+
+2. **Airline logo source:** `https://pics.avs.io/100/100/{IATA}.png`
+   - Fallback: Initials badge (already implemented)
+
+3. **Price display:** "From $XXX" (already implemented)
+
+4. **Same provider rule:** CTA links to the same agent/provider that provided the price
+
+5. **Reprice on click:** Clicks endpoint already implemented for this
+
+6. **Cache policy:** 5-minute staleTime already configured in hook
 
 ---
 
@@ -269,24 +258,12 @@ window.open(url, "_blank")
 
 After implementation:
 
-- [ ] Search MSY → LAX returns live prices with searchId/resultsUrl
-- [ ] Airlines show as "Qatar Airways (QR)" format
-- [ ] Airline logos display from IATA code
-- [ ] Missing logos fall back to initials badge
-- [ ] "View Deal" fetches fresh booking link
-- [ ] Toast shows "Price updated" message
-- [ ] Partner site opens in new tab
-- [ ] Fallback to /out works if clicks endpoint fails
-- [ ] Click tracking still logs to database
-
----
-
-## Compliance Notes
-
-All existing affiliate compliance measures remain intact:
-- "From $XXX" indicative pricing
-- "View Deal" CTA (not "Book Now")
-- Partner redirect toast notification
-- Affiliate disclosure visible
-- Opens in new tab with proper rel attributes
+- [ ] /flights search form navigates to /flights/results
+- [ ] Results page shows ApiPendingNotice when API pending (no fake prices)
+- [ ] "View Live Results" button opens white label in new tab
+- [ ] Trust disclosure visible on both pages
+- [ ] Edge function logs are secure (no tokens/signatures exposed)
+- [ ] 403 errors trigger clean fallback with helpful message
+- [ ] When API enabled: real prices display with "From $XXX" format
+- [ ] When API enabled: airlines show as "Name (IATA)" format
 
