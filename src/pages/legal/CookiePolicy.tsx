@@ -1,4 +1,4 @@
-import { ArrowLeft, Cookie, Settings, BarChart3, Megaphone, Shield, Mail } from "lucide-react";
+import { ArrowLeft, Cookie, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -32,21 +32,11 @@ const CookiePolicy = () => {
             <span className="text-sm font-medium text-primary">Legal</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Cookie Policy</h1>
-          <p className="text-muted-foreground">
-            Effective Date: February 1, 2026
-          </p>
         </div>
 
         {/* Content */}
         <div className="space-y-8">
           {/* Introduction */}
-          <section className="bg-card/50 rounded-2xl p-6 border border-border">
-            <p className="text-foreground leading-relaxed">
-              ZIVO uses cookies and similar technologies to enhance your experience on our travel search platform.
-            </p>
-          </section>
-
-          {/* How We Use Cookies */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-sky-500/10">
@@ -55,10 +45,13 @@ const CookiePolicy = () => {
               <h2 className="text-2xl font-bold text-foreground">How We Use Cookies</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed mb-4">
+                Hizivo uses cookies and similar technologies to:
+              </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Keep the site working properly
+                  Enable core site functionality
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
@@ -66,69 +59,21 @@ const CookiePolicy = () => {
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Measure performance and improve user experience
+                  Analyze traffic and performance
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
-                  Support marketing attribution (where enabled)
+                  Support marketing attribution
                 </li>
               </ul>
             </div>
           </section>
 
-          {/* Types of Cookies */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-amber-500/10">
-                <Settings className="w-5 h-5 text-amber-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Types of Cookies</h2>
-            </div>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border space-y-4">
-              <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-4 h-4 text-emerald-500" />
-                  <p className="font-semibold text-foreground">Essential Cookies</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Required for core site functionality. Cannot be disabled.</p>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Settings className="w-4 h-4 text-sky-500" />
-                  <p className="font-semibold text-foreground">Functional Cookies</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Remember your preferences and enhance features.</p>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-4 h-4 text-purple-500" />
-                  <p className="font-semibold text-foreground">Analytics Cookies</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Help us understand usage patterns and improve performance.</p>
-              </div>
-              <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Megaphone className="w-4 h-4 text-amber-500" />
-                  <p className="font-semibold text-foreground">Marketing Cookies</p>
-                </div>
-                <p className="text-sm text-muted-foreground">Used for marketing attribution where enabled.</p>
-              </div>
-            </div>
-          </section>
-
           {/* Managing Cookies */}
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-emerald-500/10">
-                <Settings className="w-5 h-5 text-emerald-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Managing Cookies</h2>
-            </div>
-            <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground leading-relaxed">
-                You can control cookies through your browser settings. Some cookies are required for core site functionality and cannot be disabled.
-              </p>
-            </div>
+          <section className="bg-muted/30 rounded-2xl p-6 border border-border">
+            <p className="text-foreground leading-relaxed">
+              Some cookies are required for the site to function properly. You can manage cookies through your browser settings.
+            </p>
           </section>
 
           {/* Contact */}
@@ -140,9 +85,6 @@ const CookiePolicy = () => {
               <h2 className="text-2xl font-bold text-foreground">Contact</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
-              <p className="text-foreground mb-4">
-                For questions regarding this Cookie Policy:
-              </p>
               <a 
                 href="mailto:support@hizivo.com" 
                 className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
