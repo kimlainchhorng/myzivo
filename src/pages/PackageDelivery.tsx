@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 
 const PackageDelivery = () => {
   const navigate = useNavigate();
@@ -375,6 +376,9 @@ const PackageDelivery = () => {
             </div>
           </div>
         </section>
+
+        {/* Service Disclaimer */}
+        <ServiceDisclaimer type="local" />
       </main>
 
       <Footer />
