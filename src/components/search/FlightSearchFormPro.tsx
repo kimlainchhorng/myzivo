@@ -166,9 +166,9 @@ export default function FlightSearchFormPro({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Public config (safe to expose - affiliate marker)
-  const WL_BASE_URL = 'https://search.jetradar.com/flights';
-  const MARKER = '700031';
+  // Read from env with fallbacks
+  const WL_BASE_URL = import.meta.env.VITE_AVIASALES_WL_BASE_URL || "https://search.jetradar.com/flights";
+  const MARKER = import.meta.env.VITE_TRAVELPAYOUTS_MARKER || "700031";
 
   // Build white label URL for live results
   const buildWhitelabelUrl = (fromCode: string, toCode: string) => {
