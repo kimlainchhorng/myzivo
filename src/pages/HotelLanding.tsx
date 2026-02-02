@@ -66,7 +66,7 @@ export default function HotelLanding() {
       <main className="pt-16">
         {/* Hero Section with Photo Background */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
-          {/* Background Image */}
+          {/* Background Image - REAL hotel imagery */}
           <div className="absolute inset-0">
             <img
               src={heroImage.src}
@@ -89,16 +89,18 @@ export default function HotelLanding() {
                 <span className="text-white/80">Compare hotel prices</span>
               </div>
               
+              {/* UPDATED HEADLINE */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
                 {formattedCity ? (
                   <>Hotels in <span className="text-amber-400">{formattedCity}</span></>
                 ) : (
-                  <>Find the <span className="text-amber-400">Best Hotel Deals</span></>
+                  <>Compare Hotels Worldwide — <span className="text-amber-400">Book Securely with Partners</span></>
                 )}
               </h1>
               
+              {/* UPDATED SUBHEADLINE */}
               <p className="text-lg text-white/80 mb-8">
-                Compare prices from Booking.com, Expedia, Hotels.com and 500+ trusted partners. No booking fees on ZIVO.
+                Search real-time hotel prices and complete booking securely with licensed partners.
               </p>
 
               {/* Search Form */}
@@ -107,7 +109,7 @@ export default function HotelLanding() {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-hotels" />
                   <Input
                     type="text"
-                    placeholder="Where do you want to stay?"
+                    placeholder="City, region, or hotel name"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
                     className="pl-12 h-14 text-base rounded-xl"
@@ -122,6 +124,12 @@ export default function HotelLanding() {
                   Search Hotels
                 </Button>
               </div>
+              
+              {/* Helper text under CTA */}
+              <p className="text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+                <ExternalLink className="w-4 h-4" />
+                Final booking completed on partner site.
+              </p>
             </div>
 
             {/* Trust Badges */}
@@ -132,6 +140,13 @@ export default function HotelLanding() {
                   <span>{badge.text}</span>
                 </div>
               ))}
+            </div>
+            
+            {/* Visible disclaimer near search */}
+            <div className="mt-6 max-w-2xl mx-auto">
+              <p className="text-center text-xs text-white/50">
+                Hizivo is not the merchant of record. Hotel bookings are completed with licensed third-party providers.
+              </p>
             </div>
           </div>
         </section>
