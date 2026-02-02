@@ -34,6 +34,7 @@ import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
+import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import {
   StickySearchSummary,
   FiltersSheet,
@@ -686,6 +687,11 @@ const FlightResults = () => {
                   destination={destinationAirport?.city || destinationIata}
                   className="mt-8"
                 />
+              )}
+
+              {/* Driver Cross-Sell - Airport Rides & Delivery */}
+              {flights.length > 0 && !isLoading && (
+                <DriverCrossSell source="flights" variant="full" className="mt-8" />
               )}
             </ResultsContainer>
           </div>
