@@ -14,7 +14,7 @@ import SEOHead from "@/components/SEOHead";
 import heroEats from "@/assets/hero-eats.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
 
-const ZIVO_DRIVER_URL = "https://zivodriver.com";
+const ZIVO_DRIVER_URL = "https://zivo-driver-app.rork.app";
 
 const features = [
   {

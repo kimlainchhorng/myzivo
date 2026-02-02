@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import heroRides from "@/assets/hero-rides.jpg";
 import serviceRides from "@/assets/service-rides.jpg";
 
-const ZIVO_DRIVER_URL = "https://zivodriver.com";
+const ZIVO_DRIVER_URL = "https://zivo-driver-app.rork.app";
 
 const features = [
   {

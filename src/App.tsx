@@ -36,8 +36,6 @@ const EatsCheckout = lazy(() => import("./pages/EatsCheckout"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const DriverRegistration = lazy(() => import("./pages/DriverRegistration"));
-const DriverApp = lazy(() => import("./pages/DriverApp"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
 const RestaurantDashboard = lazy(() => import("./pages/RestaurantDashboard"));
 const CarRentalDashboard = lazy(() => import("./pages/CarRentalDashboard"));
@@ -257,8 +255,6 @@ const App = () => (
                 <Route path="/trips" element={<TripHistory />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/drive" element={<DriverRegistration />} />
-                <Route path="/driver" element={<DriverApp />} />
                 <Route path="/dashboard" element={<CustomerDashboard />} />
                 <Route path="/restaurant" element={<RestaurantDashboard />} />
                 <Route path="/car-rental-dashboard" element={<CarRentalDashboard />} />
