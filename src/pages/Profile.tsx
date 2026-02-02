@@ -126,9 +126,9 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-20 safe-area-top safe-area-bottom">
       {/* Background effects - simplified for mobile */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 right-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[150px] sm:w-[200px] h-[150px] sm:h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
+      <div className="pointer-events-none absolute top-1/4 right-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 left-0 w-[150px] sm:w-[200px] h-[150px] sm:h-[200px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
 
       <div className="relative z-10 container max-w-lg mx-auto px-4 pt-4 pb-8">
         {/* Header */}
@@ -154,8 +154,8 @@ const Profile = () => {
         ) : (
           <div className="space-y-5 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {/* Profile Card */}
-            <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
+            <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/5 to-teal-500/5" />
               <CardHeader className="text-center pb-2 relative">
                 <div className="flex justify-center mb-4">
                   <div className="relative group">
@@ -307,8 +307,8 @@ const Profile = () => {
             </div>
 
             {/* Account Status */}
-            <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
+            <Card className="relative border-0 bg-gradient-to-br from-card/90 to-card shadow-xl overflow-hidden">
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-green-500/5" />
               <CardContent className="p-4 sm:p-5 relative">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 sm:gap-4">
