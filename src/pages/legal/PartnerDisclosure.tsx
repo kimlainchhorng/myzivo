@@ -9,13 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { 
-  Scale, 
-  Building2,
-  ArrowRightLeft,
-  Shield,
+  Plane, 
   CreditCard,
+  RefreshCw,
+  Shield,
+  FileText,
+  Mail,
+  AlertCircle,
+  Check,
   HeadphonesIcon,
-  Mail
 } from "lucide-react";
 
 const PartnerDisclosure = () => {
@@ -24,7 +26,7 @@ const PartnerDisclosure = () => {
       <SEOHead 
         title="Partner Disclosure – Hizovo Travel"
         description="Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers."
-        canonical="https://hizivo.com/partner-disclosure"
+        canonical="https://hizovo.com/partner-disclosure"
       />
       <NavBar />
       
@@ -32,164 +34,159 @@ const PartnerDisclosure = () => {
         <div className="container mx-auto px-4 max-w-3xl">
           {/* Header */}
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
-              <Scale className="w-3 h-3 mr-1" />
-              Legal Disclosure
+            <Badge className="mb-4 bg-flights/20 text-flights border-flights/30">
+              <Plane className="w-3 h-3 mr-1" />
+              Travel Bookings
             </Badge>
-            <h1 className="font-display text-4xl font-bold mb-4">
+            <h1 className="font-display text-4xl font-bold mb-2">
               Partner Disclosure
             </h1>
-            <p className="text-sm text-muted-foreground">
-              Effective Date: February 1, 2026
+            <p className="text-muted-foreground mb-2">
+              How ZIVO works with travel partners
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Last updated: February 1, 2026
             </p>
           </div>
 
-          {/* Main Disclosure Banner */}
-          <Card className="border-primary/30 bg-primary/5 mb-8">
-            <CardContent className="p-6">
-              <p className="text-lg font-medium text-center">
-                Hizovo is not the merchant of record. Travel bookings are fulfilled by 
-                licensed third-party providers.
-              </p>
-            </CardContent>
-          </Card>
-
           {/* Main Content */}
-          <div className="space-y-8">
-            {/* What Hizovo Is */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Building2 className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">What is Hizovo?</h2>
-                </div>
-                <p className="text-muted-foreground">
-                  Hizovo Travel is a search and comparison platform that helps users find 
-                  flights, hotels, and car rentals from multiple travel partners. We display 
-                  options from various providers so you can compare and choose the best option 
-                  for your needs.
-                </p>
-                <p className="text-muted-foreground">
-                  <strong>Hizovo does not:</strong>
-                </p>
-                <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                  <li>Sell travel products directly</li>
-                  <li>Issue airline tickets, hotel confirmations, or rental agreements</li>
-                  <li>Process payments for travel bookings</li>
-                  <li>Act as your travel agent or booking agent</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Partner Booking Flow */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <ArrowRightLeft className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">How Booking Works</h2>
-                </div>
-                <p className="text-muted-foreground">
-                  When you click "Continue to secure checkout" or similar booking buttons on Hizovo, 
-                  you will be redirected to our travel partner's website to complete your booking.
-                </p>
-                <div className="bg-muted/50 rounded-lg p-4 mt-4">
-                  <ol className="list-decimal list-inside text-sm space-y-2">
-                    <li>Search for flights, hotels, or cars on Hizovo</li>
-                    <li>Compare options and select your preferred choice</li>
-                    <li>Review traveler information (collected with your consent)</li>
-                    <li>Redirect to partner checkout to complete payment</li>
-                    <li>Receive confirmation directly from the travel partner</li>
-                  </ol>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment & Ticketing */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">Payment & Ticketing</h2>
-                </div>
-                <p className="text-muted-foreground">
-                  All payments are processed directly by our travel partners (the merchant of record). 
-                  Hizovo does not collect, store, or process credit card information for travel bookings.
-                </p>
-                <p className="text-muted-foreground">
-                  The travel partner is responsible for:
-                </p>
-                <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                  <li>Processing your payment securely</li>
-                  <li>Issuing tickets, confirmations, and vouchers</li>
-                  <li>Fulfilling your travel service</li>
-                  <li>Providing final pricing (which may vary from estimates shown on Hizovo)</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Support */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <HeadphonesIcon className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">Customer Support</h2>
-                </div>
-                <p className="text-muted-foreground">
-                  For booking changes, cancellations, refunds, or ticketing issues, 
-                  please contact the travel partner directly. Their support information 
-                  will be provided in your booking confirmation.
-                </p>
-                <p className="text-muted-foreground">
-                  Hizovo can assist with:
-                </p>
-                <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
-                  <li>Website navigation and search issues</li>
-                  <li>General questions about our service</li>
-                  <li>Directing you to the correct partner support</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Affiliate Disclosure */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-5 h-5 text-primary" />
-                  <h2 className="text-xl font-bold">Affiliate Compensation</h2>
-                </div>
-                <p className="text-muted-foreground">
-                  Hizovo may receive a commission from travel partners when you complete 
-                  a booking through our platform. This compensation helps us maintain and 
-                  improve our free search service.
-                </p>
-                <p className="text-muted-foreground">
-                  Important: This commission is paid by the partner and does not increase 
-                  the price you pay. The final booking price is determined entirely by the 
-                  travel partner.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Contact */}
-            <Card className="bg-muted/30">
+          <div className="space-y-6">
+            {/* Introduction Card */}
+            <Card className="border-primary/20 bg-primary/5">
               <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Mail className="w-5 h-5 text-muted-foreground" />
-                  <h2 className="text-lg font-semibold">Questions?</h2>
+                <p className="text-muted-foreground leading-relaxed">
+                  ZIVO provides travel search and referral services that help you compare flight, 
+                  hotel, and car rental options. When you choose an offer and continue to checkout, 
+                  you will be redirected to (or complete checkout with) a third-party travel provider 
+                  ("<strong>Travel Partner</strong>") that processes your payment, issues tickets or 
+                  confirmations, and fulfills your reservation.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Merchant of Record */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold">Merchant of Record</h2>
                 </div>
-                <p className="text-muted-foreground mb-4">
-                  If you have questions about this disclosure or our partner relationships, 
-                  please contact us:
+                <p className="text-muted-foreground">
+                  For travel bookings, <strong>ZIVO is NOT the merchant of record</strong>. 
+                  The Travel Partner handles all aspects of your booking:
                 </p>
-                <p className="text-sm">
-                  <strong>Email:</strong>{" "}
-                  <a 
-                    href="mailto:support@hizivo.com" 
-                    className="text-primary hover:underline"
-                  >
-                    support@hizivo.com
-                  </a>
+                <ul className="space-y-2 ml-1">
+                  {[
+                    "Pricing & payment processing",
+                    "Booking fulfillment",
+                    "Customer service for reservations",
+                    "Changes & cancellations",
+                    "Ticket/confirmation issuance",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-muted-foreground">
+                      <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Pricing & Availability */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <RefreshCw className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <h2 className="text-xl font-bold">Pricing & Availability</h2>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Prices and availability may change between the time you view results on ZIVO 
+                  and the time you complete checkout with the Travel Partner. Final pricing and 
+                  booking terms are shown on the Travel Partner's checkout page.
                 </p>
+              </CardContent>
+            </Card>
+
+            {/* Booking Terms */}
+            <Card>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <h2 className="text-xl font-bold">Booking Terms</h2>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  Your booking is subject to the Travel Partner's terms and conditions, 
+                  privacy policy, and cancellation/refund rules. Please review these 
+                  carefully during checkout.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Information Sharing - Important Callout */}
+            <Card className="border-amber-500/30 bg-amber-500/5">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <h2 className="text-xl font-bold">Information Sharing</h2>
+                  </div>
+                  <Badge variant="outline" className="border-amber-500/50 text-amber-600">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    Important
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  If you proceed to checkout, certain information you provide (such as 
+                  traveler/guest details and contact information) may be shared with the 
+                  Travel Partner to complete your booking. <strong>We will ask for your 
+                  consent when required.</strong>
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Support - Two Column */}
+            <Card className="bg-muted/30">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <HeadphonesIcon className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <h2 className="text-xl font-bold">Need Help?</h2>
+                </div>
+                
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {/* Reservation Support */}
+                  <div className="p-4 rounded-lg bg-background border">
+                    <p className="font-medium mb-1">Reservation Issues</p>
+                    <p className="text-sm text-muted-foreground">
+                      Contact the Travel Partner directly. Their support information 
+                      will be in your confirmation email.
+                    </p>
+                  </div>
+                  
+                  {/* Website Support */}
+                  <div className="p-4 rounded-lg bg-background border">
+                    <p className="font-medium mb-1">Website Issues</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      For navigation or search problems:
+                    </p>
+                    <a 
+                      href="mailto:support@hizivo.com" 
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    >
+                      <Mail className="w-3 h-3" />
+                      support@hizovo.com
+                    </a>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
