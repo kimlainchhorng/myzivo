@@ -210,7 +210,7 @@ export default function ApiPendingNotice({
           </div>
           
           <h2 className="text-xl sm:text-2xl font-bold mb-2">
-            No direct results found — here are live deals from our trusted travel partners
+            No direct results available — here are live deals from our trusted travel partners
           </h2>
           
           <p className="text-muted-foreground max-w-xl mx-auto text-sm">
@@ -331,8 +331,8 @@ export default function ApiPendingNotice({
                           deal.partnerKey === "jetradar" && "bg-purple-500 hover:bg-purple-600"
                         )}
                       >
-                        <span className="hidden sm:inline">View deal on partner site</span>
-                        <span className="sm:hidden">View deal</span>
+                        <span className="hidden sm:inline">Continue to secure partner checkout</span>
+                        <span className="sm:hidden">Partner checkout</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -388,16 +388,16 @@ export default function ApiPendingNotice({
                     </Badge>
                   </div>
 
-                  {/* Flight details disclaimer */}
-                  <p className="text-[10px] text-muted-foreground mt-2">
-                    Flight details shown are indicative. Final itinerary confirmed on partner site.
+                  {/* Compliance micro-copy under CTA - Required for Duffel/CJ */}
+                  <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                    Indicative prices shown. Final price, availability, and booking terms confirmed on partner's secure checkout page.
                   </p>
                 </a>
               );
             })}
           </div>
 
-          {/* Indicative price notice */}
+          {/* Bottom summary notice */}
           <p className="text-xs text-muted-foreground text-center mt-4 pt-3 border-t border-border/50">
             Indicative prices shown. Final price confirmed on partner site.
           </p>
