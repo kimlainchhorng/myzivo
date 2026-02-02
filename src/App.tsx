@@ -89,6 +89,10 @@ const Terms = lazy(() => import("./pages/Terms"));
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
 const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
 const ClicksAnalytics = lazy(() => import("./pages/admin/ClicksAnalytics"));
+const TravelAdminDashboard = lazy(() => import("./pages/admin/TravelAdminDashboard"));
+const TravelPartnersPage = lazy(() => import("./pages/admin/TravelPartnersPage"));
+const TravelHandoffPage = lazy(() => import("./pages/admin/TravelHandoffPage"));
+const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -266,6 +270,38 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <ClicksAnalytics />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/travel"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <TravelAdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/travel/partners"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <TravelPartnersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/travel/handoff"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <TravelHandoffPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/travel/logs"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <TravelLogsPage />
                     </ProtectedRoute>
                   }
                 />
