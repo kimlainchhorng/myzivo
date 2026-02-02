@@ -1,213 +1,405 @@
 
-# Analysis: Owner Onboarding & Verification System
+# First City Launch Checklist - Implementation Plan
 
-## Executive Summary
-
-After thorough analysis of the codebase, the **Owner Onboarding & Verification system for the ZIVO P2P Car Rental Marketplace is already fully implemented**. The system includes all the components requested and is production-ready.
-
----
-
-## Existing Implementation Status
-
-| Requirement | Status | Location |
-|-------------|--------|----------|
-| **Landing Page (/list-your-car)** | Complete | `src/pages/ListYourCar.tsx` |
-| **Owner Application (/owner/apply)** | Complete | `src/pages/owner/OwnerApply.tsx` |
-| **Identity Verification (Documents)** | Complete | Step 3 in OwnerApply.tsx |
-| **Vehicle Form (/owner/cars/new)** | Complete | `src/pages/owner/AddVehicle.tsx` + `VehicleForm.tsx` |
-| **2018+ Vehicle Year Enforcement** | Complete | Zod validation `year: z.number().min(2018)` |
-| **Vehicle Photos (4+ images)** | Complete | `VehicleImageUpload.tsx` component |
-| **Availability Calendar** | Complete | `src/pages/owner/VehicleAvailability.tsx` |
-| **Stripe Payout Setup** | Complete | `src/pages/owner/OwnerPayouts.tsx` + StripeConnectButton |
-| **Owner Dashboard** | Complete | `src/pages/owner/OwnerDashboard.tsx` |
-| **Admin Owner Verification** | Complete | `src/pages/admin/modules/AdminP2POwnersModule.tsx` |
-| **Admin Vehicle Approval** | Complete | `src/pages/admin/modules/AdminP2PVehiclesModule.tsx` |
-| **Document Upload & Review** | Complete | `OwnerDocumentUpload.tsx` + Admin module |
+## Overview
+Create a city-based launch checklist system that ensures ZIVO only goes live in specific cities when all required checks (legal, insurance, payments, supply, operations, support) are complete. This is an admin-only feature for controlled geographic expansion.
 
 ---
 
-## Detailed System Architecture
+## Database Schema
 
-### Owner Onboarding Flow (Already Implemented)
+### New Tables Required
+
+#### 1. `p2p_launch_cities`
+Stores each city ZIVO is preparing to launch or has launched.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `name` | text | City name (e.g., "Los Angeles") |
+| `state` | text | State code (e.g., "CA") |
+| `launch_status` | enum | draft / ready / live / paused |
+| `launched_at` | timestamp | When city went live |
+| `paused_at` | timestamp | When city was paused |
+| `created_by` | uuid | Admin who created |
+| `created_at` | timestamp | Record created |
+| `updated_at` | timestamp | Last updated |
+
+#### 2. `p2p_launch_checklists`
+Stores checklist completion state for each city.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | uuid | Primary key |
+| `city_id` | uuid | FK to p2p_launch_cities |
+| **Legal Section** | | |
+| `legal_renter_terms` | boolean | Renter Terms published |
+| `legal_owner_terms` | boolean | Owner Terms published |
+| `legal_insurance_disclosure` | boolean | Insurance Disclosure published |
+| `legal_damage_policy` | boolean | Damage Policy published |
+| `legal_privacy_policy` | boolean | Privacy Policy published |
+| **Insurance Section** | | |
+| `insurance_provider_name` | text | Insurance provider name |
+| `insurance_coverage_type` | text | Coverage type (Trip-based) |
+| `insurance_confirmation_ref` | text | Coverage confirmation reference |
+| `insurance_active` | boolean | Insurance coverage active |
+| **Payments Section** | | |
+| `payments_stripe_active` | boolean | Stripe Payments active |
+| `payments_connect_enabled` | boolean | Stripe Connect enabled |
+| `payments_test_payment` | boolean | Test payment completed |
+| `payments_test_payout` | boolean | Test payout completed |
+| **Operations Section** | | |
+| `ops_dispute_tested` | boolean | Dispute workflow tested |
+| `ops_damage_tested` | boolean | Damage reporting tested |
+| `ops_cancellation_tested` | boolean | Cancellation tested |
+| `ops_payout_delay_tested` | boolean | Payout delay logic tested |
+| **Support Section** | | |
+| `support_email` | text | Support email address |
+| `support_emergency_procedure` | text | Emergency contact procedure |
+| `support_confirmed` | boolean | Support process confirmed |
+| **Computed Supply** | | |
+| `min_approved_cars` | integer | Minimum cars required (default: 10) |
+| `min_approved_owners` | integer | Minimum owners required (default: 5) |
+| **Timestamps** | | |
+| `updated_at` | timestamp | Last checklist update |
+| `updated_by` | uuid | Admin who last updated |
+
+#### 3. New Enum: `p2p_launch_status`
+Values: `draft`, `ready`, `live`, `paused`
+
+---
+
+## File Structure
+
+### New Files to Create
 
 ```text
-/list-your-car (Landing Page)
-        │
-        ▼
-/owner/apply (Multi-Step Wizard)
-        │
-        ├── Step 1: Personal Information
-        │     • Full name, email, phone
-        │     • Date of birth (21+ validation)
-        │     • Address, city, state, ZIP
-        │
-        ├── Step 2: Verification Details
-        │     • SSN last 4 digits
-        │     • Insurance option selection
-        │
-        ├── Step 3: Document Upload
-        │     • Government ID (front/back)
-        │     • Driver's license
-        │     • Vehicle registration
-        │     • Selfie photo
-        │
-        └── Step 4: Completion
-              • Application submitted
-              • Status: "pending"
+src/pages/admin/modules/AdminCityLaunchModule.tsx     - Main module UI
+src/hooks/useCityLaunch.ts                            - Data fetching hooks
+src/types/cityLaunch.ts                               - TypeScript types
 ```
 
-### Owner Dashboard Features (Already Implemented)
+### Files to Modify
 
-- **Verification Status**: Displays pending/verified/rejected badge
-- **Documents Verified**: Shows when all documents are approved
-- **Stats Cards**: Total vehicles, active bookings, trips, earnings
-- **Quick Actions**: Add vehicle, view vehicles, earnings, bookings
-- **Activity Feed**: Recent booking activity
-
-### Admin Verification Panel (Already Implemented)
-
-Located at `/admin` with dedicated modules:
-- **P2P Owners Tab**: View all owner applications, filter by status
-- **Document Review**: View/approve/reject uploaded documents
-- **Status Management**: Approve, reject, or suspend owners
-- **P2P Vehicles Tab**: Approve/reject vehicle listings
-- **Stats Dashboard**: Pending, verified, suspended counts
+```text
+src/pages/admin/AdminPanel.tsx                        - Add nav item + import module
+src/hooks/useP2PBooking.ts                            - Filter by live city status
+```
 
 ---
 
-## Key Files Reference
+## Implementation Details
 
-### Owner Pages
-| Route | File | Purpose |
-|-------|------|---------|
-| `/list-your-car` | `src/pages/ListYourCar.tsx` | Marketing landing page |
-| `/owner/apply` | `src/pages/owner/OwnerApply.tsx` | 4-step application wizard |
-| `/owner/dashboard` | `src/pages/owner/OwnerDashboard.tsx` | Main owner hub |
-| `/owner/profile` | `src/pages/owner/OwnerProfile.tsx` | View/edit profile |
-| `/owner/cars` | `src/pages/owner/OwnerCars.tsx` | Vehicle list |
-| `/owner/cars/new` | `src/pages/owner/AddVehicle.tsx` | Add new vehicle |
-| `/owner/cars/:id/edit` | `src/pages/owner/EditVehicle.tsx` | Edit vehicle |
-| `/owner/cars/:id/availability` | `src/pages/owner/VehicleAvailability.tsx` | Set availability |
-| `/owner/bookings` | `src/pages/owner/OwnerBookings.tsx` | View bookings |
-| `/owner/payouts` | `src/pages/owner/OwnerPayouts.tsx` | Earnings & payouts |
-| `/owner/stripe-connect/return` | `src/pages/owner/StripeConnectReturn.tsx` | Stripe callback |
+### 1. AdminCityLaunchModule.tsx
 
-### Admin Modules
-| Module | File |
-|--------|------|
-| P2P Owners | `src/pages/admin/modules/AdminP2POwnersModule.tsx` |
-| P2P Vehicles | `src/pages/admin/modules/AdminP2PVehiclesModule.tsx` |
-| P2P Bookings | `src/pages/admin/modules/AdminP2PBookingsModule.tsx` |
-| P2P Payouts | `src/pages/admin/modules/AdminP2PPayoutsModule.tsx` |
-| P2P Commission | `src/pages/admin/modules/AdminP2PCommissionModule.tsx` |
-| P2P Disputes | `src/pages/admin/modules/AdminP2PDisputesModule.tsx` |
+The main admin UI with the following sections:
 
-### Hooks
-| Hook | File |
-|------|------|
-| useCarOwnerProfile, useCreateOwnerProfile | `src/hooks/useCarOwner.ts` |
-| useCarOwners, useUpdateOwnerStatus | `src/hooks/useAdminP2P.ts` |
-| useCreateVehicle, useAdminVehicles | `src/hooks/useP2PVehicle.ts` |
-| useStripeConnect hooks | `src/hooks/useStripeConnect.ts` |
+**Header**
+- Title: "City Launch Checklist"
+- Description: "Prepare cities for P2P marketplace launch"
+- "Add City" button (opens modal)
 
----
+**City List (Cards)**
+- Each city shows: Name, State, Status badge
+- Quick stats: Approved owners count, approved vehicles count
+- "View Checklist" button
 
-## Database Schema (Already Exists)
+**City Checklist View (Modal or Expanded Panel)**
 
-### car_owner_profiles Table
-- `user_id` - Auth user reference
-- `status` - pending/verified/rejected/suspended
-- `full_name`, `email`, `phone`, `date_of_birth`
-- `address`, `city`, `state`, `zip_code`
-- `ssn_last_four` - Last 4 SSN digits
-- `insurance_option` - platform/own/none
-- `documents_verified` - Boolean flag
-- `stripe_account_id` - Stripe Connect account
-- `payout_enabled` - Ready for payouts
-- `rating` - Owner rating
+Six collapsible sections:
 
-### car_owner_documents Table
-- `owner_id` - Reference to car_owner_profiles
-- `document_type` - drivers_license/government_id/vehicle_registration/selfie
-- `file_url`, `file_name`, `file_size`, `mime_type`
-- `status` - pending/approved/rejected
-- `reviewed_at`, `reviewed_by`, `notes`
+1. **Legal & Compliance**
+   - 5 checkboxes (Renter Terms, Owner Terms, Insurance Disclosure, Damage Policy, Privacy Policy)
+   - Auto-check option: Link to verify page exists
 
-### p2p_vehicles Table
-- `owner_id` - Reference to car_owner_profiles
-- `approval_status` - pending/approved/rejected/suspended
-- `year`, `make`, `model`, `trim`, `color`
-- `vin`, `license_plate`
-- `category`, `transmission`, `fuel_type`
-- `seats`, `doors`, `mileage`
-- `daily_rate`, `weekly_rate`, `monthly_rate`
-- `min_trip_days`, `max_trip_days`
-- `location_address`, `location_city`, `location_state`, `location_zip`
-- `images`, `features`, `description`
-- `instant_book`, `is_listed`
+2. **Insurance Setup**
+   - Text fields: Provider name, Coverage type, Confirmation reference
+   - Checkbox: Insurance active for city
+
+3. **Payments & Payouts**
+   - 4 checkboxes (Stripe Payments, Connect enabled, Test payment, Test payout)
+   - Note: These are manual confirmations
+
+4. **Owner Supply (Minimum)**
+   - Display: Current approved owners in city vs. minimum (5)
+   - Display: Current approved vehicles in city vs. minimum (10)
+   - Status: Green checkmark or red warning
+   - This section auto-calculates from database
+
+5. **Operational Readiness**
+   - 4 checkboxes (Dispute workflow, Damage reporting, Cancellation, Payout delay)
+
+6. **Support & Contact**
+   - Text fields: Support email, Emergency procedure
+   - Checkbox: Support process confirmed
+
+**Launch Controls**
+- Progress indicator: X of 6 sections complete
+- "Mark City as LIVE" button (disabled until all sections complete)
+- Confirmation modal with warning text
+- "Pause City" button (for live cities)
 
 ---
 
-## Validation Rules (Enforced)
+### 2. useCityLaunch.ts Hooks
 
-| Rule | Implementation |
-|------|----------------|
-| Vehicles must be 2018+ | Zod: `year: z.number().min(2018)` |
-| Owner must be 21+ | Zod: `calculateAge(date) >= 21` |
-| VIN must be 17 chars | Zod: `vin: z.string().length(17)` |
-| Min 1 vehicle image | Zod: `images: z.array().min(1)` |
-| Daily rate min $20 | Zod: `daily_rate: z.number().min(20)` |
-| Valid ZIP code | Zod: `zip_code: z.string().regex(/^\d{5}$/)` |
+```typescript
+// Fetch all cities with their checklist status
+useLaunchCities()
 
----
+// Fetch single city with full checklist
+useCityChecklist(cityId: string)
 
-## Stripe Connect (Already Implemented)
+// Fetch owner/vehicle counts for a city
+useCitySupplyStats(city: string, state: string)
 
-- **Onboarding**: `create-stripe-connect-link` edge function
-- **Status Check**: `check-stripe-connect-status` edge function
-- **Owner Display**: StripeConnectButton component on `/owner/payouts`
-- **Callback Routes**: `/owner/stripe-connect/return` and `/owner/stripe-connect/refresh`
+// Create new city
+useCreateLaunchCity()
 
----
+// Update checklist items
+useUpdateCityChecklist()
 
-## What's Working Now
-
-1. **Owner visits** `/list-your-car` - Sees marketing page with benefits
-2. **Clicks "Get Started"** - Redirected to login or `/owner/apply`
-3. **Completes 4-step application** - Personal info, verification, documents, completion
-4. **Application submitted** - Status = "pending", admin notified
-5. **Admin reviews** at `/admin` - Views documents, approves/rejects
-6. **Owner verified** - Can now add vehicles
-7. **Owner adds vehicle** at `/owner/cars/new` - 2018+ enforced
-8. **Vehicle submitted** - Approval_status = "pending"
-9. **Admin approves vehicle** - Vehicle becomes listed
-10. **Owner connects Stripe** - Required before receiving payouts
-11. **Bookings flow** - Renters book, trips complete, owner earns
-12. **Payouts processed** - Admin executes via Stripe Connect
+// Update city launch status
+useUpdateCityStatus()
+```
 
 ---
 
-## Conclusion
+### 3. City Supply Stats Query
 
-**The complete Owner Onboarding & Verification system is already implemented and functional.** All the requested features are in place:
+For the "Owner Supply" section, query the database:
 
-- Multi-step owner application with document upload
-- 2018+ vehicle year enforcement
-- Admin verification panel for owners and vehicles
-- Stripe Connect payout integration
-- Owner dashboard with earnings tracking
-- Status-based access control (verified owners only can list)
+```sql
+-- Approved owners count for city
+SELECT COUNT(*) FROM car_owner_profiles
+WHERE city ILIKE '%Los Angeles%'
+AND state = 'CA'
+AND status = 'verified';
 
-**No development is required.** The system is ready for production use.
+-- Approved vehicles count for city
+SELECT COUNT(*) FROM p2p_vehicles
+WHERE location_city ILIKE '%Los Angeles%'
+AND location_state = 'CA'
+AND approval_status = 'approved';
+```
 
 ---
 
-## Optional Enhancements
+### 4. Vehicle Search Filtering by Live City
 
-If you'd like to improve the existing system, consider:
+Modify `useP2PVehicleSearch` in `useP2PBooking.ts`:
 
-1. **Email Notifications** - Send emails when owner status changes
-2. **Background Checks Integration** - Add third-party background check API
-3. **Insurance Certificate Upload** - Add field for owners with their own insurance
-4. **Vehicle Inspection Checklist** - Add pre-rental inspection workflow
-5. **Selfie Verification** - Integrate with identity verification API (e.g., Stripe Identity)
+When searching for vehicles:
+1. Check if the city is in a "live" launch status
+2. If city is not live, exclude those vehicles from results
+3. This ensures only vehicles in launched cities appear in search
+
+Implementation approach:
+- Join or subquery against `p2p_launch_cities` table
+- Filter by `launch_status = 'live'`
+
+---
+
+### 5. AdminPanel.tsx Updates
+
+Add new navigation item:
+
+```typescript
+{ id: "city-launch", label: "City Launch", icon: MapPin }
+```
+
+Add to switch statement:
+
+```typescript
+case "city-launch":
+  return <AdminCityLaunchModule />;
+```
+
+---
+
+## UI Design
+
+### City Card Layout
+
+```text
++------------------------------------------+
+|  Los Angeles, CA                [Draft]  |
+|                                          |
+|  Owners: 3/5     Vehicles: 7/10         |
+|                                          |
+|  [View Checklist]                        |
++------------------------------------------+
+```
+
+### Checklist Section Layout
+
+```text
++------------------------------------------+
+|  [v] Legal & Compliance            5/5   |
+|  [v] Insurance Setup               1/1   |
+|  [x] Payments & Payouts            2/4   |
+|  [v] Owner Supply                  Met   |
+|  [x] Operational Readiness         1/4   |
+|  [v] Support & Contact             1/1   |
++------------------------------------------+
+|  Overall Progress: 4/6 sections          |
+|                                          |
+|  [Mark City as LIVE] (disabled)          |
++------------------------------------------+
+```
+
+### Status Badges
+
+| Status | Color |
+|--------|-------|
+| Draft | Gray |
+| Ready | Yellow |
+| Live | Green |
+| Paused | Orange |
+
+---
+
+## Launch Confirmation Modal
+
+When admin clicks "Mark City as LIVE":
+
+```text
++------------------------------------------+
+|  Launch Los Angeles, CA                  |
++------------------------------------------+
+|  You are about to enable public          |
+|  bookings for this city.                 |
+|                                          |
+|  This will:                              |
+|  - Make cars in this city searchable     |
+|  - Allow bookings and payments           |
+|  - Trigger live operations               |
+|                                          |
+|  [Cancel]            [Confirm Launch]    |
++------------------------------------------+
+```
+
+---
+
+## Failsafe: Pause City
+
+When a live city is paused:
+- `launch_status` changes to `paused`
+- `paused_at` timestamp is set
+- Vehicles in that city are hidden from search results
+- New bookings are blocked
+- Existing confirmed bookings remain valid
+
+---
+
+## Security Considerations
+
+- All operations require admin role (checked in hooks via `useAuth().isAdmin`)
+- RLS policies on new tables:
+  - SELECT: Admin only
+  - INSERT/UPDATE/DELETE: Admin only
+- No public access to launch configuration data
+
+---
+
+## Database Migration Summary
+
+```sql
+-- Create launch status enum
+CREATE TYPE p2p_launch_status AS ENUM ('draft', 'ready', 'live', 'paused');
+
+-- Create cities table
+CREATE TABLE p2p_launch_cities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  state TEXT NOT NULL,
+  launch_status p2p_launch_status DEFAULT 'draft',
+  launched_at TIMESTAMPTZ,
+  paused_at TIMESTAMPTZ,
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(name, state)
+);
+
+-- Create checklists table
+CREATE TABLE p2p_launch_checklists (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  city_id UUID REFERENCES p2p_launch_cities(id) ON DELETE CASCADE UNIQUE,
+  -- Legal section
+  legal_renter_terms BOOLEAN DEFAULT false,
+  legal_owner_terms BOOLEAN DEFAULT false,
+  legal_insurance_disclosure BOOLEAN DEFAULT false,
+  legal_damage_policy BOOLEAN DEFAULT false,
+  legal_privacy_policy BOOLEAN DEFAULT false,
+  -- Insurance section
+  insurance_provider_name TEXT,
+  insurance_coverage_type TEXT DEFAULT 'Trip-based',
+  insurance_confirmation_ref TEXT,
+  insurance_active BOOLEAN DEFAULT false,
+  -- Payments section
+  payments_stripe_active BOOLEAN DEFAULT false,
+  payments_connect_enabled BOOLEAN DEFAULT false,
+  payments_test_payment BOOLEAN DEFAULT false,
+  payments_test_payout BOOLEAN DEFAULT false,
+  -- Operations section
+  ops_dispute_tested BOOLEAN DEFAULT false,
+  ops_damage_tested BOOLEAN DEFAULT false,
+  ops_cancellation_tested BOOLEAN DEFAULT false,
+  ops_payout_delay_tested BOOLEAN DEFAULT false,
+  -- Support section
+  support_email TEXT,
+  support_emergency_procedure TEXT,
+  support_confirmed BOOLEAN DEFAULT false,
+  -- Supply minimums
+  min_approved_cars INTEGER DEFAULT 10,
+  min_approved_owners INTEGER DEFAULT 5,
+  -- Metadata
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  updated_by UUID REFERENCES auth.users(id)
+);
+
+-- RLS policies (admin only)
+ALTER TABLE p2p_launch_cities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE p2p_launch_checklists ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Admin can do everything
+CREATE POLICY "Admin full access to launch cities"
+  ON p2p_launch_cities FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM user_roles 
+    WHERE user_id = auth.uid() AND role = 'admin'
+  ));
+
+CREATE POLICY "Admin full access to launch checklists"
+  ON p2p_launch_checklists FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM user_roles 
+    WHERE user_id = auth.uid() AND role = 'admin'
+  ));
+```
+
+---
+
+## Summary of Changes
+
+| Action | File | Description |
+|--------|------|-------------|
+| Create | `src/types/cityLaunch.ts` | TypeScript types for city launch |
+| Create | `src/hooks/useCityLaunch.ts` | Data hooks for city launch |
+| Create | `src/pages/admin/modules/AdminCityLaunchModule.tsx` | Main admin UI |
+| Modify | `src/pages/admin/AdminPanel.tsx` | Add nav item and module |
+| Modify | `src/hooks/useP2PBooking.ts` | Filter vehicles by live city |
+| Database | Migration | Create tables, enum, and RLS policies |
+
+---
+
+## Technical Notes
+
+1. **Legal Auto-Check**: Could add automatic verification by checking if legal page routes return 200, but manual checkboxes are safer for admin accountability.
+
+2. **Supply Stats**: Calculated live from `car_owner_profiles` and `p2p_vehicles` tables using city/state matching (case-insensitive).
+
+3. **Launch Status Flow**: `draft` -> (all checks complete) -> `ready` -> (admin confirms) -> `live` -> (admin pauses) -> `paused`
+
+4. **City Matching**: Uses `ILIKE` for flexible city name matching in supply stats query.
