@@ -232,7 +232,7 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
         {/* Affiliate disclaimer - REQUIRED */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Prices are indicative and may change. Final price shown on partner site.
+            You will complete your booking securely with our travel partner. Prices are indicative and may change.
           </p>
         </div>
       </CardContent>

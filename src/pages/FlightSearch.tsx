@@ -14,6 +14,7 @@ import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/componen
 import { FlightSearchFormPro } from "@/components/search";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
+import { HowBookingWorks, FlightTrustBadgesBar } from "@/components/flight";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -59,6 +60,12 @@ const FlightSearch = () => {
 
         {/* Trust Features */}
         <TrustFeatureCards columns={4} />
+
+        {/* How Booking Works */}
+        <HowBookingWorks />
+
+        {/* Trust Badges */}
+        <FlightTrustBadgesBar />
 
         {/* Why Book Section */}
         <TrustSection service="flights" />
