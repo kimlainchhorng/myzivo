@@ -1,20 +1,21 @@
 import { Badge } from "@/components/ui/badge";
-import { Plane, Globe, Star } from "lucide-react";
+import { Globe, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getAirlineLogo } from "@/data/airlines";
 
 const airlines = [
-  { name: "United", code: "UA", logo: "🔵", alliance: "Star Alliance", featured: true },
-  { name: "Delta", code: "DL", logo: "🔺", alliance: "SkyTeam", featured: true },
-  { name: "American", code: "AA", logo: "🦅", alliance: "Oneworld", featured: true },
-  { name: "British Airways", code: "BA", logo: "🇬🇧", alliance: "Oneworld", featured: false },
-  { name: "Lufthansa", code: "LH", logo: "🇩🇪", alliance: "Star Alliance", featured: false },
-  { name: "Air France", code: "AF", logo: "🇫🇷", alliance: "SkyTeam", featured: false },
-  { name: "Emirates", code: "EK", logo: "🇦🇪", alliance: "None", featured: true },
-  { name: "Qatar Airways", code: "QR", logo: "🇶🇦", alliance: "Oneworld", featured: false },
-  { name: "Singapore", code: "SQ", logo: "🇸🇬", alliance: "Star Alliance", featured: true },
-  { name: "ANA", code: "NH", logo: "🇯🇵", alliance: "Star Alliance", featured: false },
-  { name: "KLM", code: "KL", logo: "🇳🇱", alliance: "SkyTeam", featured: false },
-  { name: "Qantas", code: "QF", logo: "🇦🇺", alliance: "Oneworld", featured: false },
+  { name: "United", code: "UA", alliance: "Star Alliance", featured: true },
+  { name: "Delta", code: "DL", alliance: "SkyTeam", featured: true },
+  { name: "American", code: "AA", alliance: "Oneworld", featured: true },
+  { name: "British Airways", code: "BA", alliance: "Oneworld", featured: false },
+  { name: "Lufthansa", code: "LH", alliance: "Star Alliance", featured: false },
+  { name: "Air France", code: "AF", alliance: "SkyTeam", featured: false },
+  { name: "Emirates", code: "EK", alliance: "None", featured: true },
+  { name: "Qatar Airways", code: "QR", alliance: "Oneworld", featured: false },
+  { name: "Singapore", code: "SQ", alliance: "Star Alliance", featured: true },
+  { name: "ANA", code: "NH", alliance: "Star Alliance", featured: false },
+  { name: "KLM", code: "KL", alliance: "SkyTeam", featured: false },
+  { name: "Qantas", code: "QF", alliance: "Oneworld", featured: false },
 ];
 
 const FlightAirlinePartners = () => {
@@ -51,8 +52,15 @@ const FlightAirlinePartners = () => {
               {airline.featured && (
                 <Star className="absolute top-2 right-2 w-3 h-3 fill-amber-400 text-amber-400" />
               )}
-              <div className="text-3xl mb-2 transition-transform group-hover:scale-110">
-                {airline.logo}
+              <div className="flex justify-center mb-2">
+                <img
+                  src={getAirlineLogo(airline.code, 48)}
+                  alt={`${airline.name} logo`}
+                  className="w-12 h-12 object-contain transition-transform group-hover:scale-110"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
               </div>
               <h3 className="font-semibold text-sm mb-1 group-hover:text-sky-400 transition-colors truncate">
                 {airline.name}
