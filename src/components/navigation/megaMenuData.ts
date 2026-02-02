@@ -272,75 +272,70 @@ export const megaMenuData: MegaMenuData[] = [
     ],
   },
   {
-    id: "extras",
-    label: "Extras",
-    icon: Sparkles,
-    color: "text-violet-500",
-    hoverColor: "hover:text-violet-500",
-    description: "Enhance your travel experience",
+    id: "help",
+    label: "Help",
+    icon: HelpCircle,
+    color: "text-muted-foreground",
+    hoverColor: "hover:text-primary",
+    description: "Get support and assistance",
     mainAction: {
-      label: "Explore Extras",
-      href: "/extras",
+      label: "Help Center",
+      href: "/help",
     },
     sections: [
       {
-        title: "Travel Services",
+        title: "Support",
         items: [
-          { icon: Car, label: "Airport Transfers", description: "Seamless pickup & drop", href: "/extras", color: "text-primary" },
-          { icon: Ticket, label: "Activities & Tours", description: "Experiences worldwide", href: "/things-to-do", color: "text-pink-500" },
-          { icon: Wifi, label: "Travel eSIM", description: "Stay connected abroad", href: "/extras", color: "text-sky-500" },
-          { icon: Luggage, label: "Luggage Storage", description: "Store bags anywhere", href: "/extras", color: "text-amber-500" },
+          { icon: HelpCircle, label: "Help Center", description: "Browse FAQs and guides", href: "/help", color: "text-primary" },
+          { icon: Phone, label: "Contact Us", description: "Get in touch with support", href: "/contact", color: "text-primary" },
+          { icon: MessageCircle, label: "Travel Bookings", description: "Help with your reservations", href: "/support/travel-bookings", color: "text-sky-500" },
+          { icon: Globe, label: "Site Issues", description: "Report technical problems", href: "/support/site-issues", color: "text-muted-foreground" },
         ],
       },
       {
-        title: "Protection",
+        title: "Company",
         items: [
-          { icon: Shield, label: "Travel Insurance", description: "Comprehensive coverage", href: "/travel-insurance", color: "text-emerald-500" },
-          { icon: PlaneLanding, label: "Flight Delay Claim", description: "Get compensation", href: "/extras", color: "text-sky-500" },
+          { icon: Globe, label: "About Hizovo", description: "Our story and mission", href: "/about", color: "text-primary" },
+          { icon: Compass, label: "How It Works", description: "Search, compare, book", href: "/how-it-works", color: "text-primary" },
+          { icon: Users, label: "Partners", description: "Our travel partners", href: "/partners", color: "text-primary" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Terms", description: "Service terms", href: "/terms" },
-      { icon: HelpCircle, label: "Help", description: "Get support", href: "/help" },
+      { icon: FileText, label: "Terms of Service", description: "Platform usage terms", href: "/terms" },
+      { icon: ShieldCheck, label: "Privacy Policy", description: "How we protect your data", href: "/privacy" },
+      { icon: CircleDollarSign, label: "Partner Disclosure", description: "Booking partner information", href: "/partner-disclosure" },
     ],
   },
 ];
 
-// ZIVO More dropdown - includes future services and company pages
+// ZIVO More dropdown - links to external ZIVO Driver services
 export const moreServicesData: MegaMenuData = {
   id: "more",
-  label: "ZIVO More",
+  label: "Rides · Eats · Move",
   icon: Package,
-  color: "text-muted-foreground",
-  hoverColor: "hover:text-primary",
-  description: "Explore all ZIVO services",
+  color: "text-rides",
+  hoverColor: "hover:text-rides",
+  description: "Local services on ZIVO Driver",
   mainAction: {
-    label: "Explore ZIVO",
-    href: "/",
+    label: "Open ZIVO Driver",
+    href: "https://zivodriver.com",
   },
   sections: [
     {
-      title: "ZIVO Services",
+      title: "ZIVO Driver Services",
       items: [
-        { icon: Car, label: "ZIVO Rides", description: "Request a ride in your area", href: "/rides", color: "text-primary" },
-        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "/eats", color: "text-eats" },
+        { icon: Car, label: "ZIVO Rides", description: "Request a ride in your area", href: "https://zivodriver.com/rides", color: "text-rides", badge: "External" },
+        { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "https://zivodriver.com/eats", color: "text-eats", badge: "External" },
+        { icon: Package, label: "ZIVO Move", description: "Package delivery service", href: "https://zivodriver.com/move", color: "text-primary", badge: "External" },
       ],
     },
     {
-      title: "Company",
+      title: "For Drivers",
       items: [
-        { icon: Globe, label: "About ZIVO", description: "Our story and mission", href: "/about", color: "text-primary" },
-        { icon: Compass, label: "How It Works", description: "Search, compare, book", href: "/how-it-works", color: "text-primary" },
-        { icon: Users, label: "Partners", description: "Our travel partners", href: "/partners", color: "text-primary" },
-        { icon: Phone, label: "Contact", description: "Get in touch", href: "/contact", color: "text-primary" },
+        { icon: Car, label: "Become a Driver", description: "Earn with ZIVO Driver", href: "https://zivodriver.com/drive", color: "text-rides", badge: "External" },
       ],
     },
   ],
-  policies: [
-    { icon: FileText, label: "Terms of Service", description: "Platform usage terms", href: "/terms" },
-    { icon: ShieldCheck, label: "Privacy Policy", description: "How we protect your data", href: "/privacy" },
-    { icon: CircleDollarSign, label: "Affiliate Disclosure", description: "Commission transparency", href: "/affiliate-disclosure" },
-    { icon: Headphones, label: "Help Center", description: "24/7 support", href: "/help" },
-  ],
+  policies: [],
 };
