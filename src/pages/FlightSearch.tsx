@@ -13,6 +13,7 @@ import { OGImageMeta } from "@/components/marketing";
 import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/components/seo";
 import { FlightSearchFormPro } from "@/components/search";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
+import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -37,12 +38,12 @@ const FlightSearch = () => {
           </BigSearchCard>
         </ImageHero>
 
-        {/* Trust/Compliance Banner */}
-        <section className="border-b border-border/50 py-3 bg-muted/10">
+        {/* Trust/Compliance Banner - LOCKED DISCLAIMER */}
+        <section className="border-b border-border/50 py-3 bg-amber-500/5">
           <div className="container mx-auto px-4">
             <p className="text-center text-xs text-muted-foreground">
-              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-emerald-500" />
-              ZIVO compares prices from third-party partners. Final price and booking are completed on partner websites.
+              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 text-amber-500" />
+              {FLIGHT_DISCLAIMERS.ticketing}
             </p>
           </div>
         </section>

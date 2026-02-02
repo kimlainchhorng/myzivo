@@ -39,12 +39,14 @@ import {
   Sparkles,
   Award,
   Globe,
+  Lock,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getAirlineLogo } from "@/data/airlines";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { trackAffiliateClick, buildAffiliateUrl } from "@/lib/affiliateTracking";
+import { FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
 
 const FlightDetails = () => {
   const navigate = useNavigate();
@@ -625,28 +627,29 @@ const FlightDetails = () => {
                     </Badge>
                   </div>
 
-                  {/* Info Note */}
-                  <div className="bg-sky-500/10 border border-sky-500/30 rounded-xl p-3">
+                  {/* Info Note - LOCKED DISCLAIMER */}
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
                     <div className="flex items-start gap-2">
-                      <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                       <p className="text-xs text-muted-foreground">
-                        You'll be redirected to our trusted booking partner to complete your reservation.
+                        {FLIGHT_DISCLAIMERS.ticketing}
                       </p>
                     </div>
                   </div>
 
-                  {/* Book Button */}
+                  {/* Book Button - LOCKED CTA TEXT */}
                   <Button
                     onClick={handleBookNow}
                     size="lg"
                     className="w-full h-14 bg-gradient-to-r from-sky-500 via-blue-600 to-sky-500 hover:from-sky-600 hover:via-blue-700 hover:to-sky-600 text-white font-bold text-lg shadow-xl shadow-sky-500/30 gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                   >
-                    Book Now
+                    <Lock className="w-5 h-5" />
+                    {FLIGHT_CTA_TEXT.primary}
                     <ExternalLink className="w-5 h-5" />
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    ✓ Free cancellation within 24hrs • ✓ No hidden fees
+                    ✓ Redirect to partner • ✓ Secure checkout
                   </p>
 
                   {/* Affiliate Disclosure */}

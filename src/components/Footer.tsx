@@ -242,10 +242,13 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Affiliate Disclosure */}
+          {/* Affiliate & Flight Disclosure */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
+              ⚠️ Hizivo does not issue airline tickets. Flight bookings are completed with licensed airline partners.
+            </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+              Hotels & Car Rentals: Hizivo is the merchant of record. Payments processed securely via Stripe/Adyen.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               ZIVO may earn a commission when users book through partner links. Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
