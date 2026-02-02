@@ -7,7 +7,7 @@
  * COMPLIANCE: Contains required disclosure text for meta-search transparency.
  */
 
-import { ExternalLink, ShieldCheck, Zap, Plane, TrendingDown, Star, ArrowRightLeft } from "lucide-react";
+import { ExternalLink, ShieldCheck, Zap, Plane, TrendingDown, Star, ArrowRightLeft, Clock, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,17 @@ export interface PartnerPricing {
   flexible?: number;
 }
 
+export interface FlightSummary {
+  airline?: string;
+  airlineCode?: string;
+  airlineLogo?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  duration?: string;
+  stops?: number;
+  stopCities?: string[];
+}
+
 interface ApiPendingNoticeProps {
   whitelabelUrl: string;
   origin: string;
@@ -29,6 +40,11 @@ interface ApiPendingNoticeProps {
   passengers?: number;
   cabin?: string;
   prices?: PartnerPricing;
+  flightSummaries?: {
+    cheapest?: FlightSummary;
+    bestValue?: FlightSummary;
+    flexible?: FlightSummary;
+  };
   currency?: string;
   className?: string;
 }
@@ -48,8 +64,12 @@ const AIRLINE_LOGOS = [
   { name: "Emirates", color: "#D71921" },
 ];
 
-// Build partner deals dynamically based on prices
-function buildPartnerDeals(prices?: PartnerPricing, currency: string = "USD") {
+// Build partner deals dynamically based on prices and flight summaries
+function buildPartnerDeals(
+  prices?: PartnerPricing, 
+  flightSummaries?: { cheapest?: FlightSummary; bestValue?: FlightSummary; flexible?: FlightSummary },
+  currency: string = "USD"
+) {
   const formatPrice = (price?: number) => {
     if (!price) return null;
     const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
@@ -67,6 +87,7 @@ function buildPartnerDeals(prices?: PartnerPricing, currency: string = "USD") {
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
       borderColor: "border-emerald-500/30",
+      flight: flightSummaries?.cheapest,
     },
     { 
       label: "Best value", 
@@ -78,6 +99,7 @@ function buildPartnerDeals(prices?: PartnerPricing, currency: string = "USD") {
       color: "text-amber-500",
       bgColor: "bg-amber-500/10",
       borderColor: "border-amber-500/30",
+      flight: flightSummaries?.bestValue,
     },
     { 
       label: "Flexible options", 
@@ -89,6 +111,7 @@ function buildPartnerDeals(prices?: PartnerPricing, currency: string = "USD") {
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
       borderColor: "border-purple-500/30",
+      flight: flightSummaries?.flexible,
     },
   ];
 }
@@ -156,6 +179,7 @@ export default function ApiPendingNotice({
   passengers,
   cabin,
   prices,
+  flightSummaries,
   currency = "USD",
   className,
 }: ApiPendingNoticeProps) {
@@ -163,8 +187,8 @@ export default function ApiPendingNotice({
   const jetradarUrl = buildPartnerUrl("jetradar", origin, destination, departDate, returnDate, passengers, cabin);
   const kiwiUrl = buildPartnerUrl("kiwi", origin, destination, departDate, returnDate, passengers, cabin);
   
-  // Build partner deals with dynamic prices
-  const partnerDeals = buildPartnerDeals(prices, currency);
+  // Build partner deals with dynamic prices and flight summaries
+  const partnerDeals = buildPartnerDeals(prices, flightSummaries, currency);
   const hasLivePrices = prices && (prices.cheapest || prices.bestValue || prices.flexible);
 
   return (
@@ -255,13 +279,16 @@ export default function ApiPendingNotice({
             Prices update in real time. Final booking completed on partner site.
           </p>
 
-          {/* Partner Deal Cards */}
+          {/* Partner Deal Cards with Flight Details */}
           <div className="space-y-3">
             {partnerDeals.map((deal) => {
               const Icon = deal.icon;
               const url = deal.partnerKey === "aviasales" ? aviasalesUrl 
                 : deal.partnerKey === "kiwi" ? kiwiUrl 
                 : jetradarUrl;
+              
+              const flight = deal.flight;
+              const hasFlightDetails = flight && (flight.airline || flight.departureTime || flight.duration);
               
               return (
                 <a
@@ -270,43 +297,101 @@ export default function ApiPendingNotice({
                   target="_blank"
                   rel="noopener noreferrer nofollow sponsored"
                   className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl border transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group",
+                    "block p-4 rounded-xl border transition-all hover:scale-[1.01] hover:shadow-lg cursor-pointer group",
                     deal.bgColor,
                     deal.borderColor
                   )}
                 >
-                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0", deal.bgColor, "border", deal.borderColor)}>
-                    <Icon className={cn("w-6 h-6", deal.color)} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold">{deal.label}</p>
-                      {deal.isLive && (
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0">
-                          LIVE
-                        </Badge>
-                      )}
+                  {/* Header Row: Deal type + Price + CTA */}
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className={cn("w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0", deal.bgColor, "border", deal.borderColor)}>
+                      <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", deal.color)} />
                     </div>
-                    <p className="text-sm text-muted-foreground">{deal.partner} • <span className="text-[10px]">Booking handled by partner</span></p>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold">{deal.label}</p>
+                        {deal.isLive && (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0">
+                            LIVE
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">{deal.partner}</p>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 shrink-0">
+                      <span className={cn("text-xl sm:text-2xl font-bold", deal.color)}>{deal.price}</span>
+                      <Button 
+                        size="sm" 
+                        className={cn(
+                          "font-semibold gap-1 group-hover:gap-2 transition-all text-xs sm:text-sm",
+                          deal.partnerKey === "aviasales" && "bg-emerald-500 hover:bg-emerald-600",
+                          deal.partnerKey === "kiwi" && "bg-amber-500 hover:bg-amber-600 text-black",
+                          deal.partnerKey === "jetradar" && "bg-purple-500 hover:bg-purple-600"
+                        )}
+                      >
+                        <span className="hidden sm:inline">View deal on partner site</span>
+                        <span className="sm:hidden">View deal</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
-                  
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 sm:gap-3 shrink-0">
-                    <span className={cn("text-xl sm:text-2xl font-bold", deal.color)}>{deal.price}</span>
-                    <Button 
-                      size="sm" 
+
+                  {/* Flight Details Row */}
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-3 border-t border-border/30">
+                    {/* Airline */}
+                    <div className="flex items-center gap-2">
+                      {flight?.airlineLogo ? (
+                        <img 
+                          src={flight.airlineLogo} 
+                          alt={flight.airline || "Airline"} 
+                          className="w-6 h-6 rounded object-contain bg-white p-0.5"
+                        />
+                      ) : (
+                        <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <span className="text-sm font-medium">
+                        {flight?.airline || "Various airlines"}
+                      </span>
+                    </div>
+
+                    {/* Time Display */}
+                    <div className="flex items-center gap-1.5 text-sm">
+                      <span className="font-semibold">{flight?.departureTime || "—"}</span>
+                      <Plane className="w-3.5 h-3.5 text-sky-500 rotate-90" />
+                      <span className="font-semibold">{flight?.arrivalTime || "—"}</span>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{flight?.duration || "~5h"}</span>
+                    </div>
+
+                    {/* Stops */}
+                    <Badge 
+                      variant="outline" 
                       className={cn(
-                        "font-semibold gap-1 group-hover:gap-2 transition-all text-xs sm:text-sm",
-                        deal.partnerKey === "aviasales" && "bg-emerald-500 hover:bg-emerald-600",
-                        deal.partnerKey === "kiwi" && "bg-amber-500 hover:bg-amber-600 text-black",
-                        deal.partnerKey === "jetradar" && "bg-purple-500 hover:bg-purple-600"
+                        "text-xs",
+                        flight?.stops === 0 ? "text-emerald-500 border-emerald-500/30" : 
+                        flight?.stops === 1 ? "text-amber-500 border-amber-500/30" : 
+                        "text-muted-foreground border-border"
                       )}
                     >
-                      <span className="hidden sm:inline">View deal on partner site</span>
-                      <span className="sm:hidden">View deal</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
+                      {flight?.stops === 0 ? "Nonstop" : 
+                       flight?.stops === 1 ? "1 stop" : 
+                       flight?.stops !== undefined ? `${flight.stops} stops` : 
+                       "1–2 stops"}
+                    </Badge>
                   </div>
+
+                  {/* Flight details disclaimer */}
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    Flight details shown are indicative. Final itinerary confirmed on partner site.
+                  </p>
                 </a>
               );
             })}
