@@ -1,343 +1,394 @@
 
-# Beta Launch Checklist Implementation Plan
 
-## Overview
-Add a comprehensive day-by-day beta launch checklist that guides admins through a safe, controlled beta launch. This will be a new admin module accessible via the existing Admin Panel navigation.
+# Public Launch System (Beta → Live) Implementation Plan
+
+## Executive Summary
+
+This plan adds a unified launch control system that manages the transition from invite-only beta to full public launch, building on the existing beta launch infrastructure. The system will provide admin controls for launch mode switching, emergency pause, booking caps, and post-launch monitoring.
 
 ---
 
-## Database Schema
+## Current State Analysis
 
-### New Table: `beta_launch_status`
-Tracks the overall beta launch state and history.
+### Existing Infrastructure (Reuse)
+- **`beta_launch_status` table**: Already tracks status (`not_ready`, `ready_for_beta`, `beta_live`, `paused`)
+- **`AdminBetaLaunchModule`**: Day-by-day checklist for beta preparation
+- **`AdminCityLaunchModule`**: City-by-city launch controls with status (`draft`, `ready`, `live`, `paused`)
+- **Beta settings hooks**: `useP2PBetaSettings`, `useRenterBetaSettings`
+- **`BetaBadge` component**: Shows "Private Beta" in header
+
+### What's Missing
+- Global launch mode switch (Beta ↔ Public Live)
+- Emergency pause functionality for all bookings
+- Daily booking cap per city
+- Minimum supply check before launch
+- Post-launch monitoring dashboard
+- Site-wide announcement banner
+- `LaunchSettings` table for these new controls
+
+---
+
+## Database Changes
+
+### New Table: `launch_settings`
 
 ```sql
-CREATE TYPE beta_launch_state AS ENUM ('not_ready', 'ready_for_beta', 'beta_live', 'paused');
-
-CREATE TABLE beta_launch_status (
+CREATE TABLE launch_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  status beta_launch_state NOT NULL DEFAULT 'not_ready',
-  activated_at TIMESTAMPTZ,
-  paused_at TIMESTAMPTZ,
-  notes TEXT,
-  activated_by UUID REFERENCES auth.users(id),
-  paused_by UUID REFERENCES auth.users(id),
+  
+  -- Global Launch Mode
+  global_mode TEXT NOT NULL DEFAULT 'beta' CHECK (global_mode IN ('beta', 'live')),
+  
+  -- Emergency Controls
+  emergency_pause BOOLEAN NOT NULL DEFAULT false,
+  emergency_pause_reason TEXT,
+  emergency_pause_at TIMESTAMPTZ,
+  emergency_pause_by UUID REFERENCES auth.users(id),
+  
+  -- Booking Limits
+  daily_booking_limit_per_city INTEGER DEFAULT 20,
+  enforce_supply_minimum BOOLEAN DEFAULT true,
+  min_owners_for_launch INTEGER DEFAULT 5,
+  min_vehicles_for_launch INTEGER DEFAULT 10,
+  
+  -- Announcements
+  announcement_enabled BOOLEAN DEFAULT false,
+  announcement_text TEXT,
+  announcement_cities TEXT[], -- Which cities to show announcement for
+  
+  -- Timestamps
+  mode_changed_at TIMESTAMPTZ,
+  mode_changed_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable RLS
-ALTER TABLE beta_launch_status ENABLE ROW LEVEL SECURITY;
+-- RLS: Admin only
+ALTER TABLE launch_settings ENABLE ROW LEVEL SECURITY;
 
--- Admin-only policies
-CREATE POLICY "Admins can read beta launch status"
-  ON beta_launch_status FOR SELECT TO authenticated
+CREATE POLICY "Admins can read launch settings"
+  ON launch_settings FOR SELECT TO authenticated
   USING (public.is_admin(auth.uid()));
 
-CREATE POLICY "Admins can update beta launch status"
-  ON beta_launch_status FOR UPDATE TO authenticated
+CREATE POLICY "Admins can update launch settings"
+  ON launch_settings FOR UPDATE TO authenticated
   USING (public.is_admin(auth.uid()));
+
+-- Everyone can read for UI display
+CREATE POLICY "Anyone can read launch mode"
+  ON launch_settings FOR SELECT TO authenticated
+  USING (true);
 
 -- Insert initial row
-INSERT INTO beta_launch_status (status, notes) 
-VALUES ('not_ready', 'Initial state');
+INSERT INTO launch_settings (global_mode, emergency_pause) 
+VALUES ('beta', false);
 ```
 
-### New Table: `beta_launch_checklist`
-Stores the checklist state for each day's items.
+### Add Columns to `p2p_launch_cities`
 
 ```sql
-CREATE TABLE beta_launch_checklist (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
-  -- Day 1: Platform Check
-  day1_homepage_loads BOOLEAN DEFAULT false,
-  day1_cars_page_loads BOOLEAN DEFAULT false,
-  day1_list_car_page_loads BOOLEAN DEFAULT false,
-  day1_login_works BOOLEAN DEFAULT false,
-  day1_owner_routing_works BOOLEAN DEFAULT false,
-  day1_renter_routing_works BOOLEAN DEFAULT false,
-  day1_admin_routing_works BOOLEAN DEFAULT false,
-  day1_footer_links_work BOOLEAN DEFAULT false,
-  day1_completed_at TIMESTAMPTZ,
-  day1_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 2: Payments & Insurance
-  day2_stripe_test_payment BOOLEAN DEFAULT false,
-  day2_stripe_connect_payout BOOLEAN DEFAULT false,
-  day2_commission_deducted BOOLEAN DEFAULT false,
-  day2_insurance_disclosure_visible BOOLEAN DEFAULT false,
-  day2_completed_at TIMESTAMPTZ,
-  day2_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 3: Owner Flow
-  day3_owner_signup_works BOOLEAN DEFAULT false,
-  day3_vehicle_upload_works BOOLEAN DEFAULT false,
-  day3_2018_rule_enforced BOOLEAN DEFAULT false,
-  day3_admin_approval_works BOOLEAN DEFAULT false,
-  day3_owner_dashboard_shows_data BOOLEAN DEFAULT false,
-  day3_completed_at TIMESTAMPTZ,
-  day3_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 4: Renter Flow
-  day4_renter_signup_works BOOLEAN DEFAULT false,
-  day4_license_verification_works BOOLEAN DEFAULT false,
-  day4_booking_blocked_without_verification BOOLEAN DEFAULT false,
-  day4_confirmation_email_works BOOLEAN DEFAULT false,
-  day4_completed_at TIMESTAMPTZ,
-  day4_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 5: Disputes & Failsafes
-  day5_damage_report_works BOOLEAN DEFAULT false,
-  day5_dispute_panel_loads BOOLEAN DEFAULT false,
-  day5_payout_hold_works BOOLEAN DEFAULT false,
-  day5_cancellation_works BOOLEAN DEFAULT false,
-  day5_completed_at TIMESTAMPTZ,
-  day5_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 6: City Launch Control
-  day6_city_status_live BOOLEAN DEFAULT false,
-  day6_only_live_city_cars_shown BOOLEAN DEFAULT false,
-  day6_non_live_cities_blocked BOOLEAN DEFAULT false,
-  day6_waitlist_shown_when_beta BOOLEAN DEFAULT false,
-  day6_completed_at TIMESTAMPTZ,
-  day6_completed_by UUID REFERENCES auth.users(id),
-  
-  -- Day 7: Beta Go Live
-  day7_first_renters_invited BOOLEAN DEFAULT false,
-  day7_bookings_enabled BOOLEAN DEFAULT false,
-  day7_first_transaction_monitored BOOLEAN DEFAULT false,
-  day7_support_contact_visible BOOLEAN DEFAULT false,
-  day7_completed_at TIMESTAMPTZ,
-  day7_completed_by UUID REFERENCES auth.users(id),
-  
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE beta_launch_checklist ENABLE ROW LEVEL SECURITY;
-
--- Admin-only policies
-CREATE POLICY "Admins can read beta checklist"
-  ON beta_launch_checklist FOR SELECT TO authenticated
-  USING (public.is_admin(auth.uid()));
-
-CREATE POLICY "Admins can update beta checklist"
-  ON beta_launch_checklist FOR UPDATE TO authenticated
-  USING (public.is_admin(auth.uid()));
-
--- Insert initial row
-INSERT INTO beta_launch_checklist DEFAULT VALUES;
+ALTER TABLE p2p_launch_cities 
+ADD COLUMN IF NOT EXISTS daily_booking_limit INTEGER DEFAULT 20,
+ADD COLUMN IF NOT EXISTS bookings_today INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS last_booking_reset DATE DEFAULT CURRENT_DATE;
 ```
 
 ---
 
 ## Files to Create
 
-### 1. `src/hooks/useBetaLaunchChecklist.ts`
-React Query hooks for managing the beta launch checklist.
+### 1. `src/types/launchSettings.ts`
+TypeScript types for launch configuration.
+
+```typescript
+export type GlobalLaunchMode = 'beta' | 'live';
+
+export interface LaunchSettings {
+  id: string;
+  global_mode: GlobalLaunchMode;
+  emergency_pause: boolean;
+  emergency_pause_reason: string | null;
+  emergency_pause_at: string | null;
+  daily_booking_limit_per_city: number;
+  enforce_supply_minimum: boolean;
+  min_owners_for_launch: number;
+  min_vehicles_for_launch: number;
+  announcement_enabled: boolean;
+  announcement_text: string | null;
+  announcement_cities: string[] | null;
+  mode_changed_at: string | null;
+}
+```
+
+### 2. `src/hooks/useLaunchSettings.ts`
+React Query hooks for launch settings.
 
 ```typescript
 // Key exports:
-- useBetaLaunchStatus() - Fetch current beta status
-- useBetaChecklist() - Fetch checklist items
-- useUpdateChecklistItem() - Toggle individual items
-- useUpdateBetaStatus() - Change overall status
-- useBetaLaunchProgress() - Calculate completion percentage
+- useLaunchSettings() - Fetch current launch settings (cached, used by UI)
+- useUpdateLaunchMode() - Switch between beta/live
+- useEmergencyPause() - Enable/disable emergency pause
+- useUpdateAnnouncementSettings() - Manage site banner
+- useUpdateBookingLimits() - Set daily caps
+- useLaunchReadinessCheck() - Validate supply minimums
 ```
 
-### 2. `src/types/betaLaunch.ts`
-TypeScript types for the beta launch feature.
+### 3. `src/pages/admin/modules/AdminPublicLaunchModule.tsx`
+Main admin module for launch controls (replaces/extends Beta Launch).
+
+**Sections:**
+1. **Launch Mode Banner** - Shows current mode (Beta/Live) with large toggle
+2. **Emergency Pause Panel** - Big red button with reason input
+3. **Supply Readiness** - Shows owners/vehicles per city vs minimums
+4. **Booking Limits** - Configure daily caps per city
+5. **Announcement Banner** - Enable/configure site-wide banner
+6. **Post-Launch Monitoring** - Real-time stats widgets
+
+### 4. `src/components/shared/AnnouncementBanner.tsx`
+Site-wide announcement banner component.
 
 ```typescript
-export type BetaLaunchState = 'not_ready' | 'ready_for_beta' | 'beta_live' | 'paused';
-
-export interface BetaLaunchStatus {
-  id: string;
-  status: BetaLaunchState;
-  activated_at: string | null;
-  paused_at: string | null;
-  notes: string | null;
-}
-
-export interface BetaChecklist {
-  // Day 1-7 fields
-}
-
-export interface DayProgress {
-  day: number;
-  title: string;
-  description: string;
-  completed: number;
-  total: number;
-  isComplete: boolean;
-  completedAt?: string;
-  completedBy?: string;
-}
+// Shows when announcement_enabled = true
+// Displays: "We're live in [CITY]! 🎉"
+// Closeable with localStorage persistence
 ```
 
-### 3. `src/pages/admin/modules/AdminBetaLaunchModule.tsx`
-Main admin module component with the full checklist UI.
+### 5. `src/components/admin/PostLaunchMonitoringPanel.tsx`
+Dashboard widgets for post-launch monitoring.
 
-**Layout:**
-- Status banner at top (Not Ready / Ready for Beta / Beta Live / Paused)
-- Progress overview (7 days, completion %)
-- Day-by-day accordion sections with checkboxes
-- Action buttons: "Mark Beta as LIVE", "Pause Beta"
-- Notes/history section
+```typescript
+// Widgets:
+// - New bookings today (per city)
+// - Failed payments (24h)
+// - Open disputes (count)
+// - Pending verifications (owners + renters)
+// - Active cars by city
+```
 
 ---
 
 ## Files to Modify
 
 ### 1. `src/pages/admin/AdminPanel.tsx`
-Add new navigation item and module rendering.
+- Add new nav item: `{ id: "public-launch", label: "Public Launch", icon: Globe }`
+- Add module render case for `AdminPublicLaunchModule`
+
+### 2. `src/components/Header.tsx`
+- Import and render `AnnouncementBanner` at top when enabled
+- Conditionally show `BetaBadge` only in beta mode
+
+### 3. `src/pages/Index.tsx` (Homepage)
+- Create conditional hero section based on launch mode:
+  - **Beta Mode**: Current hero with flights focus
+  - **Live Mode**: P2P-focused hero with "Rent cars from local owners — insurance included."
+
+### 4. `src/hooks/useP2PBooking.ts`
+- Add booking limit check before creating booking
+- Check `emergency_pause` status before allowing new bookings
+- Implement daily limit counter per city
+
+### 5. `src/pages/p2p/P2PVehicleSearch.tsx`
+- Filter vehicles to only show from `live` cities
+- Show "Coming soon" for non-live cities with email collection
+
+### 6. `src/pages/p2p/P2PVehicleDetail.tsx`
+- Block booking when `emergency_pause = true`
+- Show warning banner when approaching daily limit
+
+### 7. `src/pages/admin/modules/AdminOverview.tsx`
+- Add launch status indicator card
+- Add quick link to launch controls
+
+---
+
+## UI/UX Design
+
+### Launch Mode Toggle (Admin)
+
+```
+┌─────────────────────────────────────────────┐
+│  🚀 Launch Mode                             │
+├─────────────────────────────────────────────┤
+│                                             │
+│   [ PRIVATE BETA ]  ←──→  [ PUBLIC LIVE ]   │
+│        ⚫                      ⚪           │
+│                                             │
+│   Current: Private Beta                     │
+│   Switched: Never                           │
+│                                             │
+│   Pre-launch checklist: 7/7 complete ✓      │
+│   Cities ready: 3 of 3 ✓                    │
+│   Supply minimum met: Yes ✓                 │
+│                                             │
+│   [ Switch to Public Live ]                 │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+### Emergency Pause Panel
+
+```
+┌─────────────────────────────────────────────┐
+│  ⚠️ Emergency Controls                      │
+├─────────────────────────────────────────────┤
+│                                             │
+│   Status: ● Normal Operations               │
+│                                             │
+│   ┌───────────────────────────────────┐     │
+│   │      [ 🛑 PAUSE ALL BOOKINGS ]     │     │
+│   └───────────────────────────────────┘     │
+│                                             │
+│   This immediately blocks new bookings.     │
+│   Existing trips are not affected.          │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+### Post-Launch Monitoring
+
+```
+┌──────────────────┬──────────────────┬──────────────────┐
+│ 📊 Bookings Today│ 💳 Failed Payments│ ⚠️ Open Disputes │
+│       12         │        2         │        1         │
+│   +3 vs yesterday│   Investigate →  │   Review →       │
+└──────────────────┴──────────────────┴──────────────────┘
+┌──────────────────┬──────────────────┬──────────────────┐
+│ 📋 Pending       │ 🚗 Active Cars    │ 👥 New Signups   │
+│ Verifications    │    by City       │    Today         │
+│       5          │  NYC: 23         │   Owners: 4      │
+│   owners: 2      │  LA: 18          │   Renters: 12    │
+│   renters: 3     │  Miami: 8        │                  │
+└──────────────────┴──────────────────┴──────────────────┘
+```
+
+---
+
+## Launch Mode Behavior Matrix
+
+| Feature | Beta Mode | Live Mode |
+|---------|-----------|-----------|
+| Owner signup | Invite-only (beta badge shown) | Open (still requires approval) |
+| Renter signup | Waitlist + invite | Open signup |
+| Homepage badge | "Private Beta" | None |
+| SEO pages | noindex | Indexed |
+| City visibility | Only beta cities | Only `live` cities |
+| Promo codes | Enabled | Optional |
+| Hero text | Travel-focused | "Rent cars from local owners" |
+
+---
+
+## Safety Controls Implementation
+
+### Booking Limit Check
 
 ```typescript
-// Add to navItems array:
-{ id: "beta-launch", label: "Beta Launch", icon: Rocket }
+// In useP2PBooking.ts - before creating booking
+const checkBookingAllowed = async (cityId: string) => {
+  // Check emergency pause
+  const { data: settings } = await supabase
+    .from("launch_settings")
+    .select("emergency_pause")
+    .single();
+    
+  if (settings?.emergency_pause) {
+    throw new Error("Bookings are temporarily paused. Please try again later.");
+  }
+  
+  // Check daily limit
+  const { data: city } = await supabase
+    .from("p2p_launch_cities")
+    .select("daily_booking_limit, bookings_today")
+    .eq("id", cityId)
+    .single();
+    
+  if (city && city.bookings_today >= city.daily_booking_limit) {
+    throw new Error("Daily booking limit reached for this city. Please try tomorrow.");
+  }
+  
+  return true;
+};
+```
 
-// Add to renderModule switch:
-case "beta-launch":
-  return <AdminBetaLaunchModule />;
+### City Coming Soon UI
+
+When user searches in a non-live city:
+
+```
+┌─────────────────────────────────────────────┐
+│  🚗 Car Sharing Coming Soon to [CITY]!     │
+├─────────────────────────────────────────────┤
+│                                             │
+│  We're expanding! Be the first to know     │
+│  when we launch in [CITY].                  │
+│                                             │
+│  [ your@email.com        ] [ Notify Me ]   │
+│                                             │
+└─────────────────────────────────────────────┘
 ```
 
 ---
 
-## UI Component Structure
+## Technical Flow
 
-### Status Banner
-Displays current beta state with color coding:
-- **Not Ready** - Gray/muted
-- **Ready for Beta** - Yellow/amber
-- **Beta Live** - Green
-- **Paused** - Orange/red
+### Beta → Live Transition
 
-### Day Cards (Accordion)
-Each day shows:
-- Day number and title
-- Progress indicator (3/5 items complete)
-- Expandable checklist items
-- Completion timestamp when all items checked
-
-### Checklist Items
-Each item is a checkbox with:
-- Item description
-- Optional tooltip/help text
-- Auto-saves on toggle
-- Shows who completed it (admin email)
-
-### Action Buttons
-- **Mark Beta as LIVE** - Only enabled when all 7 days complete
-- **Pause Beta** - Emergency stop, captures reason
-- **Resume Beta** - Restores from paused state
-
----
-
-## Day-by-Day Checklist Details
-
-### Day 1: Platform Check
-| Item | Database Field |
-|------|----------------|
-| Website homepage loads correctly | `day1_homepage_loads` |
-| /cars page loads correctly | `day1_cars_page_loads` |
-| /list-your-car page loads correctly | `day1_list_car_page_loads` |
-| Login/signup works | `day1_login_works` |
-| Owner routes correctly to /owner/dashboard | `day1_owner_routing_works` |
-| Renter routes correctly to /renter/dashboard | `day1_renter_routing_works` |
-| Admin routes correctly to /admin | `day1_admin_routing_works` |
-| Footer legal links work (Terms, Privacy, etc.) | `day1_footer_links_work` |
-
-### Day 2: Payments & Insurance
-| Item | Database Field |
-|------|----------------|
-| Stripe test payment completed | `day2_stripe_test_payment` |
-| Stripe Connect owner payout tested | `day2_stripe_connect_payout` |
-| Commission deducted correctly (20%) | `day2_commission_deducted` |
-| Insurance disclosure visible at checkout | `day2_insurance_disclosure_visible` |
-
-### Day 3: Owner Flow Test
-| Item | Database Field |
-|------|----------------|
-| Owner signup works | `day3_owner_signup_works` |
-| Vehicle upload works | `day3_vehicle_upload_works` |
-| 2018+ rule enforced | `day3_2018_rule_enforced` |
-| Admin approval works | `day3_admin_approval_works` |
-| Owner dashboard shows car & earnings | `day3_owner_dashboard_shows_data` |
-
-### Day 4: Renter Flow Test
-| Item | Database Field |
-|------|----------------|
-| Renter signup works | `day4_renter_signup_works` |
-| Driver license verification works | `day4_license_verification_works` |
-| Booking blocked until verification approved | `day4_booking_blocked_without_verification` |
-| Booking confirmation email works | `day4_confirmation_email_works` |
-
-### Day 5: Disputes & Failsafes
-| Item | Database Field |
-|------|----------------|
-| Damage report submission works | `day5_damage_report_works` |
-| Admin dispute panel loads | `day5_dispute_panel_loads` |
-| Payout hold works when dispute exists | `day5_payout_hold_works` |
-| Booking cancellation works | `day5_cancellation_works` |
-
-### Day 6: City Launch Control
-| Item | Database Field |
-|------|----------------|
-| City launch status set to LIVE | `day6_city_status_live` |
-| Only LIVE city cars appear in search | `day6_only_live_city_cars_shown` |
-| Non-live cities blocked | `day6_non_live_cities_blocked` |
-| Waitlist shown when renter beta mode is ON | `day6_waitlist_shown_when_beta` |
-
-### Day 7: Beta Go Live
-| Item | Database Field |
-|------|----------------|
-| First renters invited | `day7_first_renters_invited` |
-| Bookings enabled | `day7_bookings_enabled` |
-| First transactions monitored | `day7_first_transaction_monitored` |
-| Support contact visible | `day7_support_contact_visible` |
-
----
-
-## Route Structure
-
-No separate route needed. The beta launch checklist will be accessible as a module within the existing `/admin` route via the sidebar navigation, similar to other admin modules like "City Launch" and "Renter Invites".
-
-Optional: Add `/admin/beta-launch` as an alias that auto-selects this module.
-
----
-
-## Technical Notes
-
-### Status Transitions
-```
-not_ready -> ready_for_beta (when all days complete)
-ready_for_beta -> beta_live (admin clicks "Mark Beta as LIVE")
-beta_live -> paused (admin clicks "Pause Beta")
-paused -> beta_live (admin clicks "Resume Beta")
+```text
+1. Admin opens /admin → "Public Launch" module
+2. System checks:
+   - Beta checklist 100% complete
+   - At least 1 city is "live" status
+   - Each live city meets supply minimums
+3. If all checks pass:
+   - Admin clicks "Switch to Public Live"
+   - Confirmation dialog with checklist summary
+4. On confirm:
+   - Update launch_settings.global_mode = 'live'
+   - Record timestamp and admin user
+   - Remove beta badges from UI
+   - Enable public SEO indexing
+   - Show success toast
 ```
 
-### Computed Progress
-The module will calculate overall progress by counting completed items across all 7 days. Each day can also show individual progress (e.g., "Day 1: 6/8 complete").
+### Emergency Pause Flow
 
-### Audit Trail
-Completion timestamps and user IDs are captured for each day to maintain an audit trail of who verified each section.
+```text
+1. Admin clicks "Pause All Bookings"
+2. Dialog: "Enter reason for pause"
+3. On confirm:
+   - Set emergency_pause = true
+   - Record reason, timestamp, admin
+4. Immediate effects:
+   - All new booking attempts blocked
+   - Vehicle pages show "Booking temporarily unavailable"
+   - Admin sees red "PAUSED" banner
+5. Existing active bookings continue normally
+6. To resume: Admin clicks "Resume Bookings"
+```
 
-### Integration with Existing Systems
-- Reads city launch status from `p2p_launch_cities` table
-- Reads beta mode from `system_settings` table  
-- Reads renter invite counts from `p2p_renter_invites` table
-- Can link to existing admin modules for quick access
+---
+
+## Implementation Order
+
+1. **Database migration**: Create `launch_settings` table and update `p2p_launch_cities`
+2. **Types and hooks**: Create TypeScript types and React Query hooks
+3. **Admin module**: Build `AdminPublicLaunchModule` with all controls
+4. **Booking integration**: Add pause and limit checks to booking flow
+5. **UI updates**: Announcement banner, conditional hero, city coming soon
+6. **Testing**: Manual testing of all flows
 
 ---
 
 ## Summary
 
-This implementation adds a focused, day-by-day beta launch checklist that:
-1. Uses the existing admin panel infrastructure
-2. Stores checklist state in the database with proper RLS
-3. Provides clear status visibility (Not Ready / Ready / Live / Paused)
-4. Includes emergency pause functionality
-5. Maintains an audit trail of who completed each section
-6. Integrates with existing city launch and beta invite systems
+This implementation adds a complete public launch system that:
+
+- ✅ Provides admin-controlled mode switching (Beta → Live)
+- ✅ Includes emergency pause for instant booking halt
+- ✅ Enforces daily booking caps per city
+- ✅ Validates supply minimums before launch
+- ✅ Shows site-wide announcements
+- ✅ Provides post-launch monitoring dashboard
+- ✅ Handles non-live cities gracefully with "Coming Soon"
+- ✅ Integrates with existing beta launch infrastructure
+- ✅ Maintains stability of existing website and web app
+
