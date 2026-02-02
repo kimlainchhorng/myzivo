@@ -3,17 +3,17 @@
  * Summary cards, stats, activity feed
  */
 import { 
-  Car, UtensilsCrossed, MousePointerClick, TrendingUp, Users, Store, 
-  Clock, DollarSign, MapPin, ExternalLink, Activity, ArrowUp, ArrowDown
+  Car, UtensilsCrossed, MousePointerClick, Users, CarFront,
+  MapPin, Activity, UserCircle, Calendar
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useRideRequests } from "@/hooks/useRideRequests";
 import { useFoodOrders } from "@/hooks/useEatsOrders";
 import { useDrivers } from "@/hooks/useDrivers";
 import { useClickStats } from "@/hooks/useClickStats";
+import { useAdminP2PStats } from "@/hooks/useAdminP2PStats";
 import { cn } from "@/lib/utils";
 import { format, subDays, isAfter } from "date-fns";
 
@@ -22,8 +22,9 @@ export default function AdminOverview() {
   const { data: foodOrders, isLoading: eatsLoading } = useFoodOrders("all");
   const { data: drivers, isLoading: driversLoading } = useDrivers();
   const { data: clickStats, isLoading: clicksLoading } = useClickStats();
+  const { data: p2pStats, isLoading: p2pLoading } = useAdminP2PStats();
 
-  const isLoading = ridesLoading || eatsLoading || driversLoading || clicksLoading;
+  const isLoading = ridesLoading || eatsLoading || driversLoading || clicksLoading || p2pLoading;
 
   // Calculate stats
   const today = new Date();
@@ -90,7 +91,7 @@ export default function AdminOverview() {
         <p className="text-muted-foreground">Overview of your operations</p>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Row 1: Core Ops */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Rides Today/Week */}
         <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -177,9 +178,77 @@ export default function AdminOverview() {
         </Card>
       </div>
 
+      {/* P2P Marketplace Stats - Row 2 */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* P2P Owners */}
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "200ms" }}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                <UserCircle className="w-5 h-5 text-sky-500" />
+              </div>
+              {(p2pStats?.owners.pending ?? 0) > 0 && (
+                <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500">
+                  {p2pStats?.owners.pending} pending
+                </Badge>
+              )}
+            </div>
+            <p className="text-2xl font-bold">{p2pLoading ? "..." : p2pStats?.owners.total ?? 0}</p>
+            <p className="text-xs text-muted-foreground">P2P Owners</p>
+            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+              <span>{p2pStats?.owners.verified ?? 0} verified</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* P2P Vehicles */}
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "250ms" }}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-cars/10 flex items-center justify-center">
+                <CarFront className="w-5 h-5 text-cars" />
+              </div>
+              {(p2pStats?.vehicles.pending ?? 0) > 0 && (
+                <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-500">
+                  {p2pStats?.vehicles.pending} pending
+                </Badge>
+              )}
+            </div>
+            <p className="text-2xl font-bold">{p2pLoading ? "..." : p2pStats?.vehicles.total ?? 0}</p>
+            <p className="text-xs text-muted-foreground">P2P Vehicles</p>
+            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+              <span>{p2pStats?.vehicles.approved ?? 0} approved</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* P2P Bookings */}
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "300ms" }}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-amber-500" />
+              </div>
+              {(p2pStats?.bookings.active ?? 0) > 0 && (
+                <Badge className="text-[10px] bg-emerald-500">
+                  {p2pStats?.bookings.active} active
+                </Badge>
+              )}
+            </div>
+            <p className="text-2xl font-bold">{p2pLoading ? "..." : p2pStats?.bookings.total ?? 0}</p>
+            <p className="text-xs text-muted-foreground">P2P Bookings</p>
+            <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+              <span>{p2pStats?.bookings.pending ?? 0} pending</span>
+              <span>•</span>
+              <span>{p2pStats?.bookings.completed ?? 0} completed</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Activity */}
-        <Card className="lg:col-span-2 animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "200ms" }}>
+        <Card className="lg:col-span-2 animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "350ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Activity className="w-4 h-4 text-primary" />
@@ -197,7 +266,7 @@ export default function AdminOverview() {
             ) : (
               <ScrollArea className="h-[300px]">
                 <div className="space-y-3">
-                  {recentActivity.map((activity, i) => (
+                  {recentActivity.map((activity) => (
                     <div 
                       key={activity.id} 
                       className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -233,7 +302,7 @@ export default function AdminOverview() {
         </Card>
 
         {/* Top Cities */}
-        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "250ms" }}>
+        <Card className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: "400ms" }}>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
               <MapPin className="w-4 h-4 text-primary" />

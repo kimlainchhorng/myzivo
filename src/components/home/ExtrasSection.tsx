@@ -1,10 +1,21 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { extrasCategoryPhotos } from "@/config/photos";
+import { ArrowRight, CarFront, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { extrasCategoryPhotos, carCategoryPhotos } from "@/config/photos";
+import { cn } from "@/lib/utils";
 
 const extras = [
+  {
+    id: "p2p-rentals",
+    title: "Rent from Owners",
+    description: "Skip the rental counter",
+    image: carCategoryPhotos.midsize.src,
+    href: "/p2p/search",
+    badge: "P2P",
+    highlight: true,
+  },
   {
     id: "activities",
     title: "Activities",
@@ -40,13 +51,6 @@ const extras = [
     image: extrasCategoryPhotos.luggage.src,
     href: "/extras",
   },
-  {
-    id: "compensation",
-    title: "Compensation",
-    description: "Claim for delays",
-    image: extrasCategoryPhotos.compensation.src,
-    href: "/extras",
-  },
 ];
 
 export default function ExtrasSection() {
@@ -71,7 +75,12 @@ export default function ExtrasSection() {
               to={extra.href}
               className="group"
             >
-              <Card className="h-full border overflow-hidden hover:border-primary/30 hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+              <Card className={cn(
+                "h-full border overflow-hidden hover:-translate-y-1 hover:shadow-lg transition-all duration-300",
+                extra.highlight 
+                  ? "hover:border-primary/50 ring-1 ring-primary/20" 
+                  : "hover:border-primary/30"
+              )}>
                 {/* Photo Header */}
                 <div className="relative h-20 sm:h-24 overflow-hidden">
                   <img
@@ -81,10 +90,29 @@ export default function ExtrasSection() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                  
+                  {/* P2P Badge */}
+                  {extra.badge && (
+                    <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground text-[9px] px-1.5 py-0.5">
+                      {extra.badge}
+                    </Badge>
+                  )}
+                  
+                  {/* P2P Icon Overlay */}
+                  {extra.highlight && (
+                    <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                      <div className="w-5 h-5 rounded-full bg-white/90 flex items-center justify-center">
+                        <Users className="w-3 h-3 text-primary" />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <CardContent className="p-3 text-center">
-                  <h3 className="font-semibold text-sm mb-0.5">
+                  <h3 className={cn(
+                    "font-semibold text-sm mb-0.5",
+                    extra.highlight && "text-primary"
+                  )}>
                     {extra.title}
                   </h3>
                   <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight">
