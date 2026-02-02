@@ -108,6 +108,8 @@ const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
 const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
 const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
+const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
+const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -347,6 +349,22 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminMobile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/email"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminEmail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/support"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminSupport />
                     </ProtectedRoute>
                   }
                 />
