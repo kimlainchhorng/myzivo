@@ -213,21 +213,39 @@ export function useCreateFoodOrder() {
 }
 
 // Admin: Fetch all food orders
-export function useFoodOrders(statusFilter?: string) {
+export interface UseFoodOrdersOptions {
+  statusFilter?: string;
+  regionId?: string | null;
+}
+
+export function useFoodOrders(statusFilterOrOptions?: string | UseFoodOrdersOptions, regionId?: string | null) {
+  // Handle both old API and new options object API
+  let options: UseFoodOrdersOptions;
+  if (typeof statusFilterOrOptions === 'object' && statusFilterOrOptions !== null) {
+    options = statusFilterOrOptions;
+  } else {
+    options = { statusFilter: statusFilterOrOptions as string | undefined, regionId };
+  }
+
   return useQuery({
-    queryKey: ["food-orders", statusFilter],
+    queryKey: ["food-orders", options.statusFilter, options.regionId],
     queryFn: async () => {
       let query = supabase
         .from("food_orders")
         .select(`
           *,
           restaurants:restaurant_id (name, phone),
-          drivers:driver_id (full_name, phone)
+          drivers:driver_id (full_name, phone),
+          regions(id, name, city, state)
         `)
         .order("created_at", { ascending: false });
 
-      if (statusFilter && statusFilter !== "all") {
-        query = query.eq("status", statusFilter as BookingStatus);
+      if (options.statusFilter && options.statusFilter !== "all") {
+        query = query.eq("status", options.statusFilter as BookingStatus);
+      }
+
+      if (options.regionId) {
+        query = query.eq("region_id", options.regionId);
       }
 
       const { data, error } = await query;

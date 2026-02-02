@@ -1,12 +1,13 @@
 /**
  * Admin Eats Module
  * Manage food orders
+ * Region-scoped when a region is selected
  */
 import { useState } from "react";
 import { format } from "date-fns";
 import { 
   UtensilsCrossed, Search, Download, RefreshCw, Phone, Mail, Eye, 
-  Store, Package, Loader2, Clock, User, Bike, Plus
+  Store, Package, Loader2, Clock, User, Bike, Plus, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import { useDrivers } from "@/hooks/useDrivers";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
+import { useRegion } from "@/contexts/RegionContext";
 
 type BookingStatus = Database["public"]["Enums"]["booking_status"];
 
@@ -35,12 +37,14 @@ const statusOptions: { value: BookingStatus; label: string; color: string }[] = 
 ];
 
 export default function AdminEatsModule() {
+  const { selectedRegionId, selectedRegion } = useRegion();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
-  const { data: foodOrders, isLoading, refetch } = useFoodOrders(statusFilter);
-  const { data: drivers } = useDrivers();
+  // Region-scoped food orders
+  const { data: foodOrders, isLoading, refetch } = useFoodOrders({ statusFilter, regionId: selectedRegionId });
+  const { data: drivers } = useDrivers({ regionId: selectedRegionId });
   const updateOrder = useUpdateFoodOrder();
   const createTestOrder = useCreateTestFoodOrder();
 

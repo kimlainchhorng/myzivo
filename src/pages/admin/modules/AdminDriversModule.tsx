@@ -1,13 +1,14 @@
 /**
  * Admin Drivers Module
  * CRUD for drivers with service toggles and notification logs
+ * Region-scoped when a region is selected
  */
 import { useState } from "react";
 import { format } from "date-fns";
 import { 
   Users, Search, RefreshCw, Phone, Mail, Eye, Plus, 
   Car, CheckCircle, XCircle, Loader2, Edit, Trash2,
-  UtensilsCrossed, Package, Bell, BellOff, ChevronDown
+  UtensilsCrossed, Package, Bell, BellOff, ChevronDown, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRegion } from "@/contexts/RegionContext";
 
 interface NotificationLog {
   id: string;
@@ -40,12 +42,14 @@ interface NotificationLog {
 
 export default function AdminDriversModule() {
   const queryClient = useQueryClient();
+  const { selectedRegionId, selectedRegion } = useRegion();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [notificationLogsOpen, setNotificationLogsOpen] = useState(false);
 
-  const { data: drivers, isLoading, refetch } = useDrivers();
+  // Fetch drivers scoped by region
+  const { data: drivers, isLoading, refetch } = useDrivers({ regionId: selectedRegionId });
   const updateDriverStatus = useUpdateDriverStatus();
 
   // Fetch notification logs for selected driver
