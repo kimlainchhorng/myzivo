@@ -188,13 +188,13 @@ export default function FlightResultCardPro({
                 "transition-all duration-200"
               )}
             >
-              View Deal
+              Continue to secure booking
               <ExternalLink className="w-4 h-4" />
             </Button>
             
             {/* Compliance micro-copy - Required for Duffel/CJ */}
             <p className="text-[9px] text-muted-foreground text-center lg:text-right leading-relaxed max-w-[180px]">
-              Indicative prices shown. Final price, availability, and booking terms confirmed on partner's secure checkout.
+              Powered by licensed travel partners · Final price confirmed before payment
             </p>
           </div>
         </div>
