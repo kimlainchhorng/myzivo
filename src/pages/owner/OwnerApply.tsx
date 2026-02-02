@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCarOwnerProfile, useCreateOwnerProfile, useUploadOwnerDocument, useOwnerDocuments } from "@/hooks/useCarOwner";
+import { useP2PBetaSettings } from "@/hooks/useP2PSettings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,8 +18,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { 
-  ArrowLeft, ArrowRight, Loader2, User, FileText, CheckCircle, Shield, AlertCircle, Sparkles, Car
+  ArrowLeft, ArrowRight, Loader2, User, FileText, CheckCircle, Shield, AlertCircle, Sparkles, Car, Lock, Clock
 } from "lucide-react";
 import { toast } from "sonner";
 import ZivoLogo from "@/components/ZivoLogo";
@@ -79,6 +81,7 @@ export default function OwnerApply() {
 
   const { data: existingProfile, isLoading: loadingProfile } = useCarOwnerProfile();
   const { data: documents = [] } = useOwnerDocuments(createdProfileId || existingProfile?.id);
+  const { data: betaSettings } = useP2PBetaSettings();
   const createProfile = useCreateOwnerProfile();
   const uploadDocument = useUploadOwnerDocument();
 
@@ -272,6 +275,36 @@ export default function OwnerApply() {
               <CardDescription>Tell us about yourself</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Beta Mode Alert */}
+              {betaSettings?.betaMode && (
+                <Card className="mb-6 border-amber-500/20 bg-amber-500/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-full bg-amber-500/10">
+                        <Lock className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold flex items-center gap-2">
+                          Private Beta
+                          <Badge variant="outline" className="text-amber-600 border-amber-500/30">
+                            Limited Access
+                          </Badge>
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {betaSettings.betaMessage || 
+                            "We are currently accepting a limited number of owners. Applications are reviewed manually."}
+                        </p>
+                        {betaSettings.betaCities?.length > 0 && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            <span className="font-medium">Available cities: </span>
+                            {betaSettings.betaCities.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               <Form {...personalForm}>
                 <form onSubmit={personalForm.handleSubmit(handlePersonalSubmit)} className="space-y-4">
                   <FormField
@@ -555,6 +588,18 @@ export default function OwnerApply() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center space-y-6">
+              {/* Beta Mode - Pending Review Notice */}
+              {betaSettings?.betaMode && (
+                <div className="text-center text-muted-foreground p-4 bg-amber-500/5 rounded-lg border border-amber-500/20">
+                  <Clock className="h-6 w-6 mx-auto mb-2 text-amber-500" />
+                  <p className="font-medium text-foreground">Application Under Review</p>
+                  <p className="text-sm mt-1">
+                    Our team will review your application within 2-3 business days.
+                    You'll receive an email once approved.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-muted/50 rounded-lg p-4 text-left">
                 <h4 className="font-medium mb-2">What happens next?</h4>
                 <ul className="text-sm text-muted-foreground space-y-2">

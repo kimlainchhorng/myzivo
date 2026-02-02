@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
   Car, DollarSign, Shield, Calendar, Star, CheckCircle, 
-  ArrowRight, Sparkles, Clock, Users, TrendingUp 
+  ArrowRight, Sparkles, Clock, Users, TrendingUp, Lock 
 } from "lucide-react";
 import ZivoLogo from "@/components/ZivoLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useP2PBetaSettings } from "@/hooks/useP2PSettings";
 
 const howItWorks = [
   {
@@ -84,6 +85,7 @@ const testimonials = [
 export default function ListYourCar() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: betaSettings } = useP2PBetaSettings();
 
   const handleGetStarted = () => {
     if (user) {
@@ -130,6 +132,14 @@ export default function ListYourCar() {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
+            {/* Private Beta Badge */}
+            {betaSettings?.betaMode && (
+              <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-4 py-2 rounded-full mb-4">
+                <Lock className="h-4 w-4" />
+                <span className="text-sm font-medium">Private Beta</span>
+              </div>
+            )}
+            
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
               <Sparkles className="h-4 w-4" />
               <span className="text-sm font-medium">Earn up to $1,500/month</span>
@@ -144,6 +154,20 @@ export default function ListYourCar() {
               Join thousands of car owners earning passive income by sharing their vehicles. 
               It's free to list, and you're always in control.
             </p>
+
+            {/* Beta Cities Callout */}
+            {betaSettings?.betaMode && betaSettings.betaCities?.length > 0 && (
+              <Card className="bg-muted/50 border-amber-500/20 mb-8 max-w-lg mx-auto">
+                <CardContent className="py-4 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Currently accepting applications in:{" "}
+                    <span className="font-medium text-foreground">
+                      {betaSettings.betaCities.join(", ")}
+                    </span>
+                  </p>
+                </CardContent>
+              </Card>
+            )}
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={handleGetStarted} className="text-lg px-8">

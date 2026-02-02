@@ -3,9 +3,10 @@
  * Admin interface for managing car owner applications
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCarOwners, useAdminOwnerStats, useUpdateOwnerStatus, useAdminOwnerDocuments, useUpdateDocumentStatus, useUpdateDocumentsVerified } from "@/hooks/useAdminP2P";
 import { useCreateTestOwner } from "@/hooks/useAdminP2PTestData";
+import { useP2PBetaSettings, useUpdateP2PBetaSetting, parseCitiesToArray, formatCitiesArray } from "@/hooks/useP2PSettings";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +17,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { 
   Users, Clock, CheckCircle, XCircle, AlertTriangle, Search, 
-  Eye, UserCheck, UserX, FileText, ExternalLink, Loader2, Plus
+  Eye, UserCheck, UserX, FileText, ExternalLink, Loader2, Plus, Lock
 } from "lucide-react";
 import type { CarOwnerStatus, AdminOwnerListItem, CarOwnerDocument } from "@/types/p2p";
 import OwnerStatusBadge from "@/components/owner/OwnerStatusBadge";
@@ -38,6 +42,9 @@ export default function AdminP2POwnersModule() {
   const [selectedOwner, setSelectedOwner] = useState<AdminOwnerListItem | null>(null);
   const [rejectionNote, setRejectionNote] = useState("");
   const [documentNotes, setDocumentNotes] = useState<Record<string, string>>({});
+  const [adminReviewNotes, setAdminReviewNotes] = useState("");
+  const [betaCitiesInput, setBetaCitiesInput] = useState("");
+  const [betaMessageInput, setBetaMessageInput] = useState("");
 
   const { data: stats, isLoading: loadingStats } = useAdminOwnerStats();
   const { data: owners = [], isLoading: loadingOwners } = useCarOwners(
@@ -46,10 +53,27 @@ export default function AdminP2POwnersModule() {
   const { data: ownerDocuments = [], isLoading: loadingDocs } = useAdminOwnerDocuments(
     selectedOwner?.id || ""
   );
+  const { data: betaSettings, isLoading: loadingBetaSettings } = useP2PBetaSettings();
   const updateStatus = useUpdateOwnerStatus();
   const updateDocStatus = useUpdateDocumentStatus();
   const updateDocsVerified = useUpdateDocumentsVerified();
+  const updateBetaSetting = useUpdateP2PBetaSetting();
   const createTestOwner = useCreateTestOwner();
+
+  // Sync beta settings to local state when loaded
+  useEffect(() => {
+    if (betaSettings) {
+      setBetaCitiesInput(formatCitiesArray(betaSettings.betaCities));
+      setBetaMessageInput(betaSettings.betaMessage);
+    }
+  }, [betaSettings]);
+
+  // Update admin notes when owner changes
+  useEffect(() => {
+    if (selectedOwner) {
+      setAdminReviewNotes(selectedOwner.admin_review_notes || "");
+    }
+  }, [selectedOwner]);
 
   // Filter owners by search
   const filteredOwners = owners.filter((owner) => {
@@ -63,13 +87,23 @@ export default function AdminP2POwnersModule() {
   });
 
   const handleApproveOwner = async (owner: AdminOwnerListItem) => {
-    await updateStatus.mutateAsync({ ownerId: owner.id, status: "verified" });
+    await updateStatus.mutateAsync({ 
+      ownerId: owner.id, 
+      status: "verified",
+      adminNotes: adminReviewNotes,
+    });
+    setAdminReviewNotes("");
     setSelectedOwner(null);
   };
 
   const handleRejectOwner = async (owner: AdminOwnerListItem) => {
-    await updateStatus.mutateAsync({ ownerId: owner.id, status: "rejected" });
+    await updateStatus.mutateAsync({ 
+      ownerId: owner.id, 
+      status: "rejected",
+      adminNotes: adminReviewNotes || rejectionNote,
+    });
     setRejectionNote("");
+    setAdminReviewNotes("");
     setSelectedOwner(null);
   };
 
@@ -122,6 +156,77 @@ export default function AdminP2POwnersModule() {
           Create Test Owner
         </Button>
       </div>
+
+      {/* Beta Mode Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Owner Beta Mode
+          </CardTitle>
+          <CardDescription>
+            Control owner onboarding access
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loadingBetaSettings ? (
+            <Skeleton className="h-12 w-full" />
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Invite-Only Mode</Label>
+                  <p className="text-sm text-muted-foreground">
+                    When enabled, only approved owners can list vehicles
+                  </p>
+                </div>
+                <Switch
+                  checked={betaSettings?.betaMode ?? false}
+                  onCheckedChange={(checked) => 
+                    updateBetaSetting.mutate({ key: "p2p_owner_beta_mode", value: checked })
+                  }
+                  disabled={updateBetaSetting.isPending}
+                />
+              </div>
+              
+              {betaSettings?.betaMode && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <Label>Beta Cities (comma-separated)</Label>
+                    <Input
+                      placeholder="Los Angeles, Miami, Austin"
+                      value={betaCitiesInput}
+                      onChange={(e) => setBetaCitiesInput(e.target.value)}
+                      onBlur={() => 
+                        updateBetaSetting.mutate({ 
+                          key: "p2p_beta_cities", 
+                          value: parseCitiesToArray(betaCitiesInput) 
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Beta Message</Label>
+                    <Textarea
+                      placeholder="Custom message for beta applicants..."
+                      value={betaMessageInput}
+                      onChange={(e) => setBetaMessageInput(e.target.value)}
+                      onBlur={() => 
+                        updateBetaSetting.mutate({ 
+                          key: "p2p_beta_message", 
+                          value: betaMessageInput 
+                        })
+                      }
+                      rows={3}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -397,13 +502,27 @@ export default function AdminP2POwnersModule() {
                         </Card>
                       ))}
                     </div>
-                  )}
+                )}
+                </div>
+
+                {/* Admin Review Notes */}
+                <div className="space-y-2">
+                  <Label>Admin Review Notes</Label>
+                  <Textarea
+                    placeholder="Add notes about this application..."
+                    value={adminReviewNotes}
+                    onChange={(e) => setAdminReviewNotes(e.target.value)}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Internal notes - not visible to the owner
+                  </p>
                 </div>
 
                 {/* Rejection Note (for rejecting owner) */}
                 {selectedOwner.status === "pending" && (
                   <div>
-                    <label className="text-sm font-medium">Rejection Note (optional)</label>
+                    <label className="text-sm font-medium">Rejection Reason (optional)</label>
                     <Textarea
                       placeholder="Reason for rejection..."
                       value={rejectionNote}
