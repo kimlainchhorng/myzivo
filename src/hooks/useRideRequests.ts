@@ -163,7 +163,30 @@ export function useUpdateRideRequest() {
         throw new Error('Failed to update ride request');
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // Send driver notification if driver was assigned
+      if (updates.assigned_driver_id && token) {
+        try {
+          await fetch(`${SUPABASE_URL}/functions/v1/send-driver-notification`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              driver_id: updates.assigned_driver_id,
+              title: 'New Ride Assigned',
+              body: 'You have a new ride request',
+              data: { type: 'ride_request', ride_id: id },
+            }),
+          });
+        } catch (e) {
+          console.warn('Failed to send driver notification:', e);
+        }
+      }
+
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ride-requests"] });

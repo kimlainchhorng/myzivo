@@ -53,6 +53,77 @@ export const useTrips = () => {
   });
 };
 
+// Admin hook - fetches all trips regardless of rider_id
+export const useAdminTrips = (statusFilter?: TripStatus | "all") => {
+  return useQuery({
+    queryKey: ["admin-trips", statusFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from("trips")
+        .select(`
+          *,
+          driver:drivers(full_name, email, avatar_url)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (statusFilter && statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Trip[];
+    },
+  });
+};
+
+// Create a test trip for driver app testing
+export const useCreateTestTrip = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const testAddresses = [
+        { pickup: "123 Main St, New York, NY", dropoff: "456 Broadway, New York, NY" },
+        { pickup: "789 5th Ave, New York, NY", dropoff: "321 Park Ave, New York, NY" },
+        { pickup: "555 Lexington Ave, New York, NY", dropoff: "888 Madison Ave, New York, NY" },
+      ];
+      const randomAddr = testAddresses[Math.floor(Math.random() * testAddresses.length)];
+      const fare = 15 + Math.random() * 25;
+      const distance = 2 + Math.random() * 8;
+
+      const { data, error } = await supabase
+        .from("trips")
+        .insert({
+          pickup_address: randomAddr.pickup,
+          dropoff_address: randomAddr.dropoff,
+          pickup_lat: 40.7128 + (Math.random() * 0.05),
+          pickup_lng: -74.0060 + (Math.random() * 0.05),
+          dropoff_lat: 40.7580 + (Math.random() * 0.05),
+          dropoff_lng: -73.9855 + (Math.random() * 0.05),
+          fare_amount: parseFloat(fare.toFixed(2)),
+          distance_km: parseFloat(distance.toFixed(1)),
+          duration_minutes: Math.floor(distance * 3 + 5),
+          status: "requested",
+          payment_status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-trips"] });
+      queryClient.invalidateQueries({ queryKey: ["trips"] });
+      toast.success(`Test trip created: ${data.id.slice(0, 8)}...`);
+    },
+    onError: (error) => {
+      toast.error("Failed to create test trip: " + error.message);
+    },
+  });
+};
+
 export const useUpdateTripStatus = () => {
   const queryClient = useQueryClient();
 
