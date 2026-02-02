@@ -1,20 +1,16 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { 
-  Plane, 
   TrendingDown, 
   Zap, 
   ArrowRight,
   Loader2,
-  MapPin,
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFlightPrices } from "@/hooks/useFlightPrices";
-import { airports } from "@/data/airports";
+import { getAirlineLogo } from "@/data/airlines";
 
 interface PopularRoutesProps {
   onSelectRoute: (from: string, to: string, price?: number) => void;
@@ -27,18 +23,19 @@ interface RouteData {
   fromCity: string;
   toCity: string;
   basePrice: number;
+  airline: string;
 }
 
-// Popular international and domestic routes
+// Popular international and domestic routes with featured airlines
 const popularRoutes: RouteData[] = [
-  { from: "JFK", to: "LAX", fromCity: "New York", toCity: "Los Angeles", basePrice: 189 },
-  { from: "LAX", to: "LHR", fromCity: "Los Angeles", toCity: "London", basePrice: 549 },
-  { from: "SFO", to: "NRT", fromCity: "San Francisco", toCity: "Tokyo", basePrice: 789 },
-  { from: "ORD", to: "CDG", fromCity: "Chicago", toCity: "Paris", basePrice: 589 },
-  { from: "MIA", to: "CUN", fromCity: "Miami", toCity: "Cancún", basePrice: 199 },
-  { from: "BOS", to: "DUB", fromCity: "Boston", toCity: "Dublin", basePrice: 429 },
-  { from: "SEA", to: "HNL", fromCity: "Seattle", toCity: "Honolulu", basePrice: 329 },
-  { from: "DFW", to: "LAS", fromCity: "Dallas", toCity: "Las Vegas", basePrice: 129 },
+  { from: "JFK", to: "LAX", fromCity: "New York", toCity: "Los Angeles", basePrice: 189, airline: "AA" },
+  { from: "LAX", to: "LHR", fromCity: "Los Angeles", toCity: "London", basePrice: 549, airline: "BA" },
+  { from: "SFO", to: "NRT", fromCity: "San Francisco", toCity: "Tokyo", basePrice: 789, airline: "UA" },
+  { from: "ORD", to: "CDG", fromCity: "Chicago", toCity: "Paris", basePrice: 589, airline: "AF" },
+  { from: "MIA", to: "CUN", fromCity: "Miami", toCity: "Cancún", basePrice: 199, airline: "AA" },
+  { from: "BOS", to: "DUB", fromCity: "Boston", toCity: "Dublin", basePrice: 429, airline: "EI" },
+  { from: "SEA", to: "HNL", fromCity: "Seattle", toCity: "Honolulu", basePrice: 329, airline: "AS" },
+  { from: "DFW", to: "LAS", fromCity: "Dallas", toCity: "Las Vegas", basePrice: 129, airline: "WN" },
 ];
 
 function RouteCard({ route, onSelect }: { route: RouteData; onSelect: (price?: number) => void }) {
@@ -71,8 +68,12 @@ function RouteCard({ route, onSelect }: { route: RouteData; onSelect: (price?: n
           <div className="flex items-center justify-between gap-3">
             {/* Route Info */}
             <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 flex items-center justify-center">
-                <Plane className="w-5 h-5 text-sky-500 rotate-45" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
+                <img
+                  src={getAirlineLogo(route.airline, 32)}
+                  alt="Airline logo"
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <div className="flex items-center gap-2">

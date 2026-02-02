@@ -6,49 +6,58 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plane, ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getAirlineLogo } from "@/data/airlines";
 
 const popularRoutes = [
   {
     from: { city: "New York", code: "JFK" },
     to: { city: "Los Angeles", code: "LAX" },
     trend: "hot",
+    airline: "AA",
   },
   {
     from: { city: "New York", code: "JFK" },
     to: { city: "London", code: "LHR" },
     trend: "trending",
+    airline: "BA",
   },
   {
     from: { city: "San Francisco", code: "SFO" },
     to: { city: "Tokyo", code: "NRT" },
     trend: null,
+    airline: "UA",
   },
   {
     from: { city: "Los Angeles", code: "LAX" },
     to: { city: "Paris", code: "CDG" },
     trend: null,
+    airline: "AF",
   },
   {
     from: { city: "Chicago", code: "ORD" },
     to: { city: "Miami", code: "MIA" },
     trend: "hot",
+    airline: "AA",
   },
   {
     from: { city: "New York", code: "JFK" },
     to: { city: "Dubai", code: "DXB" },
     trend: "trending",
+    airline: "EK",
   },
   {
     from: { city: "Los Angeles", code: "LAX" },
     to: { city: "Cancun", code: "CUN" },
     trend: null,
+    airline: "AA",
   },
   {
     from: { city: "Boston", code: "BOS" },
     to: { city: "San Juan", code: "SJU" },
     trend: null,
+    airline: "B6",
   },
 ];
 
@@ -97,9 +106,13 @@ export default function PopularRoutesSection() {
               )}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    {/* Plane Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 flex items-center justify-center shrink-0">
-                      <Plane className="w-5 h-5 text-sky-500 rotate-45" />
+                    {/* Airline Logo */}
+                    <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={getAirlineLogo(route.airline, 32)}
+                        alt="Airline logo"
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                     
                     {/* Route Details */}

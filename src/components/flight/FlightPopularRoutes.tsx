@@ -1,19 +1,20 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
+import { TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
 import { format, addDays } from "date-fns";
+import { getAirlineLogo } from "@/data/airlines";
 
 const routes = [
-  { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true },
-  { from: "SFO", fromCity: "San Francisco", to: "LAX", toCity: "Los Angeles", price: 79, searches: "45K+", trending: true },
-  { from: "ORD", fromCity: "Chicago", to: "MIA", toCity: "Miami", price: 119, searches: "38K+", trending: false },
-  { from: "JFK", fromCity: "New York", to: "LHR", toCity: "London", price: 349, searches: "42K+", trending: true },
-  { from: "LAX", fromCity: "Los Angeles", to: "HNL", toCity: "Honolulu", price: 189, searches: "35K+", trending: true },
-  { from: "DFW", fromCity: "Dallas", to: "LAX", toCity: "Los Angeles", price: 99, searches: "32K+", trending: false },
-  { from: "SEA", fromCity: "Seattle", to: "SFO", toCity: "San Francisco", price: 89, searches: "28K+", trending: false },
-  { from: "ATL", fromCity: "Atlanta", to: "JFK", toCity: "New York", price: 109, searches: "30K+", trending: false },
+  { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true, airline: "AA" },
+  { from: "SFO", fromCity: "San Francisco", to: "LAX", toCity: "Los Angeles", price: 79, searches: "45K+", trending: true, airline: "UA" },
+  { from: "ORD", fromCity: "Chicago", to: "MIA", toCity: "Miami", price: 119, searches: "38K+", trending: false, airline: "AA" },
+  { from: "JFK", fromCity: "New York", to: "LHR", toCity: "London", price: 349, searches: "42K+", trending: true, airline: "BA" },
+  { from: "LAX", fromCity: "Los Angeles", to: "HNL", toCity: "Honolulu", price: 189, searches: "35K+", trending: true, airline: "HA" },
+  { from: "DFW", fromCity: "Dallas", to: "LAX", toCity: "Los Angeles", price: 99, searches: "32K+", trending: false, airline: "WN" },
+  { from: "SEA", fromCity: "Seattle", to: "SFO", toCity: "San Francisco", price: 89, searches: "28K+", trending: false, airline: "AS" },
+  { from: "ATL", fromCity: "Atlanta", to: "JFK", toCity: "New York", price: 109, searches: "30K+", trending: false, airline: "DL" },
 ];
 
 interface FlightPopularRoutesProps {
@@ -76,13 +77,20 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={getAirlineLogo(route.airline, 32)}
+                        alt="Airline logo"
+                        className="w-8 h-8 object-contain"
+                      />
+                    </div>
                     <div className="text-center">
                       <p className="font-bold text-lg">{route.from}</p>
                       <p className="text-xs text-muted-foreground truncate max-w-[60px]">{route.fromCity}</p>
                     </div>
                     <div className="flex items-center">
                       <div className="w-6 h-px bg-border" />
-                      <Plane className="w-4 h-4 mx-1 text-sky-400 rotate-90" />
+                      <ArrowRight className="w-4 h-4 mx-1 text-sky-400" />
                       <div className="w-6 h-px bg-border" />
                     </div>
                     <div className="text-center">
