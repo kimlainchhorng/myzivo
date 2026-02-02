@@ -254,3 +254,166 @@ export const useDriverEarnings = (driverId: string | undefined) => {
     enabled: !!driverId,
   });
 };
+
+// Fetch driver's active Eats order
+export const useDriverActiveEatsOrder = (driverId: string | undefined) => {
+  return useQuery({
+    queryKey: ["driver-active-eats-order", driverId],
+    queryFn: async () => {
+      if (!driverId) return null;
+      
+      const { data, error } = await supabase
+        .from("food_orders")
+        .select(`
+          *,
+          restaurant:restaurants (
+            id,
+            name,
+            address,
+            lat,
+            lng,
+            phone
+          )
+        `)
+        .eq("driver_id", driverId)
+        .not("status", "in", "(completed,cancelled,delivered)")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!driverId,
+    refetchInterval: 10000,
+  });
+};
+
+// Fetch driver's active package delivery
+export const useDriverActivePackageDelivery = (driverId: string | undefined) => {
+  return useQuery({
+    queryKey: ["driver-active-package-delivery", driverId],
+    queryFn: async () => {
+      if (!driverId) return null;
+      
+      const { data, error } = await supabase
+        .from("package_deliveries")
+        .select("*")
+        .eq("driver_id", driverId)
+        .in("status", ["accepted", "at_pickup", "picked_up", "at_dropoff"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!driverId,
+    refetchInterval: 10000,
+  });
+};
+
+// Eats order status mapping: driver flow -> database enum
+type EatsDriverStatus = "ready_for_pickup" | "in_progress" | "completed" | "cancelled";
+
+// Update Eats order status (for driver flow)
+export const useUpdateDriverEatsOrderStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ orderId, status, proofPhotoUrl }: { 
+      orderId: string; 
+      status: EatsDriverStatus;
+      proofPhotoUrl?: string;
+    }) => {
+      const updateData: { 
+        status: EatsDriverStatus; 
+        delivered_at?: string; 
+        delivery_photo_url?: string;
+        picked_up_at?: string;
+      } = { status };
+      
+      if (status === "completed") {
+        updateData.delivered_at = new Date().toISOString();
+        if (proofPhotoUrl) updateData.delivery_photo_url = proofPhotoUrl;
+      }
+      if (status === "in_progress") {
+        updateData.picked_up_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from("food_orders")
+        .update(updateData)
+        .eq("id", orderId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["driver-active-eats-order"] });
+      queryClient.invalidateQueries({ queryKey: ["food-orders"] });
+      
+      const messages: Record<string, string> = {
+        ready_for_pickup: "Arrived at restaurant",
+        in_progress: "Order picked up, heading to customer",
+        completed: "Order delivered!",
+      };
+      toast.success(messages[variables.status] || "Status updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update order: " + error.message);
+    },
+  });
+};
+
+// Update package delivery status (for driver flow)
+export const useUpdateDriverPackageDeliveryStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ deliveryId, status, proofPhotoUrl, signatureUrl }: { 
+      deliveryId: string; 
+      status: string;
+      proofPhotoUrl?: string;
+      signatureUrl?: string;
+    }) => {
+      const updateData: { 
+        status: string; 
+        delivered_at?: string; 
+        pickup_photo_url?: string;
+        delivery_photo_url?: string;
+        signature_url?: string;
+      } = { status };
+      
+      if (status === "delivered") {
+        updateData.delivered_at = new Date().toISOString();
+        if (proofPhotoUrl) updateData.delivery_photo_url = proofPhotoUrl;
+        if (signatureUrl) updateData.signature_url = signatureUrl;
+      }
+      if (status === "picked_up" && proofPhotoUrl) {
+        updateData.pickup_photo_url = proofPhotoUrl;
+      }
+
+      const { error } = await supabase
+        .from("package_deliveries")
+        .update(updateData)
+        .eq("id", deliveryId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["driver-active-package-delivery"] });
+      queryClient.invalidateQueries({ queryKey: ["package-deliveries"] });
+      
+      const messages: Record<string, string> = {
+        at_pickup: "Arrived at pickup",
+        picked_up: "Package picked up",
+        at_dropoff: "Arrived at dropoff",
+        delivered: "Package delivered!",
+      };
+      toast.success(messages[variables.status] || "Status updated");
+    },
+    onError: (error) => {
+      toast.error("Failed to update delivery: " + error.message);
+    },
+  });
+};

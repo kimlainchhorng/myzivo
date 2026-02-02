@@ -32,11 +32,13 @@ import AdminP2PVehiclesModule from "./modules/AdminP2PVehiclesModule";
 import AdminP2PPayoutsModule from "./modules/AdminP2PPayoutsModule";
 import AdminP2PDisputesModule from "./modules/AdminP2PDisputesModule";
 import AdminP2PCommissionModule from "./modules/AdminP2PCommissionModule";
+import AdminMoveModule from "./modules/AdminMoveModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
+  { id: "move", label: "Move Deliveries", icon: CarFront },
   { id: "p2p-owners", label: "P2P Owners", icon: CarFront },
   { id: "p2p-vehicles", label: "P2P Vehicles", icon: Car },
   { id: "p2p-payouts", label: "P2P Payouts", icon: DollarSign },
@@ -125,6 +127,8 @@ export default function AdminPanel() {
         return <AdminRidesModule />;
       case "eats":
         return <AdminEatsModule />;
+      case "move":
+        return <AdminMoveModule />;
       case "p2p-owners":
         return <AdminP2POwnersModule />;
       case "p2p-vehicles":

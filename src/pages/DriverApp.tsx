@@ -36,7 +36,11 @@ import {
   useToggleOnlineStatus,
   useAcceptTrip,
   useUpdateDriverTripStatus,
-  useDriverEarnings as useDriverEarningsLegacy
+  useDriverEarnings as useDriverEarningsLegacy,
+  useDriverActiveEatsOrder,
+  useDriverActivePackageDelivery,
+  useUpdateDriverEatsOrderStatus,
+  useUpdateDriverPackageDeliveryStatus,
 } from "@/hooks/useDriverApp";
 import { useDriverTripRealtime } from "@/hooks/useTripRealtime";
 import { useDriverState } from "@/hooks/useDriverState";
@@ -71,6 +75,12 @@ const DriverApp = () => {
   const { data: activeTrip } = useDriverActiveTrip(driver?.id);
   const { data: tripHistory } = useDriverTripHistory(driver?.id);
   const { data: earnings } = useDriverEarningsLegacy(driver?.id);
+  
+  // Fetch active Eats and Move jobs
+  const { data: activeEatsOrder } = useDriverActiveEatsOrder(driver?.id);
+  const { data: activePackageDelivery } = useDriverActivePackageDelivery(driver?.id);
+  const updateEatsStatus = useUpdateDriverEatsOrderStatus();
+  const updatePackageStatus = useUpdateDriverPackageDeliveryStatus();
 
   // Native hooks for persistent state and real-time dispatch
   const driverState = useDriverState(driver?.id);
@@ -293,72 +303,151 @@ const DriverApp = () => {
     );
   }
 
+  // Map database status to panel status
+  const mapEatsStatusToPanel = (dbStatus: string | null): EatsDeliveryStatus => {
+    const statusMap: Record<string, EatsDeliveryStatus> = {
+      'confirmed': 'accepted',
+      'ready_for_pickup': 'at_restaurant',
+      'in_progress': 'picked_up',
+      'completed': 'delivered',
+    };
+    return statusMap[dbStatus || ''] || 'accepted';
+  };
+
+  const mapMoveStatusToPanel = (dbStatus: string | null): MoveDeliveryStatus => {
+    const statusMap: Record<string, MoveDeliveryStatus> = {
+      'accepted': 'accepted',
+      'at_pickup': 'at_pickup',
+      'picked_up': 'picked_up',
+      'at_dropoff': 'at_dropoff',
+      'delivered': 'delivered',
+    };
+    return statusMap[dbStatus || ''] || 'accepted';
+  };
+
+  // Map panel status to database status
+  const mapPanelStatusToEatsDb = (panelStatus: EatsDeliveryStatus): "ready_for_pickup" | "in_progress" | "completed" => {
+    const statusMap: Record<EatsDeliveryStatus, "ready_for_pickup" | "in_progress" | "completed"> = {
+      'accepted': 'ready_for_pickup',
+      'at_restaurant': 'ready_for_pickup',
+      'picked_up': 'in_progress',
+      'arrived_customer': 'in_progress',
+      'delivered': 'completed',
+    };
+    return statusMap[panelStatus];
+  };
+
   // Has active trip - show trip panel based on job type
-  if (activeTrip || driverState.activeJob) {
-    const jobType = driverState.activeJob?.type || 'ride';
+  if (activeTrip || driverState.activeJob || activeEatsOrder || activePackageDelivery) {
+    const jobType = driverState.activeJob?.type || (activeEatsOrder ? 'eats' : activePackageDelivery ? 'move' : 'ride');
     
     // For Eats deliveries
-    if (jobType === 'eats' && driverState.activeJob) {
-      // TODO: Fetch full eats order data
-      return (
-        <div className="min-h-screen bg-background flex flex-col">
-          <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
-            <div className="flex items-center justify-between max-w-lg mx-auto">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  <Navigation className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold">Eats Delivery</h1>
-                  <p className="text-xs text-muted-foreground">In progress</p>
-                </div>
-              </div>
-              <Badge variant="default" className="capitalize bg-gradient-to-r from-orange-500 to-amber-500 border-0 shadow-lg">
-                {driverState.activeJob.status?.replace("_", " ")}
-              </Badge>
-            </div>
+    if ((jobType === 'eats' || activeEatsOrder) && (driverState.activeJob || activeEatsOrder)) {
+      // Transform database data to EatsOrder interface
+      const eatsOrderData = activeEatsOrder ? {
+        id: activeEatsOrder.id,
+        restaurantName: (activeEatsOrder.restaurant as any)?.name || 'Restaurant',
+        restaurantAddress: (activeEatsOrder.restaurant as any)?.address || 'Pickup location',
+        restaurantLat: (activeEatsOrder.restaurant as any)?.lat || 0,
+        restaurantLng: (activeEatsOrder.restaurant as any)?.lng || 0,
+        customerName: activeEatsOrder.customer_name || 'Customer',
+        customerPhone: activeEatsOrder.customer_phone || undefined,
+        deliveryAddress: activeEatsOrder.delivery_address,
+        deliveryLat: activeEatsOrder.delivery_lat,
+        deliveryLng: activeEatsOrder.delivery_lng,
+        deliveryFee: activeEatsOrder.delivery_fee || 0,
+        totalAmount: activeEatsOrder.total_amount,
+        items: Array.isArray(activeEatsOrder.items) 
+          ? (activeEatsOrder.items as any[]).map((item: any) => item.name || item) 
+          : [],
+      } : null;
+
+      if (eatsOrderData) {
+        const currentStatus = mapEatsStatusToPanel(activeEatsOrder?.status);
+        
+        const handleEatsStatusChange = async (newStatus: EatsDeliveryStatus) => {
+          const dbStatus = mapPanelStatusToEatsDb(newStatus);
+          await updateEatsStatus.mutateAsync({ 
+            orderId: eatsOrderData.id, 
+            status: dbStatus 
+          });
+          
+          // Update driver state to track active job
+          if (newStatus === 'delivered') {
+            await driverState.setActiveJob(null);
+          } else {
+            driverState.setActiveJob({
+              id: eatsOrderData.id,
+              type: 'eats',
+              status: newStatus,
+            });
+          }
+        };
+
+        return (
+          <div className="min-h-screen bg-background flex flex-col">
+            <EatsDeliveryPanel
+              order={eatsOrderData}
+              status={currentStatus}
+              onStatusChange={handleEatsStatusChange}
+            />
           </div>
-          <div className="p-4">
-            <Card className="border-0 bg-card/90 shadow-xl">
-              <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Eats delivery panel loading...</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      );
+        );
+      }
     }
 
     // For Move deliveries
-    if (jobType === 'move' && driverState.activeJob) {
-      // TODO: Fetch full move delivery data
-      return (
-        <div className="min-h-screen bg-background flex flex-col">
-          <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
-            <div className="flex items-center justify-between max-w-lg mx-auto">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                  <Navigation className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="font-bold">Move Delivery</h1>
-                  <p className="text-xs text-muted-foreground">In progress</p>
-                </div>
-              </div>
-              <Badge variant="default" className="capitalize bg-gradient-to-r from-purple-500 to-indigo-500 border-0 shadow-lg">
-                {driverState.activeJob.status?.replace("_", " ")}
-              </Badge>
-            </div>
+    if ((jobType === 'move' || activePackageDelivery) && (driverState.activeJob || activePackageDelivery)) {
+      // Transform database data to PackageDelivery interface
+      const packageData = activePackageDelivery ? {
+        id: activePackageDelivery.id,
+        customerName: activePackageDelivery.customer_name || 'Customer',
+        customerPhone: activePackageDelivery.customer_phone || undefined,
+        pickupAddress: activePackageDelivery.pickup_address,
+        pickupLat: activePackageDelivery.pickup_lat,
+        pickupLng: activePackageDelivery.pickup_lng,
+        dropoffAddress: activePackageDelivery.dropoff_address,
+        dropoffLat: activePackageDelivery.dropoff_lat,
+        dropoffLng: activePackageDelivery.dropoff_lng,
+        packageSize: activePackageDelivery.package_size || 'medium',
+        packageWeight: activePackageDelivery.package_weight || undefined,
+        packageContents: activePackageDelivery.package_contents || undefined,
+        estimatedPayout: activePackageDelivery.estimated_payout || 0,
+        deliverySpeed: activePackageDelivery.delivery_speed || 'standard',
+        notes: activePackageDelivery.notes || undefined,
+      } : null;
+
+      if (packageData) {
+        const currentStatus = mapMoveStatusToPanel(activePackageDelivery?.status);
+        
+        const handleMoveStatusChange = async (newStatus: MoveDeliveryStatus) => {
+          await updatePackageStatus.mutateAsync({ 
+            deliveryId: packageData.id, 
+            status: newStatus 
+          });
+          
+          // Update driver state to track active job
+          if (newStatus === 'delivered') {
+            await driverState.setActiveJob(null);
+          } else {
+            driverState.setActiveJob({
+              id: packageData.id,
+              type: 'move',
+              status: newStatus,
+            });
+          }
+        };
+
+        return (
+          <div className="min-h-screen bg-background flex flex-col">
+            <MoveDeliveryPanel
+              delivery={packageData}
+              status={currentStatus}
+              onStatusChange={handleMoveStatusChange}
+            />
           </div>
-          <div className="p-4">
-            <Card className="border-0 bg-card/90 shadow-xl">
-              <CardContent className="p-6 text-center">
-                <p className="text-muted-foreground">Move delivery panel loading...</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      );
+        );
+      }
     }
 
     // Default: Ride trip panel
