@@ -163,39 +163,6 @@ export default function FlightLive() {
         </div>
       </div>
 
-      {/* Debug Panel */}
-      <div className="container mx-auto px-4 py-3 bg-muted/30 border-b">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-muted-foreground">Debug: Live URL (Marker: {MARKER})</p>
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              iframeStatus === "loaded" ? "bg-emerald-500/20 text-emerald-500" :
-              iframeStatus === "blocked" ? "bg-amber-500/20 text-amber-500" :
-              "bg-sky-500/20 text-sky-500"
-            }`}>
-              {iframeStatus === "loaded" ? "✓ Loaded" :
-               iframeStatus === "blocked" ? "⚠ Blocked" : "Loading..."}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs bg-background p-2 rounded border overflow-x-auto whitespace-nowrap">
-              {whitelabelUrl}
-            </code>
-            <Button variant="ghost" size="sm" onClick={handleCopyUrl} className="shrink-0">
-              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-            </Button>
-          </div>
-          <a 
-            href={whitelabelUrl} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="text-xs text-sky-500 hover:underline inline-flex items-center gap-1"
-          >
-            <ExternalLink className="w-3 h-3" />
-            {whitelabelUrl}
-          </a>
-        </div>
-      </div>
 
       {/* Iframe Container or Blocked Message */}
       <main className="flex-1 relative">
