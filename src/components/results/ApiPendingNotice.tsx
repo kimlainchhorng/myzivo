@@ -7,11 +7,12 @@
  * COMPLIANCE: Contains required disclosure text for meta-search transparency.
  */
 
-import { ExternalLink, ShieldCheck, Star, Zap, Globe, Plane } from "lucide-react";
+import { ExternalLink, ShieldCheck, Star, Zap, Globe, Plane, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { heroPhotos, destinationPhotos } from "@/config/photos";
 
 interface ApiPendingNoticeProps {
   whitelabelUrl: string;
@@ -26,6 +27,20 @@ interface ApiPendingNoticeProps {
 
 // Partner configurations with their specific URLs
 const PARTNER_MARKER = "700031";
+
+// Airline logos - using simple text-based logos with brand colors
+const AIRLINE_LOGOS = [
+  { name: "American", color: "#0078D2" },
+  { name: "Delta", color: "#E51937" },
+  { name: "United", color: "#002244" },
+  { name: "Southwest", color: "#304CB2" },
+  { name: "JetBlue", color: "#003876" },
+  { name: "Spirit", color: "#FFCD00" },
+  { name: "Alaska", color: "#00205B" },
+  { name: "Emirates", color: "#D71921" },
+  { name: "British Airways", color: "#2E5C99" },
+  { name: "Lufthansa", color: "#05164D" },
+];
 
 function buildPartnerUrl(
   partner: string,
@@ -61,7 +76,6 @@ function buildPartnerUrl(
   }
 
   if (partner === "jetradar") {
-    // JetRadar uses same base but different styling/domain
     const params = new URLSearchParams({
       origin_iata: origin,
       destination_iata: destination,
@@ -76,7 +90,6 @@ function buildPartnerUrl(
   }
 
   if (partner === "kiwi") {
-    // Kiwi.com format
     const formatDate = (d: string) => d?.replace(/-/g, "") || "";
     return `https://www.kiwi.com/en/search/results/${origin}/${destination}/${formatDate(departDate || "")}${returnDate ? `/${formatDate(returnDate)}` : ""}?adults=${adults}`;
   }
@@ -89,12 +102,13 @@ interface PartnerCardProps {
   tagline: string;
   badge: string;
   badgeVariant: "recommended" | "alternate" | "optional";
-  icon: React.ReactNode;
+  logoUrl?: string;
+  logoColor: string;
   features: string[];
   url: string;
 }
 
-function PartnerCard({ name, tagline, badge, badgeVariant, icon, features, url }: PartnerCardProps) {
+function PartnerCard({ name, tagline, badge, badgeVariant, logoColor, features, url }: PartnerCardProps) {
   const badgeStyles = {
     recommended: "bg-sky-500/20 text-sky-400 border-sky-500/30",
     alternate: "bg-purple-500/20 text-purple-400 border-purple-500/30",
@@ -115,12 +129,16 @@ function PartnerCard({ name, tagline, badge, badgeVariant, icon, features, url }
 
   return (
     <Card className={cn("overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl", cardStyles[badgeVariant])}>
-      <CardContent className="p-6">
-        {/* Header */}
+      <CardContent className="p-5">
+        {/* Header with Logo */}
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-card/80 border border-border/50 flex items-center justify-center">
-              {icon}
+            {/* Partner Logo Circle */}
+            <div 
+              className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg"
+              style={{ backgroundColor: logoColor }}
+            >
+              {name.charAt(0)}
             </div>
             <div>
               <h3 className="font-bold text-lg">{name}</h3>
@@ -132,11 +150,11 @@ function PartnerCard({ name, tagline, badge, badgeVariant, icon, features, url }
           </Badge>
         </div>
 
-        {/* Features */}
-        <ul className="space-y-2 mb-5">
+        {/* Features with checkmarks */}
+        <ul className="space-y-2 mb-4">
           {features.map((feature, i) => (
             <li key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               {feature}
             </li>
           ))}
@@ -181,9 +199,19 @@ export default function ApiPendingNotice({
 
   return (
     <div className={cn("space-y-6", className)}>
-      {/* Compare Header */}
-      <Card className="border-border/50 bg-gradient-to-r from-sky-500/5 via-background to-purple-500/5">
-        <CardContent className="p-6 sm:p-8 text-center">
+      {/* Hero Header with Background Image */}
+      <Card className="border-border/50 overflow-hidden relative">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src={heroPhotos.flights.src} 
+            alt="" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/90 to-background" />
+        </div>
+        
+        <CardContent className="relative p-6 sm:p-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500/20 to-purple-500/20 border border-sky-500/30 mb-4">
             <Plane className="w-8 h-8 text-sky-500" />
           </div>
@@ -201,16 +229,42 @@ export default function ApiPendingNotice({
           </p>
 
           {/* Route display */}
-          <div className="mt-6 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-card/80 border border-border/50">
+          <div className="mt-6 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-card/80 border border-border/50 backdrop-blur-sm">
             <span className="font-semibold">{origin}</span>
-            <span className="text-muted-foreground">→</span>
+            <Plane className="w-4 h-4 text-sky-500 rotate-90" />
             <span className="font-semibold">{destination}</span>
             {returnDate && (
               <>
-                <span className="text-muted-foreground">→</span>
+                <Plane className="w-4 h-4 text-sky-500 -rotate-90" />
                 <span className="font-semibold">{origin}</span>
               </>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Airline Logos Strip */}
+      <Card className="border-border/30 bg-card/50">
+        <CardContent className="p-4">
+          <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider">
+            Comparing prices from 500+ airlines including
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {AIRLINE_LOGOS.slice(0, 8).map((airline) => (
+              <div
+                key={airline.name}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/80 border border-border/50 text-xs font-medium"
+              >
+                <div 
+                  className="w-2.5 h-2.5 rounded-full"
+                  style={{ backgroundColor: airline.color }}
+                />
+                {airline.name}
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-xs font-medium text-sky-400">
+              +492 more
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -222,7 +276,7 @@ export default function ApiPendingNotice({
           tagline="Compare 500+ airlines & sellers"
           badge="Recommended"
           badgeVariant="recommended"
-          icon={<Star className="w-6 h-6 text-sky-500" />}
+          logoColor="#0094FF"
           features={[
             "Multiple airlines & sellers",
             "Best price comparison",
@@ -236,7 +290,7 @@ export default function ApiPendingNotice({
           tagline="Check additional partner offers"
           badge="Alternate"
           badgeVariant="alternate"
-          icon={<Globe className="w-6 h-6 text-purple-500" />}
+          logoColor="#7C3AED"
           features={[
             "Global airline coverage",
             "Alternative routing options",
@@ -250,7 +304,7 @@ export default function ApiPendingNotice({
           tagline="Find different routing options"
           badge="More Options"
           badgeVariant="optional"
-          icon={<Plane className="w-6 h-6 text-emerald-500" />}
+          logoColor="#00A991"
           features={[
             "Virtual interlining",
             "Unique route combinations",
@@ -259,6 +313,30 @@ export default function ApiPendingNotice({
           url={kiwiUrl}
         />
       </div>
+
+      {/* Destination Images Strip */}
+      <Card className="border-border/30 overflow-hidden">
+        <CardContent className="p-4">
+          <p className="text-xs text-muted-foreground text-center mb-3 uppercase tracking-wider">
+            Popular destinations worldwide
+          </p>
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            {Object.entries(destinationPhotos).slice(0, 8).map(([key, dest]) => (
+              <div key={key} className="shrink-0 relative group">
+                <img
+                  src={dest.src}
+                  alt={dest.alt}
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover border border-border/50 group-hover:border-sky-500/50 transition-colors"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-1">
+                  <span className="text-[10px] text-white font-medium">{dest.city}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Trust Footer */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 text-xs text-muted-foreground">
