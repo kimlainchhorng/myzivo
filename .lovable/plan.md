@@ -1,15 +1,15 @@
 
 
-# Next Update: P2P Receipt Integration + Owner Reviews for Renters
+# Next Update: P2P Dispute Integration + Owner Activity Feed
 
 ## Overview
 
-The P2P car rental marketplace now has working payment, review, and completion flows. However, two gaps remain in the user experience:
+The P2P car rental marketplace has mature booking, payment, review, and completion flows. However, two important features remain incomplete:
 
-1. **Receipt Download is Non-Functional** - The "Download Receipt" button on P2PBookingConfirmation.tsx does nothing meaningful (just a placeholder)
-2. **Owners Cannot Review Renters** - The review system only allows renters to review vehicles/owners, but owners cannot review renters
+1. **Dispute Form is Orphaned** - The `DisputeForm` component exists in `/components/p2p/DisputeForm.tsx` but is not integrated into any user-facing page
+2. **Owner Dashboard Activity Feed** - Shows a placeholder "Activity feed coming soon..." instead of real booking/earnings activity
 
-This update integrates the existing RenterReceipt component and completes the two-way review system.
+This update integrates the dispute system into the renter journey and provides owners with a real-time activity feed on their dashboard.
 
 ---
 
@@ -17,95 +17,100 @@ This update integrates the existing RenterReceipt component and completes the tw
 
 | Area | Issue |
 |------|-------|
-| **P2PBookingConfirmation** | "Download Receipt" button is placeholder |
-| **RenterReceipt** | Component exists but not integrated into confirmation flow |
-| **Review System** | Only supports renter_to_vehicle and renter_to_owner types |
-| **OwnerBookings** | No way for owners to leave reviews for renters |
+| **P2PBookingConfirmation** | No way for renters to report issues |
+| **CompletedBookingSection** | Missing dispute option for problem trips |
+| **OwnerDashboard** | Activity section is placeholder-only |
+| **DisputeForm** | Component exists but imported nowhere |
 
 ---
 
-## Phase 1: Integrate Receipt into Booking Confirmation
+## Phase 1: Integrate Dispute Form into Booking Confirmation
 
-### 1.1 Add Receipt Modal/Sheet to P2PBookingConfirmation
+### 1.1 Add "Report an Issue" Button to P2PBookingConfirmation
 
-Wire the "Download Receipt" button to show a sheet/dialog with the RenterReceipt component:
+For active, completed, or paid bookings, add the DisputeForm trigger:
 
 ```text
-User clicks "Download Receipt"
-       |
-       v
-Show Sheet/Dialog with RenterReceipt
-       |
-       v
-RenterReceipt provides "Print" and "Share" actions
++----------------------------------------------------------+
+|  Need Help?                                               |
+|  [Report an Issue]  [Download Receipt]  [View All Trips] |
++----------------------------------------------------------+
 ```
 
-Implementation:
-- Import `RenterReceipt` component
-- Add Sheet or Dialog to wrap the receipt
-- Wire button to open the sheet
-- Only show for paid/completed bookings
+Location: Add to the actions section at the bottom of the confirmation page.
 
-### 1.2 Conditional Receipt Availability
+### 1.2 Add Dispute Option to CompletedBookingSection
 
-Receipt should only be available when:
-- `payment_status === "paid"` or `"captured"`
-- OR `status === "completed"`
+After the review forms, add a subtle dispute option for problem trips:
 
-For pending/unpaid bookings, disable the button with tooltip explaining "Available after payment"
+```text
++----------------------------------------------------------+
+|  Had a problem?                                           |
+|  [Report an Issue] if something went wrong during your   |
+|  trip.                                                    |
++----------------------------------------------------------+
+```
+
+### 1.3 Conditional Display Rules
+
+Show DisputeForm button when:
+- `booking.status` is "active", "completed", or 
+- `booking.payment_status` is "captured" or "paid"
+
+Hide for pending/cancelled bookings that haven't progressed.
 
 ---
 
-## Phase 2: Owner-to-Renter Reviews
+## Phase 2: Owner Dashboard Activity Feed
 
-### 2.1 Add Owner Review Form to OwnerBookings
+### 2.1 Create useOwnerActivity Hook
 
-For completed bookings in the History tab, allow owners to leave reviews for renters:
+New hook to fetch recent owner activity:
+
+```text
+useOwnerActivity(ownerId):
+├── Fetch last 10 bookings (any status)
+├── Fetch last 5 payouts
+├── Merge and sort by date
+└── Return unified activity items
+```
+
+Activity item types:
+- **Booking Request** - New booking came in
+- **Booking Confirmed** - You confirmed a booking
+- **Trip Started** - Renter picked up vehicle
+- **Trip Completed** - Trip finished
+- **Payment Received** - Payout deposited
+- **Review Received** - Renter left a review
+
+### 2.2 Create OwnerActivityFeed Component
+
+Replace the placeholder in OwnerDashboard with a real activity feed:
 
 ```text
 +----------------------------------------------------------+
-| 2023 Tesla Model 3 - Completed Dec 18                     |
-| Renter: John D.                        $255.00 earned     |
-|                                                            |
-| [Leave Review for Renter]             [View Details]      |
+|  Recent Activity                                          |
++----------------------------------------------------------+
+|  📅 Today                                                 |
+|  ✓ Trip completed - 2023 Tesla Model 3           2h ago  |
+|  💰 Payout deposited - $245.00                   5h ago  |
++----------------------------------------------------------+
+|  📅 Yesterday                                             |
+|  ⭐ New review received - 5 stars               18h ago  |
+|  📋 Booking confirmed - Honda Accord            22h ago  |
 +----------------------------------------------------------+
 ```
 
-### 2.2 Update ReviewForm for Owner Reviews
+### 2.3 Activity Item Icons and Colors
 
-The ReviewForm component already handles multiple review types. Add support for:
-- `review_type: "owner_to_renter"`
-- Different rating categories (communication, vehicle care, timeliness)
-
-### 2.3 Update useCreateReview for Renter Ratings
-
-When owner submits a review:
-- Store in `p2p_reviews` with `review_type = "owner_to_renter"`
-- Optionally track renter ratings (could add to profiles table later)
-
----
-
-## Phase 3: Owner Review Dialog in OwnerBookings
-
-### 3.1 Create Review Dialog for Completed Trips
-
-Add a dialog to OwnerBookings.tsx that shows when owner clicks "Leave Review":
-
-```text
-+----------------------------------------------------------+
-|  Rate Your Renter                                         |
-|  John D. rented your Tesla Model 3 (Dec 15-18)            |
-|                                                            |
-|  Overall Rating: [★★★★★]                                 |
-|  Communication: [★★★★★]                                  |
-|  Vehicle Care: [★★★★★]                                   |
-|  Timeliness: [★★★★★]                                     |
-|                                                            |
-|  Comment: [                                    ]           |
-|                                                            |
-|                    [Cancel]  [Submit Review]              |
-+----------------------------------------------------------+
-```
+| Type | Icon | Color |
+|------|------|-------|
+| booking_request | Calendar | Amber |
+| booking_confirmed | CheckCircle | Emerald |
+| trip_started | Car | Blue |
+| trip_completed | CheckCircle | Emerald |
+| payout | DollarSign | Green |
+| review | Star | Amber |
 
 ---
 
@@ -113,86 +118,105 @@ Add a dialog to OwnerBookings.tsx that shows when owner clicks "Leave Review":
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/p2p/P2PBookingConfirmation.tsx` | **Update** | Integrate RenterReceipt with Sheet |
-| `src/pages/owner/OwnerBookings.tsx` | **Update** | Add review CTA and dialog for completed trips |
-| `src/components/p2p/ReviewForm.tsx` | **Update** | Add owner_to_renter review type support |
-| `src/hooks/useP2PReview.ts` | **Update** | Add support for renter review queries |
+| `src/pages/p2p/P2PBookingConfirmation.tsx` | **Update** | Add DisputeForm integration |
+| `src/components/p2p/CompletedBookingSection.tsx` | **Update** | Add dispute CTA for problem trips |
+| `src/hooks/useOwnerActivity.ts` | **Create** | Hook to fetch owner activity |
+| `src/components/owner/OwnerActivityFeed.tsx` | **Create** | Activity feed component |
+| `src/pages/owner/OwnerDashboard.tsx` | **Update** | Replace placeholder with real feed |
 
 ---
 
 ## Technical Implementation Details
 
-### Receipt Integration
+### Owner Activity Hook
 
 ```text
-P2PBookingConfirmation.tsx:
-├── Import Sheet, SheetContent, SheetTrigger from "@/components/ui/sheet"
-├── Import RenterReceipt from "@/components/p2p/RenterReceipt"
-├── Wrap "Download Receipt" button in SheetTrigger
-├── Show RenterReceipt inside SheetContent
-└── Disable if payment_status !== "paid"/"captured" and status !== "completed"
+useOwnerActivity(ownerId):
+1. Query p2p_bookings where owner_id matches
+   - Select: id, status, created_at, vehicle info, renter_id
+   - Order by created_at DESC
+   - Limit 10
+2. Query p2p_payouts where owner_id matches
+   - Select: id, amount, status, processed_at
+   - Order by created_at DESC
+   - Limit 5
+3. Query p2p_reviews where reviewee_id = ownerId
+   - Select: id, rating, created_at
+   - Order by created_at DESC
+   - Limit 5
+4. Transform into activity items with type, description, timestamp
+5. Sort combined list by timestamp DESC
 ```
 
-### Owner Review Form Categories
+### Activity Item Interface
 
-For `owner_to_renter` review type:
-- **Overall Rating** (1-5 stars) - Required
-- **Communication** (1-5 stars) - How responsive was the renter
-- **Vehicle Care** (1-5 stars) - How well they treated the vehicle
-- **Timeliness** (1-5 stars) - Were they on time for pickup/return
-- **Comment** (text) - Optional
+```text
+interface OwnerActivityItem {
+  id: string;
+  type: 'booking_request' | 'booking_confirmed' | 'trip_started' | 
+        'trip_completed' | 'payout' | 'review';
+  title: string;
+  description: string;
+  timestamp: string;
+  metadata?: {
+    vehicleName?: string;
+    amount?: number;
+    rating?: number;
+  };
+}
+```
 
 ---
 
-## User Flow After Implementation
+## User Flows After Implementation
 
-### Renter Receipt Download Journey
-1. Renter completes payment for P2P booking
-2. Navigates to booking confirmation page
-3. Clicks "Download Receipt"
-4. Sheet opens showing formatted receipt
-5. Can print or share the receipt
+### Renter Dispute Journey
+1. Renter completes trip or is in an active rental
+2. Experiences an issue (damage, cleanliness, billing)
+3. Opens booking confirmation page
+4. Clicks "Report an Issue"
+5. Selects issue type and describes problem
+6. Submits dispute
+7. Receives confirmation and waits for support response
 
-### Owner Review Journey
-1. Trip completes successfully
-2. Owner views completed booking in History tab
-3. Sees "Leave Review" button on booking card
-4. Clicks to open review dialog
-5. Rates renter on communication, care, timeliness
-6. Submits review
-7. Review stored for future reference
+### Owner Activity Feed Journey
+1. Owner logs into dashboard
+2. Sees "Recent Activity" section with real data
+3. Views recent bookings, payouts, and reviews at a glance
+4. Clicks on activity item to navigate to relevant page
 
 ---
 
 ## Testing Checklist
 
-1. Create test booking with "paid" status
-2. Navigate to booking confirmation
-3. Click "Download Receipt" - Verify sheet opens with formatted receipt
-4. Print receipt - Verify browser print dialog opens
-5. Test receipt for unpaid booking - Button should be disabled
-6. Navigate to Owner Bookings > History
-7. Click "Leave Review" on completed booking
-8. Submit review - Verify toast and review saved
-9. Check that review badge updates on booking card
+1. Navigate to booking confirmation for active booking
+2. Click "Report an Issue" - Verify DisputeForm dialog opens
+3. Submit a dispute - Verify success toast
+4. Check that button disables after dispute is filed
+5. Navigate to completed booking confirmation
+6. Verify dispute option appears in CompletedBookingSection
+7. Log in as verified owner with bookings
+8. Navigate to OwnerDashboard
+9. Verify activity feed shows real booking data
+10. Click activity item - Verify navigation works
 
 ---
 
 ## Design Considerations
 
-### Receipt Sheet
-- Use Sheet component for mobile-friendly slide-up
-- Full-screen on mobile, side panel on desktop
-- Include all booking details and payment breakdown
+### Dispute Button Placement
+- Subtle but visible - use outline variant with warning color
+- Position in actions section, not as primary action
+- Show "Dispute in Progress" badge if one exists
 
-### Owner Review Dialog
-- Centered modal dialog
-- Show renter name and trip summary at top
-- Rating inputs for each category
-- Optional text comment
-- Loading state during submission
+### Activity Feed Design
+- Group by date (Today, Yesterday, This Week, Earlier)
+- Icon + title + timestamp for each item
+- Clickable items that navigate to relevant pages
+- Empty state if no activity yet
 
-### Review Status Badges
-- "Reviewed" badge on completed trips where owner left review
-- "Leave Review" prompt on unreviewed completed trips
+### Mobile Responsiveness
+- Activity feed scrollable with max height
+- Dispute form dialog works well on mobile
+- Touch-friendly tap targets
 
