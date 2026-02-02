@@ -1,12 +1,14 @@
 /**
  * Hizovo Travel App - Traveler Information Screen
  * Collects passenger details with consent before partner handoff
+ * 
+ * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
  */
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   User, Mail, Phone, Calendar, Shield, ArrowRight,
-  CheckCircle, AlertCircle, Info, Lock
+  CheckCircle, AlertCircle, Info, Lock, Plane, ExternalLink
 } from "lucide-react";
 import HizovoAppLayout from "@/components/app/HizovoAppLayout";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { getSearchSessionId } from "@/config/trackingParams";
 import { logPartnerRedirect } from "@/lib/partnerRedirectLog";
+import { 
+  FLIGHT_CONSENT, 
+  FLIGHT_DISCLAIMERS, 
+  FLIGHT_CTA_TEXT 
+} from "@/config/flightCompliance";
 
 const HizovoTravelerInfo = () => {
   const navigate = useNavigate();
@@ -104,14 +111,14 @@ const HizovoTravelerInfo = () => {
         <div className="p-4 space-y-6">
           {/* Flight Summary */}
           {flight && (
-            <div className="p-4 rounded-xl bg-flights/5 border border-flights/20">
+            <div className="p-4 rounded-xl bg-sky-500/5 border border-sky-500/20">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Selected Flight</p>
                   <p className="font-bold">{flight.from} → {flight.to}</p>
                   <p className="text-sm text-muted-foreground">{flight.airline}</p>
                 </div>
-                <p className="text-xl font-bold text-flights">${flight.price}</p>
+                <p className="text-xl font-bold text-sky-500">${flight.price}</p>
               </div>
             </div>
           )}
@@ -211,7 +218,7 @@ const HizovoTravelerInfo = () => {
             </div>
           </div>
 
-          {/* Consent Checkbox */}
+          {/* Consent Checkbox - LOCKED TEXT */}
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-4">
             <div className="flex items-start gap-3">
               <Checkbox 
@@ -221,47 +228,44 @@ const HizovoTravelerInfo = () => {
                 className="mt-1"
               />
               <label htmlFor="consent" className="text-sm cursor-pointer">
-                <span className="font-medium">I agree to share my information with the booking partner.</span>
+                <span className="font-medium">{FLIGHT_CONSENT.checkboxLabel}</span>
                 <span className="text-muted-foreground block mt-1">
-                  Your details will be securely transmitted to complete your booking with our licensed travel partner.
+                  {FLIGHT_CONSENT.description}
                 </span>
               </label>
             </div>
             
             <div className="flex items-start gap-2 text-xs text-muted-foreground">
               <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <p>
-                Your data is encrypted and only shared with the booking partner. 
-                Hizovo does not store payment information.
-              </p>
+              <p>{FLIGHT_CONSENT.privacy}</p>
             </div>
           </div>
 
-          {/* Partner Disclosure */}
-          <div className="p-4 rounded-xl bg-muted border border-border">
+          {/* Partner Disclosure - LOCKED TEXT */}
+          <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20">
             <div className="flex items-start gap-3">
-              <Shield className="w-5 h-5 text-muted-foreground mt-0.5" />
+              <Plane className="w-5 h-5 text-amber-500 mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Secure Partner Checkout</p>
+                <p className="font-medium text-sm">{FLIGHT_DISCLAIMERS.ticketingShort}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  You'll be redirected to our travel partner to complete payment securely. 
-                  Hizovo is not the merchant of record.
+                  {FLIGHT_DISCLAIMERS.redirect}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sticky Footer */}
+        {/* Sticky Footer - LOCKED CTA TEXT */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 safe-area-bottom">
           <div className="max-w-lg mx-auto">
             <Button 
-              className="w-full h-14 rounded-xl font-bold text-lg gap-2 bg-flights hover:bg-flights/90"
+              className="w-full h-14 rounded-xl font-bold text-lg gap-2 bg-sky-500 hover:bg-sky-600"
               onClick={handleContinueToCheckout}
               disabled={isSubmitting || !consentGiven}
             >
-              {isSubmitting ? "Processing..." : "Continue to Secure Checkout"}
-              <ArrowRight className="w-5 h-5" />
+              <Lock className="w-5 h-5" />
+              {isSubmitting ? "Processing..." : FLIGHT_CTA_TEXT.primary}
+              <ExternalLink className="w-5 h-5" />
             </Button>
           </div>
         </div>

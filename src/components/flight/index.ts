@@ -99,6 +99,10 @@ export { default as FlightTrustIndicators } from './FlightTrustIndicators';
 export { default as QuickStatsBar } from './QuickStatsBar';
 export type { QuickStat } from './QuickStatsBar';
 
+// Compliance Components (LOCKED TEXT - DO NOT MODIFY)
+export { default as FlightConsentCheckbox } from './FlightConsentCheckbox';
+export { default as FlightPartnerDisclaimer, FlightTrustBadges, FlightPaymentDisclaimer } from './FlightPartnerDisclaimer';
+
 // Types
 export type { FlightFilters } from './FlightFilters';
 export type { FareClass } from './FareClassSelector';
