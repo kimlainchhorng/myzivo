@@ -14,6 +14,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { heroPhotos, destinationPhotos } from "@/config/photos";
 
+export interface PartnerPricing {
+  cheapest?: number;
+  bestValue?: number;
+  flexible?: number;
+}
+
 interface ApiPendingNoticeProps {
   whitelabelUrl: string;
   origin: string;
@@ -22,6 +28,8 @@ interface ApiPendingNoticeProps {
   returnDate?: string;
   passengers?: number;
   cabin?: string;
+  prices?: PartnerPricing;
+  currency?: string;
   className?: string;
 }
 
@@ -40,39 +48,50 @@ const AIRLINE_LOGOS = [
   { name: "Emirates", color: "#D71921" },
 ];
 
-// Partner deal options with indicative prices
-const PARTNER_DEALS = [
-  { 
-    label: "Cheapest flight", 
-    price: "$138+",
-    partner: "Aviasales",
-    partnerKey: "aviasales",
-    icon: TrendingDown, 
-    color: "text-emerald-500",
-    bgColor: "bg-emerald-500/10",
-    borderColor: "border-emerald-500/30",
-  },
-  { 
-    label: "Best value", 
-    price: "$149+",
-    partner: "Kiwi",
-    partnerKey: "kiwi",
-    icon: Star, 
-    color: "text-amber-500",
-    bgColor: "bg-amber-500/10",
-    borderColor: "border-amber-500/30",
-  },
-  { 
-    label: "Flexible options", 
-    price: "$162+",
-    partner: "JetRadar",
-    partnerKey: "jetradar",
-    icon: ArrowRightLeft, 
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/30",
-  },
-];
+// Build partner deals dynamically based on prices
+function buildPartnerDeals(prices?: PartnerPricing, currency: string = "USD") {
+  const formatPrice = (price?: number) => {
+    if (!price) return null;
+    const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
+    return `${symbols[currency] || '$'}${Math.round(price)}+`;
+  };
+
+  return [
+    { 
+      label: "Cheapest flight", 
+      price: formatPrice(prices?.cheapest) || "$138+",
+      isLive: !!prices?.cheapest,
+      partner: "Aviasales",
+      partnerKey: "aviasales",
+      icon: TrendingDown, 
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-500/10",
+      borderColor: "border-emerald-500/30",
+    },
+    { 
+      label: "Best value", 
+      price: formatPrice(prices?.bestValue) || "$149+",
+      isLive: !!prices?.bestValue,
+      partner: "Kiwi",
+      partnerKey: "kiwi",
+      icon: Star, 
+      color: "text-amber-500",
+      bgColor: "bg-amber-500/10",
+      borderColor: "border-amber-500/30",
+    },
+    { 
+      label: "Flexible options", 
+      price: formatPrice(prices?.flexible) || "$162+",
+      isLive: !!prices?.flexible,
+      partner: "JetRadar",
+      partnerKey: "jetradar",
+      icon: ArrowRightLeft, 
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+      borderColor: "border-purple-500/30",
+    },
+  ];
+}
 
 function buildPartnerUrl(
   partner: string,
@@ -136,11 +155,17 @@ export default function ApiPendingNotice({
   returnDate,
   passengers,
   cabin,
+  prices,
+  currency = "USD",
   className,
 }: ApiPendingNoticeProps) {
   const aviasalesUrl = buildPartnerUrl("aviasales", origin, destination, departDate, returnDate, passengers, cabin);
   const jetradarUrl = buildPartnerUrl("jetradar", origin, destination, departDate, returnDate, passengers, cabin);
   const kiwiUrl = buildPartnerUrl("kiwi", origin, destination, departDate, returnDate, passengers, cabin);
+  
+  // Build partner deals with dynamic prices
+  const partnerDeals = buildPartnerDeals(prices, currency);
+  const hasLivePrices = prices && (prices.cheapest || prices.bestValue || prices.flexible);
 
   return (
     <div className={cn("space-y-5", className)}>
@@ -222,7 +247,7 @@ export default function ApiPendingNotice({
 
           {/* Partner Deal Cards */}
           <div className="space-y-3">
-            {PARTNER_DEALS.map((deal) => {
+            {partnerDeals.map((deal) => {
               const Icon = deal.icon;
               const url = deal.partnerKey === "aviasales" ? aviasalesUrl 
                 : deal.partnerKey === "kiwi" ? kiwiUrl 
@@ -245,7 +270,14 @@ export default function ApiPendingNotice({
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold">{deal.label}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold">{deal.label}</p>
+                      {deal.isLive && (
+                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] px-1.5 py-0">
+                          LIVE
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground">{deal.partner}</p>
                   </div>
                   
@@ -272,7 +304,10 @@ export default function ApiPendingNotice({
           {/* Live price notice */}
           <p className="text-xs text-muted-foreground text-center mt-4">
             <Zap className="w-3 h-3 inline text-amber-500 mr-1" />
-            Indicative prices shown. Final price confirmed on partner site.
+            {hasLivePrices 
+              ? "Real-time prices from partner APIs. Final price confirmed on partner site."
+              : "Indicative prices shown. Final price confirmed on partner site."
+            }
           </p>
         </CardContent>
       </Card>
