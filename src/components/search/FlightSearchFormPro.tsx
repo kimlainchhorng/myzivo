@@ -166,13 +166,12 @@ export default function FlightSearchFormPro({
     return Object.keys(newErrors).length === 0;
   };
 
+  // Public config (safe to expose - affiliate marker)
+  const WL_BASE_URL = 'https://search.jetradar.com/flights';
+  const MARKER = '700031';
+
   // Build white label URL for live results
   const buildWhitelabelUrl = (fromCode: string, toCode: string) => {
-    // NOTE: Marker is not a secret (affiliate ID), safe to keep client-side.
-    // Keep in sync with TRAVELPAYOUTS_MARKER used server-side.
-    const marker = '700031';
-    const base = 'https://search.jetradar.com/flights';
-    
     const cabinMap: Record<string, string> = {
       'economy': 'Y',
       'premium': 'W',
@@ -186,7 +185,7 @@ export default function FlightSearchFormPro({
       depart_date: departDate ? format(departDate, "yyyy-MM-dd") : "",
       adults: String(passengers),
       trip_class: cabinMap[cabin] || 'Y',
-      marker,
+      marker: MARKER,
       with_request: 'true'
     });
     
@@ -194,35 +193,50 @@ export default function FlightSearchFormPro({
       urlParams.set('return_date', format(returnDate, "yyyy-MM-dd"));
     }
     
-    return `${base}?${urlParams.toString()}`;
+    return `${WL_BASE_URL}?${urlParams.toString()}`;
   };
 
-  // Handle search - open white label URL directly (API access pending)
+  // State for debug URL
+  const [debugUrl, setDebugUrl] = useState<string>("");
+
+  // Handle search - navigate to embedded live page
   const handleSearch = () => {
     if (!validate()) return;
 
     // Extract IATA codes
-    const fromCode = fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
-    const toCode = toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
+    const fromCode = (fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
+    const toCode = (toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
 
-    // Build and open white label URL directly (new tab)
+    // Build white label URL for debug display
     const whitelabelUrl = buildWhitelabelUrl(fromCode, toCode);
-    window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
+    setDebugUrl(whitelabelUrl);
+    console.log("[FlightSearch] Built white-label URL:", whitelabelUrl);
+
+    // Build internal live page URL
+    const liveParams = new URLSearchParams({
+      origin: fromCode,
+      dest: toCode,
+      depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
+      passengers: String(passengers),
+      cabin: cabin,
+    });
+    if (tripType === "roundtrip" && returnDate) {
+      liveParams.set("return", format(returnDate, "yyyy-MM-dd"));
+    }
+
+    // Navigate to embedded live results page
+    navigate(`/flights/live?${liveParams.toString()}`);
     
     // Call optional callback with search params for tracking
     if (onSearch) {
-      const params = new URLSearchParams({
-        from: fromCode.toUpperCase(),
-        to: toCode.toUpperCase(),
-        depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
-        passengers: String(passengers),
-        cabin: cabin,
-        tripType: tripType,
-      });
-      if (tripType === "roundtrip" && returnDate) {
-        params.set("return", format(returnDate, "yyyy-MM-dd"));
-      }
-      onSearch(params);
+      onSearch(liveParams);
+    }
+  };
+
+  // Direct open in new tab (for debug link)
+  const handleOpenDirect = () => {
+    if (debugUrl) {
+      window.open(debugUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -524,6 +538,21 @@ export default function FlightSearchFormPro({
         <ExternalLink className="w-5 h-5 mr-2" />
         View Live Results
       </Button>
+
+      {/* Debug: Show built URL for testing */}
+      {debugUrl && (
+        <div className="mt-3 p-2 bg-muted/50 rounded-lg border border-border/50">
+          <p className="text-[10px] text-muted-foreground mb-1">Debug URL:</p>
+          <a 
+            href={debugUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-xs text-sky-500 hover:underline break-all"
+          >
+            Open live results directly →
+          </a>
+        </div>
+      )}
 
       {/* Compliance notice */}
       <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-3">

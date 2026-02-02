@@ -49,6 +49,7 @@ const FlightBooking = lazy(() => import("./pages/FlightBooking"));
 const FlightLanding = lazy(() => import("./pages/FlightLanding"));
 const FlightResults = lazy(() => import("./pages/FlightResults"));
 const FlightDetails = lazy(() => import("./pages/FlightDetails"));
+const FlightLive = lazy(() => import("./pages/FlightLive"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 const HotelsPage = lazy(() => import("./pages/HotelsPage"));
@@ -180,6 +181,7 @@ const App = () => (
                 <Route path="/flights/:route" element={<FlightLanding />} />
                 
                 <Route path="/flights/results" element={<FlightResults />} />
+                <Route path="/flights/live" element={<FlightLive />} />
                 <Route path="/flights/details/:id" element={<FlightDetails />} />
                 
                 {/* Hotels Pages */}
