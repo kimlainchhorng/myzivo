@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, Percent, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin, Mail, Globe
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin, Mail, Globe, Rocket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -41,9 +41,11 @@ import AdminDamageReportsModule from "./modules/AdminDamageReportsModule";
 import AdminRenterInvitesModule from "./modules/AdminRenterInvitesModule";
 import AdminCategoryPricingModule from "./modules/AdminCategoryPricingModule";
 import AdminRegionsModule from "./modules/AdminRegionsModule";
+import AdminBetaLaunchModule from "./modules/AdminBetaLaunchModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "beta-launch", label: "Beta Launch", icon: Rocket },
   { id: "regions", label: "Regions", icon: Globe },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
@@ -137,6 +139,8 @@ export default function AdminPanel() {
     switch (activeModule) {
       case "dashboard":
         return <AdminOverview />;
+      case "beta-launch":
+        return <AdminBetaLaunchModule />;
       case "regions":
         return <AdminRegionsModule />;
       case "rides":

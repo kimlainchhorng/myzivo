@@ -562,6 +562,201 @@ export type Database = {
           },
         ]
       }
+      beta_launch_checklist: {
+        Row: {
+          created_at: string | null
+          day1_admin_routing_works: boolean | null
+          day1_cars_page_loads: boolean | null
+          day1_completed_at: string | null
+          day1_completed_by: string | null
+          day1_footer_links_work: boolean | null
+          day1_homepage_loads: boolean | null
+          day1_list_car_page_loads: boolean | null
+          day1_login_works: boolean | null
+          day1_owner_routing_works: boolean | null
+          day1_renter_routing_works: boolean | null
+          day2_commission_deducted: boolean | null
+          day2_completed_at: string | null
+          day2_completed_by: string | null
+          day2_insurance_disclosure_visible: boolean | null
+          day2_stripe_connect_payout: boolean | null
+          day2_stripe_test_payment: boolean | null
+          day3_2018_rule_enforced: boolean | null
+          day3_admin_approval_works: boolean | null
+          day3_completed_at: string | null
+          day3_completed_by: string | null
+          day3_owner_dashboard_shows_data: boolean | null
+          day3_owner_signup_works: boolean | null
+          day3_vehicle_upload_works: boolean | null
+          day4_booking_blocked_without_verification: boolean | null
+          day4_completed_at: string | null
+          day4_completed_by: string | null
+          day4_confirmation_email_works: boolean | null
+          day4_license_verification_works: boolean | null
+          day4_renter_signup_works: boolean | null
+          day5_cancellation_works: boolean | null
+          day5_completed_at: string | null
+          day5_completed_by: string | null
+          day5_damage_report_works: boolean | null
+          day5_dispute_panel_loads: boolean | null
+          day5_payout_hold_works: boolean | null
+          day6_city_status_live: boolean | null
+          day6_completed_at: string | null
+          day6_completed_by: string | null
+          day6_non_live_cities_blocked: boolean | null
+          day6_only_live_city_cars_shown: boolean | null
+          day6_waitlist_shown_when_beta: boolean | null
+          day7_bookings_enabled: boolean | null
+          day7_completed_at: string | null
+          day7_completed_by: string | null
+          day7_first_renters_invited: boolean | null
+          day7_first_transaction_monitored: boolean | null
+          day7_support_contact_visible: boolean | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day1_admin_routing_works?: boolean | null
+          day1_cars_page_loads?: boolean | null
+          day1_completed_at?: string | null
+          day1_completed_by?: string | null
+          day1_footer_links_work?: boolean | null
+          day1_homepage_loads?: boolean | null
+          day1_list_car_page_loads?: boolean | null
+          day1_login_works?: boolean | null
+          day1_owner_routing_works?: boolean | null
+          day1_renter_routing_works?: boolean | null
+          day2_commission_deducted?: boolean | null
+          day2_completed_at?: string | null
+          day2_completed_by?: string | null
+          day2_insurance_disclosure_visible?: boolean | null
+          day2_stripe_connect_payout?: boolean | null
+          day2_stripe_test_payment?: boolean | null
+          day3_2018_rule_enforced?: boolean | null
+          day3_admin_approval_works?: boolean | null
+          day3_completed_at?: string | null
+          day3_completed_by?: string | null
+          day3_owner_dashboard_shows_data?: boolean | null
+          day3_owner_signup_works?: boolean | null
+          day3_vehicle_upload_works?: boolean | null
+          day4_booking_blocked_without_verification?: boolean | null
+          day4_completed_at?: string | null
+          day4_completed_by?: string | null
+          day4_confirmation_email_works?: boolean | null
+          day4_license_verification_works?: boolean | null
+          day4_renter_signup_works?: boolean | null
+          day5_cancellation_works?: boolean | null
+          day5_completed_at?: string | null
+          day5_completed_by?: string | null
+          day5_damage_report_works?: boolean | null
+          day5_dispute_panel_loads?: boolean | null
+          day5_payout_hold_works?: boolean | null
+          day6_city_status_live?: boolean | null
+          day6_completed_at?: string | null
+          day6_completed_by?: string | null
+          day6_non_live_cities_blocked?: boolean | null
+          day6_only_live_city_cars_shown?: boolean | null
+          day6_waitlist_shown_when_beta?: boolean | null
+          day7_bookings_enabled?: boolean | null
+          day7_completed_at?: string | null
+          day7_completed_by?: string | null
+          day7_first_renters_invited?: boolean | null
+          day7_first_transaction_monitored?: boolean | null
+          day7_support_contact_visible?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day1_admin_routing_works?: boolean | null
+          day1_cars_page_loads?: boolean | null
+          day1_completed_at?: string | null
+          day1_completed_by?: string | null
+          day1_footer_links_work?: boolean | null
+          day1_homepage_loads?: boolean | null
+          day1_list_car_page_loads?: boolean | null
+          day1_login_works?: boolean | null
+          day1_owner_routing_works?: boolean | null
+          day1_renter_routing_works?: boolean | null
+          day2_commission_deducted?: boolean | null
+          day2_completed_at?: string | null
+          day2_completed_by?: string | null
+          day2_insurance_disclosure_visible?: boolean | null
+          day2_stripe_connect_payout?: boolean | null
+          day2_stripe_test_payment?: boolean | null
+          day3_2018_rule_enforced?: boolean | null
+          day3_admin_approval_works?: boolean | null
+          day3_completed_at?: string | null
+          day3_completed_by?: string | null
+          day3_owner_dashboard_shows_data?: boolean | null
+          day3_owner_signup_works?: boolean | null
+          day3_vehicle_upload_works?: boolean | null
+          day4_booking_blocked_without_verification?: boolean | null
+          day4_completed_at?: string | null
+          day4_completed_by?: string | null
+          day4_confirmation_email_works?: boolean | null
+          day4_license_verification_works?: boolean | null
+          day4_renter_signup_works?: boolean | null
+          day5_cancellation_works?: boolean | null
+          day5_completed_at?: string | null
+          day5_completed_by?: string | null
+          day5_damage_report_works?: boolean | null
+          day5_dispute_panel_loads?: boolean | null
+          day5_payout_hold_works?: boolean | null
+          day6_city_status_live?: boolean | null
+          day6_completed_at?: string | null
+          day6_completed_by?: string | null
+          day6_non_live_cities_blocked?: boolean | null
+          day6_only_live_city_cars_shown?: boolean | null
+          day6_waitlist_shown_when_beta?: boolean | null
+          day7_bookings_enabled?: boolean | null
+          day7_completed_at?: string | null
+          day7_completed_by?: string | null
+          day7_first_renters_invited?: boolean | null
+          day7_first_transaction_monitored?: boolean | null
+          day7_support_contact_visible?: boolean | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      beta_launch_status: {
+        Row: {
+          activated_at: string | null
+          activated_by: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          paused_at: string | null
+          paused_by: string | null
+          status: Database["public"]["Enums"]["beta_launch_state"]
+          updated_at: string | null
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          status?: Database["public"]["Enums"]["beta_launch_state"]
+          updated_at?: string | null
+        }
+        Update: {
+          activated_at?: string | null
+          activated_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          status?: Database["public"]["Enums"]["beta_launch_state"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bill_split_payments: {
         Row: {
           amount: number
@@ -11221,6 +11416,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       approval_status: "pending" | "approved" | "rejected"
+      beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
         | "pending"
         | "confirmed"
@@ -11445,6 +11641,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       approval_status: ["pending", "approved", "rejected"],
+      beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],
       booking_status: [
         "pending",
         "confirmed",
