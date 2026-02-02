@@ -817,6 +817,146 @@ export type Database = {
           },
         ]
       }
+      car_owner_documents: {
+        Row: {
+          created_at: string | null
+          document_type: Database["public"]["Enums"]["car_owner_document_type"]
+          expires_at: string | null
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          owner_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["document_review_status"] | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: Database["public"]["Enums"]["car_owner_document_type"]
+          expires_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          owner_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["document_review_status"] | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: Database["public"]["Enums"]["car_owner_document_type"]
+          expires_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          owner_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["document_review_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_owner_documents_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      car_owner_profiles: {
+        Row: {
+          address: string | null
+          bio: string | null
+          city: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          documents_verified: boolean | null
+          email: string | null
+          full_name: string
+          id: string
+          insurance_option:
+            | Database["public"]["Enums"]["car_owner_insurance_option"]
+            | null
+          payout_enabled: boolean | null
+          phone: string | null
+          rating: number | null
+          response_rate: number | null
+          response_time_hours: number | null
+          ssn_last_four: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_id: string | null
+          total_trips: number | null
+          updated_at: string | null
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          documents_verified?: boolean | null
+          email?: string | null
+          full_name: string
+          id?: string
+          insurance_option?:
+            | Database["public"]["Enums"]["car_owner_insurance_option"]
+            | null
+          payout_enabled?: boolean | null
+          phone?: string | null
+          rating?: number | null
+          response_rate?: number | null
+          response_time_hours?: number | null
+          ssn_last_four?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_id?: string | null
+          total_trips?: number | null
+          updated_at?: string | null
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          city?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          documents_verified?: boolean | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          insurance_option?:
+            | Database["public"]["Enums"]["car_owner_insurance_option"]
+            | null
+          payout_enabled?: boolean | null
+          phone?: string | null
+          rating?: number | null
+          response_rate?: number | null
+          response_time_hours?: number | null
+          ssn_last_four?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["car_owner_status"] | null
+          stripe_account_id?: string | null
+          total_trips?: number | null
+          updated_at?: string | null
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       car_rentals: {
         Row: {
           actual_return_date: string | null
@@ -4242,6 +4382,538 @@ export type Database = {
           },
         ]
       }
+      p2p_bookings: {
+        Row: {
+          actual_return_date: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          created_at: string | null
+          daily_rate: number
+          fuel_level_end: string | null
+          fuel_level_start: string | null
+          id: string
+          insurance_accepted: boolean | null
+          insurance_fee: number | null
+          mileage_end: number | null
+          mileage_start: number | null
+          notes: string | null
+          owner_id: string
+          owner_payout: number
+          payment_status:
+            | Database["public"]["Enums"]["p2p_payment_status"]
+            | null
+          pickup_confirmed_at: string | null
+          pickup_confirmed_by: string | null
+          pickup_date: string
+          pickup_location: string | null
+          platform_fee: number | null
+          renter_id: string
+          renter_license_verified: boolean | null
+          return_confirmed_at: string | null
+          return_confirmed_by: string | null
+          return_date: string
+          return_location: string | null
+          service_fee: number | null
+          status: Database["public"]["Enums"]["p2p_booking_status"] | null
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          subtotal: number
+          taxes: number | null
+          terms_accepted: boolean | null
+          total_amount: number
+          total_days: number
+          updated_at: string | null
+          vehicle_id: string
+        }
+        Insert: {
+          actual_return_date?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string | null
+          daily_rate: number
+          fuel_level_end?: string | null
+          fuel_level_start?: string | null
+          id?: string
+          insurance_accepted?: boolean | null
+          insurance_fee?: number | null
+          mileage_end?: number | null
+          mileage_start?: number | null
+          notes?: string | null
+          owner_id: string
+          owner_payout: number
+          payment_status?:
+            | Database["public"]["Enums"]["p2p_payment_status"]
+            | null
+          pickup_confirmed_at?: string | null
+          pickup_confirmed_by?: string | null
+          pickup_date: string
+          pickup_location?: string | null
+          platform_fee?: number | null
+          renter_id: string
+          renter_license_verified?: boolean | null
+          return_confirmed_at?: string | null
+          return_confirmed_by?: string | null
+          return_date: string
+          return_location?: string | null
+          service_fee?: number | null
+          status?: Database["public"]["Enums"]["p2p_booking_status"] | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal: number
+          taxes?: number | null
+          terms_accepted?: boolean | null
+          total_amount: number
+          total_days: number
+          updated_at?: string | null
+          vehicle_id: string
+        }
+        Update: {
+          actual_return_date?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          created_at?: string | null
+          daily_rate?: number
+          fuel_level_end?: string | null
+          fuel_level_start?: string | null
+          id?: string
+          insurance_accepted?: boolean | null
+          insurance_fee?: number | null
+          mileage_end?: number | null
+          mileage_start?: number | null
+          notes?: string | null
+          owner_id?: string
+          owner_payout?: number
+          payment_status?:
+            | Database["public"]["Enums"]["p2p_payment_status"]
+            | null
+          pickup_confirmed_at?: string | null
+          pickup_confirmed_by?: string | null
+          pickup_date?: string
+          pickup_location?: string | null
+          platform_fee?: number | null
+          renter_id?: string
+          renter_license_verified?: boolean | null
+          return_confirmed_at?: string | null
+          return_confirmed_by?: string | null
+          return_date?: string
+          return_location?: string | null
+          service_fee?: number | null
+          status?: Database["public"]["Enums"]["p2p_booking_status"] | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number
+          taxes?: number | null
+          terms_accepted?: boolean | null
+          total_amount?: number
+          total_days?: number
+          updated_at?: string | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_bookings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "p2p_bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_commission_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          insurance_daily_fee: number | null
+          is_active: boolean | null
+          name: string
+          owner_commission_pct: number | null
+          renter_service_fee_pct: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          insurance_daily_fee?: number | null
+          is_active?: boolean | null
+          name: string
+          owner_commission_pct?: number | null
+          renter_service_fee_pct?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          insurance_daily_fee?: number | null
+          is_active?: boolean | null
+          name?: string
+          owner_commission_pct?: number | null
+          renter_service_fee_pct?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      p2p_disputes: {
+        Row: {
+          admin_notes: string | null
+          booking_id: string
+          created_at: string | null
+          description: string
+          dispute_type: Database["public"]["Enums"]["p2p_dispute_type"]
+          evidence: Json | null
+          id: string
+          priority: string | null
+          raised_by: string
+          resolution: string | null
+          resolution_amount: number | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["p2p_dispute_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          booking_id: string
+          created_at?: string | null
+          description: string
+          dispute_type: Database["public"]["Enums"]["p2p_dispute_type"]
+          evidence?: Json | null
+          id?: string
+          priority?: string | null
+          raised_by: string
+          resolution?: string | null
+          resolution_amount?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["p2p_dispute_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          booking_id?: string
+          created_at?: string | null
+          description?: string
+          dispute_type?: Database["public"]["Enums"]["p2p_dispute_type"]
+          evidence?: Json | null
+          id?: string
+          priority?: string | null
+          raised_by?: string
+          resolution?: string | null
+          resolution_amount?: number | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["p2p_dispute_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_payouts: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string | null
+          failed_reason: string | null
+          id: string
+          net_amount: number
+          notes: string | null
+          owner_id: string
+          platform_fee: number | null
+          processed_at: string | null
+          requested_at: string | null
+          status: Database["public"]["Enums"]["p2p_payout_status"] | null
+          stripe_payout_id: string | null
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          net_amount: number
+          notes?: string | null
+          owner_id: string
+          platform_fee?: number | null
+          processed_at?: string | null
+          requested_at?: string | null
+          status?: Database["public"]["Enums"]["p2p_payout_status"] | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string | null
+          failed_reason?: string | null
+          id?: string
+          net_amount?: number
+          notes?: string | null
+          owner_id?: string
+          platform_fee?: number | null
+          processed_at?: string | null
+          requested_at?: string | null
+          status?: Database["public"]["Enums"]["p2p_payout_status"] | null
+          stripe_payout_id?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_payouts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "p2p_payouts_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_reviews: {
+        Row: {
+          accuracy: number | null
+          booking_id: string
+          cleanliness: number | null
+          comment: string | null
+          communication: number | null
+          condition: number | null
+          created_at: string | null
+          id: string
+          is_public: boolean | null
+          owner_responded_at: string | null
+          owner_response: string | null
+          rating: number
+          review_type: Database["public"]["Enums"]["p2p_review_type"]
+          reviewee_id: string | null
+          reviewer_id: string
+          title: string | null
+          value: number | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          booking_id: string
+          cleanliness?: number | null
+          comment?: string | null
+          communication?: number | null
+          condition?: number | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          owner_responded_at?: string | null
+          owner_response?: string | null
+          rating: number
+          review_type: Database["public"]["Enums"]["p2p_review_type"]
+          reviewee_id?: string | null
+          reviewer_id: string
+          title?: string | null
+          value?: number | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          booking_id?: string
+          cleanliness?: number | null
+          comment?: string | null
+          communication?: number | null
+          condition?: number | null
+          created_at?: string | null
+          id?: string
+          is_public?: boolean | null
+          owner_responded_at?: string | null
+          owner_response?: string | null
+          rating?: number
+          review_type?: Database["public"]["Enums"]["p2p_review_type"]
+          reviewee_id?: string | null
+          reviewer_id?: string
+          title?: string | null
+          value?: number | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "p2p_reviews_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_vehicles: {
+        Row: {
+          approval_status:
+            | Database["public"]["Enums"]["p2p_vehicle_status"]
+            | null
+          category: Database["public"]["Enums"]["p2p_vehicle_category"]
+          color: string | null
+          created_at: string | null
+          daily_rate: number
+          description: string | null
+          doors: number | null
+          features: Json | null
+          fuel_type: Database["public"]["Enums"]["p2p_fuel_type"] | null
+          id: string
+          images: Json | null
+          instant_book: boolean | null
+          is_available: boolean | null
+          lat: number | null
+          license_plate: string | null
+          lng: number | null
+          location_address: string | null
+          location_city: string | null
+          location_state: string | null
+          location_zip: string | null
+          make: string
+          max_trip_days: number | null
+          mileage: number | null
+          min_trip_days: number | null
+          model: string
+          monthly_rate: number | null
+          owner_id: string
+          rating: number | null
+          rejection_reason: string | null
+          review_count: number | null
+          seats: number | null
+          total_trips: number | null
+          transmission:
+            | Database["public"]["Enums"]["p2p_transmission_type"]
+            | null
+          trim: string | null
+          updated_at: string | null
+          vin: string | null
+          weekly_rate: number | null
+          year: number
+        }
+        Insert: {
+          approval_status?:
+            | Database["public"]["Enums"]["p2p_vehicle_status"]
+            | null
+          category?: Database["public"]["Enums"]["p2p_vehicle_category"]
+          color?: string | null
+          created_at?: string | null
+          daily_rate: number
+          description?: string | null
+          doors?: number | null
+          features?: Json | null
+          fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
+          id?: string
+          images?: Json | null
+          instant_book?: boolean | null
+          is_available?: boolean | null
+          lat?: number | null
+          license_plate?: string | null
+          lng?: number | null
+          location_address?: string | null
+          location_city?: string | null
+          location_state?: string | null
+          location_zip?: string | null
+          make: string
+          max_trip_days?: number | null
+          mileage?: number | null
+          min_trip_days?: number | null
+          model: string
+          monthly_rate?: number | null
+          owner_id: string
+          rating?: number | null
+          rejection_reason?: string | null
+          review_count?: number | null
+          seats?: number | null
+          total_trips?: number | null
+          transmission?:
+            | Database["public"]["Enums"]["p2p_transmission_type"]
+            | null
+          trim?: string | null
+          updated_at?: string | null
+          vin?: string | null
+          weekly_rate?: number | null
+          year: number
+        }
+        Update: {
+          approval_status?:
+            | Database["public"]["Enums"]["p2p_vehicle_status"]
+            | null
+          category?: Database["public"]["Enums"]["p2p_vehicle_category"]
+          color?: string | null
+          created_at?: string | null
+          daily_rate?: number
+          description?: string | null
+          doors?: number | null
+          features?: Json | null
+          fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
+          id?: string
+          images?: Json | null
+          instant_book?: boolean | null
+          is_available?: boolean | null
+          lat?: number | null
+          license_plate?: string | null
+          lng?: number | null
+          location_address?: string | null
+          location_city?: string | null
+          location_state?: string | null
+          location_zip?: string | null
+          make?: string
+          max_trip_days?: number | null
+          mileage?: number | null
+          min_trip_days?: number | null
+          model?: string
+          monthly_rate?: number | null
+          owner_id?: string
+          rating?: number | null
+          rejection_reason?: string | null
+          review_count?: number | null
+          seats?: number | null
+          total_trips?: number | null
+          transmission?:
+            | Database["public"]["Enums"]["p2p_transmission_type"]
+            | null
+          trim?: string | null
+          updated_at?: string | null
+          vin?: string | null
+          weekly_rate?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_vehicles_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_checkout_config: {
         Row: {
           checkout_mode: Database["public"]["Enums"]["checkout_mode"]
@@ -7502,6 +8174,51 @@ export type Database = {
         }
         Relationships: []
       }
+      vehicle_availability: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          date: string
+          id: string
+          is_available: boolean | null
+          price_override: number | null
+          vehicle_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          date: string
+          id?: string
+          is_available?: boolean | null
+          price_override?: number | null
+          vehicle_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          is_available?: boolean | null
+          price_override?: number | null
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_availability_booking"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_availability_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_documents: {
         Row: {
           document_type: string
@@ -9304,6 +10021,21 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_p2p_booking_fees: {
+        Args: {
+          p_daily_rate: number
+          p_include_insurance?: boolean
+          p_total_days: number
+        }
+        Returns: {
+          insurance_fee: number
+          owner_payout: number
+          platform_fee: number
+          service_fee: number
+          subtotal: number
+          total_amount: number
+        }[]
+      }
       can_customer_view_driver: {
         Args: { _driver_id: string }
         Returns: boolean
@@ -9348,6 +10080,7 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: number
       }
+      get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
         Returns: {
@@ -9379,6 +10112,7 @@ export type Database = {
         Returns: boolean
       }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
+      is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_device_fingerprint?: string
@@ -9412,8 +10146,60 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "refunded"
+      car_owner_document_type:
+        | "drivers_license"
+        | "vehicle_registration"
+        | "insurance"
+        | "title"
+        | "id_card"
+      car_owner_insurance_option: "platform" | "own" | "none"
+      car_owner_status: "pending" | "verified" | "rejected" | "suspended"
       checkout_mode: "redirect" | "iframe"
+      document_review_status: "pending" | "approved" | "rejected"
       driver_status: "pending" | "verified" | "rejected" | "suspended"
+      p2p_booking_status:
+        | "pending"
+        | "confirmed"
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "disputed"
+      p2p_dispute_status: "open" | "investigating" | "resolved" | "closed"
+      p2p_dispute_type:
+        | "damage"
+        | "late_return"
+        | "cancellation"
+        | "refund"
+        | "cleanliness"
+        | "other"
+      p2p_fuel_type:
+        | "gasoline"
+        | "diesel"
+        | "electric"
+        | "hybrid"
+        | "plug_in_hybrid"
+      p2p_payment_status:
+        | "pending"
+        | "authorized"
+        | "captured"
+        | "refunded"
+        | "failed"
+      p2p_payout_status: "pending" | "processing" | "completed" | "failed"
+      p2p_review_type:
+        | "renter_to_owner"
+        | "owner_to_renter"
+        | "renter_to_vehicle"
+      p2p_transmission_type: "automatic" | "manual"
+      p2p_vehicle_category:
+        | "economy"
+        | "compact"
+        | "midsize"
+        | "fullsize"
+        | "suv"
+        | "luxury"
+        | "minivan"
+        | "truck"
+      p2p_vehicle_status: "pending" | "approved" | "rejected" | "suspended"
       partner_booking_status: "pending" | "returned" | "failed" | "timeout"
       partner_status: "pending" | "active" | "suspended" | "inactive"
       travel_booking_status:
@@ -9570,8 +10356,67 @@ export const Constants = {
         "cancelled",
         "refunded",
       ],
+      car_owner_document_type: [
+        "drivers_license",
+        "vehicle_registration",
+        "insurance",
+        "title",
+        "id_card",
+      ],
+      car_owner_insurance_option: ["platform", "own", "none"],
+      car_owner_status: ["pending", "verified", "rejected", "suspended"],
       checkout_mode: ["redirect", "iframe"],
+      document_review_status: ["pending", "approved", "rejected"],
       driver_status: ["pending", "verified", "rejected", "suspended"],
+      p2p_booking_status: [
+        "pending",
+        "confirmed",
+        "active",
+        "completed",
+        "cancelled",
+        "disputed",
+      ],
+      p2p_dispute_status: ["open", "investigating", "resolved", "closed"],
+      p2p_dispute_type: [
+        "damage",
+        "late_return",
+        "cancellation",
+        "refund",
+        "cleanliness",
+        "other",
+      ],
+      p2p_fuel_type: [
+        "gasoline",
+        "diesel",
+        "electric",
+        "hybrid",
+        "plug_in_hybrid",
+      ],
+      p2p_payment_status: [
+        "pending",
+        "authorized",
+        "captured",
+        "refunded",
+        "failed",
+      ],
+      p2p_payout_status: ["pending", "processing", "completed", "failed"],
+      p2p_review_type: [
+        "renter_to_owner",
+        "owner_to_renter",
+        "renter_to_vehicle",
+      ],
+      p2p_transmission_type: ["automatic", "manual"],
+      p2p_vehicle_category: [
+        "economy",
+        "compact",
+        "midsize",
+        "fullsize",
+        "suv",
+        "luxury",
+        "minivan",
+        "truck",
+      ],
+      p2p_vehicle_status: ["pending", "approved", "rejected", "suspended"],
       partner_booking_status: ["pending", "returned", "failed", "timeout"],
       partner_status: ["pending", "active", "suspended", "inactive"],
       travel_booking_status: [
