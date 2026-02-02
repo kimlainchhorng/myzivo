@@ -59,8 +59,9 @@ export default function FlightDetailStickyCTA({
             onClick={onContinue}
             className={cn(
               "gap-2 text-white shadow-lg shadow-sky-500/30 shrink-0",
-              "min-h-[48px] px-5 touch-manipulation active:scale-[0.98]",
-              "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700"
+              "min-h-[52px] px-6 touch-manipulation active:scale-[0.98]",
+              "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
+              "text-base font-semibold"
             )}
           >
             {isLoading ? (
@@ -71,7 +72,7 @@ export default function FlightDetailStickyCTA({
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                {FLIGHT_CTA_TEXT.primary}
+                {FLIGHT_CTA_TEXT.mobile}
                 <ExternalLink className="w-4 h-4" />
               </>
             )}
@@ -79,9 +80,12 @@ export default function FlightDetailStickyCTA({
         </div>
 
         {/* Compliance Disclosure */}
-        <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {FLIGHT_DISCLAIMERS.redirect}
-        </p>
+        <div className="flex items-center justify-center gap-2 mt-2">
+          <Lock className="w-3 h-3 text-emerald-500" />
+          <p className="text-[9px] text-muted-foreground leading-tight">
+            Secure checkout handled by our airline partner
+          </p>
+        </div>
       </div>
     </div>
   );

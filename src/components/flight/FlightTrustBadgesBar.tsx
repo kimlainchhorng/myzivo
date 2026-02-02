@@ -67,25 +67,29 @@ export default function FlightTrustBadgesBar({ className, variant = 'default' }:
 
   return (
     <div className={cn(
-      "py-4 border-y border-border/50 bg-gradient-to-r from-muted/20 via-muted/30 to-muted/20",
+      "py-5 border-y border-border/50 bg-gradient-to-r from-muted/20 via-muted/30 to-muted/20",
       className
     )}>
       <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8">
           {badges.map((badge) => (
             <div key={badge.label} className="flex items-center gap-2">
               <div className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center",
+                "w-9 h-9 rounded-xl flex items-center justify-center",
                 badge.color === "text-emerald-500" && "bg-emerald-500/10",
                 badge.color === "text-sky-500" && "bg-sky-500/10",
                 badge.color === "text-amber-500" && "bg-amber-500/10",
               )}>
-                <badge.icon className={cn("w-4 h-4", badge.color)} />
+                <badge.icon className={cn("w-4.5 h-4.5", badge.color)} />
               </div>
               <span className="text-sm font-medium">{badge.label}</span>
             </div>
           ))}
         </div>
+        {/* Footer trust note */}
+        <p className="text-center text-[10px] text-muted-foreground mt-3">
+          No hidden fees from Hizivo • All bookings completed with licensed partners
+        </p>
       </div>
     </div>
   );

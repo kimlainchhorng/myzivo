@@ -191,7 +191,7 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           </div>
 
           {/* RIGHT: Price & CTA Section */}
-          <div className="p-4 lg:py-5 lg:px-5 lg:w-44 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-4 bg-gradient-to-br from-muted/30 to-muted/10">
+          <div className="p-4 lg:py-5 lg:px-5 lg:w-48 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
             <div className="text-left lg:text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">From</p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-500">
@@ -208,6 +208,10 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                   via {flight.partnerName}
                 </p>
               )}
+              {/* Trust micro-copy */}
+              <p className="text-[9px] text-emerald-600 mt-1 hidden lg:block">
+                Final price confirmed by partner
+              </p>
             </div>
 
             <Button
@@ -221,11 +225,16 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                 });
                 onViewDeal(flight);
               }}
-              className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white"
+              className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white min-h-[48px] touch-manipulation active:scale-[0.98]"
             >
               View Deal
               <ExternalLink className="w-4 h-4" />
             </Button>
+            
+            {/* Mobile trust micro-copy */}
+            <p className="text-[9px] text-muted-foreground lg:hidden text-center">
+              Secure partner checkout
+            </p>
           </div>
         </div>
 
