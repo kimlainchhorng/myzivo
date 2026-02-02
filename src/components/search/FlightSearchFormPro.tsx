@@ -23,6 +23,7 @@ import {
   AlertCircle,
   ChevronDown,
   Minus,
+  ExternalLink,
   Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -165,7 +166,36 @@ export default function FlightSearchFormPro({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle search
+  // Build white label URL for live results
+  const buildWhitelabelUrl = (fromCode: string, toCode: string) => {
+    const marker = '618730';
+    const base = 'https://search.jetradar.com/flights';
+    
+    const cabinMap: Record<string, string> = {
+      'economy': 'Y',
+      'premium': 'W',
+      'business': 'C',
+      'first': 'F'
+    };
+    
+    const urlParams = new URLSearchParams({
+      origin_iata: fromCode,
+      destination_iata: toCode,
+      depart_date: departDate ? format(departDate, "yyyy-MM-dd") : "",
+      adults: String(passengers),
+      trip_class: cabinMap[cabin] || 'Y',
+      marker,
+      with_request: 'true'
+    });
+    
+    if (tripType === "roundtrip" && returnDate) {
+      urlParams.set('return_date', format(returnDate, "yyyy-MM-dd"));
+    }
+    
+    return `${base}?${urlParams.toString()}`;
+  };
+
+  // Handle search - opens white label in new tab (Phase 1: API not enabled)
   const handleSearch = () => {
     if (!validate()) return;
 
@@ -173,31 +203,9 @@ export default function FlightSearchFormPro({
     const fromCode = fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
     const toCode = toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "";
 
-    const params = new URLSearchParams({
-      from: fromCode.toUpperCase(),
-      to: toCode.toUpperCase(),
-      depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
-      passengers: String(passengers),
-      cabin,
-      tripType,
-    });
-
-    if (tripType === "roundtrip" && returnDate) {
-      params.set("return", format(returnDate, "yyyy-MM-dd"));
-    }
-
-    // Preserve UTM params
-    const currentParams = new URLSearchParams(window.location.search);
-    ["utm_source", "utm_medium", "utm_campaign", "utm_content", "creator"].forEach((key) => {
-      const val = currentParams.get(key);
-      if (val) params.set(key, val);
-    });
-
-    onSearch?.(params);
-
-    if (navigateOnSearch) {
-      navigate(`/flights/results?${params.toString()}`);
-    }
+    // Phase 1: Open white label directly since API access is pending
+    const whitelabelUrl = buildWhitelabelUrl(fromCode.toUpperCase(), toCode.toUpperCase());
+    window.open(whitelabelUrl, "_blank", "noopener,noreferrer");
   };
 
   // Check if form is valid for enabling button
@@ -495,13 +503,13 @@ export default function FlightSearchFormPro({
           "disabled:opacity-50 disabled:cursor-not-allowed"
         )}
       >
-        <Search className="w-5 h-5 mr-2" />
-        Search Flights
+        <ExternalLink className="w-5 h-5 mr-2" />
+        View Live Results
       </Button>
 
-      {/* Affiliate notice */}
+      {/* Compliance notice */}
       <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-3">
-        ZIVO compares prices from multiple travel sites. We may earn a commission.
+        Live prices and final booking on partner site. We may earn a commission.
       </p>
     </div>
   );
