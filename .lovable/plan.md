@@ -1,305 +1,195 @@
 
 
-# ZIVO P2P Car Rental - Stripe Payments, Commission & Payouts Implementation Plan
+# Next Update: Complete Driver App Job Flows & Enhanced Admin Payouts
 
-## Executive Summary
+## Overview
 
-This plan implements a complete Stripe-based payment system for the ZIVO P2P Car Rental Marketplace where ZIVO acts as the merchant of record. The system will handle renter payments, automatic commission calculation, and owner payouts via Stripe Connect Express accounts.
+This update completes the pending integration work for the Driver App and Admin Dashboard:
+
+1. **Driver Active Job Data Fetching** - Replace placeholder panels with real data integration for Eats and Move deliveries
+2. **Admin P2P Payouts Module Enhancement** - Add execute payout and hold/release controls using Stripe Connect
+3. **Admin Move Module** - Create complete admin interface for package deliveries (Move service)
 
 ---
 
 ## Current State Analysis
 
-The codebase already has significant P2P payment infrastructure:
+The following items have placeholder implementations that need completing:
 
-**Existing Components:**
-- `create-p2p-checkout` edge function - Creates Stripe Checkout sessions for bookings
-- `process-p2p-payout` edge function - Creates payout records (but doesn't transfer via Stripe)
-- `process-p2p-refund` edge function - Processes refunds via Stripe
-- `stripe-webhook` - Handles checkout completion and updates booking status
-- `useP2PPayment.ts` - Frontend hooks for checkout, payouts, refunds
-- Admin modules for P2P Payouts, Owners, Bookings, Disputes
-- Owner dashboard with earnings/payouts view
+**DriverApp.tsx (lines 300-362):**
+- Eats delivery panel shows "loading..." (line 324)
+- Move delivery panel shows "loading..." (line 356)
+- Both have TODO comments indicating data fetching is needed
 
-**Database Tables Ready:**
-- `p2p_bookings` - Has `owner_payout`, `platform_fee`, `stripe_payment_intent_id`
-- `p2p_payouts` - Has `stripe_transfer_id`, `stripe_payout_id`, status tracking
-- `car_owner_profiles` - Has `stripe_account_id`, `payout_enabled`
-- `p2p_commission_settings` - Has `owner_commission_pct`, `renter_service_fee_pct`
+**AdminP2PPayoutsModule.tsx:**
+- Has "Process All Pending" button that creates payout records
+- Missing "Execute Payout" button that actually transfers via Stripe
+- Missing "Hold Payout" and "Release Hold" controls
+- Hooks exist (`useExecuteP2PPayout`, `useHoldP2PPayout`) but aren't used in the UI
 
-**What's Missing:**
-1. **Stripe Connect Onboarding** - No edge function to create/link Express accounts
-2. **Actual Stripe Transfers** - Payouts create records but don't execute Stripe transfers
-3. **Commission Admin UI** - No interface to configure commission rates
-4. **Account Status Verification** - No checking if owner can receive payouts
-5. **Payout Eligibility Logic** - 24-48 hour hold after trip completion
-6. **Dispute Payout Hold** - Automated pause when disputes exist
-7. **Renter Receipt Component** - No dedicated receipt/confirmation UI
+**Admin Panel:**
+- Missing AdminMoveModule for managing package_deliveries table
 
 ---
 
-## Architecture Overview
+## Phase 1: Driver Active Job Data Hooks
+
+### 1.1 Add Active Eats Order Hook
+
+Add to `src/hooks/useDriverApp.ts`:
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        ZIVO P2P PAYMENT FLOW                                │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  RENTER BOOKING FLOW                                                        │
-│  ┌──────────┐    ┌─────────────────────┐    ┌───────────────────────┐      │
-│  │  Renter  │───>│ create-p2p-checkout │───>│ Stripe Checkout       │      │
-│  │  Books   │    │ Edge Function       │    │ (Payment captured)    │      │
-│  └──────────┘    └─────────────────────┘    └───────────────────────┘      │
-│                           │                            │                    │
-│                           ▼                            ▼                    │
-│              ┌─────────────────────┐      ┌───────────────────────────┐    │
-│              │ p2p_bookings table  │      │ stripe-webhook updates    │    │
-│              │ payment_status=paid │<─────│ booking to 'confirmed'    │    │
-│              └─────────────────────┘      └───────────────────────────┘    │
-│                                                                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  OWNER STRIPE CONNECT ONBOARDING                                            │
-│  ┌──────────┐    ┌──────────────────────────┐    ┌────────────────────┐    │
-│  │  Owner   │───>│ create-stripe-connect    │───>│ Stripe Express     │    │
-│  │  Clicks  │    │ Edge Function            │    │ Onboarding Flow    │    │
-│  │ "Connect"│    └──────────────────────────┘    └────────────────────┘    │
-│  └──────────┘                                             │                 │
-│                                                           ▼                 │
-│                                      ┌────────────────────────────────┐    │
-│                                      │ car_owner_profiles updated     │    │
-│                                      │ stripe_account_id = acct_xxx   │    │
-│                                      │ payout_enabled = true          │    │
-│                                      └────────────────────────────────┘    │
-│                                                                             │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  PAYOUT EXECUTION FLOW                                                      │
-│  ┌───────────────┐    ┌──────────────────────────┐    ┌────────────────┐   │
-│  │ Trip Complete │───>│ Check eligibility:       │───>│ execute-p2p-   │   │
-│  │ + 24-48 hours │    │ • No disputes            │    │ payout         │   │
-│  │               │    │ • Owner has Stripe acct  │    │ Edge Function  │   │
-│  └───────────────┘    │ • Hold period passed     │    └────────────────┘   │
-│                       └──────────────────────────┘             │            │
-│                                                                ▼            │
-│                                               ┌────────────────────────┐   │
-│                                               │ stripe.transfers.create│   │
-│                                               │ from ZIVO → Owner      │   │
-│                                               │ Amount = owner_payout  │   │
-│                                               └────────────────────────┘   │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+useDriverActiveEatsOrder(driverId: string | undefined)
+- Query food_orders table
+- Filter: driver_id = driverId
+- Filter: status NOT IN ('completed', 'cancelled')
+- Include: restaurant join for restaurant details
+- Transform to EatsOrder interface shape
+```
+
+### 1.2 Add Active Package Delivery Hook
+
+Add to `src/hooks/useDriverApp.ts`:
+
+```text
+useDriverActivePackageDelivery(driverId: string | undefined)
+- Query package_deliveries table
+- Filter: driver_id = driverId
+- Filter: status IN ('accepted', 'at_pickup', 'picked_up', 'at_dropoff')
+- Transform to PackageDelivery interface shape
 ```
 
 ---
 
-## Implementation Phases
+## Phase 2: Driver App Panel Integration
 
-### Phase 1: Stripe Connect Owner Onboarding
+### 2.1 Update DriverApp.tsx
 
-Create the edge function and frontend flow for owners to connect their Stripe Express accounts.
+Replace the placeholder panels with real data integration:
 
-**Edge Function: `create-stripe-connect-link`**
-- Creates a Stripe Express account for the owner
-- Returns an onboarding link (Account Link)
-- Updates `car_owner_profiles.stripe_account_id`
-
-**Edge Function: `check-stripe-connect-status`**
-- Verifies the owner's account status
-- Updates `payout_enabled` based on account state
-- Returns whether charges and payouts are enabled
-
-**Frontend Changes:**
-- Update `OwnerPayouts.tsx` with working "Connect Stripe" button
-- Add onboarding return page to handle redirect from Stripe
-- Show account status (pending verification, active, disabled)
-
----
-
-### Phase 2: Execute Real Stripe Transfers
-
-Upgrade the payout system to actually transfer funds via Stripe Connect.
-
-**Edge Function: `execute-p2p-payout`** (new)
-- Validate payout eligibility
-- Check for active disputes on the booking
-- Verify owner has connected Stripe account with payouts enabled
-- Create Stripe Transfer to owner's connected account
-- Update `p2p_payouts` with `stripe_transfer_id`
-- Handle partial payouts for dispute resolutions
-
-**Payout Eligibility Rules:**
-- Trip status = `completed`
-- Payment status = `captured` or `paid`
-- 24 hours minimum since trip completion
-- No active disputes on the booking (or dispute resolved)
-- Owner has connected Stripe account with `payouts_enabled = true`
-
----
-
-### Phase 3: Commission Configuration Admin UI
-
-Create an admin interface to manage P2P commission settings.
-
-**New Admin Module: Commission Settings**
-- View current commission rates
-- Edit `owner_commission_pct` (15-30% range)
-- Edit `renter_service_fee_pct`
-- Edit `insurance_daily_fee`
-- Toggle settings active/inactive
-- Show preview of how fees affect a sample booking
-
-**Database Updates:**
-- Ensure `p2p_commission_settings` has default row
-- Add validation that percentages are within 15-30% range
-
----
-
-### Phase 4: Enhanced Payout Admin Controls
-
-Upgrade the Admin Payouts module for full control.
-
-**Admin Features:**
-- View all pending payouts with eligibility status
-- "Process Payout" button that calls `execute-p2p-payout`
-- "Hold Payout" button with reason field
-- Bulk process eligible payouts
-- Filter by: status, date range, owner, booking
-- Show Stripe Transfer ID and status
-- View dispute status that blocks payout
-
-**Payout Hold Logic:**
-- Admin can manually hold any payout
-- Automatic hold when dispute exists on booking
-- Hold is released when dispute is resolved
-- Show hold reason in payout details
-
----
-
-### Phase 5: Owner Earnings Dashboard Enhancement
-
-Improve the owner dashboard with Stripe Connect integration.
-
-**Owner Dashboard Updates:**
-- Real "Connect Stripe" button that initiates onboarding
-- Account status indicator (not connected, pending, verified)
-- Balance breakdown: available, pending, held
-- Weekly/monthly earnings charts
-- Trip-by-trip earnings breakdown
-- Direct link to Stripe Express dashboard
-
-**Payout History Enhancements:**
-- Show estimated payout date for pending items
-- Show Stripe Transfer ID for completed payouts
-- Show hold status with reason if applicable
-
----
-
-### Phase 6: Renter Receipt & Confirmation
-
-Create a proper receipt view for renters after payment.
-
-**Receipt Component:**
-- Booking confirmation number
-- Vehicle details (make, model, year, image)
-- Rental dates and duration
-- Price breakdown (daily rate, subtotal, service fee, insurance, taxes)
-- Total paid amount
-- Payment method (last 4 digits if available)
-- Owner contact info
-- Cancellation policy reminder
-- Link to manage booking
-
-**Email Receipt (optional future):**
-- Trigger email on successful payment
-- Include same details as web receipt
-- PDF attachment option
-
----
-
-## Technical Implementation Details
-
-### New Edge Functions
-
-| Function | Purpose | JWT Verified |
-|----------|---------|--------------|
-| `create-stripe-connect-link` | Create Stripe Express account and return onboarding URL | Yes |
-| `check-stripe-connect-status` | Check owner's Stripe account status | Yes |
-| `execute-p2p-payout` | Transfer funds to owner via Stripe Connect | Yes (Admin) |
-
-### New Frontend Hooks
-
+**For Eats (lines 300-330):**
 ```text
-useCreateStripeConnectLink()   - Initiate owner Stripe onboarding
-useCheckStripeConnectStatus()  - Check owner's account status
-useExecutePayout()             - Admin: execute a specific payout
-useP2PCommissionSettings()     - Fetch commission settings
-useUpdateCommissionSettings()  - Admin: update commission rates
+1. Add useDriverActiveEatsOrder hook call
+2. Transform data to EatsOrder interface
+3. Map internal status to EatsDeliveryStatus
+4. Render EatsDeliveryPanel with real data
+5. Handle status changes through driverState
 ```
 
-### New Components
-
+**For Move (lines 332-362):**
 ```text
-src/components/p2p/
-├── StripeConnectButton.tsx       - Owner onboarding button
-├── StripeAccountStatus.tsx       - Show connected account status
-├── RenterReceipt.tsx             - Booking receipt view
-└── PayoutEligibilityBadge.tsx    - Show payout eligibility status
-
-src/pages/owner/
-└── StripeConnectReturn.tsx       - Handle Stripe onboarding return
-
-src/pages/admin/modules/
-└── AdminP2PCommissionModule.tsx  - Commission settings admin
+1. Add useDriverActivePackageDelivery hook call
+2. Transform data to PackageDelivery interface
+3. Map internal status to MoveDeliveryStatus
+4. Render MoveDeliveryPanel with real data
+5. Handle status changes through driverState
 ```
 
-### Database Migration
+### 2.2 Status Synchronization
 
+Ensure that when driver updates status in panels:
+- Database is updated
+- `driverState.activeJob` is synced
+- Query cache is invalidated
+- Panel reflects correct progress
+
+---
+
+## Phase 3: Admin P2P Payouts Enhancement
+
+### 3.1 Add Execute/Hold Controls to AdminP2PPayoutsModule
+
+Import and use the existing hooks:
 ```text
--- Add payout eligibility tracking
-ALTER TABLE p2p_bookings ADD COLUMN IF NOT EXISTS payout_eligible_at timestamptz;
-ALTER TABLE p2p_bookings ADD COLUMN IF NOT EXISTS payout_hold_reason text;
-
--- Add hold tracking to payouts
-ALTER TABLE p2p_payouts ADD COLUMN IF NOT EXISTS is_held boolean DEFAULT false;
-ALTER TABLE p2p_payouts ADD COLUMN IF NOT EXISTS held_reason text;
-ALTER TABLE p2p_payouts ADD COLUMN IF NOT EXISTS held_at timestamptz;
-ALTER TABLE p2p_payouts ADD COLUMN IF NOT EXISTS held_by uuid;
-
--- Add Stripe Connect currency field
-ALTER TABLE car_owner_profiles ADD COLUMN IF NOT EXISTS stripe_account_currency text DEFAULT 'usd';
-ALTER TABLE car_owner_profiles ADD COLUMN IF NOT EXISTS stripe_charges_enabled boolean DEFAULT false;
-ALTER TABLE car_owner_profiles ADD COLUMN IF NOT EXISTS stripe_payouts_enabled boolean DEFAULT false;
-
--- Ensure commission settings has default row
-INSERT INTO p2p_commission_settings (name, owner_commission_pct, renter_service_fee_pct, insurance_daily_fee, is_active)
-VALUES ('default', 20, 10, 15, true)
-ON CONFLICT DO NOTHING;
+import { useExecuteP2PPayout, useHoldP2PPayout, useReleaseP2PPayoutHold } from "@/hooks/useStripeConnect";
 ```
 
-### Stripe Connect Implementation Notes
+Add new UI elements:
 
-**Express Account Setup:**
-```text
-1. Call stripe.accounts.create({ type: 'express', country: 'US', ... })
-2. Generate Account Link with return_url and refresh_url
-3. Redirect owner to Stripe-hosted onboarding
-4. On return, verify account status
-5. Store account ID and capability status
-```
+| Button | Visibility | Action |
+|--------|------------|--------|
+| Execute Payout | status = pending, not held | Calls execute-p2p-payout edge function |
+| Hold Payout | status = pending, not held | Opens dialog for hold reason |
+| Release Hold | is_held = true | Clears hold status |
+| Force Execute | is_held = true (admin override) | Executes despite hold |
 
-**Transfer Execution:**
-```text
-1. stripe.transfers.create({
-     amount: ownerPayoutCents,
-     currency: 'usd',
-     destination: owner.stripe_account_id,
-     transfer_group: bookingId,
-     metadata: { booking_id, payout_id }
-   })
-2. Store transfer.id in p2p_payouts.stripe_transfer_id
-3. Update payout status to 'completed'
-```
+### 3.2 Enhanced Payout Detail Dialog
+
+Update the dialog to show:
+- Stripe account status of owner
+- Hold status with reason if held
+- Held by (admin who placed hold)
+- Active disputes on related bookings
+- Execute button with confirmation
+
+### 3.3 Add Hold Status Column
+
+Show in table:
+- Hold badge if `is_held = true`
+- Held reason tooltip on hover
+- Different styling for held payouts
+
+---
+
+## Phase 4: Admin Move Module
+
+### 4.1 Create AdminMoveModule.tsx
+
+Full admin interface for package_deliveries table:
+
+**Stats Cards:**
+- Total deliveries
+- Pending pickup
+- In transit
+- Completed today
+- Total revenue
+
+**Actions Bar:**
+- Search by customer name, address, ID
+- Filter by status (requested, accepted, in_transit, delivered)
+- Filter by delivery speed (standard, express, same_day)
+- Date range filter
+- Create Test Delivery button
+
+**Table Columns:**
+| Column | Content |
+|--------|---------|
+| Package | ID + size + weight |
+| Customer | Name + phone |
+| Route | Pickup → Dropoff addresses |
+| Driver | Assigned driver or "Unassigned" |
+| Speed | Standard/Express/Same-day badge |
+| Status | Status badge with color |
+| Payout | Estimated/actual payout |
+| Created | Timestamp |
+| Actions | View/Assign/Cancel dropdown |
+
+**Detail Dialog:**
+- Full package info
+- Pickup/delivery photos if available
+- Signature image if captured
+- Timeline of status changes
+- Driver assignment control
+
+### 4.2 Add to Admin Panel Navigation
+
+Add "Move Deliveries" nav item with Package icon to AdminPanel.tsx
+
+---
+
+## Phase 5: Test Job Creation Tools
+
+### 5.1 Add Create Test Delivery to AdminMoveModule
+
+Button that creates a test package_delivery record:
+- Status: requested
+- Pickup/dropoff: Sample addresses
+- Package: Medium size, 5 lbs
+- Estimated payout: $15-25
+
+### 5.2 Verify Admin Eats Module Has Test Order
+
+Check if AdminEatsModule has test order creation (add if missing)
 
 ---
 
@@ -307,52 +197,61 @@ ON CONFLICT DO NOTHING;
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/create-stripe-connect-link/index.ts` | Create | Stripe Express onboarding |
-| `supabase/functions/check-stripe-connect-status/index.ts` | Create | Verify owner account status |
-| `supabase/functions/execute-p2p-payout/index.ts` | Create | Execute actual Stripe transfer |
-| `supabase/config.toml` | Update | Register new edge functions |
-| `src/hooks/useStripeConnect.ts` | Create | Stripe Connect hooks |
-| `src/hooks/useP2PPayment.ts` | Update | Add payout execution hooks |
-| `src/hooks/useP2PCommission.ts` | Create | Commission settings hooks |
-| `src/components/p2p/StripeConnectButton.tsx` | Create | Owner onboarding UI |
-| `src/components/p2p/RenterReceipt.tsx` | Create | Booking receipt component |
-| `src/pages/owner/OwnerPayouts.tsx` | Update | Add real Stripe Connect flow |
-| `src/pages/owner/StripeConnectReturn.tsx` | Create | Handle onboarding return |
-| `src/pages/p2p/P2PBookingConfirmation.tsx` | Update | Show receipt after payment |
-| `src/pages/admin/modules/AdminP2PPayoutsModule.tsx` | Update | Add execute/hold buttons |
-| `src/pages/admin/modules/AdminP2PCommissionModule.tsx` | Create | Commission settings UI |
-| `src/pages/admin/AdminPanel.tsx` | Update | Add Commission nav item |
-| SQL Migration | Create | Add payout tracking columns |
+| `src/hooks/useDriverApp.ts` | **Update** | Add useDriverActiveEatsOrder, useDriverActivePackageDelivery |
+| `src/pages/DriverApp.tsx` | **Update** | Replace placeholders with real panel integration |
+| `src/pages/admin/modules/AdminP2PPayoutsModule.tsx` | **Update** | Add execute/hold controls, enhanced dialog |
+| `src/pages/admin/modules/AdminMoveModule.tsx` | **Create** | Full admin interface for package deliveries |
+| `src/pages/admin/AdminPanel.tsx` | **Update** | Add Move nav item and module case |
 
 ---
 
-## Security Considerations
+## Technical Notes
 
-1. **Stripe Keys**: Never expose secret keys; all Stripe operations in edge functions
-2. **Authorization**: Verify booking/payout ownership before any action
-3. **Admin Validation**: Check `user_roles` for admin access on sensitive operations
-4. **Amount Validation**: Server-side calculation of commission/payout amounts
-5. **Idempotency**: Use Stripe idempotency keys to prevent duplicate transfers
-6. **Webhook Verification**: Validate Stripe webhook signatures
+### EatsOrder Interface Mapping
+
+```text
+food_orders table → EatsOrder interface:
+- id → id
+- restaurant.name → restaurantName
+- restaurant.address → restaurantAddress
+- restaurant.lat → restaurantLat
+- restaurant.lng → restaurantLng
+- customer_name → customerName
+- customer_phone → customerPhone
+- delivery_address → deliveryAddress
+- delivery_lat → deliveryLat
+- delivery_lng → deliveryLng
+- delivery_fee → deliveryFee
+- items (JSON) → items (string[])
+```
+
+### PackageDelivery Interface Mapping
+
+```text
+package_deliveries table → PackageDelivery interface:
+- id → id
+- customer_name → customerName
+- customer_phone → customerPhone
+- pickup_address → pickupAddress
+- pickup_lat → pickupLat
+- pickup_lng → pickupLng
+- dropoff_address → dropoffAddress
+- dropoff_lat → dropoffLat
+- dropoff_lng → dropoffLng
+- package_size → packageSize
+- package_weight → packageWeight
+- package_contents → packageContents
+- estimated_payout → estimatedPayout
+- delivery_speed → deliverySpeed
+```
 
 ---
 
 ## Testing Plan
 
-1. **Owner Onboarding**: Create test Stripe Express account flow
-2. **Payment Flow**: Complete booking payment end-to-end
-3. **Payout Execution**: Transfer funds to test connected account
-4. **Commission Calculation**: Verify 20% default and custom rates
-5. **Dispute Hold**: Confirm payouts are blocked when disputes exist
-6. **Admin Controls**: Test hold/release/process actions
-7. **Error Handling**: Test failure scenarios (invalid account, insufficient funds)
-
----
-
-## Environment Variables Required
-
-The following Stripe secrets should already be configured:
-- `STRIPE_SECRET_KEY` (confirmed present)
-
-No additional secrets required - Stripe Connect uses the same API key.
+1. **Eats Flow**: Create test food order → Accept as driver → Verify panel loads with restaurant/customer data → Complete delivery with photo
+2. **Move Flow**: Create test package → Accept as driver → Verify panel loads → Complete with photo + signature
+3. **Execute Payout**: Create completed booking → Process payout record → Execute via Stripe → Verify transfer created
+4. **Hold/Release**: Place payout on hold → Verify blocked → Release → Verify can execute
+5. **Admin Move**: Create, view, filter, search package deliveries → Assign driver → View proof photos
 
