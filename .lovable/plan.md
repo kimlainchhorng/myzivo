@@ -1,137 +1,144 @@
 
-# Next Update: P2P Car Rental Admin Test Data Tools + Owner Onboarding Polish
+# Next Update: P2P Marketplace Discovery + Admin Overview Integration
 
 ## Overview
 
-The P2P car rental marketplace infrastructure is complete but has **zero data** for testing. This update adds admin tools to create test owners, vehicles, and bookings - enabling full end-to-end testing of the renter and owner flows.
+The P2P car rental marketplace infrastructure is complete with test data tools, but it's **hidden from users**. This update integrates P2P rentals into the main user experience and admin dashboard, making the marketplace discoverable while adding key stats to admin overview.
 
 ---
 
-## Current State Analysis
+## Current Gap Analysis
 
-### Database Status
-| Table | Count | Status |
-|-------|-------|--------|
-| `car_owner_profiles` | 0 | Empty |
-| `p2p_vehicles` | 0 | Empty |
-| `p2p_bookings` | 0 | Empty |
-| `p2p_reviews` | 0 | Empty |
-
-### Existing Pages (Ready but Untestable)
-- `/list-your-car` - Marketing landing page
-- `/owner/apply` - Multi-step owner onboarding wizard
-- `/owner/dashboard` - Owner management dashboard
-- `/owner/cars/new` - Add vehicle form
-- `/p2p/search` - Vehicle search page
-- `/p2p/vehicle/:id` - Vehicle detail page
-- Admin modules exist but can't test without data
+| Area | Issue |
+|------|-------|
+| **Homepage** | P2P not mentioned - only shows traditional car rentals |
+| **Mobile App Home** | Quick actions link to `/rent-car` (traditional), not P2P |
+| **Admin Overview** | No P2P stats (owners, vehicles, bookings) |
+| **Navigation** | No "Rent from Owners" option anywhere |
+| **ExtrasSection** | Lists services but missing P2P |
 
 ---
 
-## Phase 1: Admin Test Data Creation Tools
+## Phase 1: Admin Overview P2P Stats Integration
 
-### 1.1 Add "Create Test Owner" Button to AdminP2POwnersModule
+### Add P2P Stats Cards to AdminOverview.tsx
 
-Creates a sample verified car owner:
+New stats row showing:
+- Total P2P Owners (pending/verified)
+- Total P2P Vehicles (pending/approved)  
+- Total P2P Bookings (pending/active/completed)
+- P2P Revenue (sum of platform_fee from bookings)
+
 ```text
-Profile data:
-- full_name: "Demo Owner"
-- email: "demo.owner@test.zivo.com"
-- phone: "+1 (555) 000-1234"
-- status: "verified"
-- city: "Los Angeles"
-- state: "CA"
-- documents_verified: true
++---------------------+  +---------------------+  +---------------------+
+| 👤 P2P Owners       |  | 🚗 P2P Vehicles     |  | 📅 P2P Bookings     |
+|   3 verified        |  |   8 approved        |  |   12 total          |
+|   1 pending         |  |   2 pending review  |  |   2 active          |
++---------------------+  +---------------------+  +---------------------+
 ```
 
-### 1.2 Add "Create Test Vehicle" Button to AdminP2PVehiclesModule
+### Add P2P Activity to Recent Activity Feed
 
-Creates sample rental vehicles:
+Include P2P bookings alongside rides and eats in the combined activity feed.
+
+---
+
+## Phase 2: Homepage P2P Discovery
+
+### 2.1 Add P2P Card to ExtrasSection
+
+Add a card for "Rent from Local Owners" in the ExtrasSection component:
+
 ```text
-Vehicle 1:
-- make: "Tesla", model: "Model 3", year: 2023
-- category: "electric"
-- daily_rate: $85
-- location: Los Angeles, CA
-- instant_book: true
-- approval_status: "approved"
-- images: [placeholder URLs]
-
-Vehicle 2:
-- make: "Toyota", model: "Camry", year: 2022
-- category: "midsize"
-- daily_rate: $55
-- location: Los Angeles, CA
-- approval_status: "approved"
+Card Details:
+- Title: "Rent from Local Owners"
+- Description: "Skip the rental counter. Book unique cars directly from people in your area."
+- Icon: CarFront with UserCircle overlay
+- Link: /p2p/search
+- Badge: "NEW" or "P2P"
 ```
 
-### 1.3 Add "Create Test Booking" Button to AdminP2PBookingsModule
+### 2.2 Update PrimaryServicesSection Car Rental Card
 
-Creates sample P2P bookings:
+Modify the Car Rentals card to include a secondary CTA for P2P:
+
 ```text
-Booking:
-- vehicle_id: First available vehicle
-- renter_id: Current admin user
-- pickup_date: Tomorrow
-- return_date: 3 days later
-- total_amount: Calculated from daily rate
-- status: "pending" or "confirmed"
+Current: "Find Rental Cars" → /rent-car
+Add: "Or rent from local owners →" link to /p2p/search
 ```
 
 ---
 
-## Phase 2: New Hooks for Admin P2P Operations
+## Phase 3: Mobile App Home P2P Integration
 
-### 2.1 Create `useAdminP2PTestData.ts`
+### 3.1 Add P2P Quick Action
 
-New hook with mutations for test data creation:
+Replace or add to quick actions grid in AppHome.tsx:
 
-| Function | Description |
-|----------|-------------|
-| `useCreateTestOwner()` | Creates verified owner profile |
-| `useCreateTestVehicle()` | Creates approved vehicle with images |
-| `useCreateTestBooking()` | Creates sample booking |
-| `useCreateTestReview()` | Creates sample vehicle review |
+Option A: Replace "Extras" with "P2P Cars"
+Option B: Add 4th row with P2P card
 
----
+```text
+{ id: "p2p", label: "P2P Cars", icon: CarFront, href: "/p2p/search", color: "bg-primary" }
+```
 
-## Phase 3: Admin Module Updates
+### 3.2 Add P2P Section Below Featured Restaurants
 
-### 3.1 AdminP2POwnersModule.tsx
-- Add "Create Test Owner" button in header
-- Success toast shows created owner ID
-- Auto-refresh owner list after creation
-
-### 3.2 AdminP2PVehiclesModule.tsx  
-- Add "Create Test Vehicle" button
-- Requires at least one owner to exist
-- Creates vehicle with sample images
-
-### 3.3 AdminP2PBookingsModule.tsx
-- Add "Create Test Booking" button
-- Requires at least one vehicle to exist
-- Sets up pending booking for testing approval flow
+New section: "Rent from Local Owners"
+- Horizontal scroll of featured P2P vehicles (if any exist)
+- CTA: "Browse all →" linking to /p2p/search
+- Empty state: "Be the first to list your car" → /list-your-car
 
 ---
 
-## Phase 4: Sample Data Configuration
+## Phase 4: Create useAdminP2PStats Hook
 
-### Test Vehicle Pool
-| Make | Model | Year | Category | Daily Rate |
-|------|-------|------|----------|------------|
-| Tesla | Model 3 | 2023 | Electric | $85 |
-| Toyota | Camry | 2022 | Midsize | $55 |
-| Honda | CR-V | 2023 | SUV | $65 |
-| BMW | 3 Series | 2022 | Luxury | $110 |
-| Ford | Mustang | 2023 | Sports | $95 |
-| Chevrolet | Suburban | 2021 | Full Size | $85 |
+New hook for admin P2P statistics:
 
-### Test Locations
-- Los Angeles, CA
-- Miami, FL  
-- New York, NY
-- Austin, TX
-- Denver, CO
+```typescript
+export function useAdminP2PStats() {
+  return useQuery({
+    queryKey: ["adminP2PStats"],
+    queryFn: async () => {
+      // Count owners by status
+      const { count: totalOwners } = await supabase
+        .from("car_owner_profiles")
+        .select("*", { count: "exact", head: true });
+      
+      const { count: pendingOwners } = await supabase
+        .from("car_owner_profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
+      
+      // Count vehicles by approval status
+      const { count: totalVehicles } = await supabase
+        .from("p2p_vehicles")
+        .select("*", { count: "exact", head: true });
+      
+      const { count: approvedVehicles } = await supabase
+        .from("p2p_vehicles")
+        .select("*", { count: "exact", head: true })
+        .eq("approval_status", "approved");
+      
+      // Count bookings
+      const { count: totalBookings } = await supabase
+        .from("p2p_bookings")
+        .select("*", { count: "exact", head: true });
+      
+      const { count: activeBookings } = await supabase
+        .from("p2p_bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "active");
+
+      return {
+        owners: { total: totalOwners || 0, pending: pendingOwners || 0 },
+        vehicles: { total: totalVehicles || 0, approved: approvedVehicles || 0 },
+        bookings: { total: totalBookings || 0, active: activeBookings || 0 },
+      };
+    },
+  });
+}
+```
 
 ---
 
@@ -139,55 +146,57 @@ New hook with mutations for test data creation:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useAdminP2PTestData.ts` | **Create** | New hook with test data mutations |
-| `src/pages/admin/modules/AdminP2POwnersModule.tsx` | **Update** | Add "Create Test Owner" button |
-| `src/pages/admin/modules/AdminP2PVehiclesModule.tsx` | **Update** | Add "Create Test Vehicle" button |
-| `src/pages/admin/modules/AdminP2PBookingsModule.tsx` | **Update** | Add "Create Test Booking" button |
+| `src/hooks/useAdminP2PStats.ts` | **Create** | New hook for P2P statistics |
+| `src/pages/admin/modules/AdminOverview.tsx` | **Update** | Add P2P stats cards and activity |
+| `src/components/home/ExtrasSection.tsx` | **Update** | Add P2P card |
+| `src/components/home/PrimaryServicesSection.tsx` | **Update** | Add P2P link under Car Rentals |
+| `src/pages/app/AppHome.tsx` | **Update** | Add P2P section for mobile |
 
 ---
 
-## Technical Notes
+## User Flow After Implementation
 
-### Test Data Pattern
-Each test button follows this flow:
-1. Check prerequisites (e.g., owner exists for vehicles)
-2. Generate realistic sample data
-3. Insert with correct status (verified/approved)
-4. Show success toast with ID
-5. Invalidate queries to refresh tables
+### Desktop User Journey
+1. User lands on homepage
+2. Sees Car Rentals card with "Or rent from local owners" link
+3. Clicks to browse `/p2p/search`
+4. Views available vehicles from verified owners
+5. Books directly from owner
 
-### Image Placeholders
-Test vehicles use placeholder image URLs from Unsplash:
-```text
-https://images.unsplash.com/photo-[id]?w=800&q=80
-```
+### Mobile User Journey  
+1. User opens app on mobile
+2. Sees P2P section below quick actions
+3. Browses featured P2P vehicles
+4. Taps to view details and book
 
-### Foreign Key Handling
-- Vehicles require `owner_id` → Create owner first
-- Bookings require `vehicle_id` + `renter_id` → Use first available
-
----
-
-## Testing Flow After Implementation
-
-1. **Admin creates test owner** → Appears in P2P Owners list
-2. **Admin creates test vehicle** → Appears in P2P Vehicles list
-3. **Admin creates test booking** → Appears in P2P Bookings list
-4. **Test renter flow** → Browse `/p2p/search`, view vehicle, book
-5. **Test owner flow** → `/owner/dashboard` shows bookings
-6. **Test approval flow** → Admin approves/rejects bookings
+### Admin Journey
+1. Admin opens dashboard
+2. Sees P2P stats alongside Rides/Eats/Clicks
+3. Can quickly see pending owners/vehicles needing review
+4. Clicks to navigate to respective P2P modules
 
 ---
 
-## Integration with Existing Features
+## Design Considerations
 
-All P2P test data connects to existing infrastructure:
+### P2P Branding
+- Use primary color for P2P elements
+- Badge: "P2P" or "From Owners"
+- Icon: Car with user indicator
 
-| Admin Tool | User-Facing Effect |
-|------------|-------------------|
-| Create Test Vehicle | Appears on `/p2p/search` for renters |
-| Create Test Booking | Shows in owner's booking queue |
-| Approve Vehicle | Makes vehicle live for booking |
-| Confirm Booking | Triggers renter confirmation flow |
+### Empty State Handling
+When no P2P vehicles exist, show:
+- "No cars available yet"
+- CTA: "List your car and be the first to earn"
+- Link to /list-your-car
 
-This enables full marketplace testing without manual data entry.
+---
+
+## Testing Checklist
+
+1. Create test owner via admin → Verify stats update
+2. Create test vehicle via admin → Verify appears in P2P search
+3. Create test booking via admin → Verify in admin overview activity
+4. Mobile: Verify P2P section renders correctly
+5. Desktop: Verify ExtrasSection shows P2P card
+6. Click all P2P navigation links → Verify correct routing
