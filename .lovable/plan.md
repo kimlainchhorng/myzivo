@@ -1,77 +1,195 @@
 
-# Pricing Strategy and Smart Price Suggestions - Implementation Plan
+# Multi-City & Region Controls (Driver-Only) - Implementation Plan
 
 ## Overview
-Implement a transparent pricing system with category-based price recommendations for car owners, admin-configurable price limits, and clear price breakdowns for renters. This ensures competitive pricing, quality margins, and high booking conversion rates.
+Implement a scalable multi-city/region system for the ZIVO Driver App (Ride, Eats, Move services). This enables isolated operations per region with separate pricing, surge, bonuses, and admin visibility while ensuring drivers only see and receive jobs within their assigned region.
 
 ---
 
 ## Current System Analysis
 
-### Existing Components
-| Component | File | Status |
-|-----------|------|--------|
-| Vehicle Categories | `VehicleForm.tsx` | 8 categories defined |
-| Daily Rate Input | `VehicleForm.tsx` | Min $20, no max or suggestions |
-| Commission Settings | `AdminP2PCommissionModule.tsx` | Platform commission, service fee, insurance |
-| Booking Pricing | `useP2PBooking.ts` | Calculates fees but no category-based guidance |
-| Price Display | `P2PVehicleDetail.tsx` | Shows breakdown to renter |
+### Existing Infrastructure
+| Component | Current State |
+|-----------|--------------|
+| `drivers` table | Has location (lat/lng), service toggles, no region field |
+| `trips` table | Has pickup/dropoff coords, no region field |
+| `food_orders` table | Has delivery address, no region field |
+| `ride_zones` table | Zone-based pricing by `city_name` and `zone_code` |
+| `eats_zones` table | Zone-based pricing by `city_name` and `zone_code` |
+| `launch_cities` table | P2P city launch tracking (city/state based) |
+| Admin Panel | No region selector, shows all data globally |
 
-### Gaps to Fill
-1. **No price suggestions based on vehicle category**
-2. **No min/max price limits per category**
-3. **No admin panel for configuring price ranges**
-4. **No estimated earnings display for owners**
-5. **No "Insurance included" labeling for renters**
-6. **Owner pricing form lacks guidance UI**
+### Integration Points
+- Zone pricing already uses `city_name` for grouping
+- City Launch module has state/city structure
+- Driver modules show all drivers without region filtering
 
 ---
 
 ## Database Schema Changes
 
-### New Table: `p2p_category_pricing`
-Store recommended price ranges per vehicle category.
+### 1. New Table: `regions`
+Master table for all operational regions.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `category` | text | Vehicle category (economy, compact, etc.) |
-| `min_daily_price` | numeric | Minimum allowed daily price |
-| `suggested_daily_price` | numeric | Recommended daily price |
-| `max_daily_price` | numeric | Maximum allowed daily price |
-| `city` | text | Optional city-specific pricing (nullable for default) |
-| `is_active` | boolean | Whether this pricing is active |
-| `created_at` | timestamp | Record created |
-| `updated_at` | timestamp | Last updated |
+```sql
+CREATE TABLE public.regions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,                    -- "Los Angeles Metro"
+  city TEXT NOT NULL,                    -- "Los Angeles"
+  state TEXT NOT NULL,                   -- "CA"
+  country TEXT DEFAULT 'US',             -- "US"
+  timezone TEXT DEFAULT 'America/Los_Angeles',
+  currency TEXT DEFAULT 'USD',
+  is_active BOOLEAN DEFAULT true,
+  disabled_at TIMESTAMPTZ,               -- When region was disabled
+  disabled_reason TEXT,                  -- Why region was disabled
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  
+  CONSTRAINT unique_city_state UNIQUE (city, state)
+);
 
-### Default Data to Seed
+CREATE INDEX idx_regions_active ON regions(is_active);
+CREATE INDEX idx_regions_city_state ON regions(city, state);
+```
 
-| Category | Min | Suggested | Max |
-|----------|-----|-----------|-----|
-| economy | $40 | $55 | $70 |
-| compact | $40 | $55 | $70 |
-| midsize | $55 | $75 | $90 |
-| fullsize | $55 | $75 | $90 |
-| suv | $70 | $95 | $120 |
-| truck | $90 | $125 | $160 |
-| minivan | $70 | $95 | $120 |
-| luxury | $110 | $150 | $200 |
+### 2. New Table: `region_settings`
+Per-region configuration stored as JSONB for flexibility.
 
-### New System Setting
-Add to `system_settings` table:
+```sql
+CREATE TABLE public.region_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+  
+  -- Commission Settings
+  default_commission_pct NUMERIC(5,2) DEFAULT 20.00,
+  eats_commission_pct NUMERIC(5,2) DEFAULT 25.00,
+  move_commission_pct NUMERIC(5,2) DEFAULT 18.00,
+  
+  -- Dispatch Settings
+  dispatch_mode TEXT DEFAULT 'auto' CHECK (dispatch_mode IN ('auto', 'broadcast', 'manual')),
+  max_dispatch_radius_km NUMERIC(6,2) DEFAULT 10.00,
+  broadcast_timeout_seconds INTEGER DEFAULT 30,
+  
+  -- Surge Settings
+  surge_enabled BOOLEAN DEFAULT true,
+  max_surge_multiplier NUMERIC(3,2) DEFAULT 3.00,
+  
+  -- Payout Settings
+  payout_schedule TEXT DEFAULT 'weekly' CHECK (payout_schedule IN ('weekly', 'biweekly', 'instant')),
+  minimum_payout_amount NUMERIC(10,2) DEFAULT 25.00,
+  
+  -- Service Toggles
+  rides_enabled BOOLEAN DEFAULT true,
+  eats_enabled BOOLEAN DEFAULT true,
+  move_enabled BOOLEAN DEFAULT true,
+  
+  -- Additional Config
+  config JSONB DEFAULT '{}',
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  
+  CONSTRAINT unique_region_settings UNIQUE (region_id)
+);
+```
 
-| Key | Value | Description |
-|-----|-------|-------------|
-| `p2p_price_suggestions_enabled` | `true` | Toggle price suggestions feature |
+### 3. New Table: `region_bonuses`
+Track bonus campaigns per region.
+
+```sql
+CREATE TABLE public.region_bonuses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  bonus_type TEXT NOT NULL CHECK (bonus_type IN ('trips_completed', 'earnings_goal', 'peak_hours', 'streak')),
+  target_value INTEGER NOT NULL,        -- e.g., 20 trips
+  bonus_amount NUMERIC(10,2) NOT NULL,  -- e.g., $50
+  service_type TEXT CHECK (service_type IN ('rides', 'eats', 'move', 'all')),
+  starts_at TIMESTAMPTZ NOT NULL,
+  ends_at TIMESTAMPTZ NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_region_bonuses_region ON region_bonuses(region_id);
+CREATE INDEX idx_region_bonuses_active ON region_bonuses(is_active, starts_at, ends_at);
+```
+
+### 4. New Table: `region_change_logs`
+Audit trail for region changes.
+
+```sql
+CREATE TABLE public.region_change_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('driver', 'region', 'settings')),
+  entity_id UUID NOT NULL,
+  action TEXT NOT NULL,                  -- 'region_assigned', 'region_changed', 'region_disabled'
+  old_region_id UUID REFERENCES regions(id),
+  new_region_id UUID REFERENCES regions(id),
+  changed_by UUID,                       -- Admin user ID
+  reason TEXT,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX idx_region_change_logs_entity ON region_change_logs(entity_type, entity_id);
+```
+
+### 5. Modify `drivers` Table
+Add region assignment fields.
+
+```sql
+ALTER TABLE drivers
+  ADD COLUMN region_id UUID REFERENCES regions(id),
+  ADD COLUMN home_city TEXT,
+  ADD COLUMN allowed_regions UUID[] DEFAULT '{}';
+
+CREATE INDEX idx_drivers_region ON drivers(region_id);
+```
+
+### 6. Modify `trips` Table
+Add region field for job scoping.
+
+```sql
+ALTER TABLE trips
+  ADD COLUMN region_id UUID REFERENCES regions(id);
+
+CREATE INDEX idx_trips_region ON trips(region_id);
+```
+
+### 7. Modify `food_orders` Table
+Add region field for job scoping.
+
+```sql
+ALTER TABLE food_orders
+  ADD COLUMN region_id UUID REFERENCES regions(id);
+
+CREATE INDEX idx_food_orders_region ON food_orders(region_id);
+```
+
+### 8. New Table: `move_deliveries` (if not existing, add region)
+Ensure Move (package delivery) jobs have region scoping.
+
+```sql
+-- Check if delivery_batches or similar exists, add:
+ALTER TABLE delivery_batches
+  ADD COLUMN region_id UUID REFERENCES regions(id);
+```
 
 ---
 
 ## New Files to Create
 
-```
-src/hooks/useCategoryPricing.ts      - Hooks for category pricing data
-src/components/owner/PricingHelper.tsx - Smart pricing suggestion UI component
-src/pages/admin/modules/AdminCategoryPricingModule.tsx - Admin pricing configuration
+```text
+src/hooks/useRegions.ts                        - Region CRUD and queries
+src/hooks/useRegionSettings.ts                 - Region settings management
+src/hooks/useRegionBonuses.ts                  - Region bonus campaigns
+src/pages/admin/modules/AdminRegionsModule.tsx - Region management admin UI
+src/components/admin/RegionSelector.tsx        - Global region selector component
+src/contexts/RegionContext.tsx                 - Region context for admin scoping
+src/types/region.ts                            - TypeScript types for regions
 ```
 
 ---
@@ -80,494 +198,662 @@ src/pages/admin/modules/AdminCategoryPricingModule.tsx - Admin pricing configura
 
 | File | Changes |
 |------|---------|
-| `src/components/owner/VehicleForm.tsx` | Add smart pricing suggestions UI |
-| `src/pages/p2p/P2PVehicleDetail.tsx` | Add "Insurance included" badge, cleaner breakdown |
-| `src/pages/p2p/P2PBookingConfirmation.tsx` | Add insurance disclosure |
-| `src/pages/admin/AdminPanel.tsx` | Add "Category Pricing" nav item |
-| `src/hooks/useP2PCommission.ts` | Add earnings calculator helper |
+| `src/pages/admin/AdminPanel.tsx` | Add region selector in header, region context |
+| `src/pages/admin/modules/AdminDriversModule.tsx` | Filter by selected region |
+| `src/pages/admin/modules/AdminRidesModule.tsx` | Filter trips by selected region |
+| `src/pages/admin/modules/AdminEatsModule.tsx` | Filter food_orders by selected region |
+| `src/pages/admin/modules/AdminMoveModule.tsx` | Filter deliveries by selected region |
+| `src/pages/admin/modules/AdminFinanceModule.tsx` | Filter payouts by region |
+| `src/hooks/useDrivers.ts` | Add region filtering support |
+| `src/hooks/useTrips.ts` | Add region filtering support |
+| `src/hooks/useEatsOrders.ts` | Add region filtering support |
+| `src/hooks/useZonePricing.ts` | Link zones to regions |
 
 ---
 
 ## Implementation Details
 
-### 1. useCategoryPricing.ts Hook
+### 1. types/region.ts
 
 ```typescript
-// Types
-interface CategoryPricing {
+export interface Region {
   id: string;
-  category: string;
-  min_daily_price: number;
-  suggested_daily_price: number;
-  max_daily_price: number;
-  city: string | null;
+  name: string;
+  city: string;
+  state: string;
+  country: string;
+  timezone: string;
+  currency: string;
+  is_active: boolean;
+  disabled_at: string | null;
+  disabled_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegionSettings {
+  id: string;
+  region_id: string;
+  default_commission_pct: number;
+  eats_commission_pct: number;
+  move_commission_pct: number;
+  dispatch_mode: 'auto' | 'broadcast' | 'manual';
+  max_dispatch_radius_km: number;
+  broadcast_timeout_seconds: number;
+  surge_enabled: boolean;
+  max_surge_multiplier: number;
+  payout_schedule: 'weekly' | 'biweekly' | 'instant';
+  minimum_payout_amount: number;
+  rides_enabled: boolean;
+  eats_enabled: boolean;
+  move_enabled: boolean;
+  config: Record<string, any>;
+}
+
+export interface RegionBonus {
+  id: string;
+  region_id: string;
+  name: string;
+  description: string | null;
+  bonus_type: 'trips_completed' | 'earnings_goal' | 'peak_hours' | 'streak';
+  target_value: number;
+  bonus_amount: number;
+  service_type: 'rides' | 'eats' | 'move' | 'all' | null;
+  starts_at: string;
+  ends_at: string;
   is_active: boolean;
 }
 
-// Fetch pricing for a specific category
-export function useCategoryPricing(category: string, city?: string) {
-  return useQuery({
-    queryKey: ["categoryPricing", category, city],
-    queryFn: async () => {
-      // First try city-specific, fall back to default (null city)
-      let query = supabase
-        .from("p2p_category_pricing")
-        .select("*")
-        .eq("category", category)
-        .eq("is_active", true);
-      
-      if (city) {
-        query = query.or(`city.eq.${city},city.is.null`);
-      } else {
-        query = query.is("city", null);
-      }
-      
-      const { data } = await query.order("city", { nullsLast: true }).limit(1);
-      return data?.[0] || null;
-    },
-    enabled: !!category,
-  });
-}
-
-// Fetch all category pricing (admin)
-export function useAllCategoryPricing() {
-  return useQuery({
-    queryKey: ["allCategoryPricing"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("p2p_category_pricing")
-        .select("*")
-        .order("category");
-      
-      if (error) throw error;
-      return data as CategoryPricing[];
-    },
-  });
-}
-
-// Admin: Update category pricing
-export function useUpdateCategoryPricing() {
-  // ... mutation to update p2p_category_pricing
-}
-
-// Admin: Create category pricing
-export function useCreateCategoryPricing() {
-  // ... mutation to create p2p_category_pricing
+export interface RegionWithSettings extends Region {
+  settings?: RegionSettings;
 }
 ```
 
----
+### 2. RegionContext.tsx
 
-### 2. PricingHelper.tsx Component
-
-A smart component that displays pricing guidance within the VehicleForm.
-
-**Features:**
-- Shows recommended price range for selected category
-- Visual slider showing where owner's price falls
-- Estimated earnings preview after commission
-- Warning if price is outside recommended range
-
-```tsx
-interface PricingHelperProps {
-  category: string;
-  currentPrice: number;
-  city?: string;
-  onSuggestedClick?: (price: number) => void;
+```typescript
+interface RegionContextType {
+  selectedRegionId: string | null;        // null = "All Regions" (super admin)
+  selectedRegion: Region | null;
+  setSelectedRegionId: (id: string | null) => void;
+  regions: Region[];
+  isLoading: boolean;
+  isSuperAdmin: boolean;
 }
 
-export function PricingHelper({ category, currentPrice, city, onSuggestedClick }: PricingHelperProps) {
-  const { data: pricing } = useCategoryPricing(category, city);
-  const { data: commission } = useP2PCommissionSettings();
+export const RegionContext = createContext<RegionContextType>(...);
+
+export function RegionProvider({ children }: { children: ReactNode }) {
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
+  const { data: regions, isLoading } = useRegions();
+  const { isAdmin } = useAuth();
   
-  if (!pricing) return null;
+  // For now, all admins are super admins
+  const isSuperAdmin = isAdmin;
   
-  // Calculate position on range
-  const range = pricing.max_daily_price - pricing.min_daily_price;
-  const position = ((currentPrice - pricing.min_daily_price) / range) * 100;
-  
-  // Calculate estimated earnings (3-day trip example)
-  const tripDays = 3;
-  const subtotal = currentPrice * tripDays;
-  const platformFee = subtotal * ((commission?.owner_commission_pct || 20) / 100);
-  const ownerEarnings = subtotal - platformFee;
-  
-  // Determine if price is in range
-  const isInRange = currentPrice >= pricing.min_daily_price && currentPrice <= pricing.max_daily_price;
+  const selectedRegion = regions?.find(r => r.id === selectedRegionId) || null;
   
   return (
-    <Card className="border-primary/20 bg-primary/5">
-      <CardContent className="py-4 space-y-4">
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-primary" />
-          <span className="font-medium">Pricing Recommendation</span>
-        </div>
-        
-        {/* Price Range Bar */}
-        <div className="space-y-2">
-          <div className="relative h-2 bg-muted rounded-full">
-            <div 
-              className="absolute h-full bg-gradient-to-r from-emerald-500 via-primary to-amber-500 rounded-full"
-              style={{ left: '0%', right: '0%' }}
-            />
-            <div 
-              className="absolute w-3 h-3 bg-foreground rounded-full -top-0.5 transform -translate-x-1/2"
-              style={{ left: `${Math.max(0, Math.min(100, position))}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>${pricing.min_daily_price}/day</span>
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="h-auto p-0 text-primary"
-              onClick={() => onSuggestedClick?.(pricing.suggested_daily_price)}
-            >
-              ${pricing.suggested_daily_price} (suggested)
-            </Button>
-            <span>${pricing.max_daily_price}/day</span>
-          </div>
-        </div>
-        
-        {/* Warning if out of range */}
-        {!isInRange && (
-          <Alert variant="warning">
-            <AlertTriangle className="w-4 h-4" />
-            <AlertDescription>
-              {currentPrice < pricing.min_daily_price 
-                ? `Minimum price for ${category} vehicles is $${pricing.min_daily_price}/day`
-                : `Maximum price for ${category} vehicles is $${pricing.max_daily_price}/day`
-              }
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {/* Earnings Preview */}
-        <div className="p-3 rounded-lg bg-background border">
-          <p className="text-sm text-muted-foreground mb-1">
-            Estimated earnings per {tripDays}-day trip:
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-emerald-600">
-              ${ownerEarnings.toFixed(0)}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              after {commission?.owner_commission_pct || 20}% platform fee
-            </span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <RegionContext.Provider value={{
+      selectedRegionId,
+      selectedRegion,
+      setSelectedRegionId,
+      regions: regions || [],
+      isLoading,
+      isSuperAdmin,
+    }}>
+      {children}
+    </RegionContext.Provider>
   );
 }
 ```
 
----
+### 3. RegionSelector.tsx (Admin Header Component)
 
-### 3. VehicleForm.tsx Updates
-
-Integrate the PricingHelper component into the Pricing section:
-
-```tsx
-// In Pricing Card section, add after CardHeader:
-<CardContent className="space-y-4">
-  {/* Smart Pricing Helper */}
-  <PricingHelper
-    category={form.watch("category")}
-    currentPrice={form.watch("daily_rate")}
-    city={form.watch("location_city")}
-    onSuggestedClick={(price) => form.setValue("daily_rate", price)}
-  />
+```typescript
+export function RegionSelector() {
+  const { selectedRegionId, setSelectedRegionId, regions, isSuperAdmin } = useRegion();
   
-  {/* Existing pricing fields... */}
-  <div className="grid gap-4 md:grid-cols-3">
-    {/* daily_rate, weekly_rate, monthly_rate fields */}
-  </div>
-</CardContent>
-
-// Update zod schema to include category-based validation:
-daily_rate: z.number()
-  .min(20, "Daily rate must be at least $20")
-  .max(500, "Daily rate cannot exceed $500"),
+  return (
+    <Select value={selectedRegionId || "all"} onValueChange={(v) => setSelectedRegionId(v === "all" ? null : v)}>
+      <SelectTrigger className="w-48">
+        <MapPin className="w-4 h-4 mr-2" />
+        <SelectValue placeholder="Select Region" />
+      </SelectTrigger>
+      <SelectContent>
+        {isSuperAdmin && (
+          <SelectItem value="all">
+            <span className="font-medium">All Regions</span>
+          </SelectItem>
+        )}
+        {regions.filter(r => r.is_active).map(region => (
+          <SelectItem key={region.id} value={region.id}>
+            {region.city}, {region.state}
+          </SelectItem>
+        ))}
+        {isSuperAdmin && (
+          <>
+            <Separator className="my-1" />
+            {regions.filter(r => !r.is_active).map(region => (
+              <SelectItem key={region.id} value={region.id} className="text-muted-foreground">
+                {region.city}, {region.state} (Disabled)
+              </SelectItem>
+            ))}
+          </>
+        )}
+      </SelectContent>
+    </Select>
+  );
+}
 ```
 
----
+### 4. useRegions.ts Hook
 
-### 4. AdminCategoryPricingModule.tsx
+```typescript
+// Fetch all regions
+export function useRegions() {
+  return useQuery({
+    queryKey: ["regions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("regions")
+        .select("*, region_settings(*)")
+        .order("city");
+      if (error) throw error;
+      return data as RegionWithSettings[];
+    },
+  });
+}
 
-Admin panel for managing category price ranges:
+// Create region
+export function useCreateRegion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (region: Omit<Region, 'id' | 'created_at' | 'updated_at'>) => {
+      // Create region
+      const { data: newRegion, error: regionError } = await supabase
+        .from("regions")
+        .insert(region)
+        .select()
+        .single();
+      if (regionError) throw regionError;
+      
+      // Create default settings
+      const { error: settingsError } = await supabase
+        .from("region_settings")
+        .insert({ region_id: newRegion.id });
+      if (settingsError) throw settingsError;
+      
+      return newRegion;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["regions"] });
+      toast.success("Region created");
+    },
+  });
+}
+
+// Disable region (stops dispatch immediately)
+export function useDisableRegion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ regionId, reason }: { regionId: string; reason?: string }) => {
+      // Update region
+      const { error } = await supabase
+        .from("regions")
+        .update({ 
+          is_active: false, 
+          disabled_at: new Date().toISOString(),
+          disabled_reason: reason,
+        })
+        .eq("id", regionId);
+      if (error) throw error;
+      
+      // Force all drivers in region offline
+      await supabase
+        .from("drivers")
+        .update({ is_online: false })
+        .eq("region_id", regionId);
+      
+      // Log the change
+      await supabase
+        .from("region_change_logs")
+        .insert({
+          entity_type: "region",
+          entity_id: regionId,
+          action: "region_disabled",
+          reason,
+        });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["regions"] });
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+      toast.success("Region disabled - all drivers forced offline");
+    },
+  });
+}
+
+// Move driver between regions (super admin only)
+export function useMoveDriverToRegion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ 
+      driverId, 
+      newRegionId, 
+      reason 
+    }: { 
+      driverId: string; 
+      newRegionId: string; 
+      reason?: string;
+    }) => {
+      // Get current region
+      const { data: driver } = await supabase
+        .from("drivers")
+        .select("region_id")
+        .eq("id", driverId)
+        .single();
+      
+      // Update driver
+      const { error } = await supabase
+        .from("drivers")
+        .update({ region_id: newRegionId, is_online: false })
+        .eq("id", driverId);
+      if (error) throw error;
+      
+      // Log the change
+      await supabase
+        .from("region_change_logs")
+        .insert({
+          entity_type: "driver",
+          entity_id: driverId,
+          action: "region_changed",
+          old_region_id: driver?.region_id,
+          new_region_id: newRegionId,
+          reason,
+        });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+      toast.success("Driver moved to new region");
+    },
+  });
+}
+```
+
+### 5. AdminRegionsModule.tsx
 
 **Features:**
-- Table showing all categories with their price ranges
-- Inline editing for min/suggested/max prices
-- City-specific overrides (optional)
-- Toggle to enable/disable price suggestions globally
+- List all regions with status badges
+- Create new region dialog
+- Region detail panel with settings
+- Disable/enable region controls
+- View region-specific stats
+- Manage bonuses per region
 
-```tsx
-export default function AdminCategoryPricingModule() {
-  const { data: pricing, isLoading } = useAllCategoryPricing();
-  const updatePricing = useUpdateCategoryPricing();
+```typescript
+export default function AdminRegionsModule() {
+  const { data: regions } = useRegions();
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
   
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Category Pricing</h1>
-        <p className="text-muted-foreground">
-          Configure recommended price ranges for each vehicle category
-        </p>
+      <div className="flex justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Globe className="w-6 h-6" />
+            Regions
+          </h1>
+          <p className="text-muted-foreground">Manage operational regions</p>
+        </div>
+        <Button onClick={() => setShowAddModal(true)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Region
+        </Button>
       </div>
       
-      {/* Global Toggle */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Price Suggestions</Label>
-              <p className="text-sm text-muted-foreground">
-                Show recommended prices to owners when listing vehicles
-              </p>
-            </div>
-            <Switch checked={suggestionsEnabled} onCheckedChange={toggleSuggestions} />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <StatsCard label="Total Regions" value={regions?.length || 0} />
+        <StatsCard label="Active" value={regions?.filter(r => r.is_active).length || 0} variant="success" />
+        <StatsCard label="Disabled" value={regions?.filter(r => !r.is_active).length || 0} variant="warning" />
+        <StatsCard label="Total Drivers" value={driverCount} />
+      </div>
       
-      {/* Pricing Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Category</TableHead>
-              <TableHead>Min ($)</TableHead>
-              <TableHead>Suggested ($)</TableHead>
-              <TableHead>Max ($)</TableHead>
-              <TableHead>City</TableHead>
-              <TableHead>Active</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pricing?.map((item) => (
-              <CategoryPricingRow 
-                key={item.id} 
-                item={item} 
-                onUpdate={updatePricing.mutate} 
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </Card>
+      {/* Region List */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {regions?.map(region => (
+          <RegionCard 
+            key={region.id}
+            region={region}
+            onClick={() => setSelectedRegion(region)}
+          />
+        ))}
+      </div>
       
-      {/* Add City Override */}
-      <Button variant="outline">
-        <Plus className="w-4 h-4 mr-2" />
-        Add City-Specific Pricing
-      </Button>
+      {/* Region Detail Panel */}
+      {selectedRegion && (
+        <RegionDetailPanel 
+          region={selectedRegion}
+          onClose={() => setSelectedRegion(null)}
+        />
+      )}
     </div>
   );
 }
 ```
 
----
-
-### 5. P2PVehicleDetail.tsx Updates
-
-Enhance the renter pricing display with clearer labels:
-
-```tsx
-{/* In Pricing Breakdown section */}
-{pricing && (
-  <div className="space-y-2 text-sm">
-    <div className="flex justify-between">
-      <span>Rental ({pricing.totalDays} days × ${pricing.dailyRate}/day)</span>
-      <span>${pricing.subtotal.toFixed(2)}</span>
-    </div>
-    <div className="flex justify-between text-muted-foreground">
-      <span>Service fee</span>
-      <span>${pricing.serviceFee.toFixed(2)}</span>
-    </div>
-    {insuranceAccepted && (
-      <div className="flex justify-between text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Shield className="w-3 h-3" />
-          Insurance protection
-        </span>
-        <span>${pricing.insuranceFee.toFixed(2)}</span>
-      </div>
-    )}
-    <div className="flex justify-between text-muted-foreground">
-      <span>Taxes & fees</span>
-      <span>${pricing.taxes.toFixed(2)}</span>
-    </div>
-    <Separator />
-    <div className="flex justify-between font-semibold text-base">
-      <span>Total</span>
-      <span>${pricing.totalAmount.toFixed(2)}</span>
-    </div>
-  </div>
-)}
-
-{/* Add insurance badge */}
-{insuranceAccepted && (
-  <Badge variant="secondary" className="gap-1 bg-emerald-500/10 text-emerald-600">
-    <Shield className="w-3 h-3" />
-    Insurance included during rental
-  </Badge>
-)}
-```
-
----
-
 ### 6. AdminPanel.tsx Updates
 
-Add Category Pricing nav item:
+Add region context and selector to header:
 
 ```typescript
-// In navItems array, add under P2P section:
-{ id: "category-pricing", label: "Category Pricing", icon: DollarSign }
+export default function AdminPanel() {
+  return (
+    <RegionProvider>
+      <div className="min-h-screen bg-background flex">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex w-64 border-r ...">
+          <NavContent />
+        </aside>
 
-// In renderModule switch:
-case "category-pricing":
-  return <AdminCategoryPricingModule />;
+        <div className="flex-1 flex flex-col">
+          {/* Header with Region Selector */}
+          <header className="hidden md:flex h-14 border-b items-center justify-between px-6">
+            <RegionSelector />
+            <div className="flex items-center gap-2">
+              {/* Notifications, etc */}
+            </div>
+          </header>
+          
+          <main className="flex-1 p-6 overflow-auto">
+            {renderModule()}
+          </main>
+        </div>
+      </div>
+    </RegionProvider>
+  );
+}
+```
+
+### 7. AdminDriversModule.tsx Updates
+
+Filter drivers by selected region:
+
+```typescript
+export default function AdminDriversModule() {
+  const { selectedRegionId } = useRegion();
+  const { data: drivers } = useDrivers({ regionId: selectedRegionId });
+  
+  // Show region column when "All Regions" selected
+  const showRegionColumn = !selectedRegionId;
+  
+  // Add "Move to Region" action for super admin
+  // ...
+}
+```
+
+### 8. useDrivers.ts Updates
+
+Add region filtering:
+
+```typescript
+export const useDrivers = (options?: { regionId?: string | null }) => {
+  return useQuery({
+    queryKey: ["drivers", options?.regionId],
+    queryFn: async () => {
+      let query = supabase
+        .from("drivers")
+        .select("*, regions(name, city, state)")
+        .order("created_at", { ascending: false });
+      
+      // Filter by region if specified
+      if (options?.regionId) {
+        query = query.eq("region_id", options.regionId);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+};
 ```
 
 ---
 
-### 7. useP2PCommission.ts Enhancement
+## Dispatch Scoping (Critical Safety Rule)
 
-Add a helper function for owner earnings calculation:
+### Dispatch Logic Requirements
+When dispatching jobs (rides, food orders, move deliveries):
+
+1. **Job must have region_id** - Set at job creation based on pickup location
+2. **Filter eligible drivers by region** - `driver.region_id === job.region_id`
+3. **Apply region-specific settings**:
+   - Surge multiplier from region settings
+   - Dispatch radius from region settings
+   - Commission rate from region settings
+
+### Pseudocode for Dispatch
 
 ```typescript
-// Calculate owner earnings preview
-export function calculateOwnerEarnings(
-  dailyRate: number,
-  days: number,
-  commission: P2PCommissionSettings | null
-): { subtotal: number; platformFee: number; earnings: number } {
-  if (!commission) {
-    return { subtotal: dailyRate * days, platformFee: 0, earnings: dailyRate * days };
+async function dispatchJob(jobId: string, jobType: 'ride' | 'eats' | 'move') {
+  // 1. Get job with region
+  const job = await getJob(jobId, jobType);
+  if (!job.region_id) throw new Error("Job must have region_id");
+  
+  // 2. Check region is active
+  const region = await getRegion(job.region_id);
+  if (!region.is_active) throw new Error("Region is disabled");
+  
+  // 3. Get region settings
+  const settings = await getRegionSettings(job.region_id);
+  
+  // 4. Find eligible drivers (CRITICAL: filter by region)
+  const eligibleDrivers = await supabase
+    .from("drivers")
+    .select("*")
+    .eq("region_id", job.region_id)  // <-- CRITICAL FILTER
+    .eq("is_online", true)
+    .eq("status", "verified")
+    .eq(serviceEnabled(jobType), true);
+  
+  // 5. Filter by distance within region
+  const nearbyDrivers = eligibleDrivers.filter(d => 
+    calculateDistance(d.lat, d.lng, job.pickup_lat, job.pickup_lng) <= settings.max_dispatch_radius_km
+  );
+  
+  // 6. Dispatch based on mode
+  if (settings.dispatch_mode === 'auto') {
+    // Auto-assign to nearest driver
+  } else if (settings.dispatch_mode === 'broadcast') {
+    // Broadcast to all nearby drivers with timeout
   }
-  
-  const subtotal = dailyRate * days;
-  const platformFee = subtotal * (commission.owner_commission_pct / 100);
-  const earnings = subtotal - platformFee;
-  
-  return { subtotal, platformFee, earnings };
 }
 ```
+
+---
+
+## Driver App UX Changes
+
+### Profile Screen Updates
+Show current region and info message:
+
+```tsx
+// In DriverProfile.tsx or similar
+<Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <MapPin className="w-5 h-5" />
+      Your Region
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    <p className="text-lg font-medium">{driver.region?.city}, {driver.region?.state}</p>
+    <p className="text-sm text-muted-foreground mt-1">
+      You receive jobs only in this region.
+    </p>
+  </CardContent>
+</Card>
+```
+
+### Region Disabled State
+When driver's region is disabled, show message and prevent going online:
+
+```typescript
+// In driver online toggle logic
+const canGoOnline = () => {
+  if (!driver.region_id) return false;
+  if (!driver.region?.is_active) return false;
+  return true;
+};
+
+// Show message when region disabled
+{!driver.region?.is_active && (
+  <Alert variant="destructive">
+    <AlertCircle className="w-4 h-4" />
+    <AlertTitle>Service Unavailable</AlertTitle>
+    <AlertDescription>
+      Service is temporarily unavailable in your city. 
+      Please check back later or contact support.
+    </AlertDescription>
+  </Alert>
+)}
+```
+
+---
+
+## Admin Reporting by Region
+
+Add region filter to all report queries:
+
+```typescript
+// Example: Get region stats
+async function getRegionStats(regionId: string) {
+  const [drivers, trips, orders, payouts] = await Promise.all([
+    supabase.from("drivers").select("*", { count: "exact", head: true }).eq("region_id", regionId),
+    supabase.from("trips").select("fare_amount").eq("region_id", regionId).eq("status", "completed"),
+    supabase.from("food_orders").select("total").eq("region_id", regionId).eq("status", "delivered"),
+    supabase.from("driver_withdrawals").select("amount").eq("status", "completed")
+      .in("driver_id", subquery), // drivers in region
+  ]);
+  
+  return {
+    activeDrivers: drivers.count,
+    completedTrips: trips.data?.length,
+    revenue: trips.data?.reduce((sum, t) => sum + t.fare_amount, 0),
+    payoutTotal: payouts.data?.reduce((sum, p) => sum + p.amount, 0),
+  };
+}
+```
+
+---
+
+## Safety Rules Summary
+
+| Rule | Implementation |
+|------|---------------|
+| Jobs cannot change region after creation | No UPDATE on region_id after INSERT |
+| Drivers cannot self-switch regions | No RLS policy allowing driver to update region_id |
+| All region changes logged | Trigger on drivers.region_id change inserts to region_change_logs |
+| Region disable stops dispatch immediately | is_active = false forces all drivers offline |
+| No cross-city dispatch | Dispatch query always includes `WHERE region_id = job.region_id` |
 
 ---
 
 ## Database Migration Summary
 
 ```sql
--- Create category pricing table
-CREATE TABLE public.p2p_category_pricing (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  category TEXT NOT NULL,
-  min_daily_price NUMERIC(10,2) NOT NULL,
-  suggested_daily_price NUMERIC(10,2) NOT NULL,
-  max_daily_price NUMERIC(10,2) NOT NULL,
-  city TEXT DEFAULT NULL,
-  is_active BOOLEAN DEFAULT true,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  
-  CONSTRAINT valid_price_range CHECK (min_daily_price <= suggested_daily_price AND suggested_daily_price <= max_daily_price),
-  CONSTRAINT positive_prices CHECK (min_daily_price > 0)
-);
+-- 1. Create regions table
+CREATE TABLE public.regions (...);
 
--- Create unique index for category + city combination
-CREATE UNIQUE INDEX idx_category_pricing_unique ON p2p_category_pricing (category, COALESCE(city, '__default__'));
+-- 2. Create region_settings table
+CREATE TABLE public.region_settings (...);
 
--- Create index for lookups
-CREATE INDEX idx_category_pricing_category ON p2p_category_pricing(category);
+-- 3. Create region_bonuses table
+CREATE TABLE public.region_bonuses (...);
 
--- Seed default pricing data
-INSERT INTO p2p_category_pricing (category, min_daily_price, suggested_daily_price, max_daily_price)
-VALUES
-  ('economy', 40, 55, 70),
-  ('compact', 40, 55, 70),
-  ('midsize', 55, 75, 90),
-  ('fullsize', 55, 75, 90),
-  ('suv', 70, 95, 120),
-  ('truck', 90, 125, 160),
-  ('minivan', 70, 95, 120),
-  ('luxury', 110, 150, 200);
+-- 4. Create region_change_logs table
+CREATE TABLE public.region_change_logs (...);
 
--- Add system setting for toggling price suggestions
-INSERT INTO system_settings (key, value, description, category, is_public)
-VALUES ('p2p_price_suggestions_enabled', 'true', 'Show price suggestions to owners', 'p2p', false)
-ON CONFLICT (key) DO NOTHING;
+-- 5. Add region_id to drivers
+ALTER TABLE drivers ADD COLUMN region_id UUID REFERENCES regions(id);
+ALTER TABLE drivers ADD COLUMN home_city TEXT;
+ALTER TABLE drivers ADD COLUMN allowed_regions UUID[] DEFAULT '{}';
 
--- Enable RLS
-ALTER TABLE p2p_category_pricing ENABLE ROW LEVEL SECURITY;
+-- 6. Add region_id to trips
+ALTER TABLE trips ADD COLUMN region_id UUID REFERENCES regions(id);
 
--- RLS: Anyone can read active pricing
-CREATE POLICY "Anyone can read active category pricing"
-  ON p2p_category_pricing FOR SELECT
-  USING (is_active = true);
+-- 7. Add region_id to food_orders
+ALTER TABLE food_orders ADD COLUMN region_id UUID REFERENCES regions(id);
 
--- RLS: Admin full access
-CREATE POLICY "Admin full access to category pricing"
-  ON p2p_category_pricing FOR ALL
-  USING (public.is_admin(auth.uid()));
+-- 8. Add region_id to delivery_batches
+ALTER TABLE delivery_batches ADD COLUMN region_id UUID REFERENCES regions(id);
+
+-- 9. Create indexes
+CREATE INDEX idx_drivers_region ON drivers(region_id);
+CREATE INDEX idx_trips_region ON trips(region_id);
+CREATE INDEX idx_food_orders_region ON food_orders(region_id);
+
+-- 10. Enable RLS
+ALTER TABLE regions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE region_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE region_bonuses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE region_change_logs ENABLE ROW LEVEL SECURITY;
+
+-- 11. RLS Policies
+-- Regions: Admin can manage, drivers can read their assigned region
+CREATE POLICY "Admin full access to regions" ON regions FOR ALL USING (is_admin(auth.uid()));
+CREATE POLICY "Drivers can read active regions" ON regions FOR SELECT USING (is_active = true);
+
+-- Region Settings: Admin only
+CREATE POLICY "Admin full access to region_settings" ON region_settings FOR ALL USING (is_admin(auth.uid()));
+
+-- Region Bonuses: Admin can manage, drivers can read active
+CREATE POLICY "Admin full access to region_bonuses" ON region_bonuses FOR ALL USING (is_admin(auth.uid()));
+CREATE POLICY "Drivers can read active bonuses" ON region_bonuses FOR SELECT USING (is_active = true);
+
+-- Change Logs: Admin only
+CREATE POLICY "Admin full access to change logs" ON region_change_logs FOR ALL USING (is_admin(auth.uid()));
+
+-- 12. Trigger to prevent driver self-updating region
+CREATE OR REPLACE FUNCTION prevent_driver_region_self_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.region_id IS DISTINCT FROM NEW.region_id THEN
+    IF NOT is_admin(auth.uid()) THEN
+      RAISE EXCEPTION 'Drivers cannot change their own region';
+    END IF;
+    
+    -- Log the change
+    INSERT INTO region_change_logs (entity_type, entity_id, action, old_region_id, new_region_id, changed_by)
+    VALUES ('driver', NEW.id, 'region_changed', OLD.region_id, NEW.region_id, auth.uid());
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER driver_region_change_trigger
+  BEFORE UPDATE ON drivers
+  FOR EACH ROW
+  EXECUTE FUNCTION prevent_driver_region_self_update();
 ```
 
 ---
 
-## UI/UX Flow
+## Navigation Updates
 
-```
-Owner Adds Vehicle
-        │
-        ▼
-┌──────────────────────────────────────────────┐
-│  VehicleForm → Pricing Section               │
-│                                              │
-│  [Category: SUV selected]                    │
-│                                              │
-│  ┌────────────────────────────────────────┐  │
-│  │ 💡 Pricing Recommendation              │  │
-│  │                                        │  │
-│  │  $70 ─────●───────────── $120          │  │
-│  │  min     $95 (suggested)    max        │  │
-│  │                                        │  │
-│  │  📊 Estimated earnings per 3-day trip: │  │
-│  │     $228 after 20% platform fee        │  │
-│  └────────────────────────────────────────┘  │
-│                                              │
-│  Daily Rate: [$__95___]                      │
-│  Weekly Rate (optional): [_______]           │
-│  Monthly Rate (optional): [_______]          │
-│                                              │
-└──────────────────────────────────────────────┘
+Add to `navItems` in AdminPanel.tsx:
+
+```typescript
+{ id: "regions", label: "Regions", icon: Globe }
 ```
 
-```
-Renter Views Vehicle
-        │
-        ▼
-┌──────────────────────────────────────────────┐
-│  Booking Sidebar                             │
-│                                              │
-│  $95/day                                     │
-│                                              │
-│  ┌────────────────────────────────────────┐  │
-│  │  Rental (3 days × $95/day)    $285.00  │  │
-│  │  Service fee                   $28.50  │  │
-│  │  🛡️ Insurance protection       $45.00  │  │
-│  │  Taxes & fees                  $22.80  │  │
-│  │  ───────────────────────────────────── │  │
-│  │  Total                        $381.30  │  │
-│  └────────────────────────────────────────┘  │
-│                                              │
-│  [🛡️ Insurance included during rental]       │
-│                                              │
-│  [ Book Now ]                                │
-└──────────────────────────────────────────────┘
+Add module case:
+
+```typescript
+case "regions":
+  return <AdminRegionsModule />;
 ```
 
 ---
@@ -576,31 +862,30 @@ Renter Views Vehicle
 
 | Action | File | Description |
 |--------|------|-------------|
-| Create | `src/hooks/useCategoryPricing.ts` | Hooks for category pricing data |
-| Create | `src/components/owner/PricingHelper.tsx` | Smart pricing suggestion component |
-| Create | `src/pages/admin/modules/AdminCategoryPricingModule.tsx` | Admin pricing configuration |
-| Modify | `src/components/owner/VehicleForm.tsx` | Integrate PricingHelper |
-| Modify | `src/pages/p2p/P2PVehicleDetail.tsx` | Enhanced price breakdown, insurance badge |
-| Modify | `src/pages/p2p/P2PBookingConfirmation.tsx` | Insurance disclosure text |
-| Modify | `src/pages/admin/AdminPanel.tsx` | Add Category Pricing nav item |
-| Modify | `src/hooks/useP2PCommission.ts` | Add earnings calculator helper |
-| Database | Migration | Create p2p_category_pricing table with default data |
-
----
-
-## Technical Considerations
-
-1. **Validation**: VehicleForm should warn but not block prices outside range (owner flexibility)
-2. **City-Specific Pricing**: Supports future market-based pricing adjustments
-3. **Commission Sync**: Earnings preview uses live commission settings
-4. **Caching**: Category pricing cached for 5 minutes to reduce DB calls
-5. **Mobile UX**: PricingHelper collapses gracefully on smaller screens
+| Create | `src/types/region.ts` | TypeScript types for regions |
+| Create | `src/contexts/RegionContext.tsx` | Region context for admin scoping |
+| Create | `src/hooks/useRegions.ts` | Region CRUD and queries |
+| Create | `src/hooks/useRegionSettings.ts` | Region settings management |
+| Create | `src/hooks/useRegionBonuses.ts` | Region bonus campaigns |
+| Create | `src/components/admin/RegionSelector.tsx` | Global region selector |
+| Create | `src/pages/admin/modules/AdminRegionsModule.tsx` | Region management UI |
+| Modify | `src/pages/admin/AdminPanel.tsx` | Add region context, selector, nav item |
+| Modify | `src/pages/admin/modules/AdminDriversModule.tsx` | Filter by region, move driver action |
+| Modify | `src/pages/admin/modules/AdminRidesModule.tsx` | Filter by region |
+| Modify | `src/pages/admin/modules/AdminEatsModule.tsx` | Filter by region |
+| Modify | `src/pages/admin/modules/AdminMoveModule.tsx` | Filter by region |
+| Modify | `src/pages/admin/modules/AdminFinanceModule.tsx` | Filter payouts by region |
+| Modify | `src/hooks/useDrivers.ts` | Add region filtering |
+| Modify | `src/hooks/useTrips.ts` | Add region filtering |
+| Modify | `src/hooks/useEatsOrders.ts` | Add region filtering |
+| Database | Migration | Create tables, add columns, RLS, triggers |
 
 ---
 
 ## Future Enhancements
 
-1. **Dynamic Pricing**: Adjust suggestions based on demand/season
-2. **Market Analysis**: Show how owner's price compares to similar vehicles
-3. **Price History**: Track price changes over time
-4. **Revenue Optimizer**: AI-suggested pricing for maximum bookings
+1. **Temporary Region Switch**: Allow admin-approved temporary moves between regions
+2. **Multi-Region Drivers**: Support drivers working in multiple adjacent regions
+3. **Region Analytics Dashboard**: Deep dive into per-region performance
+4. **Automated Surge by Region**: AI-driven surge based on regional demand
+5. **Region Geofencing**: Automatic region detection based on GPS coordinates
