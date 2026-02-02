@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, Percent, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront, MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -33,12 +33,14 @@ import AdminP2PPayoutsModule from "./modules/AdminP2PPayoutsModule";
 import AdminP2PDisputesModule from "./modules/AdminP2PDisputesModule";
 import AdminP2PCommissionModule from "./modules/AdminP2PCommissionModule";
 import AdminMoveModule from "./modules/AdminMoveModule";
+import AdminCityLaunchModule from "./modules/AdminCityLaunchModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
   { id: "move", label: "Move Deliveries", icon: CarFront },
+  { id: "city-launch", label: "City Launch", icon: MapPin },
   { id: "p2p-owners", label: "P2P Owners", icon: CarFront },
   { id: "p2p-vehicles", label: "P2P Vehicles", icon: Car },
   { id: "p2p-payouts", label: "P2P Payouts", icon: DollarSign },
@@ -129,6 +131,8 @@ export default function AdminPanel() {
         return <AdminEatsModule />;
       case "move":
         return <AdminMoveModule />;
+      case "city-launch":
+        return <AdminCityLaunchModule />;
       case "p2p-owners":
         return <AdminP2POwnersModule />;
       case "p2p-vehicles":

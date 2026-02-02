@@ -4754,6 +4754,141 @@ export type Database = {
           },
         ]
       }
+      p2p_launch_checklists: {
+        Row: {
+          city_id: string | null
+          id: string
+          insurance_active: boolean | null
+          insurance_confirmation_ref: string | null
+          insurance_coverage_type: string | null
+          insurance_provider_name: string | null
+          legal_damage_policy: boolean | null
+          legal_insurance_disclosure: boolean | null
+          legal_owner_terms: boolean | null
+          legal_privacy_policy: boolean | null
+          legal_renter_terms: boolean | null
+          min_approved_cars: number | null
+          min_approved_owners: number | null
+          ops_cancellation_tested: boolean | null
+          ops_damage_tested: boolean | null
+          ops_dispute_tested: boolean | null
+          ops_payout_delay_tested: boolean | null
+          payments_connect_enabled: boolean | null
+          payments_stripe_active: boolean | null
+          payments_test_payment: boolean | null
+          payments_test_payout: boolean | null
+          support_confirmed: boolean | null
+          support_email: string | null
+          support_emergency_procedure: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          city_id?: string | null
+          id?: string
+          insurance_active?: boolean | null
+          insurance_confirmation_ref?: string | null
+          insurance_coverage_type?: string | null
+          insurance_provider_name?: string | null
+          legal_damage_policy?: boolean | null
+          legal_insurance_disclosure?: boolean | null
+          legal_owner_terms?: boolean | null
+          legal_privacy_policy?: boolean | null
+          legal_renter_terms?: boolean | null
+          min_approved_cars?: number | null
+          min_approved_owners?: number | null
+          ops_cancellation_tested?: boolean | null
+          ops_damage_tested?: boolean | null
+          ops_dispute_tested?: boolean | null
+          ops_payout_delay_tested?: boolean | null
+          payments_connect_enabled?: boolean | null
+          payments_stripe_active?: boolean | null
+          payments_test_payment?: boolean | null
+          payments_test_payout?: boolean | null
+          support_confirmed?: boolean | null
+          support_email?: string | null
+          support_emergency_procedure?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          city_id?: string | null
+          id?: string
+          insurance_active?: boolean | null
+          insurance_confirmation_ref?: string | null
+          insurance_coverage_type?: string | null
+          insurance_provider_name?: string | null
+          legal_damage_policy?: boolean | null
+          legal_insurance_disclosure?: boolean | null
+          legal_owner_terms?: boolean | null
+          legal_privacy_policy?: boolean | null
+          legal_renter_terms?: boolean | null
+          min_approved_cars?: number | null
+          min_approved_owners?: number | null
+          ops_cancellation_tested?: boolean | null
+          ops_damage_tested?: boolean | null
+          ops_dispute_tested?: boolean | null
+          ops_payout_delay_tested?: boolean | null
+          payments_connect_enabled?: boolean | null
+          payments_stripe_active?: boolean | null
+          payments_test_payment?: boolean | null
+          payments_test_payout?: boolean | null
+          support_confirmed?: boolean | null
+          support_email?: string | null
+          support_emergency_procedure?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_launch_checklists_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: true
+            referencedRelation: "p2p_launch_cities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_launch_cities: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          launch_status: Database["public"]["Enums"]["p2p_launch_status"] | null
+          launched_at: string | null
+          name: string
+          paused_at: string | null
+          state: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          launch_status?:
+            | Database["public"]["Enums"]["p2p_launch_status"]
+            | null
+          launched_at?: string | null
+          name: string
+          paused_at?: string | null
+          state: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          launch_status?:
+            | Database["public"]["Enums"]["p2p_launch_status"]
+            | null
+          launched_at?: string | null
+          name?: string
+          paused_at?: string | null
+          state?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       p2p_payouts: {
         Row: {
           amount: number
@@ -10434,6 +10569,7 @@ export type Database = {
         | "electric"
         | "hybrid"
         | "plug_in_hybrid"
+      p2p_launch_status: "draft" | "ready" | "live" | "paused"
       p2p_payment_status:
         | "pending"
         | "authorized"
@@ -10648,6 +10784,7 @@ export const Constants = {
         "hybrid",
         "plug_in_hybrid",
       ],
+      p2p_launch_status: ["draft", "ready", "live", "paused"],
       p2p_payment_status: [
         "pending",
         "authorized",
