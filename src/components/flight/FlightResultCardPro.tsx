@@ -171,6 +171,9 @@ export default function FlightResultCardPro({
                 ${price.toLocaleString()}
               </p>
               <p className="text-xs text-muted-foreground">per person</p>
+              <p className="text-[9px] text-emerald-600 mt-1">
+                Final price confirmed by partner
+              </p>
             </div>
 
             <Button
@@ -179,7 +182,7 @@ export default function FlightResultCardPro({
                 onBook?.();
               }}
               className={cn(
-                "gap-2 font-semibold",
+                "gap-2 font-semibold min-h-[48px] touch-manipulation active:scale-[0.98]",
                 "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
                 "shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40",
                 "transition-all duration-200"
@@ -188,6 +191,11 @@ export default function FlightResultCardPro({
               View Deal
               <ExternalLink className="w-4 h-4" />
             </Button>
+            
+            {/* Trust micro-copy */}
+            <p className="text-[9px] text-muted-foreground text-center lg:text-right">
+              Secure partner checkout
+            </p>
           </div>
         </div>
       </CardContent>
