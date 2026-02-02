@@ -4403,11 +4403,15 @@ export type Database = {
           payment_status:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_id: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_date: string
           pickup_location: string | null
           platform_fee: number | null
+          refund_amount: number | null
+          refund_status: string | null
+          refunded_at: string | null
           renter_id: string
           renter_license_verified: boolean | null
           return_confirmed_at: string | null
@@ -4417,7 +4421,9 @@ export type Database = {
           service_fee: number | null
           status: Database["public"]["Enums"]["p2p_booking_status"] | null
           stripe_charge_id: string | null
+          stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
+          stripe_refund_id: string | null
           subtotal: number
           taxes: number | null
           terms_accepted: boolean | null
@@ -4446,11 +4452,15 @@ export type Database = {
           payment_status?:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_id?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date: string
           pickup_location?: string | null
           platform_fee?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
           renter_id: string
           renter_license_verified?: boolean | null
           return_confirmed_at?: string | null
@@ -4460,7 +4470,9 @@ export type Database = {
           service_fee?: number | null
           status?: Database["public"]["Enums"]["p2p_booking_status"] | null
           stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
           subtotal: number
           taxes?: number | null
           terms_accepted?: boolean | null
@@ -4489,11 +4501,15 @@ export type Database = {
           payment_status?:
             | Database["public"]["Enums"]["p2p_payment_status"]
             | null
+          payout_id?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date?: string
           pickup_location?: string | null
           platform_fee?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
+          refunded_at?: string | null
           renter_id?: string
           renter_license_verified?: boolean | null
           return_confirmed_at?: string | null
@@ -4503,7 +4519,9 @@ export type Database = {
           service_fee?: number | null
           status?: Database["public"]["Enums"]["p2p_booking_status"] | null
           stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
+          stripe_refund_id?: string | null
           subtotal?: number
           taxes?: number | null
           terms_accepted?: boolean | null
@@ -4518,6 +4536,13 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "car_owner_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "p2p_bookings_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_payouts"
             referencedColumns: ["id"]
           },
           {
@@ -4631,6 +4656,7 @@ export type Database = {
         Row: {
           amount: number
           booking_id: string | null
+          booking_ids: string[] | null
           created_at: string | null
           failed_reason: string | null
           id: string
@@ -4639,6 +4665,7 @@ export type Database = {
           owner_id: string
           platform_fee: number | null
           processed_at: string | null
+          processed_by: string | null
           requested_at: string | null
           status: Database["public"]["Enums"]["p2p_payout_status"] | null
           stripe_payout_id: string | null
@@ -4647,6 +4674,7 @@ export type Database = {
         Insert: {
           amount: number
           booking_id?: string | null
+          booking_ids?: string[] | null
           created_at?: string | null
           failed_reason?: string | null
           id?: string
@@ -4655,6 +4683,7 @@ export type Database = {
           owner_id: string
           platform_fee?: number | null
           processed_at?: string | null
+          processed_by?: string | null
           requested_at?: string | null
           status?: Database["public"]["Enums"]["p2p_payout_status"] | null
           stripe_payout_id?: string | null
@@ -4663,6 +4692,7 @@ export type Database = {
         Update: {
           amount?: number
           booking_id?: string | null
+          booking_ids?: string[] | null
           created_at?: string | null
           failed_reason?: string | null
           id?: string
@@ -4671,6 +4701,7 @@ export type Database = {
           owner_id?: string
           platform_fee?: number | null
           processed_at?: string | null
+          processed_by?: string | null
           requested_at?: string | null
           status?: Database["public"]["Enums"]["p2p_payout_status"] | null
           stripe_payout_id?: string | null

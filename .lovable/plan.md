@@ -33,8 +33,14 @@
 - `/p2p/my-trips` - Renter trips
 - `/owner/bookings` - Owner booking management
 
-## Next Phase: Phase 5 - Payments & Payouts
-- Stripe integration for booking payments
-- Owner payout processing
-- Refund handling
-- Dispute resolution
+## Phase 5: Payments & Payouts ✅
+- **create-p2p-checkout**: Stripe Checkout for P2P bookings
+- **process-p2p-payout**: Admin payout processing for owners
+- **process-p2p-refund**: Refund handling for P2P bookings
+- **useP2PPayment.ts**: Payment hooks for checkout, refunds, payouts
+- **OwnerPayouts**: Owner earnings dashboard with payout history
+- **AdminP2PPayoutsModule**: Admin payout management
+
+## Next Phase: Phase 6 - Reviews & Disputes
+- Renter/owner review system
+- Dispute resolution workflow

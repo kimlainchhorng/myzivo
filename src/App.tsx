@@ -86,6 +86,7 @@ const AddVehicle = lazy(() => import("./pages/owner/AddVehicle"));
 const EditVehicle = lazy(() => import("./pages/owner/EditVehicle"));
 const VehicleAvailability = lazy(() => import("./pages/owner/VehicleAvailability"));
 const OwnerBookings = lazy(() => import("./pages/owner/OwnerBookings"));
+const OwnerPayouts = lazy(() => import("./pages/owner/OwnerPayouts"));
 // P2P Renter pages
 const P2PVehicleSearch = lazy(() => import("./pages/p2p/P2PVehicleSearch"));
 const P2PVehicleDetail = lazy(() => import("./pages/p2p/P2PVehicleDetail"));
@@ -281,7 +282,7 @@ const App = () => (
                 <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
                 <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
                 <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
-                
+                <Route path="/owner/payouts" element={<ProtectedRoute><OwnerPayouts /></ProtectedRoute>} />
                 {/* P2P Car Rental - Renter Routes */}
                 <Route path="/p2p/search" element={<P2PVehicleSearch />} />
                 <Route path="/p2p/vehicle/:id" element={<P2PVehicleDetail />} />

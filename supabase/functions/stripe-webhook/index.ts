@@ -95,6 +95,22 @@ serve(async (req) => {
           } else {
             console.log("Food order updated to paid:", metadata.order_id);
           }
+        } else if (metadata.type === "p2p") {
+          // Update P2P booking
+          const { error } = await supabase
+            .from("p2p_bookings")
+            .update({
+              status: "confirmed",
+              payment_status: "captured",
+              stripe_payment_intent_id: paymentIntentId,
+            })
+            .eq("stripe_checkout_session_id", session.id);
+
+          if (error) {
+            console.error("Error updating P2P booking:", error);
+          } else {
+            console.log("P2P booking updated to captured:", metadata.booking_id);
+          }
         }
         break;
       }
@@ -157,6 +173,16 @@ serve(async (req) => {
               refunded_at: new Date().toISOString(),
             })
             .eq("stripe_payment_id", paymentIntentId);
+
+          // Update P2P bookings
+          await supabase
+            .from("p2p_bookings")
+            .update({ 
+              refund_status: "refunded",
+              payment_status: "refunded",
+              refunded_at: new Date().toISOString(),
+            })
+            .eq("stripe_payment_intent_id", paymentIntentId);
         }
         break;
       }
