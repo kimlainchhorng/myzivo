@@ -77,7 +77,10 @@ const Install = lazy(() => import("./pages/Install"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Promotions = lazy(() => import("./pages/Promotions"));
 const RestaurantRegistration = lazy(() => import("./pages/RestaurantRegistration"));
-
+const ListYourCar = lazy(() => import("./pages/ListYourCar"));
+const OwnerApply = lazy(() => import("./pages/owner/OwnerApply"));
+const OwnerDashboard = lazy(() => import("./pages/owner/OwnerDashboard"));
+const OwnerProfile = lazy(() => import("./pages/owner/OwnerProfile"));
 // Legal pages - lazy load
 const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
@@ -257,6 +260,14 @@ const App = () => (
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
+                
+                {/* P2P Car Rental - Owner Routes */}
+                <Route path="/list-your-car" element={<ListYourCar />} />
+                <Route path="/owner/apply" element={<ProtectedRoute><OwnerApply /></ProtectedRoute>} />
+                <Route path="/owner/dashboard" element={<ProtectedRoute><OwnerDashboard /></ProtectedRoute>} />
+                <Route path="/owner/profile" element={<ProtectedRoute><OwnerProfile /></ProtectedRoute>} />
+                
+                <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/insurance" element={<InsurancePolicy />} />
                 <Route path="/accessibility" element={<AccessibilityStatement />} />

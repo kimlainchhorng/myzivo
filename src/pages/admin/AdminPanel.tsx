@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, Car, UtensilsCrossed, Users, Store, MousePointerClick, 
-  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator
+  Settings, UserCircle, LogOut, Menu, X, ChevronRight, Bell, DollarSign, Calculator, CarFront
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -27,11 +27,13 @@ import AdminCustomersModule from "./modules/AdminCustomersModule";
 import AdminSettingsModule from "./modules/AdminSettingsModule";
 import AdminFinanceModule from "./modules/AdminFinanceModule";
 import AdminRevenueAssumptionsModule from "./modules/AdminRevenueAssumptionsModule";
+import AdminP2POwnersModule from "./modules/AdminP2POwnersModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "rides", label: "Rides", icon: Car },
   { id: "eats", label: "Eats Orders", icon: UtensilsCrossed },
+  { id: "p2p-owners", label: "P2P Owners", icon: CarFront },
   { id: "finance", label: "Finance", icon: DollarSign },
   { id: "revenue-assumptions", label: "Revenue Assumptions", icon: Calculator },
   { id: "drivers", label: "Drivers", icon: Users },
@@ -115,6 +117,8 @@ export default function AdminPanel() {
         return <AdminRidesModule />;
       case "eats":
         return <AdminEatsModule />;
+      case "p2p-owners":
+        return <AdminP2POwnersModule />;
       case "finance":
         return <AdminFinanceModule />;
       case "revenue-assumptions":
