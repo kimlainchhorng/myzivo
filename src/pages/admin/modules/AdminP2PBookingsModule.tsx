@@ -7,7 +7,7 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import {
   Car, Calendar, User, DollarSign, Search, Filter,
-  CheckCircle, Clock, XCircle, AlertCircle, Eye, MoreVertical
+  CheckCircle, Clock, XCircle, AlertCircle, Eye, MoreVertical, Plus, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useAdminP2PBookings, type BookingWithDetails } from "@/hooks/useP2PBooking";
+import { useCreateTestBooking } from "@/hooks/useAdminP2PTestData";
 
 const statusConfig = {
   pending: { icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10", label: "Pending" },
@@ -61,6 +62,7 @@ export default function AdminP2PBookingsModule() {
     status: statusFilter,
     search: searchQuery,
   });
+  const createTestBooking = useCreateTestBooking();
 
   // Calculate stats
   const stats = {
@@ -75,11 +77,24 @@ export default function AdminP2PBookingsModule() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold">P2P Bookings</h2>
-        <p className="text-muted-foreground">
-          Monitor and manage peer-to-peer rental bookings
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">P2P Bookings</h2>
+          <p className="text-muted-foreground">
+            Monitor and manage peer-to-peer rental bookings
+          </p>
+        </div>
+        <Button
+          onClick={() => createTestBooking.mutate()}
+          disabled={createTestBooking.isPending}
+        >
+          {createTestBooking.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4 mr-2" />
+          )}
+          Create Test Booking
+        </Button>
       </div>
 
       {/* Stats */}

@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useCarOwners, useAdminOwnerStats, useUpdateOwnerStatus, useAdminOwnerDocuments, useUpdateDocumentStatus, useUpdateDocumentsVerified } from "@/hooks/useAdminP2P";
+import { useCreateTestOwner } from "@/hooks/useAdminP2PTestData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Users, Clock, CheckCircle, XCircle, AlertTriangle, Search, 
-  Eye, UserCheck, UserX, FileText, ExternalLink, Loader2
+  Eye, UserCheck, UserX, FileText, ExternalLink, Loader2, Plus
 } from "lucide-react";
 import type { CarOwnerStatus, AdminOwnerListItem, CarOwnerDocument } from "@/types/p2p";
 import OwnerStatusBadge from "@/components/owner/OwnerStatusBadge";
@@ -48,6 +49,7 @@ export default function AdminP2POwnersModule() {
   const updateStatus = useUpdateOwnerStatus();
   const updateDocStatus = useUpdateDocumentStatus();
   const updateDocsVerified = useUpdateDocumentsVerified();
+  const createTestOwner = useCreateTestOwner();
 
   // Filter owners by search
   const filteredOwners = owners.filter((owner) => {
@@ -103,9 +105,22 @@ export default function AdminP2POwnersModule() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">P2P Car Owners</h1>
-        <p className="text-muted-foreground">Manage car owner applications and verification</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">P2P Car Owners</h1>
+          <p className="text-muted-foreground">Manage car owner applications and verification</p>
+        </div>
+        <Button
+          onClick={() => createTestOwner.mutate()}
+          disabled={createTestOwner.isPending}
+        >
+          {createTestOwner.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Plus className="h-4 w-4 mr-2" />
+          )}
+          Create Test Owner
+        </Button>
       </div>
 
       {/* Stats Cards */}
