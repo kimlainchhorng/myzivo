@@ -1,9 +1,13 @@
+/**
+ * HotelStickyBookingCTA Component
+ * LOCKED COMPLIANCE: Uses hotelCompliance.ts for all text
+ */
 import { ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useHotelRedirect } from "@/hooks/useAffiliateRedirect";
 import { useCTAText, useCTAColor, useStickyCTA } from "@/hooks/useABTest";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { HOTEL_DISCLAIMERS } from "@/config/hotelCompliance";
 
 interface HotelStickyBookingCTAProps {
   className?: string;
@@ -97,7 +101,7 @@ export default function HotelStickyBookingCTA({
 
         {/* Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {AFFILIATE_DISCLOSURE_TEXT.short} Booking completed on partner site.
+          {HOTEL_DISCLAIMERS.partnerBookingShort}
         </p>
       </div>
     </div>
