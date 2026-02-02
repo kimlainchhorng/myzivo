@@ -1,11 +1,13 @@
 /**
  * Completed Booking Section
- * Shows completion banner and review forms for completed P2P bookings
+ * Shows completion banner, review forms, and dispute option for completed P2P bookings
  */
 
-import { CheckCircle, Star, PartyPopper } from "lucide-react";
+import { CheckCircle, Star, PartyPopper, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import ReviewForm from "@/components/p2p/ReviewForm";
+import DisputeForm from "@/components/p2p/DisputeForm";
 import type { BookingWithDetails } from "@/types/p2p";
 
 interface CompletedBookingSectionProps {
@@ -73,6 +75,19 @@ export default function CompletedBookingSection({ booking }: CompletedBookingSec
                 ownerName={owner.full_name}
               />
             )}
+          </div>
+
+          {/* Dispute Option */}
+          <Separator className="my-6" />
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/50">
+            <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Had a problem?</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                If something went wrong during your trip, you can report an issue to our support team.
+              </p>
+              <DisputeForm bookingId={booking.id} />
+            </div>
           </div>
         </CardContent>
       </Card>
