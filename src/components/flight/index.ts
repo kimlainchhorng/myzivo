@@ -111,6 +111,9 @@ export { default as BookingSupportPanel } from './BookingSupportPanel';
 export { default as FlightDetailStickyCTA } from './FlightDetailStickyCTA';
 export { default as FlightEmptyState } from './FlightEmptyState';
 export { default as FlightMobileResultsBar } from './FlightMobileResultsBar';
+export { default as FlightStickyHeader } from './FlightStickyHeader';
+export { default as FlightItineraryTimeline } from './FlightItineraryTimeline';
+export { default as FlightBookingSidebar } from './FlightBookingSidebar';
 
 // Types
 export type { FlightFilters } from './FlightFilters';

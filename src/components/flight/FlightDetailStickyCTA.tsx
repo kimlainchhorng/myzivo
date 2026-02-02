@@ -1,13 +1,16 @@
 /**
  * Flight Detail Sticky CTA
  * Mobile sticky bottom CTA for flight detail pages
- * Uses locked compliance text
+ * Uses locked compliance text + consent blocking
  */
 
-import { Lock, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Lock, ExternalLink, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 interface FlightDetailStickyCTAProps {
   price: number;
@@ -16,6 +19,7 @@ interface FlightDetailStickyCTAProps {
   onContinue: () => void;
   className?: string;
   isLoading?: boolean;
+  consentRequired?: boolean;
 }
 
 export default function FlightDetailStickyCTA({
@@ -25,9 +29,23 @@ export default function FlightDetailStickyCTA({
   onContinue,
   className,
   isLoading = false,
+  consentRequired = true,
 }: FlightDetailStickyCTAProps) {
+  const [consentChecked, setConsentChecked] = useState(false);
   const totalPrice = price * passengers;
   const currencySymbol = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
+
+  const handleContinue = () => {
+    if (consentRequired && !consentChecked) {
+      toast({
+        title: "Consent Required",
+        description: "Please agree to share your information with the booking partner.",
+        variant: "destructive",
+      });
+      return;
+    }
+    onContinue();
+  };
 
   return (
     <div className={cn(
@@ -38,6 +56,25 @@ export default function FlightDetailStickyCTA({
       className
     )}>
       <div className="container mx-auto px-4 py-3">
+        {/* Consent Checkbox Row */}
+        {consentRequired && (
+          <div className="flex items-center gap-2 mb-3 p-2 bg-muted/30 rounded-lg">
+            <Checkbox
+              id="mobile-consent"
+              checked={consentChecked}
+              onCheckedChange={(val) => setConsentChecked(val === true)}
+              className="shrink-0"
+            />
+            <label 
+              htmlFor="mobile-consent" 
+              className="text-[11px] text-muted-foreground leading-tight cursor-pointer"
+            >
+              I agree to share my information with the booking partner.
+            </label>
+            {consentChecked && <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />}
+          </div>
+        )}
+
         <div className="flex items-center justify-between gap-4">
           {/* Price Summary */}
           <div className="flex-1 min-w-0">
@@ -48,7 +85,7 @@ export default function FlightDetailStickyCTA({
               </span>
             </div>
             <p className="text-[10px] text-muted-foreground truncate">
-              {passengers} traveler{passengers > 1 ? "s" : ""} · Taxes included*
+              {passengers} traveler{passengers > 1 ? "s" : ""} · Final price at checkout
             </p>
           </div>
 
@@ -56,12 +93,13 @@ export default function FlightDetailStickyCTA({
           <Button
             size="lg"
             disabled={isLoading}
-            onClick={onContinue}
+            onClick={handleContinue}
             className={cn(
               "gap-2 text-white shadow-lg shadow-sky-500/30 shrink-0",
               "min-h-[52px] px-6 touch-manipulation active:scale-[0.98]",
               "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
-              "text-base font-semibold"
+              "text-base font-semibold",
+              consentRequired && !consentChecked && "opacity-70"
             )}
           >
             {isLoading ? (
