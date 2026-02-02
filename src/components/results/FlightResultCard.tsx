@@ -261,22 +261,22 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
                 e.stopPropagation();
                 // Show redirect toast
                 toast({
-                  title: "Redirecting to partner...",
-                  description: "Final pricing shown on partner site.",
+                  title: "Checking latest price...",
+                  description: "Please wait while we confirm availability.",
                   duration: 3000,
                 });
                 onViewDeal(flight);
               }}
               className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white min-h-[48px] touch-manipulation active:scale-[0.98]"
             >
-              <span className="hidden sm:inline">View deal on partner site</span>
-              <span className="sm:hidden">View deal</span>
+              <span className="hidden sm:inline">Continue to secure booking</span>
+              <span className="sm:hidden">Continue</span>
               <ExternalLink className="w-4 h-4" />
             </Button>
             
             {/* Booking handled micro-copy */}
-            <p className="text-[9px] text-muted-foreground text-center">
-              Booking handled by partner
+            <p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[140px]">
+              Powered by licensed travel partners
             </p>
           </div>
         </div>
@@ -284,7 +284,7 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
         {/* Affiliate disclaimer - REQUIRED */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            You will complete your booking securely with our travel partner. Prices are indicative and may change.
+            You'll complete your booking securely on Hizovo with our licensed travel partner. Final price confirmed before payment.
           </p>
         </div>
       </CardContent>

@@ -211,16 +211,48 @@ const HizovoFlightDetail = () => {
           </Sheet>
         </div>
 
-        {/* Partner Disclosure */}
+        {/* Booking Summary Card */}
         <div className="px-4 mt-6">
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold mb-3">Booking Summary</h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Route</span>
+                  <span className="font-medium">{flight.from} → {flight.to}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Date</span>
+                  <span className="font-medium">{flight.departDate}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Passengers</span>
+                  <span className="font-medium">{searchParams.passengers || 1} traveler(s)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Cabin</span>
+                  <span className="font-medium">{flight.cabinClass}</span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between">
+                  <span className="font-semibold">Estimated Total</span>
+                  <span className="font-bold text-flights">${flight.price * (searchParams.passengers || 1)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Partner Disclosure */}
+        <div className="px-4 mt-4">
           <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-primary mt-0.5" />
               <div>
-                <p className="font-medium text-sm">Partner Checkout</p>
+                <p className="font-medium text-sm">Secure Partner Checkout</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  You'll complete your booking securely with our travel partner. 
-                  Hizovo is not the merchant of record.
+                  You'll complete your booking securely on Hizovo with our licensed travel partner.
+                  Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
                 </p>
               </div>
             </div>
@@ -229,17 +261,22 @@ const HizovoFlightDetail = () => {
 
         {/* Sticky Footer */}
         <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 safe-area-bottom">
-          <div className="max-w-lg mx-auto flex items-center justify-between gap-4">
-            <div>
-              <p className="text-2xl font-bold text-flights">${flight.price}</p>
-              <p className="text-xs text-muted-foreground">per person, taxes incl.</p>
+          <div className="max-w-lg mx-auto">
+            <div className="flex items-center justify-between gap-4 mb-2">
+              <div>
+                <p className="text-2xl font-bold text-flights">${flight.price}</p>
+                <p className="text-xs text-muted-foreground">per person</p>
+              </div>
+              <Button 
+                className="flex-1 h-14 rounded-xl font-bold text-lg gap-2 bg-flights hover:bg-flights/90"
+                onClick={handleContinue}
+              >
+                Continue to secure booking <ArrowRight className="w-5 h-5" />
+              </Button>
             </div>
-            <Button 
-              className="flex-1 h-14 rounded-xl font-bold text-lg gap-2 bg-flights hover:bg-flights/90"
-              onClick={handleContinue}
-            >
-              Continue <ArrowRight className="w-5 h-5" />
-            </Button>
+            <p className="text-[10px] text-center text-muted-foreground">
+              Powered by licensed travel partners · Final price confirmed before payment
+            </p>
           </div>
         </div>
       </div>
