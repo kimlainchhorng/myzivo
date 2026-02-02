@@ -89,6 +89,12 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
+// Support pages
+const Help = lazy(() => import("./pages/Help"));
+const TravelBookingsSupport = lazy(() => import("./pages/support/TravelBookings"));
+const SiteIssuesSupport = lazy(() => import("./pages/support/SiteIssues"));
+const PartnerOverview = lazy(() => import("./pages/partner/Overview"));
+
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
 const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
@@ -97,6 +103,8 @@ const TravelAdminDashboard = lazy(() => import("./pages/admin/TravelAdminDashboa
 const TravelPartnersPage = lazy(() => import("./pages/admin/TravelPartnersPage"));
 const TravelHandoffPage = lazy(() => import("./pages/admin/TravelHandoffPage"));
 const TravelLogsPage = lazy(() => import("./pages/admin/TravelLogsPage"));
+const AdminQA = lazy(() => import("./pages/admin/AdminQA"));
+const AdminCompliance = lazy(() => import("./pages/admin/AdminCompliance"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -313,6 +321,28 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                {/* Admin QA & Compliance */}
+                <Route
+                  path="/admin/qa"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminQA />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/compliance"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminCompliance />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Public Support Pages */}
+                <Route path="/help" element={<Help />} />
+                <Route path="/support/travel-bookings" element={<TravelBookingsSupport />} />
+                <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
+                <Route path="/partner/overview" element={<PartnerOverview />} />
                 {/* Outbound redirect for affiliate tracking */}
                 <Route path="/out" element={<OutboundRedirect />} />
                 {/* Tracking test page (hidden from nav) */}
