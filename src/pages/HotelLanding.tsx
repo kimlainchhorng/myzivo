@@ -13,16 +13,18 @@ import { InternalLinkGrid } from "@/components/seo";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { HOTEL_DISCLAIMERS, HOTEL_TRUST_BADGES } from "@/config/hotelCompliance";
+import { heroPhotos, serviceOverlays, destinationPhotos } from "@/config/photos";
 
+// Use real destination photos
 const popularCities = [
-  { city: "New York", country: "USA", image: "🗽", hotels: 2450, avgPrice: 189 },
-  { city: "Paris", country: "France", image: "🗼", hotels: 1890, avgPrice: 165 },
-  { city: "London", country: "UK", image: "🎡", hotels: 1980, avgPrice: 175 },
-  { city: "Tokyo", country: "Japan", image: "🏯", hotels: 2100, avgPrice: 142 },
-  { city: "Dubai", country: "UAE", image: "🌴", hotels: 1250, avgPrice: 225 },
-  { city: "Barcelona", country: "Spain", image: "⛪", hotels: 1120, avgPrice: 135 },
-  { city: "Miami", country: "USA", image: "🏖️", hotels: 890, avgPrice: 168 },
-  { city: "Sydney", country: "Australia", image: "🦘", hotels: 890, avgPrice: 168 },
+  { city: "New York", country: "USA", cityKey: "new-york" as const, hotels: 2450, avgPrice: 189 },
+  { city: "Paris", country: "France", cityKey: "paris" as const, hotels: 1890, avgPrice: 165 },
+  { city: "London", country: "UK", cityKey: "london" as const, hotels: 1980, avgPrice: 175 },
+  { city: "Tokyo", country: "Japan", cityKey: "tokyo" as const, hotels: 2100, avgPrice: 142 },
+  { city: "Dubai", country: "UAE", cityKey: "dubai" as const, hotels: 1250, avgPrice: 225 },
+  { city: "Barcelona", country: "Spain", cityKey: "barcelona" as const, hotels: 1120, avgPrice: 135 },
+  { city: "Miami", country: "USA", cityKey: "miami" as const, hotels: 890, avgPrice: 168 },
+  { city: "Sydney", country: "Australia", cityKey: "sydney" as const, hotels: 890, avgPrice: 168 },
 ];
 
 const trustBadges = [
@@ -46,6 +48,8 @@ export default function HotelLanding() {
     ? `Find the best hotel deals in ${formattedCity}. Compare prices from Booking.com, Expedia, Hotels.com and more. No booking fees on ZIVO.`
     : "Compare hotel prices from 500+ trusted travel partners. Find the best rates on hotels worldwide. No booking fees on ZIVO.";
 
+  const heroImage = heroPhotos.hotels;
+
   const handleSearch = () => {
     if (destination) {
       navigate(`/book-hotel?destination=${encodeURIComponent(destination)}`);
@@ -60,26 +64,40 @@ export default function HotelLanding() {
       <Header />
       
       <main className="pt-16">
-        {/* Hero Section */}
+        {/* Hero Section with Photo Background */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
-          <div className="absolute inset-0 bg-hotels-light" />
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <img
+              src={heroImage.src}
+              alt={heroImage.alt}
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+            />
+            {/* Gradient Overlay */}
+            <div className={cn("absolute inset-0 bg-gradient-to-b", serviceOverlays.hotels)} />
+            {/* Additional depth */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.4)_100%)]" />
+            {/* Bottom fade */}
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background via-background/80 to-transparent" />
+          </div>
           
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-hotels/10 border border-hotels/20 text-sm font-medium mb-6">
-                <Hotel className="w-4 h-4 text-hotels" />
-                <span className="text-muted-foreground">Compare hotel prices</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-white">
+                <Hotel className="w-4 h-4 text-amber-400" />
+                <span className="text-white/80">Compare hotel prices</span>
               </div>
               
-              <h1 className="text-display mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
                 {formattedCity ? (
-                  <>Hotels in <span className="text-hotels">{formattedCity}</span></>
+                  <>Hotels in <span className="text-amber-400">{formattedCity}</span></>
                 ) : (
-                  <>Find the <span className="text-hotels">Best Hotel Deals</span></>
+                  <>Find the <span className="text-amber-400">Best Hotel Deals</span></>
                 )}
               </h1>
               
-              <p className="text-body-lg text-muted-foreground mb-8">
+              <p className="text-lg text-white/80 mb-8">
                 Compare prices from Booking.com, Expedia, Hotels.com and 500+ trusted partners. No booking fees on ZIVO.
               </p>
 
@@ -109,8 +127,8 @@ export default function HotelLanding() {
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
-                <div key={badge.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <badge.icon className="w-4 h-4 text-hotels" />
+                <div key={badge.text} className="flex items-center gap-2 text-sm text-white/70">
+                  <badge.icon className="w-4 h-4 text-amber-400" />
                   <span>{badge.text}</span>
                 </div>
               ))}
@@ -127,25 +145,42 @@ export default function HotelLanding() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {popularCities.map((dest, index) => (
-                <Link
-                  key={dest.city}
-                  to={`/hotels/in-${dest.city.toLowerCase().replace(/\s+/g, "-")}`}
-                  className={cn(
-                    "group p-4 rounded-2xl border border-border/50 bg-card/50",
-                    "hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10",
-                    "transition-all duration-300 hover:-translate-y-1"
-                  )}
-                >
-                  <div className="text-4xl mb-3 group-hover:scale-110 transition-transform">{dest.image}</div>
-                  <h3 className="font-bold group-hover:text-amber-400 transition-colors">{dest.city}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{dest.country}</p>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{dest.hotels.toLocaleString()} hotels</span>
-                    <span className="font-bold text-amber-400">From ${dest.avgPrice}</span>
-                  </div>
-                </Link>
-              ))}
+              {popularCities.map((dest) => {
+                const photo = destinationPhotos[dest.cityKey];
+                return (
+                  <Link
+                    key={dest.city}
+                    to={`/hotels/in-${dest.city.toLowerCase().replace(/\s+/g, "-")}`}
+                    className={cn(
+                      "group rounded-2xl border border-border/50 bg-card overflow-hidden",
+                      "hover:border-amber-500/50 hover:shadow-lg hover:shadow-amber-500/10",
+                      "transition-all duration-300 hover:-translate-y-1"
+                    )}
+                  >
+                    {/* Destination Photo */}
+                    <div className="relative aspect-square overflow-hidden">
+                      <img
+                        src={photo?.src || `https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?w=400&h=400&fit=crop&q=75&fm=webp`}
+                        alt={photo?.alt || `Hotels in ${dest.city}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <div className="absolute bottom-3 left-3 right-3">
+                        <h3 className="font-bold text-white group-hover:text-amber-300 transition-colors">{dest.city}</h3>
+                        <p className="text-xs text-white/70">{dest.country}</p>
+                      </div>
+                    </div>
+                    {/* Info */}
+                    <div className="p-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{dest.hotels.toLocaleString()} hotels</span>
+                        <span className="font-bold text-amber-500">From ${dest.avgPrice}</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
