@@ -1,8 +1,12 @@
+/**
+ * NoCarsFound Component
+ * LOCKED COMPLIANCE: Uses carCompliance.ts for all text
+ */
 import { Car, Search, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { CAR_CTA_TEXT, CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 interface NoCarsFoundProps {
   onModifySearch?: () => void;
@@ -66,11 +70,11 @@ export default function NoCarsFound({
             onClick={handleSearchPartner}
           >
             <Car className="w-5 h-5" />
-            Search All Cars
+            {CAR_CTA_TEXT.viewDeal}
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground mt-3">
-            {AFFILIATE_DISCLOSURE_TEXT.short}
+            {CAR_DISCLAIMERS.partnerBookingShort}
           </p>
         </div>
       </div>
