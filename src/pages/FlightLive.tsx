@@ -150,15 +150,16 @@ export default function FlightLive() {
               confirmed at checkout.
             </span>
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            onClick={handleOpenNewTab}
+          {/* Use anchor tag to avoid popup blockers */}
+          <a
+            href={whitelabelUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-md bg-background hover:bg-accent transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
-            Open in New Tab
-          </Button>
+            View Live Results
+          </a>
         </div>
       </div>
 
@@ -166,7 +167,7 @@ export default function FlightLive() {
       <div className="container mx-auto px-4 py-3 bg-muted/30 border-b">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-medium text-muted-foreground">Debug: White-label URL</p>
+            <p className="text-xs font-medium text-muted-foreground">Debug: Live URL (Marker: {MARKER})</p>
             <span className={`text-xs px-2 py-0.5 rounded ${
               iframeStatus === "loaded" ? "bg-emerald-500/20 text-emerald-500" :
               iframeStatus === "blocked" ? "bg-amber-500/20 text-amber-500" :
@@ -191,7 +192,7 @@ export default function FlightLive() {
             className="text-xs text-sky-500 hover:underline inline-flex items-center gap-1"
           >
             <ExternalLink className="w-3 h-3" />
-            Open live results directly
+            {whitelabelUrl}
           </a>
         </div>
       </div>
