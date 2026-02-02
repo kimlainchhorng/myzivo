@@ -48,7 +48,23 @@ export { default as destOrlando } from "./dest-orlando.jpg";
 export { default as destSanDiego } from "./dest-sandiego.jpg";
 export { default as destCancun } from "./dest-cancun.jpg";
 export { default as destPhoenix } from "./dest-phoenix.jpg";
+export { default as destLasVegas } from "./dest-lasvegas.jpg";
+export { default as destChicago } from "./dest-chicago.jpg";
+export { default as destLosAngeles } from "./dest-losangeles.jpg";
+export { default as destSanFrancisco } from "./dest-sanfrancisco.jpg";
+export { default as destDallas } from "./dest-dallas.jpg";
+export { default as destAtlanta } from "./dest-atlanta.jpg";
 
+// ==========================================
+// CAR CATEGORY IMAGES (4:3 aspect ratio)
+// ==========================================
+export { default as carEconomy } from "./car-economy.jpg";
+export { default as carCompact } from "./car-compact.jpg";
+export { default as carMidsize } from "./car-midsize.jpg";
+export { default as carSuv } from "./car-suv.jpg";
+export { default as carLuxury } from "./car-luxury.jpg";
+export { default as carVan } from "./car-van.jpg";
+export { default as carElectric } from "./car-electric.jpg";
 // ==========================================
 // LIFESTYLE IMAGES
 // ==========================================
@@ -97,7 +113,19 @@ export { default as hotelMountainLodge } from "./hotel-mountain-lodge.jpg";
 export { default as hotelBoutique } from "./hotel-boutique.jpg";
 export { default as hotelRoomLuxury } from "./hotel-room-luxury.jpg";
 export { default as hotelSpa } from "./hotel-spa.jpg";
+export { default as hotelLuxury } from "./hotel-luxury.jpg";
+export { default as hotelBudget } from "./hotel-budget.jpg";
+export { default as hotelApartment } from "./hotel-apartment.jpg";
+export { default as hotelResort } from "./hotel-resort.jpg";
+export { default as hotelBusiness } from "./hotel-business.jpg";
 
+// ==========================================
+// CABIN CLASS IMAGES (4:3 aspect ratio)
+// ==========================================
+export { default as cabinEconomy } from "./cabin-economy.jpg";
+export { default as cabinPremiumEconomy } from "./cabin-premium-economy.jpg";
+export { default as cabinBusiness } from "./cabin-business.jpg";
+export { default as cabinFirst } from "./cabin-first.jpg";
 // ==========================================
 // OG/SOCIAL IMAGES
 // ==========================================
