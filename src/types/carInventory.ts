@@ -44,7 +44,8 @@ export interface CarSearchFilters {
   maxMileage: number | null;
   fuel: string | null;
   transmission: string | null;
-  location: string | null;
+  locationCity: string | null;
+  locationState: string | null;
 }
 
 export const initialCarSearchFilters: CarSearchFilters = {
@@ -57,8 +58,17 @@ export const initialCarSearchFilters: CarSearchFilters = {
   maxMileage: null,
   fuel: null,
   transmission: null,
-  location: null,
+  locationCity: null,
+  locationState: null,
 };
+
+export const usStateOptions = [
+  { value: 'CA', label: 'California' },
+  { value: 'NY', label: 'New York' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'IL', label: 'Illinois' },
+];
 
 export const fuelTypeOptions = [
   { value: 'gasoline', label: 'Gasoline' },

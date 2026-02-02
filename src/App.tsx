@@ -228,7 +228,7 @@ const App = () => (
                 <Route path="/rent-car" element={<CarRentalBooking />} />
                 <Route path="/rent-car/results" element={<CarResultsPage />} />
                 <Route path="/rent-car/:city" element={<CarRentalLanding />} />
-                <Route path="/car-search" element={<CarSearch />} />
+                <Route path="/cars/search" element={<CarSearch />} />
                 
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/trips" element={<TripHistory />} />

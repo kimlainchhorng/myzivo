@@ -165,8 +165,11 @@ export function useCarInventory() {
     if (filters.transmission) {
       query = query.eq("transmission", filters.transmission);
     }
-    if (filters.location) {
-      query = query.or(`location_city.ilike.%${filters.location}%,location_state.ilike.%${filters.location}%`);
+    if (filters.locationCity) {
+      query = query.ilike('location_city', `%${filters.locationCity}%`);
+    }
+    if (filters.locationState) {
+      query = query.eq('location_state', filters.locationState);
     }
     
     const { data, error } = await query;
