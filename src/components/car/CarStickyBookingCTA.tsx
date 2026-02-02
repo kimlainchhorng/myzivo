@@ -1,9 +1,13 @@
+/**
+ * CarStickyBookingCTA Component
+ * LOCKED COMPLIANCE: Uses carCompliance.ts for all text
+ */
 import { ExternalLink, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
 import { useCTAText, useCTAColor, useStickyCTA } from "@/hooks/useABTest";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 interface CarStickyBookingCTAProps {
   className?: string;
@@ -96,7 +100,7 @@ export default function CarStickyBookingCTA({
 
         {/* Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {AFFILIATE_DISCLOSURE_TEXT.short}
+          {CAR_DISCLAIMERS.partnerBookingShort}
         </p>
       </div>
     </div>

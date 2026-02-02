@@ -1,10 +1,14 @@
+/**
+ * CarTopSearchCTA Component
+ * LOCKED COMPLIANCE: Uses carCompliance.ts for all text
+ */
 import { ExternalLink, Sparkles, Search, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCarRedirect } from "@/hooks/useAffiliateRedirect";
 import { useCTAText, useCTAColor } from "@/hooks/useABTest";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
+import { CAR_DISCLAIMERS } from "@/config/carCompliance";
 
 interface CarTopSearchCTAProps {
   pickupLocation?: string;
@@ -91,7 +95,7 @@ export default function CarTopSearchCTA({
             <ExternalLink className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">
-            {AFFILIATE_DISCLOSURE_TEXT.short}
+            {CAR_DISCLAIMERS.partnerBookingShort}
           </p>
         </div>
       </div>
