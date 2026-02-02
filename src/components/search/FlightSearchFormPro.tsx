@@ -168,7 +168,9 @@ export default function FlightSearchFormPro({
 
   // Build white label URL for live results
   const buildWhitelabelUrl = (fromCode: string, toCode: string) => {
-    const marker = '618730';
+    // NOTE: Marker is not a secret (affiliate ID), safe to keep client-side.
+    // Keep in sync with TRAVELPAYOUTS_MARKER used server-side.
+    const marker = '700031';
     const base = 'https://search.jetradar.com/flights';
     
     const cabinMap: Record<string, string> = {
@@ -179,8 +181,8 @@ export default function FlightSearchFormPro({
     };
     
     const urlParams = new URLSearchParams({
-      origin_iata: fromCode,
-      destination_iata: toCode,
+      origin_iata: fromCode.toUpperCase(),
+      destination_iata: toCode.toUpperCase(),
       depart_date: departDate ? format(departDate, "yyyy-MM-dd") : "",
       adults: String(passengers),
       trip_class: cabinMap[cabin] || 'Y',
