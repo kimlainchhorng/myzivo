@@ -564,6 +564,7 @@ const FlightResults = () => {
                     onFilterChange={updateFilters}
                     availableAirlines={availableAirlines}
                     currency={currency}
+                    onClearAll={clearFilters}
                   />
                 </DesktopFiltersSidebar>
               }
@@ -740,6 +741,7 @@ const FlightResults = () => {
           onFilterChange={updateFilters}
           availableAirlines={availableAirlines}
           currency={currency}
+          onClearAll={clearFilters}
         />
       </FiltersSheet>
 
