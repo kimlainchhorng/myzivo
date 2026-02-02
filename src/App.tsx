@@ -61,6 +61,10 @@ const HotelsPage = lazy(() => import("./pages/HotelsPage"));
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
 const CarResultsPage = lazy(() => import("./pages/CarResultsPage"));
 const CarRentalLanding = lazy(() => import("./pages/CarRentalLanding"));
+const CarDetailPage = lazy(() => import("./pages/CarDetailPage"));
+const CarTravelerInfoPage = lazy(() => import("./pages/CarTravelerInfoPage"));
+const CarCheckoutPage = lazy(() => import("./pages/CarCheckoutPage"));
+const CarConfirmationPage = lazy(() => import("./pages/CarConfirmationPage"));
 const CarSearch = lazy(() => import("./pages/CarSearch"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PackageDelivery = lazy(() => import("./pages/PackageDelivery"));
@@ -227,6 +231,10 @@ const App = () => (
                 <Route path="/car-rental/in-:location" element={<CarRentalLanding />} />
                 <Route path="/rent-car" element={<CarRentalBooking />} />
                 <Route path="/rent-car/results" element={<CarResultsPage />} />
+                <Route path="/rent-car/detail" element={<CarDetailPage />} />
+                <Route path="/rent-car/traveler-info" element={<CarTravelerInfoPage />} />
+                <Route path="/rent-car/checkout" element={<CarCheckoutPage />} />
+                <Route path="/rent-car/confirmation" element={<CarConfirmationPage />} />
                 <Route path="/rent-car/:city" element={<CarRentalLanding />} />
                 <Route path="/cars/search" element={<CarSearch />} />
                 
