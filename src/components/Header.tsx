@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
+import BetaBadge from "./shared/BetaBadge";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -30,11 +31,14 @@ const Header = () => {
         <div className="container mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
-            <div 
-              className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
-              onClick={() => navigate("/")}
-            >
-              <ZivoLogo size="md" />
+            <div className="flex items-center gap-2">
+              <div 
+                className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
+                onClick={() => navigate("/")}
+              >
+                <ZivoLogo size="md" />
+              </div>
+              <BetaBadge variant="compact" className="hidden sm:flex" />
             </div>
 
             {/* Desktop Navigation - Mega Menus */}
