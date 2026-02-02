@@ -20,7 +20,7 @@ const quickActions = [
   { id: "cars", label: "Cars", icon: CarFront, href: "/rent-car", color: "bg-cars" },
   { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides" },
   { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats" },
-  { id: "more", label: "Extras", icon: Sparkles, href: "/extras", color: "bg-more" },
+  { id: "p2p", label: "P2P Cars", icon: CarFront, href: "/p2p/search", color: "bg-primary" },
 ];
 
 // Popular destinations
@@ -140,6 +140,23 @@ const AppHome = () => {
               </button>
             ))}
           </div>
+        </section>
+
+        {/* Rent from Owners CTA */}
+        <section className="px-4">
+          <button
+            onClick={() => navigate("/p2p/search")}
+            className="w-full p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center">
+              <CarFront className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1 text-left">
+              <h3 className="font-bold text-primary">Rent from Local Owners</h3>
+              <p className="text-sm text-muted-foreground">Skip the counter, book unique cars</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-primary" />
+          </button>
         </section>
 
         {/* Travel Extras Mini Row */}

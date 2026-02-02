@@ -143,6 +143,17 @@ export default function PrimaryServicesSection() {
                     {service.cta}
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
+                  
+                  {/* P2P Link for Cars */}
+                  {service.id === "cars" && (
+                    <Link 
+                      to="/p2p/search" 
+                      onClick={(e) => e.stopPropagation()}
+                      className="block mt-3 text-center text-sm text-primary hover:underline font-medium"
+                    >
+                      Or rent from local owners →
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             </Link>
