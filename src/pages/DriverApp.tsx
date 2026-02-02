@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +23,9 @@ import {
   Shield,
   Target,
   Award,
-  ChevronRight
+  ChevronRight,
+  WifiOff,
+  Wallet
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -34,31 +36,67 @@ import {
   useToggleOnlineStatus,
   useAcceptTrip,
   useUpdateDriverTripStatus,
-  useDriverEarnings
+  useDriverEarnings as useDriverEarningsLegacy
 } from "@/hooks/useDriverApp";
 import { useDriverTripRealtime } from "@/hooks/useTripRealtime";
+import { useDriverState } from "@/hooks/useDriverState";
+import { useJobDispatch, IncomingJob } from "@/hooks/useJobDispatch";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { LocationService, LocationCoordinates } from "@/services/LocationService";
 import DriverTripCard from "@/components/driver/DriverTripCard";
 import ActiveTripPanel from "@/components/driver/ActiveTripPanel";
+import { JobRequestModal } from "@/components/driver/JobRequestModal";
+import { ServiceToggles } from "@/components/driver/ServiceToggles";
+import { EatsDeliveryPanel, EatsDeliveryStatus } from "@/components/driver/EatsDeliveryPanel";
+import { MoveDeliveryPanel, MoveDeliveryStatus } from "@/components/driver/MoveDeliveryPanel";
+import { DriverEarningsTab } from "@/components/driver/DriverEarningsTab";
+import { DriverPayoutsTab } from "@/components/driver/DriverPayoutsTab";
 import { TripStatus } from "@/hooks/useTrips";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
 import NotificationCenter from "@/components/NotificationCenter";
-// CSS animations used instead of framer-motion for performance
 import { cn } from "@/lib/utils";
 
 const DriverApp = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("requests");
+  const [driverLocation, setDriverLocation] = useState<LocationCoordinates | null>(null);
 
   // Fetch driver data
   const { data: driver, isLoading: driverLoading } = useCurrentDriver(user?.id);
   const { data: availableTrips, isLoading: tripsLoading } = useAvailableTripRequests(driver?.is_online && driver?.status === "verified");
   const { data: activeTrip } = useDriverActiveTrip(driver?.id);
   const { data: tripHistory } = useDriverTripHistory(driver?.id);
-  const { data: earnings } = useDriverEarnings(driver?.id);
+  const { data: earnings } = useDriverEarningsLegacy(driver?.id);
+
+  // Native hooks for persistent state and real-time dispatch
+  const driverState = useDriverState(driver?.id);
+  const { isOnline: networkOnline } = useNetworkStatus();
+
+  // Job dispatch system
+  const {
+    incomingJob,
+    timeRemaining,
+    isAccepting,
+    isDeclining,
+    acceptJob,
+    declineJob,
+  } = useJobDispatch({
+    driverId: driver?.id,
+    isOnline: driver?.is_online ?? false,
+    enabledServices: driverState.enabledServices,
+    driverLocation,
+    onJobAccepted: (job) => {
+      driverState.setActiveJob({
+        id: job.id,
+        type: job.type,
+        status: 'accepted',
+      });
+    },
+  });
 
   // Mutations
   const toggleOnline = useToggleOnlineStatus();
@@ -68,32 +106,52 @@ const DriverApp = () => {
   // Enable realtime for driver trips
   useDriverTripRealtime(driver?.id);
 
+  // Initialize location tracking when online
+  useEffect(() => {
+    if (!driver?.is_online) return;
+
+    const initLocation = async () => {
+      const hasPermission = await LocationService.requestPermissions();
+      if (hasPermission) {
+        const position = await LocationService.getCurrentPosition();
+        if (position) {
+          setDriverLocation(position);
+        }
+        
+        // Start continuous tracking
+        await LocationService.startTracking((position) => {
+          setDriverLocation(position);
+        });
+      }
+    };
+
+    initLocation();
+
+    return () => {
+      LocationService.stopTracking();
+    };
+  }, [driver?.is_online]);
+
   // Get user location when going online
   const handleToggleOnline = async () => {
     if (!driver) return;
 
     if (!driver.is_online) {
       // Going online - get location
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            toggleOnline.mutate({
-              driverId: driver.id,
-              isOnline: true,
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
-          },
-          () => {
-            // Location denied, still go online
-            toggleOnline.mutate({ driverId: driver.id, isOnline: true });
-          }
-        );
+      const position = await LocationService.getCurrentPosition();
+      if (position) {
+        toggleOnline.mutate({
+          driverId: driver.id,
+          isOnline: true,
+          lat: position.lat,
+          lng: position.lng,
+        });
       } else {
         toggleOnline.mutate({ driverId: driver.id, isOnline: true });
       }
     } else {
       toggleOnline.mutate({ driverId: driver.id, isOnline: false });
+      LocationService.stopTracking();
     }
   };
 
@@ -105,6 +163,10 @@ const DriverApp = () => {
   const handleUpdateStatus = (status: TripStatus) => {
     if (!activeTrip) return;
     updateTripStatus.mutate({ tripId: activeTrip.id, status });
+  };
+
+  const handleServiceToggle = async (service: 'rides' | 'eats' | 'move', enabled: boolean) => {
+    await driverState.setEnabledServices({ [service]: enabled });
   };
 
   // Loading state
@@ -231,34 +293,103 @@ const DriverApp = () => {
     );
   }
 
-  // Has active trip - show trip panel
-  if (activeTrip) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex items-center justify-between max-w-lg mx-auto">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
-                <Navigation className="w-5 h-5 text-white" />
+  // Has active trip - show trip panel based on job type
+  if (activeTrip || driverState.activeJob) {
+    const jobType = driverState.activeJob?.type || 'ride';
+    
+    // For Eats deliveries
+    if (jobType === 'eats' && driverState.activeJob) {
+      // TODO: Fetch full eats order data
+      return (
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                  <Navigation className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold">Eats Delivery</h1>
+                  <p className="text-xs text-muted-foreground">In progress</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold">Active Trip</h1>
-                <p className="text-xs text-muted-foreground">In progress</p>
-              </div>
+              <Badge variant="default" className="capitalize bg-gradient-to-r from-orange-500 to-amber-500 border-0 shadow-lg">
+                {driverState.activeJob.status?.replace("_", " ")}
+              </Badge>
             </div>
-            <Badge variant="default" className="capitalize bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg">
-              {activeTrip.status?.replace("_", " ")}
-            </Badge>
+          </div>
+          <div className="p-4">
+            <Card className="border-0 bg-card/90 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">Eats delivery panel loading...</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <ActiveTripPanel 
-          trip={activeTrip} 
-          driverId={driver.id}
-          onUpdateStatus={handleUpdateStatus}
-          isUpdating={updateTripStatus.isPending}
-        />
-      </div>
-    );
+      );
+    }
+
+    // For Move deliveries
+    if (jobType === 'move' && driverState.activeJob) {
+      // TODO: Fetch full move delivery data
+      return (
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <Navigation className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold">Move Delivery</h1>
+                  <p className="text-xs text-muted-foreground">In progress</p>
+                </div>
+              </div>
+              <Badge variant="default" className="capitalize bg-gradient-to-r from-purple-500 to-indigo-500 border-0 shadow-lg">
+                {driverState.activeJob.status?.replace("_", " ")}
+              </Badge>
+            </div>
+          </div>
+          <div className="p-4">
+            <Card className="border-0 bg-card/90 shadow-xl">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">Move delivery panel loading...</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+
+    // Default: Ride trip panel
+    if (activeTrip) {
+      return (
+        <div className="min-h-screen bg-background flex flex-col">
+          <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center justify-between max-w-lg mx-auto">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30">
+                  <Navigation className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h1 className="font-bold">Active Trip</h1>
+                  <p className="text-xs text-muted-foreground">In progress</p>
+                </div>
+              </div>
+              <Badge variant="default" className="capitalize bg-gradient-to-r from-primary to-teal-400 border-0 shadow-lg">
+                {activeTrip.status?.replace("_", " ")}
+              </Badge>
+            </div>
+          </div>
+          <ActiveTripPanel 
+            trip={activeTrip} 
+            driverId={driver.id}
+            onUpdateStatus={handleUpdateStatus}
+            isUpdating={updateTripStatus.isPending}
+          />
+        </div>
+      );
+    }
   }
 
   return (
@@ -267,6 +398,24 @@ const DriverApp = () => {
       <div className="fixed inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40 pointer-events-none" />
       <div className="fixed top-1/4 right-0 w-[300px] h-[300px] md:w-[400px] md:h-[400px] bg-gradient-to-bl from-emerald-500/10 to-green-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-0 w-[200px] h-[200px] md:w-[300px] md:h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Offline Banner */}
+      {!networkOnline && (
+        <div className="bg-destructive/90 text-white py-2 px-4 flex items-center justify-center gap-2 text-sm">
+          <WifiOff className="w-4 h-4" />
+          <span>You're offline. Actions will sync when connection is restored.</span>
+        </div>
+      )}
+
+      {/* Job Request Modal */}
+      <JobRequestModal
+        job={incomingJob}
+        timeRemaining={timeRemaining}
+        isAccepting={isAccepting}
+        isDeclining={isDeclining}
+        onAccept={acceptJob}
+        onDecline={declineJob}
+      />
       
       {/* Premium Header */}
       <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -351,6 +500,17 @@ const DriverApp = () => {
 
       {/* Content */}
       <div className="max-w-lg mx-auto p-4 space-y-5 relative z-10">
+        {/* Service Toggles - Show when online */}
+        {driver.is_online && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <ServiceToggles
+              enabledServices={driverState.enabledServices}
+              onToggle={handleServiceToggle}
+              disabled={driverState.isLoading}
+            />
+          </div>
+        )}
+
         {/* Earnings Summary - Premium Design */}
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -437,109 +597,131 @@ const DriverApp = () => {
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ animationDelay: '200ms' }}>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full grid grid-cols-2 h-14 p-1.5 rounded-2xl bg-muted/50 mb-5">
+              <TabsList className="w-full grid grid-cols-4 h-14 p-1.5 rounded-2xl bg-muted/50 mb-5">
                 <TabsTrigger 
                   value="requests" 
-                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-2 font-semibold"
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-1 font-semibold text-xs"
                 >
-                  <Navigation className="w-4 h-4" />
-                  Requests
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Requests</span>
                   {availableTrips && availableTrips.length > 0 && (
-                    <span className="ml-1 px-2 py-0.5 text-xs bg-white/20 rounded-full">
+                    <span className="ml-0.5 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full">
                       {availableTrips.length}
                     </span>
                   )}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="history" 
-                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-2 font-semibold"
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-1 font-semibold text-xs"
                 >
-                  <History className="w-4 h-4" />
-                  History
+                  <History className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">History</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="earnings" 
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-1 font-semibold text-xs"
+                >
+                  <DollarSign className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Earnings</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="payouts" 
+                  className="rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-teal-400 data-[state=active]:text-white data-[state=active]:shadow-lg gap-1 font-semibold text-xs"
+                >
+                  <Wallet className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Payouts</span>
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="requests" className="mt-0 space-y-4">
-                  {tripsLoading ? (
-                    <>
-                      <Skeleton className="h-32 w-full rounded-2xl" />
-                      <Skeleton className="h-32 w-full rounded-2xl" />
-                    </>
-                  ) : availableTrips && availableTrips.length > 0 ? (
-                    availableTrips.map((trip, index) => (
-                      <div
-                        key={trip.id}
-                        className="animate-in fade-in slide-in-from-left-4 duration-300"
-                        style={{ animationDelay: `${index * 75}ms` }}
-                      >
-                        <DriverTripCard
-                          trip={trip}
-                          onAccept={() => handleAcceptTrip(trip.id)}
-                          isAccepting={acceptTrip.isPending}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="animate-in fade-in zoom-in-95 duration-300">
-                      <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-                        <CardContent className="p-10 text-center">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '3s' }}>
-                            <MapPin className="w-8 h-8 text-primary" />
-                          </div>
-                          <h3 className="font-bold text-lg mb-2">Waiting for trips...</h3>
-                          <p className="text-muted-foreground text-sm">
-                            Stay online to receive trip requests from nearby riders
-                          </p>
-                        </CardContent>
-                      </Card>
+                {tripsLoading ? (
+                  <>
+                    <Skeleton className="h-32 w-full rounded-2xl" />
+                    <Skeleton className="h-32 w-full rounded-2xl" />
+                  </>
+                ) : availableTrips && availableTrips.length > 0 ? (
+                  availableTrips.map((trip, index) => (
+                    <div
+                      key={trip.id}
+                      className="animate-in fade-in slide-in-from-left-4 duration-300"
+                      style={{ animationDelay: `${index * 75}ms` }}
+                    >
+                      <DriverTripCard
+                        trip={trip}
+                        onAccept={() => handleAcceptTrip(trip.id)}
+                        isAccepting={acceptTrip.isPending}
+                      />
                     </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="history" className="mt-0 space-y-4">
-                  {tripHistory && tripHistory.length > 0 ? (
-                    tripHistory.slice(0, 10).map((trip, index) => (
-                      <div
-                        key={trip.id}
-                        className="animate-in fade-in slide-in-from-left-4 duration-300"
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
-                          <CardContent className="p-5">
-                            <div className="flex items-center justify-between mb-3">
-                              <Badge variant={trip.status === "completed" ? "default" : "secondary"} className={trip.status === "completed" ? "bg-gradient-to-r from-emerald-500 to-green-500 border-0" : ""}>
-                                {trip.status}
-                              </Badge>
-                              <span className="font-bold text-lg">${trip.fare_amount?.toFixed(2)}</span>
-                            </div>
-                            <div className="space-y-2 text-sm">
-                              <div className="flex items-start gap-2">
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 ring-4 ring-emerald-500/20" />
-                                <span className="text-muted-foreground line-clamp-1">{trip.pickup_address}</span>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <div className="w-2.5 h-2.5 rounded-sm bg-foreground mt-1.5 ring-4 ring-foreground/10" />
-                                <span className="text-muted-foreground line-clamp-1">{trip.dropoff_address}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    ))
-                  ) : (
+                  ))
+                ) : (
+                  <div className="animate-in fade-in zoom-in-95 duration-300">
                     <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                       <CardContent className="p-10 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                          <History className="w-8 h-8 text-muted-foreground" />
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center mx-auto mb-4 animate-bounce" style={{ animationDuration: '3s' }}>
+                          <MapPin className="w-8 h-8 text-primary" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">No trip history</h3>
+                        <h3 className="font-bold text-lg mb-2">Waiting for trips...</h3>
                         <p className="text-muted-foreground text-sm">
-                          Your completed trips will appear here
+                          Stay online to receive trip requests from nearby riders
                         </p>
                       </CardContent>
                     </Card>
-                  )}
-                </TabsContent>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="history" className="mt-0 space-y-4">
+                {tripHistory && tripHistory.length > 0 ? (
+                  tripHistory.slice(0, 10).map((trip, index) => (
+                    <div
+                      key={trip.id}
+                      className="animate-in fade-in slide-in-from-left-4 duration-300"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-lg hover:shadow-xl transition-all">
+                        <CardContent className="p-5">
+                          <div className="flex items-center justify-between mb-3">
+                            <Badge variant={trip.status === "completed" ? "default" : "secondary"} className={trip.status === "completed" ? "bg-gradient-to-r from-emerald-500 to-green-500 border-0" : ""}>
+                              {trip.status}
+                            </Badge>
+                            <span className="font-bold text-lg">${trip.fare_amount?.toFixed(2)}</span>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start gap-2">
+                              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 ring-4 ring-emerald-500/20" />
+                              <span className="text-muted-foreground line-clamp-1">{trip.pickup_address}</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <div className="w-2.5 h-2.5 rounded-sm bg-foreground mt-1.5 ring-4 ring-foreground/10" />
+                              <span className="text-muted-foreground line-clamp-1">{trip.dropoff_address}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  ))
+                ) : (
+                  <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
+                    <CardContent className="p-10 text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                        <History className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-bold text-lg mb-2">No trip history</h3>
+                      <p className="text-muted-foreground text-sm">
+                        Your completed trips will appear here
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
+              <TabsContent value="earnings" className="mt-0">
+                <DriverEarningsTab driverId={driver.id} />
+              </TabsContent>
+
+              <TabsContent value="payouts" className="mt-0">
+                <DriverPayoutsTab driverId={driver.id} />
+              </TabsContent>
             </Tabs>
           </div>
         )}

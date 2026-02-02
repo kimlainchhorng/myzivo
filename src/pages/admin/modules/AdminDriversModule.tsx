@@ -1,12 +1,13 @@
 /**
  * Admin Drivers Module
- * CRUD for drivers
+ * CRUD for drivers with service toggles and notification logs
  */
 import { useState } from "react";
 import { format } from "date-fns";
 import { 
   Users, Search, RefreshCw, Phone, Mail, Eye, Plus, 
-  Car, CheckCircle, XCircle, Loader2, Edit, Trash2
+  Car, CheckCircle, XCircle, Loader2, Edit, Trash2,
+  UtensilsCrossed, Package, Bell, BellOff, ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,17 +18,70 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDrivers, useUpdateDriverStatus, type Driver, type DriverStatus } from "@/hooks/useDrivers";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
+interface NotificationLog {
+  id: string;
+  title: string;
+  body: string | null;
+  notification_type: string;
+  sent_at: string | null;
+  delivered_at: string | null;
+  failed_at: string | null;
+  error_message: string | null;
+  platform: string | null;
+}
+
 export default function AdminDriversModule() {
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [notificationLogsOpen, setNotificationLogsOpen] = useState(false);
 
   const { data: drivers, isLoading, refetch } = useDrivers();
   const updateDriverStatus = useUpdateDriverStatus();
+
+  // Fetch notification logs for selected driver
+  const { data: notificationLogs } = useQuery({
+    queryKey: ['driver-notification-logs', selectedDriver?.id],
+    queryFn: async () => {
+      if (!selectedDriver?.id) return [];
+      const { data, error } = await supabase
+        .from('driver_notification_logs')
+        .select('*')
+        .eq('driver_id', selectedDriver.id)
+        .order('sent_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data || []) as NotificationLog[];
+    },
+    enabled: !!selectedDriver?.id,
+  });
+
+  // Update service toggles mutation
+  const updateServiceToggles = useMutation({
+    mutationFn: async ({ driverId, field, value }: { driverId: string; field: string; value: boolean }) => {
+      const { error } = await supabase
+        .from('drivers')
+        .update({ [field]: value })
+        .eq('id', driverId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      toast.success('Service toggle updated');
+    },
+    onError: (error: any) => {
+      toast.error('Failed to update', { description: error.message });
+    },
+  });
 
   const filteredDrivers = drivers?.filter(driver => {
     const matchesSearch = !searchQuery || 
@@ -56,6 +110,10 @@ export default function AdminDriversModule() {
       status,
       documents_verified: status === "verified"
     });
+  };
+
+  const handleServiceToggle = (driverId: string, field: string, value: boolean) => {
+    updateServiceToggles.mutate({ driverId, field, value });
   };
 
   const stats = {
@@ -158,6 +216,7 @@ export default function AdminDriversModule() {
                     <th className="text-left p-3 font-medium hidden md:table-cell">Contact</th>
                     <th className="text-left p-3 font-medium hidden lg:table-cell">Vehicle</th>
                     <th className="text-left p-3 font-medium">Status</th>
+                    <th className="text-left p-3 font-medium hidden xl:table-cell">Services</th>
                     <th className="text-left p-3 font-medium hidden md:table-cell">Online</th>
                     <th className="text-left p-3 font-medium">Actions</th>
                   </tr>
@@ -199,6 +258,43 @@ export default function AdminDriversModule() {
                           </SelectContent>
                         </Select>
                       </td>
+                      <td className="p-3 hidden xl:table-cell">
+                        <div className="flex gap-1">
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] cursor-pointer",
+                              (driver as any).rides_enabled !== false ? "text-blue-500 border-blue-500" : "text-gray-400"
+                            )}
+                            onClick={() => handleServiceToggle(driver.id, 'rides_enabled', (driver as any).rides_enabled === false)}
+                          >
+                            <Car className="w-2.5 h-2.5 mr-0.5" />
+                            R
+                          </Badge>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] cursor-pointer",
+                              (driver as any).eats_enabled !== false ? "text-orange-500 border-orange-500" : "text-gray-400"
+                            )}
+                            onClick={() => handleServiceToggle(driver.id, 'eats_enabled', (driver as any).eats_enabled === false)}
+                          >
+                            <UtensilsCrossed className="w-2.5 h-2.5 mr-0.5" />
+                            E
+                          </Badge>
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "text-[10px] cursor-pointer",
+                              (driver as any).move_enabled !== false ? "text-purple-500 border-purple-500" : "text-gray-400"
+                            )}
+                            onClick={() => handleServiceToggle(driver.id, 'move_enabled', (driver as any).move_enabled === false)}
+                          >
+                            <Package className="w-2.5 h-2.5 mr-0.5" />
+                            M
+                          </Badge>
+                        </div>
+                      </td>
                       <td className="p-3 hidden md:table-cell">
                         <Badge variant="outline" className={cn("text-[10px]", driver.is_online ? "text-green-500" : "text-gray-400")}>
                           {driver.is_online ? "Online" : "Offline"}
@@ -233,7 +329,7 @@ export default function AdminDriversModule() {
 
       {/* Driver Detail Dialog */}
       <Dialog open={!!selectedDriver} onOpenChange={() => setSelectedDriver(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Driver Details</DialogTitle>
           </DialogHeader>
@@ -274,7 +370,121 @@ export default function AdminDriversModule() {
                 </div>
               </div>
 
-              <div className="flex justify-end">
+              {/* Service Toggles */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-3 block">Service Toggles</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Car className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm">Rides</span>
+                    </div>
+                    <Switch
+                      checked={(selectedDriver as any).rides_enabled !== false}
+                      onCheckedChange={(checked) => handleServiceToggle(selectedDriver.id, 'rides_enabled', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm">Eats</span>
+                    </div>
+                    <Switch
+                      checked={(selectedDriver as any).eats_enabled !== false}
+                      onCheckedChange={(checked) => handleServiceToggle(selectedDriver.id, 'eats_enabled', checked)}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-purple-500" />
+                      <span className="text-sm">Move</span>
+                    </div>
+                    <Switch
+                      checked={(selectedDriver as any).move_enabled !== false}
+                      onCheckedChange={(checked) => handleServiceToggle(selectedDriver.id, 'move_enabled', checked)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Push Notification Status */}
+              <div className="border-t pt-4">
+                <Label className="text-sm font-medium mb-3 block">Push Notifications</Label>
+                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  {(selectedDriver as any).fcm_token || (selectedDriver as any).apns_token ? (
+                    <>
+                      <Bell className="w-5 h-5 text-green-500" />
+                      <div>
+                        <p className="text-sm font-medium text-green-600">Enabled</p>
+                        <p className="text-xs text-muted-foreground">
+                          Platform: {(selectedDriver as any).device_platform || 'Unknown'}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <BellOff className="w-5 h-5 text-gray-400" />
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Not Configured</p>
+                        <p className="text-xs text-muted-foreground">
+                          Driver has not registered a push token
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Notification Logs */}
+              <Collapsible open={notificationLogsOpen} onOpenChange={setNotificationLogsOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between p-3 h-auto border-t">
+                    <span className="text-sm font-medium">Notification History</span>
+                    <ChevronDown className={cn(
+                      "w-4 h-4 transition-transform",
+                      notificationLogsOpen && "rotate-180"
+                    )} />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <ScrollArea className="h-[200px]">
+                    {notificationLogs && notificationLogs.length > 0 ? (
+                      <div className="space-y-2 p-2">
+                        {notificationLogs.map((log) => (
+                          <div key={log.id} className="p-2 bg-muted/30 rounded-lg text-xs">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="font-medium">{log.title}</span>
+                              <Badge 
+                                variant="outline" 
+                                className={cn(
+                                  "text-[10px]",
+                                  log.delivered_at ? "text-green-500" :
+                                  log.failed_at ? "text-red-500" : "text-amber-500"
+                                )}
+                              >
+                                {log.delivered_at ? "Delivered" : log.failed_at ? "Failed" : "Sent"}
+                              </Badge>
+                            </div>
+                            <p className="text-muted-foreground line-clamp-1">{log.body}</p>
+                            <p className="text-muted-foreground mt-1">
+                              {log.sent_at ? format(new Date(log.sent_at), 'MMM d, h:mm a') : 'N/A'}
+                            </p>
+                            {log.error_message && (
+                              <p className="text-red-500 mt-1">{log.error_message}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground text-sm">
+                        No notifications sent
+                      </div>
+                    )}
+                  </ScrollArea>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <div className="flex justify-end pt-2">
                 <Button variant="outline" onClick={() => setSelectedDriver(null)}>Close</Button>
               </div>
             </div>
