@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { brandedCarModels, BrandedCarModel } from "@/config/photos";
+import { useMemo } from "react";
 
 export interface CarCardData {
   id: string;
@@ -38,26 +40,43 @@ interface CarResultCardProps {
   className?: string;
 }
 
-// Car category images with better fallbacks
-const categoryImages: Record<string, string> = {
-  economy: "🚗",
-  compact: "🚙",
-  midsize: "🚘",
-  fullsize: "🚐",
-  suv: "🚙",
-  luxury: "🏎️",
-  electric: "⚡",
-  van: "🚐",
-  convertible: "🚗",
-  premium: "🏎️",
-  minivan: "🚐",
+// Map car categories to brandedCarModels categories
+const categoryMapping: Record<string, string[]> = {
+  economy: ["compact", "economy"],
+  compact: ["compact"],
+  midsize: ["midsize", "sedan"],
+  fullsize: ["sedan", "luxury"],
+  suv: ["suv"],
+  luxury: ["luxury", "exotic"],
+  electric: ["electric"],
+  van: ["van", "minivan"],
+  convertible: ["luxury", "exotic"],
+  premium: ["luxury"],
+  minivan: ["van", "minivan"],
 };
 
+// Get a branded car image for a category
+function getBrandedCarForCategory(category: string, index: number = 0): BrandedCarModel | null {
+  const categoryKey = category.toLowerCase().split(" ")[0];
+  const mappedCategories = categoryMapping[categoryKey] || [categoryKey];
+  
+  const matchingCars = brandedCarModels.filter(car => 
+    mappedCategories.includes(car.category)
+  );
+  
+  if (matchingCars.length === 0) return null;
+  return matchingCars[index % matchingCars.length];
+}
+
 export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps) {
-  const { format, getDisplay } = useCurrency();
-  const categoryKey = car.category.toLowerCase().split(" ")[0];
-  const carIcon = categoryImages[categoryKey] || "🚗";
+  const { getDisplay } = useCurrency();
   const isElectric = car.category.toLowerCase().includes("electric");
+  
+  // Get a consistent branded car based on the car ID hash
+  const brandedCar = useMemo(() => {
+    const hash = car.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return getBrandedCarForCategory(car.category, hash);
+  }, [car.id, car.category]);
   
   const { formatted: dailyPrice, wasConverted } = getDisplay(car.pricePerDay, "USD");
   const { formatted: totalPriceFormatted } = getDisplay(car.totalPrice, "USD");
@@ -89,9 +108,16 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
 
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
-          {/* LEFT: Car Image/Icon */}
-          <div className="sm:w-52 h-40 sm:h-auto bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center p-6 shrink-0">
-            {car.imageUrl ? (
+          {/* LEFT: Car Image */}
+          <div className="sm:w-52 h-40 sm:h-auto bg-gradient-to-br from-violet-500/10 to-purple-500/10 flex items-center justify-center p-4 shrink-0 relative overflow-hidden">
+            {brandedCar ? (
+              <img
+                src={brandedCar.src}
+                alt={`${brandedCar.brand} ${brandedCar.model}`}
+                className="w-full h-full object-contain max-h-32 transition-transform duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+            ) : car.imageUrl ? (
               <img
                 src={car.imageUrl}
                 alt={car.category}
@@ -99,7 +125,15 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                 loading="lazy"
               />
             ) : (
-              <span className="text-7xl">{car.categoryIcon || carIcon}</span>
+              <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
+                <span className="text-5xl">🚗</span>
+              </div>
+            )}
+            {/* Brand badge */}
+            {brandedCar && (
+              <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-background/80 backdrop-blur-sm rounded text-[10px] font-medium text-muted-foreground">
+                {brandedCar.brand}
+              </div>
             )}
           </div>
 
