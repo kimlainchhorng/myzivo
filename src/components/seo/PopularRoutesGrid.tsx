@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plane, ArrowRight, Sparkles, TrendingUp } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { popularSEORoutes } from "@/utils/seoUtils";
+import { ArrowRight, Sparkles, TrendingUp } from "lucide-react";
+import { getAirlineLogo } from "@/data/airlines";
+
+// Popular routes with a featured airline for each
+const popularSEORoutesWithAirlines = [
+  { from: "new-york", to: "los-angeles", code: { from: "JFK", to: "LAX" }, airline: "AA" },
+  { from: "los-angeles", to: "london", code: { from: "LAX", to: "LHR" }, airline: "BA" },
+  { from: "new-york", to: "london", code: { from: "JFK", to: "LHR" }, airline: "VS" },
+  { from: "san-francisco", to: "tokyo", code: { from: "SFO", to: "NRT" }, airline: "UA" },
+  { from: "chicago", to: "paris", code: { from: "ORD", to: "CDG" }, airline: "AF" },
+  { from: "miami", to: "cancun", code: { from: "MIA", to: "CUN" }, airline: "AA" },
+  { from: "boston", to: "dublin", code: { from: "BOS", to: "DUB" }, airline: "EI" },
+  { from: "seattle", to: "honolulu", code: { from: "SEA", to: "HNL" }, airline: "AS" },
+];
 
 interface PopularRoutesGridProps {
   fromCity?: string;
@@ -16,8 +27,7 @@ export default function PopularRoutesGrid({
   toCity, 
   onSelectRoute 
 }: PopularRoutesGridProps) {
-  // Filter routes based on context
-  const displayRoutes = popularSEORoutes.slice(0, 8);
+  const displayRoutes = popularSEORoutesWithAirlines;
 
   return (
     <div className="space-y-6">
@@ -47,8 +57,12 @@ export default function PopularRoutesGrid({
               <Card className="h-full border-border/50 hover:border-sky-500/50 hover:shadow-lg hover:shadow-sky-500/10 transition-all duration-300 group-hover:-translate-y-1 cursor-pointer">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 flex items-center justify-center shrink-0">
-                      <Plane className="w-5 h-5 text-sky-500 rotate-45" />
+                    <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
+                      <img
+                        src={getAirlineLogo(route.airline, 32)}
+                        alt="Airline logo"
+                        className="w-8 h-8 object-contain"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 text-sm font-bold">
