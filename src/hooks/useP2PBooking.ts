@@ -13,6 +13,29 @@ import { differenceInDays, parseISO } from "date-fns";
 // Re-export for convenience
 export type { BookingWithDetails } from "@/types/p2p";
 
+// Lightweight hook to check P2P vehicle availability in a location
+export function useP2PVehicleCount(city?: string) {
+  return useQuery({
+    queryKey: ["p2pVehicleCount", city],
+    queryFn: async () => {
+      let query = supabase
+        .from("p2p_vehicles")
+        .select("id", { count: "exact", head: true })
+        .eq("approval_status", "approved")
+        .eq("is_available", true);
+
+      if (city) {
+        query = query.ilike("location_city", `%${city}%`);
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
 // Valid P2P booking statuses from the database enum
 type P2PBookingStatusEnum = "pending" | "confirmed" | "active" | "completed" | "cancelled" | "disputed";
 
