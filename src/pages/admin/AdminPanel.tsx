@@ -37,6 +37,7 @@ import AdminCityLaunchModule from "./modules/AdminCityLaunchModule";
 import AdminRentersModule from "./modules/AdminRentersModule";
 import AdminDamageReportsModule from "./modules/AdminDamageReportsModule";
 import AdminRenterInvitesModule from "./modules/AdminRenterInvitesModule";
+import AdminCategoryPricingModule from "./modules/AdminCategoryPricingModule";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -50,6 +51,7 @@ const navItems = [
   { id: "p2p-vehicles", label: "P2P Vehicles", icon: Car },
   { id: "p2p-payouts", label: "P2P Payouts", icon: DollarSign },
   { id: "p2p-commission", label: "P2P Commission", icon: Percent },
+  { id: "category-pricing", label: "Category Pricing", icon: DollarSign },
   { id: "p2p-disputes", label: "P2P Disputes", icon: CarFront },
   { id: "damage-reports", label: "Damage Reports", icon: CarFront },
   { id: "finance", label: "Finance", icon: DollarSign },
@@ -147,6 +149,8 @@ export default function AdminPanel() {
         return <AdminP2PPayoutsModule />;
       case "p2p-commission":
         return <AdminP2PCommissionModule />;
+      case "category-pricing":
+        return <AdminCategoryPricingModule />;
       case "p2p-disputes":
         return <AdminP2PDisputesModule />;
       case "renter-invites":

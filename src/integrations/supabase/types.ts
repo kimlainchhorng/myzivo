@@ -4678,6 +4678,42 @@ export type Database = {
           },
         ]
       }
+      p2p_category_pricing: {
+        Row: {
+          category: string
+          city: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          max_daily_price: number
+          min_daily_price: number
+          suggested_daily_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_daily_price: number
+          min_daily_price: number
+          suggested_daily_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          city?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_daily_price?: number
+          min_daily_price?: number
+          suggested_daily_price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       p2p_commission_settings: {
         Row: {
           created_at: string | null
