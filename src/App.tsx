@@ -76,6 +76,7 @@ const PartnerAgreement = lazy(() => import("./pages/legal/PartnerAgreement"));
 const CommunityGuidelines = lazy(() => import("./pages/legal/CommunityGuidelines"));
 const InsurancePolicy = lazy(() => import("./pages/legal/InsurancePolicy"));
 const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilityStatement"));
+const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
@@ -226,6 +227,7 @@ const App = () => (
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
                 <Route path="/ground-transport" element={<GroundTransport />} />
                 <Route path="/events" element={<Events />} />
