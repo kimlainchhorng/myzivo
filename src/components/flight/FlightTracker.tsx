@@ -92,7 +92,7 @@ export default function FlightTracker({
   return (
     <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-card to-muted/20">
       {/* Status Bar */}
-      <div className={cn("h-1.5", statusConfig[status.status].color)} />
+      <div className={cn("h-1.5", statusConfig[currentStatus].color)} />
       
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
