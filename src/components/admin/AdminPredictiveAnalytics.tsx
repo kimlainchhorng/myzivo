@@ -1,12 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
 import { 
   LineChart, 
   TrendingUp, 
   TrendingDown,
   Target,
   Calendar,
-  DollarSign
+  DollarSign,
+  Plane,
+  Building,
+  Car,
 } from "lucide-react";
 import { 
   LineChart as RechartsLineChart, 
@@ -21,62 +25,75 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import {
+  getAllMonthlyProjections,
+  calculateMonthlyProjection,
+  getAnnualRunRate,
+} from "@/config/revenueAssumptions";
 
-const forecastData = [
-  { month: "Jan", actual: 425000, forecast: null, lower: null, upper: null },
-  { month: "Feb", actual: 445000, forecast: null, lower: null, upper: null },
-  { month: "Mar", actual: 478000, forecast: null, lower: null, upper: null },
-  { month: "Apr", actual: 485000, forecast: null, lower: null, upper: null },
-  { month: "May", actual: 512000, forecast: null, lower: null, upper: null },
-  { month: "Jun", actual: 545000, forecast: 545000, lower: 520000, upper: 570000 },
-  { month: "Jul", actual: null, forecast: 578000, lower: 545000, upper: 610000 },
-  { month: "Aug", actual: null, forecast: 612000, lower: 575000, upper: 650000 },
-  { month: "Sep", actual: null, forecast: 648000, lower: 605000, upper: 690000 },
-  { month: "Oct", actual: null, forecast: 685000, lower: 638000, upper: 732000 },
-  { month: "Nov", actual: null, forecast: 725000, lower: 672000, upper: 778000 },
-  { month: "Dec", actual: null, forecast: 768000, lower: 710000, upper: 826000 },
-];
-
-const kpiForecast = [
-  {
-    id: "revenue",
-    label: "Annual Revenue",
-    current: 545000,
-    forecast: 768000,
-    growth: 41,
-    status: "on_track",
-  },
-  {
-    id: "users",
-    label: "Active Users",
-    current: 28500,
-    forecast: 45000,
-    growth: 58,
-    status: "ahead",
-  },
-  {
-    id: "drivers",
-    label: "Driver Network",
-    current: 2450,
-    forecast: 3200,
-    growth: 31,
-    status: "at_risk",
-  },
-  {
-    id: "orders",
-    label: "Monthly Orders",
-    current: 142500,
-    forecast: 225000,
-    growth: 58,
-    status: "on_track",
-  },
-];
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const AdminPredictiveAnalytics = () => {
+  // Use real projection data from revenueAssumptions
+  const projections = useMemo(() => getAllMonthlyProjections(), []);
+  const month6 = useMemo(() => calculateMonthlyProjection(6), []);
+  const month12 = useMemo(() => calculateMonthlyProjection(12), []);
+  const annualRunRate = useMemo(() => getAnnualRunRate(), []);
+
+  // Transform projections for chart with confidence bands
+  const forecastData = useMemo(() => 
+    projections.map((p, i) => ({
+      month: MONTH_NAMES[p.month - 1],
+      actual: i < 6 ? p.totalRevenue : null,
+      forecast: i >= 5 ? p.totalRevenue : null,
+      lower: i >= 5 ? Math.round(p.totalRevenue * 0.85) : null,
+      upper: i >= 5 ? Math.round(p.totalRevenue * 1.15) : null,
+    })), [projections]);
+
+  // KPI forecasts based on real data
+  const kpiForecast = useMemo(() => [
+    {
+      id: "month6",
+      label: "Month 6 Revenue",
+      current: month6.totalRevenue,
+      forecast: month6.totalRevenue,
+      growth: 0,
+      status: "on_track",
+      icon: Target,
+    },
+    {
+      id: "month12",
+      label: "Month 12 Revenue",
+      current: month6.totalRevenue,
+      forecast: month12.totalRevenue,
+      growth: Math.round(((month12.totalRevenue - month6.totalRevenue) / month6.totalRevenue) * 100),
+      status: "on_track",
+      icon: TrendingUp,
+    },
+    {
+      id: "annual",
+      label: "Annual Run Rate",
+      current: month6.totalRevenue * 12,
+      forecast: annualRunRate,
+      growth: Math.round(((annualRunRate - (month6.totalRevenue * 12)) / (month6.totalRevenue * 12)) * 100),
+      status: "ahead",
+      icon: DollarSign,
+    },
+    {
+      id: "hotels",
+      label: "Hotels (Primary)",
+      current: month6.hotels.revenue,
+      forecast: month12.hotels.revenue,
+      growth: Math.round(((month12.hotels.revenue - month6.hotels.revenue) / month6.hotels.revenue) * 100),
+      status: "ahead",
+      icon: Building,
+    },
+  ], [month6, month12, annualRunRate]);
+
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "ahead":
-        return { color: "text-green-500", bg: "bg-green-500/10", label: "Ahead of Target" };
+        return { color: "text-green-500", bg: "bg-green-500/10", label: "Strong" };
       case "on_track":
         return { color: "text-blue-500", bg: "bg-blue-500/10", label: "On Track" };
       case "at_risk":
@@ -93,12 +110,12 @@ const AdminPredictiveAnalytics = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <LineChart className="h-6 w-6 text-primary" />
-            Predictive Analytics
+            Revenue Forecast
           </h2>
-          <p className="text-muted-foreground">AI-powered forecasts and projections</p>
+          <p className="text-muted-foreground">Hizovo OTA commission projections (conservative model)</p>
         </div>
         <Badge variant="secondary" className="bg-primary/10 text-primary">
-          Model Accuracy: 94.2%
+          Updated: Feb 2, 2026
         </Badge>
       </div>
 
@@ -106,6 +123,7 @@ const AdminPredictiveAnalytics = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiForecast.map((kpi, index) => {
           const statusConfig = getStatusConfig(kpi.status);
+          const Icon = kpi.icon;
           
           return (
             <motion.div
@@ -120,19 +138,25 @@ const AdminPredictiveAnalytics = () => {
                     <Badge variant="secondary" className={cn("text-xs", statusConfig.bg, statusConfig.color)}>
                       {statusConfig.label}
                     </Badge>
-                    <div className="flex items-center gap-1 text-green-500 text-xs font-medium">
-                      <TrendingUp className="h-3 w-3" />
-                      +{kpi.growth}%
-                    </div>
+                    {kpi.growth > 0 && (
+                      <div className="flex items-center gap-1 text-green-500 text-xs font-medium">
+                        <TrendingUp className="h-3 w-3" />
+                        +{kpi.growth}%
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-2xl font-bold">
-                      {kpi.id === "revenue" ? `$${(kpi.forecast / 1000).toFixed(0)}K` : kpi.forecast.toLocaleString()}
+                      {kpi.forecast >= 1000000 
+                        ? `$${(kpi.forecast / 1000000).toFixed(1)}M`
+                        : `$${(kpi.forecast / 1000).toFixed(0)}K`}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      from {kpi.id === "revenue" ? `$${(kpi.current / 1000).toFixed(0)}K` : kpi.current.toLocaleString()}
-                    </span>
+                    {kpi.id !== "month6" && kpi.current !== kpi.forecast && (
+                      <span className="text-xs text-muted-foreground">
+                        from ${(kpi.current / 1000).toFixed(0)}K
+                      </span>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -232,30 +256,68 @@ const AdminPredictiveAnalytics = () => {
         </CardContent>
       </Card>
 
-      {/* Insights */}
+      {/* Service Breakdown Insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 bg-gradient-to-br from-green-500/10 to-emerald-500/5 backdrop-blur-xl">
+        <Card className="border-0 bg-gradient-to-br from-sky-500/10 to-blue-500/5 backdrop-blur-xl">
           <CardContent className="p-6 text-center">
-            <TrendingUp className="h-8 w-8 text-green-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-green-500">+41%</p>
-            <p className="text-sm text-muted-foreground">Projected YoY Growth</p>
-          </CardContent>
-        </Card>
-        <Card className="border-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/5 backdrop-blur-xl">
-          <CardContent className="p-6 text-center">
-            <Target className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-500">$768K</p>
-            <p className="text-sm text-muted-foreground">December Target</p>
+            <Plane className="h-8 w-8 text-sky-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-sky-500">${(month12.flights.revenue / 1000).toFixed(0)}K</p>
+            <p className="text-sm text-muted-foreground">Flights (Volume Driver)</p>
+            <p className="text-xs text-muted-foreground mt-1">{month12.flights.bookings} bookings @ $6</p>
           </CardContent>
         </Card>
         <Card className="border-0 bg-gradient-to-br from-violet-500/10 to-purple-500/5 backdrop-blur-xl">
           <CardContent className="p-6 text-center">
-            <Calendar className="h-8 w-8 text-violet-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-violet-500">Q4</p>
-            <p className="text-sm text-muted-foreground">Peak Growth Quarter</p>
+            <Building className="h-8 w-8 text-violet-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-violet-500">${(month12.hotels.revenue / 1000).toFixed(0)}K</p>
+            <p className="text-sm text-muted-foreground">Hotels (Revenue Engine)</p>
+            <p className="text-xs text-muted-foreground mt-1">{month12.hotels.bookings} bookings @ $32</p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 bg-gradient-to-br from-emerald-500/10 to-green-500/5 backdrop-blur-xl">
+          <CardContent className="p-6 text-center">
+            <Car className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-emerald-500">${(month12.cars.revenue / 1000).toFixed(0)}K</p>
+            <p className="text-sm text-muted-foreground">Cars (Incremental)</p>
+            <p className="text-xs text-muted-foreground mt-1">{month12.cars.bookings} bookings @ $8</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Strategic Notes */}
+      <Card className="border-0 bg-card/50 backdrop-blur-xl">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Strategic Notes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-sky-500" />
+              <span>Flights = volume + traffic driver</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-violet-500" />
+              <span>Hotels = primary revenue engine</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span>Cars = incremental upside</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>No inventory risk</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <span>No payment liability</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-primary" />
+              <span>Scales with SEO + ads</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
