@@ -28,6 +28,8 @@ import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
 import CrossSellSection from "@/components/flight/CrossSellSection";
 import { QuickStatsBar, HowBookingWorks, FlightTrustBadgesBar, FlightMobileResultsBar } from "@/components/flight";
+import FlightTrustStrip from "@/components/flight/FlightTrustStrip";
+import FlightSupportCTA from "@/components/flight/FlightSupportCTA";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
@@ -358,8 +360,8 @@ const FlightResults = () => {
     );
   }
 
-  const pageTitle = `Flights ${originIata} to ${destinationIata} – Compare Prices | ZIVO`;
-  const pageDescription = `Compare flight prices from ${originDisplay} to ${destinationDisplay}. Search ${flights.length}+ options from trusted airlines and book with our travel partners.`;
+  const pageTitle = `Flights ${originIata} to ${destinationIata} – Search & Book | ZIVO`;
+  const pageDescription = `Search flights from ${originDisplay} to ${destinationDisplay}. Browse ${flights.length}+ options from trusted airlines and book securely on ZIVO.`;
 
   return (
     <div className="min-h-screen bg-background">
@@ -394,24 +396,8 @@ const FlightResults = () => {
           }
         />
 
-        {/* Trust Banner - MoR Model */}
-        <section className="border-b border-border/50 py-4 bg-gradient-to-r from-sky-500/5 via-transparent to-sky-500/5">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col items-center gap-2">
-              <p className="text-sm font-medium text-foreground">
-                Book directly on ZIVO • Tickets issued instantly
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  Secure ZIVO checkout
-                </span>
-                <span className="hidden sm:inline text-border">•</span>
-                <span className="text-emerald-600 font-medium">Prices include all taxes & fees</span>
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* Trust Strip - Always Visible */}
+        <FlightTrustStrip />
 
         {/* Quick Stats Comparison Bar - Only show when we have real API prices */}
         {!isLoading && isRealPrice && flights.length > 0 && (
@@ -520,6 +506,11 @@ const FlightResults = () => {
                     />
                   ))}
                 </div>
+              )}
+
+              {/* Support CTA */}
+              {!isLoading && (
+                <FlightSupportCTA className="mt-6" />
               )}
 
               {/* MoR Footer */}
