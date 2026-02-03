@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED } from "@/config/legalContent";
+import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED, CORPORATE_LEGAL_FAQ } from "@/config/legalContent";
 import FAQSchema from "@/components/shared/FAQSchema";
 
 export default function LegalFAQ() {
@@ -154,6 +154,33 @@ export default function LegalFAQ() {
             <Accordion type="single" collapsible className="w-full">
               {EXTREME_LEGAL_FAQ_EXTENDED.map((faq, index) => (
                 <AccordionItem key={index} value={`extreme-${index}`} className="border-destructive/20">
+                  <AccordionTrigger className="text-left hover:no-underline">
+                    <span className="font-medium">{faq.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Corporate FAQ */}
+        <Card className="mb-8 border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Corporate & IP Protection
+            </CardTitle>
+            <CardDescription>
+              Questions about intellectual property, subpoenas, and corporate structure
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {CORPORATE_LEGAL_FAQ.map((faq, index) => (
+                <AccordionItem key={index} value={`corporate-${index}`} className="border-primary/20">
                   <AccordionTrigger className="text-left hover:no-underline">
                     <span className="font-medium">{faq.question}</span>
                   </AccordionTrigger>

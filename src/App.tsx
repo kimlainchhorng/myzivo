@@ -176,6 +176,12 @@ const ContentPolicy = lazy(() => import("./pages/legal/ContentPolicy"));
 const SafetyDisclaimer = lazy(() => import("./pages/legal/SafetyDisclaimer"));
 const MarketplaceDisclaimer = lazy(() => import("./pages/legal/MarketplaceDisclaimer"));
 const EnforcementRights = lazy(() => import("./pages/legal/EnforcementRights"));
+const BrandPolicy = lazy(() => import("./pages/legal/BrandPolicy"));
+const DMCAPolicy = lazy(() => import("./pages/legal/DMCAPolicy"));
+const LegalProcess = lazy(() => import("./pages/legal/LegalProcess"));
+const RecordsPolicy = lazy(() => import("./pages/legal/RecordsPolicy"));
+const WhistleblowerPolicy = lazy(() => import("./pages/legal/WhistleblowerPolicy"));
+const CorporateProtection = lazy(() => import("./pages/legal/CorporateProtection"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -397,6 +403,12 @@ const App = () => (
                 <Route path="/legal/safety-disclaimer" element={<SafetyDisclaimer />} />
                 <Route path="/legal/marketplace-disclaimer" element={<MarketplaceDisclaimer />} />
                 <Route path="/legal/enforcement-rights" element={<EnforcementRights />} />
+                <Route path="/legal/brand-policy" element={<BrandPolicy />} />
+                <Route path="/legal/dmca" element={<DMCAPolicy />} />
+                <Route path="/legal/legal-process" element={<LegalProcess />} />
+                <Route path="/legal/records" element={<RecordsPolicy />} />
+                <Route path="/legal/whistleblower" element={<WhistleblowerPolicy />} />
+                <Route path="/legal/corporate-protection" element={<CorporateProtection />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
