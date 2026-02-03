@@ -1009,6 +1009,440 @@ export type Database = {
         }
         Relationships: []
       }
+      automation_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_acknowledged: boolean | null
+          is_resolved: boolean | null
+          metadata: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string | null
+          source: string | null
+          source_rule_id: string | null
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source?: string | null
+          source_rule_id?: string | null
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          is_resolved?: boolean | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string | null
+          source?: string | null
+          source_rule_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_alerts_source_rule_id_fkey"
+            columns: ["source_rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_job_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          items_failed: number | null
+          items_processed: number | null
+          items_succeeded: number | null
+          job_id: string | null
+          started_at: string | null
+          status: string | null
+          summary: Json | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          items_succeeded?: number | null
+          job_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: Json | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          items_failed?: number | null
+          items_processed?: number | null
+          items_succeeded?: number | null
+          job_id?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_job_runs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "automation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_jobs: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          cron_expression: string
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          job_type: string
+          last_run_at: string | null
+          last_run_duration_ms: number | null
+          last_run_status: string | null
+          last_run_summary: Json | null
+          name: string
+          next_run_at: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          cron_expression: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          job_type: string
+          last_run_at?: string | null
+          last_run_duration_ms?: number | null
+          last_run_status?: string | null
+          last_run_summary?: Json | null
+          name: string
+          next_run_at?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          cron_expression?: string
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          job_type?: string
+          last_run_at?: string | null
+          last_run_duration_ms?: number | null
+          last_run_status?: string | null
+          last_run_summary?: Json | null
+          name?: string
+          next_run_at?: string | null
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      automation_logs: {
+        Row: {
+          created_at: string | null
+          decision: string
+          decision_reason: string | null
+          entity_id: string | null
+          entity_type: string | null
+          execution_time_ms: number | null
+          id: string
+          input_data: Json | null
+          output_data: Json | null
+          rule_id: string | null
+          rule_name: string | null
+          trigger_event: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          decision: string
+          decision_reason?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          rule_id?: string | null
+          rule_name?: string | null
+          trigger_event?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          decision?: string
+          decision_reason?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          output_data?: Json | null
+          rule_id?: string | null
+          rule_name?: string | null
+          trigger_event?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_overrides: {
+        Row: {
+          action_taken: string
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          override_type: string
+          performed_by: string
+          reason: string
+          target_entity_id: string | null
+          target_entity_type: string | null
+          target_rule_id: string | null
+        }
+        Insert: {
+          action_taken: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          override_type: string
+          performed_by: string
+          reason: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          target_rule_id?: string | null
+        }
+        Update: {
+          action_taken?: string
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          override_type?: string
+          performed_by?: string
+          reason?: string
+          target_entity_id?: string | null
+          target_entity_type?: string | null
+          target_rule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_overrides_target_rule_id_fkey"
+            columns: ["target_rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_reply_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          intent: string
+          is_enabled: boolean | null
+          priority: number | null
+          reply_template: string
+          trigger_keywords: string[]
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          intent: string
+          is_enabled?: boolean | null
+          priority?: number | null
+          reply_template: string
+          trigger_keywords: string[]
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          intent?: string
+          is_enabled?: boolean | null
+          priority?: number | null
+          reply_template?: string
+          trigger_keywords?: string[]
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      automation_rules: {
+        Row: {
+          action_config: Json | null
+          action_type: string
+          category: string
+          conditions: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_enabled: boolean | null
+          name: string
+          priority: number | null
+          slug: string
+          trigger_config: Json | null
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_config?: Json | null
+          action_type: string
+          category: string
+          conditions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name: string
+          priority?: number | null
+          slug: string
+          trigger_config?: Json | null
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_config?: Json | null
+          action_type?: string
+          category?: string
+          conditions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          name?: string
+          priority?: number | null
+          slug?: string
+          trigger_config?: Json | null
+          trigger_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      automation_safety_locks: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          lock_type: string
+          locked_at: string | null
+          metadata: Json | null
+          reason: string
+          severity: string | null
+          target_id: string
+          target_identifier: string | null
+          triggered_by_log_id: string | null
+          triggered_by_rule_id: string | null
+          unlock_reason: string | null
+          unlocked_at: string | null
+          unlocked_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lock_type: string
+          locked_at?: string | null
+          metadata?: Json | null
+          reason: string
+          severity?: string | null
+          target_id: string
+          target_identifier?: string | null
+          triggered_by_log_id?: string | null
+          triggered_by_rule_id?: string | null
+          unlock_reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          lock_type?: string
+          locked_at?: string | null
+          metadata?: Json | null
+          reason?: string
+          severity?: string | null
+          target_id?: string
+          target_identifier?: string | null
+          triggered_by_log_id?: string | null
+          triggered_by_rule_id?: string | null
+          unlock_reason?: string | null
+          unlocked_at?: string | null
+          unlocked_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_safety_locks_triggered_by_log_id_fkey"
+            columns: ["triggered_by_log_id"]
+            isOneToOne: false
+            referencedRelation: "automation_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_safety_locks_triggered_by_rule_id_fkey"
+            columns: ["triggered_by_rule_id"]
+            isOneToOne: false
+            referencedRelation: "automation_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_logs: {
         Row: {
           backup_target: string
