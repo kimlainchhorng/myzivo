@@ -29,6 +29,8 @@ const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const WalletPage = lazy(() => import("./pages/app/WalletPage"));
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
+const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
+const CommissionsPage = lazy(() => import("./pages/admin/CommissionsPage"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));

@@ -12243,6 +12243,57 @@ export type Database = {
         }
         Relationships: []
       }
+      zivo_partner_commissions: {
+        Row: {
+          commission_type: string
+          commission_value: number
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean | null
+          max_commission: number | null
+          min_commission: number | null
+          partner_id: string
+          partner_type: string
+          reason: string | null
+          service_type: string
+        }
+        Insert: {
+          commission_type?: string
+          commission_value: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_commission?: number | null
+          min_commission?: number | null
+          partner_id: string
+          partner_type: string
+          reason?: string | null
+          service_type: string
+        }
+        Update: {
+          commission_type?: string
+          commission_value?: number
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_commission?: number | null
+          min_commission?: number | null
+          partner_id?: string
+          partner_type?: string
+          reason?: string | null
+          service_type?: string
+        }
+        Relationships: []
+      }
       zivo_payment_methods: {
         Row: {
           brand: string | null
@@ -12287,6 +12338,531 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      zivo_payout_items: {
+        Row: {
+          commission_amount: number
+          created_at: string
+          description: string | null
+          gross_amount: number
+          id: string
+          net_amount: number
+          payout_id: string
+          reference_id: string
+          reference_type: string
+          service_type: string
+        }
+        Insert: {
+          commission_amount: number
+          created_at?: string
+          description?: string | null
+          gross_amount: number
+          id?: string
+          net_amount: number
+          payout_id: string
+          reference_id: string
+          reference_type: string
+          service_type: string
+        }
+        Update: {
+          commission_amount?: number
+          created_at?: string
+          description?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          payout_id?: string
+          reference_id?: string
+          reference_type?: string
+          service_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_payout_items_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_payout_schedules: {
+        Row: {
+          auto_payout: boolean | null
+          day_of_month: number | null
+          day_of_week: number | null
+          hold_period_hours: number | null
+          id: string
+          is_active: boolean | null
+          min_payout_amount: number | null
+          partner_type: string
+          schedule_type: string
+          updated_at: string
+        }
+        Insert: {
+          auto_payout?: boolean | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          hold_period_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          min_payout_amount?: number | null
+          partner_type: string
+          schedule_type: string
+          updated_at?: string
+        }
+        Update: {
+          auto_payout?: boolean | null
+          day_of_month?: number | null
+          day_of_week?: number | null
+          hold_period_hours?: number | null
+          id?: string
+          is_active?: boolean | null
+          min_payout_amount?: number | null
+          partner_type?: string
+          schedule_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      zivo_payouts: {
+        Row: {
+          adjustments: number | null
+          commission_deducted: number
+          created_at: string
+          currency: string
+          failed_reason: string | null
+          gross_earnings: number
+          id: string
+          metadata: Json | null
+          net_payout: number
+          partner_id: string
+          partner_type: string
+          payout_period_end: string
+          payout_period_start: string
+          processed_at: string | null
+          status: string
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          adjustments?: number | null
+          commission_deducted?: number
+          created_at?: string
+          currency?: string
+          failed_reason?: string | null
+          gross_earnings?: number
+          id?: string
+          metadata?: Json | null
+          net_payout?: number
+          partner_id: string
+          partner_type: string
+          payout_period_end: string
+          payout_period_start: string
+          processed_at?: string | null
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          adjustments?: number | null
+          commission_deducted?: number
+          created_at?: string
+          currency?: string
+          failed_reason?: string | null
+          gross_earnings?: number
+          id?: string
+          metadata?: Json | null
+          net_payout?: number
+          partner_id?: string
+          partner_type?: string
+          payout_period_end?: string
+          payout_period_start?: string
+          processed_at?: string | null
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Relationships: []
+      }
+      zivo_promo_campaigns: {
+        Row: {
+          budget_cap: number | null
+          budget_used: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          max_discount: number | null
+          min_order_value: number | null
+          name: string
+          per_user_limit: number | null
+          promo_type: string
+          requires_code: boolean | null
+          services: string[] | null
+          starts_at: string
+          usage_count: number | null
+          usage_limit: number | null
+        }
+        Insert: {
+          budget_cap?: number | null
+          budget_used?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_order_value?: number | null
+          name: string
+          per_user_limit?: number | null
+          promo_type: string
+          requires_code?: boolean | null
+          services?: string[] | null
+          starts_at?: string
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Update: {
+          budget_cap?: number | null
+          budget_used?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_discount?: number | null
+          min_order_value?: number | null
+          name?: string
+          per_user_limit?: number | null
+          promo_type?: string
+          requires_code?: boolean | null
+          services?: string[] | null
+          starts_at?: string
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Relationships: []
+      }
+      zivo_promo_codes: {
+        Row: {
+          campaign_id: string
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          usage_count: number | null
+          usage_limit: number | null
+        }
+        Insert: {
+          campaign_id: string
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Update: {
+          campaign_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          usage_count?: number | null
+          usage_limit?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_promo_codes_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_promo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_promo_redemptions: {
+        Row: {
+          campaign_id: string
+          code_id: string | null
+          created_at: string
+          discount_applied: number
+          final_amount: number
+          id: string
+          original_amount: number
+          reference_id: string
+          reference_type: string
+          service_type: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          code_id?: string | null
+          created_at?: string
+          discount_applied: number
+          final_amount: number
+          id?: string
+          original_amount: number
+          reference_id: string
+          reference_type: string
+          service_type: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          code_id?: string | null
+          created_at?: string
+          discount_applied?: number
+          final_amount?: number
+          id?: string
+          original_amount?: number
+          reference_id?: string
+          reference_type?: string
+          service_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_promo_redemptions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_promo_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zivo_promo_redemptions_code_id_fkey"
+            columns: ["code_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_revenue: {
+        Row: {
+          created_at: string
+          currency: string
+          gross_transaction: number
+          id: string
+          metadata: Json | null
+          partner_id: string | null
+          partner_type: string | null
+          period_date: string
+          reference_id: string | null
+          reference_type: string | null
+          revenue_type: string
+          service_type: string
+          zivo_revenue: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          gross_transaction: number
+          id?: string
+          metadata?: Json | null
+          partner_id?: string | null
+          partner_type?: string | null
+          period_date?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          revenue_type: string
+          service_type: string
+          zivo_revenue: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          gross_transaction?: number
+          id?: string
+          metadata?: Json | null
+          partner_id?: string | null
+          partner_type?: string | null
+          period_date?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          revenue_type?: string
+          service_type?: string
+          zivo_revenue?: number
+        }
+        Relationships: []
+      }
+      zivo_revenue_daily: {
+        Row: {
+          created_at: string
+          id: string
+          report_date: string
+          service_type: string
+          total_commissions: number
+          total_gmv: number
+          total_revenue: number
+          total_service_fees: number
+          total_subscriptions: number
+          transaction_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_date: string
+          service_type: string
+          total_commissions?: number
+          total_gmv?: number
+          total_revenue?: number
+          total_service_fees?: number
+          total_subscriptions?: number
+          transaction_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_date?: string
+          service_type?: string
+          total_commissions?: number
+          total_gmv?: number
+          total_revenue?: number
+          total_service_fees?: number
+          total_subscriptions?: number
+          transaction_count?: number
+        }
+        Relationships: []
+      }
+      zivo_service_commissions: {
+        Row: {
+          commission_type: string
+          commission_value: number
+          id: string
+          is_active: boolean | null
+          max_commission: number | null
+          min_commission: number | null
+          notes: string | null
+          service_fee: number | null
+          service_type: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          commission_type?: string
+          commission_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_commission?: number | null
+          min_commission?: number | null
+          notes?: string | null
+          service_fee?: number | null
+          service_type: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          commission_type?: string
+          commission_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_commission?: number | null
+          min_commission?: number | null
+          notes?: string | null
+          service_fee?: number | null
+          service_type?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      zivo_subscription_plans: {
+        Row: {
+          benefits: Json | null
+          created_at: string
+          description: string | null
+          fee_reduction_pct: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly: number | null
+          priority_support: boolean | null
+          slug: string
+        }
+        Insert: {
+          benefits?: Json | null
+          created_at?: string
+          description?: string | null
+          fee_reduction_pct?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_monthly: number
+          price_yearly?: number | null
+          priority_support?: boolean | null
+          slug: string
+        }
+        Update: {
+          benefits?: Json | null
+          created_at?: string
+          description?: string | null
+          fee_reduction_pct?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_monthly?: number
+          price_yearly?: number | null
+          priority_support?: boolean | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      zivo_subscriptions: {
+        Row: {
+          billing_cycle: string
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan_id: string
+          status: string
+          stripe_subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_cycle?: string
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end: string
+          current_period_start: string
+          id?: string
+          plan_id: string
+          status?: string
+          stripe_subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_cycle?: string
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id?: string
+          status?: string
+          stripe_subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zivo_support_messages: {
         Row: {
