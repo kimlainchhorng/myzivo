@@ -199,6 +199,9 @@ const KYCPolicy = lazy(() => import("./pages/legal/KYCPolicy"));
 const AMLPolicy = lazy(() => import("./pages/legal/AMLPolicy"));
 const ComplaintsPolicy = lazy(() => import("./pages/legal/ComplaintsPolicy"));
 const FinancialRecords = lazy(() => import("./pages/legal/FinancialRecords"));
+const Governance = lazy(() => import("./pages/legal/Governance"));
+const EthicsPolicy = lazy(() => import("./pages/legal/EthicsPolicy"));
+const RegulatorCommunications = lazy(() => import("./pages/legal/RegulatorCommunications"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -444,6 +447,9 @@ const App = () => (
                 <Route path="/legal/aml" element={<AMLPolicy />} />
                 <Route path="/legal/complaints" element={<ComplaintsPolicy />} />
                 <Route path="/legal/financial-records" element={<FinancialRecords />} />
+                <Route path="/legal/governance" element={<Governance />} />
+                <Route path="/legal/ethics" element={<EthicsPolicy />} />
+                <Route path="/legal/regulator-communications" element={<RegulatorCommunications />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
