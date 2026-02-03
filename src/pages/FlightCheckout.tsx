@@ -108,6 +108,18 @@ const FlightCheckout = () => {
         cabinClass: offer.cabinClass,
       });
 
+      // Store offer details for confirmation page display
+      sessionStorage.setItem('flightOfferDetails', JSON.stringify({
+        airline: offer.airline,
+        airlineCode: offer.airlineCode,
+        flightNumber: offer.flightNumber || null,
+        cabinClass: offer.cabinClass,
+        duration: offer.duration,
+        stops: offer.stops,
+        departure: offer.departure.time,
+        arrival: offer.arrival.time,
+      }));
+
       // Redirect to Stripe Checkout
       window.location.href = result.url;
     } catch (error) {

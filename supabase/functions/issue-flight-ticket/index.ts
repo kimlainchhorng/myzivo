@@ -34,7 +34,18 @@ serve(async (req) => {
       throw new Error("bookingId is required");
     }
 
+    // Environment checks for LIVE safety
+    const DUFFEL_ENV = Deno.env.get("DUFFEL_ENV") || "sandbox";
+    const isLiveMode = DUFFEL_ENV === "live";
+    const duffelApiKey = Deno.env.get("DUFFEL_API_KEY");
+
+    console.log("[IssueTicket] Environment:", DUFFEL_ENV, "Live mode:", isLiveMode);
     console.log("[IssueTicket] Processing booking:", bookingId);
+
+    // In live mode, API key is mandatory - no mock tickets allowed
+    if (isLiveMode && !duffelApiKey) {
+      throw new Error("DUFFEL_API_KEY is required in live mode - cannot issue mock tickets");
+    }
 
     // Fetch booking with passengers
     const { data: booking, error: bookingError } = await supabase
@@ -85,9 +96,7 @@ serve(async (req) => {
       .select()
       .single();
 
-    // Check for Duffel API key
-    const duffelApiKey = Deno.env.get("DUFFEL_API_KEY");
-    
+    // duffelApiKey already checked at start of function
     let pnr: string;
     let orderId: string;
     let ticketNumbers: string[];
@@ -203,14 +212,17 @@ serve(async (req) => {
         
         throw duffelError;
       }
-    } else {
-      // Demo mode - generate mock PNR and tickets
-      console.log("[IssueTicket] Demo mode - generating mock ticket");
+    } else if (!isLiveMode) {
+      // Demo mode (sandbox only) - generate mock PNR and tickets
+      console.log("[IssueTicket] Sandbox mode - generating mock ticket");
       pnr = `ZV${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
       orderId = `ord_demo_${Date.now()}`;
       ticketNumbers = (booking.flight_passengers || []).map((_: any, i: number) => 
         `098${Math.floor(Math.random() * 10000000000).toString().padStart(10, '0')}`
       );
+    } else {
+      // This should not be reached due to earlier check, but safety fallback
+      throw new Error("Cannot issue tickets without Duffel API key in live mode");
     }
 
     // Update booking with PNR and ticket numbers

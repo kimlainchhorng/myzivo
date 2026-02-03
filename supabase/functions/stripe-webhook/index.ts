@@ -112,33 +112,58 @@ serve(async (req) => {
             console.log("P2P booking updated to captured:", metadata.booking_id);
           }
         } else if (metadata.type === "flight") {
-          // Update flight booking payment status
-          const { error } = await supabase
+          // Update flight booking with explicit payment confirmation
+          const { data: updatedBooking, error: updateError } = await supabase
             .from("flight_bookings")
             .update({
               payment_status: "paid",
               stripe_payment_intent_id: paymentIntentId,
               ticketing_status: "processing",
             })
-            .eq("stripe_checkout_session_id", session.id);
+            .eq("stripe_checkout_session_id", session.id)
+            .select()
+            .single();
 
-          if (error) {
-            console.error("Error updating flight booking:", error);
-          } else {
-            console.log("Flight booking paid:", metadata.booking_id);
-            // Trigger ticketing via edge function
-            try {
-              await fetch(`${supabaseUrl}/functions/v1/issue-flight-ticket`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Authorization": `Bearer ${supabaseServiceKey}`,
-                },
-                body: JSON.stringify({ bookingId: metadata.booking_id }),
-              });
-            } catch (ticketErr) {
-              console.error("Error triggering ticketing:", ticketErr);
+          if (updateError) {
+            console.error("[Webhook] Error updating flight booking:", updateError);
+            // Create admin alert for payment confirmation failure
+            await supabase.from('flight_admin_alerts').insert({
+              booking_id: metadata.booking_id,
+              alert_type: 'payment_failed',
+              message: `Failed to update booking after payment: ${updateError.message}`,
+              severity: 'critical',
+            });
+            break; // Don't proceed to ticketing
+          }
+
+          console.log("[Webhook] Flight booking paid:", metadata.booking_id);
+          
+          // Trigger ticketing with explicit error handling
+          try {
+            const ticketResponse = await fetch(`${supabaseUrl}/functions/v1/issue-flight-ticket`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({ bookingId: metadata.booking_id }),
+            });
+            
+            if (!ticketResponse.ok) {
+              const ticketError = await ticketResponse.json();
+              console.error("[Webhook] Ticketing trigger failed:", ticketError);
+              // Alert already created by issue-flight-ticket on failure
+            } else {
+              console.log("[Webhook] Ticketing triggered successfully for:", metadata.booking_id);
             }
+          } catch (ticketErr) {
+            console.error("[Webhook] Error triggering ticketing:", ticketErr);
+            await supabase.from('flight_admin_alerts').insert({
+              booking_id: metadata.booking_id,
+              alert_type: 'ticketing_failed',
+              message: `Failed to trigger ticketing after payment: ${ticketErr instanceof Error ? ticketErr.message : 'Unknown error'}`,
+              severity: 'critical',
+            });
           }
         }
         break;
