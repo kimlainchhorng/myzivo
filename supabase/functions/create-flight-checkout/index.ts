@@ -84,6 +84,30 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
+    // Check flights launch status
+    const { data: launchSettings } = await supabase
+      .from("flights_launch_settings")
+      .select("status, emergency_pause, first_booking_at")
+      .limit(1)
+      .single();
+
+    // Check if user is admin (can bypass test mode)
+    const { data: isAdminData } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    const isUserAdmin = isAdminData === true;
+
+    // Block non-admins in TEST mode
+    if (launchSettings?.status === 'test' && !isUserAdmin) {
+      throw new Error("Flight bookings are not yet available. Check back soon!");
+    }
+
+    // Block all bookings if emergency paused
+    if (launchSettings?.emergency_pause) {
+      throw new Error("Flight bookings are temporarily paused. Please try again later.");
+    }
+
     // Server-side passenger validation (LIVE safe)
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
@@ -217,6 +241,15 @@ serve(async (req) => {
     }
 
     console.log("[FlightCheckout] Created booking:", booking.id);
+
+    // Track first booking if LIVE mode and not already tracked
+    if (launchSettings?.status === 'live' && !launchSettings?.first_booking_at) {
+      await supabase
+        .from("flights_launch_settings")
+        .update({ first_booking_at: new Date().toISOString() })
+        .is("first_booking_at", null);
+      console.log("[FlightCheckout] First LIVE booking recorded!");
+    }
 
     // Insert passengers
     const passengerInserts = passengers.map((p, index) => ({

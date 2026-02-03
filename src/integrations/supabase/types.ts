@@ -3579,6 +3579,69 @@ export type Database = {
           },
         ]
       }
+      flights_launch_settings: {
+        Row: {
+          created_at: string | null
+          duffel_live_configured: boolean | null
+          emergency_pause: boolean | null
+          emergency_pause_at: string | null
+          emergency_pause_by: string | null
+          emergency_pause_reason: string | null
+          first_booking_at: string | null
+          first_failure_at: string | null
+          first_ticket_issued_at: string | null
+          id: string
+          seller_of_travel_verified: boolean | null
+          status: string
+          status_changed_at: string | null
+          status_changed_by: string | null
+          stripe_live_enabled: boolean | null
+          support_email_configured: boolean | null
+          terms_privacy_linked: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duffel_live_configured?: boolean | null
+          emergency_pause?: boolean | null
+          emergency_pause_at?: string | null
+          emergency_pause_by?: string | null
+          emergency_pause_reason?: string | null
+          first_booking_at?: string | null
+          first_failure_at?: string | null
+          first_ticket_issued_at?: string | null
+          id?: string
+          seller_of_travel_verified?: boolean | null
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          stripe_live_enabled?: boolean | null
+          support_email_configured?: boolean | null
+          terms_privacy_linked?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duffel_live_configured?: boolean | null
+          emergency_pause?: boolean | null
+          emergency_pause_at?: string | null
+          emergency_pause_by?: string | null
+          emergency_pause_reason?: string | null
+          first_booking_at?: string | null
+          first_failure_at?: string | null
+          first_ticket_issued_at?: string | null
+          id?: string
+          seller_of_travel_verified?: boolean | null
+          status?: string
+          status_changed_at?: string | null
+          status_changed_by?: string | null
+          stripe_live_enabled?: boolean | null
+          support_email_configured?: boolean | null
+          terms_privacy_linked?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       floor_plans: {
         Row: {
           created_at: string

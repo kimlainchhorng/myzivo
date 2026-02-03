@@ -241,6 +241,31 @@ serve(async (req) => {
       throw updateError;
     }
 
+    // Track first ticket issued if LIVE mode
+    const { data: launchSettings } = await supabase
+      .from("flights_launch_settings")
+      .select("status, first_ticket_issued_at")
+      .limit(1)
+      .single();
+
+    if (launchSettings?.status === 'live' && !launchSettings?.first_ticket_issued_at) {
+      await supabase
+        .from("flights_launch_settings")
+        .update({ first_ticket_issued_at: new Date().toISOString() })
+        .is("first_ticket_issued_at", null);
+      
+      // Create admin alert for first ticket
+      await supabase
+        .from("flight_admin_alerts")
+        .insert({
+          booking_id: bookingId,
+          alert_type: "first_ticket_issued",
+          severity: "low",
+          message: `🎉 First LIVE ticket issued! PNR: ${pnr}`,
+        });
+      console.log("[IssueTicket] First LIVE ticket recorded!");
+    }
+
     // Update passenger ticket numbers
     for (let i = 0; i < ticketNumbers.length; i++) {
       await supabase
