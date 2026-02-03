@@ -195,6 +195,10 @@ const LegalNoticesPolicy = lazy(() => import("./pages/legal/LegalNoticesPolicy")
 const ComplianceOperations = lazy(() => import("./pages/legal/ComplianceOperations"));
 const RegulatoryResponse = lazy(() => import("./pages/legal/RegulatoryResponse"));
 const ComplianceRecords = lazy(() => import("./pages/legal/ComplianceRecords"));
+const KYCPolicy = lazy(() => import("./pages/legal/KYCPolicy"));
+const AMLPolicy = lazy(() => import("./pages/legal/AMLPolicy"));
+const ComplaintsPolicy = lazy(() => import("./pages/legal/ComplaintsPolicy"));
+const FinancialRecords = lazy(() => import("./pages/legal/FinancialRecords"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -436,6 +440,10 @@ const App = () => (
                 <Route path="/legal/compliance-operations" element={<ComplianceOperations />} />
                 <Route path="/legal/regulatory-response" element={<RegulatoryResponse />} />
                 <Route path="/legal/compliance-records" element={<ComplianceRecords />} />
+                <Route path="/legal/kyc-policy" element={<KYCPolicy />} />
+                <Route path="/legal/aml" element={<AMLPolicy />} />
+                <Route path="/legal/complaints" element={<ComplaintsPolicy />} />
+                <Route path="/legal/financial-records" element={<FinancialRecords />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />

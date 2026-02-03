@@ -2347,3 +2347,193 @@ export const ONGOING_COMPLIANCE_FAQ = [
 
 // Helper arrays
 export const ONGOING_COMPLIANCE_POLICIES_LIST = Object.values(ONGOING_COMPLIANCE_POLICIES);
+
+// ============================================
+// FINANCIAL CRIME & KYC/AML POLICIES (Clauses 158-169)
+// KYC, AML, Sanctions, Complaints, Recordkeeping
+// ============================================
+
+export const FINANCIAL_COMPLIANCE_POLICIES = {
+  // Clause 158: Know Your Customer (KYC) Policy
+  kycPolicy: {
+    id: "kyc_policy",
+    title: "Know Your Customer (KYC) Policy",
+    version: "1.0",
+    content: `ZIVO may require identity verification at any time to comply with financial regulations and prevent fraud. Verification may include government-issued ID, proof of address, selfie verification, or business documents. Failure to complete verification may result in account suspension or termination. ZIVO is not liable for delays or service limitations caused by KYC checks.`,
+    verificationTypes: [
+      "Government-issued photo ID (passport, driver's license)",
+      "Proof of address (utility bill, bank statement)",
+      "Selfie verification with liveness detection",
+      "Business registration documents",
+      "Tax identification documents",
+      "Beneficial ownership declarations",
+    ],
+  },
+
+  // Clause 159: Enhanced Due Diligence (EDD)
+  enhancedDueDiligence: {
+    id: "enhanced_due_diligence",
+    title: "Enhanced Due Diligence (EDD)",
+    version: "1.0",
+    content: `ZIVO may apply enhanced verification and monitoring for high-risk users or transactions. Enhanced due diligence does not create additional rights or guarantees for users.`,
+    eddTriggers: [
+      "High-value transactions exceeding thresholds",
+      "Fleet owners and business accounts",
+      "International users from high-risk jurisdictions",
+      "Unusual transaction patterns",
+      "Politically exposed persons (PEPs)",
+      "Cash-intensive businesses",
+    ],
+  },
+
+  // Clause 160: Anti-Money Laundering (AML) Policy
+  amlPolicy: {
+    id: "aml_policy",
+    title: "Anti-Money Laundering (AML) Policy",
+    version: "1.0",
+    content: `ZIVO prohibits use of the platform for money laundering, terrorist financing, fraud, or other financial crimes. Transactions may be monitored and flagged for suspicious activity. Suspicious activity may be reported to law enforcement and financial intelligence units (FinCEN) without user notice. Funds may be frozen pending review or investigation.`,
+    prohibitedActivities: [
+      "Money laundering or structuring transactions",
+      "Terrorist financing or sanctions evasion",
+      "Fraud, identity theft, or account takeover",
+      "Using stolen or unauthorized payment methods",
+      "Facilitating payments for illegal activities",
+      "Creating multiple accounts to circumvent limits",
+    ],
+  },
+
+  // Clause 161: No Duty to Complete Transactions
+  noTransactionDuty: {
+    id: "no_transaction_duty",
+    title: "No Duty to Complete Transactions",
+    version: "1.0",
+    content: `ZIVO may refuse, delay, or cancel any transaction if financial crime risk is suspected or for any other compliance reason. ZIVO has no duty to complete any transaction and is not liable for losses resulting from transaction refusal or cancellation for risk management purposes.`,
+  },
+
+  // Clause 162: Sanctions Compliance Policy
+  sanctionsCompliance: {
+    id: "sanctions_compliance",
+    title: "Sanctions Compliance Policy",
+    version: "1.0",
+    content: `Users must comply with all applicable U.S. sanctions laws administered by OFAC, export controls, and trade restrictions. ZIVO may block countries, users, or entities subject to sanctions without prior notice. ZIVO may terminate access immediately upon detection of sanctions violations. ZIVO bears no liability for sanctions enforcement actions.`,
+    sanctionsPrograms: [
+      "OFAC Specially Designated Nationals (SDN) List",
+      "Consolidated Sanctions List",
+      "Sectoral Sanctions Identifications (SSI) List",
+      "Foreign Sanctions Evaders (FSE) List",
+      "Country-based embargoes (Cuba, Iran, North Korea, etc.)",
+      "Russian Harmful Foreign Activities Sanctions",
+    ],
+  },
+
+  // Clause 163: Customer Complaint Handling
+  complaintHandling: {
+    id: "complaint_handling",
+    title: "Customer Complaint Handling Policy",
+    version: "1.0",
+    content: `ZIVO provides a complaints process for users to raise concerns about services. Resolution timelines depend on complaint complexity and are not guaranteed. Complaints do not create legal obligations beyond good-faith review. Regulatory complaints may override platform decisions when required by law.`,
+    complaintProcess: [
+      "Submit complaint via support@hizivo.com or in-app support",
+      "Receive acknowledgment within 48 hours",
+      "Investigation and review of relevant records",
+      "Response with findings and resolution (if applicable)",
+      "Escalation path for unresolved complaints",
+      "Regulatory referral information if needed",
+    ],
+  },
+
+  // Clause 164: No Admission of Liability
+  noAdmission: {
+    id: "no_admission",
+    title: "No Admission of Liability",
+    version: "1.0",
+    content: `Responses to complaints, customer service communications, and resolution offers are provided in good faith and do not constitute admissions of fault, liability, or wrongdoing. Acceptance of refunds, credits, or other resolutions does not establish precedent or liability.`,
+  },
+
+  // Clause 165: Insurance Verification Disclaimer
+  insuranceVerification: {
+    id: "insurance_verification",
+    title: "Insurance Verification Disclaimer",
+    version: "1.0",
+    content: `ZIVO may request proof of insurance from partners and service providers. Verification is informational only and does not guarantee coverage validity, coverage scope, claim approval, or continuous coverage. Users must independently verify insurance adequacy for their needs.`,
+  },
+
+  // Clause 166: No Insurer Relationship
+  noInsurerRelationship: {
+    id: "no_insurer_relationship",
+    title: "No Insurer Relationship",
+    version: "1.0",
+    content: `ZIVO is not an insurance agent, broker, underwriter, or insurer. ZIVO does not provide insurance advice or recommendations. Any insurance products or coverage are provided by third-party insurers with their own terms and conditions.`,
+  },
+
+  // Clause 167: Financial Record Retention
+  recordRetention: {
+    id: "record_retention",
+    title: "Financial Record Retention Policy",
+    version: "1.0",
+    content: `ZIVO retains financial records as required by law and for legitimate business purposes. Records include payments, refunds, payouts, disputes, chargebacks, and related communications. Retention periods comply with applicable financial regulations and may extend beyond account termination.`,
+    recordsRetained: [
+      "Payment transactions and receipts",
+      "Refund requests and processing records",
+      "Payout records to partners and providers",
+      "Dispute and chargeback documentation",
+      "KYC/AML verification records",
+      "Suspicious activity reports (SARs)",
+    ],
+  },
+
+  // Clause 168: Audit Cooperation Clause
+  auditCooperation: {
+    id: "audit_cooperation",
+    title: "Audit Cooperation Clause",
+    version: "1.0",
+    content: `ZIVO may cooperate with and provide records to auditors, banks, payment processors, and regulators as required by law or contractual obligations. Such cooperation does not create user notification rights except where required by law.`,
+    mayCooperateWith: [
+      "Independent auditors and accountants",
+      "Banking partners and acquiring banks",
+      "Payment processors (Stripe, etc.)",
+      "Financial regulators (FinCEN, state regulators)",
+      "Law enforcement agencies",
+      "Tax authorities (IRS, state tax agencies)",
+    ],
+  },
+
+  // Clause 169: Survival of Financial Protections
+  financialSurvival: {
+    id: "financial_survival",
+    title: "Survival of Financial & AML Protections",
+    version: "1.0",
+    content: `All KYC, AML, sanctions, financial crime, and recordkeeping protections survive account termination, service shutdown, legal disputes, and corporate changes. These protections are perpetual and irrevocable to ensure ongoing compliance with financial regulations.`,
+  },
+};
+
+// Financial Compliance FAQ
+export const FINANCIAL_COMPLIANCE_FAQ = [
+  {
+    question: "Can ZIVO freeze or block payments?",
+    answer: "Yes, to comply with financial crime prevention, sanctions laws, or risk management requirements.",
+  },
+  {
+    question: "Does ZIVO guarantee transaction completion?",
+    answer: "No. Transactions may be reviewed, delayed, or refused for compliance or risk reasons.",
+  },
+  {
+    question: "Does a complaint mean ZIVO is liable?",
+    answer: "No. Complaints are handled in good faith without admission of liability.",
+  },
+  {
+    question: "Why might ZIVO require identity verification?",
+    answer: "To comply with KYC/AML regulations, prevent fraud, and maintain payment processor relationships.",
+  },
+  {
+    question: "How long does ZIVO keep financial records?",
+    answer: "Records are retained as required by law, which may extend beyond account termination.",
+  },
+  {
+    question: "Can ZIVO share my information with regulators?",
+    answer: "Yes, when required by law or for compliance with financial regulations.",
+  },
+];
+
+// Helper arrays
+export const FINANCIAL_COMPLIANCE_POLICIES_LIST = Object.values(FINANCIAL_COMPLIANCE_POLICIES);
