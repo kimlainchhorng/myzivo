@@ -35,6 +35,7 @@ const footerLinks = {
   ],
   company: [
     { name: "About Hizovo", href: "/about" },
+    { name: "Company", href: "/company" },
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
@@ -43,6 +44,7 @@ const footerLinks = {
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
     { name: "Privacy Policy", href: "/privacy" },
+    { name: "Refund Policy", href: "/refunds" },
     { name: "Cookie Policy", href: "/cookies" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Seller of Travel", href: "/legal/seller-of-travel" },
