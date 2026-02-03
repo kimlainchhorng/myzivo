@@ -1,23 +1,35 @@
 /**
  * SandboxTestHelper Component
+ * INTERNAL ADMIN ONLY - Never shown to regular users
  * Shows helpful test route suggestions when in Duffel sandbox mode
- * Only displays when no results and sandbox environment detected
+ * 
+ * IMPORTANT: This component should only be rendered:
+ * 1. In sandbox/test environment (never production)
+ * 2. For admin users only
+ * 3. On admin/debug routes only
  */
 
-import { AlertCircle, ArrowRight, TestTube } from "lucide-react";
+import { ArrowRight, TestTube } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DUFFEL_SANDBOX_ROUTES } from "@/config/duffelConfig";
+import { DUFFEL_SANDBOX_ROUTES, shouldShowSandboxUI } from "@/config/duffelConfig";
 import { useNavigate } from "react-router-dom";
 import { format, addDays } from "date-fns";
 
 interface SandboxTestHelperProps {
   className?: string;
+  /** Required: Admin status check - component won't render without admin=true */
+  isAdmin?: boolean;
 }
 
-export default function SandboxTestHelper({ className }: SandboxTestHelperProps) {
+export default function SandboxTestHelper({ className, isAdmin = false }: SandboxTestHelperProps) {
   const navigate = useNavigate();
+  
+  // CRITICAL: Never render for non-admins or in production
+  if (!shouldShowSandboxUI(isAdmin)) {
+    return null;
+  }
 
   const handleQuickSearch = (from: string, to: string) => {
     const departDate = format(addDays(new Date(), 7), 'yyyy-MM-dd');

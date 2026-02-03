@@ -194,9 +194,9 @@ export function EmptyResults({
   if (service === "flights") {
     return (
       <div className={cn("text-center py-16 px-6 bg-muted/20 rounded-2xl border border-border/50", className)}>
-        {/* Sandbox Helper - Only for admins in test mode */}
+        {/* Sandbox Helper - Only for admins in test mode (never in production) */}
         {showSandboxHelper && (
-          <SandboxTestHelper className="mb-6 text-left" />
+          <SandboxTestHelper className="mb-6 text-left" isAdmin={isAdmin} />
         )}
 
         <div
