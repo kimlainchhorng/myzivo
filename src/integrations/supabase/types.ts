@@ -896,6 +896,137 @@ export type Database = {
           },
         ]
       }
+      business_authorized_drivers: {
+        Row: {
+          business_account_id: string
+          created_at: string
+          driver_email: string | null
+          driver_name: string
+          driver_phone: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          license_expiry: string | null
+          license_number: string | null
+          license_state: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_account_id: string
+          created_at?: string
+          driver_email?: string | null
+          driver_name: string
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          license_expiry?: string | null
+          license_number?: string | null
+          license_state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_account_id?: string
+          created_at?: string
+          driver_email?: string | null
+          driver_name?: string
+          driver_phone?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          license_expiry?: string | null
+          license_number?: string | null
+          license_state?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_authorized_drivers_business_account_id_fkey"
+            columns: ["business_account_id"]
+            isOneToOne: false
+            referencedRelation: "business_renter_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_renter_accounts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          billing_address: string | null
+          billing_city: string | null
+          billing_contact_email: string
+          billing_contact_name: string
+          billing_contact_phone: string | null
+          billing_state: string | null
+          billing_zip: string | null
+          company_name: string
+          company_size: string | null
+          created_at: string
+          credit_limit: number | null
+          id: string
+          industry: string | null
+          payment_method: string | null
+          payment_terms_days: number | null
+          status: Database["public"]["Enums"]["business_account_status"] | null
+          tax_id: string | null
+          total_bookings: number | null
+          total_spent: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_contact_email: string
+          billing_contact_name: string
+          billing_contact_phone?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          company_name: string
+          company_size?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          industry?: string | null
+          payment_method?: string | null
+          payment_terms_days?: number | null
+          status?: Database["public"]["Enums"]["business_account_status"] | null
+          tax_id?: string | null
+          total_bookings?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          billing_address?: string | null
+          billing_city?: string | null
+          billing_contact_email?: string
+          billing_contact_name?: string
+          billing_contact_phone?: string | null
+          billing_state?: string | null
+          billing_zip?: string | null
+          company_name?: string
+          company_size?: string | null
+          created_at?: string
+          credit_limit?: number | null
+          id?: string
+          industry?: string | null
+          payment_method?: string | null
+          payment_terms_days?: number | null
+          status?: Database["public"]["Enums"]["business_account_status"] | null
+          tax_id?: string | null
+          total_bookings?: number | null
+          total_spent?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       car_inventory: {
         Row: {
           created_at: string
@@ -3171,6 +3302,226 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fleet_owner_profiles: {
+        Row: {
+          address: string | null
+          approved_at: string | null
+          approved_by: string | null
+          average_rating: number | null
+          business_license: string | null
+          business_name: string
+          business_type: string | null
+          city: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          custom_commission_percent: number | null
+          default_cancellation_policy: string | null
+          default_daily_rate: number | null
+          default_deposit_amount: number | null
+          default_max_rental_days: number | null
+          default_min_rental_days: number | null
+          delivery_enabled_fleet_wide: boolean | null
+          id: string
+          rejection_reason: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["fleet_owner_status"] | null
+          stripe_account_id: string | null
+          stripe_payouts_enabled: boolean | null
+          tax_id: string | null
+          total_bookings: number | null
+          total_revenue: number | null
+          total_vehicles: number | null
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          average_rating?: number | null
+          business_license?: string | null
+          business_name: string
+          business_type?: string | null
+          city?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          custom_commission_percent?: number | null
+          default_cancellation_policy?: string | null
+          default_daily_rate?: number | null
+          default_deposit_amount?: number | null
+          default_max_rental_days?: number | null
+          default_min_rental_days?: number | null
+          delivery_enabled_fleet_wide?: boolean | null
+          id?: string
+          rejection_reason?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["fleet_owner_status"] | null
+          stripe_account_id?: string | null
+          stripe_payouts_enabled?: boolean | null
+          tax_id?: string | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          total_vehicles?: number | null
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          average_rating?: number | null
+          business_license?: string | null
+          business_name?: string
+          business_type?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          custom_commission_percent?: number | null
+          default_cancellation_policy?: string | null
+          default_daily_rate?: number | null
+          default_deposit_amount?: number | null
+          default_max_rental_days?: number | null
+          default_min_rental_days?: number | null
+          delivery_enabled_fleet_wide?: boolean | null
+          id?: string
+          rejection_reason?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["fleet_owner_status"] | null
+          stripe_account_id?: string | null
+          stripe_payouts_enabled?: boolean | null
+          tax_id?: string | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          total_vehicles?: number | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      fleet_pricing_rules: {
+        Row: {
+          car_class: string | null
+          corporate_discount_percent: number | null
+          created_at: string
+          daily_rate: number | null
+          end_date: string | null
+          fleet_id: string
+          id: string
+          is_active: boolean | null
+          is_corporate_rate: boolean | null
+          monthly_discount_percent: number | null
+          name: string
+          priority: number | null
+          start_date: string | null
+          updated_at: string
+          weekend_rate: number | null
+          weekly_discount_percent: number | null
+        }
+        Insert: {
+          car_class?: string | null
+          corporate_discount_percent?: number | null
+          created_at?: string
+          daily_rate?: number | null
+          end_date?: string | null
+          fleet_id: string
+          id?: string
+          is_active?: boolean | null
+          is_corporate_rate?: boolean | null
+          monthly_discount_percent?: number | null
+          name: string
+          priority?: number | null
+          start_date?: string | null
+          updated_at?: string
+          weekend_rate?: number | null
+          weekly_discount_percent?: number | null
+        }
+        Update: {
+          car_class?: string | null
+          corporate_discount_percent?: number | null
+          created_at?: string
+          daily_rate?: number | null
+          end_date?: string | null
+          fleet_id?: string
+          id?: string
+          is_active?: boolean | null
+          is_corporate_rate?: boolean | null
+          monthly_discount_percent?: number | null
+          name?: string
+          priority?: number | null
+          start_date?: string | null
+          updated_at?: string
+          weekend_rate?: number | null
+          weekly_discount_percent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_pricing_rules_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_owner_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fleet_team_members: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          fleet_id: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          is_active: boolean | null
+          permissions: Json | null
+          role: Database["public"]["Enums"]["fleet_team_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          fleet_id: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["fleet_team_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          fleet_id?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          is_active?: boolean | null
+          permissions?: Json | null
+          role?: Database["public"]["Enums"]["fleet_team_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_team_members_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_owner_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6646,6 +6997,7 @@ export type Database = {
           base_daily_rate: number | null
           boost_until: string | null
           cancellation_policy: string | null
+          car_class: string | null
           category: Database["public"]["Enums"]["p2p_vehicle_category"]
           cleaning_fee: number | null
           color: string | null
@@ -6663,6 +7015,7 @@ export type Database = {
           doors: number | null
           extra_mileage_fee: number | null
           features: Json | null
+          fleet_id: string | null
           fuel_type: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id: string
           images: Json | null
@@ -6716,6 +7069,7 @@ export type Database = {
           base_daily_rate?: number | null
           boost_until?: string | null
           cancellation_policy?: string | null
+          car_class?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
           cleaning_fee?: number | null
           color?: string | null
@@ -6733,6 +7087,7 @@ export type Database = {
           doors?: number | null
           extra_mileage_fee?: number | null
           features?: Json | null
+          fleet_id?: string | null
           fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id?: string
           images?: Json | null
@@ -6786,6 +7141,7 @@ export type Database = {
           base_daily_rate?: number | null
           boost_until?: string | null
           cancellation_policy?: string | null
+          car_class?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
           cleaning_fee?: number | null
           color?: string | null
@@ -6803,6 +7159,7 @@ export type Database = {
           doors?: number | null
           extra_mileage_fee?: number | null
           features?: Json | null
+          fleet_id?: string | null
           fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id?: string
           images?: Json | null
@@ -6850,6 +7207,13 @@ export type Database = {
           year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "p2p_vehicles_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_owner_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "p2p_vehicles_owner_id_fkey"
             columns: ["owner_id"]
@@ -10902,6 +11266,57 @@ export type Database = {
           },
         ]
       }
+      vehicle_reservations: {
+        Row: {
+          business_account_id: string | null
+          created_at: string
+          created_by: string | null
+          end_date: string
+          id: string
+          notes: string | null
+          reservation_type: string
+          start_date: string
+          vehicle_id: string
+        }
+        Insert: {
+          business_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date: string
+          id?: string
+          notes?: string | null
+          reservation_type: string
+          start_date: string
+          vehicle_id: string
+        }
+        Update: {
+          business_account_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          notes?: string | null
+          reservation_type?: string
+          start_date?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_reservations_business_account_id_fkey"
+            columns: ["business_account_id"]
+            isOneToOne: false
+            referencedRelation: "business_renter_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_reservations_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_seasonal_pricing: {
         Row: {
           created_at: string
@@ -12775,6 +13190,7 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "refunded"
+      business_account_status: "pending" | "approved" | "suspended"
       car_owner_document_type:
         | "drivers_license"
         | "vehicle_registration"
@@ -12786,6 +13202,8 @@ export type Database = {
       checkout_mode: "redirect" | "iframe"
       document_review_status: "pending" | "approved" | "rejected"
       driver_status: "pending" | "verified" | "rejected" | "suspended"
+      fleet_owner_status: "pending" | "approved" | "suspended" | "rejected"
+      fleet_team_role: "admin" | "manager" | "staff"
       p2p_booking_status:
         | "pending"
         | "confirmed"
@@ -13001,6 +13419,7 @@ export const Constants = {
         "cancelled",
         "refunded",
       ],
+      business_account_status: ["pending", "approved", "suspended"],
       car_owner_document_type: [
         "drivers_license",
         "vehicle_registration",
@@ -13013,6 +13432,8 @@ export const Constants = {
       checkout_mode: ["redirect", "iframe"],
       document_review_status: ["pending", "approved", "rejected"],
       driver_status: ["pending", "verified", "rejected", "suspended"],
+      fleet_owner_status: ["pending", "approved", "suspended", "rejected"],
+      fleet_team_role: ["admin", "manager", "staff"],
       p2p_booking_status: [
         "pending",
         "confirmed",
