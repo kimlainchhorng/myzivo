@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO } from "@/config/legalContent";
+import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES } from "@/config/legalContent";
 import FAQSchema from "@/components/shared/FAQSchema";
 
 export default function LegalFAQ() {
@@ -116,6 +116,36 @@ export default function LegalFAQ() {
             </Card>
           ))}
         </div>
+
+        {/* High-Risk Disclaimers */}
+        <Card className="mb-8 border-destructive/50 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              High-Risk Disclaimers
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="font-semibold mb-2">No Professional Advice</h4>
+              <p className="text-sm text-muted-foreground">
+                {EXTREME_LEGAL_POLICIES.highRiskDisclaimers.noProfessionalAdvice}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Safety Equipment</h4>
+              <p className="text-sm text-muted-foreground">
+                {EXTREME_LEGAL_POLICIES.highRiskDisclaimers.safetyEquipment}
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Weather & Environment</h4>
+              <p className="text-sm text-muted-foreground">
+                {EXTREME_LEGAL_POLICIES.highRiskDisclaimers.weatherEnvironment}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Dispute Resolution Summary */}
         <Card className="border-amber-500/50 bg-amber-500/5">

@@ -151,6 +151,14 @@ const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
 const CommunityStandards = lazy(() => import("./pages/legal/CommunityStandards"));
 const LegalFAQ = lazy(() => import("./pages/legal/LegalFAQ"));
+const VerificationPolicy = lazy(() => import("./pages/legal/VerificationPolicy"));
+const AccountSecurityPolicy = lazy(() => import("./pages/legal/AccountSecurityPolicy"));
+const LocationDisclosure = lazy(() => import("./pages/legal/LocationDisclosure"));
+const CommunicationsPolicy = lazy(() => import("./pages/legal/CommunicationsPolicy"));
+const PlatformAvailability = lazy(() => import("./pages/legal/PlatformAvailability"));
+const ThirdPartyServices = lazy(() => import("./pages/legal/ThirdPartyServices"));
+const SanctionsPolicy = lazy(() => import("./pages/legal/SanctionsPolicy"));
+const AgePolicy = lazy(() => import("./pages/legal/AgePolicy"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -346,6 +354,14 @@ const App = () => (
                 <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
                 <Route path="/legal/community-standards" element={<CommunityStandards />} />
                 <Route path="/legal/faq" element={<LegalFAQ />} />
+                <Route path="/legal/verification-policy" element={<VerificationPolicy />} />
+                <Route path="/legal/account-security" element={<AccountSecurityPolicy />} />
+                <Route path="/legal/location-disclosure" element={<LocationDisclosure />} />
+                <Route path="/legal/communications" element={<CommunicationsPolicy />} />
+                <Route path="/legal/platform-availability" element={<PlatformAvailability />} />
+                <Route path="/legal/third-party-services" element={<ThirdPartyServices />} />
+                <Route path="/legal/sanctions" element={<SanctionsPolicy />} />
+                <Route path="/legal/age-policy" element={<AgePolicy />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
