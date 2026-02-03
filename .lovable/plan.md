@@ -1,9 +1,9 @@
 
-# Incident Response, Rollback Controls & Customer Protection for ZIVO Flights
+# Customer-Facing Clarity & Legal Alignment for ZIVO Flights
 
 ## Summary
 
-This plan implements OTA-grade incident management for ZIVO Flights, enabling rapid response to live incidents (Duffel outages, airline issues, payment failures) while protecting customers and maintaining trust. Key additions include structured incident reasons, auto-rollback on failure spikes, customer communication, and an incident log system.
+This plan implements final customer-facing messaging to clearly explain ZIVO's OTA role across all flight pages. Updates include header microcopy, enhanced checkout disclosures, improved confirmation messaging, My Trips support guidance, updated FAQ content, and standardized footer legal text.
 
 ---
 
@@ -11,279 +11,268 @@ This plan implements OTA-grade incident management for ZIVO Flights, enabling ra
 
 | Requirement | Status | Details |
 |-------------|--------|---------|
-| **Emergency pause control** | ✅ Exists | `flights_launch_settings.emergency_pause` field with admin UI |
-| **Pause reason** | ⚠️ Basic | Free-text field only - no structured categories |
-| **Price verification** | ✅ Exists | `create-flight-checkout` verifies offer validity/price in LIVE mode |
-| **Customer incident email** | ❌ Missing | No automated "Under Review" notification |
-| **Incident logs table** | ❌ Missing | Only `flight_admin_alerts` exists |
-| **Auto-pause on failures** | ❌ Missing | No automatic rollback trigger |
-| **Post-incident resolution flow** | ❌ Missing | No structured resolution process |
-| **Affected bookings tracking** | ❌ Missing | Can't link incidents to bookings |
+| **Flights header microcopy** | ❌ Missing | No "You book on ZIVO..." subtitle on search pages |
+| **Checkout confirmation clarity** | ⚠️ Partial | Consent exists but needs "I understand ZIVO sells flights as sub-agent" |
+| **Booking confirmation messaging** | ⚠️ Partial | Shows status but needs explicit "Booking confirmed" block |
+| **My Trips support expectations** | ❌ Missing | No support guidance or email in trips dashboard |
+| **FAQ content alignment** | ⚠️ Needs Update | Current FAQ has some affiliate-era language |
+| **Footer legal consistency** | ✅ Good | Footer already has correct OTA text |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Structured Incident Reasons
+### Phase 1: Add Flights Header Microcopy
 
-**Goal:** Replace free-text pause reason with required category selection.
+**Goal:** Display "You book and pay on ZIVO. Tickets are issued by licensed airline ticketing partners." on all flight pages.
 
-**File:** `src/types/flightsLaunch.ts` (MODIFY)
+**File:** `src/config/flightCompliance.ts` (MODIFY)
 
-Add incident reason types:
+Add new microcopy constant:
 ```typescript
-export type IncidentReasonCode = 
-  | 'airline_outage'      // Airline system outage
-  | 'pricing_issue'       // Pricing inconsistency
-  | 'payment_issue'       // Payment provider issue
-  | 'maintenance'         // Scheduled maintenance
-  | 'duffel_outage'       // Duffel API down
-  | 'other';              // Other
-
-export const INCIDENT_REASONS: { code: IncidentReasonCode; label: string; description: string }[] = [
-  { code: 'airline_outage', label: 'Airline System Outage', description: 'Airline GDS or booking system is down' },
-  { code: 'pricing_issue', label: 'Pricing Inconsistency', description: 'Fare discrepancies or incorrect prices' },
-  { code: 'payment_issue', label: 'Payment Provider Issue', description: 'Stripe or payment processing problem' },
-  { code: 'duffel_outage', label: 'Duffel API Outage', description: 'Duffel ticketing API not responding' },
-  { code: 'maintenance', label: 'Scheduled Maintenance', description: 'Planned system maintenance' },
-  { code: 'other', label: 'Other', description: 'Other issue requiring pause' },
-];
-```
-
-**Database:** Add `incident_reason_code` column to `flights_launch_settings`:
-```sql
-ALTER TABLE flights_launch_settings 
-ADD COLUMN incident_reason_code TEXT,
-ADD COLUMN incident_started_at TIMESTAMPTZ,
-ADD COLUMN incident_notes TEXT;
-```
-
-**File:** `src/pages/admin/FlightsLaunchControl.tsx` (MODIFY)
-
-Replace textarea with radio group for incident reason selection:
-- Show radio buttons for each INCIDENT_REASONS option
-- Make selection required before confirming pause
-- Add optional notes field for additional context
-
----
-
-### Phase 2: Create Incident Logs Table
-
-**Goal:** Track all incidents with affected bookings and resolution timeline.
-
-**Database:** Create `flight_incident_logs` table:
-```sql
-CREATE TABLE public.flight_incident_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  incident_type TEXT NOT NULL, -- 'pause' | 'auto_pause' | 'failure_spike' | 'api_outage'
-  reason_code TEXT NOT NULL,
-  description TEXT,
-  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES auth.users(id),
-  resolution_notes TEXT,
+export const FLIGHT_HEADER_MICROCOPY = {
+  /** Standard header subtitle for all flight pages */
+  standard: "You book and pay on ZIVO. Tickets are issued by licensed airline ticketing partners.",
   
-  -- Metrics at time of incident
-  affected_bookings_count INTEGER DEFAULT 0,
-  affected_booking_ids JSONB DEFAULT '[]',
-  failure_count_trigger INTEGER, -- For auto-pause incidents
+  /** Shorter version for mobile */
+  short: "Book on ZIVO · Licensed ticketing partners",
+} as const;
+```
+
+**File:** `src/components/flight/FlightSearchHero.tsx` (MODIFY)
+
+Add microcopy below the page title in the hero section:
+```typescript
+import { FLIGHT_HEADER_MICROCOPY } from "@/config/flightCompliance";
+
+// Below the "Search Flights" title:
+<p className="text-sm text-muted-foreground max-w-lg mx-auto mt-2">
+  {FLIGHT_HEADER_MICROCOPY.standard}
+</p>
+```
+
+**File:** `src/pages/FlightResults.tsx` (MODIFY)
+
+Add microcopy in the sticky search summary area. Update the StickySearchSummary component or add a subtitle below the route display:
+```typescript
+// After the route title, add:
+<p className="text-xs text-muted-foreground text-center mt-1 hidden sm:block">
+  {FLIGHT_HEADER_MICROCOPY.short}
+</p>
+```
+
+**File:** `src/pages/FlightCheckout.tsx` (MODIFY)
+
+Add microcopy in the checkout header section:
+```typescript
+// Below the "Checkout" or page title:
+<p className="text-sm text-muted-foreground text-center mt-1">
+  {FLIGHT_HEADER_MICROCOPY.standard}
+</p>
+```
+
+---
+
+### Phase 2: Enhanced Checkout Confirmation Clarity
+
+**Goal:** Add pre-payment messaging and update consent checkbox.
+
+**File:** `src/config/flightMoRCompliance.ts` (MODIFY)
+
+Add new checkout clarity text:
+```typescript
+export const FLIGHT_CHECKOUT_CLARITY = {
+  /** Pre-payment message - above Pay button */
+  prePayment: "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued instantly.",
   
-  -- Notifications sent
-  customers_notified INTEGER DEFAULT 0,
-  customers_resolved INTEGER DEFAULT 0,
+  /** Updated consent checkbox */
+  consent: "I understand ZIVO sells flights as a sub-agent and airline rules apply.",
   
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-
--- RLS: Admin only
-ALTER TABLE flight_incident_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage incident logs"
-ON flight_incident_logs FOR ALL TO authenticated
-USING (public.has_role(auth.uid(), 'admin'));
+  /** Full consent with links */
+  consentFull: "I understand ZIVO sells flights as a sub-agent of licensed ticketing providers and that airline fare rules, conditions of carriage, and ZIVO's Terms of Service apply to this booking.",
+} as const;
 ```
 
-**File:** `src/hooks/useIncidentLogs.ts` (NEW)
+**File:** `src/pages/FlightCheckout.tsx` (MODIFY)
 
-Create hooks for incident management:
-- `useActiveIncident()` - Get current open incident
-- `useIncidentHistory()` - Get past incidents
-- `useCreateIncident()` - Create new incident log
-- `useResolveIncident()` - Mark incident as resolved
+Update the checkout page with:
+1. Pre-payment clarity message above the Pay button
+2. Updated consent checkbox text
 
----
-
-### Phase 3: Auto-Pause on Failure Spike (Rollback Rule)
-
-**Goal:** Automatically pause flights if too many failures occur in a short window.
-
-**Configuration:**
-- Threshold: 3+ booking failures within 15 minutes triggers auto-pause
-- Creates automatic `flight_incident_logs` entry
-- Sends critical alert to admin
-
-**File:** `supabase/functions/check-flight-health/index.ts` (NEW)
-
-Create health check function that runs on a schedule:
 ```typescript
-// Called every 5 minutes via cron or after each booking failure
-// Checks failure count in last 15 minutes
-// If >= 3 failures, triggers auto-pause
+// Above the Pay button in the sidebar:
+<div className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+  <p className="text-sm text-center text-muted-foreground">
+    {FLIGHT_CHECKOUT_CLARITY.prePayment}
+  </p>
+</div>
 
-const { data: recentFailures } = await supabase
-  .from('flight_bookings')
-  .select('id')
-  .eq('ticketing_status', 'failed')
-  .gte('created_at', fifteenMinutesAgo);
-
-if (recentFailures.length >= FAILURE_THRESHOLD) {
-  // Auto-pause flights
-  await supabase.from('flights_launch_settings').update({
-    emergency_pause: true,
-    emergency_pause_reason: 'Auto-paused: Multiple booking failures detected',
-    incident_reason_code: 'other',
-    incident_started_at: new Date().toISOString(),
-  });
-
-  // Create incident log
-  await supabase.from('flight_incident_logs').insert({
-    incident_type: 'auto_pause',
-    reason_code: 'failure_spike',
-    description: `Auto-paused after ${recentFailures.length} failures in 15 minutes`,
-    failure_count_trigger: recentFailures.length,
-    affected_booking_ids: recentFailures.map(f => f.id),
-    affected_bookings_count: recentFailures.length,
-  });
-
-  // Create critical alert
-  await supabase.from('flight_admin_alerts').insert({
-    alert_type: 'auto_pause_triggered',
-    severity: 'critical',
-    message: `⚠️ Flights auto-paused: ${recentFailures.length} failures in 15 minutes`,
-  });
-}
-```
-
-**File:** `supabase/functions/issue-flight-ticket/index.ts` (MODIFY)
-
-After ticketing failure, call health check:
-```typescript
-// After creating failure alert, check for auto-pause threshold
-await fetch(`${supabaseUrl}/functions/v1/check-flight-health`, {
-  method: 'POST',
-  headers: { 'Authorization': `Bearer ${supabaseServiceKey}` },
-});
+// Update the checkbox label:
+<label htmlFor="terms">
+  {FLIGHT_CHECKOUT_CLARITY.consent} *
+</label>
 ```
 
 ---
 
-### Phase 4: Customer Communication on Incident
+### Phase 3: Improve Booking Confirmation Page
 
-**Goal:** Automatically notify affected customers when an incident occurs.
-
-**File:** `supabase/functions/send-incident-notification/index.ts` (NEW)
-
-Create function to email affected customers:
-```typescript
-// Called when incident is created with affected bookings
-// Sends "Under Review" email to each affected customer
-
-const emailContent = {
-  subject: "Update on Your ZIVO Flight Booking",
-  html: `
-    <p>We're reviewing an issue with your booking reference: ${bookingRef}</p>
-    <p>Our support team is on it and will update you shortly.</p>
-    <p>You don't need to take any action at this time.</p>
-    <p>Contact: support@hizivo.com</p>
-  `
-};
-```
-
-**File:** `src/pages/admin/FlightsLaunchControl.tsx` (MODIFY)
-
-Add option in pause modal:
-```tsx
-<Checkbox id="notify-customers" checked={notifyCustomers} onChange={...} />
-<Label>Notify affected customers about this incident</Label>
-```
-
----
-
-### Phase 5: Booking Status "Under Review"
-
-**Goal:** Show "Under Review" status for bookings affected by incidents.
+**Goal:** Add explicit confirmation block with all key details.
 
 **File:** `src/pages/FlightConfirmation.tsx` (MODIFY)
 
-Check if booking is linked to active incident:
+Add a prominent confirmation block when ticket is issued:
 ```typescript
-// If booking status is 'processing' or 'pending' AND incident is active
-if (booking.ticketing_status === 'processing' && activeIncident) {
-  return (
-    <Badge variant="outline" className="bg-amber-500/10">
-      Under Review
-    </Badge>
-  );
-}
-```
-
-**File:** `src/pages/AccountFlightBookings.tsx` (MODIFY)
-
-Same "Under Review" display in customer's booking list.
-
----
-
-### Phase 6: Post-Incident Resolution Flow
-
-**Goal:** Structured flow to resume bookings and notify customers.
-
-**File:** `src/pages/admin/FlightsLaunchControl.tsx` (MODIFY)
-
-Add resolution section when incident is active:
-```tsx
-{isPaused && activeIncident && (
-  <Card className="mb-6">
-    <CardHeader>
-      <CardTitle>Resolve Incident</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <Textarea 
-        placeholder="Resolution notes (e.g., root cause, fix applied)" 
-        value={resolutionNotes}
-      />
-      <Checkbox>Notify affected customers of resolution</Checkbox>
-      <Button onClick={handleResolveIncident}>
-        Resolve & Resume Bookings
-      </Button>
+// Replace/enhance the success header section:
+{isIssued && (
+  <Card className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+    <CardContent className="p-6 text-center">
+      <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+      <h2 className="text-xl font-bold mb-2">Booking Confirmed ✅</h2>
+      <p className="text-muted-foreground mb-4">
+        Your ticket has been issued. Your e-ticket and itinerary have been sent to your email.
+      </p>
+      
+      {/* Key details grid */}
+      <div className="grid grid-cols-3 gap-4 mt-4 text-left max-w-md mx-auto">
+        <div>
+          <p className="text-xs text-muted-foreground">Airline</p>
+          <p className="font-medium">{offerDetails?.airline || booking.airline}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Booking Reference</p>
+          <p className="font-mono font-bold">{booking.pnr || booking.booking_reference}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Ticket Number</p>
+          <p className="font-mono text-sm">
+            {booking.ticket_numbers?.[0] || 'Pending'}
+          </p>
+        </div>
+      </div>
     </CardContent>
   </Card>
 )}
 ```
 
-**File:** `supabase/functions/resolve-flight-incident/index.ts` (NEW)
+---
 
-Handles incident resolution:
-1. Mark incident as resolved in `flight_incident_logs`
-2. Resume bookings (clear `emergency_pause`)
-3. Send resolution emails to affected customers
-4. Update booking statuses if needed
+### Phase 4: My Trips Support Expectations
+
+**Goal:** Add support info box in the flights trips dashboard.
+
+**File:** `src/config/flightCompliance.ts` (MODIFY)
+
+Add support expectation text:
+```typescript
+export const FLIGHT_SUPPORT_INFO = {
+  /** My Trips support box title */
+  title: "Need to change or cancel your flight?",
+  
+  /** Description */
+  description: "Requests are handled by ZIVO according to airline fare rules.",
+  
+  /** Support email */
+  email: "support@hizivo.com",
+  
+  /** Full message */
+  full: "Need to change or cancel your flight? Requests are handled by ZIVO according to airline fare rules. Contact support@hizivo.com for assistance.",
+} as const;
+```
+
+**File:** `src/components/flight/MyTripsDashboard.tsx` (MODIFY)
+
+Add a support info card at the top of the trips list:
+```typescript
+import { FLIGHT_SUPPORT_INFO } from "@/config/flightCompliance";
+import { HelpCircle, Mail } from "lucide-react";
+
+// Add inside the component, before the trips list:
+<Card className="mb-4 border-primary/20 bg-primary/5">
+  <CardContent className="p-4 flex items-start gap-3">
+    <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+    <div className="flex-1">
+      <p className="font-medium text-sm">{FLIGHT_SUPPORT_INFO.title}</p>
+      <p className="text-xs text-muted-foreground mt-1">
+        {FLIGHT_SUPPORT_INFO.description}
+      </p>
+    </div>
+    <a 
+      href={`mailto:${FLIGHT_SUPPORT_INFO.email}`}
+      className="text-xs text-primary hover:underline flex items-center gap-1"
+    >
+      <Mail className="w-3 h-3" />
+      {FLIGHT_SUPPORT_INFO.email}
+    </a>
+  </CardContent>
+</Card>
+```
 
 ---
 
-### Phase 7: Admin Incident Dashboard
+### Phase 5: Update Flight FAQ Content
 
-**Goal:** Dedicated view for incident history and management.
+**Goal:** Align FAQ answers with OTA model.
 
-**File:** `src/pages/admin/FlightIncidentLog.tsx` (NEW)
+**File:** `src/components/flight/FlightFAQSection.tsx` (MODIFY)
 
-Create incident log page showing:
-- Current incident status (if active)
-- Incident history with timeline
-- Affected bookings per incident
-- Resolution metrics
+Replace the FAQ content with accurate OTA messaging:
+```typescript
+const faqs = [
+  {
+    question: "Do I book on ZIVO or another site?",
+    answer: "You book and pay directly on ZIVO. Your entire booking is processed securely on our platform."
+  },
+  {
+    question: "Who issues my ticket?",
+    answer: "Tickets are issued by licensed airline ticketing partners under airline rules. ZIVO operates as a sub-agent of these licensed providers."
+  },
+  {
+    question: "Are prices final?",
+    answer: "Yes. Prices shown are final before payment. All taxes and fees are included. There are no hidden charges."
+  },
+  {
+    question: "Who do I contact for support?",
+    answer: "Contact ZIVO support at support@hizivo.com for booking changes, cancellations, or any questions. We handle all support requests according to airline fare rules."
+  },
+  {
+    question: "How do I get my e-ticket?",
+    answer: "After payment, your e-ticket is issued instantly and sent to the email address provided for each passenger. You'll typically receive it within minutes."
+  },
+  {
+    question: "Can I change or cancel my booking?",
+    answer: "Changes and cancellations are subject to airline fare rules. Contact ZIVO support to request modifications. Fees may apply based on the airline's policy."
+  },
+];
+```
 
-Add route: `/admin/flights/incidents`
+---
+
+### Phase 6: Verify Footer Legal Consistency
+
+**Goal:** Ensure footer matches the required legal text exactly.
+
+**Current footer text (src/components/Footer.tsx lines 279-280):**
+```
+ZIVO sells air travel as a sub-agent of licensed ticketing providers. 
+Airline tickets are issued by authorized partners and subject to airline rules.
+```
+
+**Required text:**
+```
+ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+Tickets are issued by authorized partners under airline rules.
+```
+
+**File:** `src/components/Footer.tsx` (MODIFY)
+
+Update lines 279-280 to match the required text exactly:
+```typescript
+<p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+  ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+  Tickets are issued by authorized partners under airline rules.
+</p>
+```
 
 ---
 
@@ -291,111 +280,57 @@ Add route: `/admin/flights/incidents`
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/types/flightsLaunch.ts` | MODIFY | Add incident reason types |
-| `src/hooks/useIncidentLogs.ts` | CREATE | Hooks for incident CRUD |
-| `src/hooks/useFlightsLaunchStatus.ts` | MODIFY | Add incident reason handling |
-| `src/pages/admin/FlightsLaunchControl.tsx` | MODIFY | Structured pause reasons, resolution flow |
-| `src/pages/admin/FlightIncidentLog.tsx` | CREATE | Incident history dashboard |
-| `src/pages/FlightConfirmation.tsx` | MODIFY | Show "Under Review" status |
-| `supabase/functions/check-flight-health/index.ts` | CREATE | Auto-pause health check |
-| `supabase/functions/send-incident-notification/index.ts` | CREATE | Customer incident emails |
-| `supabase/functions/resolve-flight-incident/index.ts` | CREATE | Resolution flow |
-| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Trigger health check on failure |
-| `src/App.tsx` | MODIFY | Add incident log route |
+| `src/config/flightCompliance.ts` | MODIFY | Add header microcopy and support info constants |
+| `src/config/flightMoRCompliance.ts` | MODIFY | Add checkout clarity text |
+| `src/components/flight/FlightSearchHero.tsx` | MODIFY | Add microcopy below title |
+| `src/pages/FlightResults.tsx` | MODIFY | Add microcopy in sticky header |
+| `src/pages/FlightCheckout.tsx` | MODIFY | Add pre-payment message and update consent |
+| `src/pages/FlightConfirmation.tsx` | MODIFY | Enhance confirmation block with key details |
+| `src/components/flight/MyTripsDashboard.tsx` | MODIFY | Add support info card |
+| `src/components/flight/FlightFAQSection.tsx` | MODIFY | Update FAQ content for OTA model |
+| `src/components/Footer.tsx` | MODIFY | Minor text adjustment for consistency |
 
 ---
 
-## Database Changes
+## Key Messaging Reference
 
-### Modify `flights_launch_settings`:
-```sql
-ALTER TABLE flights_launch_settings 
-ADD COLUMN incident_reason_code TEXT,
-ADD COLUMN incident_started_at TIMESTAMPTZ,
-ADD COLUMN incident_notes TEXT;
-```
+### Header Microcopy (All Flight Pages)
+> "You book and pay on ZIVO. Tickets are issued by licensed airline ticketing partners."
 
-### Create `flight_incident_logs`:
-```sql
-CREATE TABLE public.flight_incident_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  incident_type TEXT NOT NULL,
-  reason_code TEXT NOT NULL,
-  description TEXT,
-  started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES auth.users(id),
-  resolution_notes TEXT,
-  affected_bookings_count INTEGER DEFAULT 0,
-  affected_booking_ids JSONB DEFAULT '[]',
-  failure_count_trigger INTEGER,
-  customers_notified INTEGER DEFAULT 0,
-  customers_resolved INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
+### Pre-Payment Message (Checkout)
+> "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued instantly."
+
+### Consent Checkbox (Checkout)
+> "I understand ZIVO sells flights as a sub-agent and airline rules apply."
+
+### Confirmation Block (Post-Booking)
+> "Booking confirmed ✅ Your ticket has been issued. Your e-ticket and itinerary have been sent to your email."
+
+### My Trips Support Box
+> "Need to change or cancel your flight? Requests are handled by ZIVO according to airline fare rules."
+
+### Footer Legal Text
+> "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under airline rules."
 
 ---
 
-## Incident Reason Categories
+## FAQ Content Summary
 
-| Code | Label | When to Use |
-|------|-------|-------------|
-| `airline_outage` | Airline System Outage | GDS or airline booking system is down |
-| `pricing_issue` | Pricing Inconsistency | Fare discrepancies detected |
-| `payment_issue` | Payment Provider Issue | Stripe failures |
-| `duffel_outage` | Duffel API Outage | Duffel not responding |
-| `maintenance` | Scheduled Maintenance | Planned downtime |
-| `other` | Other | Any other issue |
-
----
-
-## Auto-Pause Thresholds
-
-| Metric | Threshold | Action |
-|--------|-----------|--------|
-| Booking failures | 3+ in 15 minutes | Auto-pause + critical alert |
-| Duffel error rate | >50% in 15 minutes | Degraded status + warning alert |
-| Payment failures | 3+ in 15 minutes | Alert but no auto-pause |
+| Question | Answer |
+|----------|--------|
+| Do I book on ZIVO or another site? | You book and pay directly on ZIVO. |
+| Who issues my ticket? | Tickets are issued by licensed airline ticketing partners under airline rules. |
+| Are prices final? | Yes. Prices shown are final before payment. |
+| Who do I contact for support? | ZIVO support at support@hizivo.com |
+| How do I get my e-ticket? | Issued instantly after payment, sent via email. |
+| Can I change or cancel my booking? | Subject to airline fare rules. Contact ZIVO support. |
 
 ---
 
-## Customer-Facing Messages
+## Benefits
 
-| Scenario | Message |
-|----------|---------|
-| **Pause active (search page)** | "Flight bookings are temporarily unavailable. Please check back shortly." |
-| **Checkout blocked** | "Flight bookings are temporarily paused. Please try again later." |
-| **Booking "Under Review"** | Status badge + "Our team is reviewing your booking." |
-| **Incident email** | "We're reviewing an issue with your booking. Our support team is on it." |
-| **Resolution email** | "The issue with your booking has been resolved. Thank you for your patience." |
-
----
-
-## Testing Checklist
-
-1. **Structured Pause Flow**
-   - [ ] Radio buttons shown for incident reasons
-   - [ ] Reason required before confirming pause
-   - [ ] Incident log created on pause
-
-2. **Auto-Pause**
-   - [ ] Simulate 3 ticketing failures
-   - [ ] Verify auto-pause triggers
-   - [ ] Verify critical alert created
-
-3. **Customer Communication**
-   - [ ] "Under Review" status shown on booking
-   - [ ] Incident email sent to affected customers
-   - [ ] Resolution email sent on resolve
-
-4. **Resolution Flow**
-   - [ ] Resolution notes saved
-   - [ ] Customers notified option works
-   - [ ] Bookings resume properly
-
-5. **Incident Log**
-   - [ ] History shows all past incidents
-   - [ ] Affected booking count accurate
-   - [ ] Timeline displays correctly
+1. **Customer Clarity** - Users understand exactly who they're booking with
+2. **Legal Protection** - Clear sub-agent disclosure reduces chargeback risk
+3. **Trust Building** - Consistent messaging across all touchpoints
+4. **Support Efficiency** - Clear support expectations reduce confusion
+5. **Compliance** - Aligned with seller-of-travel disclosure requirements
