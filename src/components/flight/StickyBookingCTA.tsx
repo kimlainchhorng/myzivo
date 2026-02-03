@@ -1,7 +1,7 @@
-import { ExternalLink, Lock } from "lucide-react";
+import { Lock, Plane } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
-import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
 import { useCTAColor, useStickyCTA } from "@/hooks/useABTest";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ interface StickyBookingCTAProps {
   returnDate?: string;
   passengers?: number;
   cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+  offerId?: string;
 }
 
 export default function StickyBookingCTA({ 
@@ -27,10 +28,11 @@ export default function StickyBookingCTA({
   returnDate,
   passengers = 1,
   cabinClass = 'economy',
+  offerId,
 }: StickyBookingCTAProps) {
-  const { redirectWithParams, redirectSimple } = useFlightRedirect('sticky_booking_cta', 'sticky_cta');
+  const navigate = useNavigate();
   
-  // A/B Testing hooks - use locked CTA text
+  // A/B Testing hooks
   const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('flights');
   const { isSticky, trackClick: trackStickyClick } = useStickyCTA();
 
@@ -39,20 +41,22 @@ export default function StickyBookingCTA({
     trackColorClick();
     trackStickyClick();
     
-    // Use deep link if we have search parameters
-    if (origin && destination && departDate) {
-      redirectWithParams({
+    // Navigate to internal checkout flow
+    if (offerId) {
+      navigate(`/flights/traveler-info?offer=${offerId}&passengers=${passengers}`);
+    } else if (origin && destination && departDate) {
+      // Build search params for results
+      const params = new URLSearchParams({
         origin,
-        destination,
-        departDate,
-        returnDate,
-        passengers,
-        cabinClass,
-        tripType: returnDate ? 'roundtrip' : 'oneway',
+        dest: destination,
+        depart: departDate,
+        passengers: passengers.toString(),
+        cabin: cabinClass,
       });
+      if (returnDate) params.set('return', returnDate);
+      navigate(`/flights/results?${params.toString()}`);
     } else {
-      // Fallback to simple redirect
-      redirectSimple();
+      navigate('/flights');
     }
   };
 
@@ -76,15 +80,15 @@ export default function StickyBookingCTA({
             {lowestPrice && (
               <div className="flex items-baseline gap-1">
                 <span className="text-xs text-muted-foreground">From</span>
-                <span className="text-2xl font-bold text-sky-500">${lowestPrice}*</span>
+                <span className="text-2xl font-bold text-sky-500">${lowestPrice}</span>
               </div>
             )}
             <p className="text-[10px] text-muted-foreground truncate">
-              {flightCount ? `${flightCount} flights • Compare prices` : "Compare flight prices"}
+              {flightCount ? `${flightCount} flights available` : "Book your flight"}
             </p>
           </div>
 
-          {/* CTA Button - Locked compliance text */}
+          {/* CTA Button - MoR compliance text */}
           <Button
             size="lg"
             className={cn(
@@ -93,15 +97,15 @@ export default function StickyBookingCTA({
             )}
             onClick={handleBookClick}
           >
-            <Lock className="w-4 h-4" />
+            <Plane className="w-4 h-4" />
             {FLIGHT_CTA_TEXT.primary}
-            <ExternalLink className="w-4 h-4" />
+            <Lock className="w-4 h-4" />
           </Button>
         </div>
 
-        {/* Compliance Disclosure */}
+        {/* MoR Compliance Disclosure */}
         <p className="text-[9px] text-muted-foreground text-center mt-2 leading-tight">
-          {FLIGHT_DISCLAIMERS.redirect}
+          {FLIGHT_DISCLAIMERS.checkout}
         </p>
       </div>
     </div>

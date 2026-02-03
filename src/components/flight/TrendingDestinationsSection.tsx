@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, TrendingUp, Info } from "lucide-react";
+import { ArrowRight, TrendingUp, Plane } from "lucide-react";
 import { useTrendingDestinations } from "@/hooks/useTrendingFlights";
 
 interface TrendingDestinationsSectionProps {
@@ -9,7 +9,7 @@ interface TrendingDestinationsSectionProps {
 }
 
 export function TrendingDestinationsSection({ onSelectDestination }: TrendingDestinationsSectionProps) {
-  const { destinations, isLoading, disclaimer } = useTrendingDestinations();
+  const { destinations, isLoading } = useTrendingDestinations();
 
   return (
     <section className="py-12 border-t border-border/50">
@@ -18,8 +18,8 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
           <h2 className="font-display text-2xl font-bold">Popular Destinations</h2>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs text-muted-foreground">
-              <Info className="w-3 h-3 mr-1" />
-              Indicative Prices
+              <Plane className="w-3 h-3 mr-1" />
+              Live Prices
             </Badge>
           </div>
         </div>
@@ -53,9 +53,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                         {dest.isLoading ? (
                           <Skeleton className="h-5 w-16" />
                         ) : (
-                          <>
-                            <p className="text-sky-400 font-bold">From ${dest.price}*</p>
-                          </>
+                          <p className="text-sky-400 font-bold">From ${dest.price}</p>
                         )}
                         <span className="text-xs text-muted-foreground">round trip</span>
                       </div>
@@ -67,9 +65,9 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
             </div>
           ))}
         </div>
-        {/* Price Disclaimer */}
+        {/* MoR Disclaimer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          {disclaimer}
+          All prices include taxes and fees. Final total shown at checkout.
         </p>
       </div>
     </section>
