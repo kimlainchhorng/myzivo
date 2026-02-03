@@ -220,6 +220,9 @@ export default function Security() {
                 <Button variant="outline" asChild>
                   <Link to="/security/operations">Security Operations</Link>
                 </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/security/disaster-recovery">Disaster Recovery</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
