@@ -1,12 +1,12 @@
 /**
  * NoFlightsFound Component
- * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ * OTA Mode: Shows "No flights available" UI when Duffel returns 0 offers
+ * Does NOT fallback to affiliate - keeps cross-sell for Hotels/Cars only
  */
 import { Plane, Search, ExternalLink, Hotel, Car, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
-import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { useNavigate } from "react-router-dom";
 
@@ -24,28 +24,6 @@ export default function NoFlightsFound({
   destination 
 }: NoFlightsFoundProps) {
   const navigate = useNavigate();
-
-  const handleSearchPartner = () => {
-    // Track this click for analytics
-    trackAffiliateClick({
-      flightId: `no_results-${origin}-${destination}`,
-      airline: 'Multiple',
-      airlineCode: 'ALL',
-      origin: origin || '',
-      destination: destination || '',
-      price: 0,
-      passengers: 1,
-      cabinClass: 'economy',
-      affiliatePartner: 'searadar',
-      referralUrl: AFFILIATE_LINKS.flights.url,
-      source: 'no_flights_found',
-      ctaType: 'no_results_fallback',
-      serviceType: 'flights',
-    });
-    
-    // Open same affiliate link in new tab
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
-  };
 
   const handleCrossSellClick = (type: 'hotel' | 'car' | 'activities') => {
     trackAffiliateClick({
@@ -77,12 +55,12 @@ export default function NoFlightsFound({
         <Plane className="w-10 h-10 text-sky-500" />
       </div>
       
-      <h3 className="text-xl sm:text-2xl font-bold mb-2">Comparing live deals</h3>
+      <h3 className="text-xl sm:text-2xl font-bold mb-2">No flights available</h3>
       <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-        We're searching licensed travel partners for the best options. Try adjusting your filters or explore deals below.
+        No flights found for these dates. Try different dates or nearby airports.
       </p>
 
-      <div className="flex flex-col sm:flex-row justify-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row justify-center gap-3 mb-8">
         {onClearFilters && (
           <Button variant="outline" onClick={onClearFilters} className="gap-2">
             Clear Filters
@@ -96,28 +74,7 @@ export default function NoFlightsFound({
         )}
       </div>
 
-      {/* Primary Affiliate CTA */}
-      <div className="max-w-md mx-auto mb-8">
-        <div className="p-6 rounded-2xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
-          <p className="text-sm text-muted-foreground mb-4">
-            Search 728+ airlines with our trusted partner
-          </p>
-          <Button
-            size="lg"
-            className="w-full gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-lg shadow-sky-500/30"
-            onClick={handleSearchPartner}
-          >
-            <Plane className="w-5 h-5" />
-            {FLIGHT_CTA_TEXT.primary}
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-          <p className="text-[10px] text-muted-foreground mt-3">
-            {FLIGHT_DISCLAIMERS.ticketingShort}
-          </p>
-        </div>
-      </div>
-
-      {/* Cross-Sell Options */}
+      {/* Cross-Sell Options - Hotels/Cars remain affiliate model */}
       {destination && (
         <div className="max-w-lg mx-auto">
           <p className="text-sm text-muted-foreground mb-4">Or explore other options for your trip:</p>

@@ -1,6 +1,6 @@
 /**
  * How Booking Works Section
- * Trust-building component explaining the partner checkout flow
+ * Trust-building component explaining the ZIVO booking flow
  */
 
 import { Search, MousePointerClick, ShieldCheck, ArrowRight } from "lucide-react";
