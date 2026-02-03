@@ -35,7 +35,7 @@ import FlightSupportCTA from "@/components/flight/FlightSupportCTA";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
-import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
+import { FLIGHT_DISCLAIMERS, FLIGHT_HEADER_MICROCOPY } from "@/config/flightCompliance";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import {
@@ -397,6 +397,13 @@ const FlightResults = () => {
             />
           }
         />
+        
+        {/* OTA Microcopy - Below sticky header */}
+        <div className="bg-muted/30 border-b border-border/50 py-2">
+          <p className="text-xs text-muted-foreground text-center hidden sm:block">
+            {FLIGHT_HEADER_MICROCOPY.short}
+          </p>
+        </div>
 
         {/* Trust Strip - Always Visible */}
         <FlightTrustStrip />

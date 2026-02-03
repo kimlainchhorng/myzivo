@@ -101,6 +101,21 @@ export const FLIGHT_MOR_DISCLAIMERS = {
 } as const;
 
 // ============================================
+// CHECKOUT CLARITY (Pre-payment messaging)
+// ============================================
+
+export const FLIGHT_CHECKOUT_CLARITY = {
+  /** Pre-payment message - above Pay button */
+  prePayment: "Your payment will be processed securely by ZIVO. After payment, your airline ticket will be issued instantly.",
+  
+  /** Updated consent checkbox */
+  consent: "I understand ZIVO sells flights as a sub-agent and airline rules apply.",
+  
+  /** Full consent with links */
+  consentFull: "I understand ZIVO sells flights as a sub-agent of licensed ticketing providers and that airline fare rules, conditions of carriage, and ZIVO's Terms of Service apply to this booking.",
+} as const;
+
+// ============================================
 // TRUST BADGES (MOR)
 // ============================================
 

@@ -32,7 +32,8 @@ import {
 import { format, parseISO } from 'date-fns';
 import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from '@/hooks/useDuffelFlights';
 import { useCreateFlightCheckout, type FlightPassenger } from '@/hooks/useFlightBooking';
-import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS, ZIVO_SOT_REGISTRATION } from '@/config/flightMoRCompliance';
+import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS, ZIVO_SOT_REGISTRATION, FLIGHT_CHECKOUT_CLARITY } from '@/config/flightMoRCompliance';
+import { FLIGHT_HEADER_MICROCOPY } from '@/config/flightCompliance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFlightsCanBook } from '@/hooks/useFlightsLaunchStatus';
@@ -230,6 +231,14 @@ const FlightCheckout = () => {
 
       <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
+          {/* Page Header with Microcopy */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold mb-2">Secure Checkout</h1>
+            <p className="text-sm text-muted-foreground">
+              {FLIGHT_HEADER_MICROCOPY.standard}
+            </p>
+          </div>
+
           {/* Back button */}
           <Button
             variant="ghost"
@@ -340,7 +349,7 @@ const FlightCheckout = () => {
                 </CardContent>
               </Card>
 
-              {/* Terms and Conditions - Enhanced for fare rules compliance */}
+              {/* Terms and Conditions - Enhanced for OTA clarity */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3">
@@ -354,7 +363,7 @@ const FlightCheckout = () => {
                         htmlFor="terms"
                         className="text-sm font-medium leading-relaxed cursor-pointer"
                       >
-                        {FLIGHT_MOR_DISCLAIMERS.termsCheckbox} *
+                        {FLIGHT_CHECKOUT_CLARITY.consent} *
                       </label>
                       <p className="text-xs text-muted-foreground">
                         By booking, you agree to the{' '}
@@ -386,6 +395,13 @@ const FlightCheckout = () => {
               {/* Pay Button */}
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-6 space-y-4">
+                  {/* Pre-payment clarity message */}
+                  <div className="p-3 rounded-lg bg-background/60 border border-border/50 mb-2">
+                    <p className="text-xs text-center text-muted-foreground">
+                      {FLIGHT_CHECKOUT_CLARITY.prePayment}
+                    </p>
+                  </div>
+
                   <Button
                     size="lg"
                     className="w-full gap-2 text-lg h-14"
