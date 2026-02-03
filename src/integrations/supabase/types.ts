@@ -766,6 +766,57 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_logs: {
+        Row: {
+          backup_target: string
+          backup_type: string
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          retention_days: number | null
+          size_bytes: number | null
+          started_at: string
+          status: string
+          storage_location: string | null
+          triggered_by: string | null
+        }
+        Insert: {
+          backup_target: string
+          backup_type: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          retention_days?: number | null
+          size_bytes?: number | null
+          started_at?: string
+          status?: string
+          storage_location?: string | null
+          triggered_by?: string | null
+        }
+        Update: {
+          backup_target?: string
+          backup_type?: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          retention_days?: number | null
+          size_bytes?: number | null
+          started_at?: string
+          status?: string
+          storage_location?: string | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       batch_stops: {
         Row: {
           address: string
@@ -2492,6 +2543,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dr_configuration: {
+        Row: {
+          config_key: string
+          config_value: Json
+          created_at: string
+          description: string | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       driver_cash_collections: {
         Row: {
@@ -5912,6 +5993,48 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          incident_severity: string
+          is_active: boolean | null
+          subject: string | null
+          template_name: string
+          template_type: string
+          updated_at: string
+          variables: string[] | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_severity: string
+          is_active?: boolean | null
+          subject?: string | null
+          template_name: string
+          template_type: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          incident_severity?: string
+          is_active?: boolean | null
+          subject?: string | null
+          template_name?: string
+          template_type?: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
           category: string
@@ -9053,6 +9176,60 @@ export type Database = {
           },
         ]
       }
+      recovery_tests: {
+        Row: {
+          approved_by: string | null
+          completed_at: string | null
+          conducted_by: string | null
+          created_at: string
+          data_loss_seconds: number | null
+          id: string
+          issues_found: string[] | null
+          notes: string | null
+          recovery_time_seconds: number | null
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          test_name: string
+          test_results: Json | null
+          test_type: string
+        }
+        Insert: {
+          approved_by?: string | null
+          completed_at?: string | null
+          conducted_by?: string | null
+          created_at?: string
+          data_loss_seconds?: number | null
+          id?: string
+          issues_found?: string[] | null
+          notes?: string | null
+          recovery_time_seconds?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          test_name: string
+          test_results?: Json | null
+          test_type: string
+        }
+        Update: {
+          approved_by?: string | null
+          completed_at?: string | null
+          conducted_by?: string | null
+          created_at?: string
+          data_loss_seconds?: number | null
+          id?: string
+          issues_found?: string[] | null
+          notes?: string | null
+          recovery_time_seconds?: number | null
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          test_name?: string
+          test_results?: Json | null
+          test_type?: string
+        }
+        Relationships: []
+      }
       region_bonuses: {
         Row: {
           bonus_amount: number
@@ -9830,6 +10007,71 @@ export type Database = {
         }
         Relationships: []
       }
+      restore_operations: {
+        Row: {
+          affected_tables: string[] | null
+          approved_at: string | null
+          approved_by: string | null
+          backup_id: string | null
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          notes: string | null
+          recovery_point: string | null
+          requested_by: string
+          restore_type: string
+          rollback_available: boolean | null
+          started_at: string | null
+          status: string
+          target_environment: string
+        }
+        Insert: {
+          affected_tables?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notes?: string | null
+          recovery_point?: string | null
+          requested_by: string
+          restore_type: string
+          rollback_available?: boolean | null
+          started_at?: string | null
+          status?: string
+          target_environment: string
+        }
+        Update: {
+          affected_tables?: string[] | null
+          approved_at?: string | null
+          approved_by?: string | null
+          backup_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notes?: string | null
+          recovery_point?: string | null
+          requested_by?: string
+          restore_type?: string
+          rollback_available?: boolean | null
+          started_at?: string | null
+          status?: string
+          target_environment?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restore_operations_backup_id_fkey"
+            columns: ["backup_id"]
+            isOneToOne: false
+            referencedRelation: "backup_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_requests: {
         Row: {
           admin_notes: string | null
@@ -10370,6 +10612,54 @@ export type Database = {
           },
         ]
       }
+      service_health_status: {
+        Row: {
+          created_at: string
+          id: string
+          incident_count: number | null
+          is_paused: boolean | null
+          last_check_at: string | null
+          metadata: Json | null
+          paused_at: string | null
+          paused_by: string | null
+          paused_reason: string | null
+          service_name: string
+          status: string
+          updated_at: string
+          uptime_percent: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          incident_count?: number | null
+          is_paused?: boolean | null
+          last_check_at?: string | null
+          metadata?: Json | null
+          paused_at?: string | null
+          paused_by?: string | null
+          paused_reason?: string | null
+          service_name: string
+          status?: string
+          updated_at?: string
+          uptime_percent?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          incident_count?: number | null
+          is_paused?: boolean | null
+          last_check_at?: string | null
+          metadata?: Json | null
+          paused_at?: string | null
+          paused_by?: string | null
+          paused_reason?: string | null
+          service_name?: string
+          status?: string
+          updated_at?: string
+          uptime_percent?: number | null
+        }
+        Relationships: []
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -10871,6 +11161,33 @@ export type Database = {
           peak_hours_only?: boolean
           radius_km?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_health_history: {
+        Row: {
+          active_incidents: number | null
+          id: string
+          metrics: Json | null
+          overall_health: string
+          recorded_at: string
+          service_statuses: Json
+        }
+        Insert: {
+          active_incidents?: number | null
+          id?: string
+          metrics?: Json | null
+          overall_health: string
+          recorded_at?: string
+          service_statuses: Json
+        }
+        Update: {
+          active_incidents?: number | null
+          id?: string
+          metrics?: Json | null
+          overall_health?: string
+          recorded_at?: string
+          service_statuses?: Json
         }
         Relationships: []
       }
@@ -15635,6 +15952,10 @@ export type Database = {
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
       is_restaurant_owner: {
         Args: { p_restaurant_id: string }
+        Returns: boolean
+      }
+      is_service_available: {
+        Args: { p_service_name: string }
         Returns: boolean
       }
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
