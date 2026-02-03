@@ -1798,3 +1798,215 @@ export const CORPORATE_LEGAL_FAQ = [
 
 // Helper arrays
 export const CORPORATE_POLICIES_LIST = Object.values(CORPORATE_IP_POLICIES);
+
+// ============================================
+// FINAL LEGAL PROTECTIONS (Clauses 123-135)
+// Payments, Travel, Rental, Platform Neutrality
+// ============================================
+
+export const FINAL_LEGAL_POLICIES = {
+  // Clause 123: Payment Finality
+  paymentFinality: {
+    id: "payment_finality",
+    title: "Payment Finality Policy",
+    version: "1.0",
+    content: `Payments are final once confirmed by the payment processor. Refunds are exceptions governed by posted policies and are not guaranteed. ZIVO is not liable for bank processing delays, currency conversion issues, or payment network failures. Users agree that payment processor rules and terms apply to all transactions.`,
+    keyPoints: [
+      "Payments final upon confirmation",
+      "Refunds subject to posted policies",
+      "Not liable for bank delays",
+      "Processor rules apply",
+    ],
+  },
+
+  // Clause 124: Chargeback Abuse
+  chargebackPolicy: {
+    id: "chargeback_abuse",
+    title: "Chargeback Abuse Policy",
+    version: "1.0",
+    content: `Abusive, fraudulent, or excessive chargebacks are prohibited. Accounts associated with chargeback abuse may be suspended, terminated, or subject to collections. ZIVO reserves the right to dispute chargebacks using platform records, transaction data, and service evidence.`,
+    consequences: [
+      "Account suspension or termination",
+      "Collections referral",
+      "Dispute with evidence",
+      "Platform access revocation",
+    ],
+  },
+
+  // Clause 125: Escrow & Hold Disclosure
+  escrowDisclosure: {
+    id: "escrow_disclosure",
+    title: "Escrow & Hold Disclosure",
+    version: "1.0",
+    content: `ZIVO is not a bank, money transmitter, or escrow agent. Funds may be held temporarily for risk management, fraud prevention, or dispute resolution. ZIVO does not guarantee fund availability and is not liable for delays in fund release.`,
+  },
+
+  // Clause 126: Airline Rules Precedence
+  airlineRules: {
+    id: "airline_rules",
+    title: "Airline Rules Precedence",
+    version: "1.0",
+    content: `Airline rules, policies, and contracts of carriage always take precedence over any ZIVO policies or representations. This includes baggage, seating, check-in, refund eligibility, and all operational matters. ZIVO is not responsible for airline enforcement of their rules.`,
+    airlineControlled: [
+      "Baggage allowances and fees",
+      "Seating assignments",
+      "Check-in procedures",
+      "Refund and change policies",
+      "Boarding requirements",
+      "In-flight services",
+    ],
+  },
+
+  // Clause 127: IRROPS & Force Events
+  irropsPolicy: {
+    id: "irrops_force",
+    title: "IRROPS & Force Events",
+    version: "1.0",
+    content: `ZIVO is not liable for irregular operations (IRROPS), weather disruptions, air traffic control actions, airline labor actions, mechanical failures, security incidents, or any other force majeure events affecting travel. Airlines control all rebooking and compensation decisions.`,
+    notLiableFor: [
+      "Weather delays and cancellations",
+      "Air traffic control delays",
+      "Airline labor disputes",
+      "Mechanical or safety delays",
+      "Security incidents",
+      "Airport closures",
+    ],
+  },
+
+  // Clause 128: Mechanical Failure Disclaimer
+  mechanicalDisclaimer: {
+    id: "mechanical_failure",
+    title: "Mechanical Failure Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not responsible for vehicle breakdowns, wear and tear, mechanical defects, or equipment failures. All vehicle-related issues are the responsibility of the vehicle owner. Renters should inspect vehicles before use and report issues immediately.`,
+    ownerResponsible: [
+      "Mechanical breakdowns",
+      "Tire issues and flats",
+      "Battery and electrical problems",
+      "Engine and transmission issues",
+      "Wear and tear items",
+    ],
+  },
+
+  // Clause 129: Traffic Law Compliance
+  trafficCompliance: {
+    id: "traffic_compliance",
+    title: "Traffic Law Compliance",
+    version: "1.0",
+    content: `Renters are fully responsible for all traffic tickets, toll charges, parking fines, moving violations, and legal infractions incurred during the rental period. ZIVO and vehicle owners may pass through penalties, administrative fees, and processing costs to the renter.`,
+    renterResponsible: [
+      "Traffic tickets and violations",
+      "Toll charges and fees",
+      "Parking citations",
+      "Camera-enforced violations",
+      "Administrative processing fees",
+    ],
+  },
+
+  // Clause 130: Visibility & Demand Disclaimer
+  visibilityDisclaimer: {
+    id: "visibility_demand",
+    title: "Visibility & Demand Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not guarantee listing visibility, search placement, booking volume, customer traffic, or income of any amount. Algorithms and ranking factors may change at any time without notice. Platform performance depends on market conditions beyond ZIVO's control.`,
+  },
+
+  // Clause 131: No Reliance Clause
+  noReliance: {
+    id: "no_reliance",
+    title: "No Reliance Clause",
+    version: "1.0",
+    content: `Users agree they do not rely on future earnings, continued platform access, specific platform behavior, or any representations about business performance. ZIVO makes no promises about income, demand, or platform continuity. Users assume all business risk.`,
+    noRelianceOn: [
+      "Future earnings or income",
+      "Continued platform access",
+      "Specific algorithm behavior",
+      "Booking or demand levels",
+      "Platform feature availability",
+    ],
+  },
+
+  // Clause 132: Education Before Checkout
+  checkoutEducation: {
+    id: "checkout_education",
+    title: "Education Before Checkout",
+    version: "1.0",
+    content: `ZIVO displays key disclosures before checkout completion. By proceeding, users confirm they have reviewed and understood prices, rules, refund terms, and all applicable disclaimers. Users are responsible for reading all information presented.`,
+    userConfirms: [
+      "Final price and fees",
+      "Cancellation and refund terms",
+      "Service-specific rules",
+      "Legal disclaimers",
+      "Partner terms and conditions",
+    ],
+  },
+
+  // Clause 133: Acknowledgment of Understanding
+  acknowledgment: {
+    id: "acknowledgment",
+    title: "Acknowledgment of Understanding",
+    version: "1.0",
+    content: `Users acknowledge and understand: the platform nature of ZIVO as a technology provider; that services are provided by independent third parties; and that users assume all risks associated with transactions. This acknowledgment is binding.`,
+    userAcknowledges: [
+      "ZIVO is a technology platform",
+      "Services by independent providers",
+      "Assumption of transaction risk",
+      "Platform liability limitations",
+      "Terms binding upon use",
+    ],
+  },
+
+  // Clause 134: Order of Precedence
+  orderPrecedence: {
+    id: "order_precedence",
+    title: "Order of Precedence",
+    version: "1.0",
+    content: `If conflicts arise between documents: (1) Terms of Service control over all other documents; (2) Service-specific policies apply next; (3) Marketing content, FAQs, and informal communications never control legal terms. In case of ambiguity, terms are interpreted in ZIVO's favor.`,
+    precedenceOrder: [
+      "Terms of Service (highest)",
+      "Privacy Policy",
+      "Service-specific policies",
+      "Partner agreements",
+      "Marketing content (never controls)",
+    ],
+  },
+
+  // Clause 135: Maximum Enforceability
+  maxEnforceability: {
+    id: "max_enforceability",
+    title: "Maximum Enforceability",
+    version: "1.0",
+    content: `All clauses, terms, and protections are enforced to the maximum extent permitted by applicable law. If any provision is found unenforceable, it shall be modified to the minimum extent necessary to become enforceable while preserving ZIVO's protections.`,
+  },
+};
+
+// Final Legal FAQ
+export const FINAL_LEGAL_FAQ = [
+  {
+    question: "Are payments final?",
+    answer: "Yes. Payments are final upon confirmation. Refunds are exceptions governed by posted policies.",
+  },
+  {
+    question: "What happens if I dispute a charge?",
+    answer: "Abusive chargebacks may result in account suspension. ZIVO may dispute using platform records.",
+  },
+  {
+    question: "Does ZIVO guarantee bookings or income?",
+    answer: "No. ZIVO makes no guarantees about visibility, demand, bookings, or income.",
+  },
+  {
+    question: "Who is responsible for traffic tickets?",
+    answer: "Renters are fully responsible for all traffic violations, tolls, and fines during rentals.",
+  },
+  {
+    question: "What if my flight is canceled?",
+    answer: "Airline rules control. ZIVO is not liable for IRROPS, weather, or force majeure events.",
+  },
+  {
+    question: "Which terms control if there's a conflict?",
+    answer: "Terms of Service control, then service-specific policies. Marketing content never controls.",
+  },
+];
+
+// Helper arrays
+export const FINAL_POLICIES_LIST = Object.values(FINAL_LEGAL_POLICIES);

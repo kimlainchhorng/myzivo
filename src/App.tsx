@@ -182,6 +182,11 @@ const LegalProcess = lazy(() => import("./pages/legal/LegalProcess"));
 const RecordsPolicy = lazy(() => import("./pages/legal/RecordsPolicy"));
 const WhistleblowerPolicy = lazy(() => import("./pages/legal/WhistleblowerPolicy"));
 const CorporateProtection = lazy(() => import("./pages/legal/CorporateProtection"));
+const PaymentFinality = lazy(() => import("./pages/legal/PaymentFinality"));
+const TravelRules = lazy(() => import("./pages/legal/TravelRules"));
+const RentalCompliance = lazy(() => import("./pages/legal/RentalCompliance"));
+const PlatformReliancePolicy = lazy(() => import("./pages/legal/PlatformReliancePolicy"));
+const TermsPrecedence = lazy(() => import("./pages/legal/TermsPrecedence"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -409,6 +414,12 @@ const App = () => (
                 <Route path="/legal/records" element={<RecordsPolicy />} />
                 <Route path="/legal/whistleblower" element={<WhistleblowerPolicy />} />
                 <Route path="/legal/corporate-protection" element={<CorporateProtection />} />
+                <Route path="/legal/payment-finality" element={<PaymentFinality />} />
+                <Route path="/legal/chargebacks" element={<PaymentFinality />} />
+                <Route path="/legal/travel-rules" element={<TravelRules />} />
+                <Route path="/legal/rental-compliance" element={<RentalCompliance />} />
+                <Route path="/legal/platform-reliance" element={<PlatformReliancePolicy />} />
+                <Route path="/legal/terms-precedence" element={<TermsPrecedence />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
