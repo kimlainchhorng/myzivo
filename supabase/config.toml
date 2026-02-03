@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.resolve-flight-incident]
 verify_jwt = false
+
+[functions.send-flight-email]
+verify_jwt = false

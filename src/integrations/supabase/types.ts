@@ -3387,6 +3387,59 @@ export type Database = {
           },
         ]
       }
+      flight_email_logs: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          resend_id: string | null
+          retry_count: number | null
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          resend_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          resend_id?: string | null
+          retry_count?: number | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_email_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flight_funnel_events: {
         Row: {
           amount: number | null

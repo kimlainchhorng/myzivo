@@ -67,6 +67,23 @@ serve(async (req) => {
 
       console.log("[FlightRefund] Refund request recorded for:", bookingId);
 
+      // Send refund requested email
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'refund_requested',
+            bookingId,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("[FlightRefund] Email failed:", emailErr);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
@@ -167,6 +184,23 @@ serve(async (req) => {
         });
 
       console.log("[FlightRefund] Refund processed successfully for:", bookingId);
+
+      // Send refund completed email
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'refund_completed',
+            bookingId,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("[FlightRefund] Email failed:", emailErr);
+      }
 
       return new Response(
         JSON.stringify({

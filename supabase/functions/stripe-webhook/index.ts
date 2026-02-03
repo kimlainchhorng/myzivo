@@ -193,6 +193,24 @@ serve(async (req) => {
 
           console.log("[Webhook] Flight booking paid:", metadata.booking_id);
           
+          // Send payment receipt email
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                type: "payment_receipt",
+                bookingId: metadata.booking_id,
+              }),
+            });
+            console.log("[Webhook] Payment receipt email triggered");
+          } catch (emailErr) {
+            console.error("[Webhook] Payment email failed:", emailErr);
+          }
+          
           // Trigger ticketing with explicit error handling
           try {
             const ticketResponse = await fetch(`${supabaseUrl}/functions/v1/issue-flight-ticket`, {
