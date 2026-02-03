@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 const steps = [
   {
     step: 1,
-    title: "Search",
-    description: "Enter your travel details — destination, dates, and preferences. ZIVO searches across hundreds of airlines, hotels, and car rental providers to find available options.",
+    title: "Search & Compare",
+    description: "ZIVO searches live prices from licensed airlines, hotels, and car rental partners. Enter your destination, dates, and preferences to see all available options.",
     icon: Search,
     color: "from-sky-500 to-blue-600",
     bgColor: "bg-sky-500/10",
@@ -35,8 +35,8 @@ const steps = [
   },
   {
     step: 2,
-    title: "Compare",
-    description: "Review and compare prices, times, amenities, and options side-by-side. Use filters to narrow down by price, stops, ratings, and more.",
+    title: "Choose the Best Option",
+    description: "Compare prices, policies, and flexibility before booking. Use filters to narrow down by price, stops, ratings, cancellation terms, and more.",
     icon: MousePointerClick,
     color: "from-violet-500 to-purple-600",
     bgColor: "bg-violet-500/10",
@@ -44,12 +44,21 @@ const steps = [
   },
   {
     step: 3,
-    title: "Book",
-    description: "When you find the right option, click to book. You'll be redirected to our trusted travel partner's website to complete your reservation securely.",
-    icon: ExternalLink,
+    title: "Secure Checkout",
+    description: "Bookings are completed securely through licensed providers or ZIVO checkout, depending on availability. Your payment is always protected.",
+    icon: Shield,
     color: "from-emerald-500 to-teal-600",
     bgColor: "bg-emerald-500/10",
     borderColor: "border-emerald-500/30",
+  },
+  {
+    step: 4,
+    title: "Confirmation",
+    description: "Tickets or reservations are issued instantly by authorized partners. You'll receive confirmation details directly to your email.",
+    icon: CheckCircle2,
+    color: "from-amber-500 to-orange-600",
+    bgColor: "bg-amber-500/10",
+    borderColor: "border-amber-500/30",
   },
 ];
 
@@ -107,7 +116,7 @@ export default function HowItWorks() {
 
           {/* 3-Step Process */}
           <div className="mb-20">
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {steps.map((item, index) => (
                 <div key={item.step} className="relative">
                   <Card className={cn("h-full border-2", item.borderColor)}>
@@ -148,41 +157,53 @@ export default function HowItWorks() {
             <CardContent className="p-8 md:p-12">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold mb-2">Your Journey with ZIVO</h2>
-                <p className="text-muted-foreground">From search to booking in minutes</p>
+                <p className="text-muted-foreground">From search to confirmation in minutes</p>
               </div>
               
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8">
-                <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-card border border-border">
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/20 flex items-center justify-center">
-                    <Search className="w-6 h-6 text-sky-500" />
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6">
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-sky-500" />
                   </div>
                   <div>
-                    <p className="font-semibold">You Search</p>
-                    <p className="text-xs text-muted-foreground">Enter travel details</p>
+                    <p className="font-semibold text-sm">Search</p>
+                    <p className="text-[10px] text-muted-foreground">Live prices</p>
                   </div>
                 </div>
                 
-                <ArrowRight className="w-6 h-6 text-muted-foreground rotate-90 md:rotate-0" />
+                <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
                 
-                <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-card border border-border">
-                  <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-violet-500" />
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-violet-500" />
                   </div>
                   <div>
-                    <p className="font-semibold">ZIVO Compares</p>
-                    <p className="text-xs text-muted-foreground">Multiple partners</p>
+                    <p className="font-semibold text-sm">Compare</p>
+                    <p className="text-[10px] text-muted-foreground">Best options</p>
                   </div>
                 </div>
                 
-                <ArrowRight className="w-6 h-6 text-muted-foreground rotate-90 md:rotate-0" />
+                <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
                 
-                <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-card border border-border">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                    <ExternalLink className="w-6 h-6 text-emerald-500" />
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p className="font-semibold">You Book</p>
-                    <p className="text-xs text-muted-foreground">On partner site</p>
+                    <p className="font-semibold text-sm">Checkout</p>
+                    <p className="text-[10px] text-muted-foreground">Secure booking</p>
+                  </div>
+                </div>
+                
+                <ArrowRight className="w-5 h-5 text-muted-foreground rotate-90 md:rotate-0" />
+                
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-card border border-border">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">Confirm</p>
+                    <p className="text-[10px] text-muted-foreground">Instant tickets</p>
                   </div>
                 </div>
               </div>

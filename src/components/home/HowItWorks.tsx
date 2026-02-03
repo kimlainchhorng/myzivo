@@ -1,36 +1,36 @@
-import { MapPin, Search, Car, CheckCircle2, Sparkles } from "lucide-react";
+import { Search, Scale, ShieldCheck, Ticket, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const steps = [
   {
     step: 1,
-    title: "Set Location",
-    description: "Enter your pickup location or let us detect it automatically",
-    icon: MapPin,
+    title: "Search & Compare",
+    description: "ZIVO searches live prices from licensed airlines, hotels, and car rental partners",
+    icon: Search,
     gradient: "from-primary to-teal-400",
     glow: "shadow-primary/30",
   },
   {
     step: 2,
-    title: "Choose Service",
-    description: "Select from rides, food delivery, flights, hotels, and more",
-    icon: Search,
+    title: "Choose the Best Option",
+    description: "Compare prices, policies, and flexibility before booking",
+    icon: Scale,
     gradient: "from-violet-500 to-purple-500",
     glow: "shadow-violet-500/30",
   },
   {
     step: 3,
-    title: "Book & Track",
-    description: "Confirm your booking and track everything in real-time",
-    icon: Car,
+    title: "Secure Checkout",
+    description: "Bookings are completed securely through licensed providers or ZIVO checkout",
+    icon: ShieldCheck,
     gradient: "from-sky-500 to-blue-500",
     glow: "shadow-sky-500/30",
   },
   {
     step: 4,
-    title: "Enjoy & Rate",
-    description: "Complete your trip and share your experience",
-    icon: CheckCircle2,
+    title: "Confirmation",
+    description: "Tickets or reservations are issued instantly by authorized partners",
+    icon: Ticket,
     gradient: "from-emerald-500 to-green-500",
     glow: "shadow-emerald-500/30",
   },
