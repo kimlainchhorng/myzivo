@@ -3539,6 +3539,78 @@ export type Database = {
         }
         Relationships: []
       }
+      dr_active_incidents: {
+        Row: {
+          affected_services: string[] | null
+          communication_sent: boolean | null
+          communication_sent_at: string | null
+          contained_at: string | null
+          created_at: string | null
+          description: string | null
+          detected_at: string | null
+          id: string
+          incident_type: string
+          lessons_learned: string | null
+          metadata: Json | null
+          post_mortem_url: string | null
+          resolution_steps: string | null
+          resolved_at: string | null
+          response_lead: string | null
+          root_cause: string | null
+          severity: string
+          started_at: string | null
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_services?: string[] | null
+          communication_sent?: boolean | null
+          communication_sent_at?: string | null
+          contained_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          detected_at?: string | null
+          id?: string
+          incident_type: string
+          lessons_learned?: string | null
+          metadata?: Json | null
+          post_mortem_url?: string | null
+          resolution_steps?: string | null
+          resolved_at?: string | null
+          response_lead?: string | null
+          root_cause?: string | null
+          severity?: string
+          started_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_services?: string[] | null
+          communication_sent?: boolean | null
+          communication_sent_at?: string | null
+          contained_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          detected_at?: string | null
+          id?: string
+          incident_type?: string
+          lessons_learned?: string | null
+          metadata?: Json | null
+          post_mortem_url?: string | null
+          resolution_steps?: string | null
+          resolved_at?: string | null
+          response_lead?: string | null
+          root_cause?: string | null
+          severity?: string
+          started_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dr_configuration: {
         Row: {
           config_key: string
@@ -3566,6 +3638,90 @@ export type Database = {
           id?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      dr_emergency_contacts: {
+        Row: {
+          contact_name: string
+          contact_type: string
+          created_at: string | null
+          email: string | null
+          escalation_order: number | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          phone: string | null
+          priority: number | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_name: string
+          contact_type: string
+          created_at?: string | null
+          email?: string | null
+          escalation_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+          priority?: number | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_name?: string
+          contact_type?: string
+          created_at?: string | null
+          email?: string | null
+          escalation_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          phone?: string | null
+          priority?: number | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      dr_key_rotations: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_emergency: boolean | null
+          key_identifier: string
+          next_rotation_due: string | null
+          notes: string | null
+          rotated_at: string | null
+          rotated_by: string | null
+          rotation_reason: string
+          service_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_emergency?: boolean | null
+          key_identifier: string
+          next_rotation_due?: string | null
+          notes?: string | null
+          rotated_at?: string | null
+          rotated_by?: string | null
+          rotation_reason: string
+          service_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_emergency?: boolean | null
+          key_identifier?: string
+          next_rotation_due?: string | null
+          notes?: string | null
+          rotated_at?: string | null
+          rotated_by?: string | null
+          rotation_reason?: string
+          service_name?: string
         }
         Relationships: []
       }
