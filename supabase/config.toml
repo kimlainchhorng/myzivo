@@ -89,3 +89,15 @@ verify_jwt = false
 
 [functions.search-hotels]
 verify_jwt = false
+
+[functions.create-travel-order]
+verify_jwt = false
+
+[functions.create-travel-checkout]
+verify_jwt = false
+
+[functions.confirm-hotelbeds-booking]
+verify_jwt = false
+
+[functions.send-travel-confirmation]
+verify_jwt = false

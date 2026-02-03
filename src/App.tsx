@@ -127,6 +127,10 @@ const OwnerEarningsPage = lazy(() => import("./pages/owner/OwnerEarningsPage"));
 // Fleet pages
 const FleetDashboard = lazy(() => import("./pages/fleet/FleetDashboard"));
 const FleetOnboarding = lazy(() => import("./pages/fleet/FleetOnboarding"));
+// Travel Checkout pages
+const TravelCheckoutPage = lazy(() => import("./pages/TravelCheckoutPage"));
+const TravelConfirmationPage = lazy(() => import("./pages/TravelConfirmationPage"));
+const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
 // Business pages
 const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountPage"));
 // Renter Verification pages
@@ -382,6 +386,11 @@ const App = () => (
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
                 <Route path="/booking/duffel-checkout" element={<DuffelCheckout />} />
                 <Route path="/checkout" element={<EmbeddedCheckout />} />
+                
+                {/* Travel Checkout (Hotels/Activities/Transfers) */}
+                <Route path="/travel/checkout" element={<TravelCheckoutPage />} />
+                <Route path="/confirmation/:orderNumber" element={<TravelConfirmationPage />} />
+                <Route path="/my-orders" element={<TravelConfirmationPage />} />
                 
                 {/* Hotels Pages */}
                 <Route path="/hotels" element={<HotelsPage />} />

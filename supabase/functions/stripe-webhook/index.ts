@@ -254,6 +254,63 @@ serve(async (req) => {
               severity: 'critical',
             });
           }
+        } else if (metadata.type === "travel") {
+          // Handle travel bookings (hotels, activities, transfers)
+          console.log("[Webhook] Travel checkout completed:", session.id, "Order:", metadata.orderId);
+
+          // Update payment status
+          await supabase
+            .from("travel_payments")
+            .update({ status: "succeeded" })
+            .eq("stripe_checkout_session_id", session.id);
+
+          // Trigger booking confirmation with Hotelbeds
+          try {
+            const confirmResponse = await fetch(`${supabaseUrl}/functions/v1/confirm-hotelbeds-booking`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({ orderId: metadata.orderId }),
+            });
+
+            if (!confirmResponse.ok) {
+              const confirmError = await confirmResponse.json();
+              console.error("[Webhook] Travel booking confirmation failed:", confirmError);
+
+              // Update order status to failed
+              await supabase
+                .from("travel_orders")
+                .update({ status: "failed" })
+                .eq("id", metadata.orderId);
+
+              // Log audit event
+              await supabase.from("booking_audit_logs").insert({
+                order_id: metadata.orderId,
+                event: "booking_confirmation_failed",
+                meta: { error: confirmError.error, checkout_session_id: session.id },
+              });
+            } else {
+              console.log("[Webhook] Travel booking confirmed for order:", metadata.orderNumber);
+            }
+          } catch (confirmErr) {
+            console.error("[Webhook] Error confirming travel booking:", confirmErr);
+
+            await supabase
+              .from("travel_orders")
+              .update({ status: "failed" })
+              .eq("id", metadata.orderId);
+
+            await supabase.from("booking_audit_logs").insert({
+              order_id: metadata.orderId,
+              event: "booking_confirmation_error",
+              meta: { 
+                error: confirmErr instanceof Error ? confirmErr.message : "Unknown error",
+                checkout_session_id: session.id,
+              },
+            });
+          }
         }
         break;
       }

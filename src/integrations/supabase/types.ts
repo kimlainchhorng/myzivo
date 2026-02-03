@@ -1191,6 +1191,47 @@ export type Database = {
           },
         ]
       }
+      booking_audit_logs: {
+        Row: {
+          created_at: string
+          event: string
+          id: string
+          ip_address: string | null
+          meta: Json | null
+          order_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          id?: string
+          ip_address?: string | null
+          meta?: Json | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          id?: string
+          ip_address?: string | null
+          meta?: Json | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_audit_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_returns: {
         Row: {
           booking_ref: string | null
@@ -12073,6 +12114,125 @@ export type Database = {
           },
         ]
       }
+      travel_order_items: {
+        Row: {
+          adults: number
+          children: number
+          created_at: string
+          end_date: string | null
+          id: string
+          meta: Json
+          order_id: string
+          price: number
+          provider: string
+          provider_reference: string | null
+          quantity: number
+          start_date: string
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          adults?: number
+          children?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          meta?: Json
+          order_id: string
+          price?: number
+          provider?: string
+          provider_reference?: string | null
+          quantity?: number
+          start_date: string
+          status?: string
+          title: string
+          type: string
+        }
+        Update: {
+          adults?: number
+          children?: number
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          meta?: Json
+          order_id?: string
+          price?: number
+          provider?: string
+          provider_reference?: string | null
+          quantity?: number
+          start_date?: string
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_orders: {
+        Row: {
+          created_at: string
+          currency: string
+          fees: number
+          holder_email: string
+          holder_name: string
+          holder_phone: string | null
+          id: string
+          order_number: string
+          provider: string
+          status: string
+          stripe_checkout_session_id: string | null
+          subtotal: number
+          taxes: number
+          total: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          fees?: number
+          holder_email: string
+          holder_name: string
+          holder_phone?: string | null
+          id?: string
+          order_number: string
+          provider?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          subtotal?: number
+          taxes?: number
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          fees?: number
+          holder_email?: string
+          holder_name?: string
+          holder_phone?: string | null
+          id?: string
+          order_number?: string
+          provider?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          subtotal?: number
+          taxes?: number
+          total?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       travel_partners: {
         Row: {
           base_url: string
@@ -12117,6 +12277,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      travel_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_id: string
+          provider: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id: string
+          provider?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string
+          provider?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       travel_search_sessions: {
         Row: {
