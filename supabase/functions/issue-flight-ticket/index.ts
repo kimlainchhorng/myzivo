@@ -196,6 +196,25 @@ serve(async (req) => {
             }),
           });
           console.log("[IssueTicket] Auto-refund triggered successfully");
+          
+          // Send booking failed email
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type: 'booking_failed',
+                bookingId,
+                data: { reason: errorMessage },
+              }),
+            });
+            console.log("[IssueTicket] Failure email sent");
+          } catch (emailErr) {
+            console.error("[IssueTicket] Failure email failed:", emailErr);
+          }
         } catch (refundErr) {
           console.error("[IssueTicket] Auto-refund failed:", refundErr);
           
@@ -301,6 +320,26 @@ serve(async (req) => {
     }
 
     console.log("[IssueTicket] Ticket issued successfully:", pnr);
+
+    // Send booking confirmation email
+    console.log("[IssueTicket] Sending booking confirmation email");
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          type: "booking_confirmation",
+          bookingId,
+        }),
+      });
+      console.log("[IssueTicket] Confirmation email triggered");
+    } catch (emailErr) {
+      console.error("[IssueTicket] Email trigger failed:", emailErr);
+      // Don't fail the ticketing if email fails
+    }
 
     return new Response(
       JSON.stringify({
