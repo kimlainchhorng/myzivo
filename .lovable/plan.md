@@ -1,9 +1,10 @@
 
-# Production Safety, Rate Limiting & Monitoring for ZIVO Flights
+
+# LIVE Switch, Launch Guardrails & Public Readiness Lock for ZIVO Flights
 
 ## Summary
 
-This plan implements comprehensive production safety measures to prepare ZIVO Flights for public traffic under Duffel LIVE. It adds search rate limiting, bot protection, payment safety locks, system health monitoring, an admin system status page, and customer-friendly error messaging.
+This plan implements a controlled TEST → LIVE switch for ZIVO Flights, allowing safe transition from Duffel sandbox to production while enforcing pre-launch requirements, blocking public bookings in TEST mode, and enabling post-launch monitoring.
 
 ---
 
@@ -11,651 +12,765 @@ This plan implements comprehensive production safety measures to prepare ZIVO Fl
 
 | Requirement | Status | Details |
 |-------------|--------|---------|
-| **Rate limiting infrastructure** | ✅ Exists | `rate-limiter` edge function + client `rateLimiter.ts` |
-| **Rate limiting for flights** | ⚠️ Partial | Config exists (`flights_search: 30/min`) but NOT integrated into `useDuffelFlightSearch` |
-| **Bot detection** | ✅ Exists | Edge function has `detectBot()` with user-agent analysis |
-| **Duplicate search detection** | ❌ Missing | No protection against rapid identical searches |
-| **Payment safety (offer verification)** | ❌ Missing | No offer re-validation before checkout |
-| **System health monitoring** | ⚠️ Partial | Generic `AdminSystemStatus` exists but no Duffel/Stripe-specific monitoring |
-| **Flights system status page** | ✅ Exists | `/admin/flights/status` shows booking stats and alerts |
-| **Customer-friendly errors** | ⚠️ Partial | Some errors shown but API errors can leak through |
-| **Admin alerts for failures** | ✅ Exists | `flight_admin_alerts` table with severity levels |
+| **Global FLIGHTS_STATUS config** | Missing | Only `FLIGHTS_MODE` (OTA vs Affiliate) exists |
+| **Duffel environment detection** | Exists | `duffelConfig.ts` has `isSandboxMode()` / `isLiveMode()` |
+| **Public booking block in TEST** | Missing | Anyone can currently checkout in sandbox |
+| **Pre-LIVE checklist** | Exists (for cars) | `beta_launch_checklist` table pattern can be adapted |
+| **Admin LIVE switch UI** | Missing | Need dedicated flights launch control page |
+| **Launch confirmation modal** | Missing | No safety confirmation before going live |
+| **Post-launch monitoring** | Partial | `FlightStatusPage` shows stats but no first-booking alerts |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Integrate Rate Limiting into Flight Search Hook
+### Phase 1: Create Flights Launch Settings Types & Database
 
-**Goal:** Enforce rate limits on every flight search call.
+**Goal:** Define a dedicated flights launch configuration table and types.
 
-**File:** `src/hooks/useDuffelFlights.ts`
+**File:** `src/types/flightsLaunch.ts` (NEW)
 
-Add rate limit check before search:
-```typescript
-import { checkRateLimit, RateLimitError } from '@/lib/security/rateLimiter';
-
-export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: boolean }) {
-  const { enabled = true, ...searchParams } = params;
-
-  return useQuery({
-    queryKey: ['duffel-flights', searchParams],
-    queryFn: async (): Promise<DuffelSearchResult> => {
-      // Rate limit check
-      const rateLimitResult = await checkRateLimit('flights_search');
-      if (!rateLimitResult.allowed) {
-        throw new RateLimitError(
-          'Too many searches. Please wait a moment and try again.',
-          rateLimitResult.retryAfter
-        );
-      }
-
-      // Existing search logic...
-    },
-    // ...
-  });
-}
-```
-
-**File:** `src/lib/security/rateLimiter.ts`
-
-Update limits to match requirements (10 user, 30 IP):
-```typescript
-const CLIENT_LIMITS: Record<RateLimitAction, { windowMs: number; max: number }> = {
-  flights_search: { windowMs: 60000, max: 10 },  // Changed from 30 to 10
-  // ...
-};
-```
-
-**File:** `supabase/functions/rate-limiter/index.ts`
-
-Update server-side limits:
-```typescript
-const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'flights_search': { windowMs: 60000, maxRequests: 10 },  // 10 per user/minute
-  'flights_search_ip': { windowMs: 60000, maxRequests: 30 }, // 30 per IP/minute
-  // ...
-};
-```
-
----
-
-### Phase 2: Add Bot & Abuse Protection (Duplicate Search Detection)
-
-**Goal:** Block repeated identical searches and detect rapid cycling behavior.
-
-**File:** `src/lib/security/searchProtection.ts` (NEW)
-
-Create a new module for search abuse protection:
 ```typescript
 /**
- * Search Protection - Detect and block abusive search patterns
+ * Flights Launch Settings Types
+ * Types for the Flights TEST → LIVE launch system
  */
 
-// Track recent searches to detect duplicates
-const recentSearches = new Map<string, { count: number; lastSearch: number }>();
-const DUPLICATE_WINDOW_MS = 10000; // 10 seconds
-const MAX_DUPLICATES = 3;
+export type FlightsLaunchStatus = 'test' | 'live';
 
-// Track rapid cycling (changing airports/dates rapidly)
-const cyclingTracker = new Map<string, { changes: number; lastChange: number }>();
-const CYCLING_WINDOW_MS = 30000; // 30 seconds
-const MAX_CYCLING_CHANGES = 10;
-
-export interface SearchProtectionResult {
-  allowed: boolean;
-  reason?: 'duplicate' | 'cycling' | 'throttled';
-  message?: string;
-  waitMs?: number;
+export interface FlightsLaunchSettings {
+  id: string;
+  status: FlightsLaunchStatus;
+  status_changed_at: string | null;
+  status_changed_by: string | null;
+  
+  // Pre-launch checklist
+  seller_of_travel_verified: boolean;
+  terms_privacy_linked: boolean;
+  support_email_configured: boolean;
+  stripe_live_enabled: boolean;
+  duffel_live_configured: boolean;
+  
+  // Post-launch tracking
+  first_booking_at: string | null;
+  first_ticket_issued_at: string | null;
+  first_failure_at: string | null;
+  
+  // Emergency controls
+  emergency_pause: boolean;
+  emergency_pause_reason: string | null;
+  emergency_pause_at: string | null;
+  emergency_pause_by: string | null;
+  
+  created_at: string;
+  updated_at: string;
 }
 
-export function checkSearchAbuse(
-  origin: string,
-  destination: string,
-  departureDate: string,
-  sessionId: string
-): SearchProtectionResult {
-  const now = Date.now();
-  
-  // Check for duplicate searches
-  const searchKey = `${origin}-${destination}-${departureDate}-${sessionId}`;
-  const existing = recentSearches.get(searchKey);
-  
-  if (existing && now - existing.lastSearch < DUPLICATE_WINDOW_MS) {
-    existing.count++;
-    existing.lastSearch = now;
-    
-    if (existing.count > MAX_DUPLICATES) {
-      return {
-        allowed: false,
-        reason: 'duplicate',
-        message: 'You\'ve searched this route multiple times. Please wait a moment.',
-        waitMs: DUPLICATE_WINDOW_MS - (now - existing.lastSearch),
-      };
-    }
-  } else {
-    recentSearches.set(searchKey, { count: 1, lastSearch: now });
-  }
-
-  // Check for rapid cycling (changing search params too fast)
-  const cycleKey = sessionId;
-  const cycleData = cyclingTracker.get(cycleKey) || { changes: 0, lastChange: 0 };
-  
-  if (now - cycleData.lastChange < 2000) { // Less than 2 seconds since last change
-    cycleData.changes++;
-    
-    if (cycleData.changes > MAX_CYCLING_CHANGES) {
-      return {
-        allowed: false,
-        reason: 'cycling',
-        message: 'Please slow down. Too many searches in a short time.',
-        waitMs: CYCLING_WINDOW_MS - (now - cycleData.lastChange),
-      };
-    }
-  } else if (now - cycleData.lastChange > CYCLING_WINDOW_MS) {
-    // Reset after window expires
-    cycleData.changes = 1;
-  }
-  
-  cycleData.lastChange = now;
-  cyclingTracker.set(cycleKey, cycleData);
-
-  // Cleanup old entries periodically
-  cleanupOldEntries(now);
-
-  return { allowed: true };
+export interface FlightsLaunchChecklist {
+  seller_of_travel_verified: boolean;
+  terms_privacy_linked: boolean;
+  support_email_configured: boolean;
+  stripe_live_enabled: boolean;
+  duffel_live_configured: boolean;
 }
 
-function cleanupOldEntries(now: number) {
-  // Run cleanup every 100 calls
-  if (Math.random() > 0.01) return;
-  
-  for (const [key, value] of recentSearches) {
-    if (now - value.lastSearch > DUPLICATE_WINDOW_MS * 2) {
-      recentSearches.delete(key);
-    }
-  }
-  
-  for (const [key, value] of cyclingTracker) {
-    if (now - value.lastChange > CYCLING_WINDOW_MS * 2) {
-      cyclingTracker.delete(key);
-    }
-  }
-}
-
-export function clearSearchProtection(sessionId: string) {
-  for (const key of recentSearches.keys()) {
-    if (key.endsWith(sessionId)) {
-      recentSearches.delete(key);
-    }
-  }
-  cyclingTracker.delete(sessionId);
+export interface FlightsGoLivePayload {
+  status: 'live';
+  status_changed_at: string;
+  status_changed_by: string;
 }
 ```
 
-**File:** `src/hooks/useDuffelFlights.ts`
+**Database:** Create `flights_launch_settings` table
 
-Integrate search protection:
-```typescript
-import { checkSearchAbuse } from '@/lib/security/searchProtection';
-import { getSearchSessionId } from '@/config/trackingParams';
-
-// In queryFn:
-const sessionId = getSearchSessionId();
-const abuseCheck = checkSearchAbuse(
-  searchParams.origin,
-  searchParams.destination,
-  searchParams.departureDate,
-  sessionId
+```sql
+CREATE TABLE public.flights_launch_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  status TEXT NOT NULL DEFAULT 'test' CHECK (status IN ('test', 'live')),
+  status_changed_at TIMESTAMPTZ,
+  status_changed_by UUID REFERENCES auth.users(id),
+  
+  -- Pre-launch checklist
+  seller_of_travel_verified BOOLEAN DEFAULT false,
+  terms_privacy_linked BOOLEAN DEFAULT false,
+  support_email_configured BOOLEAN DEFAULT false,
+  stripe_live_enabled BOOLEAN DEFAULT false,
+  duffel_live_configured BOOLEAN DEFAULT false,
+  
+  -- Post-launch tracking
+  first_booking_at TIMESTAMPTZ,
+  first_ticket_issued_at TIMESTAMPTZ,
+  first_failure_at TIMESTAMPTZ,
+  
+  -- Emergency controls
+  emergency_pause BOOLEAN DEFAULT false,
+  emergency_pause_reason TEXT,
+  emergency_pause_at TIMESTAMPTZ,
+  emergency_pause_by UUID REFERENCES auth.users(id),
+  
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-if (!abuseCheck.allowed) {
-  throw new Error(abuseCheck.message || 'Please wait before searching again.');
-}
+-- RLS: Admins only for write, all can read
+ALTER TABLE public.flights_launch_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read flight launch settings"
+ON public.flights_launch_settings FOR SELECT TO authenticated
+USING (true);
+
+CREATE POLICY "Admins can update flight launch settings"
+ON public.flights_launch_settings FOR UPDATE TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+
+-- Insert default row
+INSERT INTO public.flights_launch_settings (id) VALUES (gen_random_uuid());
 ```
 
 ---
 
-### Phase 3: Payment Safety Locks (Offer Verification)
+### Phase 2: Create Flights Launch Status Hook
 
-**Goal:** Verify offer is still valid and price matches before creating PaymentIntent.
+**Goal:** Provide React hooks to read and update flights launch status.
 
-**File:** `supabase/functions/create-flight-checkout/index.ts`
+**File:** `src/hooks/useFlightsLaunchStatus.ts` (NEW)
 
-Add offer verification before checkout:
-```typescript
-// After passenger validation, before creating booking:
-
-// PAYMENT SAFETY: Verify offer is still valid
-const DUFFEL_API_KEY = Deno.env.get("DUFFEL_API_KEY");
-if (DUFFEL_API_KEY && isLiveMode) {
-  console.log("[FlightCheckout] Verifying offer validity...");
-  
-  try {
-    const offerResponse = await fetch(`https://api.duffel.com/air/offers/${offerId}`, {
-      headers: {
-        "Authorization": `Bearer ${DUFFEL_API_KEY}`,
-        "Duffel-Version": "v2",
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!offerResponse.ok) {
-      const errorData = await offerResponse.json();
-      console.error("[FlightCheckout] Offer verification failed:", errorData);
-      throw new Error("This fare is no longer available. Please search again.");
-    }
-
-    const offerData = await offerResponse.json();
-    const duffelOffer = offerData.data;
-
-    // Verify price matches (with small tolerance for rounding)
-    const duffelPrice = parseFloat(duffelOffer.total_amount);
-    const expectedPrice = totalAmount * passengers.length;
-    const priceDiff = Math.abs(duffelPrice - expectedPrice);
-    
-    if (priceDiff > 1) { // $1 tolerance
-      console.error("[FlightCheckout] Price mismatch:", { duffelPrice, expectedPrice, priceDiff });
-      throw new Error("The price has changed. Please search again for updated fares.");
-    }
-
-    // Verify offer hasn't expired
-    const expiresAt = new Date(duffelOffer.expires_at);
-    if (expiresAt < new Date()) {
-      throw new Error("This offer has expired. Please search again.");
-    }
-
-    console.log("[FlightCheckout] Offer verified successfully");
-  } catch (verifyError) {
-    if (verifyError instanceof Error && verifyError.message.includes("no longer available")) {
-      throw verifyError;
-    }
-    // Log but continue in sandbox mode
-    if (!isLiveMode) {
-      console.warn("[FlightCheckout] Offer verification skipped in sandbox");
-    } else {
-      throw verifyError;
-    }
-  }
-}
-```
-
----
-
-### Phase 4: System Health Monitoring with Alerts
-
-**Goal:** Monitor Duffel/Stripe health and create alerts for failures.
-
-**File:** `src/hooks/useSystemHealth.ts` (NEW)
-
-Create a hook for system health monitoring:
 ```typescript
 /**
- * System Health Monitoring Hook
- * Tracks Duffel API, Stripe, and booking system health
+ * Flights Launch Status Hooks
+ * Read and update flights TEST/LIVE status with pre-launch checklist validation
  */
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subHours, subMinutes } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import type { FlightsLaunchSettings, FlightsLaunchChecklist } from "@/types/flightsLaunch";
 
-export interface FlightSystemHealth {
-  duffel: {
-    status: 'ok' | 'degraded' | 'down';
-    errorRate: number;
-    avgResponseTime: number;
-    lastError?: string;
-  };
-  stripe: {
-    status: 'ok' | 'degraded' | 'down';
-    failedPayments: number;
-    mode: 'test' | 'live' | 'unknown';
-  };
-  bookings: {
-    status: 'ok' | 'warning' | 'critical';
-    lastSuccessAt: string | null;
-    failedToday: number;
-    pendingTickets: number;
-    paymentToFailureRate: number; // Payments that succeeded but ticketing failed
-  };
-  alerts: {
-    critical: number;
-    warning: number;
-    unresolved: number;
-  };
-}
-
-export function useFlightSystemHealth() {
+export function useFlightsLaunchSettings() {
   return useQuery({
-    queryKey: ['flight-system-health'],
-    queryFn: async (): Promise<FlightSystemHealth> => {
-      const now = new Date();
-      const oneHourAgo = subHours(now, 1);
-      const twentyFourHoursAgo = subHours(now, 24);
-      const fiveMinutesAgo = subMinutes(now, 5);
-
-      // Get recent search logs for Duffel health
-      const { data: searchLogs } = await supabase
-        .from('flight_search_logs')
-        .select('duffel_error, response_time_ms, created_at')
-        .gte('created_at', oneHourAgo.toISOString());
-
-      const errorSearches = searchLogs?.filter(s => s.duffel_error)?.length || 0;
-      const totalSearches = searchLogs?.length || 0;
-      const duffelErrorRate = totalSearches > 0 ? (errorSearches / totalSearches) * 100 : 0;
-      const avgResponseTime = searchLogs?.length 
-        ? searchLogs.reduce((sum, s) => sum + (s.response_time_ms || 0), 0) / searchLogs.length 
-        : 0;
-
-      // Get booking stats for last 24h
-      const { data: bookings } = await supabase
-        .from('flight_bookings')
-        .select('id, payment_status, ticketing_status, created_at, ticketed_at')
-        .gte('created_at', twentyFourHoursAgo.toISOString());
-
-      const failedBookings = bookings?.filter(b => 
-        b.ticketing_status === 'failed' || b.payment_status === 'refunded'
-      )?.length || 0;
-      
-      const pendingTickets = bookings?.filter(b => 
-        b.ticketing_status === 'pending' || b.ticketing_status === 'processing'
-      )?.length || 0;
-
-      // Calculate payment success but ticketing failure rate
-      const paidButFailed = bookings?.filter(b => 
-        b.payment_status === 'paid' && b.ticketing_status === 'failed'
-      )?.length || 0;
-      const paidTotal = bookings?.filter(b => b.payment_status === 'paid')?.length || 0;
-      const paymentToFailureRate = paidTotal > 0 ? (paidButFailed / paidTotal) * 100 : 0;
-
-      // Get last successful booking
-      const { data: lastSuccess } = await supabase
-        .from('flight_bookings')
-        .select('ticketed_at')
-        .eq('ticketing_status', 'issued')
-        .order('ticketed_at', { ascending: false })
+    queryKey: ["flights-launch-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("flights_launch_settings")
+        .select("*")
         .limit(1)
         .single();
 
-      // Get unresolved alerts
-      const { data: alerts } = await supabase
-        .from('flight_admin_alerts')
-        .select('severity, resolved')
-        .eq('resolved', false);
-
-      const criticalAlerts = alerts?.filter(a => a.severity === 'critical')?.length || 0;
-      const warningAlerts = alerts?.filter(a => a.severity === 'high' || a.severity === 'medium')?.length || 0;
-
-      // Determine statuses
-      const duffelStatus = duffelErrorRate > 50 ? 'down' : duffelErrorRate > 20 ? 'degraded' : 'ok';
-      const bookingStatus = criticalAlerts > 0 ? 'critical' : failedBookings > 5 ? 'warning' : 'ok';
-
-      return {
-        duffel: {
-          status: duffelStatus,
-          errorRate: Math.round(duffelErrorRate * 10) / 10,
-          avgResponseTime: Math.round(avgResponseTime),
-          lastError: searchLogs?.find(s => s.duffel_error)?.duffel_error || undefined,
-        },
-        stripe: {
-          status: 'ok', // Would need actual Stripe health check
-          failedPayments: 0,
-          mode: 'unknown',
-        },
-        bookings: {
-          status: bookingStatus,
-          lastSuccessAt: lastSuccess?.ticketed_at || null,
-          failedToday: failedBookings,
-          pendingTickets,
-          paymentToFailureRate: Math.round(paymentToFailureRate * 10) / 10,
-        },
-        alerts: {
-          critical: criticalAlerts,
-          warning: warningAlerts,
-          unresolved: alerts?.length || 0,
-        },
-      };
+      if (error) throw error;
+      return data as unknown as FlightsLaunchSettings;
     },
     staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
   });
 }
-```
 
----
+export function useFlightsCanBook() {
+  const { data: settings, isLoading } = useFlightsLaunchSettings();
+  const { isAdmin } = useAuth();
 
-### Phase 5: Admin System Status Page
-
-**Goal:** Create a dedicated `/admin/system/status` page for overall system health.
-
-**File:** `src/pages/admin/SystemStatusPage.tsx` (NEW)
-
-Create comprehensive system status page with:
-- Duffel API status (OK/degraded/down) based on error rate
-- Stripe status indicator
-- Last successful flight booking timestamp
-- Failed bookings count (24h)
-- Active alert count
-- Response latency trends
-
-Key components:
-```typescript
-const SystemStatusPage = () => {
-  const { data: health, isLoading } = useFlightSystemHealth();
-
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header with overall status */}
-      <div className="flex items-center gap-3">
-        <h1>System Status</h1>
-        <Badge variant={health?.alerts.critical > 0 ? "destructive" : "outline"}>
-          {health?.alerts.critical > 0 ? "Issues Detected" : "All Systems Operational"}
-        </Badge>
-      </div>
-
-      {/* Status Grid */}
-      <div className="grid md:grid-cols-4 gap-4">
-        {/* Duffel API Status */}
-        <Card>
-          <CardContent>
-            <p>Duffel API</p>
-            <StatusBadge status={health?.duffel.status} />
-            <p>Error Rate: {health?.duffel.errorRate}%</p>
-            <p>Avg Response: {health?.duffel.avgResponseTime}ms</p>
-          </CardContent>
-        </Card>
-
-        {/* Stripe Status */}
-        <Card>
-          <CardContent>
-            <p>Stripe Payments</p>
-            <StatusBadge status={health?.stripe.status} />
-            <p>Mode: {health?.stripe.mode}</p>
-          </CardContent>
-        </Card>
-
-        {/* Last Success */}
-        <Card>
-          <CardContent>
-            <p>Last Issued Ticket</p>
-            <p>{health?.bookings.lastSuccessAt ? formatRelative(new Date(health.bookings.lastSuccessAt)) : 'None'}</p>
-          </CardContent>
-        </Card>
-
-        {/* Failed Bookings */}
-        <Card>
-          <CardContent>
-            <p>Failed Bookings (24h)</p>
-            <p className="text-destructive">{health?.bookings.failedToday}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Alert Thresholds */}
-      <AlertThresholdsCard />
-    </div>
-  );
-};
-```
-
-**File:** `src/App.tsx`
-
-Add route:
-```typescript
-<Route path="/admin/system/status" element={<SystemStatusPage />} />
-```
-
----
-
-### Phase 6: Customer-Friendly Error Messages
-
-**Goal:** Replace all technical errors with user-friendly messages.
-
-**File:** `src/hooks/useDuffelFlights.ts`
-
-Add error message transformation:
-```typescript
-import { transformFlightError } from '@/lib/errors/flightErrors';
-
-// In catch block:
-if (error) {
-  throw new Error(transformFlightError(error.message || 'Unknown error'));
-}
-```
-
-**File:** `src/lib/errors/flightErrors.ts` (NEW)
-
-Create error transformation utility:
-```typescript
-/**
- * Flight Error Message Transformation
- * Converts technical API errors to user-friendly messages
- */
-
-const ERROR_MAP: Record<string, string> = {
-  // Network errors
-  'Failed to fetch': "We're having trouble retrieving flights. Please try again shortly.",
-  'Network Error': "Connection issue. Please check your internet and try again.",
-  'timeout': "Search is taking longer than expected. Please try again.",
-  
-  // Duffel API errors
-  'DUFFEL_API_KEY not configured': "Flight search is temporarily unavailable. Please try again later.",
-  'Duffel API error': "We're having trouble retrieving flights. Please try again shortly.",
-  'rate limit': "Too many searches. Please wait a moment and try again.",
-  
-  // Offer errors
-  'offer not found': "This fare is no longer available. Please search again.",
-  'offer expired': "This offer has expired. Please search again for current prices.",
-  'no offers': "No flights available for these dates. Try different dates or airports.",
-  
-  // Payment errors
-  'payment failed': "Payment could not be processed. Please try a different payment method.",
-  'card declined': "Your card was declined. Please try a different payment method.",
-  
-  // Booking errors
-  'booking failed': "We couldn't complete your booking. Please try again or contact support.",
-  'ticketing failed': "There was an issue issuing your ticket. Our team has been notified.",
-};
-
-const GENERIC_ERROR = "Something went wrong. Please try again or contact support.";
-
-export function transformFlightError(technicalError: string): string {
-  const lowerError = technicalError.toLowerCase();
-  
-  // Check for matching patterns
-  for (const [pattern, userMessage] of Object.entries(ERROR_MAP)) {
-    if (lowerError.includes(pattern.toLowerCase())) {
-      return userMessage;
-    }
-  }
-  
-  // Check if it's already a user-friendly message (starts with capital, ends with period)
-  if (/^[A-Z].*\.$/.test(technicalError) && !technicalError.includes('Error:')) {
-    return technicalError;
-  }
-  
-  // Return generic error for unrecognized technical errors
-  console.warn('[FlightErrors] Unmapped error:', technicalError);
-  return GENERIC_ERROR;
-}
-
-export function isRetryableError(error: string): boolean {
-  const retryable = ['timeout', 'network', 'fetch', 'temporarily'];
-  const lowerError = error.toLowerCase();
-  return retryable.some(pattern => lowerError.includes(pattern));
-}
-```
-
-**File:** `src/pages/FlightResults.tsx`
-
-Update error display:
-```typescript
-import { transformFlightError, isRetryableError } from '@/lib/errors/flightErrors';
-
-// In error state rendering:
-{isError && (
-  <Card className="max-w-lg mx-auto mt-12">
-    <CardContent className="p-8 text-center">
-      <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold mb-2">Unable to load flights</h3>
-      <p className="text-muted-foreground mb-6">
-        {transformFlightError(error?.message || 'Unknown error')}
-      </p>
-      {isRetryableError(error?.message || '') && (
-        <Button onClick={() => refetch()} className="gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Try Again
-        </Button>
-      )}
-    </CardContent>
-  </Card>
-)}
-```
-
----
-
-### Phase 7: Production Readiness When DUFFEL_ENV=live
-
-**Goal:** Ensure all safety measures are automatically enforced in live mode.
-
-**File:** `src/config/productionSafety.ts` (NEW)
-
-Create production configuration:
-```typescript
-/**
- * Production Safety Configuration
- * Enforces strict rules when DUFFEL_ENV=live
- */
-
-import { isLiveMode } from './duffelConfig';
-
-export interface ProductionRules {
-  enforceRateLimits: boolean;
-  enforceBotProtection: boolean;
-  enforceOfferVerification: boolean;
-  enableFullLogging: boolean;
-  showSandboxHelpers: boolean;
-  allowMockData: boolean;
-}
-
-export function getProductionRules(): ProductionRules {
-  const isLive = isLiveMode();
+  // Admins can always book (for testing)
+  // Public users can only book when status is 'live'
+  const canBook = isAdmin || settings?.status === 'live';
+  const isTestMode = settings?.status === 'test';
+  const isPaused = settings?.emergency_pause === true;
 
   return {
-    enforceRateLimits: true, // Always enforce
-    enforceBotProtection: true, // Always enforce
-    enforceOfferVerification: isLive, // Only in live
-    enableFullLogging: true, // Always log
-    showSandboxHelpers: !isLive, // Only in sandbox
-    allowMockData: !isLive, // Only in sandbox
+    canBook: canBook && !isPaused,
+    isTestMode,
+    isPaused,
+    pauseReason: settings?.emergency_pause_reason,
+    isLoading,
   };
 }
 
-export function assertProductionSafe(operation: string): void {
-  if (isLiveMode()) {
-    console.log(`[PRODUCTION] ${operation}`);
+export function useGoLive() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (settingsId: string) => {
+      const { error } = await supabase
+        .from("flights_launch_settings")
+        .update({
+          status: 'live',
+          status_changed_at: new Date().toISOString(),
+          status_changed_by: user?.id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", settingsId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["flights-launch-settings"] });
+      toast.success("🚀 ZIVO Flights is now LIVE!");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to go live");
+    },
+  });
+}
+
+export function useEmergencyPause() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({ settingsId, pause, reason }: { 
+      settingsId: string; 
+      pause: boolean; 
+      reason?: string;
+    }) => {
+      const { error } = await supabase
+        .from("flights_launch_settings")
+        .update({
+          emergency_pause: pause,
+          emergency_pause_reason: pause ? reason : null,
+          emergency_pause_at: pause ? new Date().toISOString() : null,
+          emergency_pause_by: pause ? user?.id : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", settingsId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, { pause }) => {
+      queryClient.invalidateQueries({ queryKey: ["flights-launch-settings"] });
+      toast[pause ? 'warning' : 'success'](
+        pause ? "⚠️ Flight bookings paused" : "✅ Flight bookings resumed"
+      );
+    },
+  });
+}
+
+// Validate pre-launch checklist
+export function validateLaunchChecklist(settings: FlightsLaunchSettings | undefined): {
+  ready: boolean;
+  checklist: { item: string; done: boolean }[];
+  blockers: string[];
+} {
+  if (!settings) {
+    return { ready: false, checklist: [], blockers: ['Settings not loaded'] };
+  }
+
+  const checklist = [
+    { item: 'Seller of Travel page verified', done: settings.seller_of_travel_verified },
+    { item: 'Terms & Privacy linked', done: settings.terms_privacy_linked },
+    { item: 'Support email configured', done: settings.support_email_configured },
+    { item: 'Stripe LIVE enabled', done: settings.stripe_live_enabled },
+    { item: 'Duffel LIVE configured', done: settings.duffel_live_configured },
+  ];
+
+  const blockers = checklist.filter(c => !c.done).map(c => c.item);
+
+  return {
+    ready: blockers.length === 0,
+    checklist,
+    blockers,
+  };
+}
+```
+
+---
+
+### Phase 3: Update Checkout to Block Public Users in TEST Mode
+
+**Goal:** Prevent public users from completing checkout when flights are in TEST mode.
+
+**File:** `src/pages/FlightCheckout.tsx` (MODIFY)
+
+Add booking permission check at the top of the component:
+
+```typescript
+import { useFlightsCanBook } from '@/hooks/useFlightsLaunchStatus';
+
+const FlightCheckout = () => {
+  // ... existing code ...
+  
+  const { canBook, isTestMode, isPaused, pauseReason, isLoading: bookingCheckLoading } = useFlightsCanBook();
+  const { isAdmin } = useAuth();
+
+  // Block public users in TEST mode
+  if (!bookingCheckLoading && !canBook) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEOHead title="Bookings Coming Soon – ZIVO" description="Flight bookings will open soon." />
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <Card className="max-w-lg mx-auto">
+              <CardContent className="p-8 text-center">
+                {isPaused ? (
+                  <>
+                    <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                    <h1 className="text-xl font-bold mb-2">Bookings Temporarily Paused</h1>
+                    <p className="text-muted-foreground mb-6">
+                      {pauseReason || "Flight bookings are temporarily paused. Please try again later."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
+                    <h1 className="text-xl font-bold mb-2">Bookings Coming Soon</h1>
+                    <p className="text-muted-foreground mb-6">
+                      Flights are in beta testing. Bookings will open soon.
+                    </p>
+                  </>
+                )}
+                <Button onClick={() => navigate('/flights')} className="gap-2">
+                  <Plane className="w-4 h-4" />
+                  Browse Flights
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // ... rest of existing checkout code ...
+};
+```
+
+Also update `FlightTravelerInfo.tsx` with the same check before proceeding to checkout.
+
+---
+
+### Phase 4: Create Flights Launch Control Admin Page
+
+**Goal:** Admin-only page to manage TEST/LIVE switch with pre-launch checklist.
+
+**File:** `src/pages/admin/FlightsLaunchControl.tsx` (NEW)
+
+```typescript
+/**
+ * Flights Launch Control - Admin Dashboard
+ * Manage TEST → LIVE transition with pre-launch checklist
+ */
+
+import { useState } from "react";
+import { Navigate } from "react-router-dom";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
+import { 
+  useFlightsLaunchSettings, 
+  useGoLive, 
+  useEmergencyPause,
+  validateLaunchChecklist 
+} from "@/hooks/useFlightsLaunchStatus";
+import {
+  Plane, Shield, CheckCircle, XCircle, AlertTriangle,
+  Rocket, Pause, Play, Loader2, FileText, Mail, CreditCard
+} from "lucide-react";
+import { format } from "date-fns";
+
+const FlightsLaunchControl = () => {
+  const { isAdmin, isLoading: authLoading } = useAuth();
+  const { data: settings, isLoading } = useFlightsLaunchSettings();
+  const goLive = useGoLive();
+  const emergencyPause = useEmergencyPause();
+  
+  const [showGoLiveModal, setShowGoLiveModal] = useState(false);
+  const [confirmChecked, setConfirmChecked] = useState(false);
+  const [pauseReason, setPauseReason] = useState("");
+  
+  // Redirect non-admins
+  if (!authLoading && !isAdmin) {
+    return <Navigate to="/flights" replace />;
+  }
+
+  if (isLoading || authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const { ready, checklist, blockers } = validateLaunchChecklist(settings);
+  const isLive = settings?.status === 'live';
+  const isPaused = settings?.emergency_pause;
+
+  const handleGoLive = async () => {
+    if (!settings?.id || !ready) return;
+    await goLive.mutateAsync(settings.id);
+    setShowGoLiveModal(false);
+    setConfirmChecked(false);
+  };
+
+  const handlePauseToggle = async () => {
+    if (!settings?.id) return;
+    await emergencyPause.mutateAsync({
+      settingsId: settings.id,
+      pause: !isPaused,
+      reason: pauseReason,
+    });
+    setPauseReason("");
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead title="Flights Launch Control | Admin" description="Manage ZIVO Flights TEST/LIVE status." />
+      <Header />
+
+      <main className="pt-24 pb-20">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-2xl font-bold flex items-center gap-3">
+                <Plane className="w-6 h-6 text-primary" />
+                Flights Launch Control
+              </h1>
+              <p className="text-muted-foreground">Manage TEST → LIVE transition</p>
+            </div>
+            <Badge 
+              variant={isLive ? "default" : "outline"}
+              className={isLive 
+                ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" 
+                : "bg-amber-500/20 text-amber-600 border-amber-500/30"
+              }
+            >
+              {isLive ? 'LIVE' : 'TEST MODE'}
+            </Badge>
+          </div>
+
+          {/* Emergency Pause Banner */}
+          {isPaused && (
+            <Alert className="mb-6 border-destructive/50 bg-destructive/10">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription>
+                <strong>Emergency Pause Active:</strong> {settings?.emergency_pause_reason || "Bookings are paused"}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Current Status */}
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg border">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-xl font-bold">{isLive ? 'LIVE' : 'TEST'}</p>
+                </div>
+                <div className="p-4 rounded-lg border">
+                  <p className="text-sm text-muted-foreground">Last Changed</p>
+                  <p className="text-sm font-medium">
+                    {settings?.status_changed_at 
+                      ? format(new Date(settings.status_changed_at), 'MMM d, yyyy HH:mm')
+                      : 'Never'}
+                  </p>
+                </div>
+                <div className="p-4 rounded-lg border">
+                  <p className="text-sm text-muted-foreground">Public Booking</p>
+                  <p className="text-xl font-bold text-emerald-500">
+                    {isLive && !isPaused ? 'Enabled' : 'Disabled'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pre-Launch Checklist */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Pre-Launch Checklist
+              </CardTitle>
+              <CardDescription>
+                All items must be verified before going LIVE
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {checklist.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div className="flex items-center gap-3">
+                      {item.done ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-muted-foreground" />
+                      )}
+                      <span>{item.item}</span>
+                    </div>
+                    {/* Admin can toggle checklist items */}
+                  </div>
+                ))}
+              </div>
+
+              {ready ? (
+                <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-sm font-medium text-emerald-600 flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4" />
+                    All requirements met - Ready for LIVE
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-sm font-medium text-amber-600 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    {blockers.length} item(s) remaining before LIVE
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <Card>
+            <CardContent className="p-6 flex flex-col gap-4">
+              {!isLive ? (
+                <Button 
+                  size="lg" 
+                  className="w-full gap-2"
+                  onClick={() => setShowGoLiveModal(true)}
+                  disabled={!ready}
+                >
+                  <Rocket className="w-5 h-5" />
+                  Go LIVE
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  variant={isPaused ? "default" : "destructive"}
+                  className="w-full gap-2"
+                  onClick={handlePauseToggle}
+                  disabled={emergencyPause.isPending}
+                >
+                  {isPaused ? (
+                    <>
+                      <Play className="w-5 h-5" />
+                      Resume Bookings
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="w-5 h-5" />
+                      Emergency Pause
+                    </>
+                  )}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+
+      {/* Go LIVE Confirmation Modal */}
+      <Dialog open={showGoLiveModal} onOpenChange={setShowGoLiveModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-primary" />
+              Go LIVE Confirmation
+            </DialogTitle>
+            <DialogDescription>
+              This will enable real airline bookings and real payments.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <Alert className="border-destructive/50 bg-destructive/10">
+              <AlertTriangle className="w-4 h-4" />
+              <AlertDescription>
+                <strong>Warning:</strong> This action cannot be undone. Real customers will be able to book flights and pay with real money.
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30">
+              <Checkbox
+                id="confirm-live"
+                checked={confirmChecked}
+                onCheckedChange={(checked) => setConfirmChecked(checked === true)}
+              />
+              <Label htmlFor="confirm-live" className="leading-relaxed cursor-pointer">
+                I understand this will enable real bookings, real payments, and real airline ticket issuance. I have verified all checklist items.
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowGoLiveModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleGoLive}
+              disabled={!confirmChecked || goLive.isPending}
+              className="gap-2"
+            >
+              {goLive.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Going LIVE...
+                </>
+              ) : (
+                <>
+                  <Rocket className="w-4 h-4" />
+                  Confirm Go LIVE
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default FlightsLaunchControl;
+```
+
+---
+
+### Phase 5: Add Post-Launch Monitoring & Alerts
+
+**Goal:** Track first booking, first ticket, first failure after going LIVE.
+
+**File:** `supabase/functions/issue-flight-ticket/index.ts` (MODIFY)
+
+Add post-launch event tracking:
+
+```typescript
+// After successful ticket issuance:
+// Check if this is the first ticket after go-live
+const { data: launchSettings } = await supabase
+  .from("flights_launch_settings")
+  .select("first_ticket_issued_at")
+  .limit(1)
+  .single();
+
+if (!launchSettings?.first_ticket_issued_at) {
+  await supabase
+    .from("flights_launch_settings")
+    .update({ first_ticket_issued_at: new Date().toISOString() })
+    .neq("first_ticket_issued_at", null); // Only update if null
+
+  // Create admin alert for first ticket
+  await supabase
+    .from("flight_admin_alerts")
+    .insert({
+      alert_type: "first_ticket_issued",
+      severity: "low",
+      message: `🎉 First LIVE ticket issued! Booking: ${bookingRef}`,
+      booking_id: bookingId,
+    });
+}
+
+// On failure:
+if (!launchSettings?.first_failure_at && isLiveMode) {
+  await supabase
+    .from("flights_launch_settings")
+    .update({ first_failure_at: new Date().toISOString() })
+    .is("first_failure_at", null);
+
+  await supabase
+    .from("flight_admin_alerts")
+    .insert({
+      alert_type: "first_live_failure",
+      severity: "critical",
+      message: `⚠️ First LIVE failure! Booking: ${bookingRef} - ${error}`,
+      booking_id: bookingId,
+    });
+}
+```
+
+---
+
+### Phase 6: Update Edge Functions for LIVE Mode Enforcement
+
+**Goal:** Ensure edge functions respect launch status.
+
+**File:** `supabase/functions/create-flight-checkout/index.ts` (MODIFY)
+
+Add launch status check before processing:
+
+```typescript
+// Check flights launch status
+const { data: launchSettings } = await supabase
+  .from("flights_launch_settings")
+  .select("status, emergency_pause")
+  .limit(1)
+  .single();
+
+// Check if user is admin (can bypass test mode)
+const { data: isAdminData } = await supabase.rpc("has_role", {
+  _user_id: userId,
+  _role: "admin",
+});
+const isAdmin = isAdminData === true;
+
+// Block non-admins in TEST mode
+if (launchSettings?.status === 'test' && !isAdmin) {
+  throw new Error("Flight bookings are not yet available. Check back soon!");
+}
+
+// Block all bookings if emergency paused
+if (launchSettings?.emergency_pause) {
+  throw new Error("Flight bookings are temporarily paused. Please try again later.");
+}
+
+// Track first booking if this is LIVE mode
+if (launchSettings?.status === 'live') {
+  const { data: existing } = await supabase
+    .from("flights_launch_settings")
+    .select("first_booking_at")
+    .limit(1)
+    .single();
+
+  if (!existing?.first_booking_at) {
+    await supabase
+      .from("flights_launch_settings")
+      .update({ first_booking_at: new Date().toISOString() })
+      .is("first_booking_at", null);
   }
 }
+```
+
+---
+
+### Phase 7: Add Route to App.tsx
+
+**File:** `src/App.tsx` (MODIFY)
+
+Add route for the new admin page:
+
+```typescript
+import FlightsLaunchControl from "@/pages/admin/FlightsLaunchControl";
+
+// In routes:
+<Route path="/admin/flights/launch" element={<FlightsLaunchControl />} />
+```
+
+---
+
+### Phase 8: Update FlightStatusPage with Launch Control Link
+
+**File:** `src/pages/admin/FlightStatusPage.tsx` (MODIFY)
+
+Add navigation to launch control:
+
+```typescript
+// In header buttons:
+<Button variant="outline" asChild className="gap-2">
+  <Link to="/admin/flights/launch">
+    <Rocket className="w-4 h-4" />
+    Launch Control
+  </Link>
+</Button>
 ```
 
 ---
@@ -664,83 +779,91 @@ export function assertProductionSafe(operation: string): void {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useDuffelFlights.ts` | MODIFY | Add rate limiting and abuse protection |
-| `src/lib/security/rateLimiter.ts` | MODIFY | Update limits to 10/user/min |
-| `supabase/functions/rate-limiter/index.ts` | MODIFY | Update server limits, add IP-based limiting |
-| `src/lib/security/searchProtection.ts` | CREATE | Bot/abuse protection for duplicate searches |
-| `supabase/functions/create-flight-checkout/index.ts` | MODIFY | Add offer verification before payment |
-| `src/hooks/useSystemHealth.ts` | CREATE | System health monitoring hook |
-| `src/pages/admin/SystemStatusPage.tsx` | CREATE | Admin system status dashboard |
-| `src/lib/errors/flightErrors.ts` | CREATE | User-friendly error message transformation |
-| `src/pages/FlightResults.tsx` | MODIFY | Use friendly error messages |
-| `src/config/productionSafety.ts` | CREATE | Production rules configuration |
-| `src/App.tsx` | MODIFY | Add system status route |
+| `src/types/flightsLaunch.ts` | CREATE | Types for flights launch settings |
+| `src/hooks/useFlightsLaunchStatus.ts` | CREATE | Hooks for reading/updating launch status |
+| `src/pages/admin/FlightsLaunchControl.tsx` | CREATE | Admin page for TEST/LIVE switch |
+| `src/pages/FlightCheckout.tsx` | MODIFY | Block public users in TEST mode |
+| `src/pages/FlightTravelerInfo.tsx` | MODIFY | Block public users in TEST mode |
+| `supabase/functions/create-flight-checkout/index.ts` | MODIFY | Server-side launch status enforcement |
+| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Post-launch event tracking |
+| `src/pages/admin/FlightStatusPage.tsx` | MODIFY | Add launch control link |
+| `src/App.tsx` | MODIFY | Add launch control route |
 
 ---
 
 ## Database Changes
 
-No schema changes required. Uses existing tables:
-- `flight_search_logs` - Already has error and response time fields
-- `flight_admin_alerts` - Already has severity and alert types
-- `flight_bookings` - Already tracks payment/ticketing status
+Create `flights_launch_settings` table with:
+- Status (test/live)
+- Pre-launch checklist booleans
+- Post-launch tracking timestamps
+- Emergency pause controls
+- RLS policies for admin-only writes
 
 ---
 
-## Rate Limiting Summary
+## LIVE Mode Rules Summary
 
-| Action | User Limit | IP Limit | Window |
-|--------|-----------|----------|--------|
-| `flights_search` | 10/min | 30/min | 60 seconds |
-| Duplicate search | 3 identical | - | 10 seconds |
-| Rapid cycling | 10 changes | - | 30 seconds |
-
----
-
-## Error Message Examples
-
-| Technical Error | User-Friendly Message |
-|-----------------|----------------------|
-| `Failed to fetch` | "We're having trouble retrieving flights. Please try again shortly." |
-| `DUFFEL_API_KEY not configured` | "Flight search is temporarily unavailable. Please try again later." |
-| `offer not found` | "This fare is no longer available. Please search again." |
-| `payment failed` | "Payment could not be processed. Please try a different payment method." |
-| `[Any unrecognized error]` | "Something went wrong. Please try again or contact support." |
+| Rule | TEST Mode | LIVE Mode |
+|------|-----------|-----------|
+| Public search | ✅ Enabled | ✅ Enabled |
+| Public booking | ❌ Blocked | ✅ Enabled |
+| Admin booking | ✅ Enabled | ✅ Enabled |
+| Sandbox helpers | ✅ Visible | ❌ Hidden |
+| Test routes | ✅ Available | ❌ Hidden |
+| Stripe mode | Test | Live |
+| Duffel mode | Sandbox | Live |
+| Offer verification | Skipped | Enforced |
+| Strict validation | Relaxed | Enforced |
 
 ---
 
-## Admin System Status Alerts
+## Pre-Launch Checklist Items
 
-Auto-generated alerts for:
-- **Duffel API error spike** - When error rate exceeds 20%
-- **Payment success but order failure** - When payment succeeds but ticketing fails
-- **Search error rate high** - When >30% of searches fail
-- **Long response times** - When avg response >5 seconds
+1. Seller of Travel page exists (`/legal/seller-of-travel`)
+2. Terms & Privacy pages linked and accessible
+3. Support email configured (`support@hizivo.com`)
+4. Stripe LIVE keys configured
+5. Duffel LIVE API key configured
+
+---
+
+## Post-Launch Monitoring Events
+
+| Event | Trigger | Alert Level |
+|-------|---------|-------------|
+| First LIVE booking | First checkout in LIVE mode | Info |
+| First LIVE ticket | First successful ticket issuance | Info |
+| First LIVE failure | First ticketing failure in LIVE | Critical |
 
 ---
 
 ## Testing Checklist
 
-1. **Rate Limiting**
-   - [ ] Search 11 times rapidly - should see rate limit message
-   - [ ] Wait 60 seconds, search again - should work
-   - [ ] Try identical search 4x in 10s - should be blocked
+1. **TEST Mode (Public User)**
+   - [ ] Can search flights
+   - [ ] Cannot proceed past traveler info
+   - [ ] Sees "Bookings Coming Soon" message
 
-2. **Bot Protection**
-   - [ ] Change airports rapidly 11 times in 30s - should throttle
-   - [ ] Normal search pattern - should work fine
+2. **TEST Mode (Admin)**
+   - [ ] Can search flights
+   - [ ] Can complete checkout
+   - [ ] Can test full booking flow
 
-3. **Payment Safety**
-   - [ ] Attempt checkout with expired offer - should show "no longer available"
-   - [ ] Valid offer proceeds to Stripe checkout
+3. **Launch Control Page**
+   - [ ] Shows pre-launch checklist
+   - [ ] Blocks Go LIVE until all items checked
+   - [ ] Shows confirmation modal with checkbox
+   - [ ] Updates status after confirmation
 
-4. **Error Messages**
-   - [ ] Network error shows friendly message
-   - [ ] API error shows friendly message
-   - [ ] No technical details visible to users
+4. **LIVE Mode**
+   - [ ] Public users can book
+   - [ ] First booking event recorded
+   - [ ] First ticket event recorded
+   - [ ] Emergency pause works
 
-5. **System Status Page**
-   - [ ] Shows Duffel API status
-   - [ ] Shows last successful booking
-   - [ ] Shows failed bookings count
-   - [ ] Admin-only access enforced
+5. **Emergency Pause**
+   - [ ] Blocks all new bookings
+   - [ ] Shows pause reason to users
+   - [ ] Resume re-enables bookings
+
