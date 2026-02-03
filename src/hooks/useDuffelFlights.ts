@@ -3,10 +3,16 @@
  * 
  * Provides real flight search using Duffel API
  * ZIVO is the Merchant of Record - Stripe checkout + Duffel ticketing
+ * 
+ * Includes rate limiting and abuse protection for production safety
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { checkRateLimit, RateLimitError } from "@/lib/security/rateLimiter";
+import { checkSearchAbuse } from "@/lib/security/searchProtection";
+import { transformFlightError } from "@/lib/errors/flightErrors";
+import { getSearchSessionId } from "@/config/trackingParams";
 
 export interface DuffelSearchParams {
   origin: string;
@@ -100,6 +106,28 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
   return useQuery({
     queryKey: ['duffel-flights', searchParams],
     queryFn: async (): Promise<DuffelSearchResult> => {
+      // PRODUCTION SAFETY: Check rate limits before search
+      const rateLimitResult = await checkRateLimit('flights_search');
+      if (!rateLimitResult.allowed) {
+        throw new RateLimitError(
+          'Too many searches. Please wait a moment and try again.',
+          rateLimitResult.retryAfter
+        );
+      }
+
+      // PRODUCTION SAFETY: Check for abuse patterns
+      const sessionId = getSearchSessionId();
+      const abuseCheck = checkSearchAbuse(
+        searchParams.origin,
+        searchParams.destination,
+        searchParams.departureDate,
+        sessionId
+      );
+
+      if (!abuseCheck.allowed) {
+        throw new Error(abuseCheck.message || 'Please wait before searching again.');
+      }
+
       // Build passenger list
       const passengers: Array<{ type: 'adult' | 'child' | 'infant_without_seat' }> = [];
       
@@ -141,11 +169,12 @@ export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: b
       });
 
       if (error) {
-        throw new Error(error.message || 'Failed to search flights');
+        // Transform technical errors to user-friendly messages
+        throw new Error(transformFlightError(error.message || 'Failed to search flights'));
       }
 
       if (data?.error) {
-        throw new Error(data.error);
+        throw new Error(transformFlightError(data.error));
       }
 
       return data as DuffelSearchResult;

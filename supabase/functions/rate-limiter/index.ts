@@ -21,8 +21,10 @@ interface RateLimitConfig {
 }
 
 // Rate limit configurations by action type
+// Flight searches: 10 per user/min, 30 per IP/min for bot protection
 const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'flights_search': { windowMs: 60000, maxRequests: 30 },
+  'flights_search': { windowMs: 60000, maxRequests: 10 },  // 10 per user per minute
+  'flights_search_ip': { windowMs: 60000, maxRequests: 30 }, // 30 per IP per minute
   'hotels_search': { windowMs: 60000, maxRequests: 30 },
   'cars_search': { windowMs: 60000, maxRequests: 30 },
   'contact_form': { windowMs: 60000, maxRequests: 5 },

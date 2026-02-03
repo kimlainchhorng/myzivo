@@ -26,7 +26,7 @@ interface RateLimitResult {
 const clientRateLimits = new Map<string, { count: number; resetAt: number }>();
 
 const CLIENT_LIMITS: Record<RateLimitAction, { windowMs: number; max: number }> = {
-  flights_search: { windowMs: 60000, max: 30 },
+  flights_search: { windowMs: 60000, max: 10 },  // 10 searches per user per minute
   hotels_search: { windowMs: 60000, max: 30 },
   cars_search: { windowMs: 60000, max: 30 },
   contact_form: { windowMs: 60000, max: 5 },
