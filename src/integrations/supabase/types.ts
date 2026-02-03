@@ -12061,6 +12061,39 @@ export type Database = {
         }
         Relationships: []
       }
+      sla_definitions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          priority: string
+          resolution_time_hours: number | null
+          response_time_hours: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority: string
+          resolution_time_hours?: number | null
+          response_time_hours: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          priority?: string
+          resolution_time_hours?: number | null
+          response_time_hours?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -12452,8 +12485,51 @@ export type Database = {
           },
         ]
       }
+      support_metrics: {
+        Row: {
+          avg_first_response_minutes: number | null
+          avg_resolution_minutes: number | null
+          created_at: string | null
+          date: string
+          id: string
+          sla_resolution_breach_count: number | null
+          sla_response_breach_count: number | null
+          tickets_by_category: Json | null
+          tickets_by_priority: Json | null
+          tickets_created: number | null
+          tickets_resolved: number | null
+        }
+        Insert: {
+          avg_first_response_minutes?: number | null
+          avg_resolution_minutes?: number | null
+          created_at?: string | null
+          date: string
+          id?: string
+          sla_resolution_breach_count?: number | null
+          sla_response_breach_count?: number | null
+          tickets_by_category?: Json | null
+          tickets_by_priority?: Json | null
+          tickets_created?: number | null
+          tickets_resolved?: number | null
+        }
+        Update: {
+          avg_first_response_minutes?: number | null
+          avg_resolution_minutes?: number | null
+          created_at?: string | null
+          date?: string
+          id?: string
+          sla_resolution_breach_count?: number | null
+          sla_response_breach_count?: number | null
+          tickets_by_category?: Json | null
+          tickets_by_priority?: Json | null
+          tickets_created?: number | null
+          tickets_resolved?: number | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
+          assigned_at: string | null
           assigned_to: string | null
           auto_reply_sent: boolean | null
           booking_ref: string | null
@@ -12461,19 +12537,32 @@ export type Database = {
           created_at: string | null
           description: string
           driver_id: string | null
+          escalated_at: string | null
+          escalation_reason: string | null
+          first_response_at: string | null
           id: string
+          is_escalated: boolean | null
+          order_id: string | null
           partner_name: string | null
           priority: string | null
           resolved_at: string | null
           restaurant_id: string | null
           search_session_id: string | null
+          sla_paused_at: string | null
+          sla_paused_duration_minutes: number | null
+          sla_resolution_breached: boolean | null
+          sla_resolution_due_at: string | null
+          sla_response_breached: boolean | null
+          sla_response_due_at: string | null
           status: string | null
           subject: string
+          tags: string[] | null
           ticket_number: string
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          assigned_at?: string | null
           assigned_to?: string | null
           auto_reply_sent?: boolean | null
           booking_ref?: string | null
@@ -12481,19 +12570,32 @@ export type Database = {
           created_at?: string | null
           description: string
           driver_id?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          first_response_at?: string | null
           id?: string
+          is_escalated?: boolean | null
+          order_id?: string | null
           partner_name?: string | null
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
           search_session_id?: string | null
+          sla_paused_at?: string | null
+          sla_paused_duration_minutes?: number | null
+          sla_resolution_breached?: boolean | null
+          sla_resolution_due_at?: string | null
+          sla_response_breached?: boolean | null
+          sla_response_due_at?: string | null
           status?: string | null
           subject: string
+          tags?: string[] | null
           ticket_number: string
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          assigned_at?: string | null
           assigned_to?: string | null
           auto_reply_sent?: boolean | null
           booking_ref?: string | null
@@ -12501,14 +12603,26 @@ export type Database = {
           created_at?: string | null
           description?: string
           driver_id?: string | null
+          escalated_at?: string | null
+          escalation_reason?: string | null
+          first_response_at?: string | null
           id?: string
+          is_escalated?: boolean | null
+          order_id?: string | null
           partner_name?: string | null
           priority?: string | null
           resolved_at?: string | null
           restaurant_id?: string | null
           search_session_id?: string | null
+          sla_paused_at?: string | null
+          sla_paused_duration_minutes?: number | null
+          sla_resolution_breached?: boolean | null
+          sla_resolution_due_at?: string | null
+          sla_response_breached?: boolean | null
+          sla_response_due_at?: string | null
           status?: string | null
           subject?: string
+          tags?: string[] | null
           ticket_number?: string
           updated_at?: string | null
           user_id?: string | null
@@ -12526,6 +12640,13 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
             referencedColumns: ["id"]
           },
           {
@@ -12685,6 +12806,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_escalations: {
+        Row: {
+          created_at: string | null
+          escalated_by: string | null
+          escalation_target: string
+          id: string
+          notes: string | null
+          reason: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          escalated_by?: string | null
+          escalation_target: string
+          id?: string
+          notes?: string | null
+          reason: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string | null
+          escalated_by?: string | null
+          escalation_target?: string
+          id?: string
+          notes?: string | null
+          reason?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_escalations_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_replies: {
         Row: {
           created_at: string | null
@@ -12719,6 +12887,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ticket_templates: {
+        Row: {
+          body: string
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          body: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          body?: string
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
       }
       time_entries: {
         Row: {
@@ -17664,6 +17871,7 @@ export type Database = {
         }
         Returns: Json
       }
+      check_sla_breaches: { Args: never; Returns: number }
       check_withdrawal_allowed: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json

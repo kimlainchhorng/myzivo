@@ -251,6 +251,8 @@ const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 const Help = lazy(() => import("./pages/Help"));
 const TravelBookingsSupport = lazy(() => import("./pages/support/TravelBookings"));
 const SiteIssuesSupport = lazy(() => import("./pages/support/SiteIssues"));
+const UserSupportTicketsPage = lazy(() => import("./pages/support/UserSupportTicketsPage"));
+const AdminSupportDashboard = lazy(() => import("./pages/admin/modules/support/AdminSupportDashboard"));
 const PartnerOverview = lazy(() => import("./pages/partner/Overview"));
 
 // Admin pages - lazy load
@@ -946,6 +948,7 @@ const App = () => (
                 <Route path="/help" element={<Help />} />
                 <Route path="/support/travel-bookings" element={<TravelBookingsSupport />} />
                 <Route path="/support/site-issues" element={<SiteIssuesSupport />} />
+                <Route path="/support/tickets" element={<ProtectedRoute><UserSupportTicketsPage /></ProtectedRoute>} />
                 <Route path="/partner/overview" element={<PartnerOverview />} />
                 {/* Offline fallback page for PWA */}
                 <Route path="/offline" element={<Offline />} />
