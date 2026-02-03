@@ -1560,3 +1560,241 @@ export const EXTREME_LEGAL_FAQ_EXTENDED = [
 
 // Helper arrays
 export const GOVERNMENT_POLICIES_LIST = Object.values(GOVERNMENT_SHUTDOWN_POLICIES);
+
+// ============================================
+// CORPORATE & IP PROTECTION POLICIES (Clauses 109-122)
+// IP, Subpoena, Whistleblower, Corporate Protection
+// ============================================
+
+export const CORPORATE_IP_POLICIES = {
+  // Clause 109: Trademark & Brand Usage
+  trademarkPolicy: {
+    id: "trademark_brand",
+    title: "Trademark & Brand Usage Policy",
+    version: "1.0",
+    content: `The ZIVO name, logo, user interface, design elements, and all associated trademarks are protected intellectual property. No unauthorized use, imitation, or confusingly similar marks are permitted. Use in advertisements, domain names, or social media without written permission is prohibited. Violations may result in takedown requests, legal action, and damages.`,
+    prohibitedUses: [
+      "Unauthorized use of ZIVO name or logo",
+      "Imitation or confusingly similar branding",
+      "Use in advertisements without permission",
+      "Domain names containing ZIVO marks",
+      "Social media impersonation",
+      "Third-party app store listings",
+    ],
+  },
+
+  // Clause 110: Domain & Impersonation Protection
+  impersonationProtection: {
+    id: "impersonation_protection",
+    title: "Domain & Impersonation Protection",
+    version: "1.0",
+    content: `ZIVO may take legal and technical action against impersonation websites, fake apps, fraudulent listings, and any attempts to misrepresent affiliation with ZIVO. ZIVO may report impersonators to platforms, hosting providers, domain registrars, and law enforcement. ZIVO is not liable for harm caused by third-party impersonation.`,
+    actions: [
+      "Domain takedown requests",
+      "App store removal requests",
+      "Platform reporting",
+      "Law enforcement referrals",
+      "Civil legal action",
+    ],
+  },
+
+  // Clause 111: Copyright & DMCA
+  dmcaPolicy: {
+    id: "dmca_policy",
+    title: "Copyright & DMCA Policy",
+    version: "1.0",
+    content: `ZIVO respects intellectual property rights and responds to valid DMCA takedown notices. Repeat infringers will have their accounts terminated. ZIVO is not liable for user-uploaded content that infringes third-party copyrights. Counter-notices may be submitted according to DMCA procedures.`,
+    process: [
+      "Submit DMCA notice to designated agent",
+      "Include identification of copyrighted work",
+      "Identify infringing material location",
+      "Provide contact information and signature",
+      "ZIVO reviews and acts on valid notices",
+    ],
+    dmcaAgent: "DMCA Agent, ZIVO LLC, legal@hizivo.com",
+  },
+
+  // Clause 112: Subpoena Response Policy
+  subpoenaPolicy: {
+    id: "subpoena_response",
+    title: "Subpoena Response Policy",
+    version: "1.0",
+    content: `ZIVO responds only to valid, properly served legal process including subpoenas, court orders, and warrants. ZIVO may notify affected users unless legally prohibited. ZIVO may charge reasonable costs for compliance with legal process. ZIVO is not liable for disclosures made in good-faith compliance with legal obligations.`,
+    requirements: [
+      "Valid legal process required",
+      "Proper service to designated agent",
+      "Reasonable cost recovery permitted",
+      "User notification when legally allowed",
+      "Good-faith compliance protections",
+    ],
+  },
+
+  // Clause 113: No Voluntary Discovery
+  noVoluntaryDiscovery: {
+    id: "no_voluntary_discovery",
+    title: "No Voluntary Discovery",
+    version: "1.0",
+    content: `ZIVO does not voluntarily provide data, records, communications, logs, or any other information without valid legal obligation. Informal requests, attorney letters, or demands without proper legal process will not be honored. All discovery must follow applicable legal procedures.`,
+  },
+
+  // Clause 114: Record Retention Policy
+  recordRetention: {
+    id: "record_retention",
+    title: "Record Retention Policy",
+    version: "1.0",
+    content: `Data is retained only as required by law, business necessity, or contractual obligation. Records may be deleted, anonymized, or archived according to ZIVO's retention schedule. ZIVO is not liable for records deleted in accordance with its retention policy.`,
+    retentionPrinciples: [
+      "Legal compliance periods observed",
+      "Business necessity determines retention",
+      "Anonymization after retention period",
+      "Secure deletion procedures",
+      "No indefinite storage guarantee",
+    ],
+  },
+
+  // Clause 115: No Guarantee of Record Preservation
+  noRecordGuarantee: {
+    id: "no_record_guarantee",
+    title: "No Guarantee of Record Preservation",
+    version: "1.0",
+    content: `ZIVO does not guarantee indefinite storage or preservation of messages, logs, files, media, or any user-generated content. Users are responsible for maintaining their own copies of important data. ZIVO may delete or archive data according to its policies without notice.`,
+    noGuaranteeFor: [
+      "Chat messages and communications",
+      "Activity logs and history",
+      "Uploaded files and documents",
+      "Photos and media content",
+      "Transaction records beyond legal requirements",
+    ],
+  },
+
+  // Clause 116: Whistleblower Policy
+  whistleblowerPolicy: {
+    id: "whistleblower",
+    title: "Whistleblower Policy",
+    version: "1.0",
+    content: `ZIVO encourages good-faith reporting of illegal activity, policy violations, safety concerns, and ethical issues. ZIVO maintains a strict no-retaliation policy for good-faith reporters. False or malicious reports made in bad faith are prohibited and may result in action against the reporter.`,
+    protections: [
+      "Good-faith reporting encouraged",
+      "No retaliation for legitimate reports",
+      "Confidential reporting channels",
+      "Protection from adverse action",
+      "False reports prohibited",
+    ],
+    reportingChannel: "ethics@hizivo.com",
+  },
+
+  // Clause 117: Internal Misuse Disclaimer
+  internalMisuse: {
+    id: "internal_misuse",
+    title: "Internal Misuse Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not liable for unauthorized internal access, misuse by employees, contractors, or bad actors when reasonable safeguards exist. ZIVO maintains security controls but cannot guarantee against all internal threats. Users accept this inherent risk.`,
+  },
+
+  // Clause 118: No Personal Liability
+  noPersonalLiability: {
+    id: "no_personal_liability",
+    title: "No Personal Liability Clause",
+    version: "1.0",
+    content: `Founders, officers, directors, employees, and agents of ZIVO are not personally liable for company actions or decisions. All individuals act on behalf of ZIVO LLC and are protected to the maximum extent allowed by law. Users waive any claims against individuals personally.`,
+    protectedParties: [
+      "Founders and co-founders",
+      "Officers and executives",
+      "Board of directors",
+      "Employees and staff",
+      "Contractors and agents",
+      "Advisors and consultants",
+    ],
+  },
+
+  // Clause 119: Corporate Veil Preservation
+  corporateVeil: {
+    id: "corporate_veil",
+    title: "Corporate Veil Preservation",
+    version: "1.0",
+    content: `All actions, decisions, and obligations are taken by ZIVO LLC as a corporate entity, not by individuals. The corporate form is maintained at all times. Users expressly waive any claims that would pierce the corporate veil or seek to hold individuals personally liable.`,
+  },
+
+  // Clause 120: Change of Control
+  changeOfControl: {
+    id: "change_of_control",
+    title: "Change of Control Clause",
+    version: "1.0",
+    content: `In case of merger, acquisition, sale, investment, or other change of control, all user agreements, policies, and protections remain fully enforceable. Terms transfer to successors and assigns. Users consent to assignment of agreements in such events.`,
+    survivingEvents: [
+      "Merger or consolidation",
+      "Acquisition by third party",
+      "Sale of assets or equity",
+      "Investment or financing",
+      "Management buyout",
+      "Corporate restructuring",
+    ],
+  },
+
+  // Clause 121: Platform Data Ownership
+  platformDataOwnership: {
+    id: "platform_data",
+    title: "Platform Data Ownership",
+    version: "1.0",
+    content: `ZIVO owns all rights to aggregated data, analytics, performance metrics, platform insights, and derived data. Users waive any claims to platform-level data or aggregate statistics. Individual user data rights are governed by the Privacy Policy.`,
+    zivoOwns: [
+      "Aggregated usage data",
+      "Platform analytics and metrics",
+      "Performance statistics",
+      "Market insights and trends",
+      "Derived and computed data",
+      "Machine learning models",
+    ],
+  },
+
+  // Clause 122: Survival of Corporate Protections
+  corporateSurvival: {
+    id: "corporate_survival",
+    title: "Survival of Corporate Protections",
+    version: "1.0",
+    content: `All intellectual property protections, liability limitations, arbitration agreements, and corporate protections survive termination, litigation, company restructuring, and ownership changes. These protections are perpetual and binding on all successors.`,
+    survivingProtections: [
+      "Intellectual property rights",
+      "Liability limitations",
+      "Arbitration agreements",
+      "Indemnification obligations",
+      "Corporate veil protections",
+      "Confidentiality provisions",
+    ],
+  },
+};
+
+// Corporate FAQ
+export const CORPORATE_LEGAL_FAQ = [
+  {
+    question: "Can I sue ZIVO founders personally?",
+    answer: "No. All actions are taken by ZIVO LLC as a corporate entity. Founders, officers, and directors are protected from personal liability.",
+  },
+  {
+    question: "Does ZIVO protect its brand and platform?",
+    answer: "Yes. Unauthorized use of ZIVO trademarks, impersonation, and infringement are prohibited and may result in legal action.",
+  },
+  {
+    question: "Will ZIVO share my data without a subpoena?",
+    answer: "No. ZIVO does not voluntarily provide data without valid legal process such as subpoenas or court orders.",
+  },
+  {
+    question: "Can ZIVO delete my records?",
+    answer: "Yes. ZIVO may delete or anonymize records according to its retention policy after legal and business requirements are satisfied.",
+  },
+  {
+    question: "Does a merger change my agreement?",
+    answer: "No. All terms, protections, and user agreements remain in full force after any change of control.",
+  },
+  {
+    question: "Who handles DMCA takedown requests?",
+    answer: "DMCA notices should be sent to ZIVO's designated agent at legal@hizivo.com with required information.",
+  },
+  {
+    question: "Can I report ethical concerns confidentially?",
+    answer: "Yes. ZIVO's whistleblower policy protects good-faith reporters from retaliation.",
+  },
+];
+
+// Helper arrays
+export const CORPORATE_POLICIES_LIST = Object.values(CORPORATE_IP_POLICIES);
