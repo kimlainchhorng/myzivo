@@ -36,7 +36,12 @@ import {
   useLegalDisputes,
   useLegalAuditLogs,
 } from "@/hooks/useLegalCompliance";
-import { ADVANCED_CLAUSES_LIST, LEGAL_PROTECTION_SUMMARY } from "@/config/legalContent";
+import { 
+  ADVANCED_CLAUSES_LIST, 
+  LEGAL_PROTECTION_SUMMARY, 
+  EXTENDED_POLICIES_LIST,
+  LEGAL_FAQ
+} from "@/config/legalContent";
 import { format } from "date-fns";
 
 export default function LegalControlDashboard() {
@@ -258,6 +263,22 @@ export default function LegalControlDashboard() {
                       ))}
                     </ul>
                   </div>
+
+                  {/* Community Compliance */}
+                  <div className="space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <Users className="h-4 w-4 text-pink-500" />
+                      Community Compliance
+                    </h4>
+                    <ul className="space-y-2">
+                      {LEGAL_PROTECTION_SUMMARY.communityCompliance.map((item, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-pink-500 shrink-0 mt-0.5" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -285,6 +306,38 @@ export default function LegalControlDashboard() {
                       </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {clause.content.substring(0, 100)}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Extended Policies (31-40) */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Extended Policies (31-40)</CardTitle>
+                <CardDescription>
+                  Additional legal protections and community standards
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {EXTENDED_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border bg-card hover:border-primary/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="outline" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         (policy as any).enforcement?.substring(0, 80) || 
+                         "Policy configured"}...
                       </p>
                     </div>
                   ))}

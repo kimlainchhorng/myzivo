@@ -332,6 +332,226 @@ export const CONSENT_REQUIREMENTS = {
   move: ["terms", "privacy", "transportation"],
 } as const;
 
+// ============================================
+// EXTENDED LEGAL POLICIES (Clauses 31-40)
+// ============================================
+
+export const EXTENDED_LEGAL_POLICIES = {
+  // Clause 31: Acceptable Use Policy
+  acceptableUse: {
+    id: "acceptable_use",
+    title: "Acceptable Use Policy",
+    version: "1.0",
+    prohibitions: [
+      "Fraudulent activity or misrepresentation",
+      "Creating false listings, reviews, or accounts",
+      "Abuse, harassment, threats, or intimidation",
+      "Circumventing platform fees or payment systems",
+      "Scraping, bots, automated access, or data harvesting",
+      "Illegal goods, services, or activities",
+      "Impersonating others or ZIVO representatives",
+      "Interfering with platform operations or security",
+    ],
+    enforcement: `ZIVO may suspend or terminate accounts immediately for violations without prior notice. Violators may be reported to law enforcement authorities.`,
+  },
+
+  // Clause 32: Community Standards
+  communityStandards: {
+    id: "community_standards",
+    title: "Community Standards",
+    version: "1.0",
+    standards: [
+      "Treat all users, drivers, owners, and partners with respect",
+      "Non-discrimination based on race, religion, gender, orientation, or disability",
+      "No hate speech, threats of violence, or abusive language",
+      "Safety-first approach in all interactions",
+      "Honest and accurate communications",
+      "Respect for property and personal boundaries",
+    ],
+    enforcement: `Violations may result in warnings, account suspension, or permanent ban from the platform at ZIVO's sole discretion.`,
+  },
+
+  // Clause 33: No Warranty Disclaimer
+  noWarranty: {
+    id: "no_warranty",
+    title: "No Warranty Disclaimer",
+    version: "1.0",
+    content: `ALL SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND. ZIVO EXPRESSLY DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. ZIVO DOES NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, ERROR-FREE, OR SECURE, OR THAT DEFECTS WILL BE CORRECTED.`,
+  },
+
+  // Clause 34: Service Availability Disclaimer
+  serviceAvailability: {
+    id: "service_availability",
+    title: "Service Availability Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not guarantee: (a) availability of flights, vehicles, drivers, or restaurants at any given time; (b) continuous, uninterrupted access to the platform; (c) availability of specific features or services; (d) accuracy of estimated times, prices, or availability shown on the platform. Service availability is subject to third-party provider capacity and may change without notice.`,
+  },
+
+  // Clause 35: Price & Content Accuracy Disclaimer
+  priceAccuracy: {
+    id: "price_accuracy",
+    title: "Price & Content Accuracy Disclaimer",
+    version: "1.0",
+    content: `Prices, availability, images, descriptions, and other content displayed on the platform are provided by third-party service providers and may change at any time without notice. ZIVO does not guarantee the accuracy, completeness, or timeliness of any information. Prices and availability are not guaranteed until a booking is confirmed by the service provider. Final terms, prices, and availability are determined by the service provider at the time of booking.`,
+  },
+
+  // Clause 36: User-Generated Content License
+  ugcLicense: {
+    id: "ugc_license",
+    title: "User-Generated Content License",
+    version: "1.0",
+    content: `By uploading, posting, or submitting any content to the platform (including photos, reviews, descriptions, and communications), you grant ZIVO a worldwide, royalty-free, perpetual, irrevocable, non-exclusive, transferable, and sublicensable license to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, perform, and display such content in any media for marketing, platform operations, and any other lawful purpose. You represent that you have all necessary rights to grant this license.`,
+  },
+
+  // Clause 37: Safety & Emergency Disclaimer
+  safetyEmergency: {
+    id: "safety_emergency",
+    title: "Safety & Emergency Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not responsible for accidents, injuries, loss of property, medical emergencies, or any other safety incidents arising from the use of third-party services. Users must contact local emergency services (911 in the US) immediately in case of emergency. ZIVO does not provide emergency response services. Users are responsible for their own safety and should exercise appropriate caution when using any services.`,
+  },
+
+  // Clause 38: Regulatory Cooperation Policy
+  regulatoryCooperation: {
+    id: "regulatory_cooperation",
+    title: "Regulatory Cooperation Policy",
+    version: "1.0",
+    content: `ZIVO may: (a) suspend or terminate accounts to comply with applicable laws, regulations, or legal process; (b) share user data with government agencies, regulators, or law enforcement when required by law or legal process; (c) cooperate with investigations without prior notice to affected users when permitted by law. ZIVO shall not be liable for any actions taken in good faith compliance with legal or regulatory requirements.`,
+  },
+
+  // Clause 39: Payment Hold & Reserve Policy
+  paymentHoldReserve: {
+    id: "payment_hold_reserve",
+    title: "Payment Hold & Reserve Policy",
+    version: "1.0",
+    content: `ZIVO may, in its sole discretion: (a) place holds on funds pending verification or dispute resolution; (b) delay payouts to service providers; (c) establish reserves against potential chargebacks, refunds, or claims; (d) withhold funds to satisfy outstanding obligations or damages. These measures may be taken to prevent fraud, mitigate risk, ensure regulatory compliance, or protect the platform and its users.`,
+  },
+
+  // Clause 40: Changes to Policies
+  policyChanges: {
+    id: "policy_changes",
+    title: "Changes to Policies",
+    version: "1.0",
+    content: `ZIVO reserves the right to modify, update, or replace any policies, terms, or conditions at any time. Changes become effective upon posting to the platform unless otherwise specified. Continued use of the platform after changes are posted constitutes acceptance of the updated terms. For material changes, ZIVO may provide additional notice via email or in-app notification, but is not required to do so. Users are responsible for reviewing policies periodically.`,
+  },
+};
+
+// ============================================
+// SERVICE-SPECIFIC DISCLAIMERS (Strong)
+// ============================================
+
+export const SERVICE_DISCLAIMERS = {
+  flights: {
+    id: "flights_disclaimer",
+    title: "Flights Disclaimer",
+    points: [
+      "Flight schedules, routes, and aircraft are controlled exclusively by airlines",
+      "ZIVO is not responsible for delays, cancellations, diversions, or overbooking",
+      "Airline rules govern baggage, seating, changes, and refunds",
+      "Tickets are issued by licensed ticketing providers, not ZIVO",
+      "Travel documents, visas, and entry requirements are the passenger's responsibility",
+    ],
+    summary: `ZIVO acts as a technology platform connecting travelers with licensed ticketing partners. All flight services are subject to airline terms and conditions.`,
+  },
+
+  cars: {
+    id: "cars_disclaimer",
+    title: "Car Rental Disclaimer",
+    points: [
+      "Vehicle owners control vehicle condition, maintenance, and cleanliness",
+      "Insurance coverage is subject to policy terms, conditions, and exclusions",
+      "ZIVO is not liable for mechanical failure, accidents, or vehicle defects",
+      "Drivers must meet owner requirements and local licensing laws",
+      "Damage disputes are resolved through platform arbitration procedures",
+    ],
+    summary: `ZIVO connects renters with independent vehicle owners. All rental transactions are between the renter and owner.`,
+  },
+
+  rides: {
+    id: "rides_disclaimer",
+    title: "Rides & Move Disclaimer",
+    points: [
+      "Drivers are independent contractors, not ZIVO employees",
+      "ZIVO does not provide transportation services directly",
+      "Travel time, route, and arrival times are estimates only and not guaranteed",
+      "Driver availability depends on third-party partner capacity",
+      "Passengers must follow local laws and safety requirements",
+    ],
+    summary: `ZIVO operates a technology platform connecting riders with independent driver partners.`,
+  },
+
+  eats: {
+    id: "eats_disclaimer",
+    title: "Eats Disclaimer",
+    points: [
+      "Restaurants are solely responsible for food preparation and quality",
+      "ZIVO is not responsible for allergens, ingredients, or food safety",
+      "Delivery times are estimates and may vary based on conditions",
+      "Menu items, prices, and availability are controlled by restaurants",
+      "Nutritional information is provided by restaurants and not verified by ZIVO",
+    ],
+    summary: `ZIVO connects customers with independent restaurant partners. All food orders are prepared by the restaurant.`,
+  },
+};
+
+// ============================================
+// LEGAL FAQ (DISPUTE PREVENTION)
+// ============================================
+
+export const LEGAL_FAQ = [
+  {
+    question: "Is ZIVO an airline, rental company, or transportation provider?",
+    answer: "No. ZIVO is a technology platform that connects customers with independent service providers. ZIVO does not operate airlines, own rental vehicles, employ drivers, or operate restaurants.",
+  },
+  {
+    question: "Who issues my flight ticket?",
+    answer: "Tickets are issued by licensed airline ticketing providers under airline rules. ZIVO acts as a sub-agent facilitating the booking process.",
+  },
+  {
+    question: "Who owns the rental cars?",
+    answer: "Vehicles listed on ZIVO are owned by independent car owners or fleets, not ZIVO. Owners are responsible for vehicle condition and insurance.",
+  },
+  {
+    question: "Does ZIVO employ drivers or restaurants?",
+    answer: "No. All drivers and restaurants are independent partners or contractors. There is no employment relationship between ZIVO and any service provider.",
+  },
+  {
+    question: "Is insurance provided by ZIVO?",
+    answer: "No. Insurance and protection plans are provided by licensed third-party insurance companies. Coverage is subject to policy terms and conditions.",
+  },
+  {
+    question: "Are prices guaranteed?",
+    answer: "Prices displayed are estimates and may change. Prices are final only after booking confirmation by the service provider.",
+  },
+  {
+    question: "Can ZIVO suspend my account?",
+    answer: "Yes. ZIVO may suspend or terminate accounts at its discretion to protect the platform, other users, or comply with legal requirements.",
+  },
+  {
+    question: "How are disputes handled?",
+    answer: "Disputes are resolved through binding arbitration as outlined in the Terms of Service. Users agree to waive class action rights.",
+  },
+  {
+    question: "Can I sue ZIVO?",
+    answer: "Users agree to binding arbitration and waive the right to participate in class actions to the maximum extent permitted by law.",
+  },
+  {
+    question: "What happens if a service is unavailable?",
+    answer: "ZIVO is not liable for service interruptions, unavailability, or capacity limitations. Availability depends on third-party providers.",
+  },
+  {
+    question: "What if I have a safety emergency?",
+    answer: "Contact local emergency services (911 in the US) immediately. ZIVO does not provide emergency response services.",
+  },
+  {
+    question: "Can ZIVO share my data with authorities?",
+    answer: "Yes. ZIVO may share data with government agencies or law enforcement when required by law or legal process.",
+  },
+];
+
+// Helper array for extended policies
+export const EXTENDED_POLICIES_LIST = Object.values(EXTENDED_LEGAL_POLICIES);
+
 // Summary of all legal protections for display
 export const LEGAL_PROTECTION_SUMMARY = {
   liabilityShield: [
@@ -340,6 +560,8 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Assumption of risk by users",
     "Release of liability",
     "Damage cap ($100 or 12-month payment, whichever is lower)",
+    "No warranty disclaimer",
+    "Service availability disclaimer",
   ],
   disputeResolution: [
     "Binding arbitration required",
@@ -354,6 +576,8 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Service modification rights",
     "Termination without cause",
     "Government compliance clause",
+    "Payment hold & reserve rights",
+    "Policy change rights",
   ],
   contentProtection: [
     "User content disclaimer",
@@ -361,5 +585,13 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Anti-scraping provisions",
     "Severability and survival clauses",
     "Entire agreement clause",
+    "UGC license for marketing",
+    "Price & content accuracy disclaimer",
+  ],
+  communityCompliance: [
+    "Acceptable use policy",
+    "Community standards",
+    "Safety & emergency disclaimer",
+    "Regulatory cooperation policy",
   ],
 };
