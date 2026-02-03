@@ -1,257 +1,198 @@
 
-# ZIVO Flights Duffel Integration - Complete Implementation Plan
+# ZIVO Flights OTA Conversion - Remove Affiliate Flow
 
 ## Executive Summary
 
-Finalize the ZIVO Flights integration to use **Duffel API (Sandbox)** for the complete Merchant-of-Record (MoR) flow. The `DUFFEL_API_KEY` is already configured. This plan connects all components: search, offer selection, price locking, Stripe payment, automatic ticketing, and admin management.
+Convert ZIVO Flights from an affiliate/meta-search model to a **full OTA (Online Travel Agency)** where ZIVO is the Merchant of Record. This involves removing all affiliate language, partner redirect notices, "indicative pricing" disclaimers, and updating UI to reflect direct ZIVO booking.
 
 ---
 
-## Current State Analysis
+## Current Issues Identified
 
-### What's Already Built ✅
+### Components Still Using Affiliate Patterns
 
-**Edge Functions:**
-- `duffel-flights/index.ts` - Full Duffel API wrapper (createOfferRequest, getOffers, getOffer, createOrder)
-- `create-flight-checkout/index.ts` - Creates Stripe checkout session and flight_bookings record
-- `issue-flight-ticket/index.ts` - Creates Duffel order after payment, stores PNR + ticket numbers
-- `stripe-webhook/index.ts` - Handles payment success and triggers ticketing
+| File | Issue |
+|------|-------|
+| `FlightResultCard.tsx` | Says "Indicative price. Final price confirmed on partner checkout." + ExternalLink icon + "Hizovo does not issue tickets" |
+| `AffiliateNotice.tsx` | Entire file is affiliate-focused: "View Deal will redirect you to partner", "Hizivo does not issue airline tickets" |
+| `RedirectNotice` | Shows on FlightResults page, telling users about partner redirect |
+| `AffiliateDisclaimer` | Footer component about commissions and partner bookings |
+| `TravelFAQ.tsx` | Flights FAQs describe affiliate model: "click View Deal to be redirected to partner" |
+| `TrendingDealsSection.tsx` | Uses `trackAffiliateClick`, opens external `window.open` |
+| `HowBookingWorks.tsx` | Step 3 says "Book securely with our airline partner" |
+| `TrustSignals.tsx` | Says "Secure booking on partner sites", "Partner site redirect" |
+| `MyTripsDashboard.tsx` | Still uses MOCK_TRIPS, not connected to real `flight_bookings` |
+| FlightResults.tsx | Imports/renders `RedirectNotice` and `AffiliateDisclaimer` |
 
-**Frontend Pages:**
-- `FlightCheckout.tsx` - Stripe payment page using `useDuffelOffer`
-- `FlightConfirmation.tsx` - Shows booking status, PNR, ticket numbers
-- `FlightTravelerInfo.tsx` - Collects passenger details, stores in sessionStorage
+### Compliance Configs (Already MoR - Good)
 
-**Hooks:**
-- `useDuffelFlights.ts` - React Query hooks for Duffel search
-- `useFlightBooking.ts` - Booking queries and checkout mutation
-
-**Database:**
-- `flight_bookings` - Has PNR, ticketing_status, ticket_numbers, Stripe fields
-- `flight_passengers` - Stores passenger details with ticket_number
-- `flight_ticketing_logs` - API call logging
-
-### What's Missing/Needs Work 🔧
-
-1. **FlightResults page uses Aviasales (affiliate model) instead of Duffel**
-2. **Database schema mismatch** - `create-flight-checkout` inserts `origin`, `destination`, `departure_date`, `return_date`, `currency` columns that don't exist
-3. **No refund edge function** - `process-flight-refund` doesn't exist
-4. **No DUFFEL_ENV environment variable** - for sandbox/production toggle
-5. **Admin panel missing** - ticketing status column, retry/refund actions, ticketing logs tab
-6. **FlightResults → FlightDetails navigation** - needs to store Duffel offer_id properly
-7. **Email confirmation** - not implemented
+- `flightCompliance.ts` - Uses MoR language, no "indicative" for Duffel
+- `flightMoRCompliance.ts` - Correct seller of travel text
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Database Schema Fix
+### Phase 1: FlightResultCard.tsx - Remove Affiliate Elements
 
-Add missing columns to `flight_bookings` table:
+**Current Issues:**
+- Line 3-4: Comment says "Meta-search affiliate card: Indicative pricing"
+- Line 239-240: "Estimated" label for non-live prices
+- Line 257-259: "Indicative price. Final price confirmed on partner checkout."
+- Line 277: ExternalLink icon in button
+- Line 275-276: "Continue to secure booking" implies external
+- Line 281-283: "Powered by licensed travel partners · Final price confirmed before payment"
+- Line 289-291: "Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners."
 
-```sql
-ALTER TABLE flight_bookings 
-ADD COLUMN IF NOT EXISTS origin text,
-ADD COLUMN IF NOT EXISTS destination text,
-ADD COLUMN IF NOT EXISTS departure_date date,
-ADD COLUMN IF NOT EXISTS return_date date,
-ADD COLUMN IF NOT EXISTS currency text DEFAULT 'USD';
-```
-
-This is **required** before the checkout flow can work.
-
----
-
-### Phase 2: Environment Variable
-
-Add `DUFFEL_ENV` secret for environment switching:
-
-| Secret | Value | Purpose |
-|--------|-------|---------|
-| `DUFFEL_API_KEY` | (existing) | API authentication |
-| `DUFFEL_ENV` | `sandbox` | Environment toggle |
-
-Update edge functions to use environment-aware API URL:
-
-```typescript
-const DUFFEL_ENV = Deno.env.get('DUFFEL_ENV') || 'sandbox';
-const DUFFEL_API_URL = DUFFEL_ENV === 'production' 
-  ? 'https://api.duffel.com' 
-  : 'https://api.duffel.com'; // Same URL, sandbox is key-based
-```
+**Changes:**
+- Update file comment to "ZIVO OTA Flight Card - Direct booking"
+- Change price label from "Estimated" to "From" for all prices (Duffel = exact)
+- Remove indicative price disclaimer text
+- Replace ExternalLink icon with ArrowRight (internal navigation)
+- Change button text to "Book on ZIVO"
+- Update footer to MoR language: "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers."
 
 ---
 
-### Phase 3: Connect FlightResults to Duffel
+### Phase 2: Remove Affiliate Components from FlightResults
 
-**File: `src/pages/FlightResults.tsx`**
+**File: `FlightResults.tsx`**
 
-Replace Aviasales search with Duffel:
+Remove these imports/usages:
+- Line 49-50: `RedirectNotice, AffiliateDisclaimer`
+- Line 25: `trackPageView` (affiliate tracking)
+- Line 533-536: `<RedirectNotice service="flights" />` render
+- Line 599-600: `<AffiliateDisclaimer />` render
+- Line 565-570: `TrendingDealsSection` (uses affiliate tracking)
 
-1. **Change import** from `useAviasalesFlightSearch` to `useDuffelFlightSearch`
-2. **Update search call**:
-```typescript
-const { data: duffelResult, isLoading } = useDuffelFlightSearch({
-  origin: originIata,
-  destination: destinationIata,
-  departureDate: departureDate || '',
-  returnDate: returnDate,
-  passengers: { adults: passengers },
-  cabinClass: cabinClass as 'economy' | 'business' | 'first',
-  enabled: isValid,
-});
-```
-
-3. **Map Duffel offers to card format** - offers already have exact prices
-4. **Update handleViewDeal** - navigate to `/flights/details/{offerId}` instead of affiliate redirect
-5. **Remove all affiliate tracking** for flights (keep for hotels/cars)
+Replace with:
+- Flights-specific MoR disclaimer component
+- Remove or update TrendingDeals to use internal navigation
 
 ---
 
-### Phase 4: Update FlightDetails Page
+### Phase 3: Create FlightsMoRDisclaimer Component
 
-**File: `src/pages/FlightDetails.tsx`**
+**New Component: `src/components/flight/FlightsMoRDisclaimer.tsx`**
 
-Current page shows flight details from sessionStorage. Update to:
+Replace `AffiliateDisclaimer` and `RedirectNotice` with MoR-appropriate footer:
 
-1. **Fetch offer from Duffel** using `useDuffelOffer(offerId)`
-2. **Display exact pricing** - no "indicative" disclaimers
-3. **Show fare rules** - refundable, changeable conditions from offer
-4. **CTA: "Book Now"** → navigates to `/flights/traveler-info?offer={id}&passengers={n}`
-5. **Remove affiliate redirect logic** entirely
-
----
-
-### Phase 5: Create Refund Edge Function
-
-**New file: `supabase/functions/process-flight-refund/index.ts`**
-
-```typescript
-// Actions: 'request' (user), 'process' (admin), 'auto' (after ticketing failure)
-
-serve(async (req) => {
-  const { bookingId, reason, action } = await req.json();
-  
-  // Fetch booking
-  const booking = await supabase.from('flight_bookings').select('*').eq('id', bookingId).single();
-  
-  if (action === 'auto' || action === 'process') {
-    // Refund via Stripe
-    const stripe = new Stripe(stripeKey);
-    await stripe.refunds.create({
-      payment_intent: booking.stripe_payment_intent_id,
-      reason: 'requested_by_customer',
-    });
-    
-    // Update booking
-    await supabase.from('flight_bookings').update({
-      refund_status: 'refunded',
-      refund_processed_at: new Date().toISOString(),
-      refund_amount: booking.total_amount,
-    }).eq('id', bookingId);
-    
-    // If Duffel order exists, cancel it
-    if (booking.ticketing_partner_order_id) {
-      await cancelDuffelOrder(booking.ticketing_partner_order_id);
-    }
-  }
-  
-  return { success: true };
-});
-```
-
----
-
-### Phase 6: Enhanced Error Handling in issue-flight-ticket
-
-**File: `supabase/functions/issue-flight-ticket/index.ts`**
-
-Add auto-refund on ticketing failure:
-
-```typescript
-} catch (duffelError) {
-  console.error("[IssueTicket] Duffel error:", duffelError);
-  
-  // Auto-refund on failure
-  try {
-    await fetch(`${supabaseUrl}/functions/v1/process-flight-refund`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${supabaseServiceKey}` },
-      body: JSON.stringify({ 
-        bookingId, 
-        reason: 'Ticketing failed: ' + duffelError.message,
-        action: 'auto' 
-      }),
-    });
-  } catch (refundErr) {
-    console.error("[IssueTicket] Auto-refund failed:", refundErr);
-  }
-  
-  throw duffelError;
-}
-```
-
----
-
-### Phase 7: Admin Panel Enhancements
-
-**File: `src/components/admin/AdminFlightManagement.tsx`**
-
-1. **Add "Ticketing" tab** with logs from `flight_ticketing_logs`
-2. **Add columns to Bookings table**:
-   - `ticketing_status` (Pending/Processing/Issued/Failed)
-   - `pnr` (if issued)
-3. **Add actions**:
-   - "Retry Ticketing" - calls `issue-flight-ticket` for failed status
-   - "Process Refund" - calls `process-flight-refund` for issued status
-   - "View Passengers" - expands to show passenger details
-
-**New Ticketing Status Badge:**
-```typescript
-const getTicketingBadge = (status: string) => {
-  const styles = {
-    issued: "bg-emerald-500/10 text-emerald-500",
-    processing: "bg-blue-500/10 text-blue-500",
-    failed: "bg-red-500/10 text-red-500",
-    pending: "bg-amber-500/10 text-amber-500",
-  };
-  return <Badge className={styles[status]}>{status}</Badge>;
-};
-```
-
----
-
-### Phase 8: My Trips Dashboard
-
-**File: `src/components/flight/MyTripsDashboard.tsx`**
-
-Connect to real `flight_bookings` data:
-
-1. **Import `useFlightBookings`** from hooks
-2. **Replace MOCK_TRIPS** with real query data
-3. **Display**:
-   - Booking reference / PNR
-   - Ticketing status badge
-   - Ticket numbers (if issued)
-   - "Request Change" button (opens FlightChangeRequest dialog)
-   - "Request Refund" button (for eligible bookings)
-
----
-
-### Phase 9: Compliance Disclosures
-
-All checkout/booking pages already have MoR compliance text. Verify display:
-
-**Required on checkout:**
 ```text
 "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
 Tickets are issued by authorized partners under airline rules."
 ```
 
-**Required on results:**
+No mention of:
+- Partner redirect
+- Indicative prices
+- Commission earnings
+- External booking sites
+
+---
+
+### Phase 4: Update AffiliateNotice.tsx for Non-Flights
+
+**File: `src/components/results/AffiliateNotice.tsx`**
+
+Flights use MoR model now, so update:
+- `RedirectNotice` - Exclude flights, only show for hotels/cars
+- `IndicativePriceAlert` - Exclude flights (Duffel = exact pricing)
+- `AffiliateDisclaimer` - Add conditional text for flights vs hotels/cars
+
+Or create separate components:
+- `FlightsMoRFooter.tsx` for flights
+- Keep existing for hotels/cars (still affiliate)
+
+---
+
+### Phase 5: Update TravelFAQ.tsx - Flights Section
+
+**Current (Affiliate model):**
 ```text
-"Prices shown are exact totals including taxes and fees."
+"click 'View Deal' to be redirected to our partner's website"
+"ZIVO is a search and comparison tool only. All bookings...handled by airline"
+"Prices shown on ZIVO are indicative"
 ```
+
+**Updated (MoR model):**
+```text
+"click 'Book on ZIVO' to complete your booking securely"
+"ZIVO sells tickets as a sub-agent. All bookings confirmed directly with ZIVO."
+"Prices are exact totals including taxes and fees"
+"For changes or cancellations, contact ZIVO Support"
+```
+
+---
+
+### Phase 6: Update HowBookingWorks.tsx
+
+**Current Step 3:**
+```text
+"Complete booking securely"
+"Book securely with our airline partner"
+```
+
+**Updated Step 3:**
+```text
+"Book directly on ZIVO"
+"Complete your booking and receive your e-ticket instantly"
+```
+
+---
+
+### Phase 7: Update TrustSignals.tsx
+
+**Current:**
+```text
+"Secure booking on partner sites"
+"Partner site redirect"
+```
+
+**Updated:**
+```text
+"Secure ZIVO checkout"
+"Licensed Seller of Travel"
+```
+
+---
+
+### Phase 8: Connect MyTripsDashboard to Real Data
+
+**File: `src/components/flight/MyTripsDashboard.tsx`**
+
+**Current:** Uses `MOCK_TRIPS` array (lines 88-180)
+
+**Changes:**
+1. Import and use `useFlightBookings` hook
+2. Replace MOCK_TRIPS with real database query
+3. Map `flight_bookings` data to Trip interface
+4. Show real ticketing status, PNR, ticket numbers
+5. Add "Request Change" and "Request Refund" buttons
+6. Handle empty state for users with no bookings
+
+---
+
+### Phase 9: Remove TrendingDealsSection Affiliate Tracking
+
+**File: `src/components/monetization/TrendingDealsSection.tsx`**
+
+**Current:** Uses `trackAffiliateClick`, `window.open` to external affiliate URL
+
+**Options:**
+1. Remove from FlightResults (flights are MoR now)
+2. Update to navigate internally for flights, keep affiliate for hotels/cars
+3. Create separate "Popular Routes" component for flights with internal links
+
+Recommended: Remove from flights, keep for hotels/cars only
+
+---
+
+### Phase 10: Clean Up Hizivo/Hizovo References
+
+Search found 71 files with old brand references:
+- Replace "Hizivo" / "Hizovo" with "ZIVO" throughout
+- Update email addresses to ZIVO domain if applicable
+- Ensure consistent branding
 
 ---
 
@@ -259,15 +200,58 @@ Tickets are issued by authorized partners under airline rules."
 
 | File | Action | Description |
 |------|--------|-------------|
-| **Database** | ALTER | Add origin, destination, departure_date, return_date, currency columns |
-| **Secrets** | ADD | DUFFEL_ENV = sandbox |
-| `src/pages/FlightResults.tsx` | MODIFY | Switch from Aviasales to Duffel search |
-| `src/pages/FlightDetails.tsx` | MODIFY | Fetch Duffel offer, remove affiliate redirect |
-| `supabase/functions/process-flight-refund/` | CREATE | New refund edge function |
-| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Add auto-refund on failure |
-| `src/components/admin/AdminFlightManagement.tsx` | MODIFY | Add ticketing tab, status column, actions |
-| `src/components/flight/MyTripsDashboard.tsx` | MODIFY | Connect to real flight_bookings |
-| `src/hooks/useDuffelFlights.ts` | MODIFY | Update comment (already correct) |
+| `FlightResultCard.tsx` | MODIFY | Remove affiliate text, update CTA to "Book on ZIVO" |
+| `FlightResults.tsx` | MODIFY | Remove RedirectNotice, AffiliateDisclaimer, TrendingDealsSection |
+| `AffiliateNotice.tsx` | MODIFY | Exclude flights from affiliate components |
+| `TravelFAQ.tsx` | MODIFY | Update flights FAQs to MoR language |
+| `HowBookingWorks.tsx` | MODIFY | Update step 3 to ZIVO direct booking |
+| `TrustSignals.tsx` | MODIFY | Remove partner redirect language |
+| `MyTripsDashboard.tsx` | MODIFY | Connect to real flight_bookings data |
+| `TrendingDealsSection.tsx` | MODIFY | Remove from flights or update navigation |
+| **NEW**: `FlightsMoRFooter.tsx` | CREATE | MoR-specific footer for flight pages |
+
+---
+
+## New CTA and Disclaimer Text
+
+### Result Card Button
+**Old:** "Continue to secure booking" + ExternalLink icon
+**New:** "Book on ZIVO" + ArrowRight icon
+
+### Price Display
+**Old:** "Estimated" / "Indicative price"
+**New:** "From" (always exact for Duffel)
+
+### Footer Disclaimer
+**Old:**
+```
+"ZIVO is a meta-search travel comparison platform – we do not sell tickets.
+ZIVO may earn a commission when users book through partner links."
+```
+
+**New:**
+```
+"ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+Tickets are issued by authorized partners under airline rules."
+```
+
+### Support FAQ
+**Old:** "Contact the airline or travel agency where you completed your purchase"
+**New:** "Contact ZIVO Support for booking changes. Airline fare rules apply."
+
+---
+
+## Post-Implementation Verification
+
+1. Search flights - no "partner" or "redirect" language visible
+2. Result cards show "Book on ZIVO" button (no external link icon)
+3. Prices display as "From $XXX" (not "Indicative" or "Estimated")
+4. Footer shows seller of travel disclosure
+5. FAQ describes ZIVO as seller, not aggregator
+6. My Trips shows real bookings with PNR and ticket numbers
+7. HowBookingWorks shows direct ZIVO checkout
+8. No `window.open` or `ExternalLink` for flights
+9. All Hizivo/Hizovo references replaced with ZIVO
 
 ---
 
@@ -276,48 +260,23 @@ Tickets are issued by authorized partners under airline rules."
 ```text
 User searches flights
         ↓
-FlightResults.tsx (Duffel API via duffel-flights edge function)
+FlightResults.tsx (Duffel API - exact prices)
         ↓
-User clicks "Select Flight"
+User clicks "Book on ZIVO" (internal navigation)
         ↓
-FlightDetails.tsx (Duffel getOffer - exact price, fare rules)
+FlightDetails.tsx (review itinerary, fare rules)
         ↓
 User clicks "Book Now"
         ↓
 FlightTravelerInfo.tsx (collect passenger details)
         ↓
-FlightCheckout.tsx (review + Stripe button)
+FlightCheckout.tsx (Stripe payment - ZIVO is MoR)
         ↓
-Stripe Checkout (ZIVO = merchant of record)
+stripe-webhook → issue-flight-ticket (Duffel order)
         ↓
-stripe-webhook → marks payment_status=paid
+FlightConfirmation.tsx (PNR, ticket numbers)
         ↓
-issue-flight-ticket → creates Duffel order
-        ↓
-Success: PNR + tickets saved, user sees confirmation
-Failure: Auto-refund via Stripe, user notified
+My Trips dashboard (real bookings from flight_bookings)
 ```
 
----
-
-## Testing Checklist
-
-1. Search flights with Duffel sandbox key
-2. Select a flight and view exact price
-3. Enter traveler info and proceed to checkout
-4. Complete Stripe test payment
-5. Verify ticketing webhook fires
-6. Confirm PNR and ticket numbers display
-7. Test admin retry ticketing
-8. Test admin refund processing
-9. Verify My Trips shows real bookings
-
----
-
-## Compliance Verification
-
-- [x] DUFFEL_API_KEY stored server-side only
-- [x] No API tokens exposed in frontend
-- [x] Legal disclosures on checkout
-- [x] Seller of Travel registration displayed
-- [x] Exact pricing (no "indicative" for Duffel offers)
+**Key Difference:** NO external redirects. NO partner checkout. ZIVO handles everything.
