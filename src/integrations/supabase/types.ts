@@ -89,6 +89,48 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          new_values: Json | null
+          old_values: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_driver_actions: {
         Row: {
           action_type: string
@@ -9020,6 +9062,51 @@ export type Database = {
         }
         Relationships: []
       }
+      provider_health: {
+        Row: {
+          avg_response_time_ms: number | null
+          created_at: string
+          error_count_24h: number | null
+          id: string
+          last_error_at: string | null
+          last_error_message: string | null
+          last_success_at: string | null
+          metadata: Json | null
+          provider_name: string
+          status: string
+          success_count_24h: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_response_time_ms?: number | null
+          created_at?: string
+          error_count_24h?: number | null
+          id?: string
+          last_error_at?: string | null
+          last_error_message?: string | null
+          last_success_at?: string | null
+          metadata?: Json | null
+          provider_name: string
+          status?: string
+          success_count_24h?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_response_time_ms?: number | null
+          created_at?: string
+          error_count_24h?: number | null
+          id?: string
+          last_error_at?: string | null
+          last_error_message?: string | null
+          last_success_at?: string | null
+          metadata?: Json | null
+          provider_name?: string
+          status?: string
+          success_count_24h?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       purchase_order_items: {
         Row: {
           id: string
@@ -12234,6 +12321,7 @@ export type Database = {
       }
       travel_orders: {
         Row: {
+          admin_notes: string | null
           cancellation_reason: string | null
           cancellation_requested_at: string | null
           cancellation_status: string | null
@@ -12242,6 +12330,8 @@ export type Database = {
           created_at: string
           currency: string
           fees: number
+          flagged_for_review: boolean | null
+          flagged_reason: string | null
           holder_email: string
           holder_name: string
           holder_phone: string | null
@@ -12257,6 +12347,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admin_notes?: string | null
           cancellation_reason?: string | null
           cancellation_requested_at?: string | null
           cancellation_status?: string | null
@@ -12265,6 +12356,8 @@ export type Database = {
           created_at?: string
           currency?: string
           fees?: number
+          flagged_for_review?: boolean | null
+          flagged_reason?: string | null
           holder_email: string
           holder_name: string
           holder_phone?: string | null
@@ -12280,6 +12373,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admin_notes?: string | null
           cancellation_reason?: string | null
           cancellation_requested_at?: string | null
           cancellation_status?: string | null
@@ -12288,6 +12382,8 @@ export type Database = {
           created_at?: string
           currency?: string
           fees?: number
+          flagged_for_review?: boolean | null
+          flagged_reason?: string | null
           holder_email?: string
           holder_name?: string
           holder_phone?: string | null
@@ -16554,6 +16650,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { user_uuid: string }; Returns: boolean }
+      is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_chat_participant: {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
@@ -16608,7 +16705,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "super_admin"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "super_admin"
+        | "operations"
+        | "finance"
+        | "support"
       approval_status: "pending" | "approved" | "rejected"
       beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
@@ -16844,7 +16948,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "super_admin"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "super_admin",
+        "operations",
+        "finance",
+        "support",
+      ],
       approval_status: ["pending", "approved", "rejected"],
       beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],
       booking_status: [
