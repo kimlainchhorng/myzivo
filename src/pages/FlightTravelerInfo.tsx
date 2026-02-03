@@ -1,8 +1,8 @@
 /**
  * Flight Traveler Info Page
  * 
- * Collects passenger details before partner checkout handoff
- * Hizovo is NOT the merchant of record - no payment forms here
+ * Collects passenger details before ZIVO checkout
+ * ZIVO is the Merchant of Record - internal Stripe payment
  */
 
 import { useState, useEffect } from "react";

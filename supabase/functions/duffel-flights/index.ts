@@ -3,10 +3,10 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 /**
  * Duffel Flights API Edge Function
  * 
- * Implements real flight search and booking handoff using the Duffel API
+ * Implements real flight search and booking using the Duffel API
  * Supports: offer requests, offer retrieval, order creation
  * 
- * Hizovo is NOT the merchant of record - payments handled by Duffel/airlines
+ * ZIVO is the Merchant of Record - Stripe checkout, then Duffel order
  */
 
 const corsHeaders = {

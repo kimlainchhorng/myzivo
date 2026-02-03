@@ -13,6 +13,8 @@ export { ResultCardSkeleton, ResultsSkeletonList } from "./ResultCardSkeleton";
 export { EmptyResults } from "./EmptyResults";
 export { RedirectNotice, IndicativePriceAlert, AffiliateDisclaimer } from "./AffiliateNotice";
 
+// ApiPendingNotice removed - OTA mode only (no affiliate comparison hub)
+
 // Filter components
 export { DesktopFiltersSidebar } from "./DesktopFiltersSidebar";
 export { FlightFiltersContent } from "./FlightFiltersContent";
@@ -38,5 +40,4 @@ export { RampResultsLayout, RampResultsHeader, RampGlobalDisclaimer, RampIndicat
 export { CarPartnerTrustStrip } from "./CarPartnerTrustStrip";
 export { CarResultsSkeleton } from "./CarResultsSkeleton";
 
-// API states
-export { default as ApiPendingNotice } from "./ApiPendingNotice";
+// ApiPendingNotice removed - OTA mode uses Duffel directly
