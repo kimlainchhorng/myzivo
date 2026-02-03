@@ -234,6 +234,7 @@ const TrustCertification = lazy(() => import("./pages/security/TrustCertificatio
 const ScamPrevention = lazy(() => import("./pages/security/ScamPrevention"));
 const SecurityOperations = lazy(() => import("./pages/security/SecurityOperations"));
 const DisasterRecovery = lazy(() => import("./pages/security/DisasterRecovery"));
+const VulnerabilityDisclosure = lazy(() => import("./pages/security/VulnerabilityDisclosure"));
 const Status = lazy(() => import("./pages/Status"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
@@ -549,6 +550,7 @@ const App = () => (
                 <Route path="/security/scams" element={<ScamPrevention />} />
                 <Route path="/security/operations" element={<SecurityOperations />} />
                 <Route path="/security/disaster-recovery" element={<DisasterRecovery />} />
+                <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
                 <Route path="/status" element={<Status />} />
                 <Route path="/privacy-security" element={<PrivacySecurity />} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
