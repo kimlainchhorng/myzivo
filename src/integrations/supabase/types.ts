@@ -5587,6 +5587,205 @@ export type Database = {
           },
         ]
       }
+      fraud_assessments: {
+        Row: {
+          card_country: string | null
+          created_at: string
+          decision: Database["public"]["Enums"]["fraud_decision"]
+          device_fingerprint: string | null
+          geo_country: string | null
+          id: string
+          ip_address: unknown
+          is_vpn: boolean | null
+          manual_override: boolean | null
+          order_id: string | null
+          override_at: string | null
+          override_by: string | null
+          override_reason: string | null
+          reasons: string[] | null
+          risk_level: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score: number
+          session_id: string | null
+          signals: Json | null
+          stripe_risk_level: string | null
+          stripe_risk_score: number | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          card_country?: string | null
+          created_at?: string
+          decision?: Database["public"]["Enums"]["fraud_decision"]
+          device_fingerprint?: string | null
+          geo_country?: string | null
+          id?: string
+          ip_address?: unknown
+          is_vpn?: boolean | null
+          manual_override?: boolean | null
+          order_id?: string | null
+          override_at?: string | null
+          override_by?: string | null
+          override_reason?: string | null
+          reasons?: string[] | null
+          risk_level?: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score?: number
+          session_id?: string | null
+          signals?: Json | null
+          stripe_risk_level?: string | null
+          stripe_risk_score?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          card_country?: string | null
+          created_at?: string
+          decision?: Database["public"]["Enums"]["fraud_decision"]
+          device_fingerprint?: string | null
+          geo_country?: string | null
+          id?: string
+          ip_address?: unknown
+          is_vpn?: boolean | null
+          manual_override?: boolean | null
+          order_id?: string | null
+          override_at?: string | null
+          override_by?: string | null
+          override_reason?: string | null
+          reasons?: string[] | null
+          risk_level?: Database["public"]["Enums"]["fraud_risk_level"]
+          risk_score?: number
+          session_id?: string | null
+          signals?: Json | null
+          stripe_risk_level?: string | null
+          stripe_risk_score?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_assessments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fraud_rules: {
+        Row: {
+          condition: Json
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          rule_name: string
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          condition: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_name: string
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          condition?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          rule_name?: string
+          signal_type?: Database["public"]["Enums"]["fraud_signal_type"]
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      fraud_signals: {
+        Row: {
+          assessment_id: string
+          contribution: number
+          created_at: string
+          id: string
+          metadata: Json | null
+          signal_name: string
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          signal_value: string | null
+          weight: number
+        }
+        Insert: {
+          assessment_id: string
+          contribution?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          signal_name: string
+          signal_type: Database["public"]["Enums"]["fraud_signal_type"]
+          signal_value?: string | null
+          weight?: number
+        }
+        Update: {
+          assessment_id?: string
+          contribution?: number
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          signal_name?: string
+          signal_type?: Database["public"]["Enums"]["fraud_signal_type"]
+          signal_value?: string | null
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fraud_signals_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "fraud_assessments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fraud_thresholds: {
+        Row: {
+          auto_action: string | null
+          created_at: string
+          default_decision: Database["public"]["Enums"]["fraud_decision"]
+          id: string
+          level: Database["public"]["Enums"]["fraud_risk_level"]
+          max_score: number
+          min_score: number
+          notify_admin: boolean | null
+        }
+        Insert: {
+          auto_action?: string | null
+          created_at?: string
+          default_decision: Database["public"]["Enums"]["fraud_decision"]
+          id?: string
+          level: Database["public"]["Enums"]["fraud_risk_level"]
+          max_score: number
+          min_score: number
+          notify_admin?: boolean | null
+        }
+        Update: {
+          auto_action?: string | null
+          created_at?: string
+          default_decision?: Database["public"]["Enums"]["fraud_decision"]
+          id?: string
+          level?: Database["public"]["Enums"]["fraud_risk_level"]
+          max_score?: number
+          min_score?: number
+          notify_admin?: boolean | null
+        }
+        Relationships: []
+      }
       fuel_entries: {
         Row: {
           created_at: string
@@ -13211,6 +13410,60 @@ export type Database = {
         }
         Relationships: []
       }
+      user_fraud_profiles: {
+        Row: {
+          blocked_at: string | null
+          blocked_count: number | null
+          blocked_reason: string | null
+          chargeback_count: number | null
+          created_at: string
+          failed_payment_count: number | null
+          id: string
+          is_blocked: boolean | null
+          lifetime_risk_score: number | null
+          notes: string | null
+          refund_count: number | null
+          review_count: number | null
+          total_assessments: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_count?: number | null
+          blocked_reason?: string | null
+          chargeback_count?: number | null
+          created_at?: string
+          failed_payment_count?: number | null
+          id?: string
+          is_blocked?: boolean | null
+          lifetime_risk_score?: number | null
+          notes?: string | null
+          refund_count?: number | null
+          review_count?: number | null
+          total_assessments?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_count?: number | null
+          blocked_reason?: string | null
+          chargeback_count?: number | null
+          created_at?: string
+          failed_payment_count?: number | null
+          id?: string
+          is_blocked?: boolean | null
+          lifetime_risk_score?: number | null
+          notes?: string | null
+          refund_count?: number | null
+          review_count?: number | null
+          total_assessments?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_locale_preferences: {
         Row: {
           country_code: string | null
@@ -16961,6 +17214,23 @@ export type Database = {
       driver_status: "pending" | "verified" | "rejected" | "suspended"
       fleet_owner_status: "pending" | "approved" | "suspended" | "rejected"
       fleet_team_role: "admin" | "manager" | "staff"
+      fraud_decision: "allow" | "review" | "block"
+      fraud_risk_level: "low" | "medium" | "high" | "critical"
+      fraud_signal_type:
+        | "account_age"
+        | "email_reputation"
+        | "geo_mismatch"
+        | "velocity"
+        | "payment_failures"
+        | "stripe_risk"
+        | "card_mismatch"
+        | "high_value"
+        | "chargeback_history"
+        | "ip_reputation"
+        | "vpn_detected"
+        | "device_fingerprint"
+        | "booking_pattern"
+        | "cancellation_history"
       insurance_claim_status:
         | "submitted"
         | "under_review"
@@ -17214,6 +17484,24 @@ export const Constants = {
       driver_status: ["pending", "verified", "rejected", "suspended"],
       fleet_owner_status: ["pending", "approved", "suspended", "rejected"],
       fleet_team_role: ["admin", "manager", "staff"],
+      fraud_decision: ["allow", "review", "block"],
+      fraud_risk_level: ["low", "medium", "high", "critical"],
+      fraud_signal_type: [
+        "account_age",
+        "email_reputation",
+        "geo_mismatch",
+        "velocity",
+        "payment_failures",
+        "stripe_risk",
+        "card_mismatch",
+        "high_value",
+        "chargeback_history",
+        "ip_reputation",
+        "vpn_detected",
+        "device_fingerprint",
+        "booking_pattern",
+        "cancellation_history",
+      ],
       insurance_claim_status: [
         "submitted",
         "under_review",
