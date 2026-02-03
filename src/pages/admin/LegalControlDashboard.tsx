@@ -19,7 +19,8 @@ import {
   Eye,
   Edit2,
   BookOpen,
-  Gavel
+  Gavel,
+  ShieldX
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ import {
   EXTREME_POLICIES_LIST,
   ULTRA_POLICIES_LIST,
   ADVANCED_POLICIES_LIST,
+  GOVERNMENT_POLICIES_LIST,
   LEGAL_FAQ
 } from "@/config/legalContent";
 import { format } from "date-fns";
@@ -443,6 +445,40 @@ export default function LegalControlDashboard() {
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {(policy as any).content?.substring(0, 80) || 
                          "Advanced platform protection policy"}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Government & Shutdown Policies (93-108) */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldX className="h-5 w-5 text-destructive" />
+                  Government & Shutdown Policies (93-108)
+                </CardTitle>
+                <CardDescription>
+                  Government enforcement, emergency shutdown, content law, and safety protections
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {GOVERNMENT_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         "Government & shutdown protection policy"}...
                       </p>
                     </div>
                   ))}

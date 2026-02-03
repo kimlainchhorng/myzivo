@@ -170,6 +170,12 @@ const DataPolicies = lazy(() => import("./pages/legal/DataPolicies"));
 const AIBiasPolicy = lazy(() => import("./pages/legal/AIBiasPolicy"));
 const DisputeProcess = lazy(() => import("./pages/legal/DisputeProcess"));
 const PlatformGovernance = lazy(() => import("./pages/legal/PlatformGovernance"));
+const GovernmentOrders = lazy(() => import("./pages/legal/GovernmentOrders"));
+const EmergencyShutdown = lazy(() => import("./pages/legal/EmergencyShutdown"));
+const ContentPolicy = lazy(() => import("./pages/legal/ContentPolicy"));
+const SafetyDisclaimer = lazy(() => import("./pages/legal/SafetyDisclaimer"));
+const MarketplaceDisclaimer = lazy(() => import("./pages/legal/MarketplaceDisclaimer"));
+const EnforcementRights = lazy(() => import("./pages/legal/EnforcementRights"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -385,6 +391,12 @@ const App = () => (
                 <Route path="/legal/ai-bias" element={<AIBiasPolicy />} />
                 <Route path="/legal/dispute-process" element={<DisputeProcess />} />
                 <Route path="/legal/platform-governance" element={<PlatformGovernance />} />
+                <Route path="/legal/government-orders" element={<GovernmentOrders />} />
+                <Route path="/legal/emergency-shutdown" element={<EmergencyShutdown />} />
+                <Route path="/legal/content-policy" element={<ContentPolicy />} />
+                <Route path="/legal/safety-disclaimer" element={<SafetyDisclaimer />} />
+                <Route path="/legal/marketplace-disclaimer" element={<MarketplaceDisclaimer />} />
+                <Route path="/legal/enforcement-rights" element={<EnforcementRights />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
