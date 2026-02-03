@@ -3174,6 +3174,42 @@ export type Database = {
           },
         ]
       }
+      flight_beta_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invite_code: string
+          invited_at: string
+          invited_by: string | null
+          is_active: boolean
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invite_code: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invite_code?: string
+          invited_at?: string
+          invited_by?: string | null
+          is_active?: boolean
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       flight_bookings: {
         Row: {
           admin_notes: string | null
@@ -3784,6 +3820,8 @@ export type Database = {
       }
       flights_launch_settings: {
         Row: {
+          beta_invite_code: string | null
+          beta_invite_required: boolean | null
           created_at: string | null
           duffel_live_configured: boolean | null
           emergency_pause: boolean | null
@@ -3797,6 +3835,10 @@ export type Database = {
           incident_notes: string | null
           incident_reason_code: string | null
           incident_started_at: string | null
+          launch_announcement_enabled: boolean | null
+          launch_announcement_text: string | null
+          launch_phase: string | null
+          refund_flow_tested: boolean | null
           seller_of_travel_verified: boolean | null
           status: string
           status_changed_at: string | null
@@ -3807,6 +3849,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          beta_invite_code?: string | null
+          beta_invite_required?: boolean | null
           created_at?: string | null
           duffel_live_configured?: boolean | null
           emergency_pause?: boolean | null
@@ -3820,6 +3864,10 @@ export type Database = {
           incident_notes?: string | null
           incident_reason_code?: string | null
           incident_started_at?: string | null
+          launch_announcement_enabled?: boolean | null
+          launch_announcement_text?: string | null
+          launch_phase?: string | null
+          refund_flow_tested?: boolean | null
           seller_of_travel_verified?: boolean | null
           status?: string
           status_changed_at?: string | null
@@ -3830,6 +3878,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          beta_invite_code?: string | null
+          beta_invite_required?: boolean | null
           created_at?: string | null
           duffel_live_configured?: boolean | null
           emergency_pause?: boolean | null
@@ -3843,6 +3893,10 @@ export type Database = {
           incident_notes?: string | null
           incident_reason_code?: string | null
           incident_started_at?: string | null
+          launch_announcement_enabled?: boolean | null
+          launch_announcement_text?: string | null
+          launch_phase?: string | null
+          refund_flow_tested?: boolean | null
           seller_of_travel_verified?: boolean | null
           status?: string
           status_changed_at?: string | null

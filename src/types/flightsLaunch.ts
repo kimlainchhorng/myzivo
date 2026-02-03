@@ -1,9 +1,41 @@
 /**
  * Flights Launch Settings Types
- * Types for the Flights TEST → LIVE launch system with incident management
+ * Types for the 3-phase Flights launch system with incident management
+ * Phases: Internal Test → Private Beta → Public Live
  */
 
 export type FlightsLaunchStatus = 'test' | 'live';
+
+/**
+ * 3-tier launch phase system
+ */
+export type FlightsLaunchPhase = 'internal_test' | 'private_beta' | 'public_live';
+
+export const LAUNCH_PHASE_CONFIG: Record<FlightsLaunchPhase, { 
+  label: string; 
+  description: string; 
+  color: string;
+  icon: string;
+}> = {
+  internal_test: {
+    label: 'Internal Test',
+    description: 'Admins only. Testing with sandbox/test keys.',
+    color: 'bg-slate-500/20 text-slate-600 border-slate-500/30',
+    icon: '🔒',
+  },
+  private_beta: {
+    label: 'Private Beta',
+    description: 'Invited users only. Real payments, monitored closely.',
+    color: 'bg-violet-500/20 text-violet-600 border-violet-500/30',
+    icon: '🧪',
+  },
+  public_live: {
+    label: 'Public Live',
+    description: 'Open to all users. Full production mode.',
+    color: 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30',
+    icon: '🚀',
+  },
+};
 
 /**
  * Incident reason codes for structured pause categorization
@@ -33,12 +65,22 @@ export interface FlightsLaunchSettings {
   status_changed_at: string | null;
   status_changed_by: string | null;
   
+  // 3-tier launch phase
+  launch_phase: FlightsLaunchPhase;
+  beta_invite_required: boolean;
+  beta_invite_code: string | null;
+  
+  // Launch announcement
+  launch_announcement_enabled: boolean;
+  launch_announcement_text: string | null;
+  
   // Pre-launch checklist
   seller_of_travel_verified: boolean;
   terms_privacy_linked: boolean;
   support_email_configured: boolean;
   stripe_live_enabled: boolean;
   duffel_live_configured: boolean;
+  refund_flow_tested: boolean;
   
   // Post-launch tracking
   first_booking_at: string | null;
@@ -66,6 +108,7 @@ export interface FlightsLaunchChecklist {
   support_email_configured: boolean;
   stripe_live_enabled: boolean;
   duffel_live_configured: boolean;
+  refund_flow_tested: boolean;
 }
 
 export interface FlightsGoLivePayload {
