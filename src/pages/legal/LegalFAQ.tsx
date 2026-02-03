@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED, CORPORATE_LEGAL_FAQ, FINAL_LEGAL_FAQ } from "@/config/legalContent";
+import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED, CORPORATE_LEGAL_FAQ, FINAL_LEGAL_FAQ, COMMUNICATIONS_COMPLIANCE_FAQ } from "@/config/legalContent";
 import FAQSchema from "@/components/shared/FAQSchema";
 
 export default function LegalFAQ() {
@@ -208,6 +208,33 @@ export default function LegalFAQ() {
             <Accordion type="single" collapsible className="w-full">
               {FINAL_LEGAL_FAQ.map((faq, index) => (
                 <AccordionItem key={index} value={`final-${index}`} className="border-amber-500/20">
+                  <AccordionTrigger className="text-left hover:no-underline">
+                    <span className="font-medium">{faq.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Communications Compliance FAQ */}
+        <Card className="mb-8 border-primary/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Communications & Privacy Compliance
+            </CardTitle>
+            <CardDescription>
+              Questions about messaging, data protection, and regulatory compliance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {COMMUNICATIONS_COMPLIANCE_FAQ.map((faq, index) => (
+                <AccordionItem key={index} value={`comm-${index}`} className="border-primary/20">
                   <AccordionTrigger className="text-left hover:no-underline">
                     <span className="font-medium">{faq.question}</span>
                   </AccordionTrigger>

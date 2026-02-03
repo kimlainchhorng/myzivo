@@ -2010,3 +2010,176 @@ export const FINAL_LEGAL_FAQ = [
 
 // Helper arrays
 export const FINAL_POLICIES_LIST = Object.values(FINAL_LEGAL_POLICIES);
+
+// ============================================
+// COMMUNICATIONS & COMPLIANCE POLICIES (Clauses 136-146)
+// Messaging, Data Breach, Children's Privacy, Insurance
+// ============================================
+
+export const COMMUNICATIONS_COMPLIANCE_POLICIES = {
+  // Clause 136: Electronic Communication Consent
+  electronicConsent: {
+    id: "electronic_consent",
+    title: "Electronic Communication Consent",
+    version: "1.0",
+    content: `By using ZIVO, users consent to receive electronic communications including emails, SMS, push notifications, and in-app messages for transactional purposes, account notices, legal notices, and marketing (where permitted by law). Users may opt out of marketing communications but not transactional or legal notices required for service delivery.`,
+    communicationTypes: [
+      "Emails (transactional, account, marketing)",
+      "SMS/Text messages",
+      "Push notifications",
+      "In-app messages and alerts",
+    ],
+    purposes: [
+      "Transaction confirmations and receipts",
+      "Account security alerts",
+      "Service updates and changes",
+      "Legal notices and policy updates",
+      "Marketing offers (opt-out available)",
+    ],
+  },
+
+  // Clause 137: TCPA & SMS Disclaimer
+  tcpaDisclaimer: {
+    id: "tcpa_disclaimer",
+    title: "TCPA & SMS Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not liable for carrier delays, message delivery failures, phone number reuse, or any issues outside ZIVO's control. Message frequency varies based on account activity and is not guaranteed. Standard message and data rates may apply. ZIVO uses automated systems to send messages and notifications.`,
+    notLiableFor: [
+      "Carrier network delays or outages",
+      "Message delivery failures",
+      "Phone number reuse or porting issues",
+      "Third-party SMS gateway failures",
+      "International message routing issues",
+    ],
+  },
+
+  // Clause 138: CAN-SPAM Compliance
+  canSpamCompliance: {
+    id: "canspam_compliance",
+    title: "CAN-SPAM Compliance",
+    version: "1.0",
+    content: `All marketing emails from ZIVO include: clear business identification, a functional unsubscribe mechanism, and a valid physical business address. Unsubscribe requests are processed within 10 business days. ZIVO does not use deceptive subject lines or misleading header information.`,
+    includes: [
+      "Clear business identity and sender information",
+      "Functional one-click unsubscribe option",
+      "Valid physical business address",
+      "Accurate subject lines and headers",
+      "Processing within 10 business days",
+    ],
+  },
+
+  // Clause 139: Data Breach Response Policy
+  dataBreachResponse: {
+    id: "data_breach_response",
+    title: "Data Breach Response Policy",
+    version: "1.0",
+    content: `ZIVO maintains incident response procedures and will notify affected users of data breaches as required by applicable law. Notification timing is governed by legal requirements and investigation needs. ZIVO is not liable for breaches caused by third-party systems, user negligence, or unauthorized access outside ZIVO's control.`,
+    responseSteps: [
+      "Incident detection and containment",
+      "Investigation and impact assessment",
+      "Notification to affected users as required by law",
+      "Regulatory reporting where required",
+      "Remediation and prevention measures",
+    ],
+  },
+
+  // Clause 140: Security Limitation Disclaimer
+  securityLimitation: {
+    id: "security_limitation",
+    title: "Security Limitation Disclaimer",
+    version: "1.0",
+    content: `No system is 100% secure. Despite reasonable security measures, ZIVO cannot guarantee absolute protection against all threats. Users acknowledge the residual risk of data exposure inherent in any online service and agree to use strong passwords and protect their credentials.`,
+  },
+
+  // Clause 141: Children's Privacy (COPPA)
+  childrenPrivacy: {
+    id: "children_privacy",
+    title: "Children's Privacy Policy (COPPA)",
+    version: "1.0",
+    content: `ZIVO services are not intended for users under 18 years of age. ZIVO does not knowingly collect personal information from children under 13 (or applicable age in other jurisdictions). If underage use is discovered, accounts will be terminated and associated data deleted. Parents or guardians may contact ZIVO to request deletion of any inadvertently collected child data.`,
+    ageRequirements: [
+      "Minimum age: 18 years old",
+      "No knowing collection of data from users under 13",
+      "Immediate termination if underage use discovered",
+      "Parental/guardian contact for data deletion requests",
+    ],
+  },
+
+  // Clause 142: No Insurance Certificate Guarantee
+  insuranceDisclaimer: {
+    id: "insurance_disclaimer",
+    title: "No Insurance Certificate Guarantee",
+    version: "1.0",
+    content: `ZIVO does not guarantee the validity, accuracy, or scope of any partner or third-party insurance. Insurance verification displayed on the platform is informational only and does not constitute a guarantee of coverage or claims approval. Users should independently verify insurance coverage.`,
+    noGuaranteeFor: [
+      "Validity of partner insurance certificates",
+      "Accuracy of coverage information",
+      "Claims approval or payment",
+      "Coverage scope or limits",
+      "Policy renewals or continuity",
+    ],
+  },
+
+  // Clause 143: No Claims Handling Obligation
+  noClaimsHandling: {
+    id: "no_claims_handling",
+    title: "No Claims Handling Obligation",
+    version: "1.0",
+    content: `ZIVO is not obligated to process, manage, or guarantee outcomes of any insurance claims. Insurance claims must be submitted directly to the relevant insurance provider. ZIVO may provide documentation to support claims but makes no representations about claim outcomes.`,
+  },
+
+  // Clause 144: Electronic Legal Notice Delivery
+  electronicNotices: {
+    id: "electronic_notices",
+    title: "Electronic Legal Notice Delivery",
+    version: "1.0",
+    content: `Users agree that legal notices, including notices of changes to terms, privacy policy updates, and other legal communications, may be delivered electronically via email, in-app notification, or posting on the platform. Physical mail is not required unless mandated by applicable law.`,
+  },
+
+  // Clause 145: Language & Translation Precedence
+  languagePrecedence: {
+    id: "language_precedence",
+    title: "Language & Translation Precedence",
+    version: "1.0",
+    content: `All ZIVO terms, policies, and legal documents are provided in English as the controlling language. In case of any conflict or discrepancy between the English version and any translation, the English version shall prevail and control.`,
+  },
+
+  // Clause 146: Survival of Communication & Privacy Policies
+  communicationSurvival: {
+    id: "communication_survival",
+    title: "Survival of Communication & Privacy Policies",
+    version: "1.0",
+    content: `All communication preferences, privacy settings, data protection obligations, and related policies survive account termination, service shutdown, and legal disputes. ZIVO retains the right to contact former users regarding legal matters or outstanding obligations.`,
+  },
+};
+
+// Communications Compliance FAQ
+export const COMMUNICATIONS_COMPLIANCE_FAQ = [
+  {
+    question: "Can ZIVO send me messages?",
+    answer: "Yes. Transactional and legal messages are required for service use. You may opt out of marketing only.",
+  },
+  {
+    question: "What if there is a data breach?",
+    answer: "ZIVO will respond according to applicable law and notify affected users as required.",
+  },
+  {
+    question: "Can minors use ZIVO?",
+    answer: "No. Users must be 18 or older. Accounts of underage users will be terminated.",
+  },
+  {
+    question: "Does ZIVO guarantee insurance coverage?",
+    answer: "No. Insurance verification is informational only. Coverage is provided by third parties.",
+  },
+  {
+    question: "Will ZIVO process my insurance claim?",
+    answer: "No. Claims must be submitted directly to the insurance provider. ZIVO may provide supporting documentation.",
+  },
+  {
+    question: "How will I receive legal notices?",
+    answer: "Legal notices are delivered electronically via email or in-app notification.",
+  },
+];
+
+// Helper arrays
+export const COMMUNICATIONS_POLICIES_LIST = Object.values(COMMUNICATIONS_COMPLIANCE_POLICIES);

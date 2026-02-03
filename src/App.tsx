@@ -187,6 +187,11 @@ const TravelRules = lazy(() => import("./pages/legal/TravelRules"));
 const RentalCompliance = lazy(() => import("./pages/legal/RentalCompliance"));
 const PlatformReliancePolicy = lazy(() => import("./pages/legal/PlatformReliancePolicy"));
 const TermsPrecedence = lazy(() => import("./pages/legal/TermsPrecedence"));
+const CommunicationsConsent = lazy(() => import("./pages/legal/CommunicationsConsent"));
+const DataBreachPolicy = lazy(() => import("./pages/legal/DataBreachPolicy"));
+const ChildrenPrivacy = lazy(() => import("./pages/legal/ChildrenPrivacy"));
+const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
+const LegalNoticesPolicy = lazy(() => import("./pages/legal/LegalNoticesPolicy"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -420,6 +425,11 @@ const App = () => (
                 <Route path="/legal/rental-compliance" element={<RentalCompliance />} />
                 <Route path="/legal/platform-reliance" element={<PlatformReliancePolicy />} />
                 <Route path="/legal/terms-precedence" element={<TermsPrecedence />} />
+                <Route path="/legal/communications-consent" element={<CommunicationsConsent />} />
+                <Route path="/legal/data-breach" element={<DataBreachPolicy />} />
+                <Route path="/legal/children-privacy" element={<ChildrenPrivacy />} />
+                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
+                <Route path="/legal/legal-notices" element={<LegalNoticesPolicy />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
