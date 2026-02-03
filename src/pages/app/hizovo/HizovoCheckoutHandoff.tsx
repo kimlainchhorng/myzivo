@@ -18,6 +18,7 @@ import {
   FLIGHT_CTA_TEXT, 
   FLIGHT_TRACKING_PARAMS 
 } from "@/config/flightCompliance";
+import HeroTrustBar from "@/components/home/HeroTrustBar";
 
 const HizovoCheckoutHandoff = () => {
   const navigate = useNavigate();
@@ -167,6 +168,11 @@ const HizovoCheckoutHandoff = () => {
             )}
           </div>
         )}
+
+        {/* Trust Indicators */}
+        <div className="w-full max-w-sm mb-4">
+          <HeroTrustBar variant="compact" />
+        </div>
 
         {/* Partner Disclosure - LOCKED TEXT */}
         <div className="w-full max-w-sm p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 mb-6">
