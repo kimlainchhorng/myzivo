@@ -1,6 +1,6 @@
 /**
  * Unified Trips Hook
- * Aggregates bookings across all ZIVO services
+ * Aggregates bookings across all ZIVO services including travel orders
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 
-export type ServiceType = "flights" | "cars" | "p2p_cars" | "rides" | "eats" | "move" | "hotels";
+export type ServiceType = "flights" | "cars" | "p2p_cars" | "rides" | "eats" | "move" | "hotels" | "activities" | "transfers";
 
 export interface UnifiedTrip {
   id: string;
@@ -21,6 +21,7 @@ export interface UnifiedTrip {
   currency: string;
   icon: string;
   details: Record<string, unknown>;
+  orderNumber?: string;
 }
 
 export interface TripsFilter {
@@ -37,6 +38,61 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
     queryKey: ["unified-trips", user?.id, services, status, limit],
     queryFn: async () => {
       const trips: UnifiedTrip[] = [];
+
+      // Fetch Travel Orders (Hotels, Activities, Transfers)
+      if (!services || services.includes("hotels") || services.includes("activities") || services.includes("transfers")) {
+        const { data } = await supabase
+          .from("travel_orders")
+          .select(`
+            id, order_number, status, total, currency, created_at,
+            cancellation_status,
+            travel_order_items (id, type, title, start_date, end_date, price)
+          `)
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        (data || []).forEach((order: any) => {
+          const items = order.travel_order_items || [];
+          
+          // Get earliest start date
+          const startDates = items
+            .map((item: any) => new Date(item.start_date))
+            .filter((d: Date) => !isNaN(d.getTime()));
+          const earliestDate = startDates.length > 0
+            ? new Date(Math.min(...startDates.map((d: Date) => d.getTime())))
+            : new Date(order.created_at);
+
+          // Determine primary type and icon
+          const types = [...new Set(items.map((item: any) => item.type))] as string[];
+          const primaryType = types[0] || "hotels";
+          const icon = primaryType === "hotel" ? "🏨" : primaryType === "activity" ? "🎯" : primaryType === "transfer" ? "🚗" : "✈️";
+
+          // Build subtitle from items
+          const itemTitles = items.slice(0, 2).map((item: any) => item.title).join(", ");
+          const subtitle = items.length > 2 
+            ? `${itemTitles} +${items.length - 2} more`
+            : itemTitles || "Travel booking";
+
+          // Determine display status
+          const displayStatus = order.cancellation_status !== "none" 
+            ? `cancel_${order.cancellation_status}` 
+            : order.status;
+
+          trips.push({
+            id: order.id,
+            service: primaryType === "hotel" ? "hotels" : primaryType === "activity" ? "activities" : "transfers",
+            title: `Travel Order ${order.order_number}`,
+            subtitle,
+            status: displayStatus,
+            date: earliestDate.toISOString(),
+            amount: Number(order.total),
+            currency: order.currency || "USD",
+            icon,
+            details: { order, items },
+            orderNumber: order.order_number,
+          });
+        });
+      }
 
       // Fetch P2P Car Rentals
       if (!services || services.includes("p2p_cars")) {
@@ -142,10 +198,10 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
       let filtered = trips;
       if (status !== "all") {
         const statusMap: Record<string, string[]> = {
-          upcoming: ["pending", "confirmed", "approved", "scheduled"],
+          upcoming: ["pending", "confirmed", "approved", "scheduled", "draft", "pending_payment"],
           active: ["in_progress", "active", "picked_up", "en_route"],
           completed: ["completed", "delivered", "returned"],
-          cancelled: ["cancelled", "rejected", "failed"],
+          cancelled: ["cancelled", "rejected", "failed", "refunded", "cancel_requested", "cancel_approved", "cancel_processed"],
         };
         const validStatuses = statusMap[status] || [];
         filtered = trips.filter((t) => validStatuses.includes(t.status));

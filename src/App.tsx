@@ -131,6 +131,9 @@ const FleetOnboarding = lazy(() => import("./pages/fleet/FleetOnboarding"));
 const TravelCheckoutPage = lazy(() => import("./pages/TravelCheckoutPage"));
 const TravelConfirmationPage = lazy(() => import("./pages/TravelConfirmationPage"));
 const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
+// Enhanced Travel Trips pages
+const TravelTripsPage = lazy(() => import("./pages/TravelTripsPage"));
+const TravelOrderDetailPage = lazy(() => import("./pages/TravelOrderDetailPage"));
 // Business pages
 const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountPage"));
 // Renter Verification pages
@@ -390,7 +393,11 @@ const App = () => (
                 {/* Travel Checkout (Hotels/Activities/Transfers) */}
                 <Route path="/travel/checkout" element={<TravelCheckoutPage />} />
                 <Route path="/confirmation/:orderNumber" element={<TravelConfirmationPage />} />
-                <Route path="/my-orders" element={<TravelConfirmationPage />} />
+                <Route path="/my-orders" element={<MyOrdersPage />} />
+                
+                {/* Enhanced My Trips (Travel Bookings Dashboard) */}
+                <Route path="/my-trips" element={<TravelTripsPage />} />
+                <Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
                 
                 {/* Hotels Pages */}
                 <Route path="/hotels" element={<HotelsPage />} />

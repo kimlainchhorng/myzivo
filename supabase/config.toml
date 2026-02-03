@@ -101,3 +101,12 @@ verify_jwt = false
 
 [functions.send-travel-confirmation]
 verify_jwt = false
+
+[functions.resend-travel-confirmation]
+verify_jwt = false
+
+[functions.request-travel-cancellation]
+verify_jwt = false
+
+[functions.process-travel-cancellation]
+verify_jwt = true
