@@ -39,6 +39,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useAirportSearch } from "./hooks/useLocationSearch";
 import { MobileDatePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
+import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 
 type TripType = "roundtrip" | "oneway";
 type CabinClass = "economy" | "premium" | "business" | "first";
@@ -73,6 +74,7 @@ export default function FlightSearchFormPro({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { search: searchAirports, getPopular, getByCode, allOptions } = useAirportSearch();
+  const { trackSearchStarted } = useFlightFunnel();
 
   // Trip type
   const [tripType, setTripType] = useState<TripType>(initialTripType);
@@ -178,17 +180,29 @@ export default function FlightSearchFormPro({
     // Extract IATA codes
     const fromCode = (fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
     const toCode = (toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
+    const departDateStr = departDate ? format(departDate, "yyyy-MM-dd") : "";
+    const returnDateStr = tripType === "roundtrip" && returnDate ? format(returnDate, "yyyy-MM-dd") : undefined;
+
+    // Track search started event
+    trackSearchStarted({
+      origin: fromCode,
+      destination: toCode,
+      departureDate: departDateStr,
+      returnDate: returnDateStr,
+      passengers,
+      cabinClass: cabin,
+    });
 
     // Build results page URL params
     const resultsParams = new URLSearchParams({
       origin: fromCode,
       dest: toCode,
-      depart: departDate ? format(departDate, "yyyy-MM-dd") : "",
+      depart: departDateStr,
       passengers: String(passengers),
       cabin: cabin,
     });
-    if (tripType === "roundtrip" && returnDate) {
-      resultsParams.set("return", format(returnDate, "yyyy-MM-dd"));
+    if (returnDateStr) {
+      resultsParams.set("return", returnDateStr);
     }
 
     // Navigate to results page - uses Duffel API (OTA mode, no affiliate)

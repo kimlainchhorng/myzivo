@@ -38,6 +38,7 @@ import { FLIGHT_HEADER_MICROCOPY } from '@/config/flightCompliance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useFlightsCanBook } from '@/hooks/useFlightsLaunchStatus';
+import { useFlightFunnel } from '@/hooks/useFlightFunnel';
 
 const FlightCheckout = () => {
   const navigate = useNavigate();
@@ -54,6 +55,7 @@ const FlightCheckout = () => {
   const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
   const createCheckout = useCreateFlightCheckout();
   const { canBook, isTestMode, isPaused, pauseReason, isLoading: bookingCheckLoading } = useFlightsCanBook();
+  const { trackCheckoutStarted } = useFlightFunnel();
 
   // Load passenger data from session storage
   useEffect(() => {
@@ -66,6 +68,18 @@ const FlightCheckout = () => {
       }
     }
   }, []);
+
+  // Track checkout started event
+  useEffect(() => {
+    if (offer && offerId && passengerCount > 0) {
+      trackCheckoutStarted({
+        offerId: offerId,
+        amount: offer.price * passengerCount,
+        currency: offer.currency,
+        passengers: passengerCount,
+      });
+    }
+  }, [offer, offerId, passengerCount, trackCheckoutStarted]);
 
   const handlePayment = async () => {
     if (!offer) {

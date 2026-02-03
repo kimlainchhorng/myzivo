@@ -182,10 +182,16 @@ const FlightStatusPage = () => {
                 Monitor system health and Duffel LIVE readiness
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button variant="outline" onClick={() => refetchStats()} className="gap-2">
                 <RefreshCw className="w-4 h-4" />
                 Refresh
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
+                <Link to="/admin/flights/analytics">
+                  <BarChart3 className="w-4 h-4" />
+                  Analytics
+                </Link>
               </Button>
               <Button variant="outline" asChild className="gap-2">
                 <Link to="/admin/flights/launch">
