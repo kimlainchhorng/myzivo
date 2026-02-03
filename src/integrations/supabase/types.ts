@@ -12195,6 +12195,358 @@ export type Database = {
           },
         ]
       }
+      zivo_cross_sell_suggestions: {
+        Row: {
+          clicked_at: string | null
+          context: Json | null
+          converted_at: string | null
+          created_at: string
+          id: string
+          is_clicked: boolean | null
+          is_converted: boolean | null
+          is_shown: boolean | null
+          shown_at: string | null
+          source_service: string
+          suggested_service: string
+          suggestion_type: string
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          context?: Json | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          is_clicked?: boolean | null
+          is_converted?: boolean | null
+          is_shown?: boolean | null
+          shown_at?: string | null
+          source_service: string
+          suggested_service: string
+          suggestion_type: string
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string | null
+          context?: Json | null
+          converted_at?: string | null
+          created_at?: string
+          id?: string
+          is_clicked?: boolean | null
+          is_converted?: boolean | null
+          is_shown?: boolean | null
+          shown_at?: string | null
+          source_service?: string
+          suggested_service?: string
+          suggestion_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          exp_month: number | null
+          exp_year: number | null
+          id: string
+          is_default: boolean | null
+          last_four: string | null
+          nickname: string | null
+          stripe_payment_method_id: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last_four?: string | null
+          nickname?: string | null
+          stripe_payment_method_id: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last_four?: string | null
+          nickname?: string | null
+          stripe_payment_method_id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_support_messages: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          id: string
+          is_internal: boolean | null
+          message: string
+          sender_id: string | null
+          sender_type: string
+          ticket_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message: string
+          sender_id?: string | null
+          sender_type: string
+          ticket_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          id?: string
+          is_internal?: boolean | null
+          message?: string
+          sender_id?: string | null
+          sender_type?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string
+          first_response_at: string | null
+          id: string
+          metadata: Json | null
+          priority: string
+          reference_id: string | null
+          reference_type: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          service_type: string
+          status: string
+          subject: string
+          ticket_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category: string
+          created_at?: string
+          description: string
+          first_response_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          service_type: string
+          status?: string
+          subject: string
+          ticket_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          first_response_at?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          service_type?: string
+          status?: string
+          subject?: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_user_preferences: {
+        Row: {
+          created_at: string
+          dietary_restrictions: string[] | null
+          id: string
+          marketing_opt_in: boolean | null
+          notifications_email: boolean | null
+          notifications_push: boolean | null
+          notifications_sms: boolean | null
+          preferred_cabin_class: string | null
+          preferred_currency: string | null
+          preferred_language: string | null
+          preferred_seat_type: string | null
+          tier_status: string | null
+          updated_at: string
+          user_id: string
+          zivo_miles_balance: number | null
+        }
+        Insert: {
+          created_at?: string
+          dietary_restrictions?: string[] | null
+          id?: string
+          marketing_opt_in?: boolean | null
+          notifications_email?: boolean | null
+          notifications_push?: boolean | null
+          notifications_sms?: boolean | null
+          preferred_cabin_class?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          preferred_seat_type?: string | null
+          tier_status?: string | null
+          updated_at?: string
+          user_id: string
+          zivo_miles_balance?: number | null
+        }
+        Update: {
+          created_at?: string
+          dietary_restrictions?: string[] | null
+          id?: string
+          marketing_opt_in?: boolean | null
+          notifications_email?: boolean | null
+          notifications_push?: boolean | null
+          notifications_sms?: boolean | null
+          preferred_cabin_class?: string | null
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          preferred_seat_type?: string | null
+          tier_status?: string | null
+          updated_at?: string
+          user_id?: string
+          zivo_miles_balance?: number | null
+        }
+        Relationships: []
+      }
+      zivo_wallet_credits: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_type: string
+          currency: string
+          expires_at: string | null
+          id: string
+          is_used: boolean | null
+          source_description: string | null
+          source_reference_id: string | null
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credit_type: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          source_description?: string | null
+          source_reference_id?: string | null
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_type?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          source_description?: string | null
+          source_reference_id?: string | null
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          metadata: Json | null
+          payment_method_id: string | null
+          reference_id: string | null
+          reference_type: string | null
+          service_type: string
+          status: string
+          stripe_payment_intent_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          service_type: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method_id?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          service_type?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_wallet_transactions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       car_rentals_masked: {
