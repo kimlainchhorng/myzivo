@@ -1628,6 +1628,275 @@ export type Database = {
           },
         ]
       }
+      countries: {
+        Row: {
+          code: string
+          code_alpha3: string | null
+          created_at: string
+          default_currency: string
+          default_language: string
+          disabled_at: string | null
+          disabled_reason: string | null
+          flag_emoji: string | null
+          id: string
+          is_active: boolean
+          is_beta: boolean | null
+          launched_at: string | null
+          name: string
+          native_name: string | null
+          phone_code: string | null
+          region: string
+          subregion: string | null
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          code_alpha3?: string | null
+          created_at?: string
+          default_currency?: string
+          default_language?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_beta?: boolean | null
+          launched_at?: string | null
+          name: string
+          native_name?: string | null
+          phone_code?: string | null
+          region: string
+          subregion?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          code_alpha3?: string | null
+          created_at?: string
+          default_currency?: string
+          default_language?: string
+          disabled_at?: string | null
+          disabled_reason?: string | null
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_beta?: boolean | null
+          launched_at?: string | null
+          name?: string
+          native_name?: string | null
+          phone_code?: string | null
+          region?: string
+          subregion?: string | null
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      country_analytics: {
+        Row: {
+          active_users: number | null
+          conversion_rate: number | null
+          country_id: string
+          created_at: string
+          date: string
+          id: string
+          new_users: number | null
+          service_type: string
+          total_bookings: number | null
+          total_clicks: number | null
+          total_revenue_usd: number | null
+          total_users: number | null
+        }
+        Insert: {
+          active_users?: number | null
+          conversion_rate?: number | null
+          country_id: string
+          created_at?: string
+          date: string
+          id?: string
+          new_users?: number | null
+          service_type: string
+          total_bookings?: number | null
+          total_clicks?: number | null
+          total_revenue_usd?: number | null
+          total_users?: number | null
+        }
+        Update: {
+          active_users?: number | null
+          conversion_rate?: number | null
+          country_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          new_users?: number | null
+          service_type?: string
+          total_bookings?: number | null
+          total_clicks?: number | null
+          total_revenue_usd?: number | null
+          total_users?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_analytics_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_legal_pages: {
+        Row: {
+          content: string
+          country_id: string
+          created_at: string
+          effective_at: string
+          id: string
+          is_active: boolean
+          language: string
+          page_type: string
+          title: string
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          content: string
+          country_id: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          language?: string
+          page_type: string
+          title: string
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          content?: string
+          country_id?: string
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          language?: string
+          page_type?: string
+          title?: string
+          updated_at?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_legal_pages_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_services: {
+        Row: {
+          config: Json | null
+          country_id: string
+          created_at: string
+          id: string
+          is_beta: boolean | null
+          is_enabled: boolean
+          launched_at: string | null
+          service_type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json | null
+          country_id: string
+          created_at?: string
+          id?: string
+          is_beta?: boolean | null
+          is_enabled?: boolean
+          launched_at?: string | null
+          service_type: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json | null
+          country_id?: string
+          created_at?: string
+          id?: string
+          is_beta?: boolean | null
+          is_enabled?: boolean
+          launched_at?: string | null
+          service_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_services_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      country_tax_config: {
+        Row: {
+          applies_to: string[] | null
+          config: Json | null
+          country_id: string
+          created_at: string
+          effective_from: string
+          effective_until: string | null
+          id: string
+          is_active: boolean
+          is_inclusive: boolean | null
+          rate_percent: number
+          tax_name: string
+          tax_type: string
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string[] | null
+          config?: Json | null
+          country_id: string
+          created_at?: string
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          is_inclusive?: boolean | null
+          rate_percent: number
+          tax_name: string
+          tax_type: string
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string[] | null
+          config?: Json | null
+          country_id?: string
+          created_at?: string
+          effective_from?: string
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean
+          is_inclusive?: boolean | null
+          rate_percent?: number
+          tax_name?: string
+          tax_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "country_tax_config_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cross_app_tokens: {
         Row: {
           created_at: string
@@ -10239,6 +10508,45 @@ export type Database = {
           },
         ]
       }
+      supported_languages: {
+        Row: {
+          code: string
+          created_at: string
+          direction: string
+          flag_emoji: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean | null
+          name: string
+          native_name: string
+          sort_order: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          direction?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean | null
+          name: string
+          native_name: string
+          sort_order?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          direction?: string
+          flag_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean | null
+          name?: string
+          native_name?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       surge_zones: {
         Row: {
           base_multiplier: number
@@ -11233,6 +11541,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_translations: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          language_code: string
+          namespace: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          language_code: string
+          namespace?: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          language_code?: string
+          namespace?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -11261,6 +11599,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_locale_preferences: {
+        Row: {
+          country_code: string | null
+          created_at: string
+          currency_code: string | null
+          detected_at: string | null
+          detected_country: string | null
+          id: string
+          language_code: string | null
+          timezone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          country_code?: string | null
+          created_at?: string
+          currency_code?: string | null
+          detected_at?: string | null
+          detected_country?: string | null
+          id?: string
+          language_code?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          country_code?: string | null
+          created_at?: string
+          currency_code?: string | null
+          detected_at?: string | null
+          detected_country?: string | null
+          id?: string
+          language_code?: string | null
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -14825,6 +15202,25 @@ export type Database = {
         Returns: number
       }
       generate_referral_code: { Args: never; Returns: string }
+      get_active_countries: {
+        Args: never
+        Returns: {
+          code: string
+          default_currency: string
+          default_language: string
+          flag_emoji: string
+          name: string
+          region: string
+        }[]
+      }
+      get_country_services: {
+        Args: { p_country_code: string }
+        Returns: {
+          is_beta: boolean
+          is_enabled: boolean
+          service_type: string
+        }[]
+      }
       get_credit_balance: {
         Args: { p_service?: string; p_user_id: string }
         Returns: number
@@ -14908,7 +15304,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "super_admin"
       approval_status: "pending" | "approved" | "rejected"
       beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
@@ -15144,7 +15540,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "super_admin"],
       approval_status: ["pending", "approved", "rejected"],
       beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],
       booking_status: [
