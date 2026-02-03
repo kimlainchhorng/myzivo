@@ -38,8 +38,8 @@ import { format, parseISO } from "date-fns";
 import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from "@/hooks/useDuffelFlights";
 import { supabase } from "@/integrations/supabase/client";
 import { getSearchSessionId } from "@/config/trackingParams";
-import { logPartnerRedirect } from "@/lib/partnerRedirectLog";
 import { useToast } from "@/hooks/use-toast";
+import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 interface PassengerForm {
   title: string;
@@ -106,13 +106,13 @@ const FlightTravelerInfo = () => {
       }
     }
     if (!consentGiven) {
-      setError("Please agree to share your information with the booking partner");
+      setError("Please agree to the Terms and Conditions and Airline Rules");
       return false;
     }
     return true;
   };
 
-  const handleProceedToCheckout = async () => {
+  const handleContinueToPayment = async () => {
     setError(null);
     
     if (!validateForm()) return;
@@ -139,35 +139,17 @@ const FlightTravelerInfo = () => {
         });
       }
 
-      // Log the partner redirect
-      await logPartnerRedirect({
-        partnerName: 'duffel',
-        searchType: 'flights',
-        offerId: offer.id,
-        redirectUrl: `/booking/duffel-checkout?offer=${offer.id}`,
-        checkoutMode: 'redirect',
-        searchParams: {
-          origin: offer.departure.code,
-          destination: offer.arrival.code,
-          departureDate: offer.departure.date,
-          passengers: passengerCount,
-          cabinClass: offer.cabinClass,
-        },
-        metadata: {
-          airline: offer.airline,
-          price: offer.price,
-          currency: offer.currency,
-        },
-      });
+      // Store passengers for checkout page
+      sessionStorage.setItem('flightPassengers', JSON.stringify(passengers));
+      sessionStorage.setItem('flightOfferId', offer.id);
 
       toast({
-        title: "Redirecting to secure checkout...",
-        description: "You'll complete your booking with our travel partner.",
+        title: "Continuing to checkout...",
+        description: "You'll complete your booking on our secure checkout.",
       });
 
-      // In production, redirect to Duffel Links checkout or create order
-      // For now, navigate to confirmation with booking details
-      navigate(`/booking/duffel-checkout?offer=${offer.id}&session=${sessionId}`);
+      // Navigate to ZIVO checkout (MoR flow - no partner redirect)
+      navigate(`/flights/checkout?offer=${offer.id}&passengers=${passengerCount}&session=${sessionId}`);
 
     } catch (err) {
       console.error("[TravelerInfo] Error:", err);
@@ -421,11 +403,11 @@ const FlightTravelerInfo = () => {
           {/* Consent and Partner Disclosure */}
           <Card className="mt-6">
             <CardContent className="p-6">
-              <Alert className="mb-4 border-amber-500/30 bg-amber-500/5">
-                <Info className="w-4 h-4 text-amber-500" />
+              <Alert className="mb-4 border-sky-500/30 bg-sky-500/5">
+                <Info className="w-4 h-4 text-sky-500" />
                 <AlertDescription className="text-sm">
-                  <strong>Secure Partner Checkout:</strong> You'll complete your booking securely on Hizovo with our licensed travel partner. 
-                  Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+                  <strong>Secure ZIVO Checkout:</strong> You'll complete your booking securely on ZIVO. 
+                  {FLIGHT_DISCLAIMERS.ticketing}
                 </AlertDescription>
               </Alert>
 
@@ -440,7 +422,7 @@ const FlightTravelerInfo = () => {
                     htmlFor="consent"
                     className="text-sm font-medium leading-relaxed cursor-pointer"
                   >
-                    I agree to share my information with the licensed booking partner to complete my reservation. *
+                    I agree to the <a href="/terms" className="underline text-primary hover:text-primary/80">Terms and Conditions</a> and <a href="/legal/flight-terms" className="underline text-primary hover:text-primary/80">Airline Rules</a>. *
                   </label>
                   <p className="text-xs text-muted-foreground">
                     Your details will be shared securely with our travel partner to complete your booking. 
@@ -468,7 +450,7 @@ const FlightTravelerInfo = () => {
                   Back
                 </Button>
                 <Button
-                  onClick={handleProceedToCheckout}
+                  onClick={handleContinueToPayment}
                   disabled={isSubmitting || !consentGiven}
                   className="sm:flex-[2] gap-2 bg-gradient-to-r from-primary to-sky-600"
                   size="lg"
@@ -481,7 +463,7 @@ const FlightTravelerInfo = () => {
                   ) : (
                     <>
                       <Shield className="w-4 h-4" />
-                      Proceed to secure payment
+                      {FLIGHT_CTA_TEXT.proceedToPayment}
                     </>
                   )}
                 </Button>
@@ -489,14 +471,14 @@ const FlightTravelerInfo = () => {
 
               {/* CTA Disclosure */}
               <p className="text-center text-xs text-muted-foreground mt-4">
-                Powered by licensed travel partners · Final price confirmed before payment
+                {FLIGHT_DISCLAIMERS.price}
               </p>
             </CardContent>
           </Card>
 
           {/* Footer Disclosure */}
           <p className="text-center text-xs text-muted-foreground mt-8">
-            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+            {FLIGHT_DISCLAIMERS.ticketing}
             {" "}
             <a href="/partner-disclosure" className="underline hover:text-primary">Learn more</a>
           </p>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +9,11 @@ import {
   Plane, Clock, Wifi, Coffee, Tv, Luggage, Star, 
   ChevronDown, ChevronUp, Crown, Leaf, Zap, Shield,
   ArrowRight, Users, Check, Plus, Info, Sparkles,
-  ThumbsUp, AlertCircle, BarChart3, ExternalLink
+  ThumbsUp, AlertCircle, BarChart3
 } from 'lucide-react';
 import { getAirlineLogo } from '@/data/airlines';
 import type { GeneratedFlight } from '@/data/flightGenerator';
-import { AFFILIATE_LINKS } from '@/config/affiliateLinks';
-import { trackAffiliateClick } from '@/lib/affiliateTracking';
+import { FLIGHT_CTA_TEXT } from '@/config/flightCompliance';
 
 interface FlightResultCardProps {
   flight: GeneratedFlight;
@@ -71,39 +71,32 @@ export default function FlightResultCard({
   passengers = 1,
   cabinClass = 'economy',
 }: FlightResultCardProps) {
+  const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(showDetails);
   const [isHovered, setIsHovered] = useState(false);
 
   const category = categoryConfig[flight.category || 'full-service'];
 
-  // Unified booking handler - uses same affiliate link with tracking
-  const handleBookFlight = (e: React.MouseEvent) => {
+  // Internal navigation handler - MoR flow
+  const handleSelectFlight = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    trackAffiliateClick({
-      flightId: flight.id,
-      airline: flight.airline,
-      airlineCode: flight.airlineCode,
+    // Store flight in session for details page
+    sessionStorage.setItem('selectedFlight', JSON.stringify(flight));
+    sessionStorage.setItem('flightSearchParams', JSON.stringify({
       origin,
       destination,
-      price: flight.price,
       passengers,
       cabinClass,
-      affiliatePartner: 'searadar',
-      referralUrl: AFFILIATE_LINKS.flights.url,
-      source: 'flight_result_card',
-      ctaType: 'result_card',
-      serviceType: 'flights',
-    });
+    }));
     
-    // Open affiliate link in new tab - same URL for all CTAs
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+    // Navigate to flight details internally
+    navigate(`/flights/details/${flight.id}`);
     
-    // Also call onBook if provided
-    if (onBook) {
-      onBook(flight);
-    }
+    // Also call onSelect if provided
+    onSelect?.(flight);
   };
+  
   const CategoryIcon = category.icon;
 
   const amenities = [
@@ -263,12 +256,11 @@ export default function FlightResultCard({
                 )}
                 <Button 
                   className="bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 gap-1 shadow-lg shadow-sky-500/20 min-h-[44px] touch-manipulation active:scale-[0.98]"
-                  onClick={handleBookFlight}
+                  onClick={handleSelectFlight}
                 >
-                  View Deal
-                  <ExternalLink className="w-4 h-4" />
+                  {FLIGHT_CTA_TEXT.viewDeal}
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
-                <p className="text-[9px] text-muted-foreground">Opens partner site</p>
               </div>
             </div>
           </div>
