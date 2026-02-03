@@ -4270,6 +4270,146 @@ export type Database = {
           },
         ]
       }
+      experiment_assignments: {
+        Row: {
+          assigned_at: string
+          experiment_id: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+          variant: string
+        }
+        Insert: {
+          assigned_at?: string
+          experiment_id: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          variant: string
+        }
+        Update: {
+          assigned_at?: string
+          experiment_id?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_assignments_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiment_events: {
+        Row: {
+          assignment_id: string | null
+          created_at: string
+          event_type: string
+          event_value: number | null
+          experiment_id: string
+          id: string
+          metadata: Json | null
+          variant: string
+        }
+        Insert: {
+          assignment_id?: string | null
+          created_at?: string
+          event_type: string
+          event_value?: number | null
+          experiment_id: string
+          id?: string
+          metadata?: Json | null
+          variant: string
+        }
+        Update: {
+          assignment_id?: string | null
+          created_at?: string
+          event_type?: string
+          event_value?: number | null
+          experiment_id?: string
+          id?: string
+          metadata?: Json | null
+          variant?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experiment_events_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "experiment_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experiment_events_experiment_id_fkey"
+            columns: ["experiment_id"]
+            isOneToOne: false
+            referencedRelation: "experiments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      experiments: {
+        Row: {
+          auto_stop_rules: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_at: string | null
+          hypothesis: string | null
+          id: string
+          metric_primary: string
+          metric_secondary: string[] | null
+          name: string
+          start_at: string | null
+          status: Database["public"]["Enums"]["experiment_status"]
+          targeting_rules: Json | null
+          updated_at: string
+          variants: Json
+          winner_variant: string | null
+        }
+        Insert: {
+          auto_stop_rules?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          metric_primary?: string
+          metric_secondary?: string[] | null
+          name: string
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["experiment_status"]
+          targeting_rules?: Json | null
+          updated_at?: string
+          variants?: Json
+          winner_variant?: string | null
+        }
+        Update: {
+          auto_stop_rules?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_at?: string | null
+          hypothesis?: string | null
+          id?: string
+          metric_primary?: string
+          metric_secondary?: string[] | null
+          name?: string
+          start_at?: string | null
+          status?: Database["public"]["Enums"]["experiment_status"]
+          targeting_rules?: Json | null
+          updated_at?: string
+          variants?: Json
+          winner_variant?: string | null
+        }
+        Relationships: []
+      }
       fleet_owner_profiles: {
         Row: {
           address: string | null
@@ -9470,6 +9610,69 @@ export type Database = {
         }
         Relationships: []
       }
+      price_calculations: {
+        Row: {
+          calculation_inputs: Json | null
+          created_at: string
+          discount_amount: number
+          experiment_variant: string | null
+          final_price: number
+          id: string
+          markup_amount: number
+          order_id: string | null
+          pricing_rules_applied: string[] | null
+          pricing_version: number
+          product_type: Database["public"]["Enums"]["product_category"]
+          promo_code: string | null
+          promo_id: string | null
+          service_fee: number
+          session_id: string | null
+          supplier_price: number
+          tax_amount: number
+          user_id: string | null
+        }
+        Insert: {
+          calculation_inputs?: Json | null
+          created_at?: string
+          discount_amount?: number
+          experiment_variant?: string | null
+          final_price: number
+          id?: string
+          markup_amount?: number
+          order_id?: string | null
+          pricing_rules_applied?: string[] | null
+          pricing_version?: number
+          product_type: Database["public"]["Enums"]["product_category"]
+          promo_code?: string | null
+          promo_id?: string | null
+          service_fee?: number
+          session_id?: string | null
+          supplier_price: number
+          tax_amount?: number
+          user_id?: string | null
+        }
+        Update: {
+          calculation_inputs?: Json | null
+          created_at?: string
+          discount_amount?: number
+          experiment_variant?: string | null
+          final_price?: number
+          id?: string
+          markup_amount?: number
+          order_id?: string | null
+          pricing_rules_applied?: string[] | null
+          pricing_version?: number
+          product_type?: Database["public"]["Enums"]["product_category"]
+          promo_code?: string | null
+          promo_id?: string | null
+          service_fee?: number
+          session_id?: string | null
+          supplier_price?: number
+          tax_amount?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pricing: {
         Row: {
           base_fare: number
@@ -9506,6 +9709,57 @@ export type Database = {
           surge_multiplier?: number
           updated_at?: string
           vehicle_type?: string
+        }
+        Relationships: []
+      }
+      pricing_rules: {
+        Row: {
+          applies_to: Database["public"]["Enums"]["product_category"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          max_order_value: number | null
+          min_order_value: number | null
+          name: string
+          priority: number
+          rule_type: Database["public"]["Enums"]["pricing_rule_type"]
+          updated_at: string
+          value: number
+          version: number
+        }
+        Insert: {
+          applies_to?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_order_value?: number | null
+          min_order_value?: number | null
+          name: string
+          priority?: number
+          rule_type: Database["public"]["Enums"]["pricing_rule_type"]
+          updated_at?: string
+          value: number
+          version?: number
+        }
+        Update: {
+          applies_to?: Database["public"]["Enums"]["product_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          max_order_value?: number | null
+          min_order_value?: number | null
+          name?: string
+          priority?: number
+          rule_type?: Database["public"]["Enums"]["pricing_rule_type"]
+          updated_at?: string
+          value?: number
+          version?: number
         }
         Relationships: []
       }
@@ -9572,6 +9826,45 @@ export type Database = {
           status?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      promo_redemptions: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          order_id: string | null
+          original_amount: number
+          promo_id: string
+          session_id: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_amount: number
+          final_amount: number
+          id?: string
+          order_id?: string | null
+          original_amount: number
+          promo_id: string
+          session_id?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          order_id?: string | null
+          original_amount?: number
+          promo_id?: string
+          session_id?: string | null
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -17426,6 +17719,14 @@ export type Database = {
         Args: { p_policy_type: string }
         Returns: string
       }
+      get_experiment_variant: {
+        Args: {
+          p_experiment_id: string
+          p_session_id?: string
+          p_user_id?: string
+        }
+        Returns: string
+      }
       get_or_create_referral_code: {
         Args: { p_user_id: string }
         Returns: string
@@ -17508,6 +17809,15 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: undefined
       }
+      validate_promo_code: {
+        Args: {
+          p_code: string
+          p_order_total: number
+          p_product_type: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       validate_withdrawal: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
@@ -17544,6 +17854,7 @@ export type Database = {
       checkout_mode: "redirect" | "iframe"
       document_review_status: "pending" | "approved" | "rejected"
       driver_status: "pending" | "verified" | "rejected" | "suspended"
+      experiment_status: "draft" | "running" | "paused" | "completed"
       fleet_owner_status: "pending" | "approved" | "suspended" | "rejected"
       fleet_team_role: "admin" | "manager" | "staff"
       fraud_decision: "allow" | "review" | "block"
@@ -17631,6 +17942,20 @@ export type Database = {
       p2p_vehicle_status: "pending" | "approved" | "rejected" | "suspended"
       partner_booking_status: "pending" | "returned" | "failed" | "timeout"
       partner_status: "pending" | "active" | "suspended" | "inactive"
+      pricing_rule_type:
+        | "markup_percent"
+        | "markup_flat"
+        | "service_fee_percent"
+        | "service_fee_flat"
+      product_category:
+        | "flight"
+        | "hotel"
+        | "activity"
+        | "transfer"
+        | "car_rental"
+        | "all"
+      promo_status: "active" | "paused" | "expired" | "scheduled"
+      promo_type: "percent" | "flat"
       protection_tier: "basic" | "standard" | "premium"
       renter_document_type: "license_front" | "license_back" | "selfie"
       renter_verification_status:
@@ -17814,6 +18139,7 @@ export const Constants = {
       checkout_mode: ["redirect", "iframe"],
       document_review_status: ["pending", "approved", "rejected"],
       driver_status: ["pending", "verified", "rejected", "suspended"],
+      experiment_status: ["draft", "running", "paused", "completed"],
       fleet_owner_status: ["pending", "approved", "suspended", "rejected"],
       fleet_team_role: ["admin", "manager", "staff"],
       fraud_decision: ["allow", "review", "block"],
@@ -17911,6 +18237,22 @@ export const Constants = {
       p2p_vehicle_status: ["pending", "approved", "rejected", "suspended"],
       partner_booking_status: ["pending", "returned", "failed", "timeout"],
       partner_status: ["pending", "active", "suspended", "inactive"],
+      pricing_rule_type: [
+        "markup_percent",
+        "markup_flat",
+        "service_fee_percent",
+        "service_fee_flat",
+      ],
+      product_category: [
+        "flight",
+        "hotel",
+        "activity",
+        "transfer",
+        "car_rental",
+        "all",
+      ],
+      promo_status: ["active", "paused", "expired", "scheduled"],
+      promo_type: ["percent", "flat"],
       protection_tier: ["basic", "standard", "premium"],
       renter_document_type: ["license_front", "license_back", "selfie"],
       renter_verification_status: [

@@ -283,6 +283,7 @@ const AdminNotificationsModule = lazy(() => import("./pages/admin/modules/notifi
 const AdminFinanceDashboard = lazy(() => import("./pages/admin/modules/finance/AdminFinanceDashboard"));
 const AdminFraudDashboard = lazy(() => import("./pages/admin/modules/fraud/AdminFraudDashboard"));
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/modules/analytics/AdminAnalyticsDashboard"));
+const AdminPricingDashboard = lazy(() => import("./pages/admin/modules/pricing/AdminPricingDashboard"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -930,6 +931,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminAnalyticsDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/pricing"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminPricingDashboard />
                     </ProtectedRoute>
                   }
                 />

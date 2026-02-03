@@ -1,4 +1,7 @@
 project_id = "slirphzzwcogdbkeicff"
+[functions.calculate-price]
+verify_jwt = false
+
 
 [functions.create-auth-token]
 verify_jwt = false
