@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Bell, Search, Sparkles, ChevronDown, X, Car, ShieldCheck } from "lucide-react";
+import { Menu, User, Search, Sparkles, ChevronDown, X, Car, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -13,11 +13,11 @@ import {
 import MegaMenuDropdown from "./navigation/MegaMenuDropdown";
 import MobileNavMenu from "./navigation/MobileNavMenu";
 import { megaMenuData, moreServicesData } from "./navigation/megaMenuData";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
+import { NotificationBell } from "./notifications/NotificationBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -81,15 +81,8 @@ const Header = () => {
 
               {user ? (
                 <>
-                  {/* Notifications - Enhanced */}
-                  <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted/50 transition-all duration-150 hover:scale-105 active:scale-95">
-                    <Bell className="h-5 w-5" />
-                    <div className="absolute -top-0.5 -right-0.5">
-                      <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-eats to-orange-500 border-0 shadow-lg shadow-eats/30">
-                        3
-                      </Badge>
-                    </div>
-                  </Button>
+                  {/* Notifications - Real-time */}
+                  <NotificationBell />
 
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
