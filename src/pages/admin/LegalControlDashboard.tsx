@@ -50,6 +50,7 @@ import {
   COMMUNICATIONS_POLICIES_LIST,
   ONGOING_COMPLIANCE_POLICIES_LIST,
   FINANCIAL_COMPLIANCE_POLICIES_LIST,
+  GOVERNANCE_POLICIES_LIST,
   LEGAL_FAQ
 } from "@/config/legalContent";
 import { format } from "date-fns";
@@ -654,6 +655,40 @@ export default function LegalControlDashboard() {
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {(policy as any).content?.substring(0, 80) || 
                          "Financial compliance policy"}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Governance Policies (170-179) */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-indigo-500" />
+                  Corporate Governance & Ethics (170-179)
+                </CardTitle>
+                <CardDescription>
+                  Governance, ethics, and regulator communication framework
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {GOVERNANCE_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 hover:border-indigo-500/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         "Governance policy"}...
                       </p>
                     </div>
                   ))}

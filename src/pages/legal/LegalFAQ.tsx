@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED, CORPORATE_LEGAL_FAQ, FINAL_LEGAL_FAQ, COMMUNICATIONS_COMPLIANCE_FAQ, ONGOING_COMPLIANCE_FAQ, FINANCIAL_COMPLIANCE_FAQ } from "@/config/legalContent";
+import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ, ADVANCED_LEGAL_FAQ, EXTREME_LEGAL_FAQ_EXTENDED, CORPORATE_LEGAL_FAQ, FINAL_LEGAL_FAQ, COMMUNICATIONS_COMPLIANCE_FAQ, ONGOING_COMPLIANCE_FAQ, FINANCIAL_COMPLIANCE_FAQ, GOVERNANCE_FAQ } from "@/config/legalContent";
 import FAQSchema from "@/components/shared/FAQSchema";
 
 export default function LegalFAQ() {
@@ -289,6 +289,33 @@ export default function LegalFAQ() {
             <Accordion type="single" collapsible className="w-full">
               {FINANCIAL_COMPLIANCE_FAQ.map((faq, index) => (
                 <AccordionItem key={index} value={`fin-${index}`} className="border-rose-500/20">
+                  <AccordionTrigger className="text-left hover:no-underline">
+                    <span className="font-medium">{faq.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Governance FAQ */}
+        <Card className="mb-8 border-indigo-500/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-indigo-500" />
+              Corporate Governance & Ethics
+            </CardTitle>
+            <CardDescription>
+              Questions about governance, ethics, and regulator communications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {GOVERNANCE_FAQ.map((faq, index) => (
+                <AccordionItem key={index} value={`gov-${index}`} className="border-indigo-500/20">
                   <AccordionTrigger className="text-left hover:no-underline">
                     <span className="font-medium">{faq.question}</span>
                   </AccordionTrigger>

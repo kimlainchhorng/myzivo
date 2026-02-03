@@ -2537,3 +2537,161 @@ export const FINANCIAL_COMPLIANCE_FAQ = [
 
 // Helper arrays
 export const FINANCIAL_COMPLIANCE_POLICIES_LIST = Object.values(FINANCIAL_COMPLIANCE_POLICIES);
+
+// ============================================
+// CORPORATE GOVERNANCE & ETHICS POLICIES (Clauses 170-179)
+// Governance, Ethics, Regulator Communications
+// ============================================
+
+export const GOVERNANCE_POLICIES = {
+  // Clause 170: Corporate Governance Statement
+  governanceStatement: {
+    id: "governance_statement",
+    title: "Corporate Governance Statement",
+    version: "1.0",
+    content: `ZIVO operates with good-faith compliance efforts and maintains internal controls appropriate for its operations. ZIVO documents decisions impacting users and partners and reviews policies regularly to ensure continued compliance with applicable laws and industry standards.`,
+    governancePrinciples: [
+      "Good-faith compliance efforts in all operations",
+      "Internal controls appropriate for platform scale",
+      "Documentation of decisions impacting users and partners",
+      "Regular policy review and updates",
+      "Transparent communication of material changes",
+      "Accountability for compliance outcomes",
+    ],
+  },
+
+  // Clause 171: No Fiduciary Duty Disclaimer
+  noFiduciaryDuty: {
+    id: "no_fiduciary_duty",
+    title: "No Fiduciary Duty Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not owe fiduciary duties to users, partners, drivers, owners, restaurants, or any other parties using the platform. ZIVO operates as a neutral platform provider and does not act as an agent, trustee, or fiduciary for any party. Platform participants are independent parties responsible for their own decisions and outcomes.`,
+    partiesExcluded: [
+      "Individual users and customers",
+      "Partner businesses and merchants",
+      "Drivers and delivery providers",
+      "Vehicle owners and hosts",
+      "Restaurant partners",
+      "Third-party service providers",
+    ],
+  },
+
+  // Clause 172: Ethics & Responsible Use Policy
+  ethicsPolicy: {
+    id: "ethics_policy",
+    title: "Ethics & Responsible Use Policy",
+    version: "1.0",
+    content: `ZIVO promotes lawful, ethical use of the platform and discourages misuse, fraud, or conduct that may cause harm to others. ZIVO may intervene to prevent or remediate harmful activity. This ethics policy reflects ZIVO's values but does not create a duty of care or legal obligation to users or third parties.`,
+    ethicsPrinciples: [
+      "Promote lawful use of platform services",
+      "Discourage fraud, deception, and misrepresentation",
+      "Prevent harm to users, partners, and third parties",
+      "Respect user privacy within legal requirements",
+      "Maintain fair and consistent enforcement",
+      "Support accessibility and inclusion",
+    ],
+  },
+
+  // Clause 173: Good-Faith Operation Clause
+  goodFaithOperation: {
+    id: "good_faith_operation",
+    title: "Good-Faith Operation Clause",
+    version: "1.0",
+    content: `ZIVO operates in good faith and strives for reliable platform performance. However, ZIVO does not guarantee error-free operation, continuous availability, or freedom from bugs, outages, or service interruptions. Users acknowledge that technology platforms inherently involve operational risks.`,
+  },
+
+  // Clause 174: Regulator Communication Policy
+  regulatorCommunication: {
+    id: "regulator_communication",
+    title: "Regulator Communication Policy",
+    version: "1.0",
+    content: `Only authorized officers and designated representatives may communicate with regulators, government agencies, or law enforcement on behalf of ZIVO. ZIVO may cooperate with regulatory inquiries without admitting liability. Cooperation does not waive legal defenses or create user notification rights. ZIVO may suspend services during regulatory reviews.`,
+    communicationProtocols: [
+      "Authorized officers handle all regulatory communications",
+      "Legal counsel reviews significant communications",
+      "Cooperation does not admit liability or wrongdoing",
+      "Defenses and privileges are preserved",
+      "User notification as required by law only",
+      "Services may be suspended pending review",
+    ],
+  },
+
+  // Clause 175: Safe-Harbor Cooperation Clause
+  safeHarborCooperation: {
+    id: "safe_harbor_cooperation",
+    title: "Safe-Harbor Cooperation Clause",
+    version: "1.0",
+    content: `ZIVO's cooperation with government authorities, regulators, and law enforcement is either voluntary in good faith or legally compelled. Cooperation does not imply wrongdoing, fault, or liability. Cooperation does not create enforceable user rights or establish precedent for future matters.`,
+  },
+
+  // Clause 176: Public Safety Disclaimer
+  publicSafetyDisclaimer: {
+    id: "public_safety_disclaimer",
+    title: "Public Safety Disclaimer",
+    version: "1.0",
+    content: `ZIVO balances user safety considerations with platform neutrality. Safety-related actions (such as account suspensions or service restrictions) do not imply responsibility for user outcomes. ZIVO is not responsible for the safety or conduct of users, partners, or third parties.`,
+  },
+
+  // Clause 177: No Duty to Monitor
+  noDutyToMonitor: {
+    id: "no_duty_to_monitor",
+    title: "No Duty to Monitor",
+    version: "1.0",
+    content: `ZIVO has no general duty to monitor users, content, transactions, or activity beyond legal requirements. Voluntary monitoring for fraud prevention, safety, or compliance purposes does not create a duty to monitor all activity or prevent all harm.`,
+  },
+
+  // Clause 178: Good-Faith Record Creation
+  goodFaithRecords: {
+    id: "good_faith_records",
+    title: "Good-Faith Record Creation",
+    version: "1.0",
+    content: `ZIVO maintains records to demonstrate compliance intent, policy enforcement, and risk mitigation efforts. Record creation is for ZIVO's benefit and legal defense purposes. Records do not create additional liability or user rights beyond applicable law.`,
+    recordPurposes: [
+      "Demonstrate compliance intent and good faith",
+      "Document policy enforcement decisions",
+      "Support risk mitigation efforts",
+      "Provide evidence for legal defense",
+      "Enable regulatory response",
+      "Facilitate audit cooperation",
+    ],
+  },
+
+  // Clause 179: Survival of Governance Protections
+  governanceSurvival: {
+    id: "governance_survival",
+    title: "Survival of Governance Protections",
+    version: "1.0",
+    content: `All governance, ethics, and regulator-related protections survive investigations, litigation, platform changes, and ownership changes. These protections are perpetual and continue regardless of business structure modifications or corporate transactions.`,
+  },
+};
+
+// Governance FAQ
+export const GOVERNANCE_FAQ = [
+  {
+    question: "Does ZIVO cooperate with regulators?",
+    answer: "Yes, in good faith and as required by law.",
+  },
+  {
+    question: "Does cooperation mean ZIVO is at fault?",
+    answer: "No. Cooperation is standard practice and does not imply wrongdoing.",
+  },
+  {
+    question: "Does ZIVO owe duties to partners?",
+    answer: "No. ZIVO is a neutral platform and does not owe fiduciary duties to any party.",
+  },
+  {
+    question: "Does ZIVO guarantee safety or legality?",
+    answer: "No. Users assume risk and are responsible for their own decisions.",
+  },
+  {
+    question: "Does ZIVO monitor all platform activity?",
+    answer: "No. ZIVO has no general duty to monitor beyond legal requirements.",
+  },
+  {
+    question: "Can ZIVO suspend services during investigations?",
+    answer: "Yes. ZIVO may suspend services during regulatory reviews without liability.",
+  },
+];
+
+// Helper arrays
+export const GOVERNANCE_POLICIES_LIST = Object.values(GOVERNANCE_POLICIES);
