@@ -155,6 +155,7 @@ const AdminMobile = lazy(() => import("./pages/admin/AdminMobile"));
 const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+const FlightDebugPage = lazy(() => import("./pages/admin/FlightDebugPage"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -425,6 +426,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <TravelLogsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Flight Debug Panel */}
+                <Route
+                  path="/admin/flights/debug"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FlightDebugPage />
                     </ProtectedRoute>
                   }
                 />

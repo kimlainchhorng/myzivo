@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 /**
  * Duffel Flights API Edge Function
@@ -7,6 +8,8 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
  * Supports: offer requests, offer retrieval, order creation
  * 
  * ZIVO is the Merchant of Record - Stripe checkout, then Duffel order
+ * 
+ * Includes search logging for admin debugging
  */
 
 const corsHeaders = {
@@ -16,6 +19,51 @@ const corsHeaders = {
 };
 
 const DUFFEL_API_URL = 'https://api.duffel.com';
+
+// Supabase client for logging
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Get current environment
+const DUFFEL_ENV = Deno.env.get('DUFFEL_ENV') || 'sandbox';
+
+/**
+ * Log search request and response to database for debugging
+ */
+async function logSearch(params: {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  cabinClass: string;
+  requestId?: string;
+  statusCode: number;
+  error?: string;
+  offersCount: number;
+  responseTimeMs: number;
+}) {
+  try {
+    await supabase.from('flight_search_logs').insert({
+      origin_iata: params.origin,
+      destination_iata: params.destination,
+      departure_date: params.departureDate,
+      return_date: params.returnDate || null,
+      passengers: params.passengers,
+      cabin_class: params.cabinClass,
+      duffel_request_id: params.requestId || null,
+      duffel_status_code: params.statusCode,
+      duffel_error: params.error || null,
+      offers_count: params.offersCount,
+      response_time_ms: params.responseTimeMs,
+      environment: DUFFEL_ENV,
+    });
+  } catch (err) {
+    console.error('[Logging] Failed to log search:', err);
+    // Don't throw - logging failure shouldn't break the search
+  }
+}
 
 interface DuffelPassenger {
   type: 'adult' | 'child' | 'infant_without_seat';
@@ -107,20 +155,46 @@ async function duffelRequest(
   }
 }
 
-// Create an offer request (start a search)
+// Create an offer request (start a search) with logging
 async function createOfferRequest(params: CreateOfferRequestParams) {
   console.log('[Duffel] Creating offer request:', JSON.stringify(params));
+  const startTime = Date.now();
+  
+  // Extract search params for logging
+  const firstSlice = params.slices[0];
+  const returnSlice = params.slices[1];
+  const origin = firstSlice?.origin || '';
+  const destination = firstSlice?.destination || '';
+  const departureDate = firstSlice?.departure_date || '';
+  const returnDate = returnSlice?.departure_date;
+  const passengerCount = params.passengers?.length || 1;
+  const cabinClass = params.cabin_class || 'economy';
   
   const result = await duffelRequest('/air/offer_requests', 'POST', {
     data: {
       slices: params.slices,
       passengers: params.passengers,
-      cabin_class: params.cabin_class || 'economy',
+      cabin_class: cabinClass,
       max_connections: params.max_connections ?? 2,
     }
   });
 
+  const responseTimeMs = Date.now() - startTime;
+
   if (result.error) {
+    // Log failed search
+    await logSearch({
+      origin,
+      destination,
+      departureDate,
+      returnDate,
+      passengers: passengerCount,
+      cabinClass,
+      statusCode: result.status,
+      error: result.error,
+      offersCount: 0,
+      responseTimeMs,
+    });
     return { error: result.error };
   }
 
@@ -132,12 +206,28 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
     created_at: string;
   };
 
-  console.log('[Duffel] Offer request created:', offerRequest.id, 'with', offerRequest.offers?.length || 0, 'initial offers');
+  const offersCount = offerRequest.offers?.length || 0;
+  console.log('[Duffel] Offer request created:', offerRequest.id, 'with', offersCount, 'initial offers');
+
+  // Log successful search
+  await logSearch({
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    passengers: passengerCount,
+    cabinClass,
+    requestId: offerRequest.id,
+    statusCode: result.status,
+    offersCount,
+    responseTimeMs,
+  });
 
   return {
     offer_request_id: offerRequest.id,
     offers: transformOffers(offerRequest.offers || []),
     created_at: offerRequest.created_at,
+    environment: DUFFEL_ENV,
   };
 }
 

@@ -136,24 +136,21 @@ export default function FlightSearchFormPro({
     setToDisplay(tempDisplay);
   };
 
-  // Validate form
+  // Validate form - STRICT: Must have selected airport from autocomplete
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Origin validation
-    if (!fromOption && !fromDisplay.match(/\([A-Z]{3}\)/)) {
-      newErrors.from = "Select a departure airport";
+    // STRICT: Must have selected airport from autocomplete list
+    if (!fromOption) {
+      newErrors.from = "Please choose an airport from the list.";
     }
 
-    // Destination validation
-    if (!toOption && !toDisplay.match(/\([A-Z]{3}\)/)) {
-      newErrors.to = "Select an arrival airport";
+    if (!toOption) {
+      newErrors.to = "Please choose an airport from the list.";
     }
 
     // Same origin/destination check
-    const fromCode = fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1];
-    const toCode = toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1];
-    if (fromCode && toCode && fromCode === toCode) {
+    if (fromOption && toOption && fromOption.value === toOption.value) {
       newErrors.to = "Destination must differ from origin";
     }
 
@@ -203,14 +200,14 @@ export default function FlightSearchFormPro({
     }
   };
 
-  // Check if form is valid for enabling button
+  // Check if form is valid - STRICT: require selected options
   const isFormValid = useMemo(() => {
-    const hasFrom = !!fromOption || !!fromDisplay.match(/\([A-Z]{3}\)/);
-    const hasTo = !!toOption || !!toDisplay.match(/\([A-Z]{3}\)/);
+    const hasFrom = !!fromOption;
+    const hasTo = !!toOption;
     const hasDepart = !!departDate;
     const hasReturn = tripType === "oneway" || !!returnDate;
     return hasFrom && hasTo && hasDepart && hasReturn;
-  }, [fromOption, fromDisplay, toOption, toDisplay, departDate, returnDate, tripType]);
+  }, [fromOption, toOption, departDate, returnDate, tripType]);
 
   const cabinOptions: { value: CabinClass; label: string; icon?: string }[] = [
     { value: "economy", label: "Economy" },
