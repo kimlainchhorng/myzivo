@@ -51,16 +51,24 @@ import { format } from "date-fns";
 
 interface SupportTicket {
   id: string;
-  ticket_number: string | null;
+  ticket_number?: string | null;
   category: string;
   subject: string;
   description: string;
   status: string;
   priority: string;
-  booking_ref: string | null;
-  resolution_notes: string | null;
+  booking_ref?: string | null;
+  resolution_notes?: string | null;
   created_at: string;
   updated_at: string;
+  // Optional fields from DB that may not always be present
+  assigned_to?: string | null;
+  auto_reply_sent?: boolean | null;
+  driver_id?: string | null;
+  partner_name?: string | null;
+  reference_id?: string | null;
+  service_type?: string | null;
+  user_id?: string | null;
 }
 
 const AdminTravelSupportModule = () => {
@@ -90,7 +98,7 @@ const AdminTravelSupportModule = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as SupportTicket[];
+      return (data || []) as unknown as SupportTicket[];
     },
   });
 
