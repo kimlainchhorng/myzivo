@@ -631,6 +631,126 @@ export type Database = {
         }
         Relationships: []
       }
+      analytics_aggregations: {
+        Row: {
+          avg_value: number | null
+          count_value: number | null
+          created_at: string | null
+          date: string
+          dimension_key: string | null
+          dimension_value: string | null
+          id: string
+          metric_name: string
+          product_type: string | null
+          sum_value: number | null
+        }
+        Insert: {
+          avg_value?: number | null
+          count_value?: number | null
+          created_at?: string | null
+          date: string
+          dimension_key?: string | null
+          dimension_value?: string | null
+          id?: string
+          metric_name: string
+          product_type?: string | null
+          sum_value?: number | null
+        }
+        Update: {
+          avg_value?: number | null
+          count_value?: number | null
+          created_at?: string | null
+          date?: string
+          dimension_key?: string | null
+          dimension_value?: string | null
+          id?: string
+          metric_name?: string
+          product_type?: string | null
+          sum_value?: number | null
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          device_type: string | null
+          event_name: string
+          id: string
+          is_new_user: boolean | null
+          meta: Json | null
+          order_id: string | null
+          page: string | null
+          session_id: string
+          traffic_source: string | null
+          user_id: string | null
+          value: number | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_name: string
+          id?: string
+          is_new_user?: boolean | null
+          meta?: Json | null
+          order_id?: string | null
+          page?: string | null
+          session_id: string
+          traffic_source?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          event_name?: string
+          id?: string
+          is_new_user?: boolean | null
+          meta?: Json | null
+          order_id?: string | null
+          page?: string | null
+          session_id?: string
+          traffic_source?: string | null
+          user_id?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      analytics_funnels: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          product_type: string
+          steps: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          product_type: string
+          steps: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          product_type?: string
+          steps?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       analytics_goals: {
         Row: {
           created_at: string
@@ -9124,6 +9244,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      performance_metrics: {
+        Row: {
+          created_at: string | null
+          error_code: string | null
+          id: string
+          meta: Json | null
+          metric_type: string
+          service: string | null
+          success: boolean | null
+          value_ms: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_code?: string | null
+          id?: string
+          meta?: Json | null
+          metric_type: string
+          service?: string | null
+          success?: boolean | null
+          value_ms?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          error_code?: string | null
+          id?: string
+          meta?: Json | null
+          metric_type?: string
+          service?: string | null
+          success?: boolean | null
+          value_ms?: number | null
+        }
+        Relationships: []
       }
       policy_consents: {
         Row: {
