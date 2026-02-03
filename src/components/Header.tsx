@@ -39,11 +39,19 @@ const Header = () => {
                 <ZivoLogo size="md" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
-              {/* Secure Booking Trust Indicator */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                  Secure Booking
+              {/* Trust Indicators */}
+              <div className="hidden lg:flex items-center gap-4 text-[11px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Live bookings
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Secure payments
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  Licensed travel partners
                 </span>
               </div>
             </div>
