@@ -210,7 +210,7 @@ export default function TravelerInfoForm({
 
         {/* Compliance footer */}
         <p className="text-[10px] text-center text-muted-foreground">
-          {FLIGHT_DISCLAIMERS.redirect}
+          {FLIGHT_DISCLAIMERS.checkout}
         </p>
 
         {/* Footer note */}

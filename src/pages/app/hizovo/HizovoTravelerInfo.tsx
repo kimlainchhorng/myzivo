@@ -248,7 +248,7 @@ const HizovoTravelerInfo = () => {
               <div>
                 <p className="font-medium text-sm">{FLIGHT_DISCLAIMERS.ticketingShort}</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {FLIGHT_DISCLAIMERS.redirect}
+                  {FLIGHT_DISCLAIMERS.checkout}
                 </p>
               </div>
             </div>

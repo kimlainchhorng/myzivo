@@ -1,26 +1,24 @@
 /**
- * Flight Partner Disclaimer Component
+ * Flight Seller Disclaimer Component
  * 
  * REQUIRED on all flight search, results, and detail pages
- * Displays the MoR (Merchant of Record) compliance text
- * 
- * Note: This component is maintained for backwards compatibility.
- * New code should use FlightSellerDisclaimer instead.
+ * Displays MoR (Merchant of Record) compliance text
+ * ZIVO is the seller of travel
  */
 
 import { Shield, Lock, AlertCircle, Plane, CreditCard, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FLIGHT_DISCLAIMERS, FLIGHT_TRUST_BADGES } from "@/config/flightCompliance";
 
-interface FlightPartnerDisclaimerProps {
-  variant?: 'banner' | 'inline' | 'footer' | 'card' | 'minimal';
+interface FlightSellerDisclaimerProps {
+  variant?: 'banner' | 'inline' | 'footer' | 'card' | 'minimal' | 'checkout';
   className?: string;
 }
 
-export default function FlightPartnerDisclaimer({
+export default function FlightSellerDisclaimer({
   variant = 'banner',
   className,
-}: FlightPartnerDisclaimerProps) {
+}: FlightSellerDisclaimerProps) {
   // Minimal inline disclaimer
   if (variant === 'minimal') {
     return (
@@ -48,6 +46,34 @@ export default function FlightPartnerDisclaimer({
         <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
           {FLIGHT_DISCLAIMERS.footer}
         </p>
+      </div>
+    );
+  }
+
+  // Checkout variant - more prominent for payment page
+  if (variant === 'checkout') {
+    return (
+      <div className={cn(
+        "p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 space-y-3",
+        className
+      )}>
+        <div className="flex items-center gap-2">
+          <Lock className="w-5 h-5 text-emerald-500" />
+          <p className="font-medium text-sm">Secure ZIVO Checkout</p>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {FLIGHT_DISCLAIMERS.payment}
+        </p>
+        <div className="flex flex-wrap gap-3 pt-2 border-t border-emerald-500/20">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <CreditCard className="w-3 h-3 text-emerald-500" />
+            <span>{FLIGHT_TRUST_BADGES.secureCheckout}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Shield className="w-3 h-3 text-sky-500" />
+            <span>{FLIGHT_TRUST_BADGES.dataEncrypted}</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -117,7 +143,7 @@ export function FlightTrustBadges({ className }: { className?: string }) {
 }
 
 /**
- * Payment disclaimer - shows ZIVO handles payments (MoR)
+ * Payment disclaimer - shows ZIVO handles payments
  */
 export function FlightPaymentDisclaimer({ className }: { className?: string }) {
   return (

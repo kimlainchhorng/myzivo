@@ -1,13 +1,13 @@
 /**
  * TopSearchCTA Component
- * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ * MoR Model: Internal checkout flow
  */
-import { ExternalLink, Sparkles, Search, ShieldCheck } from "lucide-react";
+import { Plane, Sparkles, Search, ShieldCheck, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
-import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
-import { useCTAText, useCTAColor } from "@/hooks/useABTest";
+import { FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
+import { useCTAColor } from "@/hooks/useABTest";
 import { cn } from "@/lib/utils";
 
 interface TopSearchCTAProps {
@@ -19,6 +19,7 @@ interface TopSearchCTAProps {
   returnDate?: string;
   passengers?: number;
   cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+  offerId?: string;
   className?: string;
 }
 
@@ -31,33 +32,30 @@ export default function TopSearchCTA({
   returnDate,
   passengers = 1,
   cabinClass = 'economy',
+  offerId,
   className 
 }: TopSearchCTAProps) {
-  const { redirectWithParams, redirectSimple } = useFlightRedirect('top_search_cta', 'top_cta');
-  
-  // A/B Testing hooks
-  const { primaryText, trackClick: trackTextClick } = useCTAText('flights');
+  const navigate = useNavigate();
   const { className: colorClassName, trackClick: trackColorClick } = useCTAColor('flights');
 
   const handleSearchClick = () => {
-    // Track A/B experiments
-    trackTextClick();
     trackColorClick();
     
-    // Use deep link if we have search parameters
-    if (origin && destination && departDate) {
-      redirectWithParams({
+    // Navigate to internal booking flow
+    if (offerId) {
+      navigate(`/flights/traveler-info?offer=${offerId}&passengers=${passengers}`);
+    } else if (origin && destination && departDate) {
+      const params = new URLSearchParams({
         origin,
-        destination,
-        departDate,
-        returnDate,
-        passengers,
-        cabinClass,
-        tripType: returnDate ? 'roundtrip' : 'oneway',
+        dest: destination,
+        depart: departDate,
+        passengers: passengers.toString(),
+        cabin: cabinClass,
       });
+      if (returnDate) params.set('return', returnDate);
+      navigate(`/flights/results?${params.toString()}`);
     } else {
-      // Fallback to simple redirect
-      redirectSimple();
+      navigate('/flights');
     }
   };
 
@@ -69,7 +67,7 @@ export default function TopSearchCTA({
       {/* Trust Text */}
       <div className="flex items-center gap-2 mb-3">
         <ShieldCheck className="w-4 h-4 text-emerald-500" />
-        <span className="text-sm font-medium text-emerald-600">Compare prices from trusted travel partners</span>
+        <span className="text-sm font-medium text-emerald-600">Secure ZIVO checkout with licensed partners</span>
       </div>
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -77,16 +75,16 @@ export default function TopSearchCTA({
           <div className="flex items-center gap-2 mb-2">
             <Badge className="bg-sky-500/20 text-sky-500 border-sky-500/30 gap-1">
               <Sparkles className="w-3 h-3" />
-              Compare & Save
+              Best Prices
             </Badge>
             {lowestPrice && (
               <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
-                From ${lowestPrice}*
+                From ${lowestPrice}
               </Badge>
             )}
             {flightCount && flightCount > 0 && (
               <Badge variant="secondary" className="text-xs">
-                {flightCount} options
+                {flightCount} flights
               </Badge>
             )}
           </div>
@@ -104,9 +102,9 @@ export default function TopSearchCTA({
             )}
             onClick={handleSearchClick}
           >
-            <Search className="w-4 h-4" />
-            {primaryText}
-            <ExternalLink className="w-4 h-4" />
+            <Plane className="w-4 h-4" />
+            {FLIGHT_CTA_TEXT.primary}
+            <Lock className="w-4 h-4" />
           </Button>
           <p className="text-[10px] text-muted-foreground text-right">
             {FLIGHT_DISCLAIMERS.ticketingShort}

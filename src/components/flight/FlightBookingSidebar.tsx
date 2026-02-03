@@ -6,9 +6,7 @@
 import { useState } from "react";
 import { 
   Lock, 
-  ExternalLink, 
   Shield, 
-  AlertCircle, 
   CheckCircle, 
   XCircle,
   Briefcase,
@@ -17,6 +15,7 @@ import {
   RefreshCw,
   CreditCard,
   Phone,
+  Plane,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -240,30 +239,29 @@ export default function FlightBookingSidebar({
             <>
               <Lock className="w-5 h-5" />
               {FLIGHT_CTA_TEXT.primary}
-              <ExternalLink className="w-5 h-5" />
             </>
           )}
         </Button>
 
         {/* Under CTA micro-copy */}
         <p className="text-xs text-center text-muted-foreground">
-          You'll complete booking securely with our airline partner.
+          {FLIGHT_DISCLAIMERS.checkout}
         </p>
 
         {/* Trust Icons */}
         <div className="flex flex-wrap justify-center gap-2">
           <Badge variant="outline" className="gap-1 text-xs">
-            <Shield className="w-3 h-3 text-emerald-500" /> Secure partner checkout
+            <Shield className="w-3 h-3 text-emerald-500" /> Secure ZIVO checkout
           </Badge>
           <Badge variant="outline" className="gap-1 text-xs">
-            <CheckCircle className="w-3 h-3 text-emerald-500" /> No hidden fees from ZIVO
+            <CheckCircle className="w-3 h-3 text-emerald-500" /> No hidden fees
           </Badge>
         </div>
 
         {/* Legal Disclaimer */}
-        <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+        <div className="p-3 bg-sky-500/10 border border-sky-500/20 rounded-xl">
           <div className="flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+            <Plane className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               {FLIGHT_DISCLAIMERS.ticketing}
             </p>
