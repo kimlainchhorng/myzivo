@@ -1,15 +1,14 @@
 /**
- * Flight Empty State Component
+ * Flight Empty State Component - OTA Version
  * Shown when no results match current search/filters
- * Suggests alternate dates, nearby airports, and partner fallback
+ * ZIVO is MoR - NO partner fallback, NO affiliate redirects
  */
 
-import { Plane, Calendar, MapPin, RefreshCw, ArrowRight, Users, ExternalLink, Lightbulb } from "lucide-react";
+import { Plane, Calendar, MapPin, RefreshCw, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 interface FlightEmptyStateProps {
   origin?: string;
@@ -82,10 +81,6 @@ export default function FlightEmptyState({
   const nearbyDestination = getNearbyAirports(destination);
   const alternateDates = getAlternateDates();
 
-  const handleSearchPartner = () => {
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
-  };
-
   // Tips based on filter state
   const tips = hasActiveFilters
     ? [
@@ -109,12 +104,12 @@ export default function FlightEmptyState({
             <Plane className="w-10 h-10 text-sky-500" />
           </div>
           <h2 className="text-xl font-bold mb-2">
-            {hasActiveFilters ? "No flights match your filters" : "No flights found"}
+            {hasActiveFilters ? "No flights match your filters" : "No flights available"}
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
             {hasActiveFilters 
               ? "Try adjusting your filters to see more results."
-              : `We couldn't find any flights${origin && destination ? ` from ${origin} to ${destination}` : ""}. Try the suggestions below.`}
+              : `No flights found for these dates${origin && destination ? ` from ${origin} to ${destination}` : ""}. Try different dates or nearby airports.`}
           </p>
         </div>
 
@@ -219,23 +214,10 @@ export default function FlightEmptyState({
           </Button>
         </div>
 
-        {/* Partner Fallback CTA */}
-        <div className="max-w-md mx-auto mt-8 p-5 rounded-xl bg-gradient-to-r from-sky-500/10 via-blue-500/5 to-cyan-500/10 border border-sky-500/20">
-          <p className="text-sm text-muted-foreground mb-3 text-center">
-            Search 728+ airlines with our trusted partner
-          </p>
-          <Button
-            onClick={handleSearchPartner}
-            className="w-full gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white min-h-[48px]"
-          >
-            <Plane className="w-4 h-4" />
-            Search Partner Site
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-          <p className="text-[10px] text-muted-foreground mt-2 text-center">
-            You will complete your booking on our partner's secure site.
-          </p>
-        </div>
+        {/* OTA disclaimer */}
+        <p className="text-[10px] text-muted-foreground text-center mt-6 max-w-md mx-auto">
+          ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+        </p>
       </CardContent>
     </Card>
   );

@@ -418,16 +418,16 @@ const FlightResults = () => {
               <QuickStatsBar
                 cheapest={{
                   price: lowestPrice,
-                  partner: (cheapestFlight as any)?.agentName || "Aviasales",
+                  airline: cheapestFlight?.airline,
                 }}
                 fastest={{
                   price: fastestFlight?.price || lowestPrice,
-                  partner: (fastestFlight as any)?.agentName || "JetRadar",
+                  airline: fastestFlight?.airline,
                   duration: fastestFlight?.duration?.split(" ")[0] || "",
                 }}
                 bestValue={{
                   price: bestValueFlight?.price || lowestPrice,
-                  partner: (bestValueFlight as any)?.agentName || "Kiwi",
+                  airline: bestValueFlight?.airline,
                 }}
                 currency={currency}
               />

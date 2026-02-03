@@ -70,7 +70,7 @@ export function ResultsHeader({
               </h2>
               {indicativePrice && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  *Indicative prices – final price shown on partner site
+                  Final prices shown — tickets issued instantly after payment.
                 </p>
               )}
             </>
