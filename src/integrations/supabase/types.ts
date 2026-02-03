@@ -11508,6 +11508,63 @@ export type Database = {
           },
         ]
       }
+      supplier_payouts: {
+        Row: {
+          created_at: string
+          gross_sales: number
+          id: string
+          meta: Json | null
+          net_sales: number
+          notes: string | null
+          period_end: string
+          period_start: string
+          provider: string
+          reconciled_at: string | null
+          reconciled_by: string | null
+          status: string
+          total_orders: number | null
+          total_refunds: number | null
+          updated_at: string
+          zivo_revenue: number
+        }
+        Insert: {
+          created_at?: string
+          gross_sales?: number
+          id?: string
+          meta?: Json | null
+          net_sales?: number
+          notes?: string | null
+          period_end: string
+          period_start: string
+          provider: string
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          status?: string
+          total_orders?: number | null
+          total_refunds?: number | null
+          updated_at?: string
+          zivo_revenue?: number
+        }
+        Update: {
+          created_at?: string
+          gross_sales?: number
+          id?: string
+          meta?: Json | null
+          net_sales?: number
+          notes?: string | null
+          period_end?: string
+          period_start?: string
+          provider?: string
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          status?: string
+          total_orders?: number | null
+          total_refunds?: number | null
+          updated_at?: string
+          zivo_revenue?: number
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           address: string | null
