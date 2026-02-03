@@ -159,6 +159,40 @@ export default function Security() {
             </CardContent>
           </Card>
 
+          {/* Advanced Security */}
+          <Card className="mb-12">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-primary" />
+                Enterprise Security Controls
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                ZIVO implements a Zero-Trust security model with advanced protections against 
+                hackers, data theft, insider threats, and account takeovers.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  "Zero-Trust Architecture",
+                  "Data Loss Prevention (DLP)",
+                  "Account Takeover Protection",
+                  "Insider Threat Controls",
+                  "API & Backend Hardening",
+                  "Breach Containment Protocols",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+              <Button asChild className="mt-4">
+                <Link to="/security/zero-trust">View Full Security Controls</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Related Links */}
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-4">Learn more about how we handle your data:</p>
@@ -167,10 +201,10 @@ export default function Security() {
                 <Link to="/privacy-security">Privacy & Data Protection</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/privacy">Privacy Policy</Link>
+                <Link to="/security/report">Report a Vulnerability</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link to="/legal/data-breach">Incident Response</Link>
+                <Link to="/legal/security-incident">Incident Response</Link>
               </Button>
             </div>
           </div>

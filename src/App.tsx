@@ -223,6 +223,8 @@ const Company = lazy(() => import("./pages/Company"));
 const Security = lazy(() => import("./pages/Security"));
 const PrivacySecurity = lazy(() => import("./pages/PrivacySecurity"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
+const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
+const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
@@ -527,6 +529,8 @@ const App = () => (
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
+                <Route path="/security/report" element={<SecurityReport />} />
+                <Route path="/security/zero-trust" element={<ZeroTrustPolicy />} />
                 <Route path="/privacy-security" element={<PrivacySecurity />} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
