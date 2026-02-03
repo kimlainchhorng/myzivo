@@ -157,6 +157,7 @@ const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const FlightDebugPage = lazy(() => import("./pages/admin/FlightDebugPage"));
 const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
+const FlightsLaunchControl = lazy(() => import("./pages/admin/FlightsLaunchControl"));
 const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 
@@ -448,6 +449,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <FlightStatusPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Flights Launch Control */}
+                <Route
+                  path="/admin/flights/launch"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FlightsLaunchControl />
                     </ProtectedRoute>
                   }
                 />

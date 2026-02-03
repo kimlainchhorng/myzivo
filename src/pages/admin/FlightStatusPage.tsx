@@ -188,6 +188,12 @@ const FlightStatusPage = () => {
                 Refresh
               </Button>
               <Button variant="outline" asChild className="gap-2">
+                <Link to="/admin/flights/launch">
+                  <Activity className="w-4 h-4" />
+                  Launch Control
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="gap-2">
                 <Link to="/admin/flights/debug">
                   <Bug className="w-4 h-4" />
                   Debug Logs

@@ -27,6 +27,7 @@ import {
   AlertCircle,
   CheckCircle,
   Users,
+  AlertTriangle,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from '@/hooks/useDuffelFlights';
@@ -34,6 +35,7 @@ import { useCreateFlightCheckout, type FlightPassenger } from '@/hooks/useFlight
 import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS, ZIVO_SOT_REGISTRATION } from '@/config/flightMoRCompliance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useFlightsCanBook } from '@/hooks/useFlightsLaunchStatus';
 
 const FlightCheckout = () => {
   const navigate = useNavigate();
@@ -48,6 +50,7 @@ const FlightCheckout = () => {
   
   const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
   const createCheckout = useCreateFlightCheckout();
+  const { canBook, isTestMode, isPaused, pauseReason, isLoading: bookingCheckLoading } = useFlightsCanBook();
 
   // Load passenger data from session storage
   useEffect(() => {
@@ -129,7 +132,7 @@ const FlightCheckout = () => {
   };
 
   // Loading state
-  if (offerLoading) {
+  if (offerLoading || bookingCheckLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -139,6 +142,46 @@ const FlightCheckout = () => {
               <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
               <p className="text-muted-foreground">Loading checkout...</p>
             </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Block public users in TEST mode or when paused
+  if (!canBook) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SEOHead title="Bookings Coming Soon – ZIVO" description="Flight bookings will open soon." />
+        <Header />
+        <main className="pt-24 pb-20">
+          <div className="container mx-auto px-4">
+            <Card className="max-w-lg mx-auto">
+              <CardContent className="p-8 text-center">
+                {isPaused ? (
+                  <>
+                    <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+                    <h1 className="text-xl font-bold mb-2">Bookings Temporarily Paused</h1>
+                    <p className="text-muted-foreground mb-6">
+                      {pauseReason || "Flight bookings are temporarily paused. Please try again later."}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-12 h-12 text-primary mx-auto mb-4" />
+                    <h1 className="text-xl font-bold mb-2">Bookings Coming Soon</h1>
+                    <p className="text-muted-foreground mb-6">
+                      Flights are in beta testing. Bookings will open soon.
+                    </p>
+                  </>
+                )}
+                <Button onClick={() => navigate('/flights')} className="gap-2">
+                  <Plane className="w-4 h-4" />
+                  Browse Flights
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </main>
         <Footer />
