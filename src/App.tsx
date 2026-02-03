@@ -217,6 +217,8 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Partners = lazy(() => import("./pages/Partners"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
+const Refunds = lazy(() => import("./pages/Refunds"));
+const Company = lazy(() => import("./pages/Company"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
@@ -518,6 +520,8 @@ const App = () => (
                 <Route path="/partners" element={<Partners />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/refunds" element={<Refunds />} />
+                <Route path="/company" element={<Company />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
