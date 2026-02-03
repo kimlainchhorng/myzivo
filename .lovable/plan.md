@@ -1,198 +1,104 @@
 
-# ZIVO Flights Final Content Update - OTA Language Cleanup
+
+# ZIVO Flights Final Modal Cleanup - Remove All Affiliate Language
 
 ## Summary
 
-Remove all remaining affiliate wording from Flights pages and update to OTA language. This covers How Booking Works sections, Trust Badges, FAQ content, Footer text, and ensures "compare" is not used for Flights.
+Remove remaining affiliate wording from the Edit Flight Search modal and all flight-related modals/components to ensure full OTA (Merchant of Record) consistency.
+
+---
+
+## Issue Identified
+
+The FlightSearchFormPro component (used in the Edit Search modal) still displays:
+
+```
+"Final booking completed on our airline partner's secure site."
+```
+
+This contradicts ZIVO's OTA booking flow where:
+- Users book and pay on ZIVO
+- Tickets are issued by licensed partners after payment
 
 ---
 
 ## Components Requiring Updates
 
-### 1. HowBookingWorks.tsx - Update Step Text
+### 1. FlightSearchFormPro.tsx - Edit Search Modal Helper Text
 
-**File:** `src/components/flight/HowBookingWorks.tsx`
+**File:** `src/components/search/FlightSearchFormPro.tsx`
 
-| Step | Current | New |
+| Line | Current | New |
 |------|---------|-----|
-| 1 Title | "Search & compare flights" | "Search flights" |
-| 1 Description | "Compare options from 500+ airlines" | "Browse real-time flight options from global airlines." |
-| 2 Title | "Choose the best option" | "Select your flight" |
-| 2 Description | "Select the best deal for your travel needs" | "View final prices, baggage, and fare rules before booking." |
-| 3 Title | "Book directly on ZIVO" | Keep as-is |
-| 3 Description | "Pay securely and receive your e-ticket instantly" | Keep as-is (already correct) |
+| 643 | "Final booking completed on our airline partner's secure site." | "Payment completed securely on ZIVO. Tickets issued by licensed partners." |
 
 ---
 
-### 2. HowItWorksSimple.tsx - Update for OTA Model
+### 2. NoFlightsFound.tsx - Complete Rewrite for OTA
 
-**File:** `src/components/home/HowItWorksSimple.tsx`
+This component is a full affiliate fallback that redirects users to external partner sites when Duffel returns 0 offers.
 
-| Step | Current | New |
+**Per the user's requirement:** IF Duffel returns 0 offers, show "No flights available" UI - DO NOT fallback to affiliate.
+
+| Section | Current | New |
+|---------|---------|-----|
+| Title | "Comparing live deals" | "No flights available" |
+| Message | "We're searching licensed travel partners..." | "No flights found for these dates. Try different dates or nearby airports." |
+| Primary CTA | "Search Partner Site" + ExternalLink + window.open affiliate | **REMOVE ENTIRE SECTION** |
+| Disclaimer | FLIGHT_DISCLAIMERS.ticketingShort | Update or remove |
+
+**Remove:**
+- `handleSearchPartner` function
+- AFFILIATE_LINKS import
+- trackAffiliateClick import
+- Primary affiliate CTA section
+- ExternalLink icon (for flights)
+
+**Keep:**
+- Cross-sell options for Hotels/Cars (those are affiliate model)
+- Clear Filters / Modify Search buttons
+
+---
+
+### 3. FlightDetailsModal.tsx - Remove Affiliate Redirect
+
+This modal uses affiliate link redirection instead of internal OTA navigation.
+
+| Section | Current | New |
+|---------|---------|-----|
+| Import | trackAffiliateClick, AFFILIATE_LINKS | Remove |
+| Line 364-367 | Affiliate disclosure | OTA disclaimer |
+| Line 375-399 | External link to AFFILIATE_LINKS.flights.url | Internal navigation to `/flights/details/{id}` |
+| Icon | ExternalLink | ArrowRight |
+| CTA | "Book Flight" + ExternalLink | "Select Flight" + ArrowRight |
+
+---
+
+### 4. FlightConsentGate.tsx - Update or Deprecate
+
+This component exists specifically for affiliate partner redirect consent flow. With OTA mode:
+- External redirects don't happen for flights
+- Consent is handled on the ZIVO checkout page
+
+**Options:**
+1. **Deprecate entirely** - Not needed for OTA flow
+2. **Repurpose** - Update for internal ZIVO checkout consent
+
+**Recommendation:** Update for OTA use or mark as deprecated.
+
+| Section | Current | New |
+|---------|---------|-----|
+| Title | "Partner Checkout" | "Confirm Booking" or deprecate |
+| Description | "You're being redirected to complete your booking with our airline partner." | "Review and confirm your booking details." or deprecate |
+| CTA | Redirect to external URL | Not needed - remove or redirect internally |
+
+---
+
+### 5. HowBookingWorks.tsx - Update Comment
+
+| Line | Current | New |
 |------|---------|-----|
-| 1 | "Search & compare prices" | "Search flights" |
-| 1 Description | "Enter your travel details and compare options from 500+ airlines" | "Browse real-time flight options from global airlines." |
-| 2 | "Choose the best option" | "Select your flight" |
-| 2 Description | "Review prices, times, baggage..." | "View final prices, baggage, and fare rules before booking." |
-| 3 | "Complete booking securely" | "Book on ZIVO" |
-| 3 Description | "Book securely with our licensed travel partners" | "Pay securely on ZIVO and receive your e-ticket instantly." |
-
-Also update reassurance text:
-- Current: "We connect you to licensed partners for secure checkout"
-- New: "Tickets issued by licensed airline ticketing providers."
-
----
-
-### 3. TopTierHero.tsx - Update Flights Headline
-
-**File:** `src/components/shared/TopTierHero.tsx`
-
-| Current | New |
-|---------|-----|
-| `headline: "Search & Compare Flights Worldwide"` | `headline: "Search Flights Worldwide"` |
-| `subheadline: "Compare 500+ airlines..."` | `subheadline: "Real-time prices from global airlines. Secure ZIVO checkout."` |
-
----
-
-### 4. FlightFAQSection.tsx - Rewrite All Answers
-
-**File:** `src/components/flight/FlightFAQSection.tsx`
-
-**Q1: "How does ZIVO find cheap flights?" → "How does ZIVO find flight prices?"**
-- Current: "ZIVO searches across 500+ airlines and travel sites in real-time to compare prices..."
-- New: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices."
-
-**Q2: "Does ZIVO sell tickets directly?"**
-- Current: "No, ZIVO is a flight comparison platform. We help you find and compare the best prices, then redirect you..."
-- New: "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules."
-
-**Q3: "Are there hidden fees?"**
-- Current: "We display all-in prices including taxes and basic fees. However, airlines may charge extra..."
-- New: "No. Prices shown on ZIVO are final and confirmed before payment. Airline extras (bags, seats) are shown separately."
-
----
-
-### 5. FlightFAQWithSchema.tsx - Rewrite for OTA
-
-**File:** `src/components/seo/FlightFAQWithSchema.tsx`
-
-Same updates as FlightFAQSection but this one affects SEO schema:
-
-| Question | New Answer |
-|----------|------------|
-| How does ZIVO find cheap flights? → How does ZIVO find flight prices? | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
-| Does ZIVO sell tickets directly? | "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
-| Are there hidden fees? | "No. Prices shown on ZIVO are final and confirmed before payment." |
-| Can I trust the prices shown? | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
-
-Remove references to "indicative prices", "partner's booking page", "redirect".
-
----
-
-### 6. ResultsFAQ.tsx - Update Flights FAQ Section
-
-**File:** `src/components/results/ResultsFAQ.tsx`
-
-Update the `flights` section in `faqContent`:
-
-| Question | Current Answer | New Answer |
-|----------|----------------|------------|
-| How does ZIVO find flight prices? | "ZIVO searches across multiple trusted airline partners and travel agencies..." | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
-| Are prices final? | "Prices shown are indicative and may change. The final price will be confirmed when you complete your booking on our partner's website." | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
-| Do I book on ZIVO or another site? | "ZIVO is a search and comparison platform. When you click 'View Deal,' you'll be redirected to our partner's website..." | "You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
-| Is my payment secure? | "All payments are processed securely on our partner's websites. ZIVO never handles your payment information." | "All payments are processed securely on ZIVO using bank-grade encryption. Your payment data is protected." |
-
----
-
-### 7. Footer.tsx - Update Description & Remove Affiliate Link
-
-**File:** `src/components/Footer.tsx`
-
-**Update brand description (line 125-127):**
-- Current: "Search & compare flights, hotels, and car rentals from trusted partners."
-- New: "Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment."
-
-**Remove Affiliate Disclosure link from legal (line 48):**
-```tsx
-// REMOVE this line:
-{ name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
-```
-
-Keep Partner Disclosure (that's correct for partner ticketing disclosure).
-
----
-
-### 8. TrustBadges & Trust Components - Update Text
-
-**Files to update:**
-
-| File | Current | New |
-|------|---------|-----|
-| `TrustBadges.tsx` | "Trusted Partners" | "Secure ZIVO Checkout" |
-| `TrustCredibilityBar.tsx` | "Trusted Partners" | "Licensed Fulfillment" |
-| `TrustSection.tsx` | "Trusted Partners" | "Licensed Ticketing Partners" |
-
----
-
-### 9. SEOContentBlock.tsx - Update Flights Content
-
-**File:** `src/components/seo/SEOContentBlock.tsx`
-
-Update flights content block:
-- Current h1: "Search & Compare Flights Worldwide"
-- New h1: "Search Flights Worldwide"
-
-- Current intro: "Compare flight prices from 500+ airlines and travel sites..."
-- New intro: "Search real-time flight prices from global airlines. Book securely on ZIVO with instant e-tickets."
-
-- Remove: "When you find a flight you like, you'll be redirected to our partner's website..."
-
----
-
-### 10. adsCompliance.ts - Update Flight Config
-
-**File:** `src/config/adsCompliance.ts`
-
-| Current | New |
-|---------|-----|
-| `headline: 'Search & Compare Flights'` | `headline: 'Search Flights'` |
-| `disclaimer: 'Hizivo does not issue airline tickets...'` | `disclaimer: 'ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.'` |
-
----
-
-### 11. DestinationHero.tsx - Update Badge
-
-**File:** `src/components/seo/DestinationHero.tsx`
-
-| Current | New |
-|---------|-----|
-| `badge: "Search & Compare Flights"` | `badge: "Search Flights"` |
-
----
-
-### 12. Landing Pages - Update Headlines
-
-**Files:**
-- `src/pages/FlightLanding.tsx`
-- `src/pages/FlightSearch.tsx`
-- `src/pages/creators/FlightsCreatorLanding.tsx`
-- `src/pages/lp/FlightsLP.tsx`
-- `src/pages/ads/FlightsAdLanding.tsx`
-
-**Pattern to replace:**
-- "Search & Compare Flights" → "Search Flights"
-- "Compare flight prices from trusted partners" → "Search real-time flight prices"
-
----
-
-### 13. LaunchAnnouncements.tsx - Update Social Copy
-
-**File:** `src/components/home/LaunchAnnouncements.tsx`
-
-| Current | New |
-|---------|-----|
-| "Search & compare flights, hotels, and car rentals..." | "Book flights, hotels, and car rentals directly on ZIVO..." |
-| "Booking completed on partner sites." | "Secure checkout. Instant e-tickets." |
+| 3 | "Trust-building component explaining the partner checkout flow" | "Trust-building component explaining the ZIVO booking flow" |
 
 ---
 
@@ -200,80 +106,120 @@ Update flights content block:
 
 | File | Action | Key Changes |
 |------|--------|-------------|
-| `src/components/flight/HowBookingWorks.tsx` | MODIFY | Update step titles and descriptions |
-| `src/components/home/HowItWorksSimple.tsx` | MODIFY | Remove "compare", update to OTA flow |
-| `src/components/shared/TopTierHero.tsx` | MODIFY | "Search Flights Worldwide" |
-| `src/components/flight/FlightFAQSection.tsx` | MODIFY | Rewrite all FAQ answers for OTA |
-| `src/components/seo/FlightFAQWithSchema.tsx` | MODIFY | Rewrite FAQs for SEO schema |
-| `src/components/results/ResultsFAQ.tsx` | MODIFY | Update flights section answers |
-| `src/components/Footer.tsx` | MODIFY | Update description, remove Affiliate Disclosure link |
-| `src/components/shared/TrustBadges.tsx` | MODIFY | "Secure ZIVO Checkout" |
-| `src/components/home/TrustCredibilityBar.tsx` | MODIFY | Update badge text |
-| `src/components/shared/TrustSection.tsx` | MODIFY | Update partner text |
-| `src/components/seo/SEOContentBlock.tsx` | MODIFY | Remove "compare", update flights content |
-| `src/config/adsCompliance.ts` | MODIFY | Update headline and disclaimer |
-| `src/components/seo/DestinationHero.tsx` | MODIFY | Update badge text |
-| `src/pages/FlightLanding.tsx` | MODIFY | Update headline |
-| `src/pages/FlightSearch.tsx` | MODIFY | Update SEO title |
-| `src/pages/creators/FlightsCreatorLanding.tsx` | MODIFY | Update headline |
-| `src/pages/lp/FlightsLP.tsx` | MODIFY | Update headline |
-| `src/pages/ads/FlightsAdLanding.tsx` | MODIFY | Update headline |
-| `src/components/home/LaunchAnnouncements.tsx` | MODIFY | Update social copy |
-| `src/utils/seoUtils.ts` | MODIFY | Update flight SEO defaults |
+| `src/components/search/FlightSearchFormPro.tsx` | MODIFY | Update helper text to OTA language |
+| `src/components/flight/NoFlightsFound.tsx` | MODIFY | Remove affiliate fallback, update to OTA empty state |
+| `src/components/flight/FlightDetailsModal.tsx` | MODIFY | Remove affiliate redirect, use internal navigation |
+| `src/components/flight/FlightConsentGate.tsx` | MODIFY/DEPRECATE | Update or mark as deprecated for OTA |
+| `src/components/flight/HowBookingWorks.tsx` | MODIFY | Update comment only |
 
 ---
 
-## New Text Standards (Flights Only)
+## New Text Standards
 
-### Headlines
-- ❌ "Search & Compare Flights" 
-- ✅ "Search Flights"
+### FlightSearchFormPro Helper Text
+- **Current:** "Final booking completed on our airline partner's secure site."
+- **New:** "Payment completed securely on ZIVO. Tickets issued by licensed partners."
 
-### How It Works Steps
-1. **Search flights** - "Browse real-time flight options from global airlines."
-2. **Select your flight** - "View final prices, baggage, and fare rules before booking."
-3. **Book on ZIVO** - "Pay securely on ZIVO and receive your e-ticket instantly."
+### NoFlightsFound Empty State
+- **Title:** "No flights available"
+- **Message:** "No flights found for these dates. Try different dates or nearby airports."
+- **NO affiliate fallback CTA**
 
-### FAQ Answers
-| Topic | OTA Answer |
-|-------|------------|
-| How ZIVO finds prices | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
-| Are prices final? | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
-| Where do I book? | "You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
-
-### Trust Badges
-- ✅ "Secure ZIVO Checkout"
-- ✅ "Tickets issued by licensed airline ticketing providers."
-- ❌ "Secure Partner Checkout"
-- ❌ "Trusted Partners" (for flights context)
-
-### Footer
-- ✅ "Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment."
-- ❌ "Search & compare flights, hotels, and car rentals from trusted partners."
+### FlightDetailsModal CTA
+- **Current:** External link with ExternalLink icon
+- **New:** Internal button with ArrowRight icon, navigates to `/flights/details/{id}`
 
 ---
 
-## Words to Remove from Flights Pages
+## Global Rule Enforcement
 
-| Forbidden | Replacement |
-|-----------|-------------|
-| "compare" | "search" or remove |
-| "partner checkout" | "ZIVO checkout" |
-| "partner site" | Remove or "ZIVO" |
-| "indicative prices" | "final prices" |
-| "redirected to" | Remove |
-| "affiliate" | Remove from flights context |
+When `DUFFEL_ENV = live` or `sandbox`:
+1. IF Duffel returns 0 offers → Show "No flights available" UI
+2. DO NOT fallback to affiliate redirects
+3. All booking language must describe ZIVO as the payment/booking platform
+4. Partners are described only as ticket issuers
+
+---
+
+## Technical Details
+
+### FlightSearchFormPro.tsx Change (Line 641-644)
+
+Replace:
+```tsx
+{/* Helper text below button */}
+<p className="text-xs text-muted-foreground text-center mt-2">
+  Final booking completed on our airline partner's secure site.
+</p>
+```
+
+With:
+```tsx
+{/* Helper text below button */}
+<p className="text-xs text-muted-foreground text-center mt-2">
+  Payment completed securely on ZIVO. Tickets issued by licensed partners.
+</p>
+```
+
+### NoFlightsFound.tsx Simplification
+
+Remove:
+- Lines 28-48: `handleSearchPartner` function
+- Lines 99-118: Primary affiliate CTA section
+- Imports: AFFILIATE_LINKS, trackAffiliateClick (for flight context)
+
+Update:
+- Line 80: "Comparing live deals" → "No flights available"
+- Line 81-83: Message to "No flights found for these dates. Try different dates or nearby airports."
+
+Keep:
+- Cross-sell for Hotels/Cars/Activities (lines 120-148) - these remain affiliate model
+
+### FlightDetailsModal.tsx Simplification
+
+Remove:
+- Line 17: trackAffiliateClick import
+- Line 18: AFFILIATE_LINKS import
+- Lines 380-393: trackAffiliateClick call
+
+Replace lines 375-399:
+```tsx
+// External affiliate link
+<a 
+  href={AFFILIATE_LINKS.flights.url}
+  target="_blank"
+  ...
+>
+  <ExternalLink className="w-4 h-4" />
+  Book Flight
+</a>
+```
+
+With:
+```tsx
+// Internal navigation button
+<Button
+  onClick={() => {
+    onOpenChange(false);
+    onSelectFlight?.(flight);
+  }}
+  className="flex-1 gap-2 bg-gradient-to-r from-sky-500 to-blue-600..."
+>
+  <ArrowRight className="w-4 h-4" />
+  Select Flight
+</Button>
+```
 
 ---
 
 ## Verification Checklist
 
 After implementation, confirm:
-1. ✅ "compare" does NOT appear on any Flights page
-2. ✅ No "partner checkout" or "partner site" for flights
-3. ✅ All FAQ answers reflect OTA model
-4. ✅ Footer says "Book...directly on ZIVO"
-5. ✅ Affiliate Disclosure link removed from footer
-6. ✅ Trust badges say "Secure ZIVO Checkout"
-7. ✅ How Booking Works uses new 3-step text
-8. ✅ All SEO titles/descriptions updated
+1. Edit Flight Search modal shows "Payment completed securely on ZIVO"
+2. FlightDetailsModal uses internal navigation (no external link)
+3. NoFlightsFound shows simple "No flights available" (no affiliate CTA)
+4. No "partner checkout" or "partner site" text in flight modals
+5. No `window.open` redirects for flights
+6. No ExternalLink icons on flight CTAs
+7. All flight booking language describes ZIVO as the platform
+
