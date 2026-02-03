@@ -64,6 +64,14 @@ export function shouldShowDebugUI(): boolean {
 }
 
 /**
+ * Whether to show sandbox-specific UI elements
+ * Requires BOTH sandbox mode AND admin status
+ */
+export function shouldShowSandboxUI(isAdmin: boolean): boolean {
+  return isSandboxMode() && isAdmin;
+}
+
+/**
  * Whether to enforce strict validation (live mode requires stricter checks)
  */
 export function shouldEnforceStrictValidation(): boolean {

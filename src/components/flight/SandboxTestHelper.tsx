@@ -39,12 +39,12 @@ export default function SandboxTestHelper({ className }: SandboxTestHelperProps)
     <Alert className={className} variant="default">
       <TestTube className="h-4 w-4" />
       <AlertTitle className="flex items-center gap-2">
-        Duffel Sandbox Mode
-        <Badge variant="secondary" className="text-[10px]">TEST</Badge>
+        Test Environment
+        <Badge variant="secondary" className="text-[10px]">ADMIN</Badge>
       </AlertTitle>
       <AlertDescription className="space-y-4 mt-2">
         <p className="text-sm text-muted-foreground">
-          The Duffel sandbox has limited test inventory. Try these routes for reliable results:
+          Test inventory is limited. Try these routes for reliable results:
         </p>
         <div className="flex flex-wrap gap-2">
           {DUFFEL_SANDBOX_ROUTES.slice(0, 4).map((route) => (
@@ -60,7 +60,7 @@ export default function SandboxTestHelper({ className }: SandboxTestHelperProps)
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground">
-          Sandbox data may not reflect real availability or prices.
+          Test data may differ from production.
         </p>
       </AlertDescription>
     </Alert>

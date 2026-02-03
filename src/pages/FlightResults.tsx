@@ -56,6 +56,7 @@ import {
 import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
 import { FlightSearchFormPro } from "@/components/search";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -63,6 +64,7 @@ const FlightResults = () => {
   const [sortBy, setSortBy] = useState<string>("price");
   const [showFilters, setShowFilters] = useState(false);
   const [currency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
+  const { isAdmin } = useAuth();
 
   // Use unified filter hook with URL sync
   const {
@@ -503,6 +505,7 @@ const FlightResults = () => {
                 <EmptyResults 
                   service="flights"
                   message="No flights found for these dates. Try different dates or nearby airports."
+                  isAdmin={isAdmin}
                 />
               )}
 

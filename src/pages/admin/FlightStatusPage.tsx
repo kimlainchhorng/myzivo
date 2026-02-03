@@ -1,10 +1,11 @@
 /**
  * Flight Status Page - Admin Dashboard
  * Shows system health and readiness for Duffel LIVE
+ * ADMIN ONLY - Non-admins are redirected
  */
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -37,13 +38,30 @@ import {
   Bug,
   BarChart3,
   Ticket,
+  Loader2,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getDuffelEnvironment, isSandboxMode } from "@/config/duffelConfig";
 import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
 
 const FlightStatusPage = () => {
+  const { isAdmin, isLoading: authLoading } = useAuth();
+
+  // Redirect non-admins
+  if (!authLoading && !isAdmin) {
+    return <Navigate to="/flights" replace />;
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   const duffelEnv = getDuffelEnvironment();
   const isSandbox = isSandboxMode();
 
