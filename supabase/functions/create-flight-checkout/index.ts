@@ -51,6 +51,12 @@ serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not configured");
 
+    // Environment checks for LIVE safety
+    const DUFFEL_ENV = Deno.env.get("DUFFEL_ENV") || "sandbox";
+    const isLiveMode = DUFFEL_ENV === "live";
+    
+    console.log("[FlightCheckout] Environment:", DUFFEL_ENV, "Live mode:", isLiveMode);
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

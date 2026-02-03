@@ -36,6 +36,7 @@ import {
   Settings,
   Bug,
   BarChart3,
+  Ticket,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,10 +57,19 @@ const FlightStatusPage = () => {
       // Get bookings
       const { data: bookings, error: bookingsError } = await supabase
         .from('flight_bookings')
-        .select('id, payment_status, ticketing_status, created_at')
+        .select('id, payment_status, ticketing_status, created_at, ticketed_at, booking_reference')
         .gte('created_at', yesterday.toISOString());
 
       if (bookingsError) throw bookingsError;
+
+      // Get last successful booking
+      const { data: lastSuccess } = await supabase
+        .from('flight_bookings')
+        .select('ticketed_at, booking_reference')
+        .eq('ticketing_status', 'issued')
+        .order('ticketed_at', { ascending: false })
+        .limit(1)
+        .single();
 
       // Get search logs
       const { data: searches, error: searchesError } = await supabase
@@ -98,6 +108,7 @@ const FlightStatusPage = () => {
         zeroResultSearches,
         errorSearches,
         alerts: alerts || [],
+        lastSuccess: lastSuccess || null,
       };
     },
     staleTime: 30 * 1000,
@@ -204,6 +215,9 @@ const FlightStatusPage = () => {
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     Stripe Connected
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Mode determined by STRIPE_SECRET_KEY prefix
+                  </p>
                 </div>
                 <div className="p-4 rounded-lg border">
                   <p className="text-sm text-muted-foreground mb-1">Ticketing Partner</p>
@@ -226,7 +240,7 @@ const FlightStatusPage = () => {
           </Card>
 
           {/* Stats Grid */}
-          <div className="grid md:grid-cols-4 gap-4 mb-6">
+          <div className="grid md:grid-cols-5 gap-4 mb-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -271,6 +285,25 @@ const FlightStatusPage = () => {
                     <p className="text-3xl font-bold text-destructive">{stats?.alerts?.length || 0}</p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-destructive opacity-20" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Last Issued Ticket</p>
+                    <p className="text-lg font-semibold">
+                      {stats?.lastSuccess?.ticketed_at 
+                        ? format(new Date(stats.lastSuccess.ticketed_at), 'MMM d, HH:mm')
+                        : 'None yet'}
+                    </p>
+                    {stats?.lastSuccess?.booking_reference && (
+                      <p className="text-xs text-muted-foreground">{stats.lastSuccess.booking_reference}</p>
+                    )}
+                  </div>
+                  <Ticket className="w-8 h-8 text-primary opacity-20" />
                 </div>
               </CardContent>
             </Card>

@@ -1,10 +1,10 @@
 /**
  * Flight Confirmation Page
  * Shows booking confirmation after successful payment
- * Displays PNR, e-ticket numbers, itinerary
+ * Displays PNR, e-ticket numbers, itinerary with airline info
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -28,11 +28,23 @@ import {
   AlertCircle,
   Copy,
   Briefcase,
+  Send,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useFlightBooking, getTicketingStatusInfo } from '@/hooks/useFlightBooking';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+
+interface OfferDetails {
+  airline?: string;
+  airlineCode?: string;
+  flightNumber?: string;
+  cabinClass?: string;
+  duration?: string;
+  stops?: number;
+  departure?: string;
+  arrival?: string;
+}
 
 const FlightConfirmation = () => {
   const navigate = useNavigate();
@@ -43,6 +55,20 @@ const FlightConfirmation = () => {
   const paymentSuccess = searchParams.get('success') === 'true';
   
   const { data: booking, isLoading, error } = useFlightBooking(bookingId || null);
+  
+  // Get stored offer details for richer display
+  const [offerDetails, setOfferDetails] = useState<OfferDetails | null>(null);
+  
+  useEffect(() => {
+    const storedOfferDetails = sessionStorage.getItem('flightOfferDetails');
+    if (storedOfferDetails) {
+      try {
+        setOfferDetails(JSON.parse(storedOfferDetails));
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, []);
 
   const handleCopyPNR = () => {
     if (booking?.pnr) {
@@ -172,6 +198,16 @@ const FlightConfirmation = () => {
             </CardContent>
           </Card>
 
+          {/* Email Confirmation Notice - when ticket is issued */}
+          {isIssued && (
+            <Alert className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+              <Send className="w-4 h-4 text-emerald-500" />
+              <AlertDescription>
+                <strong>Confirmation email sent!</strong> Your e-ticket has been sent to the email addresses provided for each passenger.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Processing Alert */}
           {isProcessing && (
             <Alert className="mb-6 border-blue-500/30 bg-blue-500/5">
@@ -194,7 +230,7 @@ const FlightConfirmation = () => {
             </Alert>
           )}
 
-          {/* Flight Details */}
+          {/* Airline & Flight Details */}
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -203,21 +239,58 @@ const FlightConfirmation = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Airline logo and name (from stored offer details) */}
+              {offerDetails?.airlineCode && (
+                <div className="flex items-center gap-4 mb-4 pb-4 border-b">
+                  <img
+                    src={`https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/${offerDetails.airlineCode}.svg`}
+                    alt={offerDetails?.airline || 'Airline'}
+                    className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <div>
+                    <h3 className="font-semibold">{offerDetails?.airline || 'Airline'}</h3>
+                    {offerDetails?.flightNumber && (
+                      <p className="text-sm text-muted-foreground">{offerDetails.flightNumber}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Route display */}
               <div className="flex items-center justify-between py-4">
                 <div className="text-center">
                   <p className="text-2xl font-bold">{(booking as any).origin || 'Origin'}</p>
                   <p className="text-sm text-muted-foreground">
                     {(booking as any).departure_date ? format(parseISO((booking as any).departure_date), 'MMM d, yyyy') : 'Date TBD'}
                   </p>
+                  {offerDetails?.departure && (
+                    <p className="text-xs text-muted-foreground mt-1">{offerDetails.departure}</p>
+                  )}
                 </div>
                 <div className="flex-1 px-4 text-center">
-                  <Plane className="w-6 h-6 text-primary mx-auto -rotate-45" />
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <Plane className="w-5 h-5 text-primary -rotate-45" />
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  {offerDetails?.duration && (
+                    <p className="text-xs text-muted-foreground mt-2">{offerDetails.duration}</p>
+                  )}
+                  {typeof offerDetails?.stops === 'number' && (
+                    <p className="text-xs text-muted-foreground">
+                      {offerDetails.stops === 0 ? 'Direct' : `${offerDetails.stops} stop${offerDetails.stops > 1 ? 's' : ''}`}
+                    </p>
+                  )}
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold">{(booking as any).destination || 'Destination'}</p>
                   <p className="text-sm text-muted-foreground">
                     {(booking as any).return_date ? format(parseISO((booking as any).return_date), 'MMM d, yyyy') : 'One way'}
                   </p>
+                  {offerDetails?.arrival && (
+                    <p className="text-xs text-muted-foreground mt-1">{offerDetails.arrival}</p>
+                  )}
                 </div>
               </div>
 
