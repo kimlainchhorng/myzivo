@@ -1,11 +1,13 @@
+/**
+ * TrendingDealsSection - OTA Model
+ * Shows trending flight deals with internal navigation (no affiliate redirects)
+ */
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plane, ArrowRight, Sparkles, TrendingUp, Zap, ExternalLink, Clock } from "lucide-react";
+import { Plane, ArrowRight, TrendingUp, Zap, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
-import { trackAffiliateClick } from "@/lib/affiliateTracking";
 
 interface TrendingDeal {
   id: string;
@@ -39,41 +41,21 @@ interface TrendingDealsSectionProps {
 }
 
 export default function TrendingDealsSection({
-  title = "Trending Deals Today",
-  subtitle = "Limited-time prices on popular routes",
+  title = "Popular Routes",
+  subtitle = "Search flights on trending routes",
   maxDeals = 6,
   variant = "grid",
   className,
 }: TrendingDealsSectionProps) {
   const navigate = useNavigate();
 
+  // Internal navigation - OTA model (no external redirect)
   const handleDealClick = (deal: TrendingDeal) => {
-    trackAffiliateClick({
-      flightId: `trending-${deal.id}`,
-      airline: deal.airline || "Multiple",
-      airlineCode: deal.toCode,
+    const params = new URLSearchParams({
       origin: deal.fromCode,
-      destination: deal.toCode,
-      price: deal.price,
-      passengers: 1,
-      cabinClass: "economy",
-      affiliatePartner: "searadar",
-      referralUrl: AFFILIATE_LINKS.flights.url,
-      source: "trending_deals_section",
-      ctaType: "trending_deal",
-      serviceType: "flights",
+      dest: deal.toCode,
     });
-
-    window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleSearchClick = (deal: TrendingDeal) => {
-    // Navigate to prefilled search
-    const searchParams = new URLSearchParams({
-      from: `${deal.from} (${deal.fromCode})`,
-      to: `${deal.to} (${deal.toCode})`,
-    });
-    navigate(`/flights/results?${searchParams.toString()}`);
+    navigate(`/flights/results?${params.toString()}`);
   };
 
   const displayDeals = trendingDeals.slice(0, maxDeals);
@@ -90,7 +72,7 @@ export default function TrendingDealsSection({
         </div>
         <Badge variant="outline" className="text-xs gap-1">
           <Clock className="w-3 h-3" />
-          Updated hourly
+          Real-time prices
         </Badge>
       </div>
 
@@ -106,6 +88,7 @@ export default function TrendingDealsSection({
               "group hover:shadow-lg hover:border-sky-500/50 transition-all duration-300 cursor-pointer overflow-hidden",
               variant === "carousel" && "min-w-[280px] snap-start"
             )}
+            onClick={() => handleDealClick(deal)}
           >
             {/* Discount Banner */}
             {deal.discount && (
@@ -145,7 +128,6 @@ export default function TrendingDealsSection({
                 {deal.originalPrice && (
                   <span className="text-sm text-muted-foreground line-through">${deal.originalPrice}</span>
                 )}
-                <span className="text-xs text-muted-foreground">*</span>
               </div>
 
               {deal.airline && (
@@ -154,7 +136,7 @@ export default function TrendingDealsSection({
                 </p>
               )}
 
-              {/* CTAs */}
+              {/* CTA - Internal navigation */}
               <div className="flex gap-2">
                 <Button
                   className="flex-1 gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
@@ -163,8 +145,8 @@ export default function TrendingDealsSection({
                     handleDealClick(deal);
                   }}
                 >
-                  View Deal
-                  <ExternalLink className="w-3 h-3" />
+                  Search Flights
+                  <ArrowRight className="w-3 h-3" />
                 </Button>
               </div>
             </CardContent>
@@ -178,11 +160,11 @@ export default function TrendingDealsSection({
           to="/flights" 
           className="text-sm text-primary hover:underline inline-flex items-center gap-1"
         >
-          View all deals
+          View all routes
           <ArrowRight className="w-4 h-4" />
         </Link>
         <p className="text-[9px] text-muted-foreground mt-2">
-          *Prices are indicative and may change. ZIVO may earn a commission from bookings.
+          *Prices shown are examples. Final prices confirmed at checkout.
         </p>
       </div>
     </section>
