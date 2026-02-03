@@ -12195,6 +12195,141 @@ export type Database = {
           },
         ]
       }
+      zivo_badges: {
+        Row: {
+          category: string
+          created_at: string | null
+          criteria_threshold: number | null
+          criteria_type: string
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean | null
+          name: string
+          sort_order: number | null
+          tier: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          criteria_threshold?: number | null
+          criteria_type: string
+          description?: string | null
+          icon: string
+          id: string
+          is_active?: boolean | null
+          name: string
+          sort_order?: number | null
+          tier?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          criteria_threshold?: number | null
+          criteria_type?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          sort_order?: number | null
+          tier?: string | null
+        }
+        Relationships: []
+      }
+      zivo_credits: {
+        Row: {
+          amount: number
+          created_at: string | null
+          credit_type: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_expired: boolean | null
+          reference_id: string | null
+          reference_type: string | null
+          source_service: string | null
+          usable_on: string[] | null
+          used_amount: number | null
+          used_at: string | null
+          used_on_booking_id: string | null
+          used_on_service: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          credit_type: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_expired?: boolean | null
+          reference_id?: string | null
+          reference_type?: string | null
+          source_service?: string | null
+          usable_on?: string[] | null
+          used_amount?: number | null
+          used_at?: string | null
+          used_on_booking_id?: string | null
+          used_on_service?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          credit_type?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_expired?: boolean | null
+          reference_id?: string | null
+          reference_type?: string | null
+          source_service?: string | null
+          usable_on?: string[] | null
+          used_amount?: number | null
+          used_at?: string | null
+          used_on_booking_id?: string | null
+          used_on_service?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_cross_sell_incentives: {
+        Row: {
+          created_at: string | null
+          credit_amount: number
+          credit_expires_days: number | null
+          id: string
+          is_active: boolean | null
+          message_template: string | null
+          target_service: string
+          trigger_service: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credit_amount: number
+          credit_expires_days?: number | null
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          target_service: string
+          trigger_service: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credit_amount?: number
+          credit_expires_days?: number | null
+          id?: string
+          is_active?: boolean | null
+          message_template?: string | null
+          target_service?: string
+          trigger_service?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       zivo_cross_sell_suggestions: {
         Row: {
           clicked_at: string | null
@@ -12240,6 +12375,117 @@ export type Database = {
           suggested_service?: string
           suggestion_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_first_booking_incentives: {
+        Row: {
+          budget_cap: number | null
+          budget_used: number | null
+          created_at: string | null
+          credit_amount: number
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          min_booking_value: number | null
+          service: string
+          starts_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          budget_cap?: number | null
+          budget_used?: number | null
+          created_at?: string | null
+          credit_amount: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_booking_value?: number | null
+          service: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          budget_cap?: number | null
+          budget_used?: number | null
+          created_at?: string | null
+          credit_amount?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_booking_value?: number | null
+          service?: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      zivo_growth_config: {
+        Row: {
+          config_key: string
+          config_value: Json
+          description: string | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_value: Json
+          description?: string | null
+          id: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_value?: Json
+          description?: string | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      zivo_leaderboards: {
+        Row: {
+          calculated_at: string | null
+          category: string
+          id: string
+          metric_type: string
+          metric_value: number | null
+          partner_avatar: string | null
+          partner_id: string
+          partner_name: string | null
+          period: string
+          rank: number | null
+          region_id: string | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          category: string
+          id?: string
+          metric_type: string
+          metric_value?: number | null
+          partner_avatar?: string | null
+          partner_id: string
+          partner_name?: string | null
+          period: string
+          rank?: number | null
+          region_id?: string | null
+        }
+        Update: {
+          calculated_at?: string | null
+          category?: string
+          id?: string
+          metric_type?: string
+          metric_value?: number | null
+          partner_avatar?: string | null
+          partner_id?: string
+          partner_name?: string | null
+          period?: string
+          rank?: number | null
+          region_id?: string | null
         }
         Relationships: []
       }
@@ -12291,6 +12537,51 @@ export type Database = {
           partner_type?: string
           reason?: string | null
           service_type?: string
+        }
+        Relationships: []
+      }
+      zivo_partner_referrals: {
+        Row: {
+          bonus_amount: number | null
+          created_at: string | null
+          first_completed_at: string | null
+          first_completed_booking_id: string | null
+          id: string
+          paid_at: string | null
+          referee_id: string
+          referee_type: string
+          referral_code: string | null
+          referrer_id: string
+          referrer_type: string
+          status: string | null
+        }
+        Insert: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          first_completed_at?: string | null
+          first_completed_booking_id?: string | null
+          id?: string
+          paid_at?: string | null
+          referee_id: string
+          referee_type: string
+          referral_code?: string | null
+          referrer_id: string
+          referrer_type: string
+          status?: string | null
+        }
+        Update: {
+          bonus_amount?: number | null
+          created_at?: string | null
+          first_completed_at?: string | null
+          first_completed_booking_id?: string | null
+          id?: string
+          paid_at?: string | null
+          referee_id?: string
+          referee_type?: string
+          referral_code?: string | null
+          referrer_id?: string
+          referrer_type?: string
+          status?: string | null
         }
         Relationships: []
       }
@@ -12646,6 +12937,114 @@ export type Database = {
           },
         ]
       }
+      zivo_referral_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          total_earnings: number | null
+          total_referrals: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          total_earnings?: number | null
+          total_referrals?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      zivo_referral_tiers: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          min_referrals: number
+          referee_reward: number
+          referrer_reward: number
+          tier_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_referrals: number
+          referee_reward: number
+          referrer_reward: number
+          tier_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_referrals?: number
+          referee_reward?: number
+          referrer_reward?: number
+          tier_name?: string
+        }
+        Relationships: []
+      }
+      zivo_referrals: {
+        Row: {
+          created_at: string | null
+          credited_at: string | null
+          first_booking_at: string | null
+          first_booking_id: string | null
+          first_booking_service: string | null
+          id: string
+          referee_credit_amount: number | null
+          referee_id: string
+          referral_code: string
+          referrer_credit_amount: number | null
+          referrer_id: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credited_at?: string | null
+          first_booking_at?: string | null
+          first_booking_id?: string | null
+          first_booking_service?: string | null
+          id?: string
+          referee_credit_amount?: number | null
+          referee_id: string
+          referral_code: string
+          referrer_credit_amount?: number | null
+          referrer_id: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credited_at?: string | null
+          first_booking_at?: string | null
+          first_booking_id?: string | null
+          first_booking_service?: string | null
+          id?: string
+          referee_credit_amount?: number | null
+          referee_id?: string
+          referral_code?: string
+          referrer_credit_amount?: number | null
+          referrer_id?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       zivo_revenue: {
         Row: {
           created_at: string
@@ -12967,6 +13366,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      zivo_user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string | null
+          id: string
+          is_featured: boolean | null
+          partner_id: string | null
+          partner_type: string | null
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          partner_id?: string | null
+          partner_type?: string | null
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string | null
+          id?: string
+          is_featured?: boolean | null
+          partner_id?: string | null
+          partner_type?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_badges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zivo_user_preferences: {
         Row: {
@@ -14318,6 +14755,15 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: number
       }
+      generate_referral_code: { Args: never; Returns: string }
+      get_credit_balance: {
+        Args: { p_service?: string; p_user_id: string }
+        Returns: number
+      }
+      get_or_create_referral_code: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
       get_user_security_summary: {
         Args: { p_user_id: string }
@@ -14364,6 +14810,10 @@ export type Database = {
           p_user_id?: string
         }
         Returns: string
+      }
+      process_referral_signup: {
+        Args: { p_referee_id: string; p_referral_code: string }
+        Returns: Json
       }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
