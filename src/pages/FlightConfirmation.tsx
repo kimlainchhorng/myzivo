@@ -374,6 +374,33 @@ const FlightConfirmation = () => {
             </Card>
           )}
 
+          {/* Chargeback Prevention - Support Contact */}
+          <Card className="mb-6 border-primary/30 bg-primary/5">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="w-6 h-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold mb-2">Need Help with Your Booking?</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    For changes, cancellations, or any issues with your booking, please contact ZIVO Support before disputing charges with your bank.
+                  </p>
+                  <div className="flex flex-wrap gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <a href="mailto:support@hizovo.com" className="ml-1 font-medium text-primary hover:underline">
+                        support@hizovo.com
+                      </a>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Booking Reference:</span>
+                      <span className="ml-1 font-mono font-medium">{booking.pnr || booking.booking_reference}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Next Steps */}
           <Card className="mb-6">
             <CardHeader>

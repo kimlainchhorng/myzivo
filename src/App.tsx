@@ -163,6 +163,7 @@ const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
 const FlightsLaunchControl = lazy(() => import("./pages/admin/FlightsLaunchControl"));
 const FlightIncidentLog = lazy(() => import("./pages/admin/FlightIncidentLog"));
 const FlightAnalyticsPage = lazy(() => import("./pages/admin/FlightAnalyticsPage"));
+const FlightRefundsPage = lazy(() => import("./pages/admin/FlightRefundsPage"));
 const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
 const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOfTravelSettings"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
@@ -487,6 +488,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <FlightAnalyticsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Flight Refunds Admin */}
+                <Route
+                  path="/admin/flights/refunds"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FlightRefundsPage />
                     </ProtectedRoute>
                   }
                 />
