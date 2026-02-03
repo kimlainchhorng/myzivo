@@ -164,7 +164,6 @@ const PartnerOverview = lazy(() => import("./pages/partner/Overview"));
 
 // Admin pages - lazy load
 const ABTestingDashboard = lazy(() => import("./pages/admin/ABTestingDashboard"));
-const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
 const ClicksAnalytics = lazy(() => import("./pages/admin/ClicksAnalytics"));
 const TravelAdminDashboard = lazy(() => import("./pages/admin/TravelAdminDashboard"));
 const TravelPartnersPage = lazy(() => import("./pages/admin/TravelPartnersPage"));
