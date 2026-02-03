@@ -2183,3 +2183,167 @@ export const COMMUNICATIONS_COMPLIANCE_FAQ = [
 
 // Helper arrays
 export const COMMUNICATIONS_POLICIES_LIST = Object.values(COMMUNICATIONS_COMPLIANCE_POLICIES);
+
+// ============================================
+// ONGOING COMPLIANCE & OPERATIONS POLICIES (Clauses 147-157)
+// Monitoring, Enforcement, Documentation
+// ============================================
+
+export const ONGOING_COMPLIANCE_POLICIES = {
+  // Clause 147: Compliance Calendar
+  complianceCalendar: {
+    id: "compliance_calendar",
+    title: "Compliance Calendar & Review Schedule",
+    version: "1.0",
+    content: `ZIVO maintains an internal compliance schedule including annual Terms & Policy review, Privacy Policy review, Seller of Travel renewals (where applicable), payment processor review, and insurance partner review. Failure to update policies on schedule does not waive any protections or create liability.`,
+    reviewItems: [
+      "Annual Terms of Service review",
+      "Annual Privacy Policy review",
+      "Seller of Travel renewal (if applicable)",
+      "Payment processor compliance review",
+      "Insurance partner coverage review",
+      "Security and data protection audit",
+    ],
+  },
+
+  // Clause 148: Law Change Disclaimer
+  lawChangeDisclaimer: {
+    id: "law_change_disclaimer",
+    title: "Law Change Disclaimer",
+    version: "1.0",
+    content: `ZIVO may update services, policies, and procedures to comply with new or changing laws, regulations, or industry standards without user consent beyond providing notice as required by law. Continued use of services after such changes constitutes acceptance.`,
+  },
+
+  // Clause 149: Continuous Risk Monitoring
+  riskMonitoring: {
+    id: "risk_monitoring",
+    title: "Continuous Risk Monitoring",
+    version: "1.0",
+    content: `ZIVO may continuously monitor platform activity for fraud, abuse, regulatory risk, and safety incidents. This monitoring is conducted to protect the platform and users, but does not create any duty of care, fiduciary relationship, or additional liability beyond platform obligations.`,
+    monitoringAreas: [
+      "Fraud detection and prevention",
+      "Platform abuse and Terms violations",
+      "Regulatory compliance risk",
+      "Safety incidents and threats",
+      "Financial irregularities",
+      "Identity verification compliance",
+    ],
+  },
+
+  // Clause 150: Partner Compliance Attestation
+  partnerAttestation: {
+    id: "partner_attestation",
+    title: "Partner Compliance Attestation",
+    version: "1.0",
+    content: `ZIVO may require periodic partner confirmation of valid insurance, legal eligibility to provide services, and tax responsibility compliance. ZIVO is not liable for false attestations made by partners. Partners bear sole responsibility for maintaining their legal compliance.`,
+    attestationRequirements: [
+      "Valid and current insurance coverage",
+      "Legal eligibility to provide services",
+      "Tax registration and compliance",
+      "Background check currency (where applicable)",
+      "License and permit validity",
+    ],
+  },
+
+  // Clause 151: Regulatory Complaint Process
+  regulatoryProcess: {
+    id: "regulatory_process",
+    title: "Regulatory Complaint Process",
+    version: "1.0",
+    content: `ZIVO may respond directly to regulators, suspend services during investigations, and restrict accounts during compliance review. Users waive claims related to good-faith compliance actions taken by ZIVO in response to regulatory inquiries or investigations.`,
+    mayTakeActions: [
+      "Respond directly to regulatory inquiries",
+      "Suspend services during active investigations",
+      "Restrict account access during compliance review",
+      "Provide data to regulators as legally required",
+      "Implement immediate safety measures",
+    ],
+  },
+
+  // Clause 152: No Private Right of Action
+  noPrivateAction: {
+    id: "no_private_action",
+    title: "No Private Right of Action",
+    version: "1.0",
+    content: `Policies, compliance measures, internal guidelines, and operational procedures do not create any rights enforceable by users or third parties. Only the Terms of Service and applicable law govern the legal relationship between ZIVO and users.`,
+  },
+
+  // Clause 153: Compliance Record Keeping
+  recordKeeping: {
+    id: "record_keeping",
+    title: "Compliance Record Keeping",
+    version: "1.0",
+    content: `ZIVO maintains records of policy acceptance, disclosures shown, user acknowledgments, and compliance activities. These records may be used for legal defense, regulatory response, arbitration evidence, and platform protection purposes.`,
+    recordTypes: [
+      "Policy acceptance timestamps and versions",
+      "Disclosure presentation logs",
+      "User acknowledgment records",
+      "Transaction and audit trails",
+      "Communication logs",
+      "Compliance verification records",
+    ],
+  },
+
+  // Clause 154: Screenshot & Log Evidence
+  logEvidence: {
+    id: "log_evidence",
+    title: "Screenshot & Log Evidence",
+    version: "1.0",
+    content: `ZIVO may rely on system logs, screenshots, automated records, database entries, and timestamped data as conclusive evidence in disputes, legal proceedings, and regulatory matters. Users agree that such records are admissible and authoritative.`,
+  },
+
+  // Clause 155: Internal Legal Escalation
+  legalEscalation: {
+    id: "legal_escalation",
+    title: "Internal Legal Escalation",
+    version: "1.0",
+    content: `Only authorized officers and designated legal representatives may respond to lawsuits, regulatory inquiries, or issue official legal statements on behalf of ZIVO. No user communication with support staff or other employees creates any legal obligation or admission.`,
+  },
+
+  // Clause 156: No Waiver by Silence
+  noWaiverSilence: {
+    id: "no_waiver_silence",
+    title: "No Waiver by Silence",
+    version: "1.0",
+    content: `Failure to enforce any provision, policy, or right does not waive ZIVO's right to enforce it later. Delayed enforcement does not constitute acceptance of violations. ZIVO reserves all rights to enforce all terms at any time.`,
+  },
+
+  // Clause 157: Survival of Operational Protections
+  operationalSurvival: {
+    id: "operational_survival",
+    title: "Survival of Operational Protections",
+    version: "1.0",
+    content: `All compliance, monitoring, enforcement, and operational protections survive platform launch, business growth, litigation, regulatory review, corporate changes, and any termination of services. These protections are perpetual and irrevocable.`,
+  },
+};
+
+// Ongoing Compliance FAQ
+export const ONGOING_COMPLIANCE_FAQ = [
+  {
+    question: "Does ZIVO continuously monitor compliance?",
+    answer: "Yes, to protect the platform and comply with applicable law. Monitoring does not create additional liability.",
+  },
+  {
+    question: "Can ZIVO change rules after launch?",
+    answer: "Yes, to comply with legal and business requirements. Users will be notified of material changes.",
+  },
+  {
+    question: "Does compliance monitoring create liability?",
+    answer: "No. Monitoring is a protective measure and does not create a duty of care or fiduciary relationship.",
+  },
+  {
+    question: "Can ZIVO suspend services during investigations?",
+    answer: "Yes, without liability. ZIVO may suspend services during regulatory or internal investigations.",
+  },
+  {
+    question: "What records does ZIVO keep for compliance?",
+    answer: "Policy acceptance, disclosures shown, acknowledgments, transaction logs, and compliance verification records.",
+  },
+  {
+    question: "Can ZIVO enforce rules it didn't enforce before?",
+    answer: "Yes. Failure to enforce any provision does not waive the right to enforce it later.",
+  },
+];
+
+// Helper arrays
+export const ONGOING_COMPLIANCE_POLICIES_LIST = Object.values(ONGOING_COMPLIANCE_POLICIES);
