@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,8 @@ import {
   TrendingDown,
   Navigation,
   Check,
-  ExternalLink
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 interface NearbyAirport {
   id: string;
@@ -110,6 +109,7 @@ export const NearbyAirports = ({
   destination = "London",
   mainPrice = 450
 }: NearbyAirportsProps) => {
+  const navigate = useNavigate();
   const [maxDistance, setMaxDistance] = useState(100);
   const [sortBy, setSortBy] = useState<'price' | 'distance' | 'savings'>('savings');
   const [expandedAirport, setExpandedAirport] = useState<string | null>(null);
@@ -165,10 +165,17 @@ export const NearbyAirports = ({
               <Button 
                 size="sm" 
                 className="bg-emerald-500 hover:bg-emerald-600 gap-1"
-                onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+                onClick={() => {
+                  // OTA Mode: Navigate to internal search with cheapest airport
+                  const params = new URLSearchParams({
+                    origin: cheapestAirport.code,
+                    dest: destination,
+                  });
+                  navigate(`/flights/results?${params.toString()}`);
+                }}
               >
                 View Deal
-                <ExternalLink className="w-3 h-3" />
+                <ArrowRight className="w-3 h-3" />
               </Button>
             </div>
           </div>
@@ -346,12 +353,17 @@ export const NearbyAirports = ({
                         className="flex-1 gap-2"
                         onClick={() => {
                           setSelectedAirport(airport.id);
-                          window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
+                          // OTA Mode: Navigate to internal search with this airport
+                          const params = new URLSearchParams({
+                            origin: airport.code,
+                            dest: destination,
+                          });
+                          navigate(`/flights/results?${params.toString()}`);
                         }}
                       >
                         <Plane className="w-4 h-4" />
                         Search Flights
-                        <ExternalLink className="w-4 h-4" />
+                        <ArrowRight className="w-4 h-4" />
                       </Button>
                       <Button variant="outline">
                         <Navigation className="w-4 h-4 mr-2" />

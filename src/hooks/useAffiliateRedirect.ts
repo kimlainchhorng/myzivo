@@ -3,6 +3,9 @@
  * 
  * Provides easy-to-use affiliate redirect functions for components
  * Handles tracking and deep link generation automatically
+ * 
+ * NOTE: Flights are in OTA-only mode - useFlightRedirect returns no-op functions.
+ * ZIVO is the Merchant of Record for all flight bookings.
  */
 
 import { useCallback } from 'react';
@@ -19,6 +22,7 @@ import type {
   CarDeepLinkParams,
   ActivityDeepLinkParams,
 } from '@/config/affiliateLinks';
+import { isFlightsOTAMode } from '@/config/flightBookingMode';
 
 type CTAType = 'top_cta' | 'result_card' | 'sticky_cta' | 'compare_prices' | 'no_results_fallback' | 'partner_selector' | 'exit_intent' | 'cross_sell' | 'popular_route' | 'trending_deal';
 
@@ -77,7 +81,28 @@ export function useAffiliateRedirect(options: UseAffiliateRedirectOptions) {
 /**
  * Shorthand hooks for specific services
  */
+
+/**
+ * @deprecated FLIGHTS ARE IN OTA-ONLY MODE
+ * This hook returns no-op functions. Use internal ZIVO booking flow instead.
+ * ZIVO is the Merchant of Record for all flight bookings via Duffel API.
+ */
 export function useFlightRedirect(source: string, ctaType?: CTAType) {
+  // OTA MODE: Return no-op functions for flights
+  if (isFlightsOTAMode()) {
+    return {
+      redirectWithParams: () => {
+        console.warn('[OTA_MODE] useFlightRedirect is disabled. Use internal booking flow.');
+        return null;
+      },
+      redirectSimple: () => {
+        console.warn('[OTA_MODE] useFlightRedirect is disabled. Use internal booking flow.');
+        return null;
+      },
+    };
+  }
+
+  // Legacy code - never executes in OTA mode
   const { redirectToFlights, redirectSimple } = useAffiliateRedirect({ source, ctaType });
   
   return {

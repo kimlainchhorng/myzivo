@@ -174,51 +174,13 @@ export default function FlightSearchFormPro({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Read from env with fallbacks
-  const WL_BASE_URL = import.meta.env.VITE_AVIASALES_WL_BASE_URL || "https://search.jetradar.com/flights";
-  const MARKER = import.meta.env.VITE_TRAVELPAYOUTS_MARKER || "700031";
-
-  // Build white label URL for live results
-  const buildWhitelabelUrl = (fromCode: string, toCode: string) => {
-    const cabinMap: Record<string, string> = {
-      'economy': 'Y',
-      'premium': 'W',
-      'business': 'C',
-      'first': 'F'
-    };
-    
-    const urlParams = new URLSearchParams({
-      origin_iata: fromCode.toUpperCase(),
-      destination_iata: toCode.toUpperCase(),
-      depart_date: departDate ? format(departDate, "yyyy-MM-dd") : "",
-      adults: String(passengers),
-      trip_class: cabinMap[cabin] || 'Y',
-      marker: MARKER,
-      with_request: 'true'
-    });
-    
-    if (tripType === "roundtrip" && returnDate) {
-      urlParams.set('return_date', format(returnDate, "yyyy-MM-dd"));
-    }
-    
-    return `${WL_BASE_URL}?${urlParams.toString()}`;
-  };
-
-  // State for debug URL
-  const [debugUrl, setDebugUrl] = useState<string>("");
-
-  // Handle search - navigate to results page with API integration
+  // Handle search - navigate to results page with Duffel API (OTA mode)
   const handleSearch = () => {
     if (!validate()) return;
 
     // Extract IATA codes
     const fromCode = (fromOption?.value || fromDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
     const toCode = (toOption?.value || toDisplay.match(/\(([A-Z]{3})\)/)?.[1] || "").toUpperCase();
-
-    // Build white label URL for debug display
-    const whitelabelUrl = buildWhitelabelUrl(fromCode, toCode);
-    setDebugUrl(whitelabelUrl);
-    console.log("[FlightSearch] Built white-label URL:", whitelabelUrl);
 
     // Build results page URL params
     const resultsParams = new URLSearchParams({
@@ -232,19 +194,12 @@ export default function FlightSearchFormPro({
       resultsParams.set("return", format(returnDate, "yyyy-MM-dd"));
     }
 
-    // Navigate to results page with API integration and fallback
+    // Navigate to results page - uses Duffel API (OTA mode, no affiliate)
     navigate(`/flights/results?${resultsParams.toString()}`);
     
     // Call optional callback with search params for tracking
     if (onSearch) {
       onSearch(resultsParams);
-    }
-  };
-
-  // Direct open in new tab (for debug link)
-  const handleOpenDirect = () => {
-    if (debugUrl) {
-      window.open(debugUrl, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -643,20 +598,6 @@ export default function FlightSearchFormPro({
         Payment completed securely on ZIVO. Tickets issued by licensed partners.
       </p>
 
-      {/* Debug: Show built URL for testing */}
-      {debugUrl && (
-        <div className="mt-3 p-2 bg-muted/50 rounded-lg border border-border/50">
-          <p className="text-[10px] text-muted-foreground mb-1">Debug URL:</p>
-          <a 
-            href={debugUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-xs text-sky-500 hover:underline break-all"
-          >
-            Open live results directly →
-          </a>
-        </div>
-      )}
 
     </div>
   );
