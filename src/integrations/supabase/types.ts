@@ -1075,6 +1075,7 @@ export type Database = {
           bio: string | null
           city: string | null
           created_at: string | null
+          custom_commission_percent: number | null
           date_of_birth: string | null
           documents_verified: boolean | null
           email: string | null
@@ -1108,6 +1109,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string | null
+          custom_commission_percent?: number | null
           date_of_birth?: string | null
           documents_verified?: boolean | null
           email?: string | null
@@ -1141,6 +1143,7 @@ export type Database = {
           bio?: string | null
           city?: string | null
           created_at?: string | null
+          custom_commission_percent?: number | null
           date_of_birth?: string | null
           documents_verified?: boolean | null
           email?: string | null
@@ -5629,6 +5632,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          cleaning_fee: number | null
           created_at: string | null
           daily_rate: number
           damage_report_id: string | null
@@ -5638,12 +5642,17 @@ export type Database = {
           deposit_released_at: string | null
           deposit_status: string | null
           deposit_stripe_payment_intent_id: string | null
+          discount_amount: number | null
+          discount_type: string | null
           fuel_level_end: string | null
           fuel_level_start: string | null
           id: string
           insurance_accepted: boolean | null
           insurance_fee: number | null
+          is_long_term: boolean | null
+          late_fee: number | null
           mileage_end: number | null
+          mileage_fee: number | null
           mileage_start: number | null
           notes: string | null
           owner_id: string
@@ -5655,6 +5664,7 @@ export type Database = {
           payout_held_at: string | null
           payout_hold_reason: string | null
           payout_id: string | null
+          payout_schedule: string | null
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_date: string
@@ -5691,6 +5701,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cleaning_fee?: number | null
           created_at?: string | null
           daily_rate: number
           damage_report_id?: string | null
@@ -5700,12 +5711,17 @@ export type Database = {
           deposit_released_at?: string | null
           deposit_status?: string | null
           deposit_stripe_payment_intent_id?: string | null
+          discount_amount?: number | null
+          discount_type?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
           insurance_accepted?: boolean | null
           insurance_fee?: number | null
+          is_long_term?: boolean | null
+          late_fee?: number | null
           mileage_end?: number | null
+          mileage_fee?: number | null
           mileage_start?: number | null
           notes?: string | null
           owner_id: string
@@ -5717,6 +5733,7 @@ export type Database = {
           payout_held_at?: string | null
           payout_hold_reason?: string | null
           payout_id?: string | null
+          payout_schedule?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date: string
@@ -5753,6 +5770,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cleaning_fee?: number | null
           created_at?: string | null
           daily_rate?: number
           damage_report_id?: string | null
@@ -5762,12 +5780,17 @@ export type Database = {
           deposit_released_at?: string | null
           deposit_status?: string | null
           deposit_stripe_payment_intent_id?: string | null
+          discount_amount?: number | null
+          discount_type?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
           insurance_accepted?: boolean | null
           insurance_fee?: number | null
+          is_long_term?: boolean | null
+          late_fee?: number | null
           mileage_end?: number | null
+          mileage_fee?: number | null
           mileage_start?: number | null
           notes?: string | null
           owner_id?: string
@@ -5779,6 +5802,7 @@ export type Database = {
           payout_held_at?: string | null
           payout_hold_reason?: string | null
           payout_id?: string | null
+          payout_schedule?: string | null
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date?: string
@@ -6589,21 +6613,29 @@ export type Database = {
           approval_status:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          base_daily_rate: number | null
+          boost_until: string | null
           cancellation_policy: string | null
           category: Database["public"]["Enums"]["p2p_vehicle_category"]
+          cleaning_fee: number | null
           color: string | null
           created_at: string | null
+          custom_commission_percent: number | null
           daily_rate: number
           deposit_amount: number | null
           description: string | null
           doors: number | null
+          extra_mileage_fee: number | null
           features: Json | null
           fuel_type: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id: string
           images: Json | null
+          included_miles_per_day: number | null
           instant_book: boolean | null
           is_available: boolean | null
+          is_featured: boolean | null
           lat: number | null
+          late_return_fee_per_hour: number | null
           license_plate: string | null
           lng: number | null
           location_address: string | null
@@ -6611,10 +6643,13 @@ export type Database = {
           location_state: string | null
           location_zip: string | null
           make: string
+          max_rental_days: number | null
           max_trip_days: number | null
           mileage: number | null
+          min_rental_days: number | null
           min_trip_days: number | null
           model: string
+          monthly_discount_percent: number | null
           monthly_rate: number | null
           owner_id: string
           rating: number | null
@@ -6628,6 +6663,8 @@ export type Database = {
           trim: string | null
           updated_at: string | null
           vin: string | null
+          weekend_rate: number | null
+          weekly_discount_percent: number | null
           weekly_rate: number | null
           year: number
         }
@@ -6635,21 +6672,29 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          base_daily_rate?: number | null
+          boost_until?: string | null
           cancellation_policy?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
+          cleaning_fee?: number | null
           color?: string | null
           created_at?: string | null
+          custom_commission_percent?: number | null
           daily_rate: number
           deposit_amount?: number | null
           description?: string | null
           doors?: number | null
+          extra_mileage_fee?: number | null
           features?: Json | null
           fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id?: string
           images?: Json | null
+          included_miles_per_day?: number | null
           instant_book?: boolean | null
           is_available?: boolean | null
+          is_featured?: boolean | null
           lat?: number | null
+          late_return_fee_per_hour?: number | null
           license_plate?: string | null
           lng?: number | null
           location_address?: string | null
@@ -6657,10 +6702,13 @@ export type Database = {
           location_state?: string | null
           location_zip?: string | null
           make: string
+          max_rental_days?: number | null
           max_trip_days?: number | null
           mileage?: number | null
+          min_rental_days?: number | null
           min_trip_days?: number | null
           model: string
+          monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id: string
           rating?: number | null
@@ -6674,6 +6722,8 @@ export type Database = {
           trim?: string | null
           updated_at?: string | null
           vin?: string | null
+          weekend_rate?: number | null
+          weekly_discount_percent?: number | null
           weekly_rate?: number | null
           year: number
         }
@@ -6681,21 +6731,29 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          base_daily_rate?: number | null
+          boost_until?: string | null
           cancellation_policy?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
+          cleaning_fee?: number | null
           color?: string | null
           created_at?: string | null
+          custom_commission_percent?: number | null
           daily_rate?: number
           deposit_amount?: number | null
           description?: string | null
           doors?: number | null
+          extra_mileage_fee?: number | null
           features?: Json | null
           fuel_type?: Database["public"]["Enums"]["p2p_fuel_type"] | null
           id?: string
           images?: Json | null
+          included_miles_per_day?: number | null
           instant_book?: boolean | null
           is_available?: boolean | null
+          is_featured?: boolean | null
           lat?: number | null
+          late_return_fee_per_hour?: number | null
           license_plate?: string | null
           lng?: number | null
           location_address?: string | null
@@ -6703,10 +6761,13 @@ export type Database = {
           location_state?: string | null
           location_zip?: string | null
           make?: string
+          max_rental_days?: number | null
           max_trip_days?: number | null
           mileage?: number | null
+          min_rental_days?: number | null
           min_trip_days?: number | null
           model?: string
+          monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id?: string
           rating?: number | null
@@ -6720,6 +6781,8 @@ export type Database = {
           trim?: string | null
           updated_at?: string | null
           vin?: string | null
+          weekend_rate?: number | null
+          weekly_discount_percent?: number | null
           weekly_rate?: number | null
           year?: number
         }
@@ -10652,6 +10715,50 @@ export type Database = {
           },
         ]
       }
+      vehicle_seasonal_pricing: {
+        Row: {
+          created_at: string
+          daily_rate: number
+          end_date: string
+          id: string
+          is_active: boolean | null
+          name: string
+          start_date: string
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_rate: number
+          end_date: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_date: string
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_rate?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_date?: string
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_seasonal_pricing_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicle_service_logs: {
         Row: {
           cost: number
@@ -10726,6 +10833,56 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_stats: {
+        Row: {
+          average_rating: number | null
+          booking_rate: number | null
+          created_at: string
+          id: string
+          last_booked_at: string | null
+          occupancy_rate: number | null
+          response_rate: number | null
+          total_bookings: number | null
+          total_revenue: number | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          average_rating?: number | null
+          booking_rate?: number | null
+          created_at?: string
+          id?: string
+          last_booked_at?: string | null
+          occupancy_rate?: number | null
+          response_rate?: number | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          average_rating?: number | null
+          booking_rate?: number | null
+          created_at?: string
+          id?: string
+          last_booked_at?: string | null
+          occupancy_rate?: number | null
+          response_rate?: number | null
+          total_bookings?: number | null
+          total_revenue?: number | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_stats_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: true
+            referencedRelation: "p2p_vehicles"
             referencedColumns: ["id"]
           },
         ]

@@ -108,8 +108,9 @@ const HowToRent = lazy(() => import("./pages/HowToRent"));
 // Admin car rental settings
 const CarRentalSettingsPage = lazy(() => import("./pages/admin/CarRentalSettingsPage"));
 const CarDamageClaimsPage = lazy(() => import("./pages/admin/CarDamageClaimsPage"));
+const CarRevenueOverviewPage = lazy(() => import("./pages/admin/CarRevenueOverviewPage"));
 // Owner Earnings
-const OwnerEarnings = lazy(() => import("./pages/owner/OwnerEarnings"));
+const OwnerEarningsPage = lazy(() => import("./pages/owner/OwnerEarningsPage"));
 // Renter Verification pages
 const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
 const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
@@ -329,7 +330,7 @@ const App = () => (
                 <Route path="/owner/cars/:id/edit" element={<ProtectedRoute><EditVehicle /></ProtectedRoute>} />
                 <Route path="/owner/cars/:id/availability" element={<ProtectedRoute><VehicleAvailability /></ProtectedRoute>} />
                 <Route path="/owner/bookings" element={<ProtectedRoute><OwnerBookings /></ProtectedRoute>} />
-                <Route path="/owner/earnings" element={<ProtectedRoute><OwnerEarnings /></ProtectedRoute>} />
+                <Route path="/owner/earnings" element={<ProtectedRoute><OwnerEarningsPage /></ProtectedRoute>} />
                 <Route path="/owner/payouts" element={<ProtectedRoute><OwnerPayouts /></ProtectedRoute>} />
                 <Route path="/owner/stripe-connect/return" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
                 <Route path="/owner/stripe-connect/refresh" element={<ProtectedRoute><StripeConnectReturn /></ProtectedRoute>} />
@@ -540,6 +541,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <CarDamageClaimsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Car Revenue Overview */}
+                <Route
+                  path="/admin/cars/revenue"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <CarRevenueOverviewPage />
                     </ProtectedRoute>
                   }
                 />
