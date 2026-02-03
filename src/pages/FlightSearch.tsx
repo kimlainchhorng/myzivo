@@ -25,8 +25,8 @@ const FlightSearch = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="ZIVO Flights – Search & Compare Flights Worldwide"
-        description="Search and compare flights from 500+ airlines worldwide. Find great options and book with trusted travel partners. No booking fees."
+        title="ZIVO Flights – Search Flights Worldwide"
+        description="Search real-time flight prices from global airlines. Book securely on ZIVO with instant e-tickets. No booking fees."
       />
       <OGImageMeta pageType="flights" />
       <Header />

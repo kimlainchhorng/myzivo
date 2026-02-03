@@ -175,13 +175,13 @@ const FlightLanding = () => {
                 }
               </h2>
               <p className="text-muted-foreground">
-                ZIVO helps travelers find the best flight deals by searching across 500+ airlines and travel sites in real-time. 
-                Whether you're looking for a last-minute getaway or planning ahead, our comparison engine finds you the lowest prices. 
-                We don't sell tickets directly – instead, we redirect you to trusted partners where you can complete your booking securely.
+                ZIVO helps travelers find the best flight deals by connecting directly to airline ticketing systems. 
+                Search real-time prices, view final fares, and book securely on ZIVO. 
+                Tickets are issued instantly after payment by our licensed ticketing partners.
               </p>
               <p className="text-xs text-muted-foreground mt-4">
-                * Prices are indicative and may change. Final price is shown on partner site. 
-                ZIVO may earn a commission when users book through partner links.
+                ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+                Tickets are issued by authorized partners under airline rules.
               </p>
             </div>
           </div>

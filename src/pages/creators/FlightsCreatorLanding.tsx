@@ -35,13 +35,13 @@ export default function FlightsCreatorLanding() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="Search & Compare Flights – ZIVO"
-        description="Compare flight prices from trusted partners before you book."
+        title="Search Flights – ZIVO"
+        description="Search flight prices from global airlines. Book securely on ZIVO."
       />
       
       <CreatorLandingHero
-        headline="Search & Compare Flights"
-        subheadline="Compare options from trusted partners before you book"
+        headline="Search Flights"
+        subheadline="Real-time prices from global airlines. Secure ZIVO checkout."
         icon={<Plane className="w-7 h-7 text-white" />}
         accentColor="sky"
       >
@@ -76,7 +76,7 @@ export default function FlightsCreatorLanding() {
           </Button>
           
           <p className="text-xs text-muted-foreground text-center">
-            You'll be redirected to partner sites to book
+            Book securely on ZIVO · Instant e-tickets
           </p>
         </div>
       </CreatorLandingHero>

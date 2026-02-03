@@ -12,9 +12,9 @@
 export const AD_LANDING_PAGES = {
   flights: {
     url: '/lp/flights',
-    headline: 'Search & Compare Flights',
+    headline: 'Search Flights',
     cta: 'Search Flights',
-    disclaimer: 'Hizivo does not issue airline tickets. Flight bookings are completed with licensed airline partners.',
+    disclaimer: 'ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.',
     hasRealImages: true,
     hasPartnerDisclosure: true,
     noIndex: true, // Prevent organic indexing
@@ -87,18 +87,16 @@ export const GOOGLE_ADS_CONFIG = {
     },
   },
   forbiddenClaims: [
-    'We sell airline tickets',
     'Best price guarantee',
     'Lowest price guaranteed',
-    'Book directly with us',
     'We are the airline',
-    'Official booking',
+    'Official airline booking',
   ],
   requiredClaims: [
-    'Compare options',
-    'Search and compare',
-    'Book with partners',
-    'Secure partner checkout',
+    'Search flights',
+    'Book on ZIVO',
+    'Secure ZIVO checkout',
+    'Licensed ticketing providers',
   ],
 };
 

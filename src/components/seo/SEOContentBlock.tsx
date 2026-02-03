@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Search, ExternalLink, ArrowRight } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -71,9 +71,9 @@ function generateContent(serviceType: 'flights' | 'hotels' | 'cars', destination
         };
       }
       return {
-        h1: `Search & Compare Flights Worldwide`,
-        intro: `Compare flight prices from 500+ airlines and travel sites. Find the best options for your trip and book with trusted travel partners. No booking fees.`,
-        details: `ZIVO is a flight search and comparison platform. We help travelers find competitive airfares by searching multiple sources simultaneously. When you find a flight you like, you'll be redirected to our partner's website to complete your booking.`,
+        h1: `Search Flights Worldwide`,
+        intro: `Search real-time flight prices from global airlines. Book securely on ZIVO with instant e-tickets.`,
+        details: `ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. We help travelers find competitive airfares by connecting directly to airline ticketing systems. Book and pay securely on ZIVO — tickets are issued instantly after payment.`,
       };
 
     case 'hotels':
@@ -134,14 +134,14 @@ export default function SEOContentBlock({
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
           <Badge variant="outline" className={cn("gap-1", config.borderColor)}>
             <Search className={cn("w-3 h-3", config.color)} />
-            Search & Compare
+            Search Flights
           </Badge>
           <Badge variant="outline" className="border-emerald-500/20">
             <span className="text-emerald-500">✓</span> No Booking Fees
           </Badge>
           <Badge variant="outline" className="border-border/50">
-            <ExternalLink className="w-3 h-3 mr-1" />
-            Secure Partner Booking
+            <ArrowRight className="w-3 h-3 mr-1" />
+            Secure ZIVO Checkout
           </Badge>
         </div>
         
@@ -177,10 +177,10 @@ export default function SEOContentBlock({
           </div>
         </div>
         
-        {/* Affiliate Disclosure */}
+        {/* Disclosure */}
         <p className="text-xs text-muted-foreground text-center mt-4">
-          ZIVO may earn a commission when you book through partner links. 
-          All bookings are completed on partner sites.
+          ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+          Tickets are issued by authorized partners under airline rules.
         </p>
       </div>
     </div>

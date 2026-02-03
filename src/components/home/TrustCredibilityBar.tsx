@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 const trustBadges = [
   { icon: Shield, label: "Secure Booking", description: "256-bit encryption" },
   { icon: CheckCircle, label: "No Booking Fees", description: "On ZIVO" },
-  { icon: Globe, label: "Trusted Partners", description: "500+ airlines" },
+  { icon: Globe, label: "Licensed Fulfillment", description: "Global coverage" },
   { icon: Clock, label: "24/7 Support", description: "Always here" },
 ];
 

@@ -11,12 +11,12 @@ import { HelpCircle } from "lucide-react";
 
 const faqs = [
   {
-    question: "How does ZIVO find cheap flights?",
-    answer: "ZIVO searches across 500+ airlines and travel sites in real-time to compare prices. Our algorithms identify the best deals, including hidden city fares and error fares, to help you save up to 60% on airfare."
+    question: "How does ZIVO find flight prices?",
+    answer: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices."
   },
   {
     question: "Does ZIVO sell tickets directly?",
-    answer: "No, ZIVO is a flight comparison platform. We help you find and compare the best prices, then redirect you to the airline or booking site of your choice to complete your purchase. This ensures you get the best available rate."
+    answer: "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules."
   },
   {
     question: "How do price alerts work?",
@@ -32,15 +32,15 @@ const faqs = [
   },
   {
     question: "Are there hidden fees?",
-    answer: "We display indicative prices including taxes and basic fees. However, airlines may charge extra for checked bags, seat selection, or other add-ons. The final price is always shown on the partner's booking page."
+    answer: "No. Prices shown on ZIVO are final and confirmed before payment. Airline extras (bags, seats) are shown separately."
   },
   {
     question: "Does ZIVO charge booking fees?",
-    answer: "No, ZIVO does not charge any booking fees. We earn a small commission from our partners when you book through our links, but this doesn't affect the price you pay."
+    answer: "No, ZIVO does not charge any booking fees on flights."
   },
   {
     question: "Can I trust the prices shown?",
-    answer: "Prices shown are indicative and sourced in real-time from airlines and travel sites. The final price is confirmed on the booking partner's website. We recommend booking quickly as prices can change."
+    answer: "Yes. Prices shown on ZIVO are final and confirmed before payment."
   },
 ];
 

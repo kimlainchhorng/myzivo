@@ -19,7 +19,7 @@ interface DestinationHeroProps {
 const serviceConfig = {
   flights: {
     icon: Plane,
-    badge: "Search & Compare Flights",
+    badge: "Search Flights",
     color: "text-flights",
     bgColor: "bg-flights/10",
     borderColor: "border-flights/20",

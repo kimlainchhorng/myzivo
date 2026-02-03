@@ -12,8 +12,8 @@ export type ServiceType = "flights" | "hotels" | "cars";
 
 const heroContent = {
   flights: {
-    headline: "Search & Compare Flights Worldwide",
-    subheadline: "Compare 500+ airlines. No hidden fees. Book with confidence.",
+    headline: "Search Flights Worldwide",
+    subheadline: "Real-time prices from global airlines. Secure ZIVO checkout.",
     gradient: "from-slate-950 via-blue-950/90 to-slate-950",
     accentGlow: "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(56, 189, 248, 0.15), transparent 50%)",
     decorativeEmoji: ["✈️", "🌍", "🛫", "🌎", "🛬"],

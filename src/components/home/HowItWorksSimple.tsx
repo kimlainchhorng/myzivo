@@ -4,22 +4,22 @@ import { cn } from "@/lib/utils";
 const steps = [
   {
     step: 1,
-    title: "Search & compare prices",
-    description: "Enter your travel details and compare options from 500+ airlines",
+    title: "Search flights",
+    description: "Browse real-time flight options from global airlines.",
     icon: Search,
     color: "from-sky-500 to-blue-600",
   },
   {
     step: 2,
-    title: "Choose the best option",
-    description: "Review prices, times, baggage, and select your preferred deal",
+    title: "Select your flight",
+    description: "View final prices, baggage, and fare rules before booking.",
     icon: GitCompare,
     color: "from-violet-500 to-purple-600",
   },
   {
     step: 3,
-    title: "Complete booking securely",
-    description: "Book securely with our licensed travel partners",
+    title: "Book on ZIVO",
+    description: "Pay securely on ZIVO and receive your e-ticket instantly.",
     icon: ShieldCheck,
     color: "from-emerald-500 to-teal-600",
   },
@@ -78,7 +78,7 @@ export default function HowItWorksSimple() {
         <div className="text-center max-w-lg mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
             <ShieldCheck className="w-4 h-4" />
-            We connect you to licensed partners for secure checkout
+            Tickets issued by licensed airline ticketing providers.
           </div>
         </div>
       </div>

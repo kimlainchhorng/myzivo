@@ -45,7 +45,6 @@ const footerLinks = {
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Cookie Policy", href: "/cookies" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
-    { name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
   ],
 };
 
@@ -123,7 +122,7 @@ const Footer = () => {
                 <ZivoLogo size="md" />
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0 mb-4">
-                Search & compare flights, hotels, and car rentals from trusted partners.
+                Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment.
               </p>
               
               {/* Business Info Block */}

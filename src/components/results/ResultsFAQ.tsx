@@ -51,21 +51,19 @@ const faqContent: Record<ResultsServiceType, { question: string; answer: React.R
       question: "How does ZIVO find flight prices?",
       answer: (
         <>
-          ZIVO searches across multiple trusted airline partners and travel agencies to find you the best flight deals. 
-          We compare prices from 500+ sources so you don't have to check each site individually.
+          ZIVO connects directly to airline ticketing systems to display real-time availability and final prices.
         </>
       ),
-      plainAnswer: "ZIVO searches across multiple trusted airline partners and travel agencies to find you the best flight deals. We compare prices from 500+ sources so you don't have to check each site individually.",
+      plainAnswer: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices.",
     },
     {
       question: "Are prices final?",
       answer: (
         <>
-          Prices shown are indicative and may change. The final price will be confirmed when you complete your booking 
-          on our partner's website. We recommend booking quickly as prices can fluctuate based on demand.
+          Yes. Prices shown on ZIVO are final and confirmed before payment.
         </>
       ),
-      plainAnswer: "Prices shown are indicative and may change. The final price will be confirmed when you complete your booking on our partner's website. We recommend booking quickly as prices can fluctuate based on demand.",
+      plainAnswer: "Yes. Prices shown on ZIVO are final and confirmed before payment.",
     },
     {
       question: "Can I change my dates?",
@@ -81,21 +79,19 @@ const faqContent: Record<ResultsServiceType, { question: string; answer: React.R
       question: "Do I book on ZIVO or another site?",
       answer: (
         <>
-          ZIVO is a search and comparison platform. When you click "View Deal," you'll be redirected to our partner's 
-          website (such as airline sites or travel agencies) where you'll complete your booking securely.
+          You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules.
         </>
       ),
-      plainAnswer: "ZIVO is a search and comparison platform. When you click View Deal, you'll be redirected to our partner's website (such as airline sites or travel agencies) where you'll complete your booking securely.",
+      plainAnswer: "You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules.",
     },
     {
       question: "Is my payment secure?",
       answer: (
         <>
-          All payments are processed securely on our partner's websites. ZIVO never handles your payment information. 
-          Our partners use industry-standard encryption to protect your data.
+          All payments are processed securely on ZIVO using bank-grade encryption. Your payment data is protected.
         </>
       ),
-      plainAnswer: "All payments are processed securely on our partner's websites. ZIVO never handles your payment information. Our partners use industry-standard encryption to protect your data.",
+      plainAnswer: "All payments are processed securely on ZIVO using bank-grade encryption. Your payment data is protected.",
     },
     {
       question: "Need help with your trip?",

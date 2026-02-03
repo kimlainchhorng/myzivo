@@ -200,11 +200,11 @@ export default function TrustSection({ service, className = '' }: TrustSectionPr
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5" />
-              <span>Secure Search</span>
+              <span>Secure ZIVO Checkout</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Award className="w-3.5 h-3.5" />
-              <span>Trusted Partners</span>
+              <span>Licensed Ticketing Partners</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
@@ -212,7 +212,7 @@ export default function TrustSection({ service, className = '' }: TrustSectionPr
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-3 max-w-2xl mx-auto">
-            ZIVO is a search and comparison platform. All bookings are completed directly with our trusted travel partners.
+            ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets issued by authorized partners.
           </p>
         </div>
       </div>
