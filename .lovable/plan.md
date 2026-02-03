@@ -1,198 +1,268 @@
 
-# ZIVO Flights OTA Conversion - Remove Affiliate Flow
 
-## Executive Summary
+# ZIVO Flights Integration - Phase 2: Data & Admin Completion
 
-Convert ZIVO Flights from an affiliate/meta-search model to a **full OTA (Online Travel Agency)** where ZIVO is the Merchant of Record. This involves removing all affiliate language, partner redirect notices, "indicative pricing" disclaimers, and updating UI to reflect direct ZIVO booking.
+## Summary
 
----
-
-## Current Issues Identified
-
-### Components Still Using Affiliate Patterns
-
-| File | Issue |
-|------|-------|
-| `FlightResultCard.tsx` | Says "Indicative price. Final price confirmed on partner checkout." + ExternalLink icon + "Hizovo does not issue tickets" |
-| `AffiliateNotice.tsx` | Entire file is affiliate-focused: "View Deal will redirect you to partner", "Hizivo does not issue airline tickets" |
-| `RedirectNotice` | Shows on FlightResults page, telling users about partner redirect |
-| `AffiliateDisclaimer` | Footer component about commissions and partner bookings |
-| `TravelFAQ.tsx` | Flights FAQs describe affiliate model: "click View Deal to be redirected to partner" |
-| `TrendingDealsSection.tsx` | Uses `trackAffiliateClick`, opens external `window.open` |
-| `HowBookingWorks.tsx` | Step 3 says "Book securely with our airline partner" |
-| `TrustSignals.tsx` | Says "Secure booking on partner sites", "Partner site redirect" |
-| `MyTripsDashboard.tsx` | Still uses MOCK_TRIPS, not connected to real `flight_bookings` |
-| FlightResults.tsx | Imports/renders `RedirectNotice` and `AffiliateDisclaimer` |
-
-### Compliance Configs (Already MoR - Good)
-
-- `flightCompliance.ts` - Uses MoR language, no "indicative" for Duffel
-- `flightMoRCompliance.ts` - Correct seller of travel text
+Complete the remaining OTA integration tasks: connect My Trips Dashboard to real booking data, enhance Admin Panel with ticketing controls, update TrendingDealsSection for OTA model, and clean up legacy branding.
 
 ---
 
-## Implementation Plan
-
-### Phase 1: FlightResultCard.tsx - Remove Affiliate Elements
-
-**Current Issues:**
-- Line 3-4: Comment says "Meta-search affiliate card: Indicative pricing"
-- Line 239-240: "Estimated" label for non-live prices
-- Line 257-259: "Indicative price. Final price confirmed on partner checkout."
-- Line 277: ExternalLink icon in button
-- Line 275-276: "Continue to secure booking" implies external
-- Line 281-283: "Powered by licensed travel partners · Final price confirmed before payment"
-- Line 289-291: "Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners."
-
-**Changes:**
-- Update file comment to "ZIVO OTA Flight Card - Direct booking"
-- Change price label from "Estimated" to "From" for all prices (Duffel = exact)
-- Remove indicative price disclaimer text
-- Replace ExternalLink icon with ArrowRight (internal navigation)
-- Change button text to "Book on ZIVO"
-- Update footer to MoR language: "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers."
-
----
-
-### Phase 2: Remove Affiliate Components from FlightResults
-
-**File: `FlightResults.tsx`**
-
-Remove these imports/usages:
-- Line 49-50: `RedirectNotice, AffiliateDisclaimer`
-- Line 25: `trackPageView` (affiliate tracking)
-- Line 533-536: `<RedirectNotice service="flights" />` render
-- Line 599-600: `<AffiliateDisclaimer />` render
-- Line 565-570: `TrendingDealsSection` (uses affiliate tracking)
-
-Replace with:
-- Flights-specific MoR disclaimer component
-- Remove or update TrendingDeals to use internal navigation
-
----
-
-### Phase 3: Create FlightsMoRDisclaimer Component
-
-**New Component: `src/components/flight/FlightsMoRDisclaimer.tsx`**
-
-Replace `AffiliateDisclaimer` and `RedirectNotice` with MoR-appropriate footer:
-
-```text
-"ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
-Tickets are issued by authorized partners under airline rules."
-```
-
-No mention of:
-- Partner redirect
-- Indicative prices
-- Commission earnings
-- External booking sites
-
----
-
-### Phase 4: Update AffiliateNotice.tsx for Non-Flights
-
-**File: `src/components/results/AffiliateNotice.tsx`**
-
-Flights use MoR model now, so update:
-- `RedirectNotice` - Exclude flights, only show for hotels/cars
-- `IndicativePriceAlert` - Exclude flights (Duffel = exact pricing)
-- `AffiliateDisclaimer` - Add conditional text for flights vs hotels/cars
-
-Or create separate components:
-- `FlightsMoRFooter.tsx` for flights
-- Keep existing for hotels/cars (still affiliate)
-
----
-
-### Phase 5: Update TravelFAQ.tsx - Flights Section
-
-**Current (Affiliate model):**
-```text
-"click 'View Deal' to be redirected to our partner's website"
-"ZIVO is a search and comparison tool only. All bookings...handled by airline"
-"Prices shown on ZIVO are indicative"
-```
-
-**Updated (MoR model):**
-```text
-"click 'Book on ZIVO' to complete your booking securely"
-"ZIVO sells tickets as a sub-agent. All bookings confirmed directly with ZIVO."
-"Prices are exact totals including taxes and fees"
-"For changes or cancellations, contact ZIVO Support"
-```
-
----
-
-### Phase 6: Update HowBookingWorks.tsx
-
-**Current Step 3:**
-```text
-"Complete booking securely"
-"Book securely with our airline partner"
-```
-
-**Updated Step 3:**
-```text
-"Book directly on ZIVO"
-"Complete your booking and receive your e-ticket instantly"
-```
-
----
-
-### Phase 7: Update TrustSignals.tsx
-
-**Current:**
-```text
-"Secure booking on partner sites"
-"Partner site redirect"
-```
-
-**Updated:**
-```text
-"Secure ZIVO checkout"
-"Licensed Seller of Travel"
-```
-
----
-
-### Phase 8: Connect MyTripsDashboard to Real Data
+## Phase 1: Connect MyTripsDashboard to Real Data
 
 **File: `src/components/flight/MyTripsDashboard.tsx`**
 
-**Current:** Uses `MOCK_TRIPS` array (lines 88-180)
+### Current State
+- Uses `MOCK_TRIPS` array (lines 88-180) with hardcoded demo data
+- Already imports `useFlightBookings` from hook but doesn't use it
+- Interface matches database structure partially
 
-**Changes:**
-1. Import and use `useFlightBookings` hook
-2. Replace MOCK_TRIPS with real database query
-3. Map `flight_bookings` data to Trip interface
-4. Show real ticketing status, PNR, ticket numbers
-5. Add "Request Change" and "Request Refund" buttons
-6. Handle empty state for users with no bookings
+### Changes Required
+
+1. **Remove MOCK_TRIPS array** (lines 88-180)
+
+2. **Use real `useFlightBookings()` hook** in component:
+```typescript
+const { data: bookings, isLoading, error } = useFlightBookings();
+```
+
+3. **Map database records to Trip interface**:
+```typescript
+const trips: Trip[] = useMemo(() => {
+  if (!bookings) return [];
+  return bookings.map(booking => ({
+    id: booking.id,
+    bookingRef: booking.booking_reference,
+    status: mapBookingStatus(booking),
+    ticketingStatus: booking.ticketing_status,
+    pnr: booking.pnr,
+    ticketNumbers: booking.ticket_numbers as string[],
+    route: {
+      origin: getAirportCity(booking.origin),
+      originCode: booking.origin || '',
+      destination: getAirportCity(booking.destination),
+      destCode: booking.destination || '',
+    },
+    departureDate: new Date(booking.departure_date || booking.created_at),
+    returnDate: booking.return_date ? new Date(booking.return_date) : undefined,
+    airline: 'Multiple Airlines', // Would need to store in DB or fetch
+    airlineCode: 'ML',
+    flightNumber: booking.flight_id?.slice(0, 8) || '',
+    passengers: booking.total_passengers,
+    totalAmount: booking.total_amount,
+    boardingPassAvailable: booking.ticketing_status === 'issued',
+    fareClass: (booking.cabin_class || 'economy') as any,
+    isRealPrice: true,
+  }));
+}, [bookings]);
+```
+
+4. **Add loading and empty states**:
+```typescript
+if (isLoading) return <LoadingState />;
+if (!bookings?.length) return <EmptyTripsState />;
+```
+
+5. **Add "Request Refund" action** for eligible bookings:
+```typescript
+{canRequestRefund(booking) && (
+  <DropdownMenuItem onClick={() => onRequestRefund?.(trip)}>
+    <CreditCard className="w-4 h-4 mr-2" />
+    Request Refund
+  </DropdownMenuItem>
+)}
+```
+
+6. **Display PNR and Ticket Numbers** in expanded view when available
 
 ---
 
-### Phase 9: Remove TrendingDealsSection Affiliate Tracking
+## Phase 2: Enhance Admin Flight Management
+
+**File: `src/components/admin/AdminFlightManagement.tsx`**
+
+### Current State
+- Has Flights, Bookings, Airlines tabs
+- Bookings table shows basic status (confirmed/pending/cancelled)
+- Missing: ticketing_status, PNR, ticket_numbers, retry/refund actions
+
+### Changes Required
+
+1. **Update FlightBooking type** to include new fields:
+```typescript
+type FlightBooking = {
+  // existing...
+  ticketing_status: string | null;
+  pnr: string | null;
+  ticket_numbers: string[] | null;
+  payment_status: string | null;
+  refund_status: string | null;
+  origin: string | null;
+  destination: string | null;
+};
+```
+
+2. **Add "Ticketing" tab** for ticketing logs:
+```typescript
+<TabsTrigger value="ticketing" className="gap-2">
+  <Ticket className="h-4 w-4" />
+  Ticketing Logs
+</TabsTrigger>
+```
+
+3. **Add ticketing status column** to Bookings table:
+```typescript
+<TableHead>Ticketing</TableHead>
+// ...
+<TableCell>{getTicketingBadge(booking.ticketing_status)}</TableCell>
+```
+
+4. **Create getTicketingBadge helper**:
+```typescript
+const getTicketingBadge = (status: string | null) => {
+  switch (status) {
+    case 'issued':
+      return <Badge className="bg-emerald-500/10 text-emerald-500">Issued</Badge>;
+    case 'processing':
+      return <Badge className="bg-blue-500/10 text-blue-500">Processing</Badge>;
+    case 'failed':
+      return <Badge className="bg-red-500/10 text-red-500">Failed</Badge>;
+    case 'pending':
+      return <Badge className="bg-amber-500/10 text-amber-500">Pending</Badge>;
+    default:
+      return <Badge variant="outline">{status || 'Unknown'}</Badge>;
+  }
+};
+```
+
+5. **Add admin actions**:
+```typescript
+<DropdownMenuItem onClick={() => handleRetryTicketing(booking.id)}>
+  <RefreshCw className="h-4 w-4 mr-2" />
+  Retry Ticketing
+</DropdownMenuItem>
+<DropdownMenuItem onClick={() => handleProcessRefund(booking.id)}>
+  <CreditCard className="h-4 w-4 mr-2" />
+  Process Refund
+</DropdownMenuItem>
+```
+
+6. **Add mutations for admin actions**:
+```typescript
+const retryTicketing = useMutation({
+  mutationFn: async (bookingId: string) => {
+    const { error } = await supabase.functions.invoke('issue-flight-ticket', {
+      body: { bookingId },
+    });
+    if (error) throw error;
+  },
+  onSuccess: () => {
+    toast.success('Ticketing retry initiated');
+    queryClient.invalidateQueries({ queryKey: ['admin-flight-bookings'] });
+  },
+});
+
+const processRefund = useMutation({
+  mutationFn: async (bookingId: string) => {
+    const { error } = await supabase.functions.invoke('process-flight-refund', {
+      body: { bookingId, action: 'process', reason: 'Admin processed' },
+    });
+    if (error) throw error;
+  },
+  onSuccess: () => {
+    toast.success('Refund processed');
+    queryClient.invalidateQueries({ queryKey: ['admin-flight-bookings'] });
+  },
+});
+```
+
+7. **Add Ticketing Logs query and tab content**:
+```typescript
+const { data: ticketingLogs } = useQuery({
+  queryKey: ['admin-ticketing-logs'],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from('flight_ticketing_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return data;
+  },
+});
+```
+
+---
+
+## Phase 3: Update TrendingDealsSection
 
 **File: `src/components/monetization/TrendingDealsSection.tsx`**
 
-**Current:** Uses `trackAffiliateClick`, `window.open` to external affiliate URL
+### Current State
+- Uses affiliate tracking (`trackAffiliateClick`)
+- Opens external URL via `window.open`
+- Shows "indicative" price disclaimer
 
-**Options:**
-1. Remove from FlightResults (flights are MoR now)
-2. Update to navigate internally for flights, keep affiliate for hotels/cars
-3. Create separate "Popular Routes" component for flights with internal links
+### Changes Required
 
-Recommended: Remove from flights, keep for hotels/cars only
+1. **Update for OTA model** - navigate to internal search:
+```typescript
+const handleDealClick = (deal: TrendingDeal) => {
+  // Internal navigation for OTA model
+  const params = new URLSearchParams({
+    origin: deal.fromCode,
+    dest: deal.toCode,
+  });
+  navigate(`/flights/results?${params.toString()}`);
+};
+```
+
+2. **Remove affiliate tracking imports**:
+```typescript
+// REMOVE: import { trackAffiliateClick } from "@/lib/affiliateTracking";
+// REMOVE: import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
+```
+
+3. **Update CTA button**:
+```typescript
+<Button onClick={() => handleDealClick(deal)}>
+  Search Flights
+  <ArrowRight className="w-3 h-3" />  // Not ExternalLink
+</Button>
+```
+
+4. **Update footer disclaimer**:
+```typescript
+<p className="text-[9px] text-muted-foreground mt-2">
+  *Prices shown are examples. Final prices confirmed at checkout.
+</p>
+// REMOVE: "ZIVO may earn a commission from bookings."
+```
 
 ---
 
-### Phase 10: Clean Up Hizivo/Hizovo References
+## Phase 4: Branding Cleanup (Hizivo → ZIVO)
 
-Search found 71 files with old brand references:
-- Replace "Hizivo" / "Hizovo" with "ZIVO" throughout
-- Update email addresses to ZIVO domain if applicable
-- Ensure consistent branding
+### Files with Hizivo/Hizovo References (105 files total)
+
+**High Priority Files** (user-facing):
+
+| File | Changes |
+|------|---------|
+| `src/pages/app/hizovo/HizovoHome.tsx` | Rename component, update branding |
+| `src/components/shared/GlobalTrustBar.tsx` | "Hizivo does not issue..." → ZIVO MoR text |
+| `src/components/cross-sell/TravelCrossSell.tsx` | `hizovo.com` → `hizivo.com` or remove |
+| `src/pages/legal/PartnerDisclosure.tsx` | Update all Hizivo references |
+| `src/components/Footer.tsx` | Already updated, verify |
+| `src/components/app/HizovoAppLayout.tsx` | Rename to ZivoAppLayout |
+
+**Pattern to Replace**:
+- "Hizivo" → "ZIVO"
+- "Hizovo" → "ZIVO"  
+- "hizovo.com" → "hizivo.com" (or actual domain)
+- "Hizivo does not issue tickets" → "ZIVO sells tickets as a sub-agent..."
+
+**Note**: This is a large-scale change across 105 files. Recommend doing this as a separate batch operation.
 
 ---
 
@@ -200,83 +270,49 @@ Search found 71 files with old brand references:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `FlightResultCard.tsx` | MODIFY | Remove affiliate text, update CTA to "Book on ZIVO" |
-| `FlightResults.tsx` | MODIFY | Remove RedirectNotice, AffiliateDisclaimer, TrendingDealsSection |
-| `AffiliateNotice.tsx` | MODIFY | Exclude flights from affiliate components |
-| `TravelFAQ.tsx` | MODIFY | Update flights FAQs to MoR language |
-| `HowBookingWorks.tsx` | MODIFY | Update step 3 to ZIVO direct booking |
-| `TrustSignals.tsx` | MODIFY | Remove partner redirect language |
-| `MyTripsDashboard.tsx` | MODIFY | Connect to real flight_bookings data |
-| `TrendingDealsSection.tsx` | MODIFY | Remove from flights or update navigation |
-| **NEW**: `FlightsMoRFooter.tsx` | CREATE | MoR-specific footer for flight pages |
-
----
-
-## New CTA and Disclaimer Text
-
-### Result Card Button
-**Old:** "Continue to secure booking" + ExternalLink icon
-**New:** "Book on ZIVO" + ArrowRight icon
-
-### Price Display
-**Old:** "Estimated" / "Indicative price"
-**New:** "From" (always exact for Duffel)
-
-### Footer Disclaimer
-**Old:**
-```
-"ZIVO is a meta-search travel comparison platform – we do not sell tickets.
-ZIVO may earn a commission when users book through partner links."
-```
-
-**New:**
-```
-"ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
-Tickets are issued by authorized partners under airline rules."
-```
-
-### Support FAQ
-**Old:** "Contact the airline or travel agency where you completed your purchase"
-**New:** "Contact ZIVO Support for booking changes. Airline fare rules apply."
+| `src/components/flight/MyTripsDashboard.tsx` | MODIFY | Connect to real booking data |
+| `src/components/admin/AdminFlightManagement.tsx` | MODIFY | Add ticketing status, logs tab, admin actions |
+| `src/components/monetization/TrendingDealsSection.tsx` | MODIFY | Remove affiliate tracking, use internal navigation |
+| `src/components/shared/GlobalTrustBar.tsx` | MODIFY | Update to MoR language |
+| Multiple files (105) | MODIFY | Branding cleanup (Hizivo → ZIVO) |
 
 ---
 
 ## Post-Implementation Verification
 
-1. Search flights - no "partner" or "redirect" language visible
-2. Result cards show "Book on ZIVO" button (no external link icon)
-3. Prices display as "From $XXX" (not "Indicative" or "Estimated")
-4. Footer shows seller of travel disclosure
-5. FAQ describes ZIVO as seller, not aggregator
-6. My Trips shows real bookings with PNR and ticket numbers
-7. HowBookingWorks shows direct ZIVO checkout
-8. No `window.open` or `ExternalLink` for flights
-9. All Hizivo/Hizovo references replaced with ZIVO
+1. Navigate to My Trips - verify real bookings display (or empty state if none)
+2. Admin Panel - verify ticketing status column shows for each booking
+3. Admin Panel - test Retry Ticketing and Process Refund buttons
+4. Admin Panel - verify Ticketing Logs tab shows API call history
+5. TrendingDealsSection - verify internal navigation (no external redirect)
+6. Search for "Hizivo" in codebase - confirm all replaced with "ZIVO"
+7. Flight checkout flow - complete test booking to verify data flows to My Trips
 
 ---
 
-## Technical Flow After Implementation
+## Technical Notes
 
-```text
-User searches flights
-        ↓
-FlightResults.tsx (Duffel API - exact prices)
-        ↓
-User clicks "Book on ZIVO" (internal navigation)
-        ↓
-FlightDetails.tsx (review itinerary, fare rules)
-        ↓
-User clicks "Book Now"
-        ↓
-FlightTravelerInfo.tsx (collect passenger details)
-        ↓
-FlightCheckout.tsx (Stripe payment - ZIVO is MoR)
-        ↓
-stripe-webhook → issue-flight-ticket (Duffel order)
-        ↓
-FlightConfirmation.tsx (PNR, ticket numbers)
-        ↓
-My Trips dashboard (real bookings from flight_bookings)
-```
+### Database Fields Available
 
-**Key Difference:** NO external redirects. NO partner checkout. ZIVO handles everything.
+From `flight_bookings` table:
+- `booking_reference` ✓
+- `pnr` ✓
+- `ticketing_status` ✓
+- `ticket_numbers` (JSON) ✓
+- `origin` ✓
+- `destination` ✓
+- `departure_date` ✓
+- `return_date` ✓
+- `total_amount` ✓
+- `total_passengers` ✓
+- `cabin_class` ✓
+- `payment_status` ✓
+- `refund_status` ✓
+
+### Hook Already Available
+
+`useFlightBookings()` - returns user's bookings from database
+`useRequestFlightRefund()` - mutation for refund requests
+`canRequestRefund()` - helper to check eligibility
+`getTicketingStatusInfo()` - status display helper
+
