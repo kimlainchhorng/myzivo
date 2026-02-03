@@ -61,6 +61,7 @@ import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
 import { FlightSearchFormPro } from "@/components/search";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ const FlightResults = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [currency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
   const { isAdmin } = useAuth();
+  const { trackResultsLoaded, trackOfferSelected } = useFlightFunnel();
 
   // Use unified filter hook with URL sync
   const {
@@ -124,6 +126,18 @@ const FlightResults = () => {
   // Extract offers from Duffel response
   const duffelOffers = duffelResult?.offers || [];
   const isRealPrice = duffelOffers.length > 0; // Duffel always returns exact prices
+
+  // Track results loaded event (once when offers arrive)
+  useEffect(() => {
+    if (!isLoading && isValid && originIata && destinationIata && departureDate) {
+      trackResultsLoaded({
+        origin: originIata,
+        destination: destinationIata,
+        offersCount: duffelOffers.length,
+        departureDate,
+      });
+    }
+  }, [isLoading, isValid, originIata, destinationIata, departureDate, duffelOffers.length, trackResultsLoaded]);
 
   // Convert Duffel offers to display format
   const convertedOffers = useMemo(() => {
@@ -281,6 +295,15 @@ const FlightResults = () => {
     const selectedOffer = duffelOffers.find((o: DuffelOffer) => o.id === flight.id);
     
     if (selectedOffer) {
+      // Track offer selected event
+      trackOfferSelected({
+        offerId: flight.id,
+        origin: originIata || '',
+        destination: destinationIata || '',
+        amount: flight.price,
+        currency: flight.currency,
+      });
+
       sessionStorage.setItem('selectedFlight', JSON.stringify({
         ...selectedOffer,
         logo: getAirlineLogo(selectedOffer.airlineCode),

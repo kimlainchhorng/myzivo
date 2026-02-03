@@ -11,7 +11,8 @@ import {
   FileText,
   TrendingUp,
   ExternalLink,
-  Shield
+  Shield,
+  BarChart3,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -197,7 +198,21 @@ const TravelAdminDashboard = () => {
       </div>
 
       {/* Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Link to="/admin/flights/analytics">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer border-sky-500/30 bg-sky-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-sky-500" />
+                Flight Analytics
+              </CardTitle>
+              <CardDescription>
+                Funnel metrics, revenue, and conversion rates
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
         <Link to="/admin/travel/partners">
           <Card className="hover:border-primary/50 transition-colors cursor-pointer">
             <CardHeader>
