@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import PhishingWarning from "@/components/security/PhishingWarning";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -131,6 +132,9 @@ const Contact = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Scam Warning */}
+          <PhishingWarning variant="compact" className="mt-6" />
         </div>
       </main>
 
