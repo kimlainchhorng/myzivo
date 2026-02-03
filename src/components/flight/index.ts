@@ -126,3 +126,6 @@ export type { Passenger } from './PassengerForm';
 export type { BookingData } from './FlightBookingFlow';
 export type { InsurancePlan } from './TravelInsuranceSelector';
 export type { FlightLeg } from './MultiCityPlanner';
+
+// Performance & Expiry
+export { default as OfferExpiryTimer } from './OfferExpiryTimer';

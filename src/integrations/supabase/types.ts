@@ -3174,6 +3174,78 @@ export type Database = {
           },
         ]
       }
+      flight_api_limits: {
+        Row: {
+          alert_threshold_percent: number
+          cache_ttl_seconds: number
+          daily_booking_cap: number | null
+          daily_search_cap: number
+          id: string
+          is_active: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alert_threshold_percent?: number
+          cache_ttl_seconds?: number
+          daily_booking_cap?: number | null
+          daily_search_cap?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alert_threshold_percent?: number
+          cache_ttl_seconds?: number
+          daily_booking_cap?: number | null
+          daily_search_cap?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      flight_api_usage: {
+        Row: {
+          avg_response_time_ms: number
+          bookings_total: number
+          created_at: string
+          date: string
+          errors_count: number
+          id: string
+          searches_cached: number
+          searches_live: number
+          searches_total: number
+          updated_at: string
+        }
+        Insert: {
+          avg_response_time_ms?: number
+          bookings_total?: number
+          created_at?: string
+          date?: string
+          errors_count?: number
+          id?: string
+          searches_cached?: number
+          searches_live?: number
+          searches_total?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_response_time_ms?: number
+          bookings_total?: number
+          created_at?: string
+          date?: string
+          errors_count?: number
+          id?: string
+          searches_cached?: number
+          searches_live?: number
+          searches_total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       flight_beta_invites: {
         Row: {
           accepted_at: string | null
@@ -3214,6 +3286,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           baggage_allowance: Json | null
+          base_currency: string | null
           base_fare: number | null
           booking_reference: string
           cabin_class: string
@@ -3226,10 +3299,12 @@ export type Database = {
           dispute_id: string | null
           dispute_status: string | null
           duffel_cost: number | null
+          exchange_rate: number | null
           fare_rules: Json | null
           flight_id: string
           id: string
           itinerary_email_sent: boolean | null
+          offer_currency: string | null
           offer_expires_at: string | null
           offer_id: string | null
           origin: string | null
@@ -3267,6 +3342,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           baggage_allowance?: Json | null
+          base_currency?: string | null
           base_fare?: number | null
           booking_reference: string
           cabin_class?: string
@@ -3279,10 +3355,12 @@ export type Database = {
           dispute_id?: string | null
           dispute_status?: string | null
           duffel_cost?: number | null
+          exchange_rate?: number | null
           fare_rules?: Json | null
           flight_id: string
           id?: string
           itinerary_email_sent?: boolean | null
+          offer_currency?: string | null
           offer_expires_at?: string | null
           offer_id?: string | null
           origin?: string | null
@@ -3320,6 +3398,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           baggage_allowance?: Json | null
+          base_currency?: string | null
           base_fare?: number | null
           booking_reference?: string
           cabin_class?: string
@@ -3332,10 +3411,12 @@ export type Database = {
           dispute_id?: string | null
           dispute_status?: string | null
           duffel_cost?: number | null
+          exchange_rate?: number | null
           fare_rules?: Json | null
           flight_id?: string
           id?: string
           itinerary_email_sent?: boolean | null
+          offer_currency?: string | null
           offer_expires_at?: string | null
           offer_id?: string | null
           origin?: string | null
@@ -3683,6 +3764,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      flight_search_cache: {
+        Row: {
+          cabin_class: string
+          cache_key: string
+          created_at: string
+          departure_date: string
+          destination_iata: string
+          expires_at: string
+          hits: number
+          id: string
+          offer_request_id: string | null
+          offers_count: number
+          offers_data: Json
+          origin_iata: string
+          passengers: number
+          return_date: string | null
+        }
+        Insert: {
+          cabin_class: string
+          cache_key: string
+          created_at?: string
+          departure_date: string
+          destination_iata: string
+          expires_at: string
+          hits?: number
+          id?: string
+          offer_request_id?: string | null
+          offers_count?: number
+          offers_data: Json
+          origin_iata: string
+          passengers: number
+          return_date?: string | null
+        }
+        Update: {
+          cabin_class?: string
+          cache_key?: string
+          created_at?: string
+          departure_date?: string
+          destination_iata?: string
+          expires_at?: string
+          hits?: number
+          id?: string
+          offer_request_id?: string | null
+          offers_count?: number
+          offers_data?: Json
+          origin_iata?: string
+          passengers?: number
+          return_date?: string | null
+        }
+        Relationships: []
       }
       flight_search_logs: {
         Row: {
@@ -12074,6 +12206,7 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
       }
+      clean_expired_flight_cache: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
