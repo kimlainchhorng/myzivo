@@ -4,10 +4,11 @@
  * Shows email contact and future live chat placeholder
  */
 
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface FlightSupportCTAProps {
   className?: string;
@@ -52,6 +53,16 @@ export default function FlightSupportCTA({ className, variant = 'default' }: Fli
           Soon
         </Badge>
       </Button>
+      
+      <div className="h-4 w-px bg-border hidden sm:block" />
+      
+      <Link 
+        to="/security/scams" 
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Shield className="w-3 h-3" />
+        <span className="hidden sm:inline">Beware of scams</span>
+      </Link>
     </div>
   );
 }
