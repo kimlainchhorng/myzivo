@@ -2,7 +2,7 @@
  * Duffel Flights API Hook
  * 
  * Provides real flight search using Duffel API
- * Hizovo is NOT the merchant of record - all payments via Duffel/airlines
+ * ZIVO is the Merchant of Record - Stripe checkout + Duffel ticketing
  */
 
 import { useQuery, useMutation } from "@tanstack/react-query";

@@ -28,7 +28,7 @@ export const FLIGHT_CTA_TEXT = {
   mobile: "Book Flight",
   
   /** View deal variant (results page) */
-  viewDeal: "Select Flight",
+  viewDeal: "Book on ZIVO",
   
   /** Select flight variant */
   select: "Select",

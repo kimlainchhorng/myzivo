@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useFlightFilters, defaultFlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
-import { trackPageView } from "@/lib/affiliateTracking";
+// Page view tracking (analytics only - no affiliate tracking)
 import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
@@ -52,7 +52,6 @@ import {
   DesktopFiltersSidebar,
   FlightFiltersContent,
   ActiveFiltersChips,
-  ApiPendingNotice,
 } from "@/components/results";
 import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
 import { FlightSearchFormPro } from "@/components/search";
@@ -98,16 +97,7 @@ const FlightResults = () => {
   // Parse departure date for calendar display
   const departDateParsed = departureDate ? parseISO(departureDate) : undefined;
 
-  // Track page view for analytics
-  useEffect(() => {
-    if (isValid) {
-      trackPageView("flight_results", {
-        origin: originIata,
-        destination: destinationIata,
-        departDate: departureDate,
-      });
-    }
-  }, [originIata, destinationIata, departureDate, isValid]);
+  // Page view tracking removed - OTA mode, no affiliate analytics needed
 
   // Fetch real flights using Duffel API (MoR model - exact pricing)
   const { 
@@ -512,7 +502,7 @@ const FlightResults = () => {
               {!isLoading && flightCards.length === 0 && isValid && (
                 <EmptyResults 
                   service="flights"
-                  message="No flights found for this route. Try adjusting your dates or filters."
+                  message="No flights found for these dates. Try different dates or nearby airports."
                 />
               )}
 
