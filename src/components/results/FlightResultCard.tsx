@@ -1,16 +1,16 @@
 /**
- * Premium Flight Result Card
- * Meta-search affiliate card: Indicative pricing, partner redirect
- * ZIVO is NOT an OTA - all bookings on partner sites
+ * ZIVO Flight Result Card - OTA Model
+ * Direct booking on ZIVO - Merchant of Record
+ * Exact pricing from Duffel API
  */
 
-import { Plane, Clock, ExternalLink, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star } from "lucide-react";
+import { Plane, Clock, ArrowRight, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { toast } from "@/hooks/use-toast";
+import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
 export interface FlightCardData {
   id: string;
@@ -235,59 +235,48 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
           {/* RIGHT: Price & CTA Section */}
           <div className="p-4 lg:py-5 lg:px-5 lg:w-56 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-3 bg-gradient-to-br from-muted/30 to-muted/10">
             <div className="text-left lg:text-center">
-              {/* INDICATIVE PRICE LABEL */}
-              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wide">
-                {flight.isRealPrice ? "From" : "Estimated"}
+              {/* EXACT PRICE LABEL - MoR model */}
+              <p className="text-[10px] text-sky-500 font-medium uppercase tracking-wide">
+                From
               </p>
               <p className="text-2xl sm:text-3xl font-bold text-sky-500">
                 {formattedPrice}
               </p>
-              <p className="text-[10px] text-muted-foreground">per person*</p>
+              <p className="text-[10px] text-muted-foreground">per person</p>
               {wasConverted && (
                 <p className="text-[9px] text-muted-foreground/70 mt-0.5">
                   Converted from {baseCurrency}
                 </p>
               )}
-              {flight.partnerName && (
-                <p className="text-[9px] text-muted-foreground/70 mt-0.5">
-                  via {flight.partnerName}
-                </p>
-              )}
-              {/* Indicative price disclaimer */}
+              {/* Price includes taxes */}
               <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">
-                Indicative price. Final price confirmed on partner checkout.
+                Includes taxes & fees
               </p>
             </div>
 
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                // Show redirect toast
-                toast({
-                  title: "Checking latest price...",
-                  description: "Please wait while we confirm availability.",
-                  duration: 3000,
-                });
                 onViewDeal(flight);
               }}
               className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white min-h-[48px] touch-manipulation active:scale-[0.98]"
             >
-              <span className="hidden sm:inline">Continue to secure booking</span>
-              <span className="sm:hidden">Continue</span>
-              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">{FLIGHT_CTA_TEXT.viewDeal}</span>
+              <span className="sm:hidden">Select</span>
+              <ArrowRight className="w-4 h-4" />
             </Button>
             
-            {/* Partner disclosure micro-copy */}
+            {/* MoR disclosure */}
             <p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[160px]">
-              Powered by licensed travel partners · Final price confirmed before payment
+              Secure ZIVO checkout
             </p>
           </div>
         </div>
 
-        {/* Legal disclaimer - REQUIRED */}
+        {/* Legal disclaimer - MoR model */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+            {FLIGHT_DISCLAIMERS.ticketingShort}
           </p>
         </div>
       </CardContent>

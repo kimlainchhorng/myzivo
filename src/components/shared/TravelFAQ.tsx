@@ -17,27 +17,27 @@ const FAQ_DATA: Record<string, FAQItem[]> = {
   flights: [
     {
       question: "How does ZIVO Flights work?",
-      answer: "ZIVO is a flight search and comparison platform. We help you search across 500+ airlines and travel sites to find the best options. When you find a flight you like, click 'View Deal' to be redirected to our partner's website to complete your booking."
+      answer: "ZIVO is a licensed flight booking platform. Search and compare flights from 500+ airlines, then book directly on ZIVO. We issue your e-ticket instantly after payment."
     },
     {
-      question: "Does ZIVO process flight bookings or payments?",
-      answer: "No. ZIVO is a search and comparison tool only. All bookings, payments, refunds, and ticket changes are handled directly by the airline or travel agency you book with. We do not collect payment information or issue tickets."
+      question: "Does ZIVO issue tickets directly?",
+      answer: "Yes. ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. After you complete payment on ZIVO, your e-ticket is issued automatically and sent to your email."
     },
     {
       question: "How do I change or cancel my flight booking?",
-      answer: "Since bookings are completed with our travel partners, please contact the airline or travel agency directly for any changes, cancellations, or refunds. Check your booking confirmation email for their contact details."
+      answer: "Contact ZIVO Support for any changes, cancellations, or refunds. Airline fare rules and fees apply. You can find your booking in 'My Trips' in your account."
     },
     {
-      question: "Why do prices change after I click?",
-      answer: "Prices shown on ZIVO are indicative and sourced from our partners in real-time. Prices may change based on availability, demand, and the time between search and booking. The final price is always confirmed on the booking site."
+      question: "Are the prices on ZIVO final?",
+      answer: "Yes. Prices shown include all taxes and fees. The total you see is the total you pay. No hidden charges at checkout."
     },
     {
       question: "Are there booking fees on ZIVO?",
-      answer: "No, ZIVO does not charge any booking fees. You pay only the price shown by our travel partners. ZIVO earns a commission from partners when you complete a booking, at no extra cost to you."
+      answer: "ZIVO does not add hidden booking fees. The price shown includes all taxes, carrier-imposed fees, and service charges."
     },
     {
       question: "What if I have a problem with my booking?",
-      answer: "For any issues with your booking, please contact the airline or travel agency where you completed your purchase. ZIVO cannot access or modify bookings made on partner sites."
+      answer: "Contact ZIVO Support for any issues with your booking. We handle all customer service for flights booked through our platform."
     },
   ],
   hotels: [
@@ -141,14 +141,23 @@ export default function TravelFAQ({ serviceType, className = '' }: TravelFAQProp
           ))}
         </Accordion>
 
-        {/* Partner Disclosure */}
+        {/* Disclosure - varies by service */}
         <div className="mt-6 p-4 rounded-xl bg-muted/30 border border-border/50 flex items-start gap-3">
           <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            <strong className="text-foreground">Important:</strong> All bookings, payments, refunds, and changes 
-            are handled directly by our travel partners. ZIVO is a search and comparison platform and does not 
-            process payments or hold booking data.{' '}
-            <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+            {serviceType === 'flights' ? (
+              <>
+                <strong className="text-foreground">About Flight Bookings:</strong> ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+                Tickets are issued by authorized partners under applicable airline rules.{' '}
+                <a href="/terms" className="text-sky-500 hover:underline">View terms</a>
+              </>
+            ) : (
+              <>
+                <strong className="text-foreground">Important:</strong> All bookings, payments, refunds, and changes 
+                are handled directly by our travel partners. ZIVO is a search and comparison platform for hotels and car rentals.{' '}
+                <a href="/partner-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+              </>
+            )}
           </p>
         </div>
       </div>

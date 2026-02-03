@@ -16,7 +16,7 @@ const steps = [
     icon: Search,
     number: "1",
     title: "Search & compare flights",
-    description: "Compare options from multiple airlines and partners",
+    description: "Compare options from 500+ airlines",
   },
   {
     icon: MousePointerClick,
@@ -27,8 +27,8 @@ const steps = [
   {
     icon: ShieldCheck,
     number: "3",
-    title: "Complete booking securely",
-    description: "Book securely with our airline partner",
+    title: "Book directly on ZIVO",
+    description: "Pay securely and receive your e-ticket instantly",
   },
 ];
 
