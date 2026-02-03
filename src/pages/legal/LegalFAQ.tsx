@@ -13,7 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES } from "@/config/legalContent";
+import { LEGAL_FAQ, SERVICE_DISCLAIMERS, COMPANY_INFO, EXTREME_LEGAL_POLICIES, ULTRA_LEGAL_FAQ } from "@/config/legalContent";
 import FAQSchema from "@/components/shared/FAQSchema";
 
 export default function LegalFAQ() {
@@ -73,6 +73,33 @@ export default function LegalFAQ() {
             <Accordion type="single" collapsible className="w-full">
               {LEGAL_FAQ.map((faq, index) => (
                 <AccordionItem key={index} value={`faq-${index}`}>
+                  <AccordionTrigger className="text-left hover:no-underline">
+                    <span className="font-medium">{faq.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </CardContent>
+        </Card>
+
+        {/* Ultra FAQ - Critical Questions */}
+        <Card className="mb-8 border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Shield className="h-5 w-5" />
+              Critical Legal Questions
+            </CardTitle>
+            <CardDescription>
+              Ultra-clear answers to the most important liability questions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {ULTRA_LEGAL_FAQ.map((faq, index) => (
+                <AccordionItem key={index} value={`ultra-${index}`} className="border-destructive/20">
                   <AccordionTrigger className="text-left hover:no-underline">
                     <span className="font-medium">{faq.question}</span>
                   </AccordionTrigger>

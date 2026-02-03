@@ -159,6 +159,11 @@ const PlatformAvailability = lazy(() => import("./pages/legal/PlatformAvailabili
 const ThirdPartyServices = lazy(() => import("./pages/legal/ThirdPartyServices"));
 const SanctionsPolicy = lazy(() => import("./pages/legal/SanctionsPolicy"));
 const AgePolicy = lazy(() => import("./pages/legal/AgePolicy"));
+const ConsumerDisclosures = lazy(() => import("./pages/legal/ConsumerDisclosures"));
+const PaymentProcessors = lazy(() => import("./pages/legal/PaymentProcessors"));
+const AIDisclosure = lazy(() => import("./pages/legal/AIDisclosure"));
+const InternationalPolicy = lazy(() => import("./pages/legal/InternationalPolicy"));
+const FraudPolicy = lazy(() => import("./pages/legal/FraudPolicy"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -362,6 +367,11 @@ const App = () => (
                 <Route path="/legal/third-party-services" element={<ThirdPartyServices />} />
                 <Route path="/legal/sanctions" element={<SanctionsPolicy />} />
                 <Route path="/legal/age-policy" element={<AgePolicy />} />
+                <Route path="/legal/consumer-disclosures" element={<ConsumerDisclosures />} />
+                <Route path="/legal/payment-processors" element={<PaymentProcessors />} />
+                <Route path="/legal/ai-disclosure" element={<AIDisclosure />} />
+                <Route path="/legal/international" element={<InternationalPolicy />} />
+                <Route path="/legal/fraud" element={<FraudPolicy />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />

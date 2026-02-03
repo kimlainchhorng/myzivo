@@ -758,6 +758,247 @@ export const EXTREME_LEGAL_POLICIES = {
   },
 };
 
+// ============================================
+// ULTRA-LEVEL LEGAL POLICIES (Clauses 58-74)
+// ============================================
+
+export const ULTRA_LEGAL_POLICIES = {
+  // Clause 58: Consumer Disclosure Policy
+  consumerDisclosures: {
+    id: "consumer_disclosures",
+    title: "Consumer Disclosure Policy",
+    version: "1.0",
+    content: `ZIVO provides transparent disclosures of all prices, fees, taxes, and service terms prior to checkout. Users are responsible for reviewing all details before completing any purchase. ZIVO is not liable for user misunderstanding after acceptance of terms.`,
+    disclosures: [
+      "Total prices shown before payment",
+      "All applicable fees and taxes disclosed",
+      "Cancellation and refund policies displayed",
+      "Service terms provided before booking",
+      "Partner information available at checkout",
+    ],
+  },
+
+  // Clause 59: Unfair Practices Disclaimer
+  unfairPracticesDisclaimer: {
+    id: "unfair_practices",
+    title: "Unfair Practices Disclaimer",
+    version: "1.0",
+    content: `ZIVO disclaims liability for pricing errors, inventory errors, or service descriptions provided by third-party partners. Corrections may be made at any time without obligation to honor erroneous prices or terms.`,
+    disclaimers: [
+      "Pricing errors caused by third parties",
+      "Inventory or availability errors",
+      "Service descriptions provided by partners",
+      "Technical glitches affecting displayed information",
+    ],
+  },
+
+  // Clause 60: Cooling-Off Rights Disclaimer
+  coolingOffDisclaimer: {
+    id: "cooling_off",
+    title: "Cooling-Off Rights Disclaimer",
+    version: "1.0",
+    content: `Where permitted by law, there is no automatic right to cancel digital services. Flights, rentals, rides, and deliveries may be non-refundable once booked. All refunds are governed strictly by posted policies and partner terms.`,
+  },
+
+  // Clause 61: Advertising & Marketing Disclaimer
+  advertisingDisclaimer: {
+    id: "advertising",
+    title: "Advertising & Marketing Disclaimer",
+    version: "1.0",
+    content: `All marketing content is informational only and does not constitute a binding offer. Prices, availability, and promotions are subject to change without notice. Actual terms are confirmed only at checkout.`,
+  },
+
+  // Clause 62: Payment Processor Reliance Policy
+  paymentProcessors: {
+    id: "payment_processors",
+    title: "Payment Processor Reliance Policy",
+    version: "1.0",
+    content: `All payments are processed by third-party payment processors (Stripe, banks, and card networks). ZIVO is not liable for processor outages, payment holds, or delays caused by payment systems. Chargebacks are governed by processor and card network rules.`,
+    processors: [
+      "Stripe payment processing",
+      "Bank and card network processing",
+      "Third-party fraud detection systems",
+      "Currency conversion services",
+    ],
+  },
+
+  // Clause 63: Funds Hold & Reserve Rights
+  fundsHoldRights: {
+    id: "funds_hold",
+    title: "Funds Hold & Reserve Rights",
+    version: "1.0",
+    content: `ZIVO may place rolling reserves, delay payouts, or withhold funds to manage fraud risk, chargeback exposure, regulatory compliance, or legal obligations. Funds may be held for extended periods as necessary.`,
+    actions: [
+      "Place rolling reserves on partner payouts",
+      "Delay payouts pending verification",
+      "Withhold funds during disputes or investigations",
+      "Offset funds for chargebacks or fees owed",
+    ],
+  },
+
+  // Clause 64: Currency & Exchange Disclaimer
+  currencyDisclaimer: {
+    id: "currency",
+    title: "Currency & Exchange Disclaimer",
+    version: "1.0",
+    content: `Exchange rates shown are estimates only. Final amounts may vary based on bank conversion rates, processing fees, and timing. ZIVO is not responsible for foreign exchange fluctuations or conversion fees charged by banks.`,
+  },
+
+  // Clause 65: AI & Recommendation Disclaimer
+  aiDisclosure: {
+    id: "ai_disclosure",
+    title: "AI & Recommendation Disclaimer",
+    version: "1.0",
+    content: `ZIVO uses artificial intelligence and machine learning to provide recommendations, rankings, pricing suggestions, and other features. AI features provide suggestions only with no guarantees of outcomes. AI decisions may be incorrect, incomplete, or not suited to user needs. Users remain solely responsible for all final decisions.`,
+    aiFeatures: [
+      "Search rankings and recommendations",
+      "Dynamic pricing suggestions",
+      "Fraud detection and risk scoring",
+      "Personalized content and offers",
+      "Trip planning and itinerary suggestions",
+    ],
+  },
+
+  // Clause 66: No Automated Decision Liability
+  automatedDecisionDisclaimer: {
+    id: "automated_decisions",
+    title: "No Automated Decision Liability",
+    version: "1.0",
+    content: `ZIVO is not liable for outcomes resulting from automated systems, including search rankings, dynamic pricing, fraud flags, account restrictions, or personalization. Users may request human review of significant automated decisions where required by law.`,
+  },
+
+  // Clause 67: Cross-Border Service Disclaimer
+  crossBorderDisclaimer: {
+    id: "cross_border",
+    title: "Cross-Border Service Disclaimer",
+    version: "1.0",
+    content: `Services may differ by country and jurisdiction. ZIVO is not responsible for local regulatory conflicts, service availability differences, or legal requirements that vary by location. Users are responsible for understanding applicable laws in their jurisdiction.`,
+    considerations: [
+      "Service availability varies by region",
+      "Local laws may affect terms",
+      "Regulatory requirements differ by jurisdiction",
+      "Consumer protection laws vary by country",
+    ],
+  },
+
+  // Clause 68: Customs, Immigration & Travel Law Disclaimer
+  travelLawDisclaimer: {
+    id: "travel_law",
+    title: "Customs, Immigration & Travel Law Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not responsible for visa requirements, immigration denial, customs issues, border restrictions, or any travel-related legal requirements. Users are solely responsible for ensuring they have proper documentation and authorization to travel.`,
+    notResponsibleFor: [
+      "Visa application or approval",
+      "Immigration or border denial",
+      "Customs duties or seizures",
+      "Passport validity requirements",
+      "Health documentation requirements",
+      "Travel advisories or restrictions",
+    ],
+  },
+
+  // Clause 69: Anti-Circumvention Policy
+  antiCircumvention: {
+    id: "anti_circumvention",
+    title: "Anti-Circumvention Policy",
+    version: "1.0",
+    content: `Users may not bypass ZIVO payment systems, contact partners off-platform to avoid fees, or circumvent any platform mechanisms. Violations result in immediate account termination and potential legal action.`,
+    prohibitions: [
+      "Bypassing ZIVO payment processing",
+      "Contacting partners off-platform for direct deals",
+      "Avoiding service or transaction fees",
+      "Manipulating pricing or availability displays",
+      "Using automation to gain unfair advantages",
+    ],
+  },
+
+  // Clause 70: Fraud Zero-Tolerance Policy
+  fraudPolicy: {
+    id: "fraud_policy",
+    title: "Fraud Zero-Tolerance Policy",
+    version: "1.0",
+    content: `ZIVO maintains a zero-tolerance policy for fraud. Fraudulent activity results in immediate permanent ban, seizure of any pending funds, and referral to law enforcement. ZIVO may share fraud data with partners and authorities.`,
+    consequences: [
+      "Immediate permanent account termination",
+      "Seizure of pending payouts and funds",
+      "Referral to law enforcement agencies",
+      "Civil liability for damages",
+      "Sharing of fraud data with partners and networks",
+    ],
+  },
+
+  // Clause 71: Blacklisting & Watchlist Rights
+  blacklistingRights: {
+    id: "blacklisting",
+    title: "Blacklisting & Watchlist Rights",
+    version: "1.0",
+    content: `ZIVO may maintain internal risk lists, block repeat offenders, share data with fraud prevention networks, and cooperate with industry watchlists as legally permitted.`,
+  },
+
+  // Clause 72: Service Suspension Rights
+  serviceSuspensionRights: {
+    id: "service_suspension",
+    title: "Service Suspension Rights",
+    version: "1.0",
+    content: `ZIVO may suspend individual services, entire regions, or specific accounts at any time without liability. Suspensions may be temporary or permanent based on risk assessment, regulatory requirements, or business decisions.`,
+  },
+
+  // Clause 73: Platform Evolution Clause
+  platformEvolution: {
+    id: "platform_evolution",
+    title: "Platform Evolution Clause",
+    version: "1.0",
+    content: `ZIVO may add, modify, or remove features, change business models, rebrand services, or fundamentally alter the platform at any time. Users accept all future changes by continuing to use the platform.`,
+  },
+
+  // Clause 74: Survival of Disclaimers
+  disclaimerSurvival: {
+    id: "disclaimer_survival",
+    title: "Survival of All Disclaimers",
+    version: "1.0",
+    content: `All disclaimers, liability limitations, waivers, indemnification obligations, and legal protections in these policies survive: account termination, service discontinuation, platform shutdown, and resolution of any disputes. These protections remain in effect indefinitely.`,
+  },
+};
+
+// Ultra-level FAQ additions
+export const ULTRA_LEGAL_FAQ = [
+  {
+    question: "Is ZIVO legally responsible for service failures?",
+    answer: "No. Services are provided by independent third parties. ZIVO provides a technology platform only.",
+  },
+  {
+    question: "Can ZIVO hold or delay my money?",
+    answer: "Yes. ZIVO may hold, delay, or withhold funds to manage risk, fraud, chargebacks, or legal obligations.",
+  },
+  {
+    question: "Does ZIVO guarantee prices, availability, or safety?",
+    answer: "No. All services are provided 'as is' without warranties. Prices and availability are subject to change.",
+  },
+  {
+    question: "Can ZIVO cooperate with governments or police?",
+    answer: "Yes. ZIVO may share data and cooperate with law enforcement, regulators, and government agencies when required by law.",
+  },
+  {
+    question: "Can ZIVO change or shut down services?",
+    answer: "Yes. ZIVO may modify, suspend, or discontinue any service at any time without liability.",
+  },
+  {
+    question: "Is ZIVO responsible for AI recommendations?",
+    answer: "No. AI features provide suggestions only. Users are responsible for all final decisions.",
+  },
+  {
+    question: "Can ZIVO ban me permanently?",
+    answer: "Yes. ZIVO may terminate accounts permanently for fraud, policy violations, or at its discretion.",
+  },
+  {
+    question: "Is ZIVO responsible for visa or immigration issues?",
+    answer: "No. Users are solely responsible for travel documentation, visas, and immigration requirements.",
+  },
+];
+
+// Helper array for ultra policies
+export const ULTRA_POLICIES_LIST = Object.values(ULTRA_LEGAL_POLICIES);
+
 // Helper array for extreme policies
 export const EXTREME_POLICIES_LIST = Object.values(EXTREME_LEGAL_POLICIES);
 
@@ -815,5 +1056,15 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Sanctions compliance",
     "Automatic risk response",
     "Survival of protections",
+  ],
+  ultraProtection: [
+    "Consumer disclosure transparency",
+    "AI & automation disclaimer",
+    "Cross-border risk insulation",
+    "Payment processor reliance",
+    "Fraud zero-tolerance enforcement",
+    "Service suspension rights",
+    "Platform evolution rights",
+    "Disclaimer survival clause",
   ],
 };
