@@ -10,7 +10,8 @@ import {
   Settings,
   FileText,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  Shield
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,12 @@ const TravelAdminDashboard = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link to="/admin/travel/seller-of-travel">
+            <Button variant="outline" className="gap-2">
+              <Shield className="w-4 h-4" />
+              Seller of Travel
+            </Button>
+          </Link>
           <Link to="/admin/travel/partners">
             <Button variant="outline" className="gap-2">
               <Settings className="w-4 h-4" />

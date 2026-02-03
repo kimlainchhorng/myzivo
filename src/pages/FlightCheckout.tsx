@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ExternalLink } from 'lucide-react';
 import FlightPriceBreakdown from '@/components/flight/FlightPriceBreakdown';
 import {
   Plane,
@@ -47,6 +48,7 @@ const FlightCheckout = () => {
   const passengerCount = parseInt(searchParams.get('passengers') || '1');
   
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [sotDisclosureAccepted, setSotDisclosureAccepted] = useState(false);
   const [passengersData, setPassengersData] = useState<FlightPassenger[]>([]);
   
   const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
@@ -79,6 +81,15 @@ const FlightCheckout = () => {
       toast({
         title: 'Terms Required',
         description: 'Please accept the Terms and Conditions to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!sotDisclosureAccepted) {
+      toast({
+        title: 'Disclosure Required',
+        description: 'Please acknowledge the Seller of Travel disclosure to continue.',
         variant: 'destructive',
       });
       return;
@@ -352,7 +363,8 @@ const FlightCheckout = () => {
 
               {/* Terms and Conditions - Enhanced for OTA clarity */}
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-6 space-y-4">
+                  {/* Terms Checkbox */}
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="terms"
@@ -372,11 +384,39 @@ const FlightCheckout = () => {
                         <a href={FLIGHT_LEGAL_LINKS.terms} className="text-primary hover:underline">Terms of Service</a>, and{' '}
                         <a href={FLIGHT_LEGAL_LINKS.privacy} className="text-primary hover:underline">Privacy Policy</a>.
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        View our{' '}
-                        <a href="/legal/seller-of-travel" className="text-primary hover:underline">Seller of Travel</a>{' '}
-                        registration and partner disclosure.
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Seller of Travel Disclosure Checkbox */}
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                    <Checkbox
+                      id="sot-disclosure"
+                      checked={sotDisclosureAccepted}
+                      onCheckedChange={(checked) => setSotDisclosureAccepted(checked === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="grid gap-1.5 leading-none">
+                      <label
+                        htmlFor="sot-disclosure"
+                        className="text-sm font-medium leading-relaxed cursor-pointer flex items-center gap-2"
+                      >
+                        <Shield className="w-4 h-4 text-amber-500" />
+                        I acknowledge the Seller of Travel disclosure *
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        ZIVO is registered or registration pending as a Seller of Travel where required.
+                        Tickets are issued by licensed airline ticketing partners.
                       </p>
+                      <a 
+                        href="/legal/seller-of-travel" 
+                        target="_blank"
+                        className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
+                      >
+                        View full Seller of Travel disclosure
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
                 </CardContent>
@@ -407,7 +447,7 @@ const FlightCheckout = () => {
                     size="lg"
                     className="w-full gap-2 text-lg h-14"
                     onClick={handlePayment}
-                    disabled={createCheckout.isPending || !termsAccepted || passengersData.length === 0}
+                    disabled={createCheckout.isPending || !termsAccepted || !sotDisclosureAccepted || passengersData.length === 0}
                   >
                     {createCheckout.isPending ? (
                       <>
