@@ -163,6 +163,7 @@ const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
 const FlightsLaunchControl = lazy(() => import("./pages/admin/FlightsLaunchControl"));
 const FlightIncidentLog = lazy(() => import("./pages/admin/FlightIncidentLog"));
 const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
+const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOfTravelSettings"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 
 // Outbound redirect page
@@ -476,6 +477,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <FlightIncidentLog />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Seller of Travel Settings */}
+                <Route
+                  path="/admin/travel/seller-of-travel"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <SellerOfTravelSettings />
                     </ProtectedRoute>
                   }
                 />

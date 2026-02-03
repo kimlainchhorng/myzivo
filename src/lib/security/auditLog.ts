@@ -19,7 +19,8 @@ export type AuditAction =
   | 'admin_2fa_enabled'
   | 'admin_2fa_disabled'
   | 'security_settings_change'
-  | 'user_role_change';
+  | 'user_role_change'
+  | 'seller_of_travel_status_change';
 
 export type AuditEntityType = 
   | 'user'
