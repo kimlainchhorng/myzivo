@@ -3137,21 +3137,27 @@ export type Database = {
           booking_reference: string
           cabin_class: string
           created_at: string | null
+          currency: string | null
           customer_id: string
+          departure_date: string | null
+          destination: string | null
           fare_rules: Json | null
           flight_id: string
           id: string
           itinerary_email_sent: boolean | null
           offer_expires_at: string | null
           offer_id: string | null
+          origin: string | null
           passengers: Json
           payment_status: string | null
           pnr: string | null
           price_per_passenger: number
           refund_amount: number | null
           refund_processed_at: string | null
+          refund_reason: string | null
           refund_requested_at: string | null
           refund_status: string | null
+          return_date: string | null
           return_flight_id: string | null
           seat_selection: Json | null
           special_requests: string | null
@@ -3176,21 +3182,27 @@ export type Database = {
           booking_reference: string
           cabin_class?: string
           created_at?: string | null
+          currency?: string | null
           customer_id: string
+          departure_date?: string | null
+          destination?: string | null
           fare_rules?: Json | null
           flight_id: string
           id?: string
           itinerary_email_sent?: boolean | null
           offer_expires_at?: string | null
           offer_id?: string | null
+          origin?: string | null
           passengers: Json
           payment_status?: string | null
           pnr?: string | null
           price_per_passenger: number
           refund_amount?: number | null
           refund_processed_at?: string | null
+          refund_reason?: string | null
           refund_requested_at?: string | null
           refund_status?: string | null
+          return_date?: string | null
           return_flight_id?: string | null
           seat_selection?: Json | null
           special_requests?: string | null
@@ -3215,21 +3227,27 @@ export type Database = {
           booking_reference?: string
           cabin_class?: string
           created_at?: string | null
+          currency?: string | null
           customer_id?: string
+          departure_date?: string | null
+          destination?: string | null
           fare_rules?: Json | null
           flight_id?: string
           id?: string
           itinerary_email_sent?: boolean | null
           offer_expires_at?: string | null
           offer_id?: string | null
+          origin?: string | null
           passengers?: Json
           payment_status?: string | null
           pnr?: string | null
           price_per_passenger?: number
           refund_amount?: number | null
           refund_processed_at?: string | null
+          refund_reason?: string | null
           refund_requested_at?: string | null
           refund_status?: string | null
+          return_date?: string | null
           return_flight_id?: string | null
           seat_selection?: Json | null
           special_requests?: string | null
