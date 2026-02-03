@@ -54,8 +54,18 @@ const FlightTerms = () => {
                   <li>Flight tickets (e-tickets) are issued by our licensed ticketing partners under a sub-agent arrangement</li>
                   <li>Your contract for carriage is with the operating airline(s)</li>
                 </ul>
+                
+                <h4>Registration Status</h4>
                 <p>
-                  ZIVO is a registered seller of travel operating in compliance with applicable laws and regulations.
+                  <strong>ZIVO is registered as a Seller of Travel where required by law.</strong>
+                </p>
+                <ul>
+                  <li>California Seller of Travel Registration: <em>pending</em></li>
+                  <li>Florida Seller of Travel Registration: <em>pending</em></li>
+                </ul>
+                <p className="text-sm">
+                  Additional state registrations will be added as obtained. ZIVO sells air travel as a sub-agent of licensed 
+                  ticketing providers. Airline tickets are issued by authorized partners and subject to airline rules.
                 </p>
               </CardContent>
             </Card>

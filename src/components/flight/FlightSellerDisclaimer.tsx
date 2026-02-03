@@ -6,12 +6,13 @@
  * ZIVO is the seller of travel
  */
 
-import { Shield, Lock, AlertCircle, Plane, CreditCard, CheckCircle } from "lucide-react";
+import { Shield, Lock, AlertCircle, Plane, CreditCard, CheckCircle, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FLIGHT_DISCLAIMERS, FLIGHT_TRUST_BADGES } from "@/config/flightCompliance";
+import { ZIVO_SOT_REGISTRATION } from "@/config/flightMoRCompliance";
 
 interface FlightSellerDisclaimerProps {
-  variant?: 'banner' | 'inline' | 'footer' | 'card' | 'minimal' | 'checkout';
+  variant?: 'banner' | 'inline' | 'footer' | 'card' | 'minimal' | 'checkout' | 'registration';
   className?: string;
 }
 
@@ -19,6 +20,27 @@ export default function FlightSellerDisclaimer({
   variant = 'banner',
   className,
 }: FlightSellerDisclaimerProps) {
+  // Registration variant - shows SOT status
+  if (variant === 'registration') {
+    return (
+      <div className={cn(
+        "p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20",
+        className
+      )}>
+        <div className="flex items-center gap-2 mb-2">
+          <Award className="w-4 h-4 text-emerald-500" />
+          <span className="text-sm font-medium">Licensed Seller of Travel</span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-1">
+          {ZIVO_SOT_REGISTRATION.status}
+        </p>
+        <p className="text-[10px] text-muted-foreground">
+          CA SOT: pending · FL SOT: pending
+        </p>
+      </div>
+    );
+  }
+
   // Minimal inline disclaimer
   if (variant === 'minimal') {
     return (

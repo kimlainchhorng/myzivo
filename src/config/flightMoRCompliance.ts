@@ -4,8 +4,35 @@
  * ZIVO is the seller of travel - NOT an affiliate
  * Tickets issued by licensed partners under sub-agent agreement
  * 
- * Last Updated: February 2, 2026
+ * Last Updated: February 3, 2026
  */
+
+// ============================================
+// SELLER OF TRAVEL REGISTRATION
+// ============================================
+
+export const ZIVO_SOT_REGISTRATION = {
+  /** Main registration status */
+  status: "ZIVO is registered as a Seller of Travel where required by law.",
+  
+  /** California registration */
+  california: "California Seller of Travel Registration: pending",
+  
+  /** Florida registration */
+  florida: "Florida Seller of Travel Registration: pending",
+  
+  /** Sub-agent disclosure */
+  subAgent: "ZIVO sells air travel as a sub-agent of licensed ticketing providers.",
+  
+  /** Ticketing disclosure */
+  ticketing: "Airline tickets are issued by authorized partners and subject to airline rules.",
+  
+  /** Combined full disclosure */
+  fullDisclosure: "ZIVO is registered as a Seller of Travel where required by law. California Seller of Travel Registration pending. Florida Seller of Travel Registration pending. ZIVO sells air travel as a sub-agent of licensed ticketing providers. Airline tickets are issued by authorized partners and subject to airline rules.",
+  
+  /** Short footer version */
+  footerShort: "ZIVO is registered as a Seller of Travel where required by law. California SOT: pending · Florida SOT: pending",
+} as const;
 
 // ============================================
 // MOR CTA TEXT (ZIVO = SELLER)
@@ -70,7 +97,7 @@ export const FLIGHT_MOR_DISCLAIMERS = {
   confirmation: "Your booking is confirmed. You will receive your e-ticket via email.",
   
   /** Footer disclaimer */
-  footer: "ZIVO is a registered seller of travel. Tickets are issued by our licensed ticketing partners.",
+  footer: "ZIVO is registered as a Seller of Travel where required by law. Tickets are issued by our licensed ticketing partners.",
 } as const;
 
 // ============================================
