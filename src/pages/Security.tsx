@@ -180,6 +180,8 @@ export default function Security() {
                   "Insider Threat Controls",
                   "API & Backend Hardening",
                   "Breach Containment Protocols",
+                  "Anti-Bot & Scraping Defense",
+                  "Fraud & Payment Protection",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -187,9 +189,14 @@ export default function Security() {
                   </div>
                 ))}
               </div>
-              <Button asChild className="mt-4">
-                <Link to="/security/zero-trust">View Full Security Controls</Link>
-              </Button>
+              <div className="flex flex-wrap gap-3 mt-4">
+                <Button asChild>
+                  <Link to="/security/zero-trust">Zero-Trust Controls</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/security/scale-protection">Scale & Fraud Protection</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
