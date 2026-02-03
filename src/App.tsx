@@ -107,6 +107,7 @@ const CarsDetailPage = lazy(() => import("./pages/cars/CarDetailPage"));
 const HowToRent = lazy(() => import("./pages/HowToRent"));
 // Admin car rental settings
 const CarRentalSettingsPage = lazy(() => import("./pages/admin/CarRentalSettingsPage"));
+const CarDamageClaimsPage = lazy(() => import("./pages/admin/CarDamageClaimsPage"));
 // Owner Earnings
 const OwnerEarnings = lazy(() => import("./pages/owner/OwnerEarnings"));
 // Renter Verification pages
@@ -524,12 +525,21 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
-                {/* Car Rental Admin Settings */}
+{/* Car Rental Admin Settings */}
                 <Route
                   path="/admin/cars/settings"
                   element={
                     <ProtectedRoute requireAdmin>
                       <CarRentalSettingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Car Damage Claims Admin */}
+                <Route
+                  path="/admin/cars/damage-claims"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <CarDamageClaimsPage />
                     </ProtectedRoute>
                   }
                 />
