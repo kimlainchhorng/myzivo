@@ -5636,6 +5636,14 @@ export type Database = {
           created_at: string | null
           daily_rate: number
           damage_report_id: string | null
+          delivery_address: string | null
+          delivery_distance_miles: number | null
+          delivery_fee: number | null
+          delivery_lat: number | null
+          delivery_lng: number | null
+          delivery_notes: string | null
+          delivery_option: string | null
+          delivery_scheduled_at: string | null
           deposit_amount: number | null
           deposit_authorized_at: string | null
           deposit_captured_amount: number | null
@@ -5668,7 +5676,9 @@ export type Database = {
           pickup_confirmed_at: string | null
           pickup_confirmed_by: string | null
           pickup_date: string
+          pickup_fee: number | null
           pickup_location: string | null
+          pickup_scheduled_at: string | null
           platform_fee: number | null
           refund_amount: number | null
           refund_status: string | null
@@ -5705,6 +5715,14 @@ export type Database = {
           created_at?: string | null
           daily_rate: number
           damage_report_id?: string | null
+          delivery_address?: string | null
+          delivery_distance_miles?: number | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          delivery_notes?: string | null
+          delivery_option?: string | null
+          delivery_scheduled_at?: string | null
           deposit_amount?: number | null
           deposit_authorized_at?: string | null
           deposit_captured_amount?: number | null
@@ -5737,7 +5755,9 @@ export type Database = {
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date: string
+          pickup_fee?: number | null
           pickup_location?: string | null
+          pickup_scheduled_at?: string | null
           platform_fee?: number | null
           refund_amount?: number | null
           refund_status?: string | null
@@ -5774,6 +5794,14 @@ export type Database = {
           created_at?: string | null
           daily_rate?: number
           damage_report_id?: string | null
+          delivery_address?: string | null
+          delivery_distance_miles?: number | null
+          delivery_fee?: number | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          delivery_notes?: string | null
+          delivery_option?: string | null
+          delivery_scheduled_at?: string | null
           deposit_amount?: number | null
           deposit_authorized_at?: string | null
           deposit_captured_amount?: number | null
@@ -5806,7 +5834,9 @@ export type Database = {
           pickup_confirmed_at?: string | null
           pickup_confirmed_by?: string | null
           pickup_date?: string
+          pickup_fee?: number | null
           pickup_location?: string | null
+          pickup_scheduled_at?: string | null
           platform_fee?: number | null
           refund_amount?: number | null
           refund_status?: string | null
@@ -6622,6 +6652,12 @@ export type Database = {
           created_at: string | null
           custom_commission_percent: number | null
           daily_rate: number
+          delivery_base_fee: number | null
+          delivery_enabled: boolean | null
+          delivery_fee_type: string | null
+          delivery_hours_end: string | null
+          delivery_hours_start: string | null
+          delivery_per_mile_fee: number | null
           deposit_amount: number | null
           description: string | null
           doors: number | null
@@ -6643,6 +6679,7 @@ export type Database = {
           location_state: string | null
           location_zip: string | null
           make: string
+          max_delivery_distance_miles: number | null
           max_rental_days: number | null
           max_trip_days: number | null
           mileage: number | null
@@ -6652,6 +6689,10 @@ export type Database = {
           monthly_discount_percent: number | null
           monthly_rate: number | null
           owner_id: string
+          pickup_base_fee: number | null
+          pickup_enabled: boolean | null
+          pickup_fee_type: string | null
+          pickup_per_mile_fee: number | null
           rating: number | null
           rejection_reason: string | null
           review_count: number | null
@@ -6681,6 +6722,12 @@ export type Database = {
           created_at?: string | null
           custom_commission_percent?: number | null
           daily_rate: number
+          delivery_base_fee?: number | null
+          delivery_enabled?: boolean | null
+          delivery_fee_type?: string | null
+          delivery_hours_end?: string | null
+          delivery_hours_start?: string | null
+          delivery_per_mile_fee?: number | null
           deposit_amount?: number | null
           description?: string | null
           doors?: number | null
@@ -6702,6 +6749,7 @@ export type Database = {
           location_state?: string | null
           location_zip?: string | null
           make: string
+          max_delivery_distance_miles?: number | null
           max_rental_days?: number | null
           max_trip_days?: number | null
           mileage?: number | null
@@ -6711,6 +6759,10 @@ export type Database = {
           monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id: string
+          pickup_base_fee?: number | null
+          pickup_enabled?: boolean | null
+          pickup_fee_type?: string | null
+          pickup_per_mile_fee?: number | null
           rating?: number | null
           rejection_reason?: string | null
           review_count?: number | null
@@ -6740,6 +6792,12 @@ export type Database = {
           created_at?: string | null
           custom_commission_percent?: number | null
           daily_rate?: number
+          delivery_base_fee?: number | null
+          delivery_enabled?: boolean | null
+          delivery_fee_type?: string | null
+          delivery_hours_end?: string | null
+          delivery_hours_start?: string | null
+          delivery_per_mile_fee?: number | null
           deposit_amount?: number | null
           description?: string | null
           doors?: number | null
@@ -6761,6 +6819,7 @@ export type Database = {
           location_state?: string | null
           location_zip?: string | null
           make?: string
+          max_delivery_distance_miles?: number | null
           max_rental_days?: number | null
           max_trip_days?: number | null
           mileage?: number | null
@@ -6770,6 +6829,10 @@ export type Database = {
           monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id?: string
+          pickup_base_fee?: number | null
+          pickup_enabled?: boolean | null
+          pickup_fee_type?: string | null
+          pickup_per_mile_fee?: number | null
           rating?: number | null
           rejection_reason?: string | null
           review_count?: number | null
@@ -10560,6 +10623,130 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "p2p_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicle_delivery_tasks: {
+        Row: {
+          arrived_at: string | null
+          assigned_at: string | null
+          booking_id: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          condition_notes: string | null
+          created_at: string
+          distance_miles: number | null
+          driver_id: string | null
+          driver_payout: number | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          handoff_pin: string | null
+          handoff_signature_url: string | null
+          handoff_verified: boolean | null
+          handoff_verified_at: string | null
+          id: string
+          payout_status: string | null
+          pickup_address: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          platform_fee: number | null
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          task_type: string
+          total_fee: number
+          updated_at: string
+          vehicle_photos: Json | null
+        }
+        Insert: {
+          arrived_at?: string | null
+          assigned_at?: string | null
+          booking_id: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          condition_notes?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          driver_id?: string | null
+          driver_payout?: number | null
+          dropoff_address: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          handoff_pin?: string | null
+          handoff_signature_url?: string | null
+          handoff_verified?: boolean | null
+          handoff_verified_at?: string | null
+          id?: string
+          payout_status?: string | null
+          pickup_address: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number | null
+          scheduled_at: string
+          started_at?: string | null
+          status?: string
+          task_type: string
+          total_fee: number
+          updated_at?: string
+          vehicle_photos?: Json | null
+        }
+        Update: {
+          arrived_at?: string | null
+          assigned_at?: string | null
+          booking_id?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          condition_notes?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          driver_id?: string | null
+          driver_payout?: number | null
+          dropoff_address?: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          handoff_pin?: string | null
+          handoff_signature_url?: string | null
+          handoff_verified?: boolean | null
+          handoff_verified_at?: string | null
+          id?: string
+          payout_status?: string | null
+          pickup_address?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          platform_fee?: number | null
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          task_type?: string
+          total_fee?: number
+          updated_at?: string
+          vehicle_photos?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_delivery_tasks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_delivery_tasks_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehicle_delivery_tasks_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
         ]
