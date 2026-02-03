@@ -6031,6 +6031,11 @@ export type Database = {
           pickup_location: string | null
           pickup_scheduled_at: string | null
           platform_fee: number | null
+          protection_daily_rate: number | null
+          protection_deductible: number | null
+          protection_plan_id: string | null
+          protection_tier: string | null
+          protection_total: number | null
           refund_amount: number | null
           refund_status: string | null
           refunded_at: string | null
@@ -6110,6 +6115,11 @@ export type Database = {
           pickup_location?: string | null
           pickup_scheduled_at?: string | null
           platform_fee?: number | null
+          protection_daily_rate?: number | null
+          protection_deductible?: number | null
+          protection_plan_id?: string | null
+          protection_tier?: string | null
+          protection_total?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -6189,6 +6199,11 @@ export type Database = {
           pickup_location?: string | null
           pickup_scheduled_at?: string | null
           platform_fee?: number | null
+          protection_daily_rate?: number | null
+          protection_deductible?: number | null
+          protection_plan_id?: string | null
+          protection_tier?: string | null
+          protection_total?: number | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -6238,6 +6253,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "p2p_bookings_protection_plan_id_fkey"
+            columns: ["protection_plan_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_protection_plans"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "p2p_bookings_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -6281,6 +6303,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      p2p_claim_documents: {
+        Row: {
+          claim_id: string
+          description: string | null
+          document_type: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          claim_id: string
+          description?: string | null
+          document_type: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          claim_id?: string
+          description?: string | null
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_claim_documents_claim_id_fkey"
+            columns: ["claim_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_enhanced_claims"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       p2p_commission_settings: {
         Row: {
@@ -6565,6 +6631,98 @@ export type Database = {
           },
         ]
       }
+      p2p_enhanced_claims: {
+        Row: {
+          admin_notes: string | null
+          booking_id: string
+          claim_number: string | null
+          closed_at: string | null
+          covered_amount: number | null
+          created_at: string
+          damage_report_id: string | null
+          decision_at: string | null
+          deductible_amount: number | null
+          id: string
+          insurance_partner: string | null
+          owner_payout: number | null
+          paid_out_at: string | null
+          partner_claim_ref: string | null
+          partner_decision: string | null
+          partner_notes: string | null
+          partner_response: Json | null
+          protection_tier: string | null
+          renter_responsibility: number | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          submitted_at: string | null
+          total_damage_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          booking_id: string
+          claim_number?: string | null
+          closed_at?: string | null
+          covered_amount?: number | null
+          created_at?: string
+          damage_report_id?: string | null
+          decision_at?: string | null
+          deductible_amount?: number | null
+          id?: string
+          insurance_partner?: string | null
+          owner_payout?: number | null
+          paid_out_at?: string | null
+          partner_claim_ref?: string | null
+          partner_decision?: string | null
+          partner_notes?: string | null
+          partner_response?: Json | null
+          protection_tier?: string | null
+          renter_responsibility?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          total_damage_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          booking_id?: string
+          claim_number?: string | null
+          closed_at?: string | null
+          covered_amount?: number | null
+          created_at?: string
+          damage_report_id?: string | null
+          decision_at?: string | null
+          deductible_amount?: number | null
+          id?: string
+          insurance_partner?: string | null
+          owner_payout?: number | null
+          paid_out_at?: string | null
+          partner_claim_ref?: string | null
+          partner_decision?: string | null
+          partner_notes?: string | null
+          partner_response?: Json | null
+          protection_tier?: string | null
+          renter_responsibility?: number | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          total_damage_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_enhanced_claims_damage_report_id_fkey"
+            columns: ["damage_report_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_damage_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       p2p_insurance_claims: {
         Row: {
           claim_reference: string | null
@@ -6840,6 +6998,104 @@ export type Database = {
           },
         ]
       }
+      p2p_protection_commissions: {
+        Row: {
+          booking_id: string
+          commission_amount: number
+          commission_percent: number | null
+          created_at: string
+          id: string
+          protection_plan_id: string | null
+          protection_revenue: number
+        }
+        Insert: {
+          booking_id: string
+          commission_amount: number
+          commission_percent?: number | null
+          created_at?: string
+          id?: string
+          protection_plan_id?: string | null
+          protection_revenue: number
+        }
+        Update: {
+          booking_id?: string
+          commission_amount?: number
+          commission_percent?: number | null
+          created_at?: string
+          id?: string
+          protection_plan_id?: string | null
+          protection_revenue?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_protection_commissions_protection_plan_id_fkey"
+            columns: ["protection_plan_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_protection_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_protection_plans: {
+        Row: {
+          collision_coverage: number
+          comprehensive_coverage: number
+          coverage_excludes: Json | null
+          coverage_includes: Json | null
+          created_at: string
+          daily_rate: number
+          deductible: number
+          description: string | null
+          id: string
+          insurance_partner: string | null
+          is_active: boolean | null
+          liability_coverage: number
+          name: string
+          policy_document_url: string | null
+          sort_order: number | null
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          collision_coverage?: number
+          comprehensive_coverage?: number
+          coverage_excludes?: Json | null
+          coverage_includes?: Json | null
+          created_at?: string
+          daily_rate?: number
+          deductible?: number
+          description?: string | null
+          id?: string
+          insurance_partner?: string | null
+          is_active?: boolean | null
+          liability_coverage?: number
+          name: string
+          policy_document_url?: string | null
+          sort_order?: number | null
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          collision_coverage?: number
+          comprehensive_coverage?: number
+          coverage_excludes?: Json | null
+          coverage_includes?: Json | null
+          created_at?: string
+          daily_rate?: number
+          deductible?: number
+          description?: string | null
+          id?: string
+          insurance_partner?: string | null
+          is_active?: boolean | null
+          liability_coverage?: number
+          name?: string
+          policy_document_url?: string | null
+          sort_order?: number | null
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       p2p_renter_invites: {
         Row: {
           created_at: string | null
@@ -7038,10 +7294,14 @@ export type Database = {
           mileage: number | null
           min_rental_days: number | null
           min_trip_days: number | null
+          minimum_protection_tier: string | null
           model: string
           monthly_discount_percent: number | null
           monthly_rate: number | null
           owner_id: string
+          owner_insurance_expiry: string | null
+          owner_insurance_policy: string | null
+          owner_insurance_verified: boolean | null
           pickup_base_fee: number | null
           pickup_enabled: boolean | null
           pickup_fee_type: string | null
@@ -7110,10 +7370,14 @@ export type Database = {
           mileage?: number | null
           min_rental_days?: number | null
           min_trip_days?: number | null
+          minimum_protection_tier?: string | null
           model: string
           monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id: string
+          owner_insurance_expiry?: string | null
+          owner_insurance_policy?: string | null
+          owner_insurance_verified?: boolean | null
           pickup_base_fee?: number | null
           pickup_enabled?: boolean | null
           pickup_fee_type?: string | null
@@ -7182,10 +7446,14 @@ export type Database = {
           mileage?: number | null
           min_rental_days?: number | null
           min_trip_days?: number | null
+          minimum_protection_tier?: string | null
           model?: string
           monthly_discount_percent?: number | null
           monthly_rate?: number | null
           owner_id?: string
+          owner_insurance_expiry?: string | null
+          owner_insurance_policy?: string | null
+          owner_insurance_verified?: boolean | null
           pickup_base_fee?: number | null
           pickup_enabled?: boolean | null
           pickup_fee_type?: string | null
@@ -13204,6 +13472,13 @@ export type Database = {
       driver_status: "pending" | "verified" | "rejected" | "suspended"
       fleet_owner_status: "pending" | "approved" | "suspended" | "rejected"
       fleet_team_role: "admin" | "manager" | "staff"
+      insurance_claim_status:
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "denied"
+        | "paid_out"
+        | "closed"
       p2p_booking_status:
         | "pending"
         | "confirmed"
@@ -13258,6 +13533,7 @@ export type Database = {
       p2p_vehicle_status: "pending" | "approved" | "rejected" | "suspended"
       partner_booking_status: "pending" | "returned" | "failed" | "timeout"
       partner_status: "pending" | "active" | "suspended" | "inactive"
+      protection_tier: "basic" | "standard" | "premium"
       renter_document_type: "license_front" | "license_back" | "selfie"
       renter_verification_status:
         | "pending"
@@ -13434,6 +13710,14 @@ export const Constants = {
       driver_status: ["pending", "verified", "rejected", "suspended"],
       fleet_owner_status: ["pending", "approved", "suspended", "rejected"],
       fleet_team_role: ["admin", "manager", "staff"],
+      insurance_claim_status: [
+        "submitted",
+        "under_review",
+        "approved",
+        "denied",
+        "paid_out",
+        "closed",
+      ],
       p2p_booking_status: [
         "pending",
         "confirmed",
@@ -13495,6 +13779,7 @@ export const Constants = {
       p2p_vehicle_status: ["pending", "approved", "rejected", "suspended"],
       partner_booking_status: ["pending", "returned", "failed", "timeout"],
       partner_status: ["pending", "active", "suspended", "inactive"],
+      protection_tier: ["basic", "standard", "premium"],
       renter_document_type: ["license_front", "license_back", "selfie"],
       renter_verification_status: [
         "pending",
