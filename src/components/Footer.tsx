@@ -40,6 +40,7 @@ const footerLinks = {
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
     { name: "FAQ", href: "/faq" },
+    { name: "Security", href: "/security" },
   ],
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
@@ -48,6 +49,7 @@ const footerLinks = {
     { name: "Cookie Policy", href: "/cookies" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Seller of Travel", href: "/legal/seller-of-travel" },
+    { name: "Incident Response", href: "/legal/security-incident" },
   ],
 };
 
