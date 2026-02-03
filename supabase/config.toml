@@ -77,3 +77,15 @@ verify_jwt = false
 
 [functions.send-flight-email]
 verify_jwt = false
+
+[functions.hotelbeds-hotels]
+verify_jwt = false
+
+[functions.hotelbeds-activities]
+verify_jwt = false
+
+[functions.hotelbeds-transfers]
+verify_jwt = false
+
+[functions.search-hotels]
+verify_jwt = false
