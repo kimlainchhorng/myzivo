@@ -5632,6 +5632,12 @@ export type Database = {
           created_at: string | null
           daily_rate: number
           damage_report_id: string | null
+          deposit_amount: number | null
+          deposit_authorized_at: string | null
+          deposit_captured_amount: number | null
+          deposit_released_at: string | null
+          deposit_status: string | null
+          deposit_stripe_payment_intent_id: string | null
           fuel_level_end: string | null
           fuel_level_start: string | null
           id: string
@@ -5657,6 +5663,9 @@ export type Database = {
           refund_amount: number | null
           refund_status: string | null
           refunded_at: string | null
+          rental_completed_at: string | null
+          rental_completed_by: string | null
+          rental_completion_notes: string | null
           renter_id: string
           renter_license_verified: boolean | null
           return_confirmed_at: string | null
@@ -5685,6 +5694,12 @@ export type Database = {
           created_at?: string | null
           daily_rate: number
           damage_report_id?: string | null
+          deposit_amount?: number | null
+          deposit_authorized_at?: string | null
+          deposit_captured_amount?: number | null
+          deposit_released_at?: string | null
+          deposit_status?: string | null
+          deposit_stripe_payment_intent_id?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
@@ -5710,6 +5725,9 @@ export type Database = {
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          rental_completed_at?: string | null
+          rental_completed_by?: string | null
+          rental_completion_notes?: string | null
           renter_id: string
           renter_license_verified?: boolean | null
           return_confirmed_at?: string | null
@@ -5738,6 +5756,12 @@ export type Database = {
           created_at?: string | null
           daily_rate?: number
           damage_report_id?: string | null
+          deposit_amount?: number | null
+          deposit_authorized_at?: string | null
+          deposit_captured_amount?: number | null
+          deposit_released_at?: string | null
+          deposit_status?: string | null
+          deposit_stripe_payment_intent_id?: string | null
           fuel_level_end?: string | null
           fuel_level_start?: string | null
           id?: string
@@ -5763,6 +5787,9 @@ export type Database = {
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          rental_completed_at?: string | null
+          rental_completed_by?: string | null
+          rental_completion_notes?: string | null
           renter_id?: string
           renter_license_verified?: boolean | null
           return_confirmed_at?: string | null
@@ -5930,6 +5957,9 @@ export type Database = {
           booking_id: string
           created_at: string | null
           date_noticed: string
+          deposit_deduction_amount: number | null
+          deposit_deduction_approved_at: string | null
+          deposit_deduction_approved_by: string | null
           description: string
           estimated_repair_cost: number | null
           id: string
@@ -5944,6 +5974,9 @@ export type Database = {
           booking_id: string
           created_at?: string | null
           date_noticed: string
+          deposit_deduction_amount?: number | null
+          deposit_deduction_approved_at?: string | null
+          deposit_deduction_approved_by?: string | null
           description: string
           estimated_repair_cost?: number | null
           id?: string
@@ -5958,6 +5991,9 @@ export type Database = {
           booking_id?: string
           created_at?: string | null
           date_noticed?: string
+          deposit_deduction_amount?: number | null
+          deposit_deduction_approved_at?: string | null
+          deposit_deduction_approved_by?: string | null
           description?: string
           estimated_repair_cost?: number | null
           id?: string
@@ -5970,6 +6006,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "p2p_damage_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "p2p_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      p2p_deposit_events: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          reason: string | null
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          reason?: string | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          reason?: string | null
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "p2p_deposit_events_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "p2p_bookings"
@@ -6509,10 +6589,12 @@ export type Database = {
           approval_status:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          cancellation_policy: string | null
           category: Database["public"]["Enums"]["p2p_vehicle_category"]
           color: string | null
           created_at: string | null
           daily_rate: number
+          deposit_amount: number | null
           description: string | null
           doors: number | null
           features: Json | null
@@ -6553,10 +6635,12 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          cancellation_policy?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
           color?: string | null
           created_at?: string | null
           daily_rate: number
+          deposit_amount?: number | null
           description?: string | null
           doors?: number | null
           features?: Json | null
@@ -6597,10 +6681,12 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["p2p_vehicle_status"]
             | null
+          cancellation_policy?: string | null
           category?: Database["public"]["Enums"]["p2p_vehicle_category"]
           color?: string | null
           created_at?: string | null
           daily_rate?: number
+          deposit_amount?: number | null
           description?: string | null
           doors?: number | null
           features?: Json | null
@@ -7960,6 +8046,8 @@ export type Database = {
       }
       renter_profiles: {
         Row: {
+          block_reason: string | null
+          booking_blocked_until: string | null
           created_at: string | null
           date_of_birth: string
           full_name: string
@@ -7977,6 +8065,8 @@ export type Database = {
             | null
         }
         Insert: {
+          block_reason?: string | null
+          booking_blocked_until?: string | null
           created_at?: string | null
           date_of_birth: string
           full_name: string
@@ -7994,6 +8084,8 @@ export type Database = {
             | null
         }
         Update: {
+          block_reason?: string | null
+          booking_blocked_until?: string | null
           created_at?: string | null
           date_of_birth?: string
           full_name?: string
