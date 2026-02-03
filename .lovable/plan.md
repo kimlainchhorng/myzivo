@@ -1,417 +1,255 @@
 
-
-# Flights SEO, Route Landing Pages & Indexing for ZIVO
+# Flights Analytics, Revenue Tracking & Funnel Visibility
 
 ## Summary
 
-This plan implements OTA-grade SEO infrastructure for ZIVO Flights, including dynamic route landing pages, airport/city information pages, enhanced structured data (TravelAction schema), comprehensive sitemap updates, and proper crawl controls. The goal is to drive organic traffic through search-engine-optimized, non-affiliate landing pages.
+This plan implements OTA-grade analytics for ZIVO Flights, providing complete visibility into the booking funnel, revenue metrics, failure detection, and exportable reports. The system leverages existing infrastructure (`flight_funnel_events`, `flight_search_logs`, `flight_bookings`) and adds a dedicated analytics dashboard with real-time KPIs, charts, and admin alerts.
 
 ---
 
 ## Current State Analysis
 
-| Requirement | Status | Details |
-|-------------|--------|---------|
-| **Route landing pages** | ✅ Exists | `/flights/:route` pattern with `FlightLanding.tsx` |
-| **Route URL format** | ⚠️ Partial | Uses `{from}-to-{to}` but sitemap uses `from-{from}-to-{to}` inconsistently |
-| **Airport pages** | ❌ Missing | No `/airports/{iata}` pages |
-| **City pages** | ⚠️ Partial | Hotels has city pages, flights does not |
-| **BreadcrumbList schema** | ✅ Exists | `BreadcrumbSchema.tsx` component available |
-| **TravelAction schema** | ❌ Missing | No TravelAction structured data |
-| **Sitemap** | ✅ Exists | `public/sitemap.xml` with 526 lines, includes some routes |
-| **robots.txt** | ✅ Exists | Good structure, blocks admin/checkout/auth pages |
-| **noIndex on checkout** | ⚠️ Partial | Some checkout pages have noIndex, need to verify all |
-| **SEO disclaimers** | ⚠️ Partial | Exists on FlightLanding but needs OTA-specific wording |
+| Component | Status | Details |
+|-----------|--------|---------|
+| **flight_search_logs table** | ✅ Exists | Tracks search queries, offers count, errors, response times |
+| **flight_bookings table** | ✅ Exists | Full booking data with payment/ticketing status, revenue fields |
+| **flight_funnel_events table** | ✅ Exists | Schema defined but not actively used - needs implementation |
+| **flight_admin_alerts table** | ✅ Exists | Used by FlightStatusPage for critical alerts |
+| **useFlightSearchLogs hook** | ✅ Exists | Basic search log queries |
+| **FlightStatusPage** | ✅ Exists | Basic 24h stats, but limited analytics |
+| **FlightDebugPage** | ✅ Exists | Search log viewer, no funnel analytics |
+| **Revenue tracking** | ⚠️ Partial | `total_amount`, `taxes_fees`, `zivo_markup` columns exist but no dashboard |
+| **Funnel event tracking** | ❌ Missing | Table exists, no client-side tracking implementation |
+| **Dedicated analytics dashboard** | ❌ Missing | Need `/admin/flights/analytics` page |
+| **Export functionality** | ❌ Missing | No booking/revenue CSV export |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Standardize Route URL Format
+### Phase 1: Funnel Event Tracking Hook
 
-**Goal:** Establish consistent URL pattern for SEO route pages.
+**Goal:** Create client-side tracking that logs user journey through the flight booking funnel.
 
-**Chosen Format:** `/flights/{origin}-to-{destination}` (lowercase, hyphenated)
+**File:** `src/hooks/useFlightFunnel.ts` (NEW)
 
-Examples:
-- `/flights/new-york-to-los-angeles`
-- `/flights/miami-to-cancun`
-- `/flights/chicago-to-london`
+Create a tracking hook that records events to `flight_funnel_events`:
 
-**File:** `src/utils/seoUtils.ts` (MODIFY)
-
-Add URL generation utilities:
 ```typescript
-/**
- * Generate SEO-friendly route URL
- */
-export function generateRouteUrl(origin: string, destination: string): string {
-  const originSlug = formatCitySlug(origin);
-  const destSlug = formatCitySlug(destination);
-  return `/flights/${originSlug}-to-${destSlug}`;
+interface FunnelEvent {
+  event_type: 
+    | 'search_started'
+    | 'results_loaded'
+    | 'offer_selected'
+    | 'checkout_started'
+    | 'payment_success'
+    | 'ticket_issued'
+    | 'booking_failed';
+  origin?: string;
+  destination?: string;
+  departure_date?: string;
+  return_date?: string;
+  passengers?: number;
+  cabin_class?: string;
+  offer_id?: string;
+  offers_count?: number;
+  amount?: number;
+  currency?: string;
+  booking_id?: string;
+  error_type?: string;
+  error_message?: string;
 }
+```
 
-/**
- * Parse route from URL slug
- */
-export function parseRouteSlug(slug: string): { origin: string; destination: string } | null {
-  const match = slug.match(/^(.+)-to-(.+)$/);
-  if (!match) return null;
-  return {
-    origin: parseCitySlug(match[1]),
-    destination: parseCitySlug(match[2]),
-  };
+Key functions:
+- `trackFunnelEvent(event)` - Log event to database
+- `getSessionId()` - Get/create session ID for attribution
+- `getDeviceType()` - Detect mobile/desktop/tablet
+
+---
+
+### Phase 2: Integrate Tracking Into Booking Flow
+
+**Goal:** Add tracking calls at each step of the flight booking journey.
+
+**Files to modify:**
+
+| File | Event | Trigger |
+|------|-------|---------|
+| `src/pages/FlightSearch.tsx` | `search_started` | Form submission |
+| `src/pages/FlightResults.tsx` | `results_loaded` | Results received from API |
+| `src/pages/FlightResults.tsx` | `offer_selected` | User clicks on flight offer |
+| `src/pages/FlightCheckout.tsx` | `checkout_started` | Checkout page loaded |
+| `supabase/functions/stripe-webhook` | `payment_success` | Payment confirmed |
+| `supabase/functions/issue-flight-ticket` | `ticket_issued` | Ticket successfully issued |
+| `supabase/functions/issue-flight-ticket` | `booking_failed` | Ticketing error |
+
+---
+
+### Phase 3: Flight Analytics Hook
+
+**Goal:** Query aggregated analytics data for the admin dashboard.
+
+**File:** `src/hooks/useFlightAnalytics.ts` (NEW)
+
+```typescript
+interface FlightAnalytics {
+  // KPIs
+  searchesToday: number;
+  searchesWeek: number;
+  searchesMonth: number;
+  resultsShown: number;
+  bookingsCompleted: number;
+  searchToResultsRate: number;
+  resultsToBookingRate: number;
+  overallConversionRate: number;
+  
+  // Revenue
+  revenueToday: number;
+  revenueWeek: number;
+  revenueMonth: number;
+  avgBookingValue: number;
+  totalTaxesFees: number;
+  totalZivoMargin: number;
+  
+  // Failures
+  zeroResultsCount: number;
+  paymentFailures: number;
+  ticketingFailures: number;
+  autoRefundsTriggered: number;
+  
+  // Top routes
+  topSearchedRoutes: { origin: string; destination: string; count: number }[];
+  topBookedRoutes: { origin: string; destination: string; revenue: number }[];
+  zeroResultsRoutes: { origin: string; destination: string; count: number }[];
 }
+```
+
+Hooks to create:
+- `useFlightKPIs(timeRange)` - Real-time KPIs
+- `useFlightRevenue(timeRange)` - Revenue metrics
+- `useFlightFunnelStats(timeRange)` - Funnel conversion data
+- `useFlightFailures(timeRange)` - Failure visibility
+- `useTopRoutes(timeRange)` - Route analytics
+- `useFlightChartData(timeRange)` - Time-series for charts
+
+---
+
+### Phase 4: Admin Analytics Dashboard
+
+**Goal:** Create dedicated analytics page at `/admin/flights/analytics`.
+
+**File:** `src/pages/admin/FlightAnalyticsPage.tsx` (NEW)
+
+**Layout:**
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  Flight Analytics Dashboard                    [Time Range ▼]   │
+├─────────────────────────────────────────────────────────────────┤
+│                         KPI CARDS                               │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐ │
+│  │ Searches │ │ Bookings │ │ Revenue  │ │ Avg Val  │ │Conv %  │ │
+│  │  Today   │ │ Today    │ │  Today   │ │          │ │        │ │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └────────┘ │
+├─────────────────────────────────────────────────────────────────┤
+│                    FUNNEL VISUALIZATION                         │
+│  Searches (100%) → Results (80%) → Checkout (15%) → Booked (5%) │
+├─────────────────────────────────────────────────────────────────┤
+│  CHARTS TAB                                                     │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐       │
+│  │  Revenue Over Time      │  │  Searches vs Bookings   │       │
+│  │  (Line Chart)           │  │  (Bar Chart)            │       │
+│  └─────────────────────────┘  └─────────────────────────┘       │
+├─────────────────────────────────────────────────────────────────┤
+│  ROUTES TAB                                                     │
+│  ┌─────────────────────────┐  ┌─────────────────────────┐       │
+│  │  Top Searched Routes    │  │  Routes with 0 Results  │       │
+│  │  (Table)                │  │  (Alert Table)          │       │
+│  └─────────────────────────┘  └─────────────────────────┘       │
+├─────────────────────────────────────────────────────────────────┤
+│  FAILURES TAB                                                   │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  Payment Failures  │  Ticketing Failures  │  Auto-Refunds│    │
+│  │  Table with booking references and error messages       │    │
+│  └─────────────────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────────────────┤
+│                    [Export Bookings CSV]  [Export Revenue CSV]  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Phase 2: Create Airport Pages
+### Phase 5: Failure Detection & Admin Alerts
 
-**Goal:** SEO landing pages for major airports at `/airports/{iata}`.
+**Goal:** Proactive alerting when failure rates spike.
 
-**File:** `src/pages/AirportPage.tsx` (NEW)
+**File:** `src/hooks/useFlightHealthAlerts.ts` (NEW)
 
-Create airport information page with:
-- Airport name and IATA code as H1
-- City and country information
-- Embedded flight search prefilled with airport code
-- Popular routes from this airport
-- "Book flights on ZIVO" CTA
-- No price guarantees or affiliate language
+Create alert rules:
+- "High no-results rate" - >30% zero-result searches in 1 hour
+- "Payment failures detected" - >3 payment failures in 15 minutes
+- "Duffel order failures" - >2 ticketing failures in 15 minutes
+- "API response degradation" - avg response >5s
 
-```typescript
-// Key content structure:
-<SEOHead 
-  title={`${airport.name} (${airport.code}) - Flights | ZIVO`}
-  description={`Search flights from ${airport.name} in ${airport.city}. Book securely on ZIVO.`}
-/>
+**File:** `src/components/admin/FlightAlertBanner.tsx` (NEW)
 
-<h1>Flights from {airport.name} ({airport.code})</h1>
-<p>{airport.city}, {airport.country}</p>
+Display critical alerts at top of analytics dashboard with severity badges.
 
-<FlightSearchFormPro initialFrom={airport.code} />
+---
 
-<PopularRoutesFromAirport airportCode={airport.code} />
-```
+### Phase 6: User Behavior Insights
 
-**File:** `src/components/seo/PopularRoutesFromAirport.tsx` (NEW)
+**Goal:** Track anonymized behavior patterns.
 
-Display popular destinations from specific airport.
+**Metrics to track (aggregated, no PII):**
+
+| Metric | Calculation |
+|--------|-------------|
+| Search abandonment rate | Searches - Results viewed / Searches |
+| Checkout abandonment rate | Checkout started - Bookings / Checkout started |
+| Average time to book | Avg(booking_created_at - search_started_at) |
+| Most searched dates | Group by departure_date, count |
+| Popular cabin classes | Group by cabin_class, count |
+
+Store aggregated stats in new table `flight_behavior_stats` or calculate on-the-fly.
+
+---
+
+### Phase 7: CSV Export Functionality
+
+**Goal:** Support audit-ready exports for accounting and Seller of Travel compliance.
+
+**File:** `src/lib/flightExports.ts` (NEW)
+
+Export functions:
+- `exportBookingsCSV(filters)` - All bookings with passenger count (no PII)
+- `exportRevenueReportCSV(dateRange)` - Revenue breakdown by day
+- `exportFailedTransactionsCSV(dateRange)` - Failed payments/ticketing for reconciliation
+
+**Privacy rules:**
+- Never export passenger names, emails, passport numbers
+- Export only: booking_reference, route, dates, amounts, status
+- Include summary totals for accounting
+
+---
+
+### Phase 8: Route Registration & Navigation
 
 **File:** `src/App.tsx` (MODIFY)
 
 Add route:
 ```typescript
-<Route path="/airports/:iata" element={<AirportPage />} />
+<Route path="/admin/flights/analytics" element={<FlightAnalyticsPage />} />
 ```
 
----
+**File:** `src/pages/admin/FlightStatusPage.tsx` (MODIFY)
 
-### Phase 3: Create City Flight Pages
+Add navigation link to analytics dashboard in the header buttons.
 
-**Goal:** SEO landing pages for cities at `/flights/cities/{city-slug}`.
+**File:** `src/pages/admin/TravelAdminDashboard.tsx` (MODIFY)
 
-**File:** `src/pages/FlightCityPage.tsx` (NEW)
-
-Create city-focused flight search page with:
-- City name as H1: "Flights to {City Name}"
-- Brief city intro (from city database)
-- Embedded search prefilled with destination
-- Popular routes to this city
-- Cross-sell to hotels in the same city
-
-**File:** `src/App.tsx` (MODIFY)
-
-Add routes:
-```typescript
-<Route path="/flights/cities/:citySlug" element={<FlightCityPage />} />
-```
-
----
-
-### Phase 4: Add TravelAction Structured Data
-
-**Goal:** Add schema.org TravelAction for flight search pages (OTA-safe, no affiliate references).
-
-**File:** `src/components/seo/FlightSearchSchema.tsx` (NEW)
-
-```typescript
-/**
- * Injects TravelAction schema for flight search pages
- * SEO-safe, OTA-compliant - no affiliate/partner references
- */
-
-interface FlightSearchSchemaProps {
-  origin?: string;
-  destination?: string;
-  departureDate?: string;
-}
-
-export default function FlightSearchSchema({ origin, destination, departureDate }: FlightSearchSchemaProps) {
-  useEffect(() => {
-    const schema = {
-      "@context": "https://schema.org",
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": "https://hizivo.com/flights/results?origin={origin}&dest={destination}&date={departureDate}",
-        "actionPlatform": ["http://schema.org/DesktopWebPlatform", "http://schema.org/MobileWebPlatform"]
-      },
-      "query-input": [
-        "required name=origin",
-        "required name=destination", 
-        "required name=departureDate"
-      ],
-      "provider": {
-        "@type": "Organization",
-        "name": "ZIVO",
-        "url": "https://hizivo.com"
-      }
-    };
-
-    // Inject script
-    let script = document.querySelector('script[data-schema="flight-search"]');
-    if (!script) {
-      script = document.createElement('script');
-      script.setAttribute('type', 'application/ld+json');
-      script.setAttribute('data-schema', 'flight-search');
-      document.head.appendChild(script);
-    }
-    script.textContent = JSON.stringify(schema);
-
-    return () => script?.remove();
-  }, [origin, destination, departureDate]);
-
-  return null;
-}
-```
-
-**File:** `src/pages/FlightLanding.tsx` (MODIFY)
-
-Add FlightSearchSchema component and BreadcrumbSchema to the page.
-
----
-
-### Phase 5: Add Breadcrumbs to All Flight Pages
-
-**Goal:** Consistent breadcrumb navigation with JSON-LD schema.
-
-**File:** `src/components/seo/FlightBreadcrumbs.tsx` (NEW)
-
-```typescript
-/**
- * Flight page breadcrumbs with JSON-LD schema
- */
-
-interface FlightBreadcrumbsProps {
-  origin?: string;
-  destination?: string;
-  currentPage?: 'search' | 'results' | 'details' | 'checkout';
-}
-
-export default function FlightBreadcrumbs({ origin, destination, currentPage = 'search' }: FlightBreadcrumbsProps) {
-  const items = [
-    { name: 'Home', url: '/' },
-    { name: 'Flights', url: '/flights' },
-  ];
-
-  if (origin && destination) {
-    items.push({
-      name: `${origin} to ${destination}`,
-      url: generateRouteUrl(origin, destination),
-    });
-  }
-
-  if (currentPage === 'results') {
-    items.push({ name: 'Results', url: '/flights/results' });
-  }
-
-  return (
-    <>
-      <BreadcrumbSchema items={items} />
-      {/* Visual breadcrumb UI */}
-    </>
-  );
-}
-```
-
----
-
-### Phase 6: Update robots.txt
-
-**Goal:** Ensure proper crawl controls for flight pages.
-
-**File:** `public/robots.txt` (MODIFY)
-
-Add explicit rules:
-```txt
-# ===========================
-# FLIGHTS - PUBLIC SEO PAGES
-# ===========================
-Allow: /flights
-Allow: /flights/*
-Allow: /airports
-Allow: /airports/*
-
-# ===========================
-# FLIGHTS - PRIVATE (NOINDEX)
-# ===========================
-Disallow: /flights/checkout
-Disallow: /flights/traveler
-Disallow: /flights/confirmation
-Disallow: /flights/results  # Dynamic results, not for indexing
-
-# Ensure checkout pages are blocked
-Disallow: /checkout
-Disallow: /booking/duffel-checkout
-```
-
----
-
-### Phase 7: Expand Sitemap with Route Pages
-
-**Goal:** Add top 50 flight routes to sitemap.
-
-**File:** `public/sitemap.xml` (MODIFY)
-
-Add popular route pages in standardized format:
-```xml
-<!-- Popular Flight Routes (SEO Format: {origin}-to-{destination}) -->
-<url>
-  <loc>https://hizivo.com/flights/new-york-to-los-angeles</loc>
-  <lastmod>2026-02-01</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.8</priority>
-</url>
-<url>
-  <loc>https://hizivo.com/flights/new-york-to-london</loc>
-  <lastmod>2026-02-01</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.8</priority>
-</url>
-<!-- ... additional routes ... -->
-
-<!-- Airport Pages -->
-<url>
-  <loc>https://hizivo.com/airports/jfk</loc>
-  <lastmod>2026-02-01</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.7</priority>
-</url>
-<url>
-  <loc>https://hizivo.com/airports/lax</loc>
-  <lastmod>2026-02-01</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.7</priority>
-</url>
-```
-
----
-
-### Phase 8: Ensure noIndex on All Private Pages
-
-**Goal:** Block indexing of checkout, traveler info, confirmation pages.
-
-**Files to verify/update with `noIndex={true}`:**
-- `FlightTravelerInfo.tsx`
-- `FlightCheckout.tsx`
-- `FlightConfirmation.tsx`
-- `FlightResults.tsx` (dynamic results shouldn't be indexed)
-
-**File:** `src/pages/FlightCheckout.tsx` (MODIFY)
-
-Ensure:
-```typescript
-<SEOHead 
-  title="Checkout - ZIVO Flights"
-  description="Complete your flight booking securely on ZIVO."
-  noIndex={true}
-/>
-```
-
----
-
-### Phase 9: SEO-Safe Content Disclaimers
-
-**Goal:** Add OTA-compliant disclaimers on all landing pages.
-
-**File:** `src/config/flightSEOContent.ts` (NEW)
-
-```typescript
-/**
- * SEO-safe content for flight landing pages
- * No affiliate references, no partner comparisons
- */
-
-export const FLIGHT_SEO_DISCLAIMERS = {
-  /** Price disclaimer for landing pages */
-  priceNote: "Prices and availability may change. Final price shown before payment.",
-  
-  /** Booking model explanation */
-  bookingModel: "You book and pay on ZIVO. Tickets are issued by licensed partners.",
-  
-  /** No guarantee language */
-  noGuarantee: "Flight prices vary by date and availability.",
-} as const;
-
-export const FLIGHT_SEO_INTRO = {
-  /** Generic intro for route pages */
-  routeIntro: (origin: string, destination: string) => 
-    `Search flights from ${origin} to ${destination}. Book directly on ZIVO and receive instant e-tickets. Tickets are issued by licensed airline ticketing partners.`,
-  
-  /** Intro for airport pages */
-  airportIntro: (airportName: string, city: string) =>
-    `Find flights from ${airportName} in ${city}. Compare prices and book securely on ZIVO.`,
-  
-  /** Intro for city pages */
-  cityIntro: (cityName: string) =>
-    `Discover flights to ${cityName}. Search real-time prices and book on ZIVO with instant ticket issuance.`,
-} as const;
-```
-
-**File:** `src/pages/FlightLanding.tsx` (MODIFY)
-
-Update SEO content block to use new OTA-safe language:
-```typescript
-import { FLIGHT_SEO_DISCLAIMERS, FLIGHT_SEO_INTRO } from "@/config/flightSEOContent";
-
-// In the SEO content section:
-<p className="text-muted-foreground">
-  {FLIGHT_SEO_INTRO.routeIntro(from, to)}
-</p>
-<p className="text-xs text-muted-foreground mt-4">
-  {FLIGHT_SEO_DISCLAIMERS.priceNote}
-</p>
-```
-
----
-
-### Phase 10: Performance Optimizations
-
-**Goal:** Ensure fast loading for SEO crawlers.
-
-**Optimizations:**
-1. **Lazy-load search results** - Results component already lazy-loaded
-2. **Pre-render critical content** - H1, intro text, search form above fold
-3. **Image optimization** - Already using optimized images with srcset
-4. **Cache route pages** - Add cache headers via Vite config
-
-**File:** `vite.config.ts` (MODIFY)
-
-Add build-time cache hints for static route pages:
-```typescript
-// Add to build config for static asset caching
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks: {
-        'flight-seo': ['./src/pages/FlightLanding.tsx', './src/pages/AirportPage.tsx'],
-      }
-    }
-  }
-}
-```
+Add analytics quick link card.
 
 ---
 
@@ -419,105 +257,110 @@ build: {
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/utils/seoUtils.ts` | MODIFY | Add route URL generation utilities |
-| `src/pages/AirportPage.tsx` | CREATE | Airport information landing page |
-| `src/pages/FlightCityPage.tsx` | CREATE | City-focused flight search page |
-| `src/components/seo/FlightSearchSchema.tsx` | CREATE | TravelAction structured data |
-| `src/components/seo/FlightBreadcrumbs.tsx` | CREATE | Breadcrumbs with schema |
-| `src/components/seo/PopularRoutesFromAirport.tsx` | CREATE | Routes grid for airport pages |
-| `src/config/flightSEOContent.ts` | CREATE | OTA-safe SEO content config |
-| `src/pages/FlightLanding.tsx` | MODIFY | Add schemas, update content |
-| `src/pages/FlightCheckout.tsx` | MODIFY | Ensure noIndex |
-| `src/pages/FlightTravelerInfo.tsx` | MODIFY | Ensure noIndex |
-| `src/pages/FlightResults.tsx` | MODIFY | Add noIndex |
-| `src/App.tsx` | MODIFY | Add airport and city routes |
-| `public/robots.txt` | MODIFY | Update crawl rules |
-| `public/sitemap.xml` | MODIFY | Add route and airport URLs |
-| `vite.config.ts` | MODIFY | Add code splitting for SEO pages |
+| `src/hooks/useFlightFunnel.ts` | CREATE | Funnel event tracking hook |
+| `src/hooks/useFlightAnalytics.ts` | CREATE | Analytics data fetching hooks |
+| `src/hooks/useFlightHealthAlerts.ts` | CREATE | Failure detection & alert rules |
+| `src/lib/flightExports.ts` | CREATE | CSV export utilities |
+| `src/pages/admin/FlightAnalyticsPage.tsx` | CREATE | Main analytics dashboard |
+| `src/components/admin/FlightFunnelChart.tsx` | CREATE | Funnel visualization component |
+| `src/components/admin/FlightRevenueChart.tsx` | CREATE | Revenue over time chart |
+| `src/components/admin/FlightTopRoutes.tsx` | CREATE | Top routes tables |
+| `src/components/admin/FlightFailuresTable.tsx` | CREATE | Failure visibility table |
+| `src/components/admin/FlightAlertBanner.tsx` | CREATE | Critical alert display |
+| `src/pages/FlightSearch.tsx` | MODIFY | Add search_started tracking |
+| `src/pages/FlightResults.tsx` | MODIFY | Add results_loaded, offer_selected tracking |
+| `src/pages/FlightCheckout.tsx` | MODIFY | Add checkout_started tracking |
+| `supabase/functions/stripe-webhook/index.ts` | MODIFY | Add payment_success event |
+| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Add ticket_issued/booking_failed events |
+| `src/App.tsx` | MODIFY | Add analytics route |
+| `src/pages/admin/FlightStatusPage.tsx` | MODIFY | Add nav link to analytics |
+| `src/pages/admin/TravelAdminDashboard.tsx` | MODIFY | Add analytics quick link |
 
 ---
 
-## URL Structure Summary
+## Database Tables Used
 
-| Pattern | Example | Purpose |
-|---------|---------|---------|
-| `/flights` | `/flights` | Main flights search |
-| `/flights/{origin}-to-{destination}` | `/flights/new-york-to-london` | Route landing page |
-| `/flights/to-{city}` | `/flights/to-paris` | Destination landing |
-| `/flights/from-{city}` | `/flights/from-miami` | Origin landing |
-| `/flights/cities/{slug}` | `/flights/cities/tokyo` | City info page |
-| `/airports/{iata}` | `/airports/jfk` | Airport info page |
+| Table | Purpose |
+|-------|---------|
+| `flight_funnel_events` | Store funnel tracking events (exists) |
+| `flight_search_logs` | Search query logs (exists) |
+| `flight_bookings` | Booking data & revenue (exists) |
+| `flight_admin_alerts` | Critical alerts (exists) |
 
 ---
 
-## Structured Data Summary
+## KPI Definitions
 
-| Schema Type | Page | Purpose |
-|-------------|------|---------|
-| `Organization` | All pages | Company info |
-| `WebSite` | Homepage | Site search action |
-| `BreadcrumbList` | All flight pages | Navigation hierarchy |
-| `FAQPage` | Flight landing | Common questions |
-| `SearchAction` | Flight search | Rich search integration |
-
----
-
-## Indexing Rules
-
-| Page Type | Index? | robots.txt | noIndex meta |
-|-----------|--------|------------|--------------|
-| `/flights` | YES | Allow | No |
-| `/flights/{route}` | YES | Allow | No |
-| `/airports/{iata}` | YES | Allow | No |
-| `/flights/results` | NO | Disallow | Yes |
-| `/flights/traveler` | NO | Disallow | Yes |
-| `/flights/checkout` | NO | Disallow | Yes |
-| `/flights/confirmation/*` | NO | Disallow | Yes |
+| KPI | Formula |
+|-----|---------|
+| Searches Today | COUNT(flight_search_logs WHERE created_at >= today) |
+| Results Shown | COUNT(flight_funnel_events WHERE event_type = 'results_loaded') |
+| Bookings Completed | COUNT(flight_bookings WHERE ticketing_status = 'issued') |
+| Conversion Rate | Bookings / Searches × 100 |
+| Revenue Today | SUM(flight_bookings.total_amount WHERE created_at >= today) |
+| Avg Booking Value | SUM(total_amount) / COUNT(bookings) |
+| Zero-Result Rate | Zero-result searches / Total searches × 100 |
+| Payment Failure Rate | Failed payments / Total checkout attempts × 100 |
+| Ticketing Failure Rate | Failed ticketing / Successful payments × 100 |
 
 ---
 
-## SEO Content Guidelines
+## Privacy & Security
 
-**DO use:**
-- "Search flights"
-- "Book on ZIVO"
-- "Prices shown are final before payment"
-- "Tickets issued by licensed partners"
+- **No PII in analytics**: Passenger names, emails, passports never exposed
+- **Admin-only access**: All analytics pages require admin role check
+- **Read-only dashboard**: No mutations from analytics UI
+- **Anonymized exports**: CSV exports contain booking IDs and amounts only
+- **Session tracking**: Use anonymous session IDs, not user IDs for guests
 
-**DO NOT use:**
-- "Cheapest guaranteed"
-- "Compare with other sites"
-- "Redirect to partner"
-- "Affiliate" or "commission" language
-- Price guarantees
+---
+
+## Alert Thresholds
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| High no-results rate | >30% in 1 hour | Warning |
+| Payment failures | >3 in 15 minutes | Critical |
+| Ticketing failures | >2 in 15 minutes | Critical |
+| API degradation | Avg response >5000ms | Warning |
+| Auto-pause triggered | check-flight-health triggered | Critical |
+
+---
+
+## Technical Notes
+
+1. **Time range selector**: Support Today, 7 Days, 30 Days, Custom
+2. **Real-time updates**: Use TanStack Query with 30s stale time
+3. **Chart library**: Recharts (already installed)
+4. **Lazy loading**: Split analytics page into chunks
+5. **Error boundaries**: Wrap each chart in error boundary
+6. **Empty states**: Show helpful messages when no data
 
 ---
 
 ## Testing Checklist
 
-1. **Route Pages**
-   - [ ] `/flights/new-york-to-london` loads correctly
-   - [ ] Search form prefilled with route
-   - [ ] Breadcrumbs display correctly
-   - [ ] Structured data validates in Google Rich Results Test
+1. **Funnel Tracking**
+   - [ ] search_started fires on form submit
+   - [ ] results_loaded fires when offers return
+   - [ ] offer_selected fires on flight click
+   - [ ] checkout_started fires on checkout page load
+   - [ ] Events appear in flight_funnel_events table
 
-2. **Airport Pages**
-   - [ ] `/airports/jfk` shows airport info
-   - [ ] Popular routes display
-   - [ ] Search prefilled with IATA code
+2. **Analytics Dashboard**
+   - [ ] KPIs show accurate counts
+   - [ ] Revenue calculations match booking totals
+   - [ ] Charts render with real data
+   - [ ] Time range filter works
+   - [ ] Admin-only access enforced
 
-3. **Crawl Control**
-   - [ ] Checkout pages return noindex meta
-   - [ ] Results pages return noindex meta
-   - [ ] robots.txt blocks private paths
+3. **Failure Detection**
+   - [ ] Zero-result routes displayed correctly
+   - [ ] Payment failures show booking references
+   - [ ] Ticketing failures link to incident log
+   - [ ] Alert thresholds trigger correctly
 
-4. **Sitemap**
-   - [ ] All route URLs accessible
-   - [ ] All airport URLs accessible
-   - [ ] No 404s in sitemap
-
-5. **Performance**
-   - [ ] LCP < 2.5s on mobile
-   - [ ] CLS < 0.1
-   - [ ] Search form interactive within 3s
-
+4. **Exports**
+   - [ ] Bookings CSV downloads
+   - [ ] Revenue report includes correct totals
+   - [ ] No PII in exported files
