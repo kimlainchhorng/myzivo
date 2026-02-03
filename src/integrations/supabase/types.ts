@@ -3327,6 +3327,60 @@ export type Database = {
           },
         ]
       }
+      flight_incident_logs: {
+        Row: {
+          affected_booking_ids: Json | null
+          affected_bookings_count: number | null
+          created_at: string | null
+          customers_notified: number | null
+          customers_resolved: number | null
+          description: string | null
+          failure_count_trigger: number | null
+          id: string
+          incident_type: string
+          reason_code: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          started_at: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_booking_ids?: Json | null
+          affected_bookings_count?: number | null
+          created_at?: string | null
+          customers_notified?: number | null
+          customers_resolved?: number | null
+          description?: string | null
+          failure_count_trigger?: number | null
+          id?: string
+          incident_type: string
+          reason_code: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          started_at?: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_booking_ids?: Json | null
+          affected_bookings_count?: number | null
+          created_at?: string | null
+          customers_notified?: number | null
+          customers_resolved?: number | null
+          description?: string | null
+          failure_count_trigger?: number | null
+          id?: string
+          incident_type?: string
+          reason_code?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          started_at?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       flight_passengers: {
         Row: {
           booking_id: string
@@ -3591,6 +3645,9 @@ export type Database = {
           first_failure_at: string | null
           first_ticket_issued_at: string | null
           id: string
+          incident_notes: string | null
+          incident_reason_code: string | null
+          incident_started_at: string | null
           seller_of_travel_verified: boolean | null
           status: string
           status_changed_at: string | null
@@ -3611,6 +3668,9 @@ export type Database = {
           first_failure_at?: string | null
           first_ticket_issued_at?: string | null
           id?: string
+          incident_notes?: string | null
+          incident_reason_code?: string | null
+          incident_started_at?: string | null
           seller_of_travel_verified?: boolean | null
           status?: string
           status_changed_at?: string | null
@@ -3631,6 +3691,9 @@ export type Database = {
           first_failure_at?: string | null
           first_ticket_issued_at?: string | null
           id?: string
+          incident_notes?: string | null
+          incident_reason_code?: string | null
+          incident_started_at?: string | null
           seller_of_travel_verified?: boolean | null
           status?: string
           status_changed_at?: string | null

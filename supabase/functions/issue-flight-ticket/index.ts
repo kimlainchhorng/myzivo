@@ -210,6 +210,20 @@ serve(async (req) => {
             });
         }
         
+        // Trigger health check for auto-pause evaluation
+        console.log("[IssueTicket] Triggering health check after failure");
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/check-flight-health`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (healthErr) {
+          console.error("[IssueTicket] Health check trigger failed:", healthErr);
+        }
+        
         throw duffelError;
       }
     } else if (!isLiveMode) {
