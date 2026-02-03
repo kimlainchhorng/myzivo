@@ -40,6 +40,7 @@ import {
   ADVANCED_CLAUSES_LIST, 
   LEGAL_PROTECTION_SUMMARY, 
   EXTENDED_POLICIES_LIST,
+  EXTREME_POLICIES_LIST,
   LEGAL_FAQ
 } from "@/config/legalContent";
 import { format } from "date-fns";
@@ -338,6 +339,40 @@ export default function LegalControlDashboard() {
                         {(policy as any).content?.substring(0, 80) || 
                          (policy as any).enforcement?.substring(0, 80) || 
                          "Policy configured"}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Extreme Policies (43-57) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Extreme Legal Safeguards (43-57)
+                </CardTitle>
+                <CardDescription>
+                  Maximum protection policies for lawsuit prevention
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {EXTREME_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border border-destructive/30 bg-destructive/5 hover:border-destructive/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="destructive" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         "Maximum protection policy"}...
                       </p>
                     </div>
                   ))}

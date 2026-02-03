@@ -547,7 +547,219 @@ export const LEGAL_FAQ = [
     question: "Can ZIVO share my data with authorities?",
     answer: "Yes. ZIVO may share data with government agencies or law enforcement when required by law or legal process.",
   },
+  // Advanced Lawsuit Prevention Q&A (Section G)
+  {
+    question: "Is ZIVO responsible if something goes wrong?",
+    answer: "No. ZIVO is a technology platform and does not provide the underlying services. Responsibility lies with independent service providers.",
+  },
+  {
+    question: "Can I hold ZIVO liable for accidents or injuries?",
+    answer: "No. Responsibility lies with independent service providers to the maximum extent allowed by law. Users assume all risks.",
+  },
+  {
+    question: "Does ZIVO guarantee safety, quality, or availability?",
+    answer: "No. All services are provided by third parties 'as is' without warranties of any kind.",
+  },
+  {
+    question: "Can ZIVO delay or hold my payout?",
+    answer: "Yes. ZIVO may hold funds to prevent fraud, chargebacks, regulatory compliance, or legal risk.",
+  },
+  {
+    question: "Can ZIVO remove my listing or account?",
+    answer: "Yes. ZIVO may suspend or terminate accounts at its sole discretion without prior notice.",
+  },
+  {
+    question: "What law applies to disputes?",
+    answer: "Disputes are governed by Delaware law and resolved through binding arbitration as defined in ZIVO's Terms of Service.",
+  },
+  {
+    question: "Can I join a class action against ZIVO?",
+    answer: "No. Users waive class action rights and agree to individual arbitration where permitted by law.",
+  },
+  {
+    question: "Is ZIVO responsible for third-party system failures?",
+    answer: "No. ZIVO relies on third parties (Stripe, Duffel, insurers, maps) and is not liable for their failures or outages.",
+  },
+  {
+    question: "Can ZIVO monitor my communications?",
+    answer: "Yes. ZIVO may monitor messages to prevent fraud, abuse, and harassment. Users consent to monitoring for safety.",
+  },
+  {
+    question: "What happens if I provide false information?",
+    answer: "Providing false identity or information may result in immediate permanent ban and potential legal action.",
+  },
 ];
+
+// ============================================
+// EXTREME LEGAL POLICIES (Clauses 43-57)
+// ============================================
+
+export const EXTREME_LEGAL_POLICIES = {
+  // Clause 43: User Verification Policy
+  userVerification: {
+    id: "user_verification",
+    title: "User Verification Policy",
+    version: "1.0",
+    content: `ZIVO may require identity verification at any time for security, fraud prevention, or regulatory compliance. Failure to complete verification within the specified timeframe may result in account suspension or termination. ZIVO is not liable for delays, loss of access, or missed bookings caused by pending verification. Providing false identity information constitutes fraud and will result in immediate permanent ban from the platform and potential referral to law enforcement.`,
+    requirements: [
+      "Government-issued photo ID may be required",
+      "Verification must be completed within specified timeframe",
+      "False identity results in permanent ban",
+      "ZIVO not liable for verification delays",
+    ],
+  },
+
+  // Clause 44: Account Security Policy
+  accountSecurity: {
+    id: "account_security",
+    title: "Account Security Policy",
+    version: "1.0",
+    content: `Users are solely responsible for maintaining the confidentiality and security of their account credentials, including passwords and authentication tokens. ZIVO is not liable for unauthorized access, transactions, or losses caused by user negligence, shared credentials, or compromised devices. ZIVO may reset, lock, or terminate accounts at any time for security reasons without prior notice.`,
+    userResponsibilities: [
+      "Keep passwords confidential and secure",
+      "Use strong, unique passwords",
+      "Enable two-factor authentication when available",
+      "Report suspicious activity immediately",
+      "Do not share account access with others",
+    ],
+  },
+
+  // Clause 45: Location & Geo-Tracking Disclosure
+  locationDisclosure: {
+    id: "location_disclosure",
+    title: "Location & Geo-Tracking Disclosure",
+    version: "1.0",
+    content: `ZIVO collects, processes, and stores location data for service delivery, safety monitoring, fraud prevention, and platform improvement. Location data may be shared with service providers (drivers, owners, restaurants) involved in active bookings and with law enforcement when required. ZIVO is not liable for inaccuracies in GPS, mapping, or location data provided by devices or third-party systems.`,
+    dataUsage: [
+      "Real-time location for active services",
+      "Historical location for safety and support",
+      "Sharing with service providers during bookings",
+      "Fraud prevention and risk assessment",
+      "Compliance with law enforcement requests",
+    ],
+  },
+
+  // Clause 46: Communication Monitoring Policy
+  communicationMonitoring: {
+    id: "communication_monitoring",
+    title: "Communication Monitoring Policy",
+    version: "1.0",
+    content: `By using the ZIVO platform, users consent to monitoring, recording, and analysis of in-app communications (messages, calls, photos) for fraud prevention, safety enforcement, and platform compliance. ZIVO is not responsible for the content of user-generated communications. Violations of communication policies may result in immediate account termination.`,
+    scope: [
+      "In-app messages between users and providers",
+      "Support communications",
+      "Reviews and ratings",
+      "Uploaded photos and documents",
+      "Audio communications where applicable",
+    ],
+  },
+
+  // Clause 47: Platform Availability & Maintenance Policy
+  platformAvailability: {
+    id: "platform_availability",
+    title: "Platform Availability & Maintenance Policy",
+    version: "1.0",
+    content: `The ZIVO platform may be unavailable due to scheduled maintenance, emergency repairs, security incidents, or system failures. ZIVO does not guarantee any specific uptime, availability, or service level. ZIVO is not liable for losses, missed bookings, or damages caused by platform downtime. No Service Level Agreement (SLA) is provided to users or partners.`,
+    notice: "ZIVO may perform maintenance at any time without prior notice.",
+  },
+
+  // Clause 48: Third-Party Service Dependency Policy
+  thirdPartyDependency: {
+    id: "third_party_dependency",
+    title: "Third-Party Service Dependency Policy",
+    version: "1.0",
+    content: `ZIVO relies on third-party services including payment processors (Stripe), ticketing providers (Duffel), insurance partners, mapping services, cloud infrastructure, and communication providers. ZIVO is not responsible for failures, outages, errors, or service degradation caused by third-party systems. Users accept all risks associated with third-party service dependencies.`,
+    thirdParties: [
+      "Payment processing (Stripe)",
+      "Flight ticketing (Duffel and partners)",
+      "Insurance providers",
+      "Mapping and navigation services",
+      "Cloud infrastructure providers",
+      "Communication services",
+    ],
+  },
+
+  // Clause 49: Government Sanctions & Export Control
+  sanctionsCompliance: {
+    id: "sanctions_compliance",
+    title: "Government Sanctions & Export Control Policy",
+    version: "1.0",
+    content: `Users must comply with all applicable U.S. sanctions laws, export controls, and trade restrictions. ZIVO may block access from sanctioned countries, regions, or individuals identified on government watchlists. ZIVO may terminate accounts without notice to comply with sanctions requirements. Users represent that they are not located in, under the control of, or a national of any sanctioned jurisdiction.`,
+    restrictions: [
+      "No access from OFAC-sanctioned countries",
+      "No transactions with sanctioned individuals or entities",
+      "Account termination without notice for violations",
+      "Cooperation with government enforcement",
+    ],
+  },
+
+  // Clause 50: Minimum Age & Legal Capacity
+  agePolicy: {
+    id: "age_policy",
+    title: "Minimum Age & Legal Capacity Policy",
+    version: "1.0",
+    content: `Users must be at least 18 years of age and have full legal capacity to enter binding contracts in their jurisdiction. By using ZIVO, users represent and warrant that they meet these requirements. ZIVO is not responsible for use by minors or individuals lacking legal capacity. Accounts discovered to be operated by minors will be terminated immediately.`,
+  },
+
+  // Clause 51-53: High-Risk Disclaimers
+  highRiskDisclaimers: {
+    id: "high_risk_disclaimers",
+    title: "High-Risk Disclaimers",
+    version: "1.0",
+    noProfessionalAdvice: `ZIVO does not provide legal advice, financial advice, travel advice, insurance advice, or any other professional guidance. All decisions made by users are at their own risk. Users should consult qualified professionals before making important decisions.`,
+    safetyEquipment: `ZIVO does not guarantee vehicle safety equipment, driver training standards, food handling procedures, or any other safety measures. Responsibility for safety lies solely with independent service providers.`,
+    weatherEnvironment: `ZIVO is not responsible for weather delays, road conditions, natural disasters, environmental hazards, or any other external factors affecting services.`,
+  },
+
+  // Clause 54: Partner Terms Acceptance
+  partnerTerms: {
+    id: "partner_terms",
+    title: "Partner Terms & Acknowledgments",
+    version: "1.0",
+    content: `All partners (drivers, car owners, fleet owners, restaurants) must accept role-specific terms acknowledging independent contractor status, tax responsibilities, insurance requirements, and liability limitations. Partners are not employees, agents, or representatives of ZIVO.`,
+    acknowledgments: [
+      "Independent contractor status (not employment)",
+      "Sole responsibility for tax reporting and payment",
+      "Requirement to maintain adequate insurance",
+      "Compliance with all applicable laws and regulations",
+      "No authority to bind or represent ZIVO",
+    ],
+  },
+
+  // Clause 55: Tax Responsibility Disclaimer
+  taxResponsibility: {
+    id: "tax_responsibility",
+    title: "Tax Responsibility Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not withhold taxes from partner payouts except where required by law. Partners are solely responsible for reporting all income to tax authorities and paying all applicable taxes. ZIVO does not provide tax advice. ZIVO may issue tax forms (1099s) as required by law.`,
+  },
+
+  // Clause 56: Automatic Risk Flags
+  automaticRiskFlags: {
+    id: "automatic_risk_flags",
+    title: "Automatic Risk Detection & Response",
+    version: "1.0",
+    content: `ZIVO employs automated systems to detect fraud, abuse, and risk. When risk is detected, ZIVO may automatically: freeze accounts, delay or hold payouts, require additional verification, limit platform access, or terminate accounts. These actions may occur without prior notice and ZIVO is not liable for any resulting losses or inconvenience.`,
+    automaticActions: [
+      "Account freezing or suspension",
+      "Payout delays or holds",
+      "Mandatory re-verification",
+      "Transaction limits or restrictions",
+      "Immediate account termination",
+    ],
+  },
+
+  // Clause 57: Survival of Protections
+  survivalClause: {
+    id: "survival_clause",
+    title: "Survival of Legal Protections",
+    version: "1.0",
+    content: `All liability limitations, indemnification obligations, warranty disclaimers, arbitration agreements, and other legal protections in these terms shall survive: account termination, service discontinuation, platform closure, and resolution of any disputes. These protections remain in effect indefinitely.`,
+  },
+};
+
+// Helper array for extreme policies
+export const EXTREME_POLICIES_LIST = Object.values(EXTREME_LEGAL_POLICIES);
 
 // Helper array for extended policies
 export const EXTENDED_POLICIES_LIST = Object.values(EXTENDED_LEGAL_POLICIES);
@@ -593,5 +805,15 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Community standards",
     "Safety & emergency disclaimer",
     "Regulatory cooperation policy",
+  ],
+  extremeProtection: [
+    "User verification enforcement",
+    "Account security responsibility",
+    "Location tracking disclosure",
+    "Communication monitoring consent",
+    "Third-party dependency acceptance",
+    "Sanctions compliance",
+    "Automatic risk response",
+    "Survival of protections",
   ],
 };
