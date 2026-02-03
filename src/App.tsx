@@ -183,6 +183,7 @@ const RecordsPolicy = lazy(() => import("./pages/legal/RecordsPolicy"));
 const WhistleblowerPolicy = lazy(() => import("./pages/legal/WhistleblowerPolicy"));
 const CorporateProtection = lazy(() => import("./pages/legal/CorporateProtection"));
 const PaymentFinality = lazy(() => import("./pages/legal/PaymentFinality"));
+const DataResidency = lazy(() => import("./pages/legal/DataResidency"));
 const TravelRules = lazy(() => import("./pages/legal/TravelRules"));
 const RentalCompliance = lazy(() => import("./pages/legal/RentalCompliance"));
 const PlatformReliancePolicy = lazy(() => import("./pages/legal/PlatformReliancePolicy"));
@@ -473,6 +474,7 @@ const App = () => (
                 <Route path="/legal/governance" element={<Governance />} />
                 <Route path="/legal/ethics" element={<EthicsPolicy />} />
                 <Route path="/legal/regulator-communications" element={<RegulatorCommunications />} />
+                <Route path="/legal/data-residency" element={<DataResidency />} />
                 <Route path="/admin/legal-docs" element={<LegalDocCenter />} />
                 <Route path="/admin/evidence-logging" element={<EvidenceLogging />} />
                 <Route path="/admin/case-files" element={<CaseFileSystem />} />
