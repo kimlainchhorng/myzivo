@@ -1,368 +1,443 @@
 
-# Hotelbeds API Integration Plan
 
-## Overview
-
-Transform ZIVO Hotels from an affiliate redirect model to a direct booking experience using the Hotelbeds API. Users will search for hotels, view real availability and prices, select rooms, and complete bookings entirely within ZIVO.
-
-## Current State
-
-- **Frontend**: Existing hotel search form, results page, and filters (mock data + affiliate redirect to Booking.com)
-- **Backend**: TripAdvisor Content API edge function for hotel discovery (no booking capability)
-- **Architecture**: Hotels use indicative pricing with partner redirect; ZIVO is NOT the Merchant of Record
-
-## Target State
-
-- **Frontend**: Real-time hotel search, details, room selection, and checkout flow
-- **Backend**: Hotelbeds API integration for availability, pricing, and booking
-- **Architecture**: ZIVO displays live Hotelbeds data; booking completed via Hotelbeds (TEST first, then LIVE)
+# ZIVO Full Hotelbeds Integration Plan
+## Hotels + Activities + Transfers - Complete API Integration
 
 ---
 
-## Phase 1: Backend Infrastructure
+## Executive Summary
 
-### 1.1 Add Secrets (Manual Step Required)
+Transform ZIVO from an affiliate-redirect travel platform to a **full-service booking platform** using Hotelbeds APIs for Hotels, Activities, and Transfers. Users will search, view real prices, and complete bookings entirely within ZIVO without external redirects.
 
-Add these secrets to Supabase Edge Functions:
-- `HOTELBEDS_API_KEY` - Your Hotelbeds API key
-- `HOTELBEDS_SECRET` - Your Hotelbeds secret
-- `HOTELBEDS_BASE_URL` - Set to `https://api.test.hotelbeds.com` (TEST) or `https://api.hotelbeds.com` (LIVE)
+---
 
-### 1.2 Create Edge Function: `hotelbeds-api`
+## Current State Analysis
 
-A unified edge function handling all Hotelbeds API operations:
+### Hotels
+- **Current**: Displays indicative (mock) prices and redirects users to Booking.com affiliate
+- **Components**: `HotelsPage.tsx`, `HotelResultCard.tsx`, `HotelFilters.tsx`
+- **Hook**: `useRealHotelSearch` generates fake hotel data
+- **Backend**: TripAdvisor Content API for discovery (no booking)
+
+### Activities  
+- **Current**: Affiliate redirects to Tiqets, WeGoTrip, TicketNetwork
+- **Page**: `ThingsToDo.tsx` with hardcoded experiences
+- **No real search** - just static content with partner links
+
+### Transfers
+- **Current**: Affiliate redirects to KiwiTaxi, GetTransfer, Intui.travel
+- **Component**: `AirportTransfersSection.tsx` 
+- **No search** - displays partner cards with external links
+
+---
+
+## Target Architecture
 
 ```text
-supabase/functions/hotelbeds-api/index.ts
++------------------+     +----------------------+     +------------------+
+|   ZIVO Frontend  | --> | Supabase Edge Fns    | --> | Hotelbeds APIs   |
++------------------+     +----------------------+     +------------------+
+     |                          |                           |
+     | Search/Book              | Secure Auth               | Hotels API
+     | Requests                 | Rate Limiting             | Activities API
+     |                          | Error Handling            | Transfers API
+     v                          v                           v
++------------------+     +----------------------+     +------------------+
+| React Pages      |     | hotelbeds-hotels     |     | /hotel-api/1.0   |
+| - Search Forms   |     | hotelbeds-activities |     | /activity-api/1.0|
+| - Results Lists  |     | hotelbeds-transfers  |     | /transfer-api/1.0|
+| - Checkout Flows |     +----------------------+     +------------------+
++------------------+
 ```
 
-**Key Features**:
-- Secure SHA256 signature generation: `SHA256(apiKey + secret + unixTimestampSeconds)`
-- Rate limiting with 429/403 error handling
-- Request routing based on `action` parameter:
-  - `status` - GET /hotel-api/1.0/status (health check)
-  - `hotels` - POST /hotel-api/1.0/hotels (availability search)
-  - `checkrates` - POST /hotel-api/1.0/checkrates (price verification)
-  - `bookings` - POST /hotel-api/1.0/bookings (confirm booking)
+---
 
-**Authentication Implementation**:
-```
+## Phase 1: Secrets Configuration
+
+### Required Environment Variables
+
+**Hotels API**:
+- `HOTELBEDS_HOTEL_API_KEY`
+- `HOTELBEDS_HOTEL_SECRET`
+
+**Activities API**:
+- `HOTELBEDS_ACTIVITY_API_KEY`
+- `HOTELBEDS_ACTIVITY_SECRET`
+
+**Transfers API**:
+- `HOTELBEDS_TRANSFER_API_KEY`
+- `HOTELBEDS_TRANSFER_SECRET`
+
+**Shared**:
+- `HOTELBEDS_BASE_URL` = `https://api.test.hotelbeds.com` (TEST environment)
+
+All secrets are stored in Supabase Edge Function secrets - never exposed to frontend.
+
+---
+
+## Phase 2: Edge Functions
+
+### 2.1 Hotels Edge Function: `hotelbeds-hotels`
+
+**File**: `supabase/functions/hotelbeds-hotels/index.ts`
+
+**Actions**:
+| Action | Method | Hotelbeds Endpoint | Purpose |
+|--------|--------|-------------------|---------|
+| `status` | GET | `/hotel-api/1.0/status` | Health check |
+| `search` | POST | `/hotel-api/1.0/hotels` | Availability search |
+| `checkrates` | POST | `/hotel-api/1.0/checkrates` | Price verification |
+| `book` | POST | `/hotel-api/1.0/bookings` | Create booking |
+
+**Authentication** (applies to all):
+```text
 Headers:
-  Api-key: {HOTELBEDS_API_KEY}
-  X-Signature: SHA256_HEX(apiKey + secret + Math.floor(Date.now()/1000))
+  Api-key: {HOTELBEDS_HOTEL_API_KEY}
+  X-Signature: SHA256_HEX(apiKey + secret + unixTimestampSeconds)
   Accept: application/json
   Content-Type: application/json
 ```
 
-**Security**:
-- Secrets never exposed to frontend
-- No secret logging
-- Server-side signature generation only
-- Rate limiting per IP/user
+### 2.2 Activities Edge Function: `hotelbeds-activities`
+
+**File**: `supabase/functions/hotelbeds-activities/index.ts`
+
+**Actions**:
+| Action | Method | Hotelbeds Endpoint | Purpose |
+|--------|--------|-------------------|---------|
+| `status` | GET | `/activity-api/1.0/status` | Health check |
+| `search` | POST | `/activity-api/1.0/activities/availability` | Search activities |
+| `details` | GET | `/activity-api/1.0/activities/{code}` | Activity details |
+| `book` | POST | `/activity-api/1.0/bookings` | Create booking |
+
+### 2.3 Transfers Edge Function: `hotelbeds-transfers`
+
+**File**: `supabase/functions/hotelbeds-transfers/index.ts`
+
+**Actions**:
+| Action | Method | Hotelbeds Endpoint | Purpose |
+|--------|--------|-------------------|---------|
+| `status` | GET | `/transfer-api/1.0/status` | Health check |
+| `availability` | POST | `/transfer-api/1.0/availability` | Search transfers |
+| `book` | POST | `/transfer-api/1.0/bookings` | Create booking |
 
 ---
 
-## Phase 2: Frontend Architecture
+## Phase 3: TypeScript Types
 
-### 2.1 New Hook: `useHotelbedsSearch`
+**File**: `src/types/hotelbeds.ts`
 
 ```text
-src/hooks/useHotelbedsSearch.ts
+Types to define:
+- HotelbedsHotel, HotelbedsRoom, HotelbedsRate
+- HotelbedsActivity, ActivityModality, ActivityRate
+- HotelbedsTransfer, TransferVehicle, TransferRate
+- SearchRequest/Response types for each service
+- BookingRequest/Response types for each service
+- Common types: HotelbedsError, GuestInfo, PaymentInfo
 ```
 
-**Features**:
-- Search availability with destination/dates/guests
+---
+
+## Phase 4: Frontend Hooks
+
+### 4.1 Hotels Hooks
+
+**File**: `src/hooks/useHotelbedsSearch.ts`
+- `searchHotels(params)` - Search availability
 - Transform Hotelbeds response to ZIVO format
-- Handle loading, error, and empty states
-- Support filters (price, stars, board type, refundable)
+- Handle loading, error, empty states
 
-**Data Flow**:
-```
-User Search → useHotelbedsSearch → hotelbeds-api Edge Function → Hotelbeds API
-     ↓
-   Results ← Transform Response ← API Response
-```
+**File**: `src/hooks/useHotelbedsBooking.ts`
+- `checkRates(rateKey)` - Verify current price
+- `createBooking(params)` - Submit booking
+- Handle rate changes and booking confirmation
 
-### 2.2 New Hook: `useHotelbedsBooking`
+### 4.2 Activities Hooks
 
-```text
-src/hooks/useHotelbedsBooking.ts
-```
+**File**: `src/hooks/useHotelbedsActivities.ts`
+- `searchActivities(destination, date)` - Search by location/date
+- `getActivityDetails(code)` - Get full details
+- `bookActivity(params)` - Create booking
 
-**Features**:
-- Check rates (if `rateType === "recheck"`)
-- Create booking with holder + pax details
-- Handle booking confirmation and errors
+### 4.3 Transfers Hooks
 
----
-
-## Phase 3: UI Pages
-
-### 3.1 Update `/hotels` (Search Page)
-
-Modify `src/pages/HotelsPage.tsx`:
-- Keep existing search form (destination, dates, guests, rooms)
-- Replace mock data hook with `useHotelbedsSearch`
-- Add loading spinner and no-results state
-- Remove affiliate redirect messaging (now booking directly)
-
-### 3.2 Update `/hotels/results` (Results Page)
-
-Modify `src/pages/HotelResultsPage.tsx`:
-- Display real Hotelbeds hotel data
-- Show: image, name, rating, neighborhood, nightly price, total, cancellation badge
-- Filter support: price range, stars, board type, refundable
-- "View Details" button navigates to `/hotels/:hotelCode`
-
-### 3.3 New Page: `/hotels/:hotelCode` (Hotel Details)
-
-```text
-src/pages/HotelDetailPage.tsx
-```
-
-**Sections**:
-- Hero with hotel images (carousel)
-- Hotel description and facilities
-- Room options with rates, board types, cancellation policies
-- "Select Room" button navigates to checkout with selected rate
-
-### 3.4 New Page: `/hotels/checkout` (Checkout)
-
-```text
-src/pages/HotelCheckoutPage.tsx
-```
-
-**Flow**:
-1. Display booking summary (hotel, room, dates, price)
-2. Guest details form:
-   - Holder: name, surname, email, phone
-   - Paxes: name, surname, type (adult/child)
-3. If `rateType === "recheck"`, call `/api/hotelbeds/checkrates` before confirm
-4. Display updated price if changed
-5. "Confirm Booking" button calls `/api/hotelbeds/bookings`
-6. On success, navigate to confirmation page
-
-### 3.5 New Page: `/hotels/confirmation/:reference` (Confirmation)
-
-```text
-src/pages/HotelConfirmationPage.tsx
-```
-
-**Display**:
-- Booking reference
-- Hotel and room details
-- Check-in/out dates
-- Guest names
-- Total price paid
-- Support contact info
+**File**: `src/hooks/useHotelbedsTransfers.ts`
+- `searchTransfers(pickup, dropoff, date)` - Search availability
+- `bookTransfer(params)` - Create booking
 
 ---
 
-## Phase 4: Components
+## Phase 5: UI Pages
 
-### 4.1 New Components
+### 5.1 Hotels Module
 
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/hotels` | `HotelsPage.tsx` (update) | Search form + results |
+| `/hotels/:hotelCode` | `HotelDetailPage.tsx` (new) | Hotel details + room selection |
+| `/hotels/checkout` | `HotelCheckoutPage.tsx` (new) | Guest form + booking |
+| `/hotels/confirmation/:ref` | `HotelConfirmationPage.tsx` (new) | Booking confirmation |
+
+### 5.2 Activities Module
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/activities` | `ActivitiesPage.tsx` (update) | Search + browse |
+| `/activities/results` | `ActivityResultsPage.tsx` (new) | Search results |
+| `/activities/:code` | `ActivityDetailPage.tsx` (new) | Activity details |
+| `/activities/checkout` | `ActivityCheckoutPage.tsx` (new) | Booking form |
+| `/activities/confirmation/:ref` | `ActivityConfirmationPage.tsx` (new) | Confirmation |
+
+### 5.3 Transfers Module
+
+| Route | Page | Purpose |
+|-------|------|---------|
+| `/transfers` | `TransfersPage.tsx` (new) | Search form |
+| `/transfers/results` | `TransferResultsPage.tsx` (new) | Vehicle options |
+| `/transfers/checkout` | `TransferCheckoutPage.tsx` (new) | Passenger details |
+| `/transfers/confirmation/:ref` | `TransferConfirmationPage.tsx` (new) | Confirmation |
+
+---
+
+## Phase 6: Components
+
+### Hotels Components
 ```text
 src/components/hotels/
-├── HotelbedsResultCard.tsx    # Hotel card with real data
-├── HotelRoomCard.tsx          # Room option with rate
-├── HotelImageGallery.tsx      # Image carousel
-├── HotelFacilities.tsx        # Amenities display
-├── HotelGuestForm.tsx         # Booking form
-├── HotelPriceSummary.tsx      # Price breakdown
-└── HotelConfirmationCard.tsx  # Booking confirmation
+├── HotelbedsResultCard.tsx     # Real hotel card
+├── HotelRoomCard.tsx           # Room option with rate
+├── HotelImageGallery.tsx       # Photo carousel  
+├── HotelFacilities.tsx         # Amenities list
+├── HotelGuestForm.tsx          # Booking form
+├── HotelPriceSummary.tsx       # Price breakdown
+└── HotelConfirmationCard.tsx   # Booking success
 ```
 
-### 4.2 Update Filters
-
-Modify `src/components/hotels/HotelFilters.tsx`:
-- Add "Board Type" filter (Room Only, Breakfast, Half Board, Full Board, All Inclusive)
-- Add "Refundable Only" toggle
-- Keep existing: price range, star rating, amenities
-
----
-
-## Phase 5: Data Types
-
-### 5.1 TypeScript Interfaces
-
+### Activities Components
 ```text
-src/types/hotelbeds.ts
+src/components/activities/
+├── ActivityResultCard.tsx      # Activity card
+├── ActivityModalityCard.tsx    # Tour option/timing
+├── ActivityDetailHero.tsx      # Hero with images
+├── ActivityBookingForm.tsx     # Participant details
+└── ActivityConfirmation.tsx    # Booking success
 ```
 
-Key types:
-- `HotelbedsHotel` - Hotel from availability response
-- `HotelbedsRoom` - Room with rates
-- `HotelbedsRate` - Rate details (price, board, cancellation)
-- `HotelbedsBookingRequest` - Booking payload
-- `HotelbedsBookingResponse` - Confirmation response
-- `HotelbedsGuest` - Holder/pax details
-
----
-
-## Phase 6: Routing Updates
-
-Update `src/App.tsx`:
-```
-/hotels                    → HotelsPage (search + results)
-/hotels/results            → HotelResultsPage (results with filters)
-/hotels/:hotelCode         → HotelDetailPage (new)
-/hotels/checkout           → HotelCheckoutPage (new)
-/hotels/confirmation/:ref  → HotelConfirmationPage (new)
+### Transfers Components
+```text
+src/components/transfers/
+├── TransferSearchForm.tsx      # Pickup/dropoff form
+├── TransferVehicleCard.tsx     # Vehicle option card
+├── TransferRouteDisplay.tsx    # Route visualization
+├── TransferPassengerForm.tsx   # Passenger details
+└── TransferConfirmation.tsx    # Booking success
 ```
 
 ---
 
-## Phase 7: Error Handling
+## Phase 7: Database Schema
 
-### API Errors
+### Hotels Bookings Table
+```text
+hotelbeds_hotel_bookings
+- id (UUID)
+- user_id (UUID, optional)
+- reference (TEXT) - Hotelbeds booking reference
+- hotel_code (TEXT)
+- hotel_name (TEXT)
+- check_in (DATE)
+- check_out (DATE)
+- room_code (TEXT)
+- rate_key (TEXT)
+- holder_name (TEXT)
+- holder_email (TEXT)
+- total_amount (DECIMAL)
+- currency (TEXT)
+- status (TEXT) - confirmed, cancelled, pending
+- raw_response (JSONB)
+- created_at (TIMESTAMPTZ)
+```
 
-| Error | User Message |
-|-------|-------------|
-| 403 Forbidden | "Authentication failed. Please try again." |
-| 429 Rate Limit | "Too many requests. Please wait a moment." |
-| Network Error | "Connection failed. Check your internet." |
-| Price Changed | "Price has changed. Please review and confirm." |
-| No Availability | "This room is no longer available." |
+### Activities Bookings Table
+```text
+hotelbeds_activity_bookings
+- id (UUID)
+- user_id (UUID, optional)
+- reference (TEXT)
+- activity_code (TEXT)
+- activity_name (TEXT)
+- activity_date (DATE)
+- modality_code (TEXT)
+- holder_name (TEXT)
+- holder_email (TEXT)
+- participants (JSONB)
+- total_amount (DECIMAL)
+- currency (TEXT)
+- status (TEXT)
+- raw_response (JSONB)
+- created_at (TIMESTAMPTZ)
+```
 
-### Signature Failures
-
-If signature fails due to time drift:
-- Log error to admin monitoring
-- Retry with fresh timestamp
-- Alert if persistent failure
+### Transfers Bookings Table
+```text
+hotelbeds_transfer_bookings
+- id (UUID)
+- user_id (UUID, optional)
+- reference (TEXT)
+- transfer_type (TEXT) - airport, hotel, etc.
+- pickup_location (TEXT)
+- dropoff_location (TEXT)
+- transfer_date (DATE)
+- transfer_time (TIME)
+- vehicle_type (TEXT)
+- passengers (INTEGER)
+- holder_name (TEXT)
+- holder_email (TEXT)
+- total_amount (DECIMAL)
+- currency (TEXT)
+- status (TEXT)
+- raw_response (JSONB)
+- created_at (TIMESTAMPTZ)
+```
 
 ---
 
-## Phase 8: Database Schema (Optional)
+## Phase 8: Error Handling
 
-Add `hotelbeds_bookings` table for tracking:
-```sql
-CREATE TABLE hotelbeds_bookings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
-  reference TEXT NOT NULL,
-  hotel_code TEXT NOT NULL,
-  hotel_name TEXT NOT NULL,
-  check_in DATE NOT NULL,
-  check_out DATE NOT NULL,
-  total_amount DECIMAL(10,2) NOT NULL,
-  currency TEXT NOT NULL,
-  status TEXT DEFAULT 'confirmed',
-  raw_response JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
+### API Error Mapping
+
+| HTTP Status | Error Type | User Message |
+|-------------|------------|--------------|
+| 400 | Bad Request | "Please check your search details" |
+| 401/403 | Auth Failed | "Authentication error. Please try again." |
+| 404 | Not Found | "This option is no longer available" |
+| 429 | Rate Limited | "Too many requests. Please wait a moment." |
+| 500+ | Server Error | "Service temporarily unavailable" |
+
+### Price Change Handling
+- If `checkrates` returns different price, show comparison
+- User must confirm new price before booking
+- Log price discrepancies for monitoring
+
+### Signature Time Drift
+- Edge function uses server time (Deno.now())
+- No time drift issues expected
+- Log and alert if signature failures occur
+
+---
+
+## Phase 9: Cross-Sell Integration
+
+### Hotel Checkout Upsells
+- After hotel selection, suggest:
+  - Airport transfer to hotel
+  - Activities at destination
+- Use destination + dates context
+
+### Activity Cross-Sell
+- After hotel booking confirmation:
+  - "Add things to do in [City]"
+  - Pre-filtered by booking dates
+
+### Transfer Integration
+- Offer during hotel checkout
+- "Add airport pickup for your arrival"
+- Pre-populated with hotel address
 
 ---
 
 ## Implementation Order
 
-1. **Backend First**: Create `hotelbeds-api` edge function with all endpoints
-2. **Test Backend**: Verify status, search, checkrates, bookings work with Hotelbeds TEST
-3. **Hooks**: Build `useHotelbedsSearch` and `useHotelbedsBooking`
-4. **Results Page**: Connect real data to existing UI
-5. **Detail Page**: Build new hotel detail page
-6. **Checkout Flow**: Build checkout and confirmation pages
-7. **End-to-End Test**: Complete booking in TEST environment
-8. **Production Switch**: Change `HOTELBEDS_BASE_URL` to live URL
+### Week 1: Backend Foundation
+1. Add all Hotelbeds secrets to Supabase
+2. Create `hotelbeds-hotels` edge function
+3. Create `hotelbeds-activities` edge function
+4. Create `hotelbeds-transfers` edge function
+5. Test each endpoint with TEST environment
+
+### Week 2: Hotels Flow
+1. Create TypeScript types for Hotels
+2. Build `useHotelbedsSearch` hook
+3. Update `HotelsPage.tsx` with real search
+4. Create `HotelDetailPage.tsx`
+5. Create `HotelCheckoutPage.tsx`
+6. Create `HotelConfirmationPage.tsx`
+7. Add database table + RLS policies
+
+### Week 3: Activities Flow
+1. Add Activities types
+2. Build `useHotelbedsActivities` hook
+3. Create/update Activities pages
+4. Build booking flow components
+5. Add database table + RLS
+
+### Week 4: Transfers Flow
+1. Add Transfers types
+2. Build `useHotelbedsTransfers` hook
+3. Create Transfers pages
+4. Build booking flow
+5. Add database table + RLS
+
+### Week 5: Integration & Polish
+1. Cross-sell integration
+2. Error handling refinement
+3. End-to-end testing in TEST
+4. Performance optimization
+5. Switch to LIVE environment
 
 ---
 
-## Technical Details
+## Files Summary
 
-### Hotelbeds API Authentication
+### To Create
 
-```typescript
-function generateSignature(): string {
-  const apiKey = Deno.env.get('HOTELBEDS_API_KEY')!;
-  const secret = Deno.env.get('HOTELBEDS_SECRET')!;
-  const timestamp = Math.floor(Date.now() / 1000);
-  const data = `${apiKey}${secret}${timestamp}`;
-  
-  // SHA256 hex digest
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(data));
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-```
+| Category | Files |
+|----------|-------|
+| Edge Functions | `supabase/functions/hotelbeds-hotels/index.ts`, `supabase/functions/hotelbeds-activities/index.ts`, `supabase/functions/hotelbeds-transfers/index.ts` |
+| Types | `src/types/hotelbeds.ts` |
+| Hooks | `src/hooks/useHotelbedsSearch.ts`, `src/hooks/useHotelbedsBooking.ts`, `src/hooks/useHotelbedsActivities.ts`, `src/hooks/useHotelbedsTransfers.ts` |
+| Hotel Pages | `src/pages/HotelDetailPage.tsx`, `src/pages/HotelCheckoutPage.tsx`, `src/pages/HotelConfirmationPage.tsx` |
+| Activity Pages | `src/pages/ActivityResultsPage.tsx`, `src/pages/ActivityDetailPage.tsx`, `src/pages/ActivityCheckoutPage.tsx`, `src/pages/ActivityConfirmationPage.tsx` |
+| Transfer Pages | `src/pages/TransfersPage.tsx`, `src/pages/TransferResultsPage.tsx`, `src/pages/TransferCheckoutPage.tsx`, `src/pages/TransferConfirmationPage.tsx` |
+| Components | ~15 new components across hotels, activities, transfers |
 
-### Availability Search Request
-
-```typescript
-// POST /hotel-api/1.0/hotels
-{
-  "stay": {
-    "checkIn": "2026-03-01",
-    "checkOut": "2026-03-05"
-  },
-  "occupancies": [
-    { "rooms": 1, "adults": 2, "children": 0 }
-  ],
-  "destination": {
-    "code": "NYC"
-  }
-}
-```
-
-### Booking Request
-
-```typescript
-// POST /hotel-api/1.0/bookings
-{
-  "holder": {
-    "name": "John",
-    "surname": "Doe"
-  },
-  "rooms": [
-    {
-      "rateKey": "selected_rate_key",
-      "paxes": [
-        { "roomId": 1, "type": "AD", "name": "John", "surname": "Doe" }
-      ]
-    }
-  ],
-  "clientReference": "ZIVO-123456"
-}
-```
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `supabase/functions/hotelbeds-api/index.ts` | Edge function for all Hotelbeds API calls |
-| `src/types/hotelbeds.ts` | TypeScript interfaces |
-| `src/hooks/useHotelbedsSearch.ts` | Search availability hook |
-| `src/hooks/useHotelbedsBooking.ts` | Booking flow hook |
-| `src/pages/HotelDetailPage.tsx` | Hotel details page |
-| `src/pages/HotelCheckoutPage.tsx` | Checkout page |
-| `src/pages/HotelConfirmationPage.tsx` | Confirmation page |
-| `src/components/hotels/HotelbedsResultCard.tsx` | Result card component |
-| `src/components/hotels/HotelRoomCard.tsx` | Room selection component |
-| `src/components/hotels/HotelGuestForm.tsx` | Guest form component |
-
-## Files to Modify
+### To Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/HotelsPage.tsx` | Replace mock hook with Hotelbeds |
-| `src/pages/HotelResultsPage.tsx` | Display real hotel data |
+| `src/App.tsx` | Add new routes for all three modules |
+| `src/pages/HotelsPage.tsx` | Replace mock hook with Hotelbeds API |
+| `src/pages/ThingsToDo.tsx` | Replace affiliate cards with real search |
+| `src/components/travel-extras/AirportTransfersSection.tsx` | Link to new transfers flow |
 | `src/components/hotels/HotelFilters.tsx` | Add board type, refundable filters |
-| `src/App.tsx` | Add new hotel routes |
-| `supabase/config.toml` | Add hotelbeds-api function config |
+| `supabase/config.toml` | Add three new function configurations |
+
+---
+
+## Security Checklist
+
+- [ ] All API keys stored in Supabase secrets only
+- [ ] No secrets logged in edge functions
+- [ ] Signature generated server-side only
+- [ ] Rate limiting applied to all endpoints
+- [ ] Input validation on all requests
+- [ ] RLS policies on all booking tables
+- [ ] Error messages don't leak internal details
+- [ ] CORS headers properly configured
 
 ---
 
 ## Success Criteria
 
-- Status endpoint returns healthy response from Hotelbeds TEST
-- Availability search returns real hotel data
-- Hotel details page displays rooms with rates
-- Checkout flow completes booking successfully
-- Confirmation shows booking reference
-- No API secrets exposed in frontend
-- Error handling covers all edge cases
+- [ ] Hotels: Search returns real availability from Hotelbeds TEST
+- [ ] Hotels: Booking flow completes successfully
+- [ ] Activities: Search returns real activities
+- [ ] Activities: Booking creates valid reservation
+- [ ] Transfers: Availability returns vehicle options
+- [ ] Transfers: Booking creates confirmed transfer
+- [ ] All booking references stored in database
+- [ ] No external redirects for booking completion
+- [ ] Error states handled gracefully
+- [ ] Mobile-responsive UI throughout
+
