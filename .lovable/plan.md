@@ -1,347 +1,515 @@
 
 
-# OTA-Only Mode: Lock Flights System and Remove All Affiliate Fallback Logic
+# Duffel OTA Search Reliability + Admin Debug Tools
 
 ## Summary
 
-This plan permanently disables all affiliate fallback logic for ZIVO Flights and enforces strict OTA-only mode. A new feature flag (`FLIGHTS_MODE = OTA_ONLY`) will be introduced to globally control this behavior, ensuring that Duffel API failures or empty results never trigger affiliate redirects.
+This plan improves Duffel OTA search reliability by enhancing airport validation, adding sandbox-specific helper suggestions, implementing server-side logging for search diagnostics, and creating an admin debug panel for flight searches.
 
 ---
 
 ## Current State Analysis
 
-### Components Still Using Affiliate Logic for Flights
-
-| File | Issue | Risk Level |
-|------|-------|------------|
-| `src/components/search/FlightSearchFormPro.tsx` | Debug URL exposed to client with "Open live results directly" link | HIGH |
-| `src/components/monetization/ExitIntentPrompt.tsx` | Affiliate redirect on exit intent | HIGH |
-| `src/components/monetization/SmartBookingCTA.tsx` | Full affiliate redirect component | HIGH |
-| `src/components/flight/FlightFlashSale.tsx` | Mock "flash deals" with affiliate redirect | HIGH |
-| `src/components/flight/FlightDestinationInspiration.tsx` | Destination cards with affiliate redirect | HIGH |
-| `src/components/flight/NearbyAirports.tsx` | Nearby airports with affiliate "View Deal" CTAs | HIGH |
-| `src/components/shared/AffiliateDestinationCard.tsx` | Generic affiliate card used for flights | MEDIUM |
-| `src/lib/affiliateRedirect.ts` | `redirectToFlightPartner()` function | MEDIUM |
-| `src/hooks/useAffiliateRedirect.ts` | Flight redirect hook | MEDIUM |
-| `src/config/affiliateLinks.ts` | `AFFILIATE_LINKS.flights` config | LOW (config only) |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Airport Autocomplete | Partial | Uses `LocationAutocomplete` with local `airports.ts` dataset. Validation exists but allows free-text fallback. |
+| Duffel Integration | Working | Edge function `duffel-flights` with proper API calls. Hook `useDuffelFlights` handles requests. |
+| No Results Handling | Basic | Shows generic "No flights available" message via `EmptyResults` component. No sandbox-specific guidance. |
+| Search Logging | None | No database logging of Duffel requests/responses for debugging. |
+| Admin Debug | Partial | `TravelLogsPage` exists for partner redirects, but no Duffel-specific debug panel. |
+| Flexible Dates | None | No date flexibility toggle in search form. |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Create Global Feature Flag Configuration
+### Phase 1: Strengthen Airport Validation
 
-**File:** `src/config/flightBookingMode.ts` (NEW)
+**Goal:** Ensure only valid IATA codes from autocomplete can be used for search.
 
-```typescript
-/**
- * ZIVO Flight Booking Mode Configuration
- * 
- * FLIGHTS_MODE determines how flight bookings are handled:
- * - OTA_ONLY: All bookings through ZIVO + Duffel (no affiliate)
- * - AFFILIATE: Legacy affiliate redirect mode (DEPRECATED)
- * 
- * This is a LOCKED configuration - affiliate mode is permanently disabled.
- */
-
-export const FLIGHTS_MODE = 'OTA_ONLY' as const;
-
-export type FlightsMode = 'OTA_ONLY' | 'AFFILIATE';
-
-/**
- * Check if flights are in OTA-only mode
- * This should ALWAYS return true for production
- */
-export function isFlightsOTAMode(): boolean {
-  return FLIGHTS_MODE === 'OTA_ONLY';
-}
-
-/**
- * Guard function - throws error if affiliate code attempts to run
- * Use in any legacy affiliate function for safety
- */
-export function assertOTAMode(context: string): void {
-  if (FLIGHTS_MODE !== 'OTA_ONLY') {
-    console.error(`[SECURITY] Affiliate mode attempted in: ${context}`);
-    throw new Error('Affiliate mode is disabled. ZIVO operates in OTA-only mode.');
-  }
-}
-
-/**
- * Safe guard for affiliate functions - returns false to prevent execution
- * Use in conditionals before affiliate logic
- */
-export function canUseAffiliateForFlights(): boolean {
-  return false; // LOCKED: Always return false
-}
-```
-
----
-
-### Phase 2: Remove Debug URL from FlightSearchFormPro
+#### 1.1 Update FlightSearchFormPro Validation
 
 **File:** `src/components/search/FlightSearchFormPro.tsx`
 
-**Remove Lines 177-205:** White label URL builder
-**Remove Lines 207-208:** Debug URL state
-**Remove Lines 218-221:** Debug URL logging
-**Remove Lines 244-249:** `handleOpenDirect` function
-**Remove Lines 646-658:** Debug URL display section
+Modify the `validate()` function to strictly require a valid `LocationOption` selection:
 
-This removes:
-- `WL_BASE_URL` environment variable usage
-- `MARKER` tracking parameter
-- `buildWhitelabelUrl()` function
-- `debugUrl` state
-- "Open live results directly →" link
-
----
-
-### Phase 3: Disable ExitIntentPrompt for Flights
-
-**File:** `src/components/monetization/ExitIntentPrompt.tsx`
-
-**Option A:** Completely remove from FlightResults.tsx import
-**Option B:** Add OTA mode guard at component level
-
-Implementation (Option B - safer):
 ```typescript
-// Add at top of component
-import { isFlightsOTAMode } from '@/config/flightBookingMode';
+const validate = (): boolean => {
+  const newErrors: Record<string, string> = {};
 
-export default function ExitIntentPrompt({ ... }) {
-  // OTA Mode: Exit intent affiliate prompts are disabled
-  if (isFlightsOTAMode()) {
-    return null;
+  // STRICT: Must have selected airport from autocomplete
+  if (!fromOption) {
+    newErrors.from = "Please choose an airport from the list.";
   }
-  // ... existing code (for hotels/cars if ever used)
-}
-```
 
-Also update `src/pages/FlightResults.tsx` to not render ExitIntentPrompt.
-
----
-
-### Phase 4: Remove/Disable SmartBookingCTA
-
-**File:** `src/components/monetization/SmartBookingCTA.tsx`
-
-This component is exclusively for affiliate redirects. For flights:
-
-**Option A:** Delete the component entirely (risky if used elsewhere)
-**Option B:** Add OTA mode guard
-
-Since it might be used for hotels/cars, add guard:
-```typescript
-import { isFlightsOTAMode, assertOTAMode } from '@/config/flightBookingMode';
-
-// Add to handlePrimaryClick:
-const handlePrimaryClick = () => {
-  // For flights, affiliate redirect is DISABLED
-  if (serviceType === 'flights' || origin || destination) {
-    assertOTAMode('SmartBookingCTA'); // Will throw if called
-    return;
+  if (!toOption) {
+    newErrors.to = "Please choose an airport from the list.";
   }
-  // ... existing affiliate logic for other services
+
+  // Same origin/destination check
+  if (fromOption && toOption && fromOption.value === toOption.value) {
+    newErrors.to = "Destination must differ from origin";
+  }
+
+  // Date validation...
 };
 ```
 
-Also export `FallbackBookingCTA` with same guard.
+Remove the fallback regex matching `fromDisplay.match(/\([A-Z]{3}\)/)` that currently allows free-text entries.
 
----
+#### 1.2 Update isFormValid Check
 
-### Phase 5: Remove FlightFlashSale Component
-
-**File:** `src/components/flight/FlightFlashSale.tsx`
-
-This component shows fake "flash deals" with affiliate redirects. For OTA model:
-
-**Option A:** Delete component and remove from imports
-**Option B:** Convert to OTA model (internal navigation)
-
-Recommended: **Delete entirely** - flash deals with fake prices contradict OTA model
-
-**Remove from:** `src/pages/FlightBooking.tsx` (lines 41, 310)
-
----
-
-### Phase 6: Convert FlightDestinationInspiration to OTA
-
-**File:** `src/components/flight/FlightDestinationInspiration.tsx`
-
-Replace affiliate redirect with internal navigation:
+Ensure the search button is only enabled when proper `LocationOption` objects are selected:
 
 ```typescript
-// Change onClick handler (line 91)
-onClick={() => {
-  // OTA: Navigate to flight search internally
-  const params = new URLSearchParams({
-    dest: dest.city,
-  });
-  navigate(`/flights?${params.toString()}`);
-}}
+const isFormValid = useMemo(() => {
+  const hasFrom = !!fromOption; // Strict - must have selected option
+  const hasTo = !!toOption;     // Strict - must have selected option
+  const hasDepart = !!departDate;
+  const hasReturn = tripType === "oneway" || !!returnDate;
+  return hasFrom && hasTo && hasDepart && hasReturn;
+}, [fromOption, toOption, departDate, returnDate, tripType]);
 ```
 
-Remove:
-- `AFFILIATE_LINKS` import
-- `window.open()` calls
-- ExternalLink icons
-
 ---
 
-### Phase 7: Convert NearbyAirports to OTA
+### Phase 2: Sandbox Test Mode Suggestions
 
-**File:** `src/components/flight/NearbyAirports.tsx`
+**Goal:** When `DUFFEL_ENV = sandbox` and results = 0, show helpful test route suggestions.
 
-Replace affiliate redirects with internal navigation:
+#### 2.1 Create Environment Config Helper
+
+**File:** `src/config/duffelConfig.ts` (NEW)
 
 ```typescript
-// Change all onClick handlers that use AFFILIATE_LINKS.flights.url
-onClick={() => {
-  // OTA: Navigate to search with this airport
-  const params = new URLSearchParams({
-    origin: airport.code,
-    dest: destination,
-  });
-  navigate(`/flights/results?${params.toString()}`);
-}}
+/**
+ * Duffel Environment Configuration
+ * Provides helper routes for sandbox testing
+ */
+
+// This is set at build time or from edge function response
+export const DUFFEL_SANDBOX_ROUTES = [
+  { from: 'LHR', to: 'CDG', label: 'London → Paris' },
+  { from: 'SFO', to: 'LAX', label: 'San Francisco → Los Angeles' },
+  { from: 'JFK', to: 'BOS', label: 'New York → Boston' },
+  { from: 'LAX', to: 'SFO', label: 'Los Angeles → San Francisco' },
+  { from: 'LHR', to: 'JFK', label: 'London → New York' },
+  { from: 'CDG', to: 'AMS', label: 'Paris → Amsterdam' },
+];
+
+export function isSandboxMode(): boolean {
+  // Check if we're in sandbox (this would be returned from edge function)
+  return import.meta.env.MODE === 'development' || 
+         sessionStorage.getItem('duffel_env') === 'sandbox';
+}
 ```
 
-Remove:
-- `AFFILIATE_LINKS` import (line 22)
-- `window.open(AFFILIATE_LINKS.flights.url, ...)` calls (lines 168, 349)
-- ExternalLink icons for flights
+#### 2.2 Create Sandbox Helper Component
 
----
-
-### Phase 8: Add OTA Guard to AffiliateDestinationCard
-
-**File:** `src/components/shared/AffiliateDestinationCard.tsx`
-
-Add guard for flights:
+**File:** `src/components/flight/SandboxTestHelper.tsx` (NEW)
 
 ```typescript
-import { isFlightsOTAMode } from '@/config/flightBookingMode';
-import { useNavigate } from 'react-router-dom';
+/**
+ * SandboxTestHelper Component
+ * Shows helpful test route suggestions when in Duffel sandbox mode
+ * Only displays when no results and sandbox environment detected
+ */
 
-const handleClick = () => {
-  // OTA Mode: Use internal navigation for flights
-  if (serviceType === 'flights' && isFlightsOTAMode()) {
-    const params = new URLSearchParams();
-    if (originCode) params.set('origin', originCode);
-    if (destinationCode) params.set('dest', destinationCode);
-    if (departDate) params.set('depart', departDate);
+import { AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { DUFFEL_SANDBOX_ROUTES } from "@/config/duffelConfig";
+import { useNavigate } from "react-router-dom";
+import { format, addDays } from "date-fns";
+
+interface SandboxTestHelperProps {
+  onTryRoute: (origin: string, destination: string) => void;
+  className?: string;
+}
+
+export default function SandboxTestHelper({ onTryRoute, className }: SandboxTestHelperProps) {
+  const navigate = useNavigate();
+
+  const handleQuickSearch = (from: string, to: string) => {
+    const departDate = format(addDays(new Date(), 7), 'yyyy-MM-dd');
+    const returnDate = format(addDays(new Date(), 14), 'yyyy-MM-dd');
+    
+    const params = new URLSearchParams({
+      origin: from,
+      dest: to,
+      depart: departDate,
+      return: returnDate,
+      passengers: '1',
+      cabin: 'economy',
+    });
+    
     navigate(`/flights/results?${params.toString()}`);
-    return;
-  }
-  // ... existing affiliate logic for hotels/cars
+  };
+
+  return (
+    <Alert className={className}>
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>Duffel Sandbox Mode</AlertTitle>
+      <AlertDescription className="space-y-4">
+        <p>
+          The Duffel sandbox has limited test inventory. Try these routes for reliable results:
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {DUFFEL_SANDBOX_ROUTES.slice(0, 4).map((route) => (
+            <Button
+              key={`${route.from}-${route.to}`}
+              variant="outline"
+              size="sm"
+              onClick={() => handleQuickSearch(route.from, route.to)}
+              className="gap-2"
+            >
+              {route.from} <ArrowRight className="w-3 h-3" /> {route.to}
+            </Button>
+          ))}
+        </div>
+        <Badge variant="secondary" className="text-xs">
+          Sandbox data may not reflect real availability
+        </Badge>
+      </AlertDescription>
+    </Alert>
+  );
+}
+```
+
+#### 2.3 Update NoFlightsFound Component
+
+**File:** `src/components/flight/NoFlightsFound.tsx`
+
+Add sandbox helper banner when in test mode:
+
+```typescript
+import SandboxTestHelper from "./SandboxTestHelper";
+import { isSandboxMode } from "@/config/duffelConfig";
+
+export default function NoFlightsFound({ ... }) {
+  const navigate = useNavigate();
+  const showSandboxHelper = isSandboxMode();
+
+  return (
+    <Card className="p-8 sm:p-12 text-center">
+      {/* Existing icon and message */}
+      
+      {/* Sandbox Helper Banner - Only in test mode */}
+      {showSandboxHelper && (
+        <SandboxTestHelper 
+          onTryRoute={(from, to) => {
+            // Navigate with test route
+          }}
+          className="mb-6 text-left"
+        />
+      )}
+
+      {/* Rest of existing component */}
+    </Card>
+  );
+}
+```
+
+#### 2.4 Update Duffel Edge Function to Return Environment
+
+**File:** `supabase/functions/duffel-flights/index.ts`
+
+Add environment indicator to response:
+
+```typescript
+// At the end of createOfferRequest function
+return {
+  offer_request_id: offerRequest.id,
+  offers: transformOffers(offerRequest.offers || []),
+  created_at: offerRequest.created_at,
+  environment: Deno.env.get('DUFFEL_ENV') || 'test', // Add this
 };
 ```
 
 ---
 
-### Phase 9: Disable Flight Affiliate Redirect Functions
+### Phase 3: Server-Side Search Logging
 
-**File:** `src/lib/affiliateRedirect.ts`
+**Goal:** Log every Duffel search request and response for debugging.
 
-Add OTA mode guard:
+#### 3.1 Create Database Table
+
+**SQL Migration:**
+
+```sql
+CREATE TABLE flight_search_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  
+  -- Search parameters
+  origin_iata TEXT NOT NULL,
+  destination_iata TEXT NOT NULL,
+  departure_date DATE NOT NULL,
+  return_date DATE,
+  passengers INTEGER NOT NULL DEFAULT 1,
+  cabin_class TEXT NOT NULL DEFAULT 'economy',
+  
+  -- Duffel response
+  duffel_request_id TEXT,
+  duffel_status_code INTEGER,
+  duffel_error TEXT,
+  offers_count INTEGER DEFAULT 0,
+  
+  -- Timing
+  response_time_ms INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  
+  -- Environment
+  environment TEXT DEFAULT 'sandbox'
+);
+
+-- Index for admin queries
+CREATE INDEX idx_flight_search_logs_created ON flight_search_logs(created_at DESC);
+CREATE INDEX idx_flight_search_logs_route ON flight_search_logs(origin_iata, destination_iata);
+CREATE INDEX idx_flight_search_logs_errors ON flight_search_logs(duffel_error) WHERE duffel_error IS NOT NULL;
+
+-- RLS: Admin-only access
+ALTER TABLE flight_search_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admin full access to flight logs"
+ON flight_search_logs
+FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM user_roles 
+    WHERE user_id = auth.uid() 
+    AND role = 'admin'
+  )
+);
+```
+
+#### 3.2 Update Duffel Edge Function with Logging
+
+**File:** `supabase/functions/duffel-flights/index.ts`
+
+Add logging after each search:
 
 ```typescript
-import { isFlightsOTAMode, assertOTAMode } from '@/config/flightBookingMode';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-export function redirectToFlightPartner(
-  params: FlightDeepLinkParams,
-  options: RedirectOptions
-) {
-  // OTA MODE: Flight partner redirect is DISABLED
-  if (isFlightsOTAMode()) {
-    assertOTAMode('redirectToFlightPartner');
-    console.error('[BLOCKED] Attempted affiliate redirect for flights');
-    return null; // Don't redirect
+// Add at start of function
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// In createOfferRequest, after Duffel call
+async function logSearch(params: {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  cabinClass: string;
+  requestId?: string;
+  statusCode: number;
+  error?: string;
+  offersCount: number;
+  responseTimeMs: number;
+}) {
+  try {
+    await supabase.from('flight_search_logs').insert({
+      origin_iata: params.origin,
+      destination_iata: params.destination,
+      departure_date: params.departureDate,
+      return_date: params.returnDate,
+      passengers: params.passengers,
+      cabin_class: params.cabinClass,
+      duffel_request_id: params.requestId,
+      duffel_status_code: params.statusCode,
+      duffel_error: params.error,
+      offers_count: params.offersCount,
+      response_time_ms: params.responseTimeMs,
+      environment: Deno.env.get('DUFFEL_ENV') || 'sandbox',
+    });
+  } catch (err) {
+    console.error('[Logging] Failed to log search:', err);
   }
-  
-  // ... legacy code (never executes in OTA mode)
 }
 ```
 
 ---
 
-### Phase 10: Disable Flight Affiliate Hook
+### Phase 4: Admin Flight Debug Panel
 
-**File:** `src/hooks/useAffiliateRedirect.ts`
+**Goal:** Create `/admin/flights/debug` page for diagnosing search issues.
 
-Add OTA mode guard:
+#### 4.1 Create Admin Debug Hook
+
+**File:** `src/hooks/useFlightSearchLogs.ts` (NEW)
 
 ```typescript
-import { isFlightsOTAMode } from '@/config/flightBookingMode';
+/**
+ * Hook for fetching flight search logs (admin only)
+ */
 
-export function useFlightRedirect(source: string, ctaType?: CTAType) {
-  // OTA MODE: Return no-op functions for flights
-  if (isFlightsOTAMode()) {
-    return {
-      redirectWithParams: () => {
-        console.warn('[OTA] Flight affiliate redirect is disabled');
-        return null;
-      },
-      redirectSimple: () => {
-        console.warn('[OTA] Flight affiliate redirect is disabled');
-        return null;
-      },
-    };
-  }
-  
-  // ... legacy code
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface FlightSearchLog {
+  id: string;
+  origin_iata: string;
+  destination_iata: string;
+  departure_date: string;
+  return_date: string | null;
+  passengers: number;
+  cabin_class: string;
+  duffel_request_id: string | null;
+  duffel_status_code: number | null;
+  duffel_error: string | null;
+  offers_count: number;
+  response_time_ms: number | null;
+  environment: string;
+  created_at: string;
+}
+
+export function useFlightSearchLogs(limit = 50) {
+  return useQuery({
+    queryKey: ['flight-search-logs', limit],
+    queryFn: async (): Promise<FlightSearchLog[]> => {
+      const { data, error } = await supabase
+        .from('flight_search_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      return data as FlightSearchLog[];
+    },
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+export function useFlightSearchStats() {
+  return useQuery({
+    queryKey: ['flight-search-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_flight_search_stats');
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+}
+```
+
+#### 4.2 Create Admin Debug Page
+
+**File:** `src/pages/admin/FlightDebugPage.tsx` (NEW)
+
+Key features:
+- Table showing last 50 searches (origin, dest, dates, passengers, cabin, timestamp)
+- Status column: success/failed with offer count
+- Error column: Duffel error message if any
+- "Replay Search" button (sandbox only) - opens a new search with same params
+- Filter by: error status, route, date range
+- Stats summary: total searches, success rate, avg response time
+
+#### 4.3 Add Route
+
+**File:** `src/App.tsx`
+
+Add route for admin debug page:
+
+```typescript
+{
+  path: "/admin/flights/debug",
+  element: <FlightDebugPage />,
 }
 ```
 
 ---
 
-### Phase 11: Update Error Handling (No Affiliate Fallback)
+### Phase 5: Flexible Dates Toggle
 
-**File:** `src/pages/FlightResults.tsx`
+**Goal:** Add simple date flexibility suggestion for users.
 
-Ensure error states don't trigger affiliate fallback:
+#### 5.1 Add Flexible Dates Toggle to Search Form
+
+**File:** `src/components/search/FlightSearchFormPro.tsx`
+
+Add a toggle near the date pickers:
 
 ```typescript
-// Verify error handling doesn't redirect
-{error && (
-  <Card className="p-6 text-center">
-    <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-    <h3 className="font-bold text-lg mb-2">Unable to load flights</h3>
-    <p className="text-muted-foreground mb-4">
-      We couldn't connect to our flight search. Please try again.
-    </p>
-    <Button onClick={() => window.location.reload()}>
-      Try Again
-    </Button>
-    {/* NO affiliate fallback CTA */}
-  </Card>
+const [flexibleDates, setFlexibleDates] = useState(false);
+
+// In the dates row
+<div className="flex items-center gap-2 mt-2">
+  <Switch
+    id="flexible-dates"
+    checked={flexibleDates}
+    onCheckedChange={setFlexibleDates}
+  />
+  <Label htmlFor="flexible-dates" className="text-xs text-muted-foreground">
+    Flexible dates (±3 days)
+  </Label>
+</div>
+```
+
+When enabled, pass `flexible: true` in URL params. Results page can show alternative date suggestions.
+
+#### 5.2 Update Results Page for Flexible Dates
+
+Show alternative date cards when `flexible=true` is in URL:
+
+```typescript
+// In FlightResults.tsx
+const isFlexibleSearch = searchParams.get('flexible') === 'true';
+
+// After no results or in a sidebar
+{isFlexibleSearch && (
+  <AlternativeDatesCard
+    currentDate={departureDate}
+    onSelectDate={(newDate) => {
+      // Navigate with new date
+    }}
+  />
 )}
 ```
 
 ---
 
-### Phase 12: Remove Affiliate Feature Flags (Admin)
+### Phase 6: Enhanced No Results UI
 
-**File:** `src/components/admin/settings/FeatureFlagsPanel.tsx`
+**Goal:** Improve the empty results experience with actionable options.
 
-Add a locked "FLIGHTS_OTA_MODE" flag that cannot be toggled:
+#### 6.1 Update EmptyResults Component
+
+**File:** `src/components/results/EmptyResults.tsx`
+
+Add "Try nearby airports" and "Try flexible dates" buttons:
 
 ```typescript
-// Add to mockFlags array
-{
-  id: "ota_flights",
-  key: "flights_ota_mode",
-  name: "Flights OTA Mode",
-  description: "LOCKED: ZIVO is the Merchant of Record for flights. Affiliate mode permanently disabled.",
-  isEnabled: true,
-  rolloutPercentage: 100,
-  targetAudience: "all",
-  category: "locked", // New category
-  createdAt: new Date(),
-  lastModified: new Date(),
-},
+{service === "flights" && (
+  <div className="flex flex-wrap justify-center gap-3 mt-4">
+    <Button
+      variant="outline"
+      onClick={() => onTryNearbyAirports?.()}
+      className="gap-2"
+    >
+      <MapPin className="w-4 h-4" />
+      Try nearby airports
+    </Button>
+    <Button
+      variant="outline"
+      onClick={() => onTryFlexibleDates?.()}
+      className="gap-2"
+    >
+      <Calendar className="w-4 h-4" />
+      Try flexible dates
+    </Button>
+  </div>
+)}
 ```
+
+These buttons should reopen the edit search modal with modified parameters.
 
 ---
 
@@ -349,92 +517,87 @@ Add a locked "FLIGHTS_OTA_MODE" flag that cannot be toggled:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/config/flightBookingMode.ts` | CREATE | Global OTA mode flag and guard functions |
-| `src/components/search/FlightSearchFormPro.tsx` | MODIFY | Remove debug URL section and white label URL builder |
-| `src/components/monetization/ExitIntentPrompt.tsx` | MODIFY | Add OTA mode guard, return null for flights |
-| `src/components/monetization/SmartBookingCTA.tsx` | MODIFY | Add OTA mode guard, block flight affiliate redirects |
-| `src/components/flight/FlightFlashSale.tsx` | DELETE | Fake flash deals contradict OTA model |
-| `src/components/flight/FlightDestinationInspiration.tsx` | MODIFY | Convert to internal navigation |
-| `src/components/flight/NearbyAirports.tsx` | MODIFY | Convert to internal navigation |
-| `src/components/shared/AffiliateDestinationCard.tsx` | MODIFY | Add OTA mode guard for flights |
-| `src/lib/affiliateRedirect.ts` | MODIFY | Add OTA mode guard to block flight redirects |
-| `src/hooks/useAffiliateRedirect.ts` | MODIFY | Add OTA mode guard to flight hooks |
-| `src/pages/FlightResults.tsx` | MODIFY | Remove ExitIntentPrompt import |
-| `src/pages/FlightBooking.tsx` | MODIFY | Remove FlightFlashSale import and usage |
-| `src/components/admin/settings/FeatureFlagsPanel.tsx` | MODIFY | Add locked OTA mode flag |
+| `src/components/search/FlightSearchFormPro.tsx` | MODIFY | Strict airport validation, flexible dates toggle |
+| `src/config/duffelConfig.ts` | CREATE | Sandbox routes config, environment helper |
+| `src/components/flight/SandboxTestHelper.tsx` | CREATE | Test route suggestion component |
+| `src/components/flight/NoFlightsFound.tsx` | MODIFY | Add sandbox helper integration |
+| `supabase/functions/duffel-flights/index.ts` | MODIFY | Add logging, return environment |
+| `src/hooks/useFlightSearchLogs.ts` | CREATE | Admin log fetching hook |
+| `src/pages/admin/FlightDebugPage.tsx` | CREATE | Admin debug dashboard |
+| `src/components/results/EmptyResults.tsx` | MODIFY | Add actionable buttons for flights |
+| `src/App.tsx` | MODIFY | Add admin debug route |
+| **Database Migration** | CREATE | `flight_search_logs` table with RLS |
 
 ---
 
-## Security Verification Checklist
+## Database Migration
 
-After implementation, verify:
+```sql
+-- New table for flight search logging
+CREATE TABLE flight_search_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  origin_iata TEXT NOT NULL,
+  destination_iata TEXT NOT NULL,
+  departure_date DATE NOT NULL,
+  return_date DATE,
+  passengers INTEGER NOT NULL DEFAULT 1,
+  cabin_class TEXT NOT NULL DEFAULT 'economy',
+  duffel_request_id TEXT,
+  duffel_status_code INTEGER,
+  duffel_error TEXT,
+  offers_count INTEGER DEFAULT 0,
+  response_time_ms INTEGER,
+  environment TEXT DEFAULT 'sandbox',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-1. **Duffel API Key Security**
-   - [ ] `DUFFEL_API_KEY` is ONLY in edge function (server-side)
-   - [ ] No Duffel URLs exposed to client except through edge function
+-- Indexes
+CREATE INDEX idx_flight_search_logs_created ON flight_search_logs(created_at DESC);
+CREATE INDEX idx_flight_search_logs_route ON flight_search_logs(origin_iata, destination_iata);
 
-2. **No Affiliate URLs for Flights**
-   - [ ] No `window.open()` calls for flight affiliate links
-   - [ ] No `AFFILIATE_LINKS.flights.url` usage in flight components
-   - [ ] No ExternalLink icons on flight CTAs
+-- RLS: Admin-only
+ALTER TABLE flight_search_logs ENABLE ROW LEVEL SECURITY;
 
-3. **No Debug URLs**
-   - [ ] No "Open live results directly" links
-   - [ ] No white label URLs exposed to users
-   - [ ] No partner tracking URLs in console logs
-
-4. **No Affiliate Fallback**
-   - [ ] Empty results show "No flights available" (no partner CTA)
-   - [ ] Error states show "Try again" (no partner fallback)
-   - [ ] Exit intent disabled for flights
-
-5. **Proper Error Handling**
-   - [ ] API failures show user-friendly message
-   - [ ] Errors logged server-side (edge function logs)
-   - [ ] No redirect on any error condition
+CREATE POLICY "Admin access to flight logs"
+ON flight_search_logs FOR ALL TO authenticated
+USING (EXISTS (
+  SELECT 1 FROM user_roles 
+  WHERE user_id = auth.uid() AND role = 'admin'
+));
+```
 
 ---
 
-## Compliance Benefits
+## Security Checklist
 
-This implementation ensures:
-
-1. **Seller of Travel Compliance**
-   - ZIVO is clearly the seller/MoR
-   - No confusing partner redirects
-   - Clear price disclosure
-
-2. **Duffel LIVE Approval**
-   - Clean API integration
-   - No affiliate mixing
-   - Proper ticketing flow
-
-3. **User Trust**
-   - Consistent booking experience
-   - No unexpected redirects
-   - Clear ZIVO branding throughout
+1. **Duffel API Key** - Only in edge function (server-side)
+2. **No API URLs exposed** - All calls go through edge function
+3. **Admin-only debug access** - RLS enforced on logs table
+4. **No affiliate fallback** - OTA mode remains locked
 
 ---
 
 ## Testing Requirements
 
-After implementation, test:
+1. **Airport Validation**
+   - Verify free-text entries are blocked
+   - Confirm "Please choose an airport from the list" error shows
+   - Test autocomplete selection works correctly
 
-1. **Search Flow**
-   - Search flights → Results display → Select flight → Checkout on ZIVO
-   - No external links or redirects at any step
+2. **Sandbox Helper**
+   - Verify banner only shows in sandbox mode
+   - Test quick search buttons navigate correctly
+   - Confirm no affiliate language appears
 
-2. **Empty Results**
-   - Search with no results → "No flights available" message
-   - NO partner fallback buttons
+3. **Logging**
+   - Trigger searches and verify logs appear in database
+   - Check error cases are logged with messages
+   - Verify response times are captured
 
-3. **Error States**
-   - Trigger API error → User-friendly error message
-   - NO affiliate fallback
-
-4. **All Flight Pages**
-   - `/flights` landing
-   - `/flights/results` results page
-   - `/flights/booking` (if separate)
-   - Verify no affiliate CTAs appear
+4. **Admin Debug Panel**
+   - Access `/admin/flights/debug` as admin
+   - Verify log table displays correctly
+   - Test "Replay Search" button functionality
 
