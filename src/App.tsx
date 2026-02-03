@@ -277,6 +277,9 @@ const FlightPerformancePage = lazy(() => import("./pages/admin/FlightPerformance
 const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
 const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOfTravelSettings"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+const TravelOperationsCenter = lazy(() => import("./pages/admin/TravelOperationsCenter"));
+const MarketingDashboard = lazy(() => import("./pages/admin/MarketingDashboard"));
+const AdminNotificationsModule = lazy(() => import("./pages/admin/modules/notifications/AdminNotificationsModule"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -874,6 +877,30 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminSupport />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/notifications"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminNotificationsModule />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/travel-operations"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <TravelOperationsCenter />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <MarketingDashboard />
                     </ProtectedRoute>
                   }
                 />

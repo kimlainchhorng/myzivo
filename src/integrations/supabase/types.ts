@@ -6845,6 +6845,173 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean | null
+          id: string
+          in_app_enabled: boolean | null
+          marketing_enabled: boolean | null
+          operational_enabled: boolean | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          sms_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          marketing_enabled?: boolean | null
+          operational_enabled?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          marketing_enabled?: boolean | null
+          operational_enabled?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          sms_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          can_be_disabled: boolean | null
+          category: Database["public"]["Enums"]["notification_category"]
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string
+          supports_email: boolean | null
+          supports_in_app: boolean | null
+          supports_sms: boolean | null
+          template_key: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          can_be_disabled?: boolean | null
+          category: Database["public"]["Enums"]["notification_category"]
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject: string
+          supports_email?: boolean | null
+          supports_in_app?: boolean | null
+          supports_sms?: boolean | null
+          template_key: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          can_be_disabled?: boolean | null
+          category?: Database["public"]["Enums"]["notification_category"]
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string
+          supports_email?: boolean | null
+          supports_in_app?: boolean | null
+          supports_sms?: boolean | null
+          template_key?: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          body: string
+          category: Database["public"]["Enums"]["notification_category"]
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string
+          error_message: string | null
+          id: string
+          is_read: boolean | null
+          metadata: Json | null
+          order_id: string | null
+          provider_message_id: string | null
+          read_at: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["notification_status"]
+          template: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          action_url?: string | null
+          body: string
+          category?: Database["public"]["Enums"]["notification_category"]
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_read?: boolean | null
+          metadata?: Json | null
+          order_id?: string | null
+          provider_message_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_url?: string | null
+          body?: string
+          category?: Database["public"]["Enums"]["notification_category"]
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          is_read?: boolean | null
+          metadata?: Json | null
+          order_id?: string | null
+          provider_message_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["notification_status"]
+          template?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offline_sync_queue: {
         Row: {
           action_data: Json
@@ -16744,6 +16911,13 @@ export type Database = {
         | "denied"
         | "paid_out"
         | "closed"
+      notification_category:
+        | "transactional"
+        | "account"
+        | "operational"
+        | "marketing"
+      notification_channel: "email" | "in_app" | "sms"
+      notification_status: "queued" | "sent" | "failed" | "read"
       p2p_booking_status:
         | "pending"
         | "confirmed"
@@ -16991,6 +17165,14 @@ export const Constants = {
         "paid_out",
         "closed",
       ],
+      notification_category: [
+        "transactional",
+        "account",
+        "operational",
+        "marketing",
+      ],
+      notification_channel: ["email", "in_app", "sms"],
+      notification_status: ["queued", "sent", "failed", "read"],
       p2p_booking_status: [
         "pending",
         "confirmed",

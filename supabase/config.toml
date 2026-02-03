@@ -110,3 +110,9 @@ verify_jwt = false
 
 [functions.process-travel-cancellation]
 verify_jwt = true
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.notifications-api]
+verify_jwt = false
