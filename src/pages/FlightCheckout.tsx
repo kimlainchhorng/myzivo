@@ -54,7 +54,7 @@ const FlightCheckout = () => {
   
   const { data: offer, isLoading: offerLoading, error: offerError } = useDuffelOffer(offerId);
   const createCheckout = useCreateFlightCheckout();
-  const { canBook, isTestMode, isPaused, pauseReason, isLoading: bookingCheckLoading } = useFlightsCanBook();
+  const { canBook, isInternalTest, isPaused, pauseReason, isLoading: bookingCheckLoading, phase } = useFlightsCanBook();
   const { trackCheckoutStarted } = useFlightFunnel();
 
   // Load passenger data from session storage
