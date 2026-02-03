@@ -367,7 +367,7 @@ const FlightResults = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title={pageTitle} description={pageDescription} />
+      <SEOHead title={pageTitle} description={pageDescription} noIndex={true} />
       <Header />
 
       <main className="pt-16 pb-24 lg:pb-8">

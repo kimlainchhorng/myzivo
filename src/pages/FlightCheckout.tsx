@@ -226,6 +226,7 @@ const FlightCheckout = () => {
       <SEOHead 
         title={`Checkout – ${offer.departure.code} to ${offer.arrival.code} | ZIVO`}
         description="Complete your flight booking securely with ZIVO."
+        noIndex={true}
       />
       <Header />
 

@@ -3185,6 +3185,7 @@ export type Database = {
           customer_id: string
           departure_date: string | null
           destination: string | null
+          duffel_cost: number | null
           fare_rules: Json | null
           flight_id: string
           id: string
@@ -3193,6 +3194,7 @@ export type Database = {
           offer_id: string | null
           origin: string | null
           passengers: Json
+          payment_processor_fee: number | null
           payment_status: string | null
           pnr: string | null
           price_per_passenger: number
@@ -3219,6 +3221,8 @@ export type Database = {
           total_amount: number
           total_passengers: number
           updated_at: string | null
+          zivo_margin_pct: number | null
+          zivo_markup: number | null
         }
         Insert: {
           baggage_allowance?: Json | null
@@ -3230,6 +3234,7 @@ export type Database = {
           customer_id: string
           departure_date?: string | null
           destination?: string | null
+          duffel_cost?: number | null
           fare_rules?: Json | null
           flight_id: string
           id?: string
@@ -3238,6 +3243,7 @@ export type Database = {
           offer_id?: string | null
           origin?: string | null
           passengers: Json
+          payment_processor_fee?: number | null
           payment_status?: string | null
           pnr?: string | null
           price_per_passenger: number
@@ -3264,6 +3270,8 @@ export type Database = {
           total_amount: number
           total_passengers: number
           updated_at?: string | null
+          zivo_margin_pct?: number | null
+          zivo_markup?: number | null
         }
         Update: {
           baggage_allowance?: Json | null
@@ -3275,6 +3283,7 @@ export type Database = {
           customer_id?: string
           departure_date?: string | null
           destination?: string | null
+          duffel_cost?: number | null
           fare_rules?: Json | null
           flight_id?: string
           id?: string
@@ -3283,6 +3292,7 @@ export type Database = {
           offer_id?: string | null
           origin?: string | null
           passengers?: Json
+          payment_processor_fee?: number | null
           payment_status?: string | null
           pnr?: string | null
           price_per_passenger?: number
@@ -3309,6 +3319,8 @@ export type Database = {
           total_amount?: number
           total_passengers?: number
           updated_at?: string | null
+          zivo_margin_pct?: number | null
+          zivo_markup?: number | null
         }
         Relationships: [
           {
@@ -3326,6 +3338,78 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      flight_funnel_events: {
+        Row: {
+          amount: number | null
+          booking_id: string | null
+          cabin_class: string | null
+          created_at: string | null
+          currency: string | null
+          departure_date: string | null
+          destination: string | null
+          device_type: string | null
+          error_message: string | null
+          error_type: string | null
+          event_type: string
+          id: string
+          offer_id: string | null
+          offers_count: number | null
+          origin: string | null
+          passengers: number | null
+          return_date: string | null
+          session_id: string | null
+          user_id: string | null
+          utm_campaign: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          amount?: number | null
+          booking_id?: string | null
+          cabin_class?: string | null
+          created_at?: string | null
+          currency?: string | null
+          departure_date?: string | null
+          destination?: string | null
+          device_type?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          event_type: string
+          id?: string
+          offer_id?: string | null
+          offers_count?: number | null
+          origin?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          amount?: number | null
+          booking_id?: string | null
+          cabin_class?: string | null
+          created_at?: string | null
+          currency?: string | null
+          departure_date?: string | null
+          destination?: string | null
+          device_type?: string | null
+          error_message?: string | null
+          error_type?: string | null
+          event_type?: string
+          id?: string
+          offer_id?: string | null
+          offers_count?: number | null
+          origin?: string | null
+          passengers?: number | null
+          return_date?: string | null
+          session_id?: string | null
+          user_id?: string | null
+          utm_campaign?: string | null
+          utm_source?: string | null
+        }
+        Relationships: []
       }
       flight_incident_logs: {
         Row: {

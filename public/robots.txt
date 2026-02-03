@@ -1,5 +1,7 @@
-# ZIVO Travel - robots.txt
-# https://hizivo.com
+# ============================================
+# ZIVO (hizivo.com) - robots.txt
+# OTA-grade SEO configuration
+# ============================================
 
 # Primary Search Engines
 User-agent: Googlebot
@@ -25,26 +27,21 @@ User-agent: *
 Allow: /
 
 # ===========================
-# PUBLIC PAGES - ALLOW ALL
+# ALLOW - PUBLIC SEO PAGES
 # ===========================
 
 # Main Travel Services
 Allow: /flights
 Allow: /flights/*
+Allow: /airports
+Allow: /airports/*
 Allow: /hotels
 Allow: /hotels/*
 Allow: /rent-car
-Allow: /rent-car/*
 Allow: /car-rental
-Allow: /car-rental/*
+Allow: /extras
 Allow: /rides
 Allow: /eats
-Allow: /extras
-Allow: /travel-extras
-Allow: /things-to-do
-Allow: /activities
-Allow: /ground-transport
-Allow: /travel-insurance
 
 # Company & Info Pages
 Allow: /about
@@ -54,16 +51,43 @@ Allow: /creators
 Allow: /creators/*
 Allow: /contact
 Allow: /help
+Allow: /faq
 
 # Legal Pages
 Allow: /terms
 Allow: /privacy
+Allow: /cookies
+Allow: /partner-disclosure
 Allow: /affiliate-disclosure
 Allow: /accessibility
 
 # ===========================
-# PRIVATE PAGES - DISALLOW
+# DISALLOW - PRIVATE PAGES
 # ===========================
+
+# Flight booking flow (dynamic, not for indexing)
+Disallow: /flights/results
+Disallow: /flights/details/
+Disallow: /flights/traveler
+Disallow: /flights/traveler-info
+Disallow: /flights/checkout
+Disallow: /flights/confirmation/
+Disallow: /flights/live
+
+# Hotel booking flow
+Disallow: /hotels/results
+Disallow: /hotels/checkout
+
+# Car rental booking flow
+Disallow: /rent-car/results
+Disallow: /rent-car/detail
+Disallow: /rent-car/traveler-info
+Disallow: /rent-car/checkout
+Disallow: /rent-car/confirmation
+
+# General checkout pages
+Disallow: /checkout
+Disallow: /booking/
 
 # Admin & Dashboard
 Disallow: /admin
@@ -77,10 +101,16 @@ Disallow: /driver/*
 Disallow: /restaurant
 Disallow: /restaurant/*
 
+# Owner/Renter dashboards
+Disallow: /owner/
+Disallow: /renter/
+Disallow: /p2p/
+
 # User Account Pages
 Disallow: /profile
 Disallow: /profile/*
 Disallow: /settings
+Disallow: /trips
 
 # Authentication
 Disallow: /auth-callback
@@ -89,6 +119,13 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 
+# Verification pages
+Disallow: /verify/
+
+# Beta/Test pages
+Disallow: /beta/
+Disallow: /tracking-test
+
 # Tracking & Redirects
 Disallow: /out
 Disallow: /out/*
@@ -96,6 +133,10 @@ Disallow: /out/*
 # Ad Landing Pages (paid traffic only)
 Disallow: /ads/
 Disallow: /ads/*
+
+# Internal pages
+Disallow: /app
+Disallow: /more
 
 # ===========================
 # SITEMAP

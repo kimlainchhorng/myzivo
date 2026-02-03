@@ -54,6 +54,9 @@ const FlightTravelerInfo = lazy(() => import("./pages/FlightTravelerInfo"));
 const FlightCheckout = lazy(() => import("./pages/FlightCheckout"));
 const FlightConfirmation = lazy(() => import("./pages/FlightConfirmation"));
 const FlightTerms = lazy(() => import("./pages/legal/FlightTerms"));
+// New SEO pages for flights
+const AirportPage = lazy(() => import("./pages/AirportPage"));
+const FlightCityPage = lazy(() => import("./pages/FlightCityPage"));
 const DuffelCheckout = lazy(() => import("./pages/DuffelCheckout"));
 const EmbeddedCheckout = lazy(() => import("./pages/EmbeddedCheckout"));
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
@@ -253,12 +256,17 @@ const App = () => (
                 <Route path="/flights" element={<FlightLanding />} />
                 <Route path="/flights/from-:fromCity" element={<FlightLanding />} />
                 <Route path="/flights/to-:toCity" element={<FlightLanding />} />
+                <Route path="/flights/cities/:citySlug" element={<FlightCityPage />} />
                 <Route path="/flights/:route" element={<FlightLanding />} />
+                
+                {/* Airport Pages - SEO */}
+                <Route path="/airports/:iata" element={<AirportPage />} />
                 
                 <Route path="/flights/results" element={<FlightResults />} />
                 <Route path="/flights/live" element={<FlightLive />} />
                 <Route path="/flights/details/:id" element={<FlightDetails />} />
                 <Route path="/flights/traveler" element={<FlightTravelerInfo />} />
+                <Route path="/flights/traveler-info" element={<FlightTravelerInfo />} />
                 <Route path="/flights/checkout" element={<FlightCheckout />} />
                 <Route path="/flights/confirmation/:bookingId" element={<FlightConfirmation />} />
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
