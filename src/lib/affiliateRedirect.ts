@@ -3,6 +3,9 @@
  * 
  * Handles all affiliate redirections with proper tracking
  * Supports dynamic deep links with search parameters
+ * 
+ * NOTE: Flights are in OTA-only mode - affiliate redirects are DISABLED
+ * for flights. ZIVO is the Merchant of Record for all flight bookings.
  */
 
 import { 
@@ -17,6 +20,7 @@ import {
   type ActivityDeepLinkParams,
 } from '@/config/affiliateLinks';
 import { trackAffiliateClick, getSessionId, getDeviceType } from './affiliateTracking';
+import { isFlightsOTAMode, logBlockedAffiliateAttempt } from '@/config/flightBookingMode';
 
 // ============================================
 // REDIRECT FUNCTIONS
@@ -29,11 +33,23 @@ interface RedirectOptions {
 
 /**
  * Redirect to flight partner with deep link parameters
+ * 
+ * @deprecated FLIGHTS ARE IN OTA-ONLY MODE
+ * This function is disabled. Use internal ZIVO booking flow instead.
+ * ZIVO is the Merchant of Record for all flight bookings via Duffel API.
  */
 export function redirectToFlightPartner(
   params: FlightDeepLinkParams,
   options: RedirectOptions
 ) {
+  // OTA MODE: Flight partner redirects are PERMANENTLY DISABLED
+  if (isFlightsOTAMode()) {
+    logBlockedAffiliateAttempt(options.source, 'redirectToFlightPartner');
+    console.error('[OTA_MODE] redirectToFlightPartner is disabled. ZIVO is Merchant of Record.');
+    return null;
+  }
+
+  // Legacy code below - NEVER executes in OTA mode
   const url = buildFlightDeepLink(params);
   
   // Track the click

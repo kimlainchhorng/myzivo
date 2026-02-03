@@ -6,12 +6,15 @@ import { X, Plane, Sparkles, ExternalLink, TrendingDown } from "lucide-react";
 import { AFFILIATE_LINKS, AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
+import { isFlightsOTAMode } from "@/config/flightBookingMode";
 
 interface ExitIntentPromptProps {
   origin?: string;
   destination?: string;
   lowestPrice?: number;
   className?: string;
+  /** Service type - flights are disabled in OTA mode */
+  serviceType?: 'flights' | 'hotels' | 'cars' | 'activities';
 }
 
 export default function ExitIntentPrompt({
@@ -19,7 +22,14 @@ export default function ExitIntentPrompt({
   destination = "",
   lowestPrice,
   className,
+  serviceType = 'flights',
 }: ExitIntentPromptProps) {
+  // OTA Mode: Exit intent affiliate prompts are disabled for flights
+  // ZIVO is the Merchant of Record - no partner redirects
+  if (serviceType === 'flights' && isFlightsOTAMode()) {
+    return null;
+  }
+
   const [isVisible, setIsVisible] = useState(false);
   const [hasShown, setHasShown] = useState(false);
 

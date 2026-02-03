@@ -38,7 +38,7 @@ import FlightCustomerSupport from "@/components/flight/FlightCustomerSupport";
 import FlightCorporateSection from "@/components/flight/FlightCorporateSection";
 import FlightAccessibility from "@/components/flight/FlightAccessibility";
 import FlightCarbonOffset from "@/components/flight/FlightCarbonOffset";
-import FlightFlashSale from "@/components/flight/FlightFlashSale";
+// FlightFlashSale removed - OTA mode (fake flash deals with affiliate redirects contradict MoR model)
 import FlightSeatMap from "@/components/flight/FlightSeatMap";
 import FlightBaggageOptions from "@/components/flight/FlightBaggageOptions";
 import FlightMealPreorder from "@/components/flight/FlightMealPreorder";
@@ -306,8 +306,7 @@ const FlightBooking = () => {
             {/* Stats Bar - Social Proof */}
             <FlightStatsBar />
 
-            {/* Flash Sale - Urgency */}
-            <FlightFlashSale />
+            {/* Flash Sale removed - OTA mode (no affiliate redirects) */}
 
             {/* Featured Destinations - Discovery */}
             <FlightFeaturedDestinations

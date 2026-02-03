@@ -3,9 +3,12 @@
  * 
  * Used for popular destinations, trending deals, and explore sections
  * Each card redirects to partner with dynamic deep link
+ * 
+ * NOTE: Flights use OTA-only mode - internal navigation instead of affiliate redirect
  */
 
-import { ExternalLink, TrendingUp, MapPin, Plane, Hotel, Car } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ExternalLink, TrendingUp, MapPin, Plane, Hotel, Car, ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -17,6 +20,7 @@ import {
   getPrimaryPartner,
   AFFILIATE_LINKS,
 } from "@/config/affiliateLinks";
+import { isFlightsOTAMode } from "@/config/flightBookingMode";
 
 type ServiceType = 'flights' | 'hotels' | 'cars';
 
@@ -94,16 +98,29 @@ export default function AffiliateDestinationCard({
   dropoffDate,
   className,
 }: AffiliateDestinationCardProps) {
+  const navigate = useNavigate();
   const colors = serviceColors[serviceType];
   const ServiceIcon = serviceIcons[serviceType];
   const partner = getPrimaryPartner(serviceType);
 
   const handleClick = () => {
+    // OTA Mode: Use internal navigation for flights
+    if (serviceType === 'flights' && isFlightsOTAMode()) {
+      const params = new URLSearchParams();
+      if (originCode) params.set('origin', originCode);
+      if (destinationCode) params.set('dest', destinationCode);
+      if (departDate) params.set('depart', departDate);
+      if (returnDate) params.set('return', returnDate);
+      navigate(`/flights/results?${params.toString()}`);
+      return;
+    }
+
     let url: string;
     
     // Build deep link based on service type with available params
     switch (serviceType) {
       case 'flights':
+        // This code only runs if OTA mode is disabled (legacy/fallback)
         if (originCode && destinationCode && departDate) {
           url = buildFlightDeepLink({
             origin: originCode,
@@ -231,7 +248,13 @@ export default function AffiliateDestinationCard({
                 <span className={cn("text-xl font-bold", colors.text)}>${price}</span>
                 <span className="text-white/70 text-xs">*</span>
               </div>
-              <ExternalLink className="w-3 h-3 text-white/50 ml-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ExternalLink className={cn(
+                "w-3 h-3 text-white/50 ml-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity",
+                serviceType === 'flights' && isFlightsOTAMode() && "hidden"
+              )} />
+              {serviceType === 'flights' && isFlightsOTAMode() && (
+                <ArrowRight className="w-3 h-3 text-white/50 ml-auto mt-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+              )}
             </div>
           </div>
         </div>

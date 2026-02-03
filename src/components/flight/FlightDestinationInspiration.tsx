@@ -1,8 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar, ExternalLink } from "lucide-react";
+import { Sparkles, TrendingUp, Star, Plane, ArrowRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 
 const destinations = [
   {
@@ -88,7 +87,11 @@ const FlightDestinationInspiration = () => {
           {destinations.map((dest, index) => (
             <button
               key={dest.id}
-              onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+              onClick={() => {
+                // OTA Mode: Navigate internally to flight search
+                const params = new URLSearchParams({ dest: dest.city });
+                navigate(`/flights?${params.toString()}`);
+              }}
               className={cn(
                 "group relative p-5 rounded-2xl bg-card/50 border border-border/50 backdrop-blur-sm",
                 "text-left transition-all duration-300 hover:border-sky-500/30 hover:shadow-xl",
@@ -121,8 +124,8 @@ const FlightDestinationInspiration = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">From</p>
                   <div className="flex items-center gap-1">
-                    <p className="text-xl font-bold text-sky-400">${dest.fromPrice}</p>
-                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <p className="text-xl font-bold text-sky-400">${dest.fromPrice}*</p>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -136,13 +139,14 @@ const FlightDestinationInspiration = () => {
 
         <div className="text-center mt-8">
           <Button 
-            onClick={() => window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer")}
+            onClick={() => navigate('/flights')}
             variant="outline" 
             className="rounded-xl gap-2"
           >
             Explore All Destinations
-            <ExternalLink className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4" />
           </Button>
+          <p className="text-[9px] text-muted-foreground mt-2">*Prices are estimates. Final price confirmed at checkout.</p>
         </div>
       </div>
     </section>

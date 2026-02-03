@@ -4,6 +4,7 @@ import { ExternalLink, Sparkles, Search, TrendingDown } from "lucide-react";
 import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
+import { isFlightsOTAMode, logBlockedAffiliateAttempt } from "@/config/flightBookingMode";
 
 interface SmartBookingCTAProps {
   flightId?: string;
@@ -38,6 +39,13 @@ export default function SmartBookingCTA({
   className,
 }: SmartBookingCTAProps) {
   const handlePrimaryClick = () => {
+    // OTA Mode: Block flight affiliate redirects - ZIVO is Merchant of Record
+    if (isFlightsOTAMode()) {
+      logBlockedAffiliateAttempt('SmartBookingCTA', 'flight redirect');
+      console.warn('[OTA_MODE] SmartBookingCTA is disabled for flights. Use internal booking flow.');
+      return;
+    }
+
     trackAffiliateClick({
       flightId: flightId || `${source}-${origin}-${destination}`,
       airline,
@@ -57,6 +65,11 @@ export default function SmartBookingCTA({
     // Open affiliate link - uses centralized config for consistency
     window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
   };
+
+  // OTA Mode: Don't render for flights - use internal booking flow instead
+  if (isFlightsOTAMode() && (origin || destination)) {
+    return null;
+  }
 
   if (variant === "compact") {
     return (
@@ -120,6 +133,13 @@ export function FallbackBookingCTA({
   destination?: string;
   className?: string;
 }) {
+  // OTA Mode: Fallback affiliate CTA is disabled for flights
+  // If Duffel returns no results, show "No flights available" UI instead
+  if (isFlightsOTAMode()) {
+    logBlockedAffiliateAttempt('FallbackBookingCTA', 'fallback redirect');
+    return null;
+  }
+
   const handleClick = () => {
     trackAffiliateClick({
       flightId: `fallback-${origin}-${destination}`,
