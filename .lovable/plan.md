@@ -1,179 +1,247 @@
 
-# ZIVO Flights OTA Mode - Remove Affiliate Flow Completely
+# ZIVO Flights Final OTA Cleanup - Remove All Affiliate Language
 
-## Executive Summary
+## Summary
 
-The core Flights OTA infrastructure is already built (Duffel API, Stripe checkout, ticketing webhook). However, several legacy affiliate components and text patterns remain visible in the UI. This plan removes all remaining affiliate patterns and ensures a pure OTA booking experience.
+Complete removal of all remaining affiliate/indicative pricing language from the Flights UI to ensure ZIVO is presented as a true OTA (Merchant of Record) with Duffel ticketing and Stripe checkout. No affiliate fallback UI should ever render.
 
 ---
 
-## Current State Analysis
+## Components with Remaining Affiliate Language
 
-### Already OTA-Ready (Working)
+### Critical Fixes Required
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `FlightResults.tsx` | ✅ Uses Duffel | Calls `useDuffelFlightSearch`, navigates to `/flights/details/{id}` |
-| `FlightDetails.tsx` | ✅ OTA Flow | Navigates to `/flights/traveler-info`, no external redirect |
-| `FlightTravelerInfo.tsx` | ✅ OTA Flow | Collects passengers, navigates to `/flights/checkout` |
-| `FlightCheckout.tsx` | ✅ Stripe MoR | Uses `useCreateFlightCheckout`, redirects to Stripe |
-| `FlightConfirmation.tsx` | ✅ Shows PNR | Displays ticketing status and ticket numbers |
-| `FlightResultCard.tsx` | ✅ OTA CTA | Shows "Select Flight" + ArrowRight, "Secure ZIVO checkout" |
-| `duffel-flights` Edge Function | ✅ Working | Handles search, offers, orders |
-| `create-flight-checkout` Edge Function | ✅ Working | Creates Stripe session |
-| `issue-flight-ticket` Edge Function | ✅ Working | Creates Duffel order after payment |
-| `flightCompliance.ts` | ✅ MoR Text | Correct disclaimers, no "indicative" language |
-
-### Still Contains Affiliate Patterns (Needs Removal)
-
-| Component | Issue |
-|-----------|-------|
-| `ApiPendingNotice.tsx` | Full affiliate comparison hub with partner redirect links (Aviasales, Kiwi, JetRadar) |
-| `AffiliatePartnerSelector.tsx` | Uses `trackAffiliateClick`, `window.open` to external site, ExternalLink icons |
-| `useDuffelFlights.ts` Line 6 | Comment says "Hizovo is NOT the merchant of record" - incorrect |
-| `duffel-flights/index.ts` Line 9 | Comment says "Hizovo is NOT the merchant of record" - incorrect |
-| `FlightTravelerInfo.tsx` Line 6 | Comment says "Hizovo is NOT the merchant of record" - incorrect |
-| `trackPageView` import | Still imported in FlightResults (line 25) |
-| Various "Hizivo" / "Hizovo" references | 70+ files still contain old brand name |
+| File | Issue | Fix |
+|------|-------|-----|
+| `EmptyResults.tsx` | Shows "Estimated prices shown", Cheapest/Best Value/Flexible cards, partner CTA, affiliate disclaimer | Replace with OTA-appropriate empty state for flights |
+| `QuickStatsBar.tsx` | Shows "via Aviasales/JetRadar/Kiwi" partner names, "partner websites" footer | Remove partner names, update to airline sources |
+| `FlightTicketCard.tsx` | Shows "Estimated", "Indicative price. Final price confirmed on partner checkout.", ExternalLink icon, `window.open` affiliate redirect | Replace with OTA wording, remove affiliate redirect |
+| `ResultsContainer.tsx` | Shows "*Indicative prices – final price shown on partner site" | Remove for flights (or change to OTA text) |
+| `RampResultsLayout.tsx` | Shows "Indicative prices shown — final price confirmed on partner site", "Hizovo does not issue tickets" | Replace with OTA disclaimer |
+| `FlightEmptyState.tsx` | Shows "Search Partner Site" CTA with ExternalLink, affiliate redirect, "partner's secure site" | Replace with OTA messaging |
+| `FlightTrustBadgesBar.tsx` | Shows "Secure Partner Checkout", "licensed airline partners" | Change to "Secure ZIVO Checkout" |
+| `FlightPriceCalendar.tsx` | Shows "indicative prices" | Change to "estimated" or remove |
+| `HeroSection.tsx` | Shows "Indicative prices shown", "Final booking completed on partner site", ExternalLink icon | Remove for flights context |
+| `FlightConsentGate.tsx` | Entire component is for partner redirect consent | Component likely unused now (OTA flow) - verify usage |
+| `FlightConsentCheckbox.tsx` | Comment says "REQUIRED before partner checkout redirect" | Update comment, verify if still needed |
+| `FlightCardWithModal.tsx` | Builds affiliate URL for partner redirect | Update to use internal navigation |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Remove ApiPendingNotice (Affiliate Hub)
+### Phase 1: EmptyResults.tsx - Flight-Specific OTA Mode
 
-**Problem:** `ApiPendingNotice.tsx` is a full affiliate comparison component that:
-- Builds partner URLs (Aviasales, JetRadar, Kiwi)
-- Shows "Continue to secure booking" with ExternalLink
-- Says "Hizivo does not issue airline tickets"
-- Says "Final booking completed on partner site"
-
-**Solution:** 
-1. Remove import from `FlightResults.tsx` (line 55)
-2. Delete the `ApiPendingNotice.tsx` file entirely
-3. Remove export from `src/components/results/index.ts`
-
-The component is currently imported but NOT rendered in FlightResults (searched entire file - it's imported but never used in JSX). This is dead code that should be removed.
-
----
-
-### Phase 2: Remove AffiliatePartnerSelector
-
-**Problem:** `AffiliatePartnerSelector.tsx` uses affiliate tracking and external redirects.
-
-**Solution:**
-1. Delete `src/components/flight/AffiliatePartnerSelector.tsx`
-2. Search for any imports and remove them
-3. Update `src/components/flight/index.ts` to remove export
-
----
-
-### Phase 3: Update Comments to MoR Model
-
-**Files with incorrect "NOT merchant of record" comments:**
-
-| File | Line | Current Comment | New Comment |
-|------|------|-----------------|-------------|
-| `src/hooks/useDuffelFlights.ts` | 6 | "Hizovo is NOT the merchant of record" | "ZIVO is the Merchant of Record for flight bookings" |
-| `supabase/functions/duffel-flights/index.ts` | 9 | "Hizovo is NOT the merchant of record" | "ZIVO is the Merchant of Record - Stripe + Duffel" |
-| `src/pages/FlightTravelerInfo.tsx` | 6 | "Hizovo is NOT the merchant of record" | "ZIVO is the Merchant of Record - internal checkout" |
-
----
-
-### Phase 4: Remove Unused Affiliate Tracking Import
-
-**File:** `src/pages/FlightResults.tsx`
-
-Remove line 25:
-```typescript
-// REMOVE: import { trackPageView } from "@/lib/affiliateTracking";
+**Current (lines 38-63):**
+```tsx
+flights: {
+  icon: Plane,
+  title: "Estimated prices shown",
+  titleFiltered: "No flights match your filters",
+  message: "We're comparing deals from our licensed travel partners.",
+  // ... mock indicative price cards
+}
 ```
 
-The `trackPageView` function is used in the component (lines 102-110), but for OTA mode we should either:
-- Keep it for analytics purposes (harmless)
-- OR remove the import and the useEffect that calls it
+**Updated:**
+```tsx
+flights: {
+  icon: Plane,
+  title: "No flights available",  // Changed
+  titleFiltered: "No flights match your filters",
+  message: "No flights found for these dates. Try different dates or nearby airports.",  // MoR text
+  defaultPrices: null,  // NO mock prices for flights
+}
+```
 
-**Recommendation:** Keep for analytics - it just tracks page views, not affiliate clicks.
+**Also update:**
+- Line 230: Remove "Estimated" label for flights
+- Line 239: Remove "Indicative price. Final price confirmed on partner checkout."
+- Line 254-256: Remove ExternalLink icon and "Continue to secure booking" for flights
+- Line 270: Change disclaimer to "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers."
 
 ---
 
-### Phase 5: Update CTA Text (Already Correct)
+### Phase 2: QuickStatsBar.tsx - Remove Partner Names
 
-Current state in `FlightResultCard.tsx` lines 263-266:
+**Current (lines 42, 52, 63):**
 ```tsx
-<span className="hidden sm:inline">{FLIGHT_CTA_TEXT.viewDeal}</span>  // = "Select Flight"
-<span className="sm:hidden">Select</span>
-<ArrowRight className="w-4 h-4" />  // ✅ Not ExternalLink
+partner: cheapest.partner || "Aviasales",
+partner: fastest.partner || "JetRadar", 
+partner: bestValue.partner || "Kiwi",
 ```
 
-And line 271:
+**Updated:**
 ```tsx
-<p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[160px]">
-  Secure ZIVO checkout
+partner: undefined,  // Remove partner references
+```
+
+**Also update:**
+- Line 77: Change "Compare prices from multiple airlines and trusted partners" → "Compare prices from multiple airlines"
+- Line 105-107: Remove "via {stat.partner}" display
+- Line 117: Change "Final booking is completed securely on partner websites" → "Tickets issued instantly after payment"
+
+---
+
+### Phase 3: FlightTicketCard.tsx - Full OTA Conversion
+
+**Current (lines 320-370):**
+- Line 322: `{flight.isRealPrice ? "From" : "Estimated"}`
+- Line 334: "Indicative price. Final price confirmed on partner checkout."
+- Line 347-351: `window.open(AFFILIATE_LINKS.flights.url, "_blank")`
+- Line 369: ExternalLink icon
+
+**Updated:**
+- Line 322: Always show "From" (all Duffel prices are exact)
+- Line 334: "Final prices shown — tickets issued instantly after payment." (or remove)
+- Line 347-351: Replace with internal navigation to `/flights/details/{id}`
+- Line 369: Replace ExternalLink with ArrowRight
+
+---
+
+### Phase 4: ResultsContainer.tsx - Remove Indicative for Flights
+
+**Current (lines 71-75):**
+```tsx
+{indicativePrice && (
+  <p className="text-xs text-muted-foreground mt-0.5">
+    *Indicative prices – final price shown on partner site
+  </p>
+)}
+```
+
+**Updated:**
+Keep `indicativePrice` prop but change the text:
+```tsx
+{indicativePrice && (
+  <p className="text-xs text-muted-foreground mt-0.5">
+    Final prices shown — tickets issued instantly after payment.
+  </p>
+)}
+```
+
+Or pass `indicativePrice={false}` from FlightResults.tsx (since Duffel = exact pricing).
+
+---
+
+### Phase 5: RampResultsLayout.tsx - Update Disclaimers
+
+**Current (lines 64-67, 91-93):**
+```tsx
+<p className="text-xs text-muted-foreground mt-1">
+  Indicative prices shown — final price confirmed on partner site
+</p>
+...
+<p className="text-xs text-muted-foreground">
+  Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
 </p>
 ```
 
-**Status:** Already correct. The CTA says "Select Flight" with ArrowRight icon and "Secure ZIVO checkout" micro-copy.
-
-However, the user requested "Book on ZIVO" as the CTA. We should update:
-
-| Location | Current | Proposed |
-|----------|---------|----------|
-| `FLIGHT_CTA_TEXT.viewDeal` | "Select Flight" | "Book on ZIVO" |
-| Desktop button | "Select Flight" | "Book on ZIVO" |
-| Mobile button | "Select" | "Book" |
-
----
-
-### Phase 6: Update Trust Banner Text
-
-**File:** `src/pages/FlightResults.tsx` lines 406-422
-
-Current:
+**Updated:**
 ```tsx
-<p className="text-sm font-medium text-foreground">
-  Book directly on ZIVO • Tickets issued instantly
+<p className="text-xs text-muted-foreground mt-1">
+  Final prices shown — tickets issued instantly after payment.
+</p>
+...
+<p className="text-xs text-muted-foreground">
+  ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
 </p>
 ```
 
-This is already correct. The trust banner says:
-- "Book directly on ZIVO • Tickets issued instantly"
-- "Secure ZIVO checkout"
-- "Prices include all taxes & fees"
-
-No changes needed.
-
 ---
 
-### Phase 7: EmptyResults Message Update
+### Phase 6: FlightEmptyState.tsx - Remove Partner Fallback
 
-**File:** `src/pages/FlightResults.tsx` line 515
-
-Current:
+**Current (lines 222-238):**
 ```tsx
-<EmptyResults 
-  service="flights"
-  message="No flights found for this route. Try adjusting your dates or filters."
-/>
+{/* Partner Fallback CTA */}
+<Button onClick={handleSearchPartner}>
+  Search Partner Site
+  <ExternalLink className="w-4 h-4" />
+</Button>
+<p>You will complete your booking on our partner's secure site.</p>
 ```
 
-User requested: "No flights found for these dates. Try different dates or nearby airports."
+**Updated:**
+Remove entire partner fallback section. Replace with:
+```tsx
+<p className="text-sm text-muted-foreground">
+  Can't find what you're looking for? Try adjusting your search criteria.
+</p>
+```
 
-**Change:** Update message text.
+Also remove the `handleSearchPartner` function and AFFILIATE_LINKS import.
 
 ---
 
-### Phase 8: Branding Cleanup (Hizivo → ZIVO)
+### Phase 7: FlightTrustBadgesBar.tsx - OTA Language
 
-Based on search, 70+ files contain "Hizivo" or "Hizovo" references. Key files:
-- `src/components/results/ApiPendingNotice.tsx` (will be deleted)
-- Various component files
-- Legal pages
+**Current:**
+- Line 17: `"Secure Partner Checkout"`
+- Line 97: `"All bookings completed with licensed airline partners"`
 
-**Approach:** After removing affiliate components, do a batch find/replace:
-- "Hizivo" → "ZIVO"
-- "Hizovo" → "ZIVO"
-- "hizovo.com" → "hizivo.com" (or keep for domain)
+**Updated:**
+- Line 17: `"Secure ZIVO Checkout"`
+- Line 97: `"ZIVO sells tickets as a sub-agent of licensed ticketing providers"`
+
+---
+
+### Phase 8: FlightPriceCalendar.tsx - Update Text
+
+**Current (line 69):**
+```tsx
+Explore indicative prices across the month to compare options
+```
+
+**Updated:**
+```tsx
+Explore prices across the month to find the best deals
+```
+
+---
+
+### Phase 9: HeroSection.tsx - Remove Partner Language
+
+**Current (lines 39-41, 81-83, 98-100):**
+```tsx
+<p>Indicative prices shown · Final price confirmed before payment</p>
+...
+<ExternalLink /> Final booking completed on partner site.
+```
+
+**Updated:**
+For flights context, these should not appear. Since this is a shared home page component, we could:
+1. Remove these lines entirely (affects hotels/cars too - keep for them)
+2. Add a service-specific conditional
+
+**Recommendation:** Keep for hotels/cars (affiliate), but remove ExternalLink icon.
+
+---
+
+### Phase 10: FlightConsentGate.tsx & FlightConsentCheckbox.tsx
+
+These components were designed for affiliate partner redirect flow. Since OTA mode doesn't redirect externally:
+1. Verify if these are still used in the OTA flow
+2. If used for internal ZIVO checkout consent, update comments and text
+3. If unused, mark as deprecated or remove
+
+---
+
+### Phase 11: FlightCardWithModal.tsx - Remove Affiliate URL
+
+**Current (line 25-27):**
+```tsx
+// Build affiliate URL for partner redirect
+const getAffiliateUrl = () => { ... }
+```
+
+**Updated:**
+Remove affiliate URL logic, use internal navigation:
+```tsx
+const handleSelect = () => {
+  navigate(`/flights/details/${flight.id}`);
+};
+```
 
 ---
 
@@ -181,75 +249,77 @@ Based on search, 70+ files contain "Hizivo" or "Hizovo" references. Key files:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/results/ApiPendingNotice.tsx` | DELETE | Remove affiliate hub component |
-| `src/components/results/index.ts` | MODIFY | Remove ApiPendingNotice export |
-| `src/components/flight/AffiliatePartnerSelector.tsx` | DELETE | Remove affiliate partner selector |
-| `src/components/flight/index.ts` | MODIFY | Remove AffiliatePartnerSelector export |
-| `src/pages/FlightResults.tsx` | MODIFY | Remove ApiPendingNotice import, update empty state message |
-| `src/hooks/useDuffelFlights.ts` | MODIFY | Update comment to MoR model |
-| `supabase/functions/duffel-flights/index.ts` | MODIFY | Update comment to MoR model |
-| `src/pages/FlightTravelerInfo.tsx` | MODIFY | Update comment to MoR model |
-| `src/config/flightCompliance.ts` | MODIFY | Change viewDeal CTA to "Book on ZIVO" |
+| `src/components/results/EmptyResults.tsx` | MODIFY | Update flights config to OTA language, remove mock price cards |
+| `src/components/flight/QuickStatsBar.tsx` | MODIFY | Remove partner names, update footer text |
+| `src/components/flight/FlightTicketCard.tsx` | MODIFY | Remove affiliate redirect, use internal navigation, update price labels |
+| `src/components/results/ResultsContainer.tsx` | MODIFY | Update indicative price text to OTA language |
+| `src/components/results/RampResultsLayout.tsx` | MODIFY | Update disclaimers to OTA language |
+| `src/components/flight/FlightEmptyState.tsx` | MODIFY | Remove partner fallback CTA entirely |
+| `src/components/flight/FlightTrustBadgesBar.tsx` | MODIFY | Change "Partner Checkout" to "ZIVO Checkout" |
+| `src/components/flight/FlightPriceCalendar.tsx` | MODIFY | Remove "indicative" wording |
+| `src/components/home/HeroSection.tsx` | MODIFY | Remove ExternalLink icon, keep pricing text for hotels/cars |
+| `src/components/flight/FlightCardWithModal.tsx` | MODIFY | Remove affiliate URL, use internal navigation |
+
+---
+
+## New Text Standards
+
+### Empty State
+**Old:** "Estimated prices shown"
+**New:** "No flights available for these dates. Try different dates or nearby airports."
+
+### Price Labels
+**Old:** "Estimated" / "Indicative"
+**New:** "From" (all Duffel prices are exact)
+
+### Price Disclaimers
+**Old:** "Indicative price. Final price confirmed on partner checkout."
+**New:** "Final prices shown — tickets issued instantly after payment."
+
+### Global Disclaimer
+**Old:** "Hizovo does not issue tickets. Payment and booking fulfilled by partners."
+**New:** "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under airline rules."
+
+### CTAs
+**Old:** "Search Partner Site" + ExternalLink
+**New:** "Book on ZIVO" + ArrowRight
+
+### Trust Badges
+**Old:** "Secure Partner Checkout"
+**New:** "Secure ZIVO Checkout"
+
+---
+
+## Global Rule Enforcement
+
+When `DUFFEL_ENV = sandbox` or `live`:
+- Affiliate fallback UI must NEVER render
+- Partner redirect logic must NEVER execute
+- All prices are final (from Duffel API)
+- All bookings complete on ZIVO (Stripe checkout)
+- Tickets issued via Duffel after payment
 
 ---
 
 ## Verification Checklist
 
-After implementation, verify:
+After implementation, search codebase to confirm ZERO instances of:
+1. ❌ "Estimated prices" (for flights)
+2. ❌ "Indicative price"
+3. ❌ "partner site" / "partner checkout" (for flights)
+4. ❌ "does not issue tickets"
+5. ❌ "Continue to secure booking" with ExternalLink
+6. ❌ Mock Cheapest/Best Value/Flexible cards (for flights)
+7. ❌ Partner names (Aviasales, JetRadar, Kiwi)
+8. ❌ `window.open` for flights
+9. ❌ AFFILIATE_LINKS usage in flight components
+10. ❌ Hizivo/Hizovo references
 
-1. **Search flights** - Real Duffel offers display with exact prices
-2. **Result cards** - Show "Book on ZIVO" CTA with ArrowRight (not ExternalLink)
-3. **No affiliate text** - No "partner redirect", "indicative prices", "continue to secure booking"
-4. **Trust banner** - Shows "Book directly on ZIVO" (already correct)
-5. **Select flight** - Navigates to `/flights/details/{id}` (internal)
-6. **Traveler info** - Collects passengers, navigates to `/flights/checkout`
-7. **Checkout** - Stripe payment processed by ZIVO
-8. **Confirmation** - Shows PNR and ticket numbers
-9. **Empty state** - Shows "Try different dates or nearby airports"
-10. **No Hizivo** - Search codebase confirms no legacy brand references
-
----
-
-## Technical Flow After Implementation
-
-```text
-User searches flights
-        ↓
-FlightResults.tsx (Duffel API - exact prices)
-        ↓
-User clicks "Book on ZIVO" (internal navigation)
-        ↓
-FlightDetails.tsx (review itinerary, fare rules)
-        ↓
-User clicks "Book Now"
-        ↓
-FlightTravelerInfo.tsx (collect passenger details)
-        ↓
-FlightCheckout.tsx (Stripe payment - ZIVO is MoR)
-        ↓
-stripe-webhook → issue-flight-ticket (Duffel order)
-        ↓
-FlightConfirmation.tsx (PNR, ticket numbers)
-        ↓
-My Trips dashboard (real bookings from flight_bookings)
-```
-
-**Result:** Pure OTA flow with NO external redirects, NO partner comparisons, NO affiliate tracking for flights.
-
----
-
-## New CTA and Disclaimer Text
-
-### Result Card Button
-**Current:** "Select Flight" + ArrowRight
-**New:** "Book on ZIVO" + ArrowRight
-
-### Trust Banner (Already Correct)
-"Book directly on ZIVO • Tickets issued instantly"
-
-### Footer Disclaimer (Already Correct)
-"ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under airline rules."
-
-### Empty State
-**Current:** "No flights found for this route. Try adjusting your dates or filters."
-**New:** "No flights found for these dates. Try different dates or nearby airports."
+And confirm these ARE present:
+1. ✅ "Book on ZIVO" CTA
+2. ✅ "From $XXX" price labels
+3. ✅ "Final prices shown — tickets issued instantly"
+4. ✅ "Secure ZIVO Checkout"
+5. ✅ "ZIVO sells flight tickets as a sub-agent..."
+6. ✅ ArrowRight icons (internal navigation)
+7. ✅ Internal navigate() calls to `/flights/details/{id}`
