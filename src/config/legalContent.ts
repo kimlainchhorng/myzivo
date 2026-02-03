@@ -996,13 +996,253 @@ export const ULTRA_LEGAL_FAQ = [
   },
 ];
 
-// Helper array for ultra policies
+// ============================================
+// ADVANCED LEGAL POLICIES (Clauses 75-92)
+// Labor, Antitrust, Accessibility, AI Law, Platform Governance
+// ============================================
+
+export const ADVANCED_PLATFORM_POLICIES = {
+  // Clause 75: Independent Contractor Acknowledgment
+  contractorStatus: {
+    id: "contractor_status",
+    title: "Independent Contractor Status",
+    version: "1.0",
+    content: `All partners (drivers, car owners, fleets, restaurants) acknowledge and agree that they are independent contractors, not employees. Partners control their own schedules, provide their own tools and assets, bear their own business expenses, may work with competitors, and have no exclusivity arrangement with ZIVO.`,
+    acknowledgments: [
+      "Control over own schedule and working hours",
+      "Provision of own tools, equipment, and assets",
+      "Responsibility for own business expenses",
+      "Freedom to work with competing platforms",
+      "No exclusivity or minimum commitment required",
+      "Independent business operation",
+    ],
+  },
+
+  // Clause 76: No Benefits / No Wages Clause
+  noBenefits: {
+    id: "no_benefits",
+    title: "No Benefits or Wages",
+    version: "1.0",
+    content: `ZIVO does not provide wages, overtime, benefits, insurance, workers' compensation, or any employment benefits to partners. All partners acknowledge their self-employment status and sole responsibility for their own taxes, insurance, and benefits.`,
+    excludedBenefits: [
+      "Wages or salary",
+      "Overtime compensation",
+      "Health insurance",
+      "Retirement benefits",
+      "Workers' compensation",
+      "Paid time off",
+      "Employment protections",
+    ],
+  },
+
+  // Clause 77: No Supervision / No Control Clause
+  noSupervision: {
+    id: "no_supervision",
+    title: "No Supervision or Control",
+    version: "1.0",
+    content: `ZIVO does not supervise how services are performed, does not train partners on service delivery, and does not control routes, methods, timing, or performance standards. Partners retain full autonomy over service execution.`,
+  },
+
+  // Clause 78: Platform Neutrality Policy
+  platformNeutrality: {
+    id: "platform_neutrality",
+    title: "Platform Neutrality Policy",
+    version: "1.0",
+    content: `ZIVO operates as a neutral technology platform. We do not favor or discriminate unfairly among partners. Rankings are algorithmic and based on objective factors. Visibility is not guaranteed to any partner. No promise of minimum earnings, bookings, or revenue is made.`,
+    principles: [
+      "Neutral platform operation",
+      "Algorithmic ranking based on objective factors",
+      "No guaranteed visibility or placement",
+      "No promise of minimum earnings",
+      "No favoritism or unfair discrimination",
+    ],
+  },
+
+  // Clause 79: No Price Fixing Disclaimer
+  noPriceFixing: {
+    id: "no_price_fixing",
+    title: "No Price Fixing Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not set partner prices (except for platform fees), does not coordinate pricing between partners, and does not guarantee demand, income, or revenue. Partners set their own prices independently where applicable.`,
+  },
+
+  // Clause 80: Competitor Participation Clause
+  competitorParticipation: {
+    id: "competitor_participation",
+    title: "Competitor Participation Rights",
+    version: "1.0",
+    content: `Partners are free to use competing platforms, advertise their services elsewhere, and operate their businesses independently. ZIVO does not require exclusivity and does not restrict partners from competitive activities.`,
+  },
+
+  // Clause 81: Accessibility Statement
+  accessibilityStatement: {
+    id: "accessibility",
+    title: "Accessibility Statement",
+    version: "1.0",
+    content: `ZIVO strives to make its platform accessible to users with disabilities. However, we do not guarantee error-free accessibility compliance at all times. Users may report accessibility issues for review. ZIVO is not liable for temporary non-compliance or third-party content accessibility.`,
+    commitments: [
+      "Ongoing accessibility improvements",
+      "User feedback consideration",
+      "Regular accessibility reviews",
+      "Third-party audit consideration",
+    ],
+  },
+
+  // Clause 82: Assistive Technology Disclaimer
+  assistiveTechDisclaimer: {
+    id: "assistive_tech",
+    title: "Assistive Technology Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not guarantee full compatibility with all screen readers, voice assistants, or third-party accessibility tools. Functionality may vary based on device, browser, and assistive technology configurations.`,
+  },
+
+  // Clause 83: Data Minimization Policy
+  dataMinimization: {
+    id: "data_minimization",
+    title: "Data Minimization Policy",
+    version: "1.0",
+    content: `ZIVO collects only data necessary for providing services. We are not liable for inaccuracies in data provided by users. Users are responsible for ensuring their information is accurate and up-to-date.`,
+  },
+
+  // Clause 84: Data Portability Disclaimer
+  dataPortability: {
+    id: "data_portability",
+    title: "Data Portability Disclaimer",
+    version: "1.0",
+    content: `Data export is available where legally required. ZIVO may refuse excessive, repetitive, or abusive data requests. Standard processing times apply to all data requests.`,
+  },
+
+  // Clause 85: Data Deletion Limitations
+  dataDeletionLimits: {
+    id: "data_deletion_limits",
+    title: "Data Deletion Limitations",
+    version: "1.0",
+    content: `Some data cannot be deleted due to legal obligations, fraud prevention requirements, accounting rules, and regulatory compliance. ZIVO will inform users of any limitations on deletion requests.`,
+    retentionReasons: [
+      "Legal and regulatory obligations",
+      "Fraud prevention and security",
+      "Accounting and tax requirements",
+      "Dispute resolution records",
+      "Safety and compliance records",
+    ],
+  },
+
+  // Clause 86: No Solely Automated Decisions
+  noSolelyAutomated: {
+    id: "no_solely_automated",
+    title: "No Solely Automated Decisions",
+    version: "1.0",
+    content: `ZIVO does not make decisions solely by AI or automation that produce significant legal effects on users without opportunity for human review. Users may request human review of significant automated decisions where required by law.`,
+  },
+
+  // Clause 87: AI Bias Disclaimer
+  aiBiasDisclaimer: {
+    id: "ai_bias",
+    title: "AI Bias Disclaimer",
+    version: "1.0",
+    content: `Algorithms may reflect user behavior, market conditions, and historical patterns. ZIVO does not guarantee neutrality, fairness, or absence of bias in AI outcomes. AI systems are continuously improved but may contain inherent limitations.`,
+  },
+
+  // Clause 88: Mass Arbitration Rules
+  massArbitrationRules: {
+    id: "mass_arbitration",
+    title: "Mass Arbitration Rules",
+    version: "1.0",
+    content: `If multiple similar claims arise, each claim must be resolved individually. Filing fees are allocated per claimant. No consolidated or class-wide arbitration is permitted. Sequential batching may apply to mass filings.`,
+    rules: [
+      "Individual claim resolution required",
+      "Per-claimant filing fee allocation",
+      "No consolidated arbitration",
+      "Sequential batch processing for mass filings",
+    ],
+  },
+
+  // Clause 89: Pre-Dispute Resolution Requirement
+  preDisputeRequirement: {
+    id: "pre_dispute",
+    title: "Pre-Dispute Resolution Requirement",
+    version: "1.0",
+    content: `Before filing any formal dispute or arbitration, users must first contact ZIVO support and allow a reasonable period for informal resolution. Failure to follow this process may result in dismissal of claims.`,
+    steps: [
+      "Contact ZIVO support with detailed complaint",
+      "Allow 30 days for informal resolution",
+      "Participate in good-faith negotiation",
+      "Proceed to formal dispute only if unresolved",
+    ],
+  },
+
+  // Clause 90: Platform Rule Enforcement
+  ruleEnforcement: {
+    id: "rule_enforcement",
+    title: "Platform Rule Enforcement",
+    version: "1.0",
+    content: `ZIVO may enforce platform rules automatically, manually, or retroactively. Enforcement decisions are at ZIVO's discretion and may include warnings, restrictions, suspensions, or permanent removal.`,
+  },
+
+  // Clause 91: Emergency Action Clause
+  emergencyAction: {
+    id: "emergency_action",
+    title: "Emergency Action Rights",
+    version: "1.0",
+    content: `ZIVO may take immediate action without prior notice to suspend accounts, freeze funds, remove listings, or restrict access when safety, legal, or fraud risks are detected. Emergency actions may be taken to protect users, partners, or the platform.`,
+    emergencyActions: [
+      "Immediate account suspension",
+      "Funds freeze pending investigation",
+      "Listing removal without notice",
+      "Access restriction for safety",
+      "Cooperation with authorities",
+    ],
+  },
+
+  // Clause 92: Survival of Advanced Protections
+  advancedProtectionSurvival: {
+    id: "advanced_survival",
+    title: "Survival of Advanced Protections",
+    version: "1.0",
+    content: `All labor, antitrust, AI, neutrality, and governance protections in these policies survive: account termination, partner offboarding, service discontinuation, and resolution of any legal disputes. These protections remain in effect indefinitely.`,
+  },
+};
+
+// Advanced FAQ for edge cases
+export const ADVANCED_LEGAL_FAQ = [
+  {
+    question: "Is ZIVO my employer?",
+    answer: "No. All partners are independent businesses. ZIVO is a technology platform only.",
+  },
+  {
+    question: "Does ZIVO control how services are performed?",
+    answer: "No. ZIVO provides software only. Partners control their own methods, schedules, and service delivery.",
+  },
+  {
+    question: "Can ZIVO guarantee earnings or bookings?",
+    answer: "No. ZIVO does not guarantee any minimum earnings, bookings, or revenue to partners.",
+  },
+  {
+    question: "Does ZIVO manipulate prices?",
+    answer: "No. Prices are set by partners or third parties. ZIVO does not engage in price fixing.",
+  },
+  {
+    question: "Can ZIVO block access to the platform?",
+    answer: "Yes. ZIVO may suspend or terminate access at its discretion for safety, compliance, or policy reasons.",
+  },
+  {
+    question: "Is ZIVO responsible for accessibility issues?",
+    answer: "ZIVO strives for accessibility but does not guarantee full compliance in all cases. Users may report issues for review.",
+  },
+  {
+    question: "Can I request my data be deleted?",
+    answer: "Some data may be retained for legal, fraud prevention, or accounting reasons even after deletion requests.",
+  },
+  {
+    question: "Are AI decisions final?",
+    answer: "Users may request human review of significant automated decisions where legally required.",
+  },
+];
+
+// Helper arrays
+export const ADVANCED_POLICIES_LIST = Object.values(ADVANCED_PLATFORM_POLICIES);
 export const ULTRA_POLICIES_LIST = Object.values(ULTRA_LEGAL_POLICIES);
-
-// Helper array for extreme policies
 export const EXTREME_POLICIES_LIST = Object.values(EXTREME_LEGAL_POLICIES);
-
-// Helper array for extended policies
 export const EXTENDED_POLICIES_LIST = Object.values(EXTENDED_LEGAL_POLICIES);
 
 // Summary of all legal protections for display
@@ -1022,6 +1262,8 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Jury trial waiver",
     "30-day opt-out procedure for transparency",
     "Delaware governing law",
+    "Pre-dispute resolution requirement",
+    "Mass arbitration rules",
   ],
   operationalProtection: [
     "Force majeure (expanded coverage)",
@@ -1031,6 +1273,7 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Government compliance clause",
     "Payment hold & reserve rights",
     "Policy change rights",
+    "Emergency action rights",
   ],
   contentProtection: [
     "User content disclaimer",
@@ -1066,5 +1309,15 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "Service suspension rights",
     "Platform evolution rights",
     "Disclaimer survival clause",
+  ],
+  advancedProtection: [
+    "Independent contractor acknowledgment",
+    "No employment benefits clause",
+    "Platform neutrality policy",
+    "No price fixing disclaimer",
+    "Accessibility statement",
+    "Data minimization & portability",
+    "AI bias disclaimer",
+    "Platform governance authority",
   ],
 };
