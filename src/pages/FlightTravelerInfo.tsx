@@ -239,6 +239,7 @@ const FlightTravelerInfo = () => {
       <SEOHead 
         title={`Passenger Details – ${offer.departure.code} to ${offer.arrival.code} | ZIVO`}
         description="Enter passenger details to continue with your flight booking."
+        noIndex={true}
       />
       <Header />
 

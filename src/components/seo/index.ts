@@ -6,3 +6,7 @@ export { default as PopularDestinationsGrid } from './PopularDestinationsGrid';
 export { default as BreadcrumbSchema } from './BreadcrumbSchema';
 export { default as DestinationHero } from './DestinationHero';
 export { DestinationIntro, TravelTips, RelatedDestinations, DestinationFAQ, AffiliateDisclaimer } from './DestinationContent';
+// Flight SEO components
+export { default as FlightSearchSchema } from './FlightSearchSchema';
+export { default as FlightBreadcrumbs } from './FlightBreadcrumbs';
+export { default as PopularRoutesFromAirport } from './PopularRoutesFromAirport';

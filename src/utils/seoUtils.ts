@@ -90,6 +90,29 @@ export function parseCitySlug(slug: string): string {
 }
 
 /**
+ * Generate SEO-friendly route URL
+ * Format: /flights/{origin}-to-{destination}
+ */
+export function generateRouteUrl(origin: string, destination: string): string {
+  const originSlug = formatCitySlug(origin);
+  const destSlug = formatCitySlug(destination);
+  return `/flights/${originSlug}-to-${destSlug}`;
+}
+
+/**
+ * Parse route from URL slug
+ * Returns origin and destination city names
+ */
+export function parseRouteSlug(slug: string): { origin: string; destination: string } | null {
+  const match = slug.match(/^(.+)-to-(.+)$/);
+  if (!match) return null;
+  return {
+    origin: parseCitySlug(match[1]),
+    destination: parseCitySlug(match[2]),
+  };
+}
+
+/**
  * Generate SEO title, description, and H1 for flight routes
  */
 export function formatRouteTitle(from: string, to: string): {
