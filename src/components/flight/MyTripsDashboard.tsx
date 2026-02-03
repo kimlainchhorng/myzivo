@@ -43,15 +43,22 @@ import {
   Trash2,
   Copy,
   ExternalLink,
-  Zap
+  Zap,
+  Loader2,
+  FileText
 } from "lucide-react";
 import { format, addDays, subDays, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useFlightBookings, getTicketingStatusInfo, canRequestRefund } from "@/hooks/useFlightBooking";
+import FlightTicketCard from "./FlightTicketCard";
 
 interface Trip {
   id: string;
   bookingRef: string;
   status: 'upcoming' | 'completed' | 'cancelled';
+  ticketingStatus?: 'pending' | 'processing' | 'issued' | 'failed' | 'cancelled' | 'voided';
+  pnr?: string;
+  ticketNumbers?: string[];
   route: {
     origin: string;
     originCode: string;
@@ -74,6 +81,8 @@ interface MyTripsDashboardProps {
   className?: string;
   onViewTrip?: (trip: Trip) => void;
   onDownloadBoardingPass?: (trip: Trip) => void;
+  onRequestChange?: (trip: Trip) => void;
+  onRequestRefund?: (trip: Trip) => void;
 }
 
 const MOCK_TRIPS: Trip[] = [

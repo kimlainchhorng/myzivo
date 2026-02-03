@@ -48,8 +48,7 @@ import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getAirlineLogo } from "@/data/airlines";
 import type { GeneratedFlight } from "@/data/flightGenerator";
-import { trackAffiliateClick, buildAffiliateUrl } from "@/lib/affiliateTracking";
-import { FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
+import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import { 
   FlightDetailStickyCTA, 
   HowBookingWorks, 
@@ -112,7 +111,7 @@ const FlightDetails = () => {
     if (!consentChecked) {
       toast({
         title: "Consent Required",
-        description: "Please agree to share your information with the booking partner before continuing.",
+        description: "Please agree to the Terms and Conditions before continuing.",
         variant: "destructive",
       });
       return;
@@ -120,32 +119,12 @@ const FlightDetails = () => {
 
     setIsRedirecting(true);
     
-    trackAffiliateClick({
-      userId: undefined,
-      flightId: flight.id,
-      airline: flight.airline,
-      airlineCode: flight.airlineCode,
-      origin: flight.departure.code,
-      destination: flight.arrival.code,
-      price: flight.price,
-      passengers: parseInt(searchParams?.passengers || "1"),
-      cabinClass: searchParams?.cabinClass || "economy",
-      affiliatePartner: "skyscanner",
-      referralUrl: window.location.href,
-      source: "flight_details",
-    });
-
-    const url = buildAffiliateUrl({
-      origin: flight.departure.code,
-      destination: flight.arrival.code,
-      departDate: searchParams?.departDate || format(new Date(), "yyyy-MM-dd"),
-      returnDate: searchParams?.returnDate,
-      passengers: parseInt(searchParams?.passengers || "1"),
-      cabinClass: searchParams?.cabinClass || "economy",
-    });
+    // Store flight data for traveler info page
+    sessionStorage.setItem('selectedFlight', JSON.stringify(flight));
+    sessionStorage.setItem('flightSearchParams', JSON.stringify(searchParams));
     
-    // Redirect in same tab to avoid popup blockers
-    window.location.href = url;
+    // Navigate to traveler info page (internal MoR flow)
+    navigate(`/flights/traveler-info?offer=${flight.id}&passengers=${searchParams?.passengers || 1}`);
   };
 
   const handleChangeFlight = () => {
