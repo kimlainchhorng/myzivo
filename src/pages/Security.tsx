@@ -186,6 +186,8 @@ export default function Security() {
                   "Automated Incident Response",
                   "Encryption at Rest & Transit",
                   "Data Isolation & Segmentation",
+                  "GDPR & CCPA Compliance",
+                  "Automated Consent Management",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -205,6 +207,9 @@ export default function Security() {
                 </Button>
                 <Button variant="outline" asChild>
                   <Link to="/security/data-protection">Data Protection</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/security/privacy-compliance">Privacy Compliance</Link>
                 </Button>
               </div>
             </CardContent>
