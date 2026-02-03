@@ -1,559 +1,388 @@
 
 
-# ZIVO Booking Engine - Complete Implementation Plan
-## Orders, Payments, and Webhooks for Hotelbeds Integration
+# My Trips Dashboard + Email Confirmations + Cancel/Refund Flow
+## Complete Implementation Plan
 
 ---
 
 ## Executive Summary
 
-Build a unified booking engine that transforms ZIVO from an affiliate-redirect platform to a real travel booking platform. This system will handle Hotels, Activities, and Transfers through Hotelbeds APIs with Stripe payment integration, order tracking, and webhook-driven confirmations.
+Enhance the ZIVO booking experience by consolidating all travel bookings (Hotels, Activities, Transfers) into a unified "My Trips" dashboard. Add email confirmation functionality, support ticket integration, and a cancellation/refund request workflow.
 
 ---
 
 ## Current State Analysis
 
 ### Existing Infrastructure
-- **Database**: Existing `profiles` table with `user_id`, `full_name`, `email`, `phone`
-- **Edge Functions**: Three Hotelbeds edge functions already created (`hotelbeds-hotels`, `hotelbeds-activities`, `hotelbeds-transfers`)
-- **Stripe Integration**: Existing `stripe-webhook` handler for rides, eats, flights, and P2P
-- **Payment Pattern**: `create-eats-checkout` demonstrates the checkout flow pattern
-- **Frontend Hooks**: `useHotelbedsSearch`, `useHotelbedsBooking`, `useHotelbedsActivities`, `useHotelbedsTransfers` already exist
+
+**Database Tables**:
+- `travel_orders` - Core orders with holder info, totals, status
+- `travel_order_items` - Individual booking items with provider references
+- `travel_payments` - Stripe payment tracking
+- `booking_audit_logs` - Audit trail for operations
+- `email_logs` - Email delivery tracking (already exists with Resend integration)
+- `support_tickets` - General support (existing table)
+- `zivo_support_tickets` - Enhanced support with service routing
+
+**Existing Pages**:
+- `MyOrdersPage.tsx` - Basic order list (exists but minimal)
+- `TravelConfirmationPage.tsx` - Shows confirmation after booking
+- `TravelTrips.tsx` - Travel booking history (affiliate-based redirects)
+- `SupportCenterPage.tsx` - Support ticket creation
+
+**Hooks**:
+- `useOrderDetails.ts` - Fetches orders with items/payments
+- `useGlobalSupport.ts` - Support ticket CRUD operations
+
+**Edge Functions**:
+- `send-travel-confirmation` - Sends confirmation emails (logs to console, needs Resend integration)
+- `send-travel-email` - Generic travel email sender with Resend
 
 ### What Needs to Be Built
-1. New database tables: `orders`, `order_items`, `payments`, `audit_logs`
-2. New edge functions: `create-order`, `create-checkout-session`, `confirm-hotelbeds-booking`
-3. Update existing `stripe-webhook` to handle Hotelbeds bookings
-4. Unified checkout page and confirmation flow
+
+1. **Database**: Add cancellation columns to `travel_orders` + `travel_order_items`
+2. **UI**: Enhanced "My Trips" page with tabs and detailed order view
+3. **Backend**: Cancellation request + resend confirmation endpoints
+4. **Email**: Integration with existing email system for confirmations
 
 ---
 
-## Phase 1: Database Schema
+## Phase 1: Database Schema Updates
 
-### 1.1 Orders Table
+### 1.1 Add Columns to travel_orders
 
 ```text
-Table: orders
-Purpose: Central order record for all travel bookings
-
-Columns:
-- id (UUID, PK)
-- user_id (UUID, FK -> profiles.user_id, nullable for guest checkout)
-- order_number (TEXT, unique, format: ZIVO-YYYY-NNNNNN)
-- currency (TEXT, default 'USD')
-- subtotal (NUMERIC(10,2))
-- taxes (NUMERIC(10,2), default 0)
-- fees (NUMERIC(10,2), default 0)
-- total (NUMERIC(10,2))
-- status (TEXT: draft | pending_payment | confirmed | cancelled | failed | refunded)
-- provider (TEXT: hotelbeds)
-- holder_name (TEXT)
-- holder_email (TEXT)
-- holder_phone (TEXT)
-- created_at (TIMESTAMPTZ)
-- updated_at (TIMESTAMPTZ)
+ALTER TABLE travel_orders ADD:
+- cancellation_status (TEXT default 'none')
+    Options: 'none' | 'requested' | 'under_review' | 'approved' | 'rejected' | 'processed'
+- cancellation_reason (TEXT nullable)
+- cancellation_requested_at (TIMESTAMPTZ nullable)
+- cancelled_at (TIMESTAMPTZ nullable)
+- cancelled_by (UUID nullable) - admin who processed
 ```
 
-### 1.2 Order Items Table
+### 1.2 Add Columns to travel_order_items
 
 ```text
-Table: order_items
-Purpose: Individual products within an order (hotel, activity, transfer)
+ALTER TABLE travel_order_items ADD:
+- cancellation_policy (TEXT nullable) - summary text
+- cancellable (BOOLEAN default false)
+- cancellation_deadline (TIMESTAMPTZ nullable)
+- supplier_status (TEXT default 'pending')
+    Options: 'pending' | 'confirmed' | 'cancelled' | 'failed'
+- supplier_payload (JSONB nullable) - raw Hotelbeds response
+```
 
-Columns:
+### 1.3 Create travel_email_logs Table
+
+Link emails specifically to travel orders (extends existing email_logs pattern):
+
+```text
+Table: travel_email_logs
 - id (UUID, PK)
-- order_id (UUID, FK -> orders.id, CASCADE)
-- type (TEXT: hotel | activity | transfer)
-- provider (TEXT: hotelbeds)
-- provider_reference (TEXT, nullable - set after booking confirmed)
-- title (TEXT - hotel name, activity name, or transfer route)
-- start_date (DATE)
-- end_date (DATE, nullable)
-- adults (INT)
-- children (INT, default 0)
-- quantity (INT, default 1)
-- price (NUMERIC(10,2))
-- meta (JSONB - rateKey, hotelCode, activityCode, etc.)
-- status (TEXT: reserved | confirmed | cancelled | failed)
+- order_id (UUID FK -> travel_orders.id)
+- to_email (TEXT)
+- template (TEXT: 'booking_confirmation' | 'cancellation_request' | 'cancellation_update' | 'refund_processed')
+- resend_message_id (TEXT nullable)
+- status (TEXT: 'queued' | 'sent' | 'failed')
+- error_message (TEXT nullable)
 - created_at (TIMESTAMPTZ)
 ```
 
-### 1.3 Payments Table
+### 1.4 RLS Policies
 
 ```text
-Table: payments
-Purpose: Track Stripe payment status for orders
+travel_email_logs:
+- SELECT: order belongs to user (join travel_orders)
+- INSERT: service role only
 
-Columns:
-- id (UUID, PK)
-- order_id (UUID, FK -> orders.id, CASCADE)
-- provider (TEXT: stripe)
-- stripe_payment_intent_id (TEXT)
-- stripe_checkout_session_id (TEXT)
-- amount (NUMERIC(10,2))
-- currency (TEXT)
-- status (TEXT: pending | processing | succeeded | failed | canceled | refunded)
-- created_at (TIMESTAMPTZ)
-```
-
-### 1.4 Booking Audit Logs Table
-
-```text
-Table: booking_audit_logs
-Purpose: Security + debugging trail for all booking operations
-
-Columns:
-- id (UUID, PK)
-- order_id (UUID, nullable)
-- user_id (UUID, nullable)
-- event (TEXT: order_created | payment_initiated | payment_succeeded | booking_confirmed | booking_failed | refund_requested | etc.)
-- ip_address (TEXT, nullable)
-- user_agent (TEXT, nullable)
-- meta (JSONB - detailed event data)
-- created_at (TIMESTAMPTZ)
-```
-
-### 1.5 Database Function: Generate Order Number
-
-```sql
-CREATE OR REPLACE FUNCTION generate_order_number()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.order_number := 'ZIVO-' || TO_CHAR(NOW(), 'YYYY') || '-' || 
-    LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+travel_orders updates:
+- UPDATE cancellation columns: user can only set cancellation_status = 'requested' for their own orders
 ```
 
 ---
 
-## Phase 2: Row Level Security (RLS)
+## Phase 2: Backend Edge Functions
 
-### Orders Table RLS
+### 2.1 Resend Confirmation Email
 
-```text
-Policies:
-1. "Users can view own orders"
-   - SELECT: user_id = auth.uid() OR user_id IS NULL (guest with email verification)
+**File**: `supabase/functions/resend-travel-confirmation/index.ts`
 
-2. "Users can create orders"
-   - INSERT: user_id = auth.uid() OR user_id IS NULL
+**Purpose**: User can request their confirmation email to be resent
 
-3. "Service role can manage all orders"
-   - ALL: For webhook and backend operations
-```
+**Flow**:
+1. Validate order belongs to user
+2. Check rate limit (max 3 per hour per order)
+3. Fetch order details
+4. Call existing `send-travel-confirmation` function
+5. Log to `travel_email_logs`
+6. Return success
 
-### Order Items Table RLS
+### 2.2 Request Cancellation
 
-```text
-Policies:
-1. "Users can view items for own orders"
-   - SELECT: EXISTS (SELECT 1 FROM orders WHERE id = order_items.order_id AND user_id = auth.uid())
+**File**: `supabase/functions/request-travel-cancellation/index.ts`
 
-2. "Service role can manage all items"
-   - ALL: For backend operations
-```
-
-### Payments Table RLS
-
-```text
-Policies:
-1. "Users can view payments for own orders"
-   - SELECT: EXISTS (SELECT 1 FROM orders WHERE id = payments.order_id AND user_id = auth.uid())
-
-2. "Service role can manage all payments"
-   - ALL: For webhook operations
-```
-
-### Audit Logs Table RLS
-
-```text
-Policies:
-1. "Only admins can read audit logs"
-   - SELECT: public.has_role(auth.uid(), 'admin')
-
-2. "Service role can insert logs"
-   - INSERT: For backend logging
-```
-
----
-
-## Phase 3: Edge Functions
-
-### 3.1 Create Order Edge Function
-
-**File**: `supabase/functions/create-travel-order/index.ts`
-
-**Purpose**: Create order + order_items from selected hotel/activity/transfer
-
-**Request Body**:
-```typescript
-{
-  items: Array<{
-    type: 'hotel' | 'activity' | 'transfer';
-    title: string;
-    startDate: string;
-    endDate?: string;
-    adults: number;
-    children?: number;
-    quantity?: number;
-    price: number;
-    meta: {
-      rateKey?: string;
-      hotelCode?: string;
-      activityCode?: string;
-      modalityCode?: string;
-      transferRoute?: object;
-    };
-  }>;
-  holder: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  currency?: string;
-}
-```
-
-**Response**:
+**Request**:
 ```typescript
 {
   orderId: string;
-  orderNumber: string;
-  total: number;
+  reason: string;
 }
 ```
 
 **Flow**:
-1. Validate input
-2. Calculate totals (subtotal + taxes + fees)
-3. Insert into `orders` with status='draft'
-4. Insert each item into `order_items` with status='reserved'
-5. Log to `booking_audit_logs`
-6. Return order details
+1. Validate order belongs to user
+2. Check order status is 'confirmed' (not already cancelled/refunded)
+3. Update `travel_orders.cancellation_status = 'requested'`
+4. Update `travel_orders.cancellation_reason`
+5. Update `travel_orders.cancellation_requested_at`
+6. Log to `booking_audit_logs`
+7. Send notification email to admin inbox
+8. Return success
 
-### 3.2 Create Checkout Session Edge Function
+### 2.3 Process Cancellation (Admin)
 
-**File**: `supabase/functions/create-travel-checkout/index.ts`
+**File**: `supabase/functions/process-travel-cancellation/index.ts`
 
-**Purpose**: Create Stripe Checkout session for an order
-
-**Request Body**:
-```typescript
-{
-  orderId: string;
-  successUrl?: string;
-  cancelUrl?: string;
-}
-```
-
-**Response**:
-```typescript
-{
-  url: string;
-  sessionId: string;
-}
-```
+**Purpose**: Admin reviews and approves/rejects cancellation
 
 **Flow**:
-1. Fetch order + order_items from database
-2. Validate order status is 'draft'
-3. Build Stripe line items from order_items
-4. Create Stripe Checkout session with metadata: `{ type: 'travel', orderId, orderNumber }`
-5. Insert into `payments` table with status='pending'
-6. Update order status to 'pending_payment'
-7. Store `stripe_checkout_session_id` on order
-8. Log audit event
-9. Return checkout URL
+1. Verify admin role
+2. Update cancellation_status to 'approved' or 'rejected'
+3. If approved and payment exists:
+   - Call Hotelbeds cancellation API for each item
+   - Process Stripe refund if eligible
+   - Update order status to 'cancelled'
+4. Send email to customer with decision
+5. Log all actions
 
-### 3.3 Confirm Hotelbeds Booking Edge Function
+### 2.4 Update send-travel-confirmation
 
-**File**: `supabase/functions/confirm-hotelbeds-booking/index.ts`
-
-**Purpose**: Called by webhook after payment succeeds - confirms actual bookings with Hotelbeds
-
-**Request Body** (internal):
-```typescript
-{
-  orderId: string;
-}
-```
-
-**Flow**:
-1. Fetch order + order_items
-2. For each order_item:
-   - If type='hotel': Call `hotelbeds-hotels` with action='book'
-   - If type='activity': Call `hotelbeds-activities` with action='book'
-   - If type='transfer': Call `hotelbeds-transfers` with action='book'
-3. Update each item's `provider_reference` and `status='confirmed'`
-4. If all items confirmed: Update order `status='confirmed'`
-5. If any item fails: Update order `status='failed'`, create support ticket
-6. Log all events to audit_logs
-7. Trigger confirmation email
-
-### 3.4 Update Stripe Webhook Handler
-
-**File**: `supabase/functions/stripe-webhook/index.ts` (modify existing)
-
-**Add handler for travel bookings**:
-
-```typescript
-case "checkout.session.completed": {
-  // Existing handlers for ride, eats, flight, p2p...
-  
-  if (metadata.type === "travel") {
-    // Update order status
-    await supabase
-      .from("orders")
-      .update({ status: "pending_payment" }) // Already set, but confirm
-      .eq("id", metadata.orderId);
-    
-    // Update payment status
-    await supabase
-      .from("payments")
-      .update({ status: "succeeded" })
-      .eq("stripe_checkout_session_id", session.id);
-    
-    // Trigger booking confirmation
-    await fetch(`${supabaseUrl}/functions/v1/confirm-hotelbeds-booking`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${supabaseServiceKey}`,
-      },
-      body: JSON.stringify({ orderId: metadata.orderId }),
-    });
-  }
-}
-```
+Modify existing function to:
+- Integrate with Resend API (currently just logging)
+- Use HTML email template
+- Log to `travel_email_logs`
 
 ---
 
-## Phase 4: Frontend - Checkout Flow
+## Phase 3: Frontend Pages
 
-### 4.1 Checkout Page
+### 3.1 Enhanced My Trips Page
 
-**File**: `src/pages/TravelCheckoutPage.tsx`
-
-**Route**: `/checkout`
+**File**: `src/pages/MyTripsPage.tsx` (new, replaces MyOrdersPage.tsx route)
 
 **Features**:
-- Step 1: Review itinerary (display all order_items)
-- Step 2: Traveler details form (holder info)
-- Step 3: Payment method selection:
-  - Pay Now (Stripe)
-  - Pay at Hotel (only if rate supports it - check meta.paymentType)
-- Step 4: Terms acceptance + Confirm button
-- Loading/error states
+- **Tabs**: Upcoming | Past | Cancelled
+- **Order Cards**: Show order number, date range, destination icons, status badge, total
+- **Status Badges**:
+  - Confirmed (green)
+  - Pending Payment (yellow)
+  - Cancellation Requested (orange)
+  - Cancelled (gray)
+  - Refunded (blue)
+- **Click to expand**: Navigate to detailed view
 
-**Data Flow**:
-```text
-User selects hotel/activity/transfer
-  -> Adds to cart (localStorage/context)
-  -> Navigates to /checkout
-  -> Fills holder info
-  -> Clicks "Pay Now"
-  -> Calls create-travel-order
-  -> Calls create-travel-checkout
-  -> Redirect to Stripe Checkout
-  -> Stripe webhook triggers booking
-  -> User returns to confirmation page
-```
-
-### 4.2 Cart Context
-
-**File**: `src/contexts/TravelCartContext.tsx`
-
-**State**:
+**Data Classification**:
 ```typescript
-interface CartItem {
-  id: string;
-  type: 'hotel' | 'activity' | 'transfer';
-  title: string;
-  startDate: string;
-  endDate?: string;
-  adults: number;
-  children: number;
-  price: number;
-  meta: object;
-}
-
-interface TravelCartState {
-  items: CartItem[];
-  addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  clearCart: () => void;
-  getTotal: () => number;
-}
+Upcoming: start_date >= today AND status != cancelled
+Past: start_date < today AND status = confirmed
+Cancelled: status = cancelled OR status = refunded
 ```
 
-### 4.3 Order Confirmation Page
+### 3.2 Order Detail Page
 
-**File**: `src/pages/TravelConfirmationPage.tsx`
+**File**: `src/pages/TravelOrderDetailPage.tsx`
 
-**Route**: `/confirmation/:orderNumber`
+**Route**: `/my-trips/:orderNumber`
 
-**Display**:
-- Order number
-- Booking references for each item (from provider_reference)
-- Hotel/activity/transfer details
-- Check-in/out dates
-- Guest names
-- Total paid
-- Support contact info
-- Download confirmation (PDF future)
+**Sections**:
 
-### 4.4 My Orders Page
+1. **Header**: Order number, status badge, total
+2. **Itinerary Summary**: Timeline view of all items
+3. **Item Cards** (for each travel_order_item):
+   - Type icon (hotel/activity/transfer)
+   - Title
+   - Date range
+   - Guests count
+   - Supplier reference (if confirmed)
+   - Cancellation policy text
+   - Cancellation deadline (if applicable)
+   - Status badge
 
-**File**: `src/pages/MyOrdersPage.tsx`
+4. **Traveler Info**: Holder name, email, phone
 
-**Route**: `/my-orders`
+5. **Payment Summary**: Subtotal, fees, taxes, total
 
-**Features**:
-- List all user's orders
-- Filter by status
-- Click to view order details
-- Cancel order (if cancellation allowed)
+6. **Action Buttons**:
+   - "Resend Confirmation" (calls resend endpoint)
+   - "Contact Support" (opens support modal with order pre-filled)
+   - "Request Cancellation" (if order.cancellable and not already requested)
 
----
+### 3.3 Cancel Request Modal
 
-## Phase 5: Frontend Hooks
-
-### 5.1 useCreateOrder Hook
-
-**File**: `src/hooks/useCreateOrder.ts`
-
-```typescript
-export function useCreateOrder() {
-  const createOrder = async (items: CartItem[], holder: HolderInfo) => {
-    const { data, error } = await supabase.functions.invoke('create-travel-order', {
-      body: { items, holder }
-    });
-    return data;
-  };
-  
-  return { createOrder, isLoading, error };
-}
-```
-
-### 5.2 useCheckout Hook
-
-**File**: `src/hooks/useTravelCheckout.ts`
-
-```typescript
-export function useTravelCheckout() {
-  const startCheckout = async (orderId: string) => {
-    const { data, error } = await supabase.functions.invoke('create-travel-checkout', {
-      body: { orderId }
-    });
-    
-    if (data?.url) {
-      window.location.href = data.url; // Redirect to Stripe
-    }
-  };
-  
-  return { startCheckout, isLoading, error };
-}
-```
-
-### 5.3 useOrderDetails Hook
-
-**File**: `src/hooks/useOrderDetails.ts`
-
-```typescript
-export function useOrderDetails(orderNumber: string) {
-  return useQuery({
-    queryKey: ['order', orderNumber],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (*),
-          payments (*)
-        `)
-        .eq('order_number', orderNumber)
-        .single();
-      return data;
-    }
-  });
-}
-```
-
----
-
-## Phase 6: Integration Points
-
-### 6.1 Hotel Detail Page Integration
-
-**Modify**: `src/pages/HotelDetailPage.tsx` (to be created)
-
-When user clicks "Book Now" on a room:
-1. Add hotel to cart context
-2. Navigate to `/checkout` or show cart drawer
-
-### 6.2 Activity Detail Page Integration
-
-**Modify**: `src/pages/ActivityDetailPage.tsx` (to be created)
-
-When user clicks "Book" on an activity:
-1. Add activity to cart context
-2. Navigate to `/checkout`
-
-### 6.3 Transfer Results Integration
-
-**Modify**: Transfer selection flow
-
-When user selects a transfer:
-1. Add transfer to cart context
-2. Continue to checkout or upsell activities
-
----
-
-## Phase 7: Email Notifications
-
-### 7.1 Confirmation Email Edge Function
-
-**File**: `supabase/functions/send-travel-confirmation/index.ts`
-
-**Trigger**: Called after all items in order confirmed
+**Component**: `src/components/travel/CancelRequestModal.tsx`
 
 **Content**:
+- Order summary
+- Cancellation policy warning text:
+  ```
+  Cancellation depends on supplier rules.
+  Some bookings are non-refundable.
+  If eligible, refund timing depends on payment provider.
+  Typical processing: 5-10 business days.
+  ```
+- Reason input (required)
+- Confirm button
+
+### 3.4 Support Modal Integration
+
+**Update**: `src/components/travel/OrderSupportModal.tsx`
+
+- Pre-fill order reference
+- Set service_type = 'hotels' | 'activities' | 'transfers' based on order items
+- Set reference_id = order.id
+- Categories: booking_issue, refund_request, room_issue, etc.
+
+---
+
+## Phase 4: Frontend Hooks
+
+### 4.1 useMyTrips Hook
+
+**File**: `src/hooks/useMyTrips.ts`
+
+```typescript
+export function useMyTrips(filter?: 'upcoming' | 'past' | 'cancelled') {
+  // Fetch travel_orders with items for current user
+  // Apply date-based filtering
+  // Return grouped and sorted orders
+}
+```
+
+### 4.2 useOrderActions Hook
+
+**File**: `src/hooks/useOrderActions.ts`
+
+```typescript
+export function useOrderActions() {
+  return {
+    resendConfirmation: (orderId: string) => {...},
+    requestCancellation: (orderId: string, reason: string) => {...},
+    // Rate limit state for resend
+  };
+}
+```
+
+---
+
+## Phase 5: Email Templates
+
+### 5.1 Booking Confirmation Email
+
+Enhance existing `send-travel-confirmation` with HTML template:
+
+```text
+Subject: Booking Confirmed - {order_number}
+
+Content:
+- ZIVO logo
+- "Your booking is confirmed!"
 - Order number
-- All booking references
-- Itinerary summary
-- Cancellation policy
+- Itinerary summary with dates
+- Supplier booking references
 - Support contact
+- Terms link
+- Footer with unsubscribe
+```
+
+### 5.2 Cancellation Request Email
+
+**To Customer**:
+```text
+Subject: Cancellation Request Received - {order_number}
+
+"We've received your cancellation request.
+Our team will review it within 24-48 hours.
+You'll receive an update by email."
+```
+
+**To Admin**:
+```text
+Subject: [Action Required] Cancellation Request - {order_number}
+
+Order details
+Customer reason
+Link to admin dashboard
+```
+
+### 5.3 Cancellation Decision Email
+
+```text
+Subject: Cancellation Update - {order_number}
+
+APPROVED:
+"Your cancellation has been approved.
+Refund of ${amount} will be processed in 5-10 business days."
+
+REJECTED:
+"We're unable to process your cancellation.
+Reason: {reason}
+Please contact support for assistance."
+```
+
+---
+
+## Phase 6: Routing Updates
+
+**Add to App.tsx**:
+
+```typescript
+// My Trips routes
+<Route path="/my-trips" element={<MyTripsPage />} />
+<Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
+
+// Keep old route as redirect
+<Route path="/my-orders" element={<Navigate to="/my-trips" replace />} />
+```
+
+---
+
+## Phase 7: Admin Dashboard
+
+### 7.1 Cancellation Queue
+
+**File**: `src/pages/admin/TravelCancellationsPage.tsx`
+
+**Features**:
+- List orders with cancellation_status = 'requested'
+- Show order details, reason, requested date
+- Action buttons: Approve | Reject
+- Approval triggers Hotelbeds cancellation + Stripe refund
+- Audit log of all decisions
 
 ---
 
 ## Implementation Order
 
-### Week 1: Database + Core Backend
-1. Create database migration with all tables
-2. Add RLS policies
-3. Create `create-travel-order` edge function
-4. Create `create-travel-checkout` edge function
-5. Test order creation flow
+### Week 1: Database + Backend
+1. Create database migration for new columns
+2. Add `travel_email_logs` table with RLS
+3. Create `resend-travel-confirmation` edge function
+4. Create `request-travel-cancellation` edge function
+5. Update `send-travel-confirmation` with Resend integration
 
-### Week 2: Webhook + Booking Confirmation
-1. Create `confirm-hotelbeds-booking` edge function
-2. Update `stripe-webhook` to handle travel type
-3. Test end-to-end payment -> booking flow
-4. Add audit logging
+### Week 2: Frontend My Trips
+1. Create `MyTripsPage.tsx` with tabs
+2. Create `TravelOrderDetailPage.tsx`
+3. Create `useMyTrips` and `useOrderActions` hooks
+4. Build `CancelRequestModal` component
+5. Integrate support modal with order context
 
-### Week 3: Frontend Checkout
-1. Create `TravelCartContext`
-2. Create `TravelCheckoutPage`
-3. Create `TravelConfirmationPage`
-4. Integrate with hotel/activity/transfer selection
-
-### Week 4: Polish + Testing
-1. Create `MyOrdersPage`
-2. Add email notifications
-3. Error handling refinement
-4. End-to-end testing in Hotelbeds TEST mode
+### Week 3: Admin + Polish
+1. Create admin cancellation queue
+2. Create `process-travel-cancellation` edge function
+3. Add email templates for cancellation flow
+4. End-to-end testing
 
 ---
 
@@ -563,43 +392,41 @@ When user selects a transfer:
 
 | Category | Files |
 |----------|-------|
-| Edge Functions | `create-travel-order/index.ts`, `create-travel-checkout/index.ts`, `confirm-hotelbeds-booking/index.ts`, `send-travel-confirmation/index.ts` |
-| Pages | `TravelCheckoutPage.tsx`, `TravelConfirmationPage.tsx`, `MyOrdersPage.tsx` |
-| Hooks | `useCreateOrder.ts`, `useTravelCheckout.ts`, `useOrderDetails.ts` |
-| Context | `TravelCartContext.tsx` |
-| Components | `CheckoutSummary.tsx`, `TravelerForm.tsx`, `PaymentMethodSelector.tsx`, `OrderConfirmationCard.tsx` |
+| Database | Migration for new columns + travel_email_logs table |
+| Edge Functions | `resend-travel-confirmation/index.ts`, `request-travel-cancellation/index.ts`, `process-travel-cancellation/index.ts` |
+| Pages | `MyTripsPage.tsx`, `TravelOrderDetailPage.tsx`, `TravelCancellationsPage.tsx` (admin) |
+| Hooks | `useMyTrips.ts`, `useOrderActions.ts` |
+| Components | `CancelRequestModal.tsx`, `OrderSupportModal.tsx`, `TripCard.tsx`, `OrderItemCard.tsx` |
 
 ### To Modify
 
 | File | Changes |
 |------|---------|
-| `stripe-webhook/index.ts` | Add travel booking handler |
+| `src/App.tsx` | Add my-trips routes |
+| `supabase/functions/send-travel-confirmation/index.ts` | Integrate Resend API |
+| `src/hooks/useOrderDetails.ts` | Add cancellation fields |
 | `supabase/config.toml` | Add new function configs |
-| `src/App.tsx` | Add checkout, confirmation, my-orders routes |
 
 ---
 
 ## Security Considerations
 
-1. **API Keys**: All Hotelbeds API calls remain server-side only
-2. **RLS**: Users can only see their own orders
-3. **Audit Trail**: All operations logged to `booking_audit_logs`
-4. **Webhook Verification**: Stripe signature verification required
-5. **Rate Limiting**: Apply to all checkout endpoints
-6. **PII Minimization**: Store only essential traveler info
-7. **Guest Checkout**: Secured by email verification link for order access
+1. **Authorization**: Users can only view/cancel their own orders
+2. **Rate Limiting**: Resend confirmation limited to 3/hour/order
+3. **Admin Verification**: Cancellation processing requires admin role
+4. **Audit Trail**: All cancellation actions logged
+5. **Email Safety**: No sensitive data (full card numbers, secrets) in emails
 
 ---
 
 ## Success Criteria
 
-- [ ] Order creation stores all items correctly
-- [ ] Stripe Checkout redirects work properly
-- [ ] Webhook successfully triggers Hotelbeds bookings
-- [ ] Booking references stored in database
-- [ ] Confirmation page shows all booking details
-- [ ] Users can view their order history
-- [ ] Failed bookings create support tickets
-- [ ] Audit logs capture all events
-- [ ] Works in Hotelbeds TEST environment
+- [ ] Users can view all their travel orders in My Trips
+- [ ] Orders show accurate status (Confirmed, Cancellation Requested, etc.)
+- [ ] Resend confirmation works with rate limiting
+- [ ] Support tickets linked to orders
+- [ ] Cancellation request updates order status
+- [ ] Admin can process cancellation requests
+- [ ] Email notifications sent at each step
+- [ ] Audit logs capture all actions
 
