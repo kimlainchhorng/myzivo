@@ -7,49 +7,49 @@ export const launchContent = {
   // Short version for social/quick posts
   short: `ZIVO is now live!  
 
-Search and compare flights, hotels, and car rentals worldwide.  
+Book flights, hotels, and car rentals directly on ZIVO.  
 
-Find the best options and book securely with trusted travel partners.
+Secure checkout. Instant e-tickets. Licensed fulfillment.
 
 Start your search today.`,
 
   // Full version for press/email
-  full: `We're excited to launch ZIVO — a new way to search and compare travel worldwide.
+  full: `We're excited to launch ZIVO — a new way to book travel worldwide.
 
 With ZIVO, you can:
-• Compare flights from hundreds of airlines
+• Search flights from global airlines and book securely
 • Find hotels and stays around the world
-• Compare car rental options at major destinations
+• Book car rentals at major destinations
 
-ZIVO does not sell tickets or process payments.  
-When you're ready to book, you'll be securely redirected to our trusted travel partners to complete your reservation.
+ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+Book directly on ZIVO with secure checkout and instant e-tickets.
 
-Start comparing and plan your next trip with confidence.`,
+Start searching and plan your next trip with confidence.`,
 
   // Banner headline/subheadline
   banner: {
-    headline: "ZIVO is Live — Search & Compare Travel Worldwide",
-    subheadline: "Compare flights, hotels, and car rentals from trusted travel partners. No booking fees on ZIVO.",
+    headline: "ZIVO is Live — Book Travel Worldwide",
+    subheadline: "Search flights, hotels, and car rentals. Secure checkout. Instant e-tickets.",
     ctas: ["Search Flights", "Search Hotels", "Rent a Car"],
-    note: "Booking completed on partner sites.",
+    note: "Licensed ticketing partners.",
   },
 
   // Trust section bullets
   trustPoints: [
-    "Compare prices from trusted travel partners",
+    "Real-time prices from global airlines",
     "No booking fees on ZIVO",
-    "Secure booking on partner sites",
-    "Worldwide coverage",
+    "Secure ZIVO checkout",
+    "Instant e-tickets for flights",
   ],
 
   // Footer disclosure
-  footerNote: "ZIVO is a travel search and comparison platform. ZIVO may earn a commission when you book through partner links.",
+  footerNote: "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets issued by authorized partners.",
 
   // Social media ready posts
   social: {
-    twitter: "🚀 ZIVO is live! Search & compare flights, hotels, and car rentals worldwide. No booking fees. Start your search → hizivo.com",
-    linkedin: "Excited to announce the launch of ZIVO — a new way to search and compare travel worldwide. Compare flights from 500+ airlines, find hotels globally, and rent cars at major destinations. All in one place. #travel #startup #launch",
-    instagram: "✈️ ZIVO IS LIVE ✈️\n\nYour new way to search & compare travel:\n→ Flights from 500+ airlines\n→ Hotels worldwide\n→ Car rentals everywhere\n\nNo booking fees. Secure partner booking.\n\nLink in bio 🔗",
+    twitter: "🚀 ZIVO is live! Search flights, hotels, and car rentals worldwide. Secure checkout. Instant e-tickets. Start your search → hizivo.com",
+    linkedin: "Excited to announce the launch of ZIVO — a new way to book travel worldwide. Search flights from global airlines, find hotels globally, and rent cars at major destinations. Secure checkout. Instant e-tickets. #travel #startup #launch",
+    instagram: "✈️ ZIVO IS LIVE ✈️\n\nYour new way to book travel:\n→ Flights from global airlines\n→ Hotels worldwide\n→ Car rentals everywhere\n\nSecure checkout. Instant e-tickets.\n\nLink in bio 🔗",
   },
 };
 

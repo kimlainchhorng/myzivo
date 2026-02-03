@@ -15,20 +15,20 @@ const steps = [
   {
     icon: Search,
     number: "1",
-    title: "Search & compare flights",
-    description: "Compare options from 500+ airlines",
+    title: "Search flights",
+    description: "Browse real-time flight options from global airlines.",
   },
   {
     icon: MousePointerClick,
     number: "2",
-    title: "Choose the best option",
-    description: "Select the best deal for your travel needs",
+    title: "Select your flight",
+    description: "View final prices, baggage, and fare rules before booking.",
   },
   {
     icon: ShieldCheck,
     number: "3",
-    title: "Book directly on ZIVO",
-    description: "Pay securely and receive your e-ticket instantly",
+    title: "Book on ZIVO",
+    description: "Pay securely on ZIVO and receive your e-ticket instantly.",
   },
 ];
 

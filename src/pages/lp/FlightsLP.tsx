@@ -37,8 +37,8 @@ export default function FlightsLP() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="Search & Compare Flights – Hizivo"
-        description="Compare flight prices from trusted airline partners. Search, compare, and book securely on partner sites."
+        title="Search Flights – ZIVO"
+        description="Search flight prices from global airlines. Book securely on ZIVO with instant e-tickets."
         noIndex={true}
       />
       
@@ -65,27 +65,27 @@ export default function FlightsLP() {
             
             {/* Headline */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-              Search & Compare Flights
+              Search Flights
             </h1>
             
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-xl mx-auto">
-              Find the best flight options from trusted airline partners worldwide.
+              Real-time prices from global airlines. Book securely on ZIVO.
             </p>
             
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8 text-white/80 text-sm">
               <span className="flex items-center gap-1.5">
                 <Search className="w-4 h-4" />
-                Compare 500+ Airlines
+                Global Airlines
               </span>
               <span className="flex items-center gap-1.5">
                 <Shield className="w-4 h-4" />
-                Licensed Partners
+                Licensed Ticketing
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4" />
-                Secure Booking
+                Secure ZIVO Checkout
               </span>
             </div>
             
@@ -108,10 +108,10 @@ export default function FlightsLP() {
             {/* Partner Disclosure */}
             <div className="mt-8 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 max-w-lg mx-auto">
               <div className="flex items-start gap-3 text-left">
-                <ExternalLink className="w-4 h-4 text-white/80 shrink-0 mt-0.5" />
+                <Shield className="w-4 h-4 text-white/80 shrink-0 mt-0.5" />
                 <p className="text-sm text-white/80">
-                  Hizivo compares flights from licensed partners. When you're ready to book, 
-                  you'll be redirected to our partner's secure checkout.
+                  ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+                  Book securely and receive your e-ticket instantly.
                 </p>
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function FlightsLP() {
               </div>
               <h3 className="font-semibold text-lg mb-2">1. Search</h3>
               <p className="text-sm text-muted-foreground">
-                Enter your travel details and browse options from multiple airlines.
+                Enter your travel details and browse real-time options from global airlines.
               </p>
             </div>
             
@@ -141,19 +141,19 @@ export default function FlightsLP() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-lg mb-2">2. Compare</h3>
+              <h3 className="font-semibold text-lg mb-2">2. Select</h3>
               <p className="text-sm text-muted-foreground">
-                View prices, schedules, and amenities from our trusted airline partners.
+                View final prices, baggage, and fare rules before booking.
               </p>
             </div>
             
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mx-auto mb-4">
-                <ExternalLink className="w-8 h-8 text-sky-600" />
+                <Shield className="w-8 h-8 text-sky-600" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">3. Book Securely</h3>
+              <h3 className="font-semibold text-lg mb-2">3. Book on ZIVO</h3>
               <p className="text-sm text-muted-foreground">
-                Complete your booking on our partner's secure checkout page.
+                Pay securely on ZIVO and receive your e-ticket instantly.
               </p>
             </div>
           </div>

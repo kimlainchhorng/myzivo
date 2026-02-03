@@ -17,12 +17,12 @@ interface FlightFAQSectionProps {
 export default function FlightFAQSection({ className }: FlightFAQSectionProps) {
   const faqs = [
     {
-      question: "How does ZIVO find cheap flights?",
-      answer: "ZIVO searches across 500+ airlines and travel sites in real-time to compare prices. Our algorithms identify the best deals, including hidden city fares and error fares, to help you save up to 60% on airfare."
+      question: "How does ZIVO find flight prices?",
+      answer: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices."
     },
     {
       question: "Does ZIVO sell tickets directly?",
-      answer: "No, ZIVO is a flight comparison platform. We help you find and compare the best prices, then redirect you to the airline or booking site of your choice to complete your purchase. This ensures you get the best available rate."
+      answer: "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules."
     },
     {
       question: "How do price alerts work?",
@@ -38,7 +38,7 @@ export default function FlightFAQSection({ className }: FlightFAQSectionProps) {
     },
     {
       question: "Are there hidden fees?",
-      answer: "We display all-in prices including taxes and basic fees. However, airlines may charge extra for checked bags, seat selection, or other add-ons. These are clearly shown on the airline's booking page."
+      answer: "No. Prices shown on ZIVO are final and confirmed before payment. Airline extras (bags, seats) are shown separately."
     },
   ];
 

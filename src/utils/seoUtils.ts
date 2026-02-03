@@ -125,9 +125,9 @@ export function formatRouteTitle(from: string, to: string): {
   }
 
   return {
-    title: "ZIVO Flights – Search & Compare Flights Worldwide",
-    description: "Search and compare flights from 500+ airlines worldwide. Find the best deals and book with trusted travel partners. No booking fees.",
-    h1: "Compare prices from 500+ airlines",
+    title: "ZIVO Flights – Search Flights Worldwide",
+    description: "Search real-time flight prices from global airlines. Book securely on ZIVO with instant e-tickets. No booking fees.",
+    h1: "Search flights from global airlines",
   };
 }
 

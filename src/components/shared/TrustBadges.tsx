@@ -16,16 +16,16 @@ interface TrustBadge {
 }
 
 const universalBadges: TrustBadge[] = [
-  { icon: Shield, text: "Secure Search", color: "text-emerald-500" },
-  { icon: Users, text: "Trusted Partners", color: "text-sky-500" },
+  { icon: Shield, text: "Secure ZIVO Checkout", color: "text-emerald-500" },
+  { icon: Users, text: "Licensed Partners", color: "text-sky-500" },
   { icon: Zap, text: "Real-Time Prices", color: "text-amber-500" },
   { icon: Clock, text: "24/7 Support", color: "text-violet-500" },
 ];
 
 const serviceBadges: Record<ServiceType, TrustBadge[]> = {
   flights: [
-    { icon: Shield, text: "Secure Search", color: "text-emerald-500" },
-    { icon: Users, text: "500+ Airlines", color: "text-sky-500" },
+    { icon: Shield, text: "Secure ZIVO Checkout", color: "text-emerald-500" },
+    { icon: Users, text: "Global Airlines", color: "text-sky-500" },
     { icon: Zap, text: "Real-Time Prices", color: "text-amber-500" },
     { icon: CreditCard, text: "No Booking Fees", color: "text-violet-500" },
   ],
