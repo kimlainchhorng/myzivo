@@ -2,11 +2,13 @@
  * Duffel Environment Configuration
  * Provides helper routes for sandbox testing and environment detection
  * 
- * LIVE MODE: When DUFFEL_ENV=live, strict validation is enforced
- * SANDBOX MODE: Test routes available, debug UI enabled
+ * PRODUCTION MODE: DUFFEL_MODE=live (locked)
+ * Strict validation enforced, no sandbox UI
  */
 
-// Sandbox test routes that reliably return results in Duffel test mode
+import { DUFFEL_MODE } from './environment';
+
+// Sandbox test routes (disabled in production)
 export const DUFFEL_SANDBOX_ROUTES = [
   { from: 'LHR', to: 'CDG', label: 'London → Paris' },
   { from: 'SFO', to: 'LAX', label: 'San Francisco → Los Angeles' },
@@ -18,23 +20,33 @@ export const DUFFEL_SANDBOX_ROUTES = [
 
 /**
  * Check if we're in Duffel sandbox mode
- * This is set from the edge function response or sessionStorage
+ * In production, this always returns false
  */
 export function isSandboxMode(): boolean {
-  // Check sessionStorage first (set from edge function response)
+  // Production mode is locked to live
+  if (DUFFEL_MODE === 'live') {
+    return false;
+  }
+  
+  // Check sessionStorage (set from edge function response)
   const storedEnv = sessionStorage.getItem('duffel_env');
   if (storedEnv) {
     return storedEnv === 'sandbox' || storedEnv === 'test';
   }
   
-  // In development mode, assume sandbox
-  return import.meta.env.MODE === 'development';
+  return false;
 }
 
 /**
  * Check if we're in Duffel LIVE mode
+ * In production, this always returns true
  */
 export function isLiveMode(): boolean {
+  // Production mode is locked to live
+  if (DUFFEL_MODE === 'live') {
+    return true;
+  }
+  
   const stored = sessionStorage.getItem('duffel_env');
   return stored === 'live';
 }
