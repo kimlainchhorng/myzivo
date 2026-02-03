@@ -109,8 +109,14 @@ const HowToRent = lazy(() => import("./pages/HowToRent"));
 const CarRentalSettingsPage = lazy(() => import("./pages/admin/CarRentalSettingsPage"));
 const CarDamageClaimsPage = lazy(() => import("./pages/admin/CarDamageClaimsPage"));
 const CarRevenueOverviewPage = lazy(() => import("./pages/admin/CarRevenueOverviewPage"));
+const FleetOversightPage = lazy(() => import("./pages/admin/FleetOversightPage"));
 // Owner Earnings
 const OwnerEarningsPage = lazy(() => import("./pages/owner/OwnerEarningsPage"));
+// Fleet pages
+const FleetDashboard = lazy(() => import("./pages/fleet/FleetDashboard"));
+const FleetOnboarding = lazy(() => import("./pages/fleet/FleetOnboarding"));
+// Business pages
+const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountPage"));
 // Renter Verification pages
 const RenterVerification = lazy(() => import("./pages/verify/RenterVerification"));
 const VerificationStatus = lazy(() => import("./pages/verify/VerificationStatus"));
@@ -553,6 +559,20 @@ const App = () => (
                     </ProtectedRoute>
                   }
                 />
+                {/* Fleet Oversight */}
+                <Route
+                  path="/admin/fleets"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FleetOversightPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Fleet Dashboard */}
+                <Route path="/fleet/dashboard" element={<FleetDashboard />} />
+                <Route path="/fleet/onboarding" element={<FleetOnboarding />} />
+                {/* Business Account */}
+                <Route path="/business/account" element={<BusinessAccountPage />} />
                 {/* Seller of Travel Settings */}
                 <Route
                   path="/admin/travel/seller-of-travel"
