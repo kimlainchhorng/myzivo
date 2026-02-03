@@ -640,7 +640,7 @@ export default function FlightSearchFormPro({
       
       {/* Helper text below button */}
       <p className="text-xs text-muted-foreground text-center mt-2">
-        Final booking completed on our airline partner's secure site.
+        Payment completed securely on ZIVO. Tickets issued by licensed partners.
       </p>
 
       {/* Debug: Show built URL for testing */}

@@ -1,6 +1,6 @@
 /**
  * FlightDetailsModal Component
- * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ * OTA Mode: Uses internal navigation instead of affiliate redirect
  */
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Plane, Clock, Calendar, MapPin, Wifi, Tv, Utensils, 
   Plug, Luggage, ArrowRight, Shield, Leaf, Timer,
-  Crown, Star, AlertCircle, Check, ExternalLink
+  Crown, Star, AlertCircle, Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAirlineLogo } from '@/data/airlines';
-import { trackAffiliateClick } from '@/lib/affiliateTracking';
-import { AFFILIATE_LINKS } from '@/config/affiliateLinks';
-import { FLIGHT_DISCLAIMERS } from '@/config/flightCompliance';
 import type { GeneratedFlight } from '@/data/flightGenerator';
 import { useState } from 'react';
 
@@ -50,6 +47,11 @@ export default function FlightDetailsModal({
 
   const isPremium = flight.category === 'premium';
   const isFullService = flight.category === 'full-service';
+
+  const handleSelectFlight = () => {
+    onOpenChange(false);
+    onSelectFlight?.(flight);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -361,9 +363,9 @@ export default function FlightDetailsModal({
 
         {/* Action buttons */}
         <div className="flex flex-col gap-3">
-          {/* Affiliate disclosure */}
+          {/* OTA disclaimer */}
           <p className="text-xs text-muted-foreground text-center px-2">
-            {FLIGHT_DISCLAIMERS.ticketingShort}{' '}
+            Tickets issued by licensed ticketing partners.{' '}
             <a href="/partner-disclosure" className="text-sky-500 hover:underline">Learn more</a>
           </p>
           
@@ -372,31 +374,13 @@ export default function FlightDetailsModal({
               Close
             </Button>
             
-            <a 
-              href={AFFILIATE_LINKS.flights.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-semibold transition-colors"
-              onClick={() => {
-                trackAffiliateClick({
-                  flightId: flight.flightNumber || String(flight.id),
-                  airline: flight.airline,
-                  airlineCode: flight.airlineCode,
-                  origin: flight.departure.code,
-                  destination: flight.arrival.code,
-                  price: flight.price,
-                  passengers: 1,
-                  cabinClass: 'economy',
-                  affiliatePartner: 'searadar',
-                  referralUrl: AFFILIATE_LINKS.flights.url,
-                  source: 'flight_modal_primary',
-                });
-                onSelectFlight?.(flight);
-              }}
+            <Button 
+              onClick={handleSelectFlight}
+              className="flex-1 gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white"
             >
-              <ExternalLink className="w-4 h-4" />
-              Book Flight
-            </a>
+              <ArrowRight className="w-4 h-4" />
+              Select Flight
+            </Button>
           </div>
         </div>
       </DialogContent>

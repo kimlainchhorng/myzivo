@@ -1,32 +1,34 @@
 /**
  * Flight Consent Gate Component
  * 
- * REQUIRED before ANY partner checkout redirect for flights
- * Uses locked compliance text from flightCompliance.ts
+ * OTA Mode: This component is DEPRECATED for flights.
  * 
- * Features:
- * - Modal-style consent gate
- * - Required checkbox before proceeding
- * - Partner disclosure
- * - Same-tab redirect (mobile safe)
+ * With ZIVO as the OTA (Merchant of Record):
+ * - Users book and pay directly on ZIVO
+ * - No external redirect needed
+ * - Consent is handled on ZIVO checkout page
+ * 
+ * This component remains for backward compatibility but should
+ * not be used in the OTA booking flow. Consider removing in
+ * future cleanup.
+ * 
+ * @deprecated Use direct checkout flow instead
  */
 
 import { useState } from "react";
-import { ExternalLink, Shield, Lock, CheckCircle, Plane, Info } from "lucide-react";
+import { ArrowRight, Shield, Lock, CheckCircle, Plane, Info } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { FLIGHT_CONSENT, FLIGHT_DISCLAIMERS, FLIGHT_CTA_TEXT, FLIGHT_TRACKING_PARAMS } from "@/config/flightCompliance";
-import { trackPartnerCheckoutInitiated } from "@/lib/conversionTracking";
 import { cn } from "@/lib/utils";
 
 interface FlightConsentGateProps {
   isOpen: boolean;
   onClose: () => void;
-  checkoutUrl: string;
+  onProceed: () => void;
   flightInfo?: {
     airline: string;
     origin: string;
@@ -34,60 +36,36 @@ interface FlightConsentGateProps {
     price: number;
     departDate: string;
   };
-  searchSessionId?: string;
 }
 
+/**
+ * @deprecated This component is for legacy affiliate flow.
+ * OTA mode uses direct checkout on ZIVO.
+ */
 export default function FlightConsentGate({
   isOpen,
   onClose,
-  checkoutUrl,
+  onProceed,
   flightInfo,
-  searchSessionId,
 }: FlightConsentGateProps) {
   const [hasConsented, setHasConsented] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
-
-  // Build final checkout URL with tracking params
-  const buildFinalUrl = () => {
-    const url = new URL(checkoutUrl);
-    url.searchParams.set('utm_source', FLIGHT_TRACKING_PARAMS.utm_source);
-    url.searchParams.set('utm_medium', FLIGHT_TRACKING_PARAMS.utm_medium);
-    url.searchParams.set('utm_campaign', FLIGHT_TRACKING_PARAMS.utm_campaign);
-    if (searchSessionId) {
-      url.searchParams.set('subid', searchSessionId);
-    }
-    return url.toString();
-  };
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleProceed = () => {
     if (!hasConsented) return;
     
-    setIsRedirecting(true);
+    setIsProcessing(true);
     
-    // Track conversion event
-    trackPartnerCheckoutInitiated({
-      service: 'flights',
-      eventData: {
-        airline: flightInfo?.airline || 'unknown',
-        origin: flightInfo?.origin || '',
-        destination: flightInfo?.destination || '',
-        price: flightInfo?.price || 0,
-        sessionId: searchSessionId || '',
-      }
-    });
-    
-    // Same-tab redirect (mobile safe)
-    const finalUrl = buildFinalUrl();
-    
-    // Small delay to ensure tracking fires
+    // Small delay for UX
     setTimeout(() => {
-      window.location.href = finalUrl;
+      onProceed();
+      setIsProcessing(false);
     }, 300);
   };
 
   const handleClose = () => {
     setHasConsented(false);
-    setIsRedirecting(false);
+    setIsProcessing(false);
     onClose();
   };
 
@@ -99,10 +77,10 @@ export default function FlightConsentGate({
             <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
               <Plane className="w-5 h-5 text-sky-500" />
             </div>
-            Partner Checkout
+            Confirm Booking
           </DialogTitle>
           <DialogDescription className="text-left">
-            You're being redirected to complete your booking with our airline partner.
+            Review and confirm your flight selection before proceeding to checkout.
           </DialogDescription>
         </DialogHeader>
 
@@ -126,22 +104,22 @@ export default function FlightConsentGate({
             </div>
           )}
 
-          {/* Partner Disclosure */}
-          <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+          {/* OTA Notice */}
+          <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/30">
             <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <Info className="w-5 h-5 text-sky-500 shrink-0 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium text-amber-700 dark:text-amber-400 mb-1">
-                  Important Notice
+                <p className="font-medium text-sky-700 dark:text-sky-400 mb-1">
+                  Secure ZIVO Checkout
                 </p>
                 <p className="text-muted-foreground">
-                  {FLIGHT_DISCLAIMERS.ticketing}
+                  Payment is completed securely on ZIVO. Tickets are issued by licensed ticketing partners under airline rules.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Consent Checkbox - REQUIRED */}
+          {/* Consent Checkbox */}
           <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-card">
             <Checkbox
               id="consent"
@@ -154,16 +132,16 @@ export default function FlightConsentGate({
                 htmlFor="consent" 
                 className="text-sm font-medium cursor-pointer leading-tight"
               >
-                {FLIGHT_CONSENT.checkboxLabel}
+                I confirm my booking details are correct
               </Label>
               <p className="text-xs text-muted-foreground">
-                {FLIGHT_CONSENT.description}{" "}
+                By proceeding, you agree to our{" "}
+                <Link to="/terms" className="text-primary hover:underline">
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
                 <Link to="/privacy" className="text-primary hover:underline">
                   Privacy Policy
-                </Link>{" "}
-                ·{" "}
-                <Link to="/partner-disclosure" className="text-primary hover:underline">
-                  Partner Disclosure
                 </Link>
               </p>
             </div>
@@ -172,7 +150,7 @@ export default function FlightConsentGate({
           {/* Security Notice */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Lock className="w-3.5 h-3.5 text-emerald-500" />
-            <span>{FLIGHT_CONSENT.privacy}</span>
+            <span>Your payment is protected with bank-grade encryption</span>
           </div>
         </div>
 
@@ -182,23 +160,23 @@ export default function FlightConsentGate({
           </Button>
           <Button
             onClick={handleProceed}
-            disabled={!hasConsented || isRedirecting}
+            disabled={!hasConsented || isProcessing}
             className={cn(
               "w-full sm:w-auto gap-2",
               "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700",
               "text-white shadow-lg shadow-sky-500/30"
             )}
           >
-            {isRedirecting ? (
+            {isProcessing ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Redirecting...
+                Processing...
               </>
             ) : (
               <>
                 <Lock className="w-4 h-4" />
-                {FLIGHT_CTA_TEXT.primary}
-                <ExternalLink className="w-4 h-4" />
+                Continue to Checkout
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </Button>
