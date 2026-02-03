@@ -62,7 +62,7 @@ export function RampResultsHeader({
         </p>
         {!isLoading && count > 0 && (
           <p className="text-xs text-muted-foreground mt-1">
-            Indicative prices shown — final price confirmed on partner site
+            Final prices shown — tickets issued instantly after payment.
           </p>
         )}
       </div>
@@ -89,7 +89,7 @@ export function RampGlobalDisclaimer({ className }: RampGlobalDisclaimerProps) {
       className
     )}>
       <p className="text-xs text-muted-foreground">
-        Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+        ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
       </p>
     </div>
   );

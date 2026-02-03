@@ -1,10 +1,10 @@
 /**
- * Empty Results State - Indicative Pricing Version
- * NEVER show "0 results" - always show estimated prices
- * Users must always see prices, clearly marked as indicative
+ * Empty Results State - OTA Version for Flights, Affiliate for Hotels/Cars
+ * Flights: Simple "no results" message (ZIVO is MoR, real Duffel prices only)
+ * Hotels/Cars: Indicative pricing with partner CTA
  */
 
-import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, Star, Zap, Clock } from "lucide-react";
+import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ interface EmptyResultsProps {
   onClearFilters?: () => void;
   hasActiveFilters?: boolean;
   className?: string;
-  // NEW: Mock indicative prices to always show
+  // Mock indicative prices (hotels/cars only - NOT for flights)
   indicativePrices?: IndicativePrice[];
   origin?: string;
   destination?: string;
@@ -38,9 +38,9 @@ interface EmptyResultsProps {
 const serviceConfig = {
   flights: {
     icon: Plane,
-    title: "Estimated prices shown",
+    title: "No flights available",
     titleFiltered: "No flights match your filters",
-    message: "We're comparing deals from our licensed travel partners.",
+    message: "No flights found for these dates. Try different dates or nearby airports.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
       "Try nearby airports (e.g., EWR instead of JFK)",
@@ -55,11 +55,8 @@ const serviceConfig = {
     color: "text-sky-500",
     bg: "bg-sky-500",
     bgLight: "bg-sky-500/10",
-    defaultPrices: [
-      { label: "Cheapest", price: 248, badge: "💰 Best Price", badgeColor: "bg-emerald-500" },
-      { label: "Best Value", price: 312, badge: "⭐ Recommended", badgeColor: "bg-amber-500" },
-      { label: "Flexible", price: 389, badge: "✓ Refundable", badgeColor: "bg-sky-500" },
-    ],
+    // NO mock prices for flights - ZIVO is MoR
+    defaultPrices: null,
   },
   hotels: {
     icon: Hotel,
@@ -131,7 +128,10 @@ export function EmptyResults({
   const title = hasActiveFilters ? config.titleFiltered : config.title;
   const defaultMessage = hasActiveFilters ? config.messageFiltered : config.message;
   const suggestions = hasActiveFilters ? config.suggestionsFiltered : config.suggestions;
-  const prices = indicativePrices || config.defaultPrices;
+  
+  // For flights: NO mock prices (OTA mode)
+  // For hotels/cars: Use indicative prices
+  const prices = service === "flights" ? null : (indicativePrices || config.defaultPrices);
 
   // If filters are active, show filter-focused empty state (no mock prices)
   if (hasActiveFilters) {
@@ -182,7 +182,57 @@ export function EmptyResults({
     );
   }
 
-  // DEFAULT: Show indicative prices - NEVER show "0 results"
+  // FLIGHTS: Simple OTA empty state (no mock prices)
+  if (service === "flights") {
+    return (
+      <div className={cn("text-center py-16 px-6 bg-muted/20 rounded-2xl border border-border/50", className)}>
+        <div
+          className={cn(
+            "w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center",
+            config.bgLight
+          )}
+        >
+          <Icon className={cn("w-10 h-10", config.color)} />
+        </div>
+        
+        {origin && destination && (
+          <p className="text-sm text-muted-foreground mb-1">
+            {origin} → {destination}
+          </p>
+        )}
+        
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+          {message || defaultMessage}
+        </p>
+
+        <div className="mb-8">
+          <p className="text-sm text-muted-foreground mb-3">Try the following:</p>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            {suggestions.map((s, i) => (
+              <li key={i}>• {s}</li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          {onRetry && (
+            <Button variant="outline" onClick={onRetry} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Try Again
+            </Button>
+          )}
+        </div>
+
+        {/* OTA disclaimer for flights */}
+        <p className="text-[10px] text-muted-foreground max-w-lg mx-auto leading-relaxed mt-6">
+          ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+        </p>
+      </div>
+    );
+  }
+
+  // HOTELS/CARS: Show indicative prices with partner CTA
   return (
     <div className={cn("space-y-6", className)}>
       {/* Header with route info */}
@@ -208,40 +258,42 @@ export function EmptyResults({
         </p>
       </div>
 
-      {/* Indicative Price Cards - ALWAYS VISIBLE */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
-        {prices.map((item, idx) => (
-          <Card 
-            key={idx}
-            className={cn(
-              "overflow-hidden transition-all hover:shadow-lg cursor-pointer",
-              idx === 1 && "ring-2 ring-amber-500/50 shadow-lg"
-            )}
-            onClick={partnerCta?.onClick}
-          >
-            <CardContent className="p-4 text-center">
-              {item.badge && (
-                <Badge className={cn("text-white text-[10px] mb-3", item.badgeColor)}>
-                  {item.badge}
-                </Badge>
+      {/* Indicative Price Cards - HOTELS/CARS ONLY */}
+      {prices && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          {prices.map((item, idx) => (
+            <Card 
+              key={idx}
+              className={cn(
+                "overflow-hidden transition-all hover:shadow-lg cursor-pointer",
+                idx === 1 && "ring-2 ring-amber-500/50 shadow-lg"
               )}
-              <p className="text-sm text-muted-foreground mb-1">{item.label}</p>
-              <div className="mb-2">
-                <span className="text-[10px] text-amber-500 font-medium">Estimated</span>
-                <p className={cn("text-2xl font-bold", config.color)}>
-                  ${item.price}
+              onClick={partnerCta?.onClick}
+            >
+              <CardContent className="p-4 text-center">
+                {item.badge && (
+                  <Badge className={cn("text-white text-[10px] mb-3", item.badgeColor)}>
+                    {item.badge}
+                  </Badge>
+                )}
+                <p className="text-sm text-muted-foreground mb-1">{item.label}</p>
+                <div className="mb-2">
+                  <span className="text-[10px] text-amber-500 font-medium">Estimated</span>
+                  <p className={cn("text-2xl font-bold", config.color)}>
+                    ${item.price}
+                  </p>
+                  <span className="text-xs text-muted-foreground">
+                    {service === "hotels" ? "per night*" : "per day*"}
+                  </span>
+                </div>
+                <p className="text-[9px] text-muted-foreground leading-tight">
+                  Indicative price. Final price confirmed on partner checkout.
                 </p>
-                <span className="text-xs text-muted-foreground">
-                  {service === "flights" ? "per person*" : service === "hotels" ? "per night*" : "per day*"}
-                </span>
-              </div>
-              <p className="text-[9px] text-muted-foreground leading-tight">
-                Indicative price. Final price confirmed on partner checkout.
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* CTA Section */}
       <div className="text-center space-y-4">
@@ -265,9 +317,9 @@ export function EmptyResults({
           </div>
         )}
 
-        {/* Legal disclaimer */}
+        {/* Legal disclaimer for hotels/cars */}
         <p className="text-[10px] text-muted-foreground max-w-lg mx-auto leading-relaxed">
-          Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+          Payment and booking fulfillment are handled by licensed travel partners.
         </p>
       </div>
     </div>

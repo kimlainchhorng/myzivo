@@ -14,7 +14,7 @@ interface FlightTrustBadgesBarProps {
 const badges = [
   {
     icon: Lock,
-    label: "Secure Partner Checkout",
+    label: "Secure ZIVO Checkout",
     color: "text-emerald-500",
   },
   {
@@ -94,7 +94,7 @@ export default function FlightTrustBadgesBar({ className, variant = 'default' }:
         </div>
         {/* Footer trust note */}
         <p className="text-center text-[10px] text-muted-foreground mt-3">
-          No hidden fees from ZIVO • All bookings completed with licensed airline partners
+          ZIVO sells tickets as a sub-agent of licensed ticketing providers
         </p>
       </div>
     </div>

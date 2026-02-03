@@ -1,6 +1,7 @@
 /**
  * Quick Stats Comparison Bar
  * Shows Cheapest, Fastest, and Best Value options for flight results
+ * OTA Mode: No partner names, direct airline data
  */
 
 import { Plane, Clock, Star, Zap } from "lucide-react";
@@ -10,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export interface QuickStat {
   price: number;
-  partner?: string;
+  airline?: string;
   duration?: string;
 }
 
@@ -39,7 +40,7 @@ export function QuickStatsBar({
       label: "Cheapest",
       icon: Plane,
       price: cheapest.price,
-      partner: cheapest.partner || "Aviasales",
+      airline: cheapest.airline,
       color: "emerald",
       bgClass: "bg-emerald-500/10",
       textClass: "text-emerald-500",
@@ -49,7 +50,7 @@ export function QuickStatsBar({
       label: "Fastest",
       icon: Clock,
       price: fastest.price,
-      partner: fastest.partner || "JetRadar",
+      airline: fastest.airline,
       duration: fastest.duration,
       color: "purple",
       bgClass: "bg-purple-500/10",
@@ -60,7 +61,7 @@ export function QuickStatsBar({
       label: "Best Value",
       icon: Star,
       price: bestValue.price,
-      partner: bestValue.partner || "Kiwi",
+      airline: bestValue.airline,
       color: "amber",
       bgClass: "bg-amber-500/10",
       textClass: "text-amber-500",
@@ -74,7 +75,7 @@ export function QuickStatsBar({
         {/* Header */}
         <div className="px-4 py-3 bg-gradient-to-r from-sky-500/10 to-blue-500/10 border-b border-border/50">
           <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="text-muted-foreground">Compare prices from multiple airlines and trusted partners</span>
+            <span className="text-muted-foreground">Compare prices from multiple airlines</span>
             <Badge className="bg-sky-500/20 text-sky-500 text-[10px] gap-1">
               <Zap className="w-3 h-3" />
               Live Prices
@@ -102,10 +103,12 @@ export function QuickStatsBar({
                 <p className={cn("text-xl font-bold", stat.textClass)}>
                   {formatPrice(stat.price)}
                 </p>
-                <p className="text-[10px] text-muted-foreground">
-                  via {stat.partner}
-                  {stat.duration && <span className="ml-1">• {stat.duration}</span>}
-                </p>
+                {stat.airline && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {stat.airline}
+                    {stat.duration && <span className="ml-1">• {stat.duration}</span>}
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -114,7 +117,7 @@ export function QuickStatsBar({
         {/* Footer */}
         <div className="px-4 py-2.5 bg-muted/30 border-t border-border/50">
           <p className="text-center text-[10px] text-muted-foreground">
-            Prices update in real time. Final booking is completed securely on partner websites.
+            Final prices shown — tickets issued instantly after payment.
           </p>
         </div>
       </CardContent>

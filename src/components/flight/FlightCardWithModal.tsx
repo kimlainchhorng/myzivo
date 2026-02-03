@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import FlightTicketCard from './FlightTicketCard';
 import FlightDetailsModal from './FlightDetailsModal';
 import { getAirlineLogo } from '@/data/airlines';
@@ -18,15 +19,10 @@ export default function FlightCardWithModal({
   index = 0,
 }: FlightCardWithModalProps) {
   const [showDetails, setShowDetails] = useState(false);
+  const navigate = useNavigate();
 
   // Ensure logo is set from CDN if not already provided
   const airlineLogo = flight.logo || (flight.airlineCode ? getAirlineLogo(flight.airlineCode) : undefined);
-
-  // Build affiliate URL for partner redirect
-  const getAffiliateUrl = () => {
-    if (flight.bookingLink) return flight.bookingLink;
-    return `https://www.skyscanner.com/transport/flights/${flight.departure.code}/${flight.arrival.code}/`;
-  };
 
   // Full flight object for modal with real data support
   const modalFlight: GeneratedFlight = {
@@ -35,7 +31,6 @@ export default function FlightCardWithModal({
     aircraft: flight.aircraft || 'Boeing 787-9',
     onTimePerformance: flight.onTimePerformance || 85,
     carbonOffset: flight.carbonOffset || 180,
-    bookingLink: getAffiliateUrl(),
   };
 
   const handleSelectClick = () => {
@@ -53,8 +48,7 @@ export default function FlightCardWithModal({
           isLowest: index === 0,
           isFastest: flight.stops === 0 && parseFloat(flight.duration) < 5.5,
           co2: flight.carbonOffset ? `${flight.carbonOffset}kg` : `${120 + index * 15}kg`,
-          isRealPrice: flight.isRealPrice || !!flight.bookingLink,
-          bookingLink: getAffiliateUrl(),
+          isRealPrice: true, // OTA mode - all prices are real from Duffel
         }}
         onSelect={handleSelectClick}
         isSelected={isSelected}

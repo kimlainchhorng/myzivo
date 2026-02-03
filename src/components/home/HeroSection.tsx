@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, ArrowRight, ExternalLink } from "lucide-react";
+import { Plane, Hotel, CarFront, ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero-homepage.jpg";
 import { useImagePreload } from "@/hooks/useImagePreload";
 
@@ -37,7 +37,7 @@ export default function HeroSection() {
             Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
           </p>
           <p className="text-xs text-muted-foreground/80 mb-6">
-            Indicative prices shown · Final price confirmed before payment
+            Compare real-time prices · Book securely on ZIVO
           </p>
 
           {/* Primary CTA - Flights */}
@@ -78,8 +78,8 @@ export default function HeroSection() {
 
           {/* Helper Text */}
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>Final booking completed on partner site.</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+            <span>Book flights securely on ZIVO.</span>
           </div>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function HeroSection() {
               Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
             </p>
             <p className="text-sm text-muted-foreground/80 mb-8">
-              Indicative prices shown · Final price confirmed before payment
+              Compare real-time prices · Book securely on ZIVO
             </p>
 
             {/* Primary CTA - Flights */}
@@ -137,8 +137,8 @@ export default function HeroSection() {
 
             {/* Helper Text */}
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ExternalLink className="w-4 h-4" />
-              <span>Final booking completed on partner site.</span>
+              <ArrowRight className="w-4 h-4" />
+              <span>Book flights securely on ZIVO.</span>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 /**
- * FlightTicketCard Component
- * LOCKED COMPLIANCE: Uses flightCompliance.ts for all text
+ * FlightTicketCard Component - OTA Version
+ * ZIVO is Merchant of Record - Internal checkout, no partner redirects
+ * Uses flightCompliance.ts for all text
  */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,15 @@ import {
   Shield,
   Sparkles,
   Zap,
-  ChevronRight,
   Crown,
   Check,
-  ExternalLink
+  ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAirlineLogo as getCDNLogo } from "@/data/airlines";
-import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
-import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
+import { FLIGHT_CTA_TEXT } from "@/config/flightCompliance";
 
 interface FlightTicketCardProps {
   flight: {
@@ -82,6 +82,7 @@ const getAirlineLogo = (code: string, size: number = 100) => {
 
 const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProps) => {
   const [logoError, setLogoError] = useState(false);
+  const navigate = useNavigate();
   const isPremiumAirline = flight.category === 'premium' || premiumAirlineNames.includes(flight.airline);
   
   const getAmenityIcon = (amenity: string) => {
@@ -92,6 +93,12 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
       case "lounge": return <Luggage className="w-3.5 h-3.5" />;
       default: return null;
     }
+  };
+
+  // OTA Mode: Navigate internally to flight details
+  const handleBookClick = () => {
+    navigate(`/flights/details/${flight.id}`);
+    onSelect?.();
   };
 
   return (
@@ -297,12 +304,10 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
             <div className="text-right">
               {/* Badges */}
               <div className="flex items-center justify-end gap-1.5 mb-2">
-                {flight.isRealPrice && (
-                  <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
-                    <Check className="w-2.5 h-2.5 mr-1" />
-                    Live Price
-                  </Badge>
-                )}
+                <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
+                  <Check className="w-2.5 h-2.5 mr-1" />
+                  Live Price
+                </Badge>
                 {flight.isLowest && (
                   <Badge className="bg-gradient-to-r from-emerald-500/20 to-green-500/20 text-emerald-500 border-emerald-500/40 text-[10px] px-2 font-semibold shadow-sm">
                     <Sparkles className="w-2.5 h-2.5 mr-1" />
@@ -317,9 +322,9 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                 )}
               </div>
               
-              {/* INDICATIVE PRICE LABEL */}
-              <p className="text-[10px] text-amber-500 font-medium uppercase tracking-wide mb-0.5">
-                {flight.isRealPrice ? "From" : "Estimated"}
+              {/* FINAL PRICE LABEL - OTA Mode */}
+              <p className="text-[10px] text-emerald-500 font-medium uppercase tracking-wide mb-0.5">
+                From
               </p>
               <div className="flex items-baseline gap-1 justify-end">
                 <span className={cn(
@@ -328,11 +333,6 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                 )}>${flight.price}</span>
               </div>
               <p className="text-xs text-muted-foreground">per person • {flight.class}</p>
-              
-              {/* Indicative disclaimer */}
-              <p className="text-[9px] text-muted-foreground mt-1 leading-tight max-w-[130px] ml-auto">
-                Indicative price. Final price confirmed on partner checkout.
-              </p>
               
               {flight.seatsLeft && flight.seatsLeft <= 5 && (
                 <p className="text-xs text-orange-500 font-semibold mt-1 animate-pulse flex items-center justify-end gap-1">
@@ -343,12 +343,7 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
 
             <div className="flex flex-col gap-2 w-full lg:w-auto">
               <Button 
-                onClick={() => {
-                  // Open Searadar affiliate link in new tab
-                  window.open(AFFILIATE_LINKS.flights.url, "_blank", "noopener,noreferrer");
-                  // Also trigger the onSelect for tracking
-                  onSelect?.();
-                }}
+                onClick={handleBookClick}
                 className={cn(
                   "w-full lg:w-auto px-6 py-5 font-bold transition-all duration-300 rounded-xl gap-2",
                   isSelected
@@ -365,14 +360,14 @@ const FlightTicketCard = ({ flight, onSelect, isSelected }: FlightTicketCardProp
                   </>
                 ) : (
                   <>
-                    Continue
-                    <ExternalLink className="w-4 h-4" />
+                    {FLIGHT_CTA_TEXT.viewDeal}
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </Button>
               
               <p className="text-[9px] text-muted-foreground text-center leading-tight max-w-[140px]">
-                Powered by licensed travel partners · Final price confirmed before payment
+                Secure ZIVO checkout
               </p>
             </div>
           </div>
