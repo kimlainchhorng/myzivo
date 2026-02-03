@@ -34,7 +34,8 @@ import { Progress } from "@/components/ui/progress";
 import { 
   Search, Eye, Plane, DollarSign, AlertCircle, Clock, Users, TrendingUp,
   MoreHorizontal, CheckCircle, XCircle, Edit, Ban, RefreshCw, Calendar,
-  ArrowUpRight, ArrowDownRight, Globe, MapPin, Briefcase, Timer, Filter
+  ArrowUpRight, ArrowDownRight, Globe, MapPin, Briefcase, Timer, Filter,
+  Ticket, CreditCard
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,6 +68,14 @@ type FlightBooking = {
   status: string | null;
   created_at: string | null;
   flight_id: string;
+  // MoR fields
+  ticketing_status: string | null;
+  pnr: string | null;
+  ticket_numbers: string[] | null;
+  payment_status: string | null;
+  refund_status: string | null;
+  origin: string | null;
+  destination: string | null;
 };
 
 const AdminFlightManagement = () => {
@@ -143,6 +152,36 @@ const AdminFlightManagement = () => {
     onError: (error) => toast.error("Failed to update: " + error.message),
   });
 
+  // Retry ticketing mutation
+  const retryTicketing = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { error } = await supabase.functions.invoke('issue-flight-ticket', {
+        body: { bookingId },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Ticketing retry initiated');
+      queryClient.invalidateQueries({ queryKey: ['admin-flight-bookings'] });
+    },
+    onError: (error) => toast.error('Ticketing failed: ' + (error as Error).message),
+  });
+
+  // Process refund mutation
+  const processRefund = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { error } = await supabase.functions.invoke('process-flight-refund', {
+        body: { bookingId, action: 'process', reason: 'Admin processed' },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Refund processed successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin-flight-bookings'] });
+    },
+    onError: (error) => toast.error('Refund failed: ' + (error as Error).message),
+  });
+
   const filteredFlights = flights?.filter((flight) => {
     const matchesSearch = 
       flight.flight_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,8 +195,18 @@ const AdminFlightManagement = () => {
   }) || [];
 
   const filteredBookings = bookings?.filter((booking) => {
-    if (statusFilter === "all") return true;
-    return booking.status === statusFilter;
+    const matchesSearch = 
+      booking.booking_reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (booking.pnr && booking.pnr.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (booking.origin && booking.origin.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (booking.destination && booking.destination.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "issued") return matchesSearch && booking.ticketing_status === "issued";
+    if (statusFilter === "pending") return matchesSearch && booking.ticketing_status === "pending";
+    if (statusFilter === "processing") return matchesSearch && booking.ticketing_status === "processing";
+    if (statusFilter === "failed") return matchesSearch && booking.ticketing_status === "failed";
+    return matchesSearch && booking.status === statusFilter;
   }) || [];
 
   const getStatusBadge = (status: string | null) => {
@@ -175,14 +224,33 @@ const AdminFlightManagement = () => {
     }
   };
 
+  const getTicketingBadge = (status: string | null) => {
+    switch (status) {
+      case 'issued':
+        return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20">Issued</Badge>;
+      case 'processing':
+        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">Processing</Badge>;
+      case 'failed':
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Failed</Badge>;
+      case 'pending':
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">Pending</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">Cancelled</Badge>;
+      case 'voided':
+        return <Badge className="bg-gray-500/10 text-gray-500 border-gray-500/20">Voided</Badge>;
+      default:
+        return <Badge variant="outline">{status || '-'}</Badge>;
+    }
+  };
+
   // Stats calculations
   const activeFlights = flights?.filter((f) => f.is_active).length || 0;
   const totalBookings = bookings?.length || 0;
-  const confirmedBookings = bookings?.filter((b) => b.status === "confirmed").length || 0;
-  const totalRevenue = bookings?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
+  const issuedTickets = bookings?.filter((b) => b.ticketing_status === "issued").length || 0;
+  const failedTickets = bookings?.filter((b) => b.ticketing_status === "failed").length || 0;
+  const totalRevenue = bookings?.filter(b => b.ticketing_status === 'issued').reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
   const totalPassengers = bookings?.reduce((sum, b) => sum + b.total_passengers, 0) || 0;
-  const avgBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
-  const conversionRate = totalBookings > 0 ? (confirmedBookings / totalBookings) * 100 : 0;
+  const ticketingSuccessRate = totalBookings > 0 ? (issuedTickets / totalBookings) * 100 : 0;
 
   if (flightsError) {
     return (
@@ -218,7 +286,7 @@ const AdminFlightManagement = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Flight Management</h1>
-              <p className="text-muted-foreground">Manage flights, bookings, and airlines</p>
+              <p className="text-muted-foreground">Manage flights, bookings, ticketing, and airlines</p>
             </div>
           </div>
           <Button 
@@ -240,8 +308,8 @@ const AdminFlightManagement = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Active Flights", value: activeFlights, icon: Plane, color: "text-sky-500", gradient: "from-sky-500/20 to-sky-500/5", change: "+5", trend: "up" },
-          { label: "Total Bookings", value: totalBookings, icon: Briefcase, color: "text-green-500", gradient: "from-green-500/20 to-green-500/5", change: "+12%", trend: "up" },
-          { label: "Passengers", value: totalPassengers, icon: Users, color: "text-violet-500", gradient: "from-violet-500/20 to-violet-500/5", change: "+8%", trend: "up" },
+          { label: "Tickets Issued", value: issuedTickets, icon: Ticket, color: "text-emerald-500", gradient: "from-emerald-500/20 to-emerald-500/5", change: `${ticketingSuccessRate.toFixed(0)}%`, trend: "up" },
+          { label: "Failed Tickets", value: failedTickets, icon: AlertCircle, color: "text-red-500", gradient: "from-red-500/20 to-red-500/5", change: failedTickets > 0 ? "Attention" : "None", trend: failedTickets > 0 ? "down" : "up" },
           { label: "Revenue", value: `$${(totalRevenue / 1000).toFixed(1)}k`, icon: DollarSign, color: "text-amber-500", gradient: "from-amber-500/20 to-amber-500/5", change: "+18%", trend: "up" },
         ].map((stat, i) => (
           <Card 
@@ -271,19 +339,19 @@ const AdminFlightManagement = () => {
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Confirmation Rate</span>
-              <span className="text-sm font-medium">{conversionRate.toFixed(1)}%</span>
+              <span className="text-sm text-muted-foreground">Ticketing Success Rate</span>
+              <span className="text-sm font-medium">{ticketingSuccessRate.toFixed(1)}%</span>
             </div>
-            <Progress value={conversionRate} className="h-2" />
+            <Progress value={ticketingSuccessRate} className="h-2" />
           </CardContent>
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Avg Booking Value</span>
-              <span className="text-sm font-medium">${avgBookingValue.toFixed(0)}</span>
+              <span className="text-sm text-muted-foreground">Total Passengers</span>
+              <span className="text-sm font-medium">{totalPassengers}</span>
             </div>
-            <Progress value={Math.min((avgBookingValue / 500) * 100, 100)} className="h-2" />
+            <Progress value={Math.min((totalPassengers / 100) * 100, 100)} className="h-2" />
           </CardContent>
         </Card>
         <Card className="border-0 bg-card/50 backdrop-blur-xl">
@@ -309,6 +377,10 @@ const AdminFlightManagement = () => {
               <Briefcase className="h-4 w-4" />
               Bookings
             </TabsTrigger>
+            <TabsTrigger value="ticketing" className="gap-2">
+              <Ticket className="h-4 w-4" />
+              Ticketing
+            </TabsTrigger>
             <TabsTrigger value="airlines" className="gap-2">
               <Globe className="h-4 w-4" />
               Airlines
@@ -326,6 +398,13 @@ const AdminFlightManagement = () => {
                   <>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
+                  </>
+                ) : activeTab === "ticketing" || activeTab === "bookings" ? (
+                  <>
+                    <SelectItem value="issued">Issued</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="processing">Processing</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
                   </>
                 ) : (
                   <>
@@ -485,7 +564,7 @@ const AdminFlightManagement = () => {
           <Card className="border-0 bg-card/50 backdrop-blur-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
+                <Briefcase className="h-5 w-5 text-primary" />
                 Recent Bookings
               </CardTitle>
               <CardDescription>Manage flight bookings and reservations</CardDescription>
@@ -496,9 +575,11 @@ const AdminFlightManagement = () => {
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
                       <TableHead>Reference</TableHead>
+                      <TableHead>Route</TableHead>
                       <TableHead>Passengers</TableHead>
                       <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>Ticketing</TableHead>
+                      <TableHead>PNR</TableHead>
                       <TableHead className="hidden md:table-cell">Date</TableHead>
                       <TableHead className="w-16">Actions</TableHead>
                     </TableRow>
@@ -508,16 +589,18 @@ const AdminFlightManagement = () => {
                       [...Array(5)].map((_, i) => (
                         <TableRow key={i}>
                           <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                           <TableCell><Skeleton className="h-4 w-8" /></TableCell>
                           <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                           <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
                           <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-20" /></TableCell>
                           <TableCell><Skeleton className="h-8 w-8" /></TableCell>
                         </TableRow>
                       ))
                     ) : filteredBookings.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12">
+                        <TableCell colSpan={8} className="text-center py-12">
                           <Briefcase className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                           <p className="text-muted-foreground">No bookings found</p>
                         </TableCell>
@@ -531,13 +614,25 @@ const AdminFlightManagement = () => {
                         >
                           <TableCell className="font-mono font-medium">{booking.booking_reference}</TableCell>
                           <TableCell>
+                            {booking.origin && booking.destination ? (
+                              <div className="flex items-center gap-1 text-sm">
+                                <span className="font-medium">{booking.origin}</span>
+                                <Plane className="h-3 w-3 text-muted-foreground rotate-90" />
+                                <span className="font-medium">{booking.destination}</span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
                             <div className="flex items-center gap-1.5">
                               <Users className="h-3.5 w-3.5 text-muted-foreground" />
                               {booking.total_passengers}
                             </div>
                           </TableCell>
                           <TableCell className="font-medium">${Number(booking.total_amount).toFixed(0)}</TableCell>
-                          <TableCell>{getStatusBadge(booking.status)}</TableCell>
+                          <TableCell>{getTicketingBadge(booking.ticketing_status)}</TableCell>
+                          <TableCell className="font-mono text-sm">{booking.pnr || '-'}</TableCell>
                           <TableCell className="hidden md:table-cell text-muted-foreground">
                             {booking.created_at && format(new Date(booking.created_at), "MMM d, yyyy")}
                           </TableCell>
@@ -555,6 +650,25 @@ const AdminFlightManagement = () => {
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
+                                {booking.ticketing_status === 'failed' && (
+                                  <DropdownMenuItem 
+                                    className="text-blue-600"
+                                    onClick={() => retryTicketing.mutate(booking.id)}
+                                  >
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    Retry Ticketing
+                                  </DropdownMenuItem>
+                                )}
+                                {booking.ticketing_status === 'issued' && (
+                                  <DropdownMenuItem 
+                                    className="text-amber-600"
+                                    onClick={() => processRefund.mutate(booking.id)}
+                                  >
+                                    <CreditCard className="h-4 w-4 mr-2" />
+                                    Process Refund
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
                                 {booking.status === "pending" && (
                                   <>
                                     <DropdownMenuItem 
@@ -572,6 +686,152 @@ const AdminFlightManagement = () => {
                                       Cancel
                                     </DropdownMenuItem>
                                   </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Ticketing Tab */}
+        <TabsContent value="ticketing" className="mt-0">
+          <Card className="border-0 bg-card/50 backdrop-blur-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Ticket className="h-5 w-5 text-primary" />
+                Ticketing Status
+              </CardTitle>
+              <CardDescription>Monitor ticket issuance and manage failed tickets</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Quick stats for ticketing */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center gap-2 text-emerald-500 mb-1">
+                    <CheckCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Issued</span>
+                  </div>
+                  <p className="text-2xl font-bold">{issuedTickets}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <div className="flex items-center gap-2 text-amber-500 mb-1">
+                    <Clock className="h-4 w-4" />
+                    <span className="text-sm font-medium">Pending</span>
+                  </div>
+                  <p className="text-2xl font-bold">{bookings?.filter(b => b.ticketing_status === 'pending').length || 0}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <div className="flex items-center gap-2 text-blue-500 mb-1">
+                    <RefreshCw className="h-4 w-4" />
+                    <span className="text-sm font-medium">Processing</span>
+                  </div>
+                  <p className="text-2xl font-bold">{bookings?.filter(b => b.ticketing_status === 'processing').length || 0}</p>
+                </div>
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                  <div className="flex items-center gap-2 text-red-500 mb-1">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Failed</span>
+                  </div>
+                  <p className="text-2xl font-bold">{failedTickets}</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                      <TableHead>Booking Ref</TableHead>
+                      <TableHead>Route</TableHead>
+                      <TableHead>Ticketing Status</TableHead>
+                      <TableHead>PNR</TableHead>
+                      <TableHead>Ticket Numbers</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead className="w-16">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bookingsLoading ? (
+                      [...Array(5)].map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredBookings.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-12">
+                          <Ticket className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                          <p className="text-muted-foreground">No tickets found</p>
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredBookings.map((booking, index) => (
+                        <TableRow
+                          key={booking.id}
+                          className="group hover:bg-muted/30 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-300"
+                          style={{ animationDelay: `${index * 30}ms` }}
+                        >
+                          <TableCell className="font-mono font-medium">{booking.booking_reference}</TableCell>
+                          <TableCell>
+                            {booking.origin && booking.destination ? (
+                              <div className="flex items-center gap-1 text-sm">
+                                <span className="font-medium">{booking.origin}</span>
+                                <Plane className="h-3 w-3 text-muted-foreground rotate-90" />
+                                <span className="font-medium">{booking.destination}</span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{getTicketingBadge(booking.ticketing_status)}</TableCell>
+                          <TableCell className="font-mono text-sm">{booking.pnr || '-'}</TableCell>
+                          <TableCell className="font-mono text-xs">
+                            {booking.ticket_numbers?.length ? booking.ticket_numbers.join(', ') : '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">${Number(booking.total_amount).toFixed(0)}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                {booking.ticketing_status === 'failed' && (
+                                  <DropdownMenuItem 
+                                    className="text-blue-600"
+                                    onClick={() => retryTicketing.mutate(booking.id)}
+                                  >
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    Retry Ticketing
+                                  </DropdownMenuItem>
+                                )}
+                                {booking.ticketing_status === 'issued' && (
+                                  <DropdownMenuItem 
+                                    className="text-amber-600"
+                                    onClick={() => processRefund.mutate(booking.id)}
+                                  >
+                                    <CreditCard className="h-4 w-4 mr-2" />
+                                    Process Refund
+                                  </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>

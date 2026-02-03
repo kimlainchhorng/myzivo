@@ -45,12 +45,14 @@ import {
   ExternalLink,
   Zap,
   Loader2,
-  FileText
+  FileText,
+  CreditCard
 } from "lucide-react";
 import { format, addDays, subDays, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
-import { useFlightBookings, getTicketingStatusInfo, canRequestRefund } from "@/hooks/useFlightBooking";
+import { useFlightBookings, useRequestFlightRefund, getTicketingStatusInfo, canRequestRefund } from "@/hooks/useFlightBooking";
 import FlightTicketCard from "./FlightTicketCard";
+import { useToast } from "@/hooks/use-toast";
 
 interface Trip {
   id: string;
@@ -75,6 +77,7 @@ interface Trip {
   boardingPassAvailable: boolean;
   fareClass: 'economy' | 'premium' | 'business' | 'first';
   isRealPrice?: boolean;
+  rawBooking?: any; // For refund eligibility check
 }
 
 interface MyTripsDashboardProps {
@@ -85,116 +88,104 @@ interface MyTripsDashboardProps {
   onRequestRefund?: (trip: Trip) => void;
 }
 
-const MOCK_TRIPS: Trip[] = [
-  {
-    id: '1',
-    bookingRef: 'ZIVO-ABC123',
-    status: 'upcoming',
-    route: { origin: 'New York', originCode: 'JFK', destination: 'London', destCode: 'LHR' },
-    departureDate: addDays(new Date(), 7),
-    returnDate: addDays(new Date(), 14),
-    airline: 'British Airways',
-    airlineCode: 'BA',
-    flightNumber: 'BA178',
-    passengers: 2,
-    totalAmount: 2840,
-    boardingPassAvailable: true,
-    fareClass: 'business',
-    isRealPrice: true
-  },
-  {
-    id: '2',
-    bookingRef: 'ZIVO-DEF456',
-    status: 'upcoming',
-    route: { origin: 'London', originCode: 'LHR', destination: 'Paris', destCode: 'CDG' },
-    departureDate: addDays(new Date(), 21),
-    airline: 'Air France',
-    airlineCode: 'AF',
-    flightNumber: 'AF1681',
-    passengers: 1,
-    totalAmount: 380,
-    boardingPassAvailable: false,
-    fareClass: 'economy'
-  },
-  {
-    id: '3',
-    bookingRef: 'ZIVO-GHI789',
-    status: 'completed',
-    route: { origin: 'Los Angeles', originCode: 'LAX', destination: 'Tokyo', destCode: 'NRT' },
-    departureDate: subDays(new Date(), 30),
-    returnDate: subDays(new Date(), 20),
-    airline: 'Japan Airlines',
-    airlineCode: 'JL',
-    flightNumber: 'JL61',
-    passengers: 2,
-    totalAmount: 4200,
-    boardingPassAvailable: false,
-    fareClass: 'premium',
-    isRealPrice: true
-  },
-  {
-    id: '4',
-    bookingRef: 'ZIVO-JKL012',
-    status: 'cancelled',
-    route: { origin: 'Chicago', originCode: 'ORD', destination: 'Miami', destCode: 'MIA' },
-    departureDate: subDays(new Date(), 5),
-    airline: 'American Airlines',
-    airlineCode: 'AA',
-    flightNumber: 'AA1234',
-    passengers: 1,
-    totalAmount: 320,
-    boardingPassAvailable: false,
-    fareClass: 'economy'
-  },
-  {
-    id: '5',
-    bookingRef: 'ZIVO-MNO345',
-    status: 'completed',
-    route: { origin: 'San Francisco', originCode: 'SFO', destination: 'Sydney', destCode: 'SYD' },
-    departureDate: subDays(new Date(), 60),
-    returnDate: subDays(new Date(), 45),
-    airline: 'Qantas',
-    airlineCode: 'QF',
-    flightNumber: 'QF74',
-    passengers: 3,
-    totalAmount: 8900,
-    boardingPassAvailable: false,
-    fareClass: 'first',
-    isRealPrice: true
-  },
-  {
-    id: '6',
-    bookingRef: 'ZIVO-PQR678',
-    status: 'upcoming',
-    route: { origin: 'Dubai', originCode: 'DXB', destination: 'Singapore', destCode: 'SIN' },
-    departureDate: addDays(new Date(), 3),
-    airline: 'Emirates',
-    airlineCode: 'EK',
-    flightNumber: 'EK354',
-    passengers: 2,
-    totalAmount: 1560,
-    boardingPassAvailable: true,
-    fareClass: 'business',
-    isRealPrice: true
-  },
-];
+// Map airport codes to city names (basic mapping, would ideally come from API)
+const airportCityMap: Record<string, string> = {
+  'JFK': 'New York',
+  'LAX': 'Los Angeles',
+  'LHR': 'London',
+  'CDG': 'Paris',
+  'NRT': 'Tokyo',
+  'SYD': 'Sydney',
+  'DXB': 'Dubai',
+  'SIN': 'Singapore',
+  'ORD': 'Chicago',
+  'MIA': 'Miami',
+  'SFO': 'San Francisco',
+};
+
+const getAirportCity = (code: string | null): string => {
+  if (!code) return 'Unknown';
+  return airportCityMap[code] || code;
+};
+
+const mapBookingStatus = (booking: any): 'upcoming' | 'completed' | 'cancelled' => {
+  if (booking.status === 'cancelled' || booking.ticketing_status === 'cancelled' || booking.ticketing_status === 'voided') {
+    return 'cancelled';
+  }
+  
+  const departureDate = booking.departure_date ? new Date(booking.departure_date) : null;
+  if (departureDate && departureDate < new Date()) {
+    return 'completed';
+  }
+  
+  return 'upcoming';
+};
+
+const mapCabinClass = (cabin: string | null): 'economy' | 'premium' | 'business' | 'first' => {
+  switch (cabin?.toLowerCase()) {
+    case 'first':
+      return 'first';
+    case 'business':
+      return 'business';
+    case 'premium_economy':
+    case 'premium':
+      return 'premium';
+    default:
+      return 'economy';
+  }
+};
 
 type SortOption = 'date-asc' | 'date-desc' | 'price-asc' | 'price-desc' | 'destination';
 
-export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass }: MyTripsDashboardProps) => {
+export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass, onRequestChange, onRequestRefund }: MyTripsDashboardProps) => {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>('date-asc');
   const [dateFilter, setDateFilter] = useState<'all' | 'this-month' | 'next-month'>('all');
 
+  const { toast } = useToast();
+  const { data: bookings, isLoading, error, refetch } = useFlightBookings();
+  const requestRefund = useRequestFlightRefund();
+
+  // Map database bookings to Trip interface
+  const trips: Trip[] = useMemo(() => {
+    if (!bookings) return [];
+    return bookings.map((booking: any) => ({
+      id: booking.id,
+      bookingRef: booking.booking_reference || `ZIVO-${booking.id.slice(0, 6).toUpperCase()}`,
+      status: mapBookingStatus(booking),
+      ticketingStatus: booking.ticketing_status,
+      pnr: booking.pnr,
+      ticketNumbers: booking.ticket_numbers as string[] | undefined,
+      route: {
+        origin: getAirportCity(booking.origin),
+        originCode: booking.origin || '',
+        destination: getAirportCity(booking.destination),
+        destCode: booking.destination || '',
+      },
+      departureDate: new Date(booking.departure_date || booking.created_at),
+      returnDate: booking.return_date ? new Date(booking.return_date) : undefined,
+      airline: 'Multiple Airlines', // Would need to store in DB or fetch from Duffel
+      airlineCode: 'ML',
+      flightNumber: booking.flight_id?.slice(0, 8) || '',
+      passengers: booking.total_passengers || 1,
+      totalAmount: Number(booking.total_amount) || 0,
+      boardingPassAvailable: booking.ticketing_status === 'issued',
+      fareClass: mapCabinClass(booking.cabin_class),
+      isRealPrice: true,
+      rawBooking: booking,
+    }));
+  }, [bookings]);
+
   const filteredTrips = useMemo(() => {
-    let trips = MOCK_TRIPS.filter(trip => {
+    let filtered = trips.filter(trip => {
       const matchesTab = activeTab === 'all' || trip.status === activeTab;
       const matchesSearch = searchQuery === '' || 
         trip.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
         trip.route.destination.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        trip.airline.toLowerCase().includes(searchQuery.toLowerCase());
+        trip.airline.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (trip.pnr && trip.pnr.toLowerCase().includes(searchQuery.toLowerCase()));
       
       // Date filter
       let matchesDate = true;
@@ -216,7 +207,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
     });
 
     // Sort
-    trips.sort((a, b) => {
+    filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date-asc':
           return a.departureDate.getTime() - b.departureDate.getTime();
@@ -233,15 +224,28 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
       }
     });
 
-    return trips;
-  }, [activeTab, searchQuery, sortBy, dateFilter]);
+    return filtered;
+  }, [trips, activeTab, searchQuery, sortBy, dateFilter]);
 
-  const upcomingCount = MOCK_TRIPS.filter(t => t.status === 'upcoming').length;
-  const completedCount = MOCK_TRIPS.filter(t => t.status === 'completed').length;
-  const cancelledCount = MOCK_TRIPS.filter(t => t.status === 'cancelled').length;
+  const upcomingCount = trips.filter(t => t.status === 'upcoming').length;
+  const completedCount = trips.filter(t => t.status === 'completed').length;
+  const cancelledCount = trips.filter(t => t.status === 'cancelled').length;
 
-  const totalSpent = MOCK_TRIPS.filter(t => t.status === 'completed').reduce((sum, t) => sum + t.totalAmount, 0);
-  const totalTrips = MOCK_TRIPS.filter(t => t.status === 'completed').length;
+  const totalSpent = trips.filter(t => t.status === 'completed').reduce((sum, t) => sum + t.totalAmount, 0);
+  const totalTrips = trips.filter(t => t.status === 'completed').length;
+
+  const handleRequestRefund = async (trip: Trip) => {
+    if (!trip.rawBooking) return;
+    
+    try {
+      await requestRefund.mutateAsync({
+        bookingId: trip.id,
+        reason: 'Customer requested refund',
+      });
+    } catch (error) {
+      // Error toast is handled by the hook
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -261,6 +265,24 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
     }
   };
 
+  const getTicketingBadge = (status?: string) => {
+    if (!status) return null;
+    const info = getTicketingStatusInfo(status);
+    const colorMap: Record<string, string> = {
+      green: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40',
+      blue: 'bg-sky-500/20 text-sky-400 border-sky-500/40',
+      yellow: 'bg-amber-500/20 text-amber-400 border-amber-500/40',
+      red: 'bg-red-500/20 text-red-400 border-red-500/40',
+      gray: 'bg-muted text-muted-foreground',
+    };
+    return (
+      <Badge className={colorMap[info.color] || colorMap.gray} title={info.description}>
+        <Ticket className="w-3 h-3 mr-1" />
+        {info.label}
+      </Badge>
+    );
+  };
+
   const getFareClassColor = (fareClass: string) => {
     switch (fareClass) {
       case 'first': return 'bg-amber-500/20 text-amber-400 border-amber-500/40';
@@ -272,7 +294,61 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
 
   const handleCopyBookingRef = (ref: string) => {
     navigator.clipboard.writeText(ref);
+    toast({ title: 'Copied!', description: 'Booking reference copied to clipboard' });
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
+        <CardContent className="p-12 text-center">
+          <Loader2 className="w-12 h-12 mx-auto text-primary animate-spin mb-4" />
+          <h3 className="font-semibold mb-2">Loading your trips...</h3>
+          <p className="text-sm text-muted-foreground">Please wait while we fetch your bookings</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
+        <CardContent className="p-12 text-center">
+          <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
+          <h3 className="font-semibold mb-2">Failed to load trips</h3>
+          <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>
+          <Button onClick={() => refetch()} variant="outline" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Empty state (no bookings at all)
+  if (trips.length === 0) {
+    return (
+      <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
+        <CardContent className="p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-500/20 to-blue-500/10 flex items-center justify-center mx-auto mb-4">
+            <Plane className="w-8 h-8 text-sky-500" />
+          </div>
+          <h3 className="font-semibold text-lg mb-2">No trips yet</h3>
+          <p className="text-sm text-muted-foreground mb-6">
+            Start planning your next adventure! Search for flights and book directly on ZIVO.
+          </p>
+          <Button className="gap-2" asChild>
+            <a href="/flights">
+              <Search className="w-4 h-4" />
+              Search Flights
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
@@ -295,7 +371,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
             <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Search trips..."
+                placeholder="Search trips, PNR..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -382,7 +458,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                 <Plane className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
                 <h3 className="font-semibold mb-2">No trips found</h3>
                 <p className="text-sm text-muted-foreground">
-                  {searchQuery ? "Try a different search term" : "Start planning your next adventure!"}
+                  {searchQuery ? "Try a different search term" : "No trips in this category"}
                 </p>
               </div>
             ) : (
@@ -416,7 +492,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                             <div className="w-8 sm:w-16 h-px bg-gradient-to-r from-violet-500 to-sky-500" />
                             <div className="w-2 h-2 rounded-full bg-violet-500" />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">{trip.flightNumber}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{trip.flightNumber || 'Direct'}</p>
                         </div>
                         <div className="text-center">
                           <p className="text-xl sm:text-2xl font-bold">{trip.route.destCode}</p>
@@ -437,11 +513,13 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={getStatusColor(trip.status)}>
                             {getStatusIcon(trip.status)}
                             <span className="ml-1 capitalize hidden sm:inline">{trip.status}</span>
                           </Badge>
+                          
+                          {trip.ticketingStatus && getTicketingBadge(trip.ticketingStatus)}
                           
                           <Badge variant="outline" className={getFareClassColor(trip.fareClass)}>
                             {trip.fareClass.charAt(0).toUpperCase() + trip.fareClass.slice(1)}
@@ -495,6 +573,29 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                                     </button>
                                   </div>
                                 </div>
+                                {trip.pnr && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">PNR</p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-mono font-semibold">{trip.pnr}</p>
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCopyBookingRef(trip.pnr!);
+                                        }}
+                                        className="text-muted-foreground hover:text-foreground"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                                {trip.ticketNumbers && trip.ticketNumbers.length > 0 && (
+                                  <div>
+                                    <p className="text-xs text-muted-foreground">Ticket Numbers</p>
+                                    <p className="font-mono text-sm">{trip.ticketNumbers.join(', ')}</p>
+                                  </div>
+                                )}
                                 <div>
                                   <p className="text-xs text-muted-foreground">Airline</p>
                                   <p className="font-medium">{trip.airline}</p>
@@ -539,6 +640,13 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyBookingRef(trip.bookingRef);
+                                    }}>
+                                      <Copy className="w-4 h-4 mr-2" />
+                                      Copy Booking Ref
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem>
                                       <Share2 className="w-4 h-4 mr-2" />
                                       Share Trip
@@ -547,16 +655,34 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                                       <RefreshCw className="w-4 h-4 mr-2" />
                                       Rebook Similar
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                      <ExternalLink className="w-4 h-4 mr-2" />
-                                      Airline Website
-                                    </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     {trip.status === 'upcoming' && (
-                                      <DropdownMenuItem className="text-red-500">
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Cancel Booking
-                                      </DropdownMenuItem>
+                                      <>
+                                        <DropdownMenuItem onClick={(e) => {
+                                          e.stopPropagation();
+                                          onRequestChange?.(trip);
+                                        }}>
+                                          <Calendar className="w-4 h-4 mr-2" />
+                                          Request Change
+                                        </DropdownMenuItem>
+                                        {trip.rawBooking && canRequestRefund(trip.rawBooking) && (
+                                          <DropdownMenuItem 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleRequestRefund(trip);
+                                            }}
+                                            className="text-amber-600"
+                                          >
+                                            <CreditCard className="w-4 h-4 mr-2" />
+                                            Request Refund
+                                          </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className="text-red-500">
+                                          <Trash2 className="w-4 h-4 mr-2" />
+                                          Cancel Booking
+                                        </DropdownMenuItem>
+                                      </>
                                     )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>

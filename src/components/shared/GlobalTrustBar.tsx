@@ -1,16 +1,16 @@
 /**
  * Global Trust Bar
  * Compact trust indicators for key pages (Home, Flights, Hotels, Cars, Extras)
- * Premium, non-intrusive design with compliance disclaimer
+ * Premium, non-intrusive design with MoR compliance disclaimer
  */
 
-import { ShieldCheck, Zap, BadgeCheck, Smartphone, Info } from "lucide-react";
+import { ShieldCheck, Zap, BadgeCheck, Smartphone, Info, Ticket } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const trustItems = [
   { 
     icon: ShieldCheck, 
-    label: "Secure partner checkout",
+    label: "Secure ZIVO checkout",
     color: "text-emerald-500"
   },
   { 
@@ -19,13 +19,13 @@ const trustItems = [
     color: "text-sky-500"
   },
   { 
-    icon: BadgeCheck, 
-    label: "No hidden fees from ZIVO",
+    icon: Ticket, 
+    label: "Instant e-tickets",
     color: "text-violet-500"
   },
   { 
-    icon: Smartphone, 
-    label: "Mobile-friendly booking",
+    icon: BadgeCheck, 
+    label: "Licensed seller of travel",
     color: "text-amber-500"
   },
 ];
@@ -34,13 +34,28 @@ interface GlobalTrustBarProps {
   className?: string;
   variant?: "default" | "compact";
   showDisclaimer?: boolean;
+  service?: "flights" | "hotels" | "cars" | "all";
 }
 
 export default function GlobalTrustBar({ 
   className,
   variant = "default",
-  showDisclaimer = true
+  showDisclaimer = true,
+  service = "all"
 }: GlobalTrustBarProps) {
+  // Get appropriate disclaimer based on service
+  const getDisclaimer = () => {
+    switch (service) {
+      case "flights":
+        return "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under airline rules.";
+      case "hotels":
+      case "cars":
+        return "Bookings are processed securely through ZIVO. Subject to provider terms and conditions.";
+      default:
+        return "ZIVO is a licensed seller of travel. Flight tickets are issued by authorized airline partners.";
+    }
+  };
+
   return (
     <section 
       className={cn(
@@ -82,12 +97,12 @@ export default function GlobalTrustBar({
           })}
         </div>
 
-        {/* Compliance Disclaimer */}
+        {/* MoR Compliance Disclaimer */}
         {showDisclaimer && (
           <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-border/30">
             <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <p className="text-[11px] text-muted-foreground text-center">
-              Hizivo does not issue airline tickets. Flight bookings are completed with licensed airline partners.
+              {getDisclaimer()}
             </p>
           </div>
         )}
