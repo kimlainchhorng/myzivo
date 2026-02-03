@@ -1,10 +1,15 @@
 
-
-# Duffel OTA Search Reliability + Admin Debug Tools
+# ZIVO Flights LIVE Operation Readiness
 
 ## Summary
 
-This plan improves Duffel OTA search reliability by enhancing airport validation, adding sandbox-specific helper suggestions, implementing server-side logging for search diagnostics, and creating an admin debug panel for flight searches.
+This plan prepares ZIVO Flights for Duffel LIVE access and Seller of Travel compliance by:
+1. Creating a dedicated Seller of Travel legal page
+2. Enhancing checkout compliance with fare rules consent
+3. Adding environment-aware guards (sandbox vs. live)
+4. Strengthening passenger data validation for live booking
+5. Implementing Stripe + Duffel failure safety with auto-refund
+6. Creating an Admin Flights Status/Readiness panel
 
 ---
 
@@ -12,504 +17,247 @@ This plan improves Duffel OTA search reliability by enhancing airport validation
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Airport Autocomplete | Partial | Uses `LocationAutocomplete` with local `airports.ts` dataset. Validation exists but allows free-text fallback. |
-| Duffel Integration | Working | Edge function `duffel-flights` with proper API calls. Hook `useDuffelFlights` handles requests. |
-| No Results Handling | Basic | Shows generic "No flights available" message via `EmptyResults` component. No sandbox-specific guidance. |
-| Search Logging | None | No database logging of Duffel requests/responses for debugging. |
-| Admin Debug | Partial | `TravelLogsPage` exists for partner redirects, but no Duffel-specific debug panel. |
-| Flexible Dates | None | No date flexibility toggle in search form. |
+| Seller of Travel disclosure | Partial | Footer has SOT text, but no dedicated legal page |
+| Checkout consent | Basic | Terms checkbox exists, but doesn't mention "fare rules" explicitly |
+| Environment switching | Implemented | `DUFFEL_ENV` in edge function, `duffelConfig.ts` on frontend |
+| Passenger validation | Basic | Required fields checked, but no strict format validation |
+| Failure safety | Implemented | Auto-refund exists in `issue-flight-ticket/index.ts` |
+| Admin status panel | Missing | FlightDebugPage exists but no "readiness" overview |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Strengthen Airport Validation
+### Phase 1: Seller of Travel Legal Page
 
-**Goal:** Ensure only valid IATA codes from autocomplete can be used for search.
+**Goal:** Create `/legal/seller-of-travel` page with required disclosures.
 
-#### 1.1 Update FlightSearchFormPro Validation
+**File:** `src/pages/legal/SellerOfTravel.tsx` (NEW)
 
-**File:** `src/components/search/FlightSearchFormPro.tsx`
+Content sections:
+- ZIVO business name and registered address
+- Customer support contact (email)
+- Registration status (California pending, Florida pending)
+- Sub-agent disclosure statement
+- Ticketing partner explanation
+- Link to Flight Terms for detailed policies
 
-Modify the `validate()` function to strictly require a valid `LocationOption` selection:
+This page will be professionally formatted with cards for each section and clear legal language.
 
+**Also update:**
+- `src/components/Footer.tsx` - Add "Seller of Travel" link in Legal section
+- `src/pages/FlightCheckout.tsx` - Link to SOT page in footer trust badges
+- `src/App.tsx` - Add route for `/legal/seller-of-travel`
+
+---
+
+### Phase 2: Checkout Compliance Enhancement
+
+**Goal:** Strengthen the checkout consent to explicitly mention airline fare rules.
+
+**File:** `src/pages/FlightCheckout.tsx`
+
+Current checkbox text:
+> "I agree to the Terms and Conditions and Airline Rules."
+
+Enhanced checkbox:
+> "I agree to the airline's fare rules and ZIVO's Terms & Conditions" with links to:
+> - `/terms` (ZIVO Terms)
+> - `/legal/flight-terms` (Flight Terms with fare rules)
+> - Fare rules section of booking (if available from Duffel)
+
+**Additional changes:**
+- Show explicit fare conditions (refundable/non-refundable badge)
+- Display tax breakdown more prominently
+- Ensure button is disabled when checkbox unchecked (already implemented)
+
+**File:** `src/config/flightMoRCompliance.ts`
+
+Update consent text constant:
 ```typescript
-const validate = (): boolean => {
-  const newErrors: Record<string, string> = {};
+termsCheckbox: "I agree to the airline's fare rules and ZIVO's Terms & Conditions"
+```
 
-  // STRICT: Must have selected airport from autocomplete
-  if (!fromOption) {
-    newErrors.from = "Please choose an airport from the list.";
+---
+
+### Phase 3: Environment Guard System
+
+**Goal:** Conditionally show/hide features based on `DUFFEL_ENV` (sandbox vs. live).
+
+**File:** `src/config/duffelConfig.ts` (MODIFY)
+
+Add functions:
+```typescript
+export function isLiveMode(): boolean {
+  const stored = sessionStorage.getItem('duffel_env');
+  return stored === 'live';
+}
+
+export function shouldShowDebugUI(): boolean {
+  // Only show debug UI in sandbox mode
+  return isSandboxMode();
+}
+
+export function shouldEnforceStrictValidation(): boolean {
+  // Enforce strict validation in live mode
+  return isLiveMode();
+}
+```
+
+**UI Changes:**
+
+1. **Test Mode Badge** (Admin-only visibility)
+   - Show small "Test Mode" badge in header for admins when `isSandboxMode()` is true
+   - File: `src/components/Header.tsx` - Add conditional badge
+
+2. **Sandbox Helpers**
+   - `SandboxTestHelper.tsx` already checks `isSandboxMode()` - no change needed
+   - `NoFlightsFound.tsx` already shows sandbox routes only in test mode
+
+3. **Debug UI**
+   - FlightDebugPage already shows "Sandbox Mode" badge
+   - Add guard to hide certain debug features in live mode
+
+---
+
+### Phase 4: Passenger Data Validation (Live Safe)
+
+**Goal:** Strict validation before allowing checkout to proceed.
+
+**File:** `src/pages/FlightTravelerInfo.tsx` (MODIFY)
+
+Enhanced validation rules:
+```typescript
+const validatePassenger = (p: PassengerForm, index: number): string | null => {
+  // Full legal name validation
+  if (!p.given_name.trim() || p.given_name.length < 2) {
+    return `Passenger ${index + 1}: First name must be at least 2 characters`;
   }
-
-  if (!toOption) {
-    newErrors.to = "Please choose an airport from the list.";
+  if (!p.family_name.trim() || p.family_name.length < 2) {
+    return `Passenger ${index + 1}: Last name must be at least 2 characters`;
   }
-
-  // Same origin/destination check
-  if (fromOption && toOption && fromOption.value === toOption.value) {
-    newErrors.to = "Destination must differ from origin";
+  // Only letters and hyphens allowed in names
+  if (!/^[a-zA-Z\s\-']+$/.test(p.given_name)) {
+    return `Passenger ${index + 1}: First name can only contain letters`;
   }
-
-  // Date validation...
+  if (!/^[a-zA-Z\s\-']+$/.test(p.family_name)) {
+    return `Passenger ${index + 1}: Last name can only contain letters`;
+  }
+  
+  // Date of birth validation
+  if (!p.born_on) {
+    return `Passenger ${index + 1}: Date of birth is required`;
+  }
+  const dob = new Date(p.born_on);
+  const now = new Date();
+  if (dob >= now) {
+    return `Passenger ${index + 1}: Invalid date of birth`;
+  }
+  
+  // Gender validation (required for airlines)
+  if (!p.gender || !['m', 'f'].includes(p.gender)) {
+    return `Passenger ${index + 1}: Gender is required`;
+  }
+  
+  // Email validation (stricter)
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(p.email)) {
+    return `Passenger ${index + 1}: Please enter a valid email address`;
+  }
+  
+  return null; // No errors
 };
 ```
 
-Remove the fallback regex matching `fromDisplay.match(/\([A-Z]{3}\)/)` that currently allows free-text entries.
+**File:** `supabase/functions/create-flight-checkout/index.ts` (MODIFY)
 
-#### 1.2 Update isFormValid Check
-
-Ensure the search button is only enabled when proper `LocationOption` objects are selected:
-
+Add server-side validation before creating Stripe session:
 ```typescript
-const isFormValid = useMemo(() => {
-  const hasFrom = !!fromOption; // Strict - must have selected option
-  const hasTo = !!toOption;     // Strict - must have selected option
-  const hasDepart = !!departDate;
-  const hasReturn = tripType === "oneway" || !!returnDate;
-  return hasFrom && hasTo && hasDepart && hasReturn;
-}, [fromOption, toOption, departDate, returnDate, tripType]);
-```
-
----
-
-### Phase 2: Sandbox Test Mode Suggestions
-
-**Goal:** When `DUFFEL_ENV = sandbox` and results = 0, show helpful test route suggestions.
-
-#### 2.1 Create Environment Config Helper
-
-**File:** `src/config/duffelConfig.ts` (NEW)
-
-```typescript
-/**
- * Duffel Environment Configuration
- * Provides helper routes for sandbox testing
- */
-
-// This is set at build time or from edge function response
-export const DUFFEL_SANDBOX_ROUTES = [
-  { from: 'LHR', to: 'CDG', label: 'London → Paris' },
-  { from: 'SFO', to: 'LAX', label: 'San Francisco → Los Angeles' },
-  { from: 'JFK', to: 'BOS', label: 'New York → Boston' },
-  { from: 'LAX', to: 'SFO', label: 'Los Angeles → San Francisco' },
-  { from: 'LHR', to: 'JFK', label: 'London → New York' },
-  { from: 'CDG', to: 'AMS', label: 'Paris → Amsterdam' },
-];
-
-export function isSandboxMode(): boolean {
-  // Check if we're in sandbox (this would be returned from edge function)
-  return import.meta.env.MODE === 'development' || 
-         sessionStorage.getItem('duffel_env') === 'sandbox';
-}
-```
-
-#### 2.2 Create Sandbox Helper Component
-
-**File:** `src/components/flight/SandboxTestHelper.tsx` (NEW)
-
-```typescript
-/**
- * SandboxTestHelper Component
- * Shows helpful test route suggestions when in Duffel sandbox mode
- * Only displays when no results and sandbox environment detected
- */
-
-import { AlertCircle, ArrowRight, RefreshCw } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DUFFEL_SANDBOX_ROUTES } from "@/config/duffelConfig";
-import { useNavigate } from "react-router-dom";
-import { format, addDays } from "date-fns";
-
-interface SandboxTestHelperProps {
-  onTryRoute: (origin: string, destination: string) => void;
-  className?: string;
-}
-
-export default function SandboxTestHelper({ onTryRoute, className }: SandboxTestHelperProps) {
-  const navigate = useNavigate();
-
-  const handleQuickSearch = (from: string, to: string) => {
-    const departDate = format(addDays(new Date(), 7), 'yyyy-MM-dd');
-    const returnDate = format(addDays(new Date(), 14), 'yyyy-MM-dd');
-    
-    const params = new URLSearchParams({
-      origin: from,
-      dest: to,
-      depart: departDate,
-      return: returnDate,
-      passengers: '1',
-      cabin: 'economy',
-    });
-    
-    navigate(`/flights/results?${params.toString()}`);
-  };
-
-  return (
-    <Alert className={className}>
-      <AlertCircle className="h-4 w-4" />
-      <AlertTitle>Duffel Sandbox Mode</AlertTitle>
-      <AlertDescription className="space-y-4">
-        <p>
-          The Duffel sandbox has limited test inventory. Try these routes for reliable results:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {DUFFEL_SANDBOX_ROUTES.slice(0, 4).map((route) => (
-            <Button
-              key={`${route.from}-${route.to}`}
-              variant="outline"
-              size="sm"
-              onClick={() => handleQuickSearch(route.from, route.to)}
-              className="gap-2"
-            >
-              {route.from} <ArrowRight className="w-3 h-3" /> {route.to}
-            </Button>
-          ))}
-        </div>
-        <Badge variant="secondary" className="text-xs">
-          Sandbox data may not reflect real availability
-        </Badge>
-      </AlertDescription>
-    </Alert>
-  );
-}
-```
-
-#### 2.3 Update NoFlightsFound Component
-
-**File:** `src/components/flight/NoFlightsFound.tsx`
-
-Add sandbox helper banner when in test mode:
-
-```typescript
-import SandboxTestHelper from "./SandboxTestHelper";
-import { isSandboxMode } from "@/config/duffelConfig";
-
-export default function NoFlightsFound({ ... }) {
-  const navigate = useNavigate();
-  const showSandboxHelper = isSandboxMode();
-
-  return (
-    <Card className="p-8 sm:p-12 text-center">
-      {/* Existing icon and message */}
-      
-      {/* Sandbox Helper Banner - Only in test mode */}
-      {showSandboxHelper && (
-        <SandboxTestHelper 
-          onTryRoute={(from, to) => {
-            // Navigate with test route
-          }}
-          className="mb-6 text-left"
-        />
-      )}
-
-      {/* Rest of existing component */}
-    </Card>
-  );
-}
-```
-
-#### 2.4 Update Duffel Edge Function to Return Environment
-
-**File:** `supabase/functions/duffel-flights/index.ts`
-
-Add environment indicator to response:
-
-```typescript
-// At the end of createOfferRequest function
-return {
-  offer_request_id: offerRequest.id,
-  offers: transformOffers(offerRequest.offers || []),
-  created_at: offerRequest.created_at,
-  environment: Deno.env.get('DUFFEL_ENV') || 'test', // Add this
-};
-```
-
----
-
-### Phase 3: Server-Side Search Logging
-
-**Goal:** Log every Duffel search request and response for debugging.
-
-#### 3.1 Create Database Table
-
-**SQL Migration:**
-
-```sql
-CREATE TABLE flight_search_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id TEXT,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  
-  -- Search parameters
-  origin_iata TEXT NOT NULL,
-  destination_iata TEXT NOT NULL,
-  departure_date DATE NOT NULL,
-  return_date DATE,
-  passengers INTEGER NOT NULL DEFAULT 1,
-  cabin_class TEXT NOT NULL DEFAULT 'economy',
-  
-  -- Duffel response
-  duffel_request_id TEXT,
-  duffel_status_code INTEGER,
-  duffel_error TEXT,
-  offers_count INTEGER DEFAULT 0,
-  
-  -- Timing
-  response_time_ms INTEGER,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  
-  -- Environment
-  environment TEXT DEFAULT 'sandbox'
-);
-
--- Index for admin queries
-CREATE INDEX idx_flight_search_logs_created ON flight_search_logs(created_at DESC);
-CREATE INDEX idx_flight_search_logs_route ON flight_search_logs(origin_iata, destination_iata);
-CREATE INDEX idx_flight_search_logs_errors ON flight_search_logs(duffel_error) WHERE duffel_error IS NOT NULL;
-
--- RLS: Admin-only access
-ALTER TABLE flight_search_logs ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admin full access to flight logs"
-ON flight_search_logs
-FOR ALL
-TO authenticated
-USING (
-  EXISTS (
-    SELECT 1 FROM user_roles 
-    WHERE user_id = auth.uid() 
-    AND role = 'admin'
-  )
-);
-```
-
-#### 3.2 Update Duffel Edge Function with Logging
-
-**File:** `supabase/functions/duffel-flights/index.ts`
-
-Add logging after each search:
-
-```typescript
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-// Add at start of function
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-// In createOfferRequest, after Duffel call
-async function logSearch(params: {
-  origin: string;
-  destination: string;
-  departureDate: string;
-  returnDate?: string;
-  passengers: number;
-  cabinClass: string;
-  requestId?: string;
-  statusCode: number;
-  error?: string;
-  offersCount: number;
-  responseTimeMs: number;
-}) {
-  try {
-    await supabase.from('flight_search_logs').insert({
-      origin_iata: params.origin,
-      destination_iata: params.destination,
-      departure_date: params.departureDate,
-      return_date: params.returnDate,
-      passengers: params.passengers,
-      cabin_class: params.cabinClass,
-      duffel_request_id: params.requestId,
-      duffel_status_code: params.statusCode,
-      duffel_error: params.error,
-      offers_count: params.offersCount,
-      response_time_ms: params.responseTimeMs,
-      environment: Deno.env.get('DUFFEL_ENV') || 'sandbox',
-    });
-  } catch (err) {
-    console.error('[Logging] Failed to log search:', err);
+// Validate passenger data
+for (const p of passengers) {
+  if (!p.given_name || !p.family_name || !p.born_on || !p.email) {
+    throw new Error('Missing required passenger information');
+  }
+  if (!p.gender || !['m', 'f'].includes(p.gender)) {
+    throw new Error('Invalid passenger gender');
   }
 }
 ```
 
 ---
 
-### Phase 4: Admin Flight Debug Panel
+### Phase 5: Stripe + Duffel Failure Safety
 
-**Goal:** Create `/admin/flights/debug` page for diagnosing search issues.
+**Current implementation review:**
 
-#### 4.1 Create Admin Debug Hook
-
-**File:** `src/hooks/useFlightSearchLogs.ts` (NEW)
-
+The `issue-flight-ticket/index.ts` already has auto-refund logic:
 ```typescript
-/**
- * Hook for fetching flight search logs (admin only)
- */
-
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
-export interface FlightSearchLog {
-  id: string;
-  origin_iata: string;
-  destination_iata: string;
-  departure_date: string;
-  return_date: string | null;
-  passengers: number;
-  cabin_class: string;
-  duffel_request_id: string | null;
-  duffel_status_code: number | null;
-  duffel_error: string | null;
-  offers_count: number;
-  response_time_ms: number | null;
-  environment: string;
-  created_at: string;
-}
-
-export function useFlightSearchLogs(limit = 50) {
-  return useQuery({
-    queryKey: ['flight-search-logs', limit],
-    queryFn: async (): Promise<FlightSearchLog[]> => {
-      const { data, error } = await supabase
-        .from('flight_search_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data as FlightSearchLog[];
-    },
-    staleTime: 30 * 1000, // 30 seconds
-  });
-}
-
-export function useFlightSearchStats() {
-  return useQuery({
-    queryKey: ['flight-search-stats'],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_flight_search_stats');
-      if (error) throw error;
-      return data;
-    },
-    staleTime: 60 * 1000,
-  });
-}
+// Auto-refund on ticketing failure
+console.log("[IssueTicket] Triggering auto-refund for booking:", bookingId);
+await fetch(`${supabaseUrl}/functions/v1/process-flight-refund`, {
+  method: 'POST',
+  body: JSON.stringify({
+    bookingId,
+    reason: `Ticketing failed: ${error.message}`,
+    action: 'auto',
+  }),
+});
 ```
 
-#### 4.2 Create Admin Debug Page
+**Enhancements needed:**
 
-**File:** `src/pages/admin/FlightDebugPage.tsx` (NEW)
+1. **Admin notification on failure**
+   - File: `supabase/functions/issue-flight-ticket/index.ts`
+   - Add entry to a `flight_admin_alerts` table when ticketing fails
+   - Fields: booking_id, alert_type, message, created_at, resolved
 
-Key features:
-- Table showing last 50 searches (origin, dest, dates, passengers, cabin, timestamp)
-- Status column: success/failed with offer count
-- Error column: Duffel error message if any
-- "Replay Search" button (sandbox only) - opens a new search with same params
-- Filter by: error status, route, date range
-- Stats summary: total searches, success rate, avg response time
+2. **Update booking status more clearly**
+   - Set `payment_status = 'refunded'` and `ticketing_status = 'failed'` atomically
+   - Already done in `process-flight-refund/index.ts`
 
-#### 4.3 Add Route
-
-**File:** `src/App.tsx`
-
-Add route for admin debug page:
-
-```typescript
-{
-  path: "/admin/flights/debug",
-  element: <FlightDebugPage />,
-}
-```
+3. **Database table for alerts**
+   - Create `flight_admin_alerts` table for dashboard visibility
 
 ---
 
-### Phase 5: Flexible Dates Toggle
+### Phase 6: Admin Flights Readiness Panel
 
-**Goal:** Add simple date flexibility suggestion for users.
+**Goal:** Create `/admin/flights/status` showing system health and readiness.
 
-#### 5.1 Add Flexible Dates Toggle to Search Form
+**File:** `src/pages/admin/FlightStatusPage.tsx` (NEW)
 
-**File:** `src/components/search/FlightSearchFormPro.tsx`
+Dashboard sections:
 
-Add a toggle near the date pickers:
+1. **Environment Status**
+   - Current mode: Sandbox / Live
+   - API health check (last successful Duffel call)
+   - Stripe connection status
 
-```typescript
-const [flexibleDates, setFlexibleDates] = useState(false);
+2. **Booking Stats (Last 24h)**
+   - Total bookings attempted
+   - Successful tickets issued
+   - Failed/refunded bookings
+   - Zero-result searches
 
-// In the dates row
-<div className="flex items-center gap-2 mt-2">
-  <Switch
-    id="flexible-dates"
-    checked={flexibleDates}
-    onCheckedChange={setFlexibleDates}
-  />
-  <Label htmlFor="flexible-dates" className="text-xs text-muted-foreground">
-    Flexible dates (±3 days)
-  </Label>
-</div>
-```
+3. **Compliance Checklist**
+   - [ ] Seller of Travel page exists
+   - [ ] Terms checkbox includes fare rules
+   - [ ] Footer has SOT disclosure
+   - [ ] Auto-refund on failure enabled
+   - [ ] Passenger validation enforced
 
-When enabled, pass `flexible: true` in URL params. Results page can show alternative date suggestions.
+4. **Recent Alerts**
+   - Failed ticketing attempts
+   - Refund triggers
+   - API errors
 
-#### 5.2 Update Results Page for Flexible Dates
+5. **Environment Switch Controls** (For future - locked for now)
+   - Display current DUFFEL_ENV (read-only)
+   - Note: "Switch to LIVE requires updating environment variable in Supabase"
 
-Show alternative date cards when `flexible=true` is in URL:
-
-```typescript
-// In FlightResults.tsx
-const isFlexibleSearch = searchParams.get('flexible') === 'true';
-
-// After no results or in a sidebar
-{isFlexibleSearch && (
-  <AlternativeDatesCard
-    currentDate={departureDate}
-    onSelectDate={(newDate) => {
-      // Navigate with new date
-    }}
-  />
-)}
-```
-
----
-
-### Phase 6: Enhanced No Results UI
-
-**Goal:** Improve the empty results experience with actionable options.
-
-#### 6.1 Update EmptyResults Component
-
-**File:** `src/components/results/EmptyResults.tsx`
-
-Add "Try nearby airports" and "Try flexible dates" buttons:
-
-```typescript
-{service === "flights" && (
-  <div className="flex flex-wrap justify-center gap-3 mt-4">
-    <Button
-      variant="outline"
-      onClick={() => onTryNearbyAirports?.()}
-      className="gap-2"
-    >
-      <MapPin className="w-4 h-4" />
-      Try nearby airports
-    </Button>
-    <Button
-      variant="outline"
-      onClick={() => onTryFlexibleDates?.()}
-      className="gap-2"
-    >
-      <Calendar className="w-4 h-4" />
-      Try flexible dates
-    </Button>
-  </div>
-)}
-```
-
-These buttons should reopen the edit search modal with modified parameters.
+**Also update:**
+- `src/App.tsx` - Add route for `/admin/flights/status`
+- `src/pages/admin/FlightDebugPage.tsx` - Add link to status page
 
 ---
 
@@ -517,51 +265,45 @@ These buttons should reopen the edit search modal with modified parameters.
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/search/FlightSearchFormPro.tsx` | MODIFY | Strict airport validation, flexible dates toggle |
-| `src/config/duffelConfig.ts` | CREATE | Sandbox routes config, environment helper |
-| `src/components/flight/SandboxTestHelper.tsx` | CREATE | Test route suggestion component |
-| `src/components/flight/NoFlightsFound.tsx` | MODIFY | Add sandbox helper integration |
-| `supabase/functions/duffel-flights/index.ts` | MODIFY | Add logging, return environment |
-| `src/hooks/useFlightSearchLogs.ts` | CREATE | Admin log fetching hook |
-| `src/pages/admin/FlightDebugPage.tsx` | CREATE | Admin debug dashboard |
-| `src/components/results/EmptyResults.tsx` | MODIFY | Add actionable buttons for flights |
-| `src/App.tsx` | MODIFY | Add admin debug route |
-| **Database Migration** | CREATE | `flight_search_logs` table with RLS |
+| `src/pages/legal/SellerOfTravel.tsx` | CREATE | New legal page with SOT disclosure |
+| `src/components/Footer.tsx` | MODIFY | Add "Seller of Travel" link to legal section |
+| `src/App.tsx` | MODIFY | Add routes for new pages |
+| `src/config/flightMoRCompliance.ts` | MODIFY | Update consent text for fare rules |
+| `src/pages/FlightCheckout.tsx` | MODIFY | Enhanced consent UI, SOT link in footer |
+| `src/config/duffelConfig.ts` | MODIFY | Add `isLiveMode()`, `shouldEnforceStrictValidation()` |
+| `src/components/Header.tsx` | MODIFY | Add "Test Mode" badge for admins |
+| `src/pages/FlightTravelerInfo.tsx` | MODIFY | Stricter passenger validation |
+| `supabase/functions/create-flight-checkout/index.ts` | MODIFY | Server-side passenger validation |
+| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Admin alert on failure |
+| `src/pages/admin/FlightStatusPage.tsx` | CREATE | Admin readiness dashboard |
+| `src/hooks/useFlightAdminStatus.ts` | CREATE | Hook for fetching admin stats |
 
 ---
 
 ## Database Migration
 
 ```sql
--- New table for flight search logging
-CREATE TABLE flight_search_logs (
+-- Admin alerts table for failed bookings
+CREATE TABLE flight_admin_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  session_id TEXT,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  origin_iata TEXT NOT NULL,
-  destination_iata TEXT NOT NULL,
-  departure_date DATE NOT NULL,
-  return_date DATE,
-  passengers INTEGER NOT NULL DEFAULT 1,
-  cabin_class TEXT NOT NULL DEFAULT 'economy',
-  duffel_request_id TEXT,
-  duffel_status_code INTEGER,
-  duffel_error TEXT,
-  offers_count INTEGER DEFAULT 0,
-  response_time_ms INTEGER,
-  environment TEXT DEFAULT 'sandbox',
+  booking_id UUID REFERENCES flight_bookings(id) ON DELETE CASCADE,
+  alert_type TEXT NOT NULL CHECK (alert_type IN ('ticketing_failed', 'refund_failed', 'api_error', 'payment_failed')),
+  message TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'high' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+  resolved BOOLEAN DEFAULT FALSE,
+  resolved_at TIMESTAMPTZ,
+  resolved_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Indexes
-CREATE INDEX idx_flight_search_logs_created ON flight_search_logs(created_at DESC);
-CREATE INDEX idx_flight_search_logs_route ON flight_search_logs(origin_iata, destination_iata);
+-- Index for unresolved alerts
+CREATE INDEX idx_flight_admin_alerts_unresolved ON flight_admin_alerts(created_at DESC) WHERE resolved = FALSE;
 
--- RLS: Admin-only
-ALTER TABLE flight_search_logs ENABLE ROW LEVEL SECURITY;
+-- RLS: Admin-only access
+ALTER TABLE flight_admin_alerts ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Admin access to flight logs"
-ON flight_search_logs FOR ALL TO authenticated
+CREATE POLICY "Admin access to flight alerts"
+ON flight_admin_alerts FOR ALL TO authenticated
 USING (EXISTS (
   SELECT 1 FROM user_roles 
   WHERE user_id = auth.uid() AND role = 'admin'
@@ -572,32 +314,101 @@ USING (EXISTS (
 
 ## Security Checklist
 
-1. **Duffel API Key** - Only in edge function (server-side)
-2. **No API URLs exposed** - All calls go through edge function
-3. **Admin-only debug access** - RLS enforced on logs table
-4. **No affiliate fallback** - OTA mode remains locked
+1. **Duffel API Key** - Server-only (edge function)
+2. **No API URLs exposed** - All calls through edge functions
+3. **Admin-only debug access** - RLS enforced
+4. **Passenger data encrypted** - Via Supabase/Stripe
+5. **Auto-refund on failure** - Protects customer
+
+---
+
+## Technical Details
+
+### SellerOfTravel.tsx Structure
+
+```tsx
+// Key content sections:
+1. Business Information Card
+   - ZIVO LLC (legal name)
+   - Business address placeholder (to be filled)
+   - Support email: support@hizivo.com
+
+2. Registration Status Card
+   - California SOT: pending
+   - Florida SOT: pending
+   - Link to state registries
+
+3. Sub-Agent Disclosure Card
+   - "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers"
+   - "Tickets are issued by authorized partners under airline rules"
+   - Link to ticketing partner info
+
+4. Customer Rights Card
+   - Refund eligibility
+   - Support contact
+   - Complaint process
+```
+
+### FlightStatusPage.tsx Structure
+
+```tsx
+// Dashboard layout:
+1. Header with environment badge (Sandbox/Live)
+2. Stats grid (4 cards):
+   - Bookings today
+   - Success rate
+   - Pending tickets
+   - Active alerts
+
+3. Compliance checklist (expandable card)
+4. Recent alerts table (sortable)
+5. Quick actions: Link to Debug page, Link to Logs
+```
+
+### Header.tsx Test Mode Badge
+
+```tsx
+// Add after logo, visible only to admins in sandbox mode
+{isAdmin && isSandboxMode() && (
+  <Badge 
+    variant="outline" 
+    className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30"
+  >
+    Test Mode
+  </Badge>
+)}
+```
 
 ---
 
 ## Testing Requirements
 
-1. **Airport Validation**
-   - Verify free-text entries are blocked
-   - Confirm "Please choose an airport from the list" error shows
-   - Test autocomplete selection works correctly
+1. **Seller of Travel Page**
+   - Verify page loads at `/legal/seller-of-travel`
+   - Confirm footer links to this page
+   - Check all legal text is accurate
 
-2. **Sandbox Helper**
-   - Verify banner only shows in sandbox mode
-   - Test quick search buttons navigate correctly
-   - Confirm no affiliate language appears
+2. **Checkout Compliance**
+   - Verify updated consent text appears
+   - Confirm checkout button disabled when unchecked
+   - Test fare rules link works
 
-3. **Logging**
-   - Trigger searches and verify logs appear in database
-   - Check error cases are logged with messages
-   - Verify response times are captured
+3. **Environment Guards**
+   - Toggle `duffel_env` in sessionStorage
+   - Verify sandbox helpers show/hide correctly
+   - Confirm admin test mode badge appears
 
-4. **Admin Debug Panel**
-   - Access `/admin/flights/debug` as admin
-   - Verify log table displays correctly
-   - Test "Replay Search" button functionality
+4. **Passenger Validation**
+   - Test with invalid names (numbers, special chars)
+   - Test with missing required fields
+   - Verify server rejects invalid data
 
+5. **Failure Safety**
+   - Simulate Duffel order failure
+   - Verify auto-refund triggers
+   - Check admin alert is created
+
+6. **Admin Status Page**
+   - Access `/admin/flights/status` as admin
+   - Verify all stats display correctly
+   - Test alert resolution flow
