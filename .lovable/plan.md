@@ -1,263 +1,343 @@
 
-# ZIVO Flights LIVE Operation Readiness
+
+# Duffel LIVE Environment Production Readiness
 
 ## Summary
 
-This plan prepares ZIVO Flights for Duffel LIVE access and Seller of Travel compliance by:
-1. Creating a dedicated Seller of Travel legal page
-2. Enhancing checkout compliance with fare rules consent
-3. Adding environment-aware guards (sandbox vs. live)
-4. Strengthening passenger data validation for live booking
-5. Implementing Stripe + Duffel failure safety with auto-refund
-6. Creating an Admin Flights Status/Readiness panel
+This plan finalizes ZIVO Flights for Duffel LIVE environment by hardening environment separation, strengthening validation, ensuring atomic payment+ticketing flow, and enhancing the confirmation page and admin monitoring.
 
 ---
 
 ## Current State Analysis
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Seller of Travel disclosure | Partial | Footer has SOT text, but no dedicated legal page |
-| Checkout consent | Basic | Terms checkbox exists, but doesn't mention "fare rules" explicitly |
-| Environment switching | Implemented | `DUFFEL_ENV` in edge function, `duffelConfig.ts` on frontend |
-| Passenger validation | Basic | Required fields checked, but no strict format validation |
-| Failure safety | Implemented | Auto-refund exists in `issue-flight-ticket/index.ts` |
-| Admin status panel | Missing | FlightDebugPage exists but no "readiness" overview |
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Environment separation (DUFFEL_ENV) | ✅ Implemented | Edge functions use `DUFFEL_ENV`, frontend uses sessionStorage |
+| API key isolation | ✅ Implemented | Key only in edge functions, never client-side |
+| Passenger validation | ✅ Implemented | Client + server validation in `FlightTravelerInfo.tsx` and `create-flight-checkout` |
+| Stripe payment flow | ✅ Implemented | Checkout session created, webhook triggers ticketing |
+| Auto-refund on failure | ✅ Implemented | `issue-flight-ticket` calls `process-flight-refund` on error |
+| Admin status panel | ✅ Implemented | `/admin/flights/status` shows env, stats, alerts |
+| Test mode badge | ✅ Implemented | Header shows badge when sandbox + admin |
+| OTA-only mode (no affiliate) | ✅ Implemented | `flightBookingMode.ts` guards all affiliate code |
+| Confirmation page | Partial | Shows PNR, tickets, but missing airline name from booking |
+| Stripe LIVE mode indicator | Not shown | Admin panel only shows "Stripe Connected" |
+| Last successful booking timestamp | Not shown | Available in DB, not displayed |
+| Atomic booking guarantee | Partial | Webhook triggers ticketing, but no explicit atomicity checks |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Seller of Travel Legal Page
+### Phase 1: Enhance Stripe Webhook with Better Flight Handling
 
-**Goal:** Create `/legal/seller-of-travel` page with required disclosures.
+**Goal:** Ensure atomic payment → ticketing flow with explicit status tracking.
 
-**File:** `src/pages/legal/SellerOfTravel.tsx` (NEW)
+**File:** `supabase/functions/stripe-webhook/index.ts`
 
-Content sections:
-- ZIVO business name and registered address
-- Customer support contact (email)
-- Registration status (California pending, Florida pending)
-- Sub-agent disclosure statement
-- Ticketing partner explanation
-- Link to Flight Terms for detailed policies
+Enhancements:
+1. Log the payment confirmation more explicitly
+2. Add error handling if ticketing trigger fails
+3. Create admin alert if ticketing trigger fails
 
-This page will be professionally formatted with cards for each section and clear legal language.
+```typescript
+// In checkout.session.completed for flights:
+} else if (metadata.type === "flight") {
+  // Update flight booking with explicit payment confirmation
+  const { data: updatedBooking, error: updateError } = await supabase
+    .from("flight_bookings")
+    .update({
+      payment_status: "paid",
+      stripe_payment_intent_id: paymentIntentId,
+      ticketing_status: "processing",
+    })
+    .eq("stripe_checkout_session_id", session.id)
+    .select()
+    .single();
 
-**Also update:**
-- `src/components/Footer.tsx` - Add "Seller of Travel" link in Legal section
-- `src/pages/FlightCheckout.tsx` - Link to SOT page in footer trust badges
-- `src/App.tsx` - Add route for `/legal/seller-of-travel`
+  if (updateError) {
+    console.error("[Webhook] Error updating flight booking:", updateError);
+    // Create admin alert for payment confirmation failure
+    await supabase.from('flight_admin_alerts').insert({
+      booking_id: metadata.booking_id,
+      alert_type: 'payment_failed',
+      message: `Failed to update booking after payment: ${updateError.message}`,
+      severity: 'critical',
+    });
+    return; // Don't proceed to ticketing
+  }
+
+  console.log("[Webhook] Flight booking paid:", metadata.booking_id);
+  
+  // Trigger ticketing with explicit error handling
+  try {
+    const ticketResponse = await fetch(`${supabaseUrl}/functions/v1/issue-flight-ticket`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ bookingId: metadata.booking_id }),
+    });
+    
+    if (!ticketResponse.ok) {
+      const ticketError = await ticketResponse.json();
+      console.error("[Webhook] Ticketing trigger failed:", ticketError);
+      // Alert already created by issue-flight-ticket on failure
+    }
+  } catch (ticketErr) {
+    console.error("[Webhook] Error triggering ticketing:", ticketErr);
+    await supabase.from('flight_admin_alerts').insert({
+      booking_id: metadata.booking_id,
+      alert_type: 'ticketing_failed',
+      message: `Failed to trigger ticketing after payment: ${ticketErr instanceof Error ? ticketErr.message : 'Unknown error'}`,
+      severity: 'critical',
+    });
+  }
+}
+```
 
 ---
 
-### Phase 2: Checkout Compliance Enhancement
+### Phase 2: Enhance Confirmation Page with Full Itinerary
 
-**Goal:** Strengthen the checkout consent to explicitly mention airline fare rules.
+**Goal:** Show complete booking details including airline name, full itinerary, PNR, and ticket numbers.
+
+**File:** `src/pages/FlightConfirmation.tsx`
+
+Current issues:
+- Airline name not shown (only origin/destination codes)
+- Flight number not shown
+- Itinerary segments not shown
+
+Enhancements:
+1. Store and display airline info from the original offer
+2. Show flight number(s)
+3. Add "Email confirmation sent" notice
+4. Improve itinerary display
+
+**Add to booking fetch or sessionStorage retrieval:**
+```typescript
+// Also try to get offer details from session for richer display
+const [offerDetails, setOfferDetails] = useState<any>(null);
+
+useEffect(() => {
+  const storedOffer = sessionStorage.getItem('flightOfferId');
+  const storedOfferDetails = sessionStorage.getItem('flightOfferDetails');
+  if (storedOfferDetails) {
+    try {
+      setOfferDetails(JSON.parse(storedOfferDetails));
+    } catch {}
+  }
+}, []);
+```
+
+**Add airline info display:**
+```tsx
+{/* Airline Info */}
+<Card className="mb-6">
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <Plane className="w-5 h-5 text-primary" />
+      Flight Details
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* Airline logo and name */}
+    <div className="flex items-center gap-4 mb-4">
+      {offerDetails?.airlineCode && (
+        <img
+          src={`https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/${offerDetails.airlineCode}.svg`}
+          alt={offerDetails?.airline || 'Airline'}
+          className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+        />
+      )}
+      <div>
+        <h3 className="font-semibold">{offerDetails?.airline || 'Airline'}</h3>
+        <p className="text-sm text-muted-foreground">{offerDetails?.flightNumber || ''}</p>
+      </div>
+    </div>
+    
+    {/* Route display */}
+    ...
+  </CardContent>
+</Card>
+```
+
+**Add email confirmation notice (when ticket issued):**
+```tsx
+{isIssued && (
+  <Alert className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+    <Mail className="w-4 h-4 text-emerald-500" />
+    <AlertDescription>
+      <strong>Confirmation email sent!</strong> Your e-ticket has been sent to the email addresses provided for each passenger.
+    </AlertDescription>
+  </Alert>
+)}
+```
+
+---
+
+### Phase 3: Store Offer Details During Checkout Flow
+
+**Goal:** Persist offer details so confirmation page can display airline name, flight number, etc.
 
 **File:** `src/pages/FlightCheckout.tsx`
 
-Current checkbox text:
-> "I agree to the Terms and Conditions and Airline Rules."
-
-Enhanced checkbox:
-> "I agree to the airline's fare rules and ZIVO's Terms & Conditions" with links to:
-> - `/terms` (ZIVO Terms)
-> - `/legal/flight-terms` (Flight Terms with fare rules)
-> - Fare rules section of booking (if available from Duffel)
-
-**Additional changes:**
-- Show explicit fare conditions (refundable/non-refundable badge)
-- Display tax breakdown more prominently
-- Ensure button is disabled when checkbox unchecked (already implemented)
-
-**File:** `src/config/flightMoRCompliance.ts`
-
-Update consent text constant:
+Add before navigating to Stripe:
 ```typescript
-termsCheckbox: "I agree to the airline's fare rules and ZIVO's Terms & Conditions"
+// Store full offer details for confirmation page
+sessionStorage.setItem('flightOfferDetails', JSON.stringify({
+  airline: offer.airline,
+  airlineCode: offer.airlineCode,
+  flightNumber: offer.flightNumber,
+  cabinClass: offer.cabinClass,
+  duration: offer.duration,
+  stops: offer.stops,
+  departure: offer.departure,
+  arrival: offer.arrival,
+}));
 ```
 
 ---
 
-### Phase 3: Environment Guard System
+### Phase 4: Add Stripe Mode Indicator to Admin Panel
 
-**Goal:** Conditionally show/hide features based on `DUFFEL_ENV` (sandbox vs. live).
+**Goal:** Show whether Stripe is in test or live mode.
 
-**File:** `src/config/duffelConfig.ts` (MODIFY)
+**File:** `src/pages/admin/FlightStatusPage.tsx`
 
-Add functions:
-```typescript
-export function isLiveMode(): boolean {
-  const stored = sessionStorage.getItem('duffel_env');
-  return stored === 'live';
-}
+Add Stripe mode detection (based on key prefix in edge function response):
 
-export function shouldShowDebugUI(): boolean {
-  // Only show debug UI in sandbox mode
-  return isSandboxMode();
-}
+**Option A:** Add to the stats query by calling a simple edge function that returns env info.
 
-export function shouldEnforceStrictValidation(): boolean {
-  // Enforce strict validation in live mode
-  return isLiveMode();
-}
+**Option B:** Check if any recent payment intents have `pi_test_` vs `pi_` prefix.
+
+For simplicity, add a note that Stripe mode is determined by the `STRIPE_SECRET_KEY`:
+
+```tsx
+<div className="p-4 rounded-lg border">
+  <p className="text-sm text-muted-foreground mb-1">Payment Processor</p>
+  <p className="font-semibold flex items-center gap-2">
+    <CheckCircle className="w-4 h-4 text-emerald-500" />
+    Stripe Connected
+  </p>
+  <p className="text-xs text-muted-foreground mt-1">
+    Mode determined by STRIPE_SECRET_KEY (sk_test_* = test, sk_live_* = live)
+  </p>
+</div>
 ```
-
-**UI Changes:**
-
-1. **Test Mode Badge** (Admin-only visibility)
-   - Show small "Test Mode" badge in header for admins when `isSandboxMode()` is true
-   - File: `src/components/Header.tsx` - Add conditional badge
-
-2. **Sandbox Helpers**
-   - `SandboxTestHelper.tsx` already checks `isSandboxMode()` - no change needed
-   - `NoFlightsFound.tsx` already shows sandbox routes only in test mode
-
-3. **Debug UI**
-   - FlightDebugPage already shows "Sandbox Mode" badge
-   - Add guard to hide certain debug features in live mode
 
 ---
 
-### Phase 4: Passenger Data Validation (Live Safe)
+### Phase 5: Show Last Successful Booking Timestamp
 
-**Goal:** Strict validation before allowing checkout to proceed.
+**Goal:** Display when the last successful ticket was issued.
 
-**File:** `src/pages/FlightTravelerInfo.tsx` (MODIFY)
+**File:** `src/pages/admin/FlightStatusPage.tsx`
 
-Enhanced validation rules:
+Add to stats query:
 ```typescript
-const validatePassenger = (p: PassengerForm, index: number): string | null => {
-  // Full legal name validation
-  if (!p.given_name.trim() || p.given_name.length < 2) {
-    return `Passenger ${index + 1}: First name must be at least 2 characters`;
-  }
-  if (!p.family_name.trim() || p.family_name.length < 2) {
-    return `Passenger ${index + 1}: Last name must be at least 2 characters`;
-  }
-  // Only letters and hyphens allowed in names
-  if (!/^[a-zA-Z\s\-']+$/.test(p.given_name)) {
-    return `Passenger ${index + 1}: First name can only contain letters`;
-  }
-  if (!/^[a-zA-Z\s\-']+$/.test(p.family_name)) {
-    return `Passenger ${index + 1}: Last name can only contain letters`;
-  }
-  
-  // Date of birth validation
-  if (!p.born_on) {
-    return `Passenger ${index + 1}: Date of birth is required`;
-  }
-  const dob = new Date(p.born_on);
-  const now = new Date();
-  if (dob >= now) {
-    return `Passenger ${index + 1}: Invalid date of birth`;
-  }
-  
-  // Gender validation (required for airlines)
-  if (!p.gender || !['m', 'f'].includes(p.gender)) {
-    return `Passenger ${index + 1}: Gender is required`;
-  }
-  
-  // Email validation (stricter)
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  if (!emailRegex.test(p.email)) {
-    return `Passenger ${index + 1}: Please enter a valid email address`;
-  }
-  
-  return null; // No errors
-};
+// Get last successful booking
+const { data: lastSuccess } = await supabase
+  .from('flight_bookings')
+  .select('ticketed_at, booking_reference')
+  .eq('ticketing_status', 'issued')
+  .order('ticketed_at', { ascending: false })
+  .limit(1)
+  .single();
 ```
 
-**File:** `supabase/functions/create-flight-checkout/index.ts` (MODIFY)
+Add to stats grid:
+```tsx
+<Card>
+  <CardContent className="p-6">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-muted-foreground">Last Issued Ticket</p>
+        <p className="text-lg font-semibold">
+          {stats?.lastSuccess?.ticketed_at 
+            ? format(new Date(stats.lastSuccess.ticketed_at), 'MMM d, HH:mm')
+            : 'None yet'}
+        </p>
+        {stats?.lastSuccess?.booking_reference && (
+          <p className="text-xs text-muted-foreground">{stats.lastSuccess.booking_reference}</p>
+        )}
+      </div>
+      <Ticket className="w-8 h-8 text-primary opacity-20" />
+    </div>
+  </CardContent>
+</Card>
+```
 
-Add server-side validation before creating Stripe session:
+---
+
+### Phase 6: Add Environment Safety Checks to Edge Functions
+
+**Goal:** Ensure strict validation is enforced in LIVE mode.
+
+**File:** `supabase/functions/create-flight-checkout/index.ts`
+
+Already has strict validation. Add explicit LIVE mode logging:
 ```typescript
-// Validate passenger data
-for (const p of passengers) {
-  if (!p.given_name || !p.family_name || !p.born_on || !p.email) {
-    throw new Error('Missing required passenger information');
-  }
-  if (!p.gender || !['m', 'f'].includes(p.gender)) {
-    throw new Error('Invalid passenger gender');
-  }
+// At start of function
+const DUFFEL_ENV = Deno.env.get('DUFFEL_ENV') || 'sandbox';
+const isLiveMode = DUFFEL_ENV === 'live';
+
+console.log("[FlightCheckout] Environment:", DUFFEL_ENV, "Live mode:", isLiveMode);
+
+// Existing validation already enforces strict checks
+// Add explicit warning if validation would have failed in live mode
+```
+
+**File:** `supabase/functions/issue-flight-ticket/index.ts`
+
+Add live mode checks:
+```typescript
+const DUFFEL_ENV = Deno.env.get('DUFFEL_ENV') || 'sandbox';
+const isLiveMode = DUFFEL_ENV === 'live';
+
+console.log("[IssueTicket] Environment:", DUFFEL_ENV);
+
+// In live mode, never use demo/mock data
+if (isLiveMode && !duffelApiKey) {
+  throw new Error('DUFFEL_API_KEY is required in live mode');
 }
 ```
 
 ---
 
-### Phase 5: Stripe + Duffel Failure Safety
+### Phase 7: Ensure No Estimated/Indicative Language in LIVE
 
-**Current implementation review:**
+**Goal:** Verify all price displays use final pricing language.
 
-The `issue-flight-ticket/index.ts` already has auto-refund logic:
-```typescript
-// Auto-refund on ticketing failure
-console.log("[IssueTicket] Triggering auto-refund for booking:", bookingId);
-await fetch(`${supabaseUrl}/functions/v1/process-flight-refund`, {
-  method: 'POST',
-  body: JSON.stringify({
-    bookingId,
-    reason: `Ticketing failed: ${error.message}`,
-    action: 'auto',
-  }),
-});
-```
+**Already implemented in:**
+- `src/config/flightMoRCompliance.ts` - All price text is final ("All prices include taxes and fees")
+- No "indicative" or "estimated" language exists
 
-**Enhancements needed:**
+**Verify in search results:**
+- `src/components/flight/FlightCard.tsx` - Uses exact Duffel prices
+- `src/pages/FlightCheckout.tsx` - Shows exact breakdown
 
-1. **Admin notification on failure**
-   - File: `supabase/functions/issue-flight-ticket/index.ts`
-   - Add entry to a `flight_admin_alerts` table when ticketing fails
-   - Fields: booking_id, alert_type, message, created_at, resolved
-
-2. **Update booking status more clearly**
-   - Set `payment_status = 'refunded'` and `ticketing_status = 'failed'` atomically
-   - Already done in `process-flight-refund/index.ts`
-
-3. **Database table for alerts**
-   - Create `flight_admin_alerts` table for dashboard visibility
+No changes needed - already compliant.
 
 ---
 
-### Phase 6: Admin Flights Readiness Panel
+### Phase 8: Add Failed Bookings Count to Admin Panel
 
-**Goal:** Create `/admin/flights/status` showing system health and readiness.
+**Goal:** Show count of failed bookings in the last 24h.
 
-**File:** `src/pages/admin/FlightStatusPage.tsx` (NEW)
+**File:** `src/pages/admin/FlightStatusPage.tsx`
 
-Dashboard sections:
+Already implemented in stats query:
+```typescript
+const failedBookings = bookings?.filter(b => 
+  b.ticketing_status === 'failed' || b.payment_status === 'refunded'
+).length || 0;
+```
 
-1. **Environment Status**
-   - Current mode: Sandbox / Live
-   - API health check (last successful Duffel call)
-   - Stripe connection status
-
-2. **Booking Stats (Last 24h)**
-   - Total bookings attempted
-   - Successful tickets issued
-   - Failed/refunded bookings
-   - Zero-result searches
-
-3. **Compliance Checklist**
-   - [ ] Seller of Travel page exists
-   - [ ] Terms checkbox includes fare rules
-   - [ ] Footer has SOT disclosure
-   - [ ] Auto-refund on failure enabled
-   - [ ] Passenger validation enforced
-
-4. **Recent Alerts**
-   - Failed ticketing attempts
-   - Refund triggers
-   - API errors
-
-5. **Environment Switch Controls** (For future - locked for now)
-   - Display current DUFFEL_ENV (read-only)
-   - Note: "Switch to LIVE requires updating environment variable in Supabase"
-
-**Also update:**
-- `src/App.tsx` - Add route for `/admin/flights/status`
-- `src/pages/admin/FlightDebugPage.tsx` - Add link to status page
+Already displayed in stats grid - verify it's shown prominently.
 
 ---
 
@@ -265,150 +345,78 @@ Dashboard sections:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/legal/SellerOfTravel.tsx` | CREATE | New legal page with SOT disclosure |
-| `src/components/Footer.tsx` | MODIFY | Add "Seller of Travel" link to legal section |
-| `src/App.tsx` | MODIFY | Add routes for new pages |
-| `src/config/flightMoRCompliance.ts` | MODIFY | Update consent text for fare rules |
-| `src/pages/FlightCheckout.tsx` | MODIFY | Enhanced consent UI, SOT link in footer |
-| `src/config/duffelConfig.ts` | MODIFY | Add `isLiveMode()`, `shouldEnforceStrictValidation()` |
-| `src/components/Header.tsx` | MODIFY | Add "Test Mode" badge for admins |
-| `src/pages/FlightTravelerInfo.tsx` | MODIFY | Stricter passenger validation |
-| `supabase/functions/create-flight-checkout/index.ts` | MODIFY | Server-side passenger validation |
-| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Admin alert on failure |
-| `src/pages/admin/FlightStatusPage.tsx` | CREATE | Admin readiness dashboard |
-| `src/hooks/useFlightAdminStatus.ts` | CREATE | Hook for fetching admin stats |
+| `supabase/functions/stripe-webhook/index.ts` | MODIFY | Better error handling for flight payment confirmation |
+| `src/pages/FlightConfirmation.tsx` | MODIFY | Add airline name, flight number, email sent notice |
+| `src/pages/FlightCheckout.tsx` | MODIFY | Store offer details for confirmation page |
+| `src/pages/admin/FlightStatusPage.tsx` | MODIFY | Add last successful booking, Stripe mode note |
+| `supabase/functions/issue-flight-ticket/index.ts` | MODIFY | Add live mode check for API key |
 
 ---
 
-## Database Migration
+## No Database Changes Required
 
-```sql
--- Admin alerts table for failed bookings
-CREATE TABLE flight_admin_alerts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  booking_id UUID REFERENCES flight_bookings(id) ON DELETE CASCADE,
-  alert_type TEXT NOT NULL CHECK (alert_type IN ('ticketing_failed', 'refund_failed', 'api_error', 'payment_failed')),
-  message TEXT NOT NULL,
-  severity TEXT NOT NULL DEFAULT 'high' CHECK (severity IN ('low', 'medium', 'high', 'critical')),
-  resolved BOOLEAN DEFAULT FALSE,
-  resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES auth.users(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Index for unresolved alerts
-CREATE INDEX idx_flight_admin_alerts_unresolved ON flight_admin_alerts(created_at DESC) WHERE resolved = FALSE;
-
--- RLS: Admin-only access
-ALTER TABLE flight_admin_alerts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admin access to flight alerts"
-ON flight_admin_alerts FOR ALL TO authenticated
-USING (EXISTS (
-  SELECT 1 FROM user_roles 
-  WHERE user_id = auth.uid() AND role = 'admin'
-));
-```
+All required fields already exist in `flight_bookings` table:
+- `ticketed_at` for last successful timestamp
+- `ticketing_status` for success/failure tracking
+- `pnr`, `ticket_numbers` for confirmation display
 
 ---
 
-## Security Checklist
+## Security Verification
 
-1. **Duffel API Key** - Server-only (edge function)
-2. **No API URLs exposed** - All calls through edge functions
-3. **Admin-only debug access** - RLS enforced
-4. **Passenger data encrypted** - Via Supabase/Stripe
-5. **Auto-refund on failure** - Protects customer
+1. **Environment separation** ✅
+   - `DUFFEL_ENV` controls sandbox vs live behavior
+   - API key isolated to edge functions only
+   
+2. **No affiliate fallback** ✅
+   - `flightBookingMode.ts` blocks all affiliate logic
+   - OTA-only mode permanently locked
+
+3. **Atomic payment flow** ✅
+   - Stripe webhook triggers ticketing
+   - Auto-refund on ticketing failure
+   - Admin alerts for failures
+
+4. **Passenger validation** ✅
+   - Client-side regex validation
+   - Server-side validation in checkout function
+   - Required fields: name, DOB, gender, email
 
 ---
 
-## Technical Details
+## LIVE Readiness Checklist
 
-### SellerOfTravel.tsx Structure
+After implementation, verify:
 
-```tsx
-// Key content sections:
-1. Business Information Card
-   - ZIVO LLC (legal name)
-   - Business address placeholder (to be filled)
-   - Support email: support@hizivo.com
-
-2. Registration Status Card
-   - California SOT: pending
-   - Florida SOT: pending
-   - Link to state registries
-
-3. Sub-Agent Disclosure Card
-   - "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers"
-   - "Tickets are issued by authorized partners under airline rules"
-   - Link to ticketing partner info
-
-4. Customer Rights Card
-   - Refund eligibility
-   - Support contact
-   - Complaint process
-```
-
-### FlightStatusPage.tsx Structure
-
-```tsx
-// Dashboard layout:
-1. Header with environment badge (Sandbox/Live)
-2. Stats grid (4 cards):
-   - Bookings today
-   - Success rate
-   - Pending tickets
-   - Active alerts
-
-3. Compliance checklist (expandable card)
-4. Recent alerts table (sortable)
-5. Quick actions: Link to Debug page, Link to Logs
-```
-
-### Header.tsx Test Mode Badge
-
-```tsx
-// Add after logo, visible only to admins in sandbox mode
-{isAdmin && isSandboxMode() && (
-  <Badge 
-    variant="outline" 
-    className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30"
-  >
-    Test Mode
-  </Badge>
-)}
-```
+- [ ] `DUFFEL_ENV=live` in edge function secrets
+- [ ] `DUFFEL_API_KEY` is production key (not test)
+- [ ] `STRIPE_SECRET_KEY` is production key
+- [ ] Admin panel shows "LIVE Mode" badge
+- [ ] Test booking flow end-to-end
+- [ ] Confirm email delivery works
+- [ ] Verify refund flow works
+- [ ] Check admin alerts populate
 
 ---
 
 ## Testing Requirements
 
-1. **Seller of Travel Page**
-   - Verify page loads at `/legal/seller-of-travel`
-   - Confirm footer links to this page
-   - Check all legal text is accurate
+1. **Payment Flow**
+   - Complete checkout with Stripe test mode
+   - Verify webhook triggers ticketing
+   - Confirm confirmation page shows all details
 
-2. **Checkout Compliance**
-   - Verify updated consent text appears
-   - Confirm checkout button disabled when unchecked
-   - Test fare rules link works
-
-3. **Environment Guards**
-   - Toggle `duffel_env` in sessionStorage
-   - Verify sandbox helpers show/hide correctly
-   - Confirm admin test mode badge appears
-
-4. **Passenger Validation**
-   - Test with invalid names (numbers, special chars)
-   - Test with missing required fields
-   - Verify server rejects invalid data
-
-5. **Failure Safety**
-   - Simulate Duffel order failure
+2. **Error Handling**
+   - Simulate ticketing failure (invalid offer)
    - Verify auto-refund triggers
    - Check admin alert is created
 
-6. **Admin Status Page**
-   - Access `/admin/flights/status` as admin
-   - Verify all stats display correctly
-   - Test alert resolution flow
+3. **Admin Panel**
+   - Verify stats update correctly
+   - Check last successful booking displays
+   - Test alert resolution
+
+4. **Environment Guards**
+   - Test in sandbox mode (demo tickets allowed)
+   - Verify live mode requires real API key
+
