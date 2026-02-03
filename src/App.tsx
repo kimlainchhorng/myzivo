@@ -202,6 +202,10 @@ const FinancialRecords = lazy(() => import("./pages/legal/FinancialRecords"));
 const Governance = lazy(() => import("./pages/legal/Governance"));
 const EthicsPolicy = lazy(() => import("./pages/legal/EthicsPolicy"));
 const RegulatorCommunications = lazy(() => import("./pages/legal/RegulatorCommunications"));
+const LegalDocCenter = lazy(() => import("./pages/admin/LegalDocCenter"));
+const EvidenceLogging = lazy(() => import("./pages/admin/EvidenceLogging"));
+const CaseFileSystem = lazy(() => import("./pages/admin/CaseFileSystem"));
+const LegalResponseProtocols = lazy(() => import("./pages/admin/LegalResponseProtocols"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -450,6 +454,10 @@ const App = () => (
                 <Route path="/legal/governance" element={<Governance />} />
                 <Route path="/legal/ethics" element={<EthicsPolicy />} />
                 <Route path="/legal/regulator-communications" element={<RegulatorCommunications />} />
+                <Route path="/admin/legal-docs" element={<LegalDocCenter />} />
+                <Route path="/admin/evidence-logging" element={<EvidenceLogging />} />
+                <Route path="/admin/case-files" element={<CaseFileSystem />} />
+                <Route path="/admin/legal-response" element={<LegalResponseProtocols />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />

@@ -2695,3 +2695,181 @@ export const GOVERNANCE_FAQ = [
 
 // Helper arrays
 export const GOVERNANCE_POLICIES_LIST = Object.values(GOVERNANCE_POLICIES);
+
+// ============================================
+// LEGAL DOCUMENTATION & EVIDENCE SYSTEMS (Clauses 180-187)
+// Evidence, Case Files, Response Protocols
+// ============================================
+
+export const LEGAL_EVIDENCE_POLICIES = {
+  // Clause 180: Legal Document Center
+  legalDocCenter: {
+    id: "legal_doc_center",
+    title: "Legal Document Center",
+    version: "1.0",
+    content: `ZIVO maintains a centralized legal document center storing all terms versions, policy versions, disclosure text, and historical changes. Administrators can view, export, timestamp, and lock versions to ensure document integrity and provide evidence of policy history.`,
+    capabilities: [
+      "Store and version all legal terms",
+      "Archive policy versions with timestamps",
+      "Export documents for legal proceedings",
+      "Lock versions to prevent modification",
+      "Track historical changes with audit trail",
+      "Generate compliance reports",
+    ],
+  },
+
+  // Clause 181: User Action Logging
+  userActionLogging: {
+    id: "user_action_logging",
+    title: "User Action Logging",
+    version: "1.0",
+    content: `ZIVO logs user actions relevant to legal compliance, including pages viewed, disclosures shown, checkboxes accepted, and checkout confirmations. All logs are immutable, timestamped, and may be used as legal evidence in disputes or regulatory proceedings.`,
+    loggedActions: [
+      "Pages and disclosures viewed",
+      "Legal checkboxes accepted",
+      "Checkout confirmations",
+      "Terms acceptance timestamps",
+      "Consent acknowledgments",
+      "Policy version at time of action",
+    ],
+  },
+
+  // Clause 182: Partner Acknowledgment Logs
+  partnerAcknowledgmentLogs: {
+    id: "partner_acknowledgment_logs",
+    title: "Partner Acknowledgment Logs",
+    version: "1.0",
+    content: `ZIVO maintains acknowledgment logs for all partner types including drivers, car owners, fleet owners, and restaurants. Logs include role type, policy accepted, date, and IP address for legal defense purposes.`,
+    partnerTypes: [
+      "Drivers and delivery providers",
+      "Individual car owners",
+      "Fleet owners and managers",
+      "Restaurant partners",
+      "Business account administrators",
+      "Third-party service providers",
+    ],
+    loggedFields: [
+      "Partner role and type",
+      "Policy type and version accepted",
+      "Acceptance timestamp",
+      "IP address",
+      "User agent / device info",
+      "Geographic location (if available)",
+    ],
+  },
+
+  // Clause 183: Case File System
+  caseFileSystem: {
+    id: "case_file_system",
+    title: "Case File System",
+    version: "1.0",
+    content: `ZIVO maintains internal case files for complaints, refund disputes, chargebacks, damage claims, and legal threats. Each case file includes a timeline, evidence, screenshots, logs, and resolution notes for comprehensive legal defense.`,
+    caseTypes: [
+      "Customer complaints",
+      "Refund disputes",
+      "Payment chargebacks",
+      "Damage claims (P2P rentals)",
+      "Legal threats and notices",
+      "Regulatory inquiries",
+    ],
+    caseFileContents: [
+      "Chronological timeline",
+      "User and partner evidence",
+      "Screenshots and documentation",
+      "System logs and audit trails",
+      "Communications history",
+      "Resolution notes and outcomes",
+    ],
+  },
+
+  // Clause 184: Regulator Response Templates
+  regulatorResponseTemplates: {
+    id: "regulator_response_templates",
+    title: "Regulator Response Templates",
+    version: "1.0",
+    content: `ZIVO maintains prepared response templates for regulatory and banking inquiries including consumer complaints, Attorney General inquiries, banking partner inquiries, and payment processor reviews. All templates use neutral tone without admission of liability.`,
+    templateTypes: [
+      "Consumer complaint response",
+      "Attorney General inquiry",
+      "Banking partner inquiry",
+      "Payment processor review",
+      "State regulatory inquiry",
+      "Federal agency inquiry",
+    ],
+    templatePrinciples: [
+      "Professional, neutral tone",
+      "No admission of liability",
+      "Reference to applicable policies",
+      "Factual, documented responses",
+      "Legal counsel review required",
+      "Preservation of all defenses",
+    ],
+  },
+
+  // Clause 185: Legal Threat Protocol
+  legalThreatProtocol: {
+    id: "legal_threat_protocol",
+    title: "Legal Threat Protocol",
+    version: "1.0",
+    content: `When a legal threat is received, ZIVO immediately freezes relevant accounts, preserves all logs and evidence, stops direct user communication, and escalates to legal counsel only. No employee or administrator admits fault or liability.`,
+    protocolSteps: [
+      "Freeze relevant user/partner accounts",
+      "Preserve all logs and evidence",
+      "Stop direct user communication",
+      "Document threat receipt and details",
+      "Escalate to legal counsel immediately",
+      "No admission of fault or liability",
+    ],
+  },
+
+  // Clause 186: No Off-The-Record Statements
+  noOffRecordStatements: {
+    id: "no_off_record_statements",
+    title: "No Off-The-Record Statements",
+    version: "1.0",
+    content: `All ZIVO administrators and staff are prohibited from making off-the-record statements about disputes, legal matters, or platform issues. Staff do not comment on disputes, speculate on outcomes, apologize legally, and use only approved responses.`,
+    prohibitedActions: [
+      "Commenting on active disputes",
+      "Speculating on legal outcomes",
+      "Making legal apologies or admissions",
+      "Discussing pending investigations",
+      "Providing unofficial legal advice",
+      "Making statements without approval",
+    ],
+  },
+
+  // Clause 187: Survival of Evidence & Documentation
+  evidenceSurvival: {
+    id: "evidence_survival",
+    title: "Survival of Evidence & Documentation",
+    version: "1.0",
+    content: `All logs, records, and evidence survive account deletion, service shutdown, and legal disputes. ZIVO retains documentation as required by law and for legal defense purposes regardless of user or platform status.`,
+  },
+};
+
+// Legal Evidence FAQ (Internal Playbook)
+export const LEGAL_EVIDENCE_FAQ = [
+  {
+    question: "User threatens lawsuit — what do we do?",
+    answer: "Acknowledge receipt, preserve all evidence, freeze relevant accounts, and escalate to legal counsel immediately. Do not admit fault.",
+  },
+  {
+    question: "Regulator contacts us?",
+    answer: "Respond via authorized officer only. Use approved templates. Do not admit liability.",
+  },
+  {
+    question: "Media contacts us?",
+    answer: "No comment. Refer to official statement or press contact only.",
+  },
+  {
+    question: "How long do we retain evidence?",
+    answer: "Evidence survives account deletion and is retained as required by law and for legal defense.",
+  },
+  {
+    question: "Can staff discuss disputes with users?",
+    answer: "No. Use approved responses only. Do not speculate or admit fault.",
+  },
+];
+
+// Helper arrays
+export const LEGAL_EVIDENCE_POLICIES_LIST = Object.values(LEGAL_EVIDENCE_POLICIES);
