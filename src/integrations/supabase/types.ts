@@ -1170,6 +1170,48 @@ export type Database = {
         }
         Relationships: []
       }
+      car_rental_settings: {
+        Row: {
+          default_commission_percent: number
+          id: string
+          instant_book_enabled: boolean
+          insurance_required: boolean
+          is_active: boolean
+          min_vehicle_year: number
+          mode: string
+          require_owner_verification: boolean
+          require_renter_verification: boolean
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          default_commission_percent?: number
+          id?: string
+          instant_book_enabled?: boolean
+          insurance_required?: boolean
+          is_active?: boolean
+          min_vehicle_year?: number
+          mode?: string
+          require_owner_verification?: boolean
+          require_renter_verification?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          default_commission_percent?: number
+          id?: string
+          instant_book_enabled?: boolean
+          insurance_required?: boolean
+          is_active?: boolean
+          min_vehicle_year?: number
+          mode?: string
+          require_owner_verification?: boolean
+          require_renter_verification?: boolean
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       car_rentals: {
         Row: {
           actual_return_date: string | null
