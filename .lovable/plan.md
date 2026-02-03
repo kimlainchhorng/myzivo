@@ -1,432 +1,288 @@
 
+# ZIVO Production Launch, Go-Live & Scale System
 
-# My Trips Dashboard + Email Confirmations + Cancel/Refund Flow
-## Complete Implementation Plan
+## Overview
 
----
+This plan implements a comprehensive Production Launch Dashboard that consolidates all pre-launch verification, live booking tests, and post-launch monitoring into a unified admin interface. The system will ensure ZIVO can safely transition from staging to production with complete visibility into all critical systems.
 
-## Executive Summary
+## Architecture
 
-Enhance the ZIVO booking experience by consolidating all travel bookings (Hotels, Activities, Transfers) into a unified "My Trips" dashboard. Add email confirmation functionality, support ticket integration, and a cancellation/refund request workflow.
-
----
-
-## Current State Analysis
-
-### Existing Infrastructure
-
-**Database Tables**:
-- `travel_orders` - Core orders with holder info, totals, status
-- `travel_order_items` - Individual booking items with provider references
-- `travel_payments` - Stripe payment tracking
-- `booking_audit_logs` - Audit trail for operations
-- `email_logs` - Email delivery tracking (already exists with Resend integration)
-- `support_tickets` - General support (existing table)
-- `zivo_support_tickets` - Enhanced support with service routing
-
-**Existing Pages**:
-- `MyOrdersPage.tsx` - Basic order list (exists but minimal)
-- `TravelConfirmationPage.tsx` - Shows confirmation after booking
-- `TravelTrips.tsx` - Travel booking history (affiliate-based redirects)
-- `SupportCenterPage.tsx` - Support ticket creation
-
-**Hooks**:
-- `useOrderDetails.ts` - Fetches orders with items/payments
-- `useGlobalSupport.ts` - Support ticket CRUD operations
-
-**Edge Functions**:
-- `send-travel-confirmation` - Sends confirmation emails (logs to console, needs Resend integration)
-- `send-travel-email` - Generic travel email sender with Resend
-
-### What Needs to Be Built
-
-1. **Database**: Add cancellation columns to `travel_orders` + `travel_order_items`
-2. **UI**: Enhanced "My Trips" page with tabs and detailed order view
-3. **Backend**: Cancellation request + resend confirmation endpoints
-4. **Email**: Integration with existing email system for confirmations
+The Production Launch system builds on existing infrastructure:
+- Uses existing `src/config/environment.ts` (already locked to production mode)
+- Integrates with existing launch systems (`useLaunchSettings`, `useFlightsLaunchStatus`)
+- Extends existing admin modules pattern
+- Leverages existing Disaster Recovery, Compliance, and Automation dashboards
 
 ---
 
-## Phase 1: Database Schema Updates
+## Technical Scope
 
-### 1.1 Add Columns to travel_orders
+### 1. Database Schema (Migration)
+
+New tables to support production launch tracking:
 
 ```text
-ALTER TABLE travel_orders ADD:
-- cancellation_status (TEXT default 'none')
-    Options: 'none' | 'requested' | 'under_review' | 'approved' | 'rejected' | 'processed'
-- cancellation_reason (TEXT nullable)
-- cancellation_requested_at (TIMESTAMPTZ nullable)
-- cancelled_at (TIMESTAMPTZ nullable)
-- cancelled_by (UUID nullable) - admin who processed
+production_launch_checklist
+- id, category, item_key, item_title, item_description
+- is_verified, verified_at, verified_by
+- is_critical, verification_notes, evidence_url
+- created_at, updated_at
+
+production_test_bookings
+- id, service_type (hotel | activity | transfer | flight)
+- test_status (pending | success | failed)
+- booking_reference, supplier_confirmation
+- payment_captured, amount_cents, currency
+- email_sent, admin_visible, my_trips_visible
+- error_message, tested_by, tested_at
+- created_at
+
+launch_phase_log
+- id, phase (pre_launch | soft_launch | full_launch | scaling)
+- started_at, completed_at, started_by
+- notes, metrics_snapshot
+
+launch_monitoring_alerts
+- id, alert_type (booking_failure | payment_failure | api_outage | fraud_spike | refund_spike)
+- severity (info | warning | critical)
+- message, details, acknowledged, acknowledged_by
+- created_at
 ```
 
-### 1.2 Add Columns to travel_order_items
+Seed data for checklist items across 8 categories matching the specification.
+
+### 2. Environment Verification System
+
+A component that validates all critical environment settings:
 
 ```text
-ALTER TABLE travel_order_items ADD:
-- cancellation_policy (TEXT nullable) - summary text
-- cancellable (BOOLEAN default false)
-- cancellation_deadline (TIMESTAMPTZ nullable)
-- supplier_status (TEXT default 'pending')
-    Options: 'pending' | 'confirmed' | 'cancelled' | 'failed'
-- supplier_payload (JSONB nullable) - raw Hotelbeds response
+Environment Switch Panel
++-------------------------------------------------+
+| API MODE VERIFICATION                           |
+|-------------------------------------------------|
+| Hotelbeds Hotels    | LIVE ✓ | HOTELBEDS_BASE_URL |
+| Hotelbeds Activities| LIVE ✓ | verified         |
+| Hotelbeds Transfers | LIVE ✓ | verified         |
+| Stripe              | LIVE ✓ | STRIPE_MODE      |
+| Duffel (Flights)    | LIVE ✓ | DUFFEL_MODE      |
+| Email (Resend)      | LIVE ✓ | RESEND_API_KEY   |
++-------------------------------------------------+
+| Debug/Test Checks                               |
+|-------------------------------------------------|
+| Test badges hidden  | ✓ SHOW_TEST_BADGE=false   |
+| Debug logs disabled | ✓ Production mode         |
+| Sandbox UI hidden   | ✓ shouldShowDebugUI=false |
++-------------------------------------------------+
 ```
 
-### 1.3 Create travel_email_logs Table
+### 3. Live Booking Test Runner
 
-Link emails specifically to travel orders (extends existing email_logs pattern):
+An interactive panel to execute and verify real test bookings:
 
 ```text
-Table: travel_email_logs
-- id (UUID, PK)
-- order_id (UUID FK -> travel_orders.id)
-- to_email (TEXT)
-- template (TEXT: 'booking_confirmation' | 'cancellation_request' | 'cancellation_update' | 'refund_processed')
-- resend_message_id (TEXT nullable)
-- status (TEXT: 'queued' | 'sent' | 'failed')
-- error_message (TEXT nullable)
-- created_at (TIMESTAMPTZ)
+LIVE BOOKING VERIFICATION
++-------------------------------------------------+
+| Service      | Status  | Payment | Supplier | Email |
+|--------------|---------|---------|----------|-------|
+| Hotel        | Pending | -       | -        | -     |
+| Activity     | Success | $19.00  | HB12345  | Sent  |
+| Transfer     | Success | $35.00  | HB67890  | Sent  |
+| Flight       | -       | (Duffel partner handles) |
++-------------------------------------------------+
+| [Run Hotel Test] [Run Activity Test] [Run All] |
++-------------------------------------------------+
 ```
 
-### 1.4 RLS Policies
+Each test will:
+1. Create a low-value real booking via edge function
+2. Verify payment capture in Stripe
+3. Verify supplier confirmation
+4. Verify confirmation email sent
+5. Verify order appears in My Trips
+6. Verify order visible in Admin dashboard
+
+### 4. Pre-Launch Checklist Dashboard
+
+Interactive checklist with 8 categories from the specification:
+
+**Category A: Environment Switch**
+- All APIs switched to LIVE mode
+- Test banners disabled
+- Debug logging disabled
+- Sandbox endpoints disabled
+
+**Category B: Final Booking Tests**
+- Hotel booking verified
+- Activity booking verified
+- Transfer booking verified
+- Payment success confirmed
+- Supplier confirmation received
+- Email delivery confirmed
+- My Trips display verified
+- Admin visibility confirmed
+
+**Category C: Legal & Trust**
+- Terms of Service published
+- Privacy Policy published
+- Refund & Cancellation Policy published
+- Company legal name visible
+- Support email displayed
+- Partner disclosure visible
+
+**Category D: Security**
+- HTTPS enforced
+- Rate limits active
+- Admin routes protected
+- API keys in env only
+- Backups enabled
+
+**Category E: Support Readiness**
+- Support inbox active
+- Auto-replies enabled
+- SLA timers active
+- Escalation contacts set
+
+**Category F: Monitoring & Alerts**
+- Booking failure alerts enabled
+- Payment failure alerts enabled
+- Supplier API monitoring active
+- Fraud detection active
+- High refund alerts enabled
+
+**Category G: Soft Launch Config**
+- Soft launch phase defined (24-72h)
+- Traffic controls ready
+- Monitoring dashboard accessible
+
+**Category H: Full Launch Config**
+- Paid ads ready to enable
+- SEO pages published
+- Public announcement prepared
+
+### 5. Launch Phase Manager
+
+Controls for managing launch phases:
 
 ```text
-travel_email_logs:
-- SELECT: order belongs to user (join travel_orders)
-- INSERT: service role only
-
-travel_orders updates:
-- UPDATE cancellation columns: user can only set cancellation_status = 'requested' for their own orders
+LAUNCH PHASE CONTROL
++-------------------------------------------------+
+| Current Phase: PRE_LAUNCH                       |
+|-------------------------------------------------|
+| ○ Pre-Launch    - Final verification            |
+| ● Soft Launch   - Limited traffic (24-72h)      |
+| ○ Full Launch   - Public + paid ads             |
+| ○ Scaling       - Optimizing for growth         |
++-------------------------------------------------+
+| Blockers: 2 items incomplete                    |
+| [View Blockers] [Advance Phase]                 |
++-------------------------------------------------+
 ```
 
----
+### 6. Post-Launch Monitoring Panel
 
-## Phase 2: Backend Edge Functions
-
-### 2.1 Resend Confirmation Email
-
-**File**: `supabase/functions/resend-travel-confirmation/index.ts`
-
-**Purpose**: User can request their confirmation email to be resent
-
-**Flow**:
-1. Validate order belongs to user
-2. Check rate limit (max 3 per hour per order)
-3. Fetch order details
-4. Call existing `send-travel-confirmation` function
-5. Log to `travel_email_logs`
-6. Return success
-
-### 2.2 Request Cancellation
-
-**File**: `supabase/functions/request-travel-cancellation/index.ts`
-
-**Request**:
-```typescript
-{
-  orderId: string;
-  reason: string;
-}
-```
-
-**Flow**:
-1. Validate order belongs to user
-2. Check order status is 'confirmed' (not already cancelled/refunded)
-3. Update `travel_orders.cancellation_status = 'requested'`
-4. Update `travel_orders.cancellation_reason`
-5. Update `travel_orders.cancellation_requested_at`
-6. Log to `booking_audit_logs`
-7. Send notification email to admin inbox
-8. Return success
-
-### 2.3 Process Cancellation (Admin)
-
-**File**: `supabase/functions/process-travel-cancellation/index.ts`
-
-**Purpose**: Admin reviews and approves/rejects cancellation
-
-**Flow**:
-1. Verify admin role
-2. Update cancellation_status to 'approved' or 'rejected'
-3. If approved and payment exists:
-   - Call Hotelbeds cancellation API for each item
-   - Process Stripe refund if eligible
-   - Update order status to 'cancelled'
-4. Send email to customer with decision
-5. Log all actions
-
-### 2.4 Update send-travel-confirmation
-
-Modify existing function to:
-- Integrate with Resend API (currently just logging)
-- Use HTML email template
-- Log to `travel_email_logs`
-
----
-
-## Phase 3: Frontend Pages
-
-### 3.1 Enhanced My Trips Page
-
-**File**: `src/pages/MyTripsPage.tsx` (new, replaces MyOrdersPage.tsx route)
-
-**Features**:
-- **Tabs**: Upcoming | Past | Cancelled
-- **Order Cards**: Show order number, date range, destination icons, status badge, total
-- **Status Badges**:
-  - Confirmed (green)
-  - Pending Payment (yellow)
-  - Cancellation Requested (orange)
-  - Cancelled (gray)
-  - Refunded (blue)
-- **Click to expand**: Navigate to detailed view
-
-**Data Classification**:
-```typescript
-Upcoming: start_date >= today AND status != cancelled
-Past: start_date < today AND status = confirmed
-Cancelled: status = cancelled OR status = refunded
-```
-
-### 3.2 Order Detail Page
-
-**File**: `src/pages/TravelOrderDetailPage.tsx`
-
-**Route**: `/my-trips/:orderNumber`
-
-**Sections**:
-
-1. **Header**: Order number, status badge, total
-2. **Itinerary Summary**: Timeline view of all items
-3. **Item Cards** (for each travel_order_item):
-   - Type icon (hotel/activity/transfer)
-   - Title
-   - Date range
-   - Guests count
-   - Supplier reference (if confirmed)
-   - Cancellation policy text
-   - Cancellation deadline (if applicable)
-   - Status badge
-
-4. **Traveler Info**: Holder name, email, phone
-
-5. **Payment Summary**: Subtotal, fees, taxes, total
-
-6. **Action Buttons**:
-   - "Resend Confirmation" (calls resend endpoint)
-   - "Contact Support" (opens support modal with order pre-filled)
-   - "Request Cancellation" (if order.cancellable and not already requested)
-
-### 3.3 Cancel Request Modal
-
-**Component**: `src/components/travel/CancelRequestModal.tsx`
-
-**Content**:
-- Order summary
-- Cancellation policy warning text:
-  ```
-  Cancellation depends on supplier rules.
-  Some bookings are non-refundable.
-  If eligible, refund timing depends on payment provider.
-  Typical processing: 5-10 business days.
-  ```
-- Reason input (required)
-- Confirm button
-
-### 3.4 Support Modal Integration
-
-**Update**: `src/components/travel/OrderSupportModal.tsx`
-
-- Pre-fill order reference
-- Set service_type = 'hotels' | 'activities' | 'transfers' based on order items
-- Set reference_id = order.id
-- Categories: booking_issue, refund_request, room_issue, etc.
-
----
-
-## Phase 4: Frontend Hooks
-
-### 4.1 useMyTrips Hook
-
-**File**: `src/hooks/useMyTrips.ts`
-
-```typescript
-export function useMyTrips(filter?: 'upcoming' | 'past' | 'cancelled') {
-  // Fetch travel_orders with items for current user
-  // Apply date-based filtering
-  // Return grouped and sorted orders
-}
-```
-
-### 4.2 useOrderActions Hook
-
-**File**: `src/hooks/useOrderActions.ts`
-
-```typescript
-export function useOrderActions() {
-  return {
-    resendConfirmation: (orderId: string) => {...},
-    requestCancellation: (orderId: string, reason: string) => {...},
-    // Rate limit state for resend
-  };
-}
-```
-
----
-
-## Phase 5: Email Templates
-
-### 5.1 Booking Confirmation Email
-
-Enhance existing `send-travel-confirmation` with HTML template:
+Real-time metrics for the first 7 days:
 
 ```text
-Subject: Booking Confirmed - {order_number}
-
-Content:
-- ZIVO logo
-- "Your booking is confirmed!"
-- Order number
-- Itinerary summary with dates
-- Supplier booking references
-- Support contact
-- Terms link
-- Footer with unsubscribe
+POST-LAUNCH MONITORING (Day 3 of 7)
++-------------------------------------------------+
+| Metric                | Today | Yesterday | Δ   |
+|-----------------------|-------|-----------|-----|
+| Bookings              | 47    | 32        | +46%|
+| Revenue               | $8,420| $5,100    | +65%|
+| Failed Bookings       | 2     | 1         | +1  |
+| Failed Payments       | 0     | 0         | -   |
+| Refund Rate           | 2.1%  | 3.1%      | -1% |
+| Fraud Flags           | 1     | 0         | +1  |
++-------------------------------------------------+
+| ALERTS (3 active)                               |
+| ⚠ High refund request from user@email.com      |
+| ⚠ Hotelbeds response time >2s                  |
+| ✓ All systems operational                       |
++-------------------------------------------------+
 ```
 
-### 5.2 Cancellation Request Email
+### 7. React Query Hooks
 
-**To Customer**:
-```text
-Subject: Cancellation Request Received - {order_number}
-
-"We've received your cancellation request.
-Our team will review it within 24-48 hours.
-You'll receive an update by email."
-```
-
-**To Admin**:
-```text
-Subject: [Action Required] Cancellation Request - {order_number}
-
-Order details
-Customer reason
-Link to admin dashboard
-```
-
-### 5.3 Cancellation Decision Email
+New hook file: `src/hooks/useProductionLaunch.ts`
 
 ```text
-Subject: Cancellation Update - {order_number}
+Hooks:
+- useProductionLaunchChecklist() - fetch/update checklist items
+- useProductionTestBookings() - manage test booking runs
+- useLaunchPhase() - current phase and controls
+- usePostLaunchMetrics() - real-time monitoring data
+- useLaunchMonitoringAlerts() - active alerts
+- useAdvanceLaunchPhase() - mutation to progress phases
+- useRunTestBooking() - trigger a live test booking
+```
 
-APPROVED:
-"Your cancellation has been approved.
-Refund of ${amount} will be processed in 5-10 business days."
+### 8. Admin Dashboard Page
 
-REJECTED:
-"We're unable to process your cancellation.
-Reason: {reason}
-Please contact support for assistance."
+New page: `src/pages/admin/modules/launch/ProductionLaunchDashboard.tsx`
+
+Tabbed interface:
+- **Overview**: Phase status, blockers, quick actions
+- **Environment**: API mode verification, debug checks
+- **Checklist**: All 8 category checklists with verification
+- **Test Bookings**: Live booking test runner
+- **Monitoring**: Post-launch metrics and alerts
+- **Logs**: Phase transition history
+
+### 9. Route Registration
+
+Add to `App.tsx`:
+```text
+/admin/production-launch → ProductionLaunchDashboard
 ```
 
 ---
 
-## Phase 6: Routing Updates
+## File Changes Summary
 
-**Add to App.tsx**:
-
-```typescript
-// My Trips routes
-<Route path="/my-trips" element={<MyTripsPage />} />
-<Route path="/my-trips/:orderNumber" element={<TravelOrderDetailPage />} />
-
-// Keep old route as redirect
-<Route path="/my-orders" element={<Navigate to="/my-trips" replace />} />
-```
-
----
-
-## Phase 7: Admin Dashboard
-
-### 7.1 Cancellation Queue
-
-**File**: `src/pages/admin/TravelCancellationsPage.tsx`
-
-**Features**:
-- List orders with cancellation_status = 'requested'
-- Show order details, reason, requested date
-- Action buttons: Approve | Reject
-- Approval triggers Hotelbeds cancellation + Stripe refund
-- Audit log of all decisions
+| File | Action |
+|------|--------|
+| `supabase/migrations/xxx_production_launch.sql` | Create |
+| `src/types/productionLaunch.ts` | Create |
+| `src/hooks/useProductionLaunch.ts` | Create |
+| `src/integrations/supabase/types.ts` | Update (auto) |
+| `src/pages/admin/modules/launch/ProductionLaunchDashboard.tsx` | Create |
+| `src/components/launch/EnvironmentVerificationPanel.tsx` | Create |
+| `src/components/launch/LaunchChecklistPanel.tsx` | Create |
+| `src/components/launch/TestBookingRunner.tsx` | Create |
+| `src/components/launch/PostLaunchMonitoringPanel.tsx` | Create |
+| `src/components/launch/LaunchPhaseControl.tsx` | Create |
+| `src/App.tsx` | Update (add route) |
 
 ---
 
-## Implementation Order
+## Integration Points
 
-### Week 1: Database + Backend
-1. Create database migration for new columns
-2. Add `travel_email_logs` table with RLS
-3. Create `resend-travel-confirmation` edge function
-4. Create `request-travel-cancellation` edge function
-5. Update `send-travel-confirmation` with Resend integration
-
-### Week 2: Frontend My Trips
-1. Create `MyTripsPage.tsx` with tabs
-2. Create `TravelOrderDetailPage.tsx`
-3. Create `useMyTrips` and `useOrderActions` hooks
-4. Build `CancelRequestModal` component
-5. Integrate support modal with order context
-
-### Week 3: Admin + Polish
-1. Create admin cancellation queue
-2. Create `process-travel-cancellation` edge function
-3. Add email templates for cancellation flow
-4. End-to-end testing
-
----
-
-## Files Summary
-
-### To Create
-
-| Category | Files |
-|----------|-------|
-| Database | Migration for new columns + travel_email_logs table |
-| Edge Functions | `resend-travel-confirmation/index.ts`, `request-travel-cancellation/index.ts`, `process-travel-cancellation/index.ts` |
-| Pages | `MyTripsPage.tsx`, `TravelOrderDetailPage.tsx`, `TravelCancellationsPage.tsx` (admin) |
-| Hooks | `useMyTrips.ts`, `useOrderActions.ts` |
-| Components | `CancelRequestModal.tsx`, `OrderSupportModal.tsx`, `TripCard.tsx`, `OrderItemCard.tsx` |
-
-### To Modify
-
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add my-trips routes |
-| `supabase/functions/send-travel-confirmation/index.ts` | Integrate Resend API |
-| `src/hooks/useOrderDetails.ts` | Add cancellation fields |
-| `supabase/config.toml` | Add new function configs |
+1. **Environment Config**: Reads from `src/config/environment.ts` to verify production mode
+2. **Compliance**: Links to `/admin/compliance` for legal verification
+3. **Disaster Recovery**: Links to DR dashboard for backup status
+4. **Automation**: Links to automation dashboard for alert configuration
+5. **Support**: Links to support dashboard for SLA verification
+6. **Flights Launch**: Integrates with existing `useFlightsLaunchStatus` for flights-specific checks
 
 ---
 
 ## Security Considerations
 
-1. **Authorization**: Users can only view/cancel their own orders
-2. **Rate Limiting**: Resend confirmation limited to 3/hour/order
-3. **Admin Verification**: Cancellation processing requires admin role
-4. **Audit Trail**: All cancellation actions logged
-5. **Email Safety**: No sensitive data (full card numbers, secrets) in emails
+- All launch controls require admin authentication
+- Phase transitions logged with user ID and timestamp
+- Test bookings use real but low-value amounts ($10-50)
+- Environment checks validate secrets exist without exposing values
+- All actions logged to `launch_phase_log`
 
 ---
 
 ## Success Criteria
 
-- [ ] Users can view all their travel orders in My Trips
-- [ ] Orders show accurate status (Confirmed, Cancellation Requested, etc.)
-- [ ] Resend confirmation works with rate limiting
-- [ ] Support tickets linked to orders
-- [ ] Cancellation request updates order status
-- [ ] Admin can process cancellation requests
-- [ ] Email notifications sent at each step
-- [ ] Audit logs capture all actions
-
+After implementation, admins can:
+1. Verify all APIs are in LIVE mode with one click
+2. Run and verify real test bookings for each service
+3. Track all 40+ checklist items across 8 categories
+4. Progress through launch phases with blocker awareness
+5. Monitor post-launch metrics in real-time
+6. Receive and acknowledge critical alerts
+7. Review complete launch history and audit trail
