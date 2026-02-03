@@ -65,3 +65,12 @@ verify_jwt = false
 
 [functions.duffel-flights]
 verify_jwt = false
+
+[functions.check-flight-health]
+verify_jwt = false
+
+[functions.send-incident-notification]
+verify_jwt = false
+
+[functions.resolve-flight-incident]
+verify_jwt = false

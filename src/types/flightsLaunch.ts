@@ -1,9 +1,31 @@
 /**
  * Flights Launch Settings Types
- * Types for the Flights TEST → LIVE launch system
+ * Types for the Flights TEST → LIVE launch system with incident management
  */
 
 export type FlightsLaunchStatus = 'test' | 'live';
+
+/**
+ * Incident reason codes for structured pause categorization
+ */
+export type IncidentReasonCode = 
+  | 'airline_outage'      // Airline system outage
+  | 'pricing_issue'       // Pricing inconsistency
+  | 'payment_issue'       // Payment provider issue
+  | 'maintenance'         // Scheduled maintenance
+  | 'duffel_outage'       // Duffel API down
+  | 'failure_spike'       // Auto-pause due to failure threshold
+  | 'other';              // Other
+
+export const INCIDENT_REASONS: { code: IncidentReasonCode; label: string; description: string }[] = [
+  { code: 'airline_outage', label: 'Airline System Outage', description: 'Airline GDS or booking system is down' },
+  { code: 'pricing_issue', label: 'Pricing Inconsistency', description: 'Fare discrepancies or incorrect prices' },
+  { code: 'payment_issue', label: 'Payment Provider Issue', description: 'Stripe or payment processing problem' },
+  { code: 'duffel_outage', label: 'Duffel API Outage', description: 'Duffel ticketing API not responding' },
+  { code: 'maintenance', label: 'Scheduled Maintenance', description: 'Planned system maintenance' },
+  { code: 'failure_spike', label: 'Failure Spike', description: 'Multiple booking failures detected' },
+  { code: 'other', label: 'Other', description: 'Other issue requiring pause' },
+];
 
 export interface FlightsLaunchSettings {
   id: string;
@@ -29,6 +51,11 @@ export interface FlightsLaunchSettings {
   emergency_pause_at: string | null;
   emergency_pause_by: string | null;
   
+  // Incident tracking
+  incident_reason_code: IncidentReasonCode | null;
+  incident_started_at: string | null;
+  incident_notes: string | null;
+  
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +72,24 @@ export interface FlightsGoLivePayload {
   status: 'live';
   status_changed_at: string;
   status_changed_by: string;
+}
+
+export interface FlightIncidentLog {
+  id: string;
+  incident_type: 'manual_pause' | 'auto_pause' | 'failure_spike' | 'api_outage';
+  reason_code: IncidentReasonCode;
+  description: string | null;
+  started_at: string;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  resolution_notes: string | null;
+  affected_bookings_count: number;
+  affected_booking_ids: string[];
+  failure_count_trigger: number | null;
+  customers_notified: number;
+  customers_resolved: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ChecklistItem {
