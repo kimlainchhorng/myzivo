@@ -1,325 +1,279 @@
 
-# ZIVO Flights Final OTA Cleanup - Remove All Affiliate Language
+# ZIVO Flights Final Content Update - OTA Language Cleanup
 
 ## Summary
 
-Complete removal of all remaining affiliate/indicative pricing language from the Flights UI to ensure ZIVO is presented as a true OTA (Merchant of Record) with Duffel ticketing and Stripe checkout. No affiliate fallback UI should ever render.
+Remove all remaining affiliate wording from Flights pages and update to OTA language. This covers How Booking Works sections, Trust Badges, FAQ content, Footer text, and ensures "compare" is not used for Flights.
 
 ---
 
-## Components with Remaining Affiliate Language
+## Components Requiring Updates
 
-### Critical Fixes Required
+### 1. HowBookingWorks.tsx - Update Step Text
 
-| File | Issue | Fix |
-|------|-------|-----|
-| `EmptyResults.tsx` | Shows "Estimated prices shown", Cheapest/Best Value/Flexible cards, partner CTA, affiliate disclaimer | Replace with OTA-appropriate empty state for flights |
-| `QuickStatsBar.tsx` | Shows "via Aviasales/JetRadar/Kiwi" partner names, "partner websites" footer | Remove partner names, update to airline sources |
-| `FlightTicketCard.tsx` | Shows "Estimated", "Indicative price. Final price confirmed on partner checkout.", ExternalLink icon, `window.open` affiliate redirect | Replace with OTA wording, remove affiliate redirect |
-| `ResultsContainer.tsx` | Shows "*Indicative prices – final price shown on partner site" | Remove for flights (or change to OTA text) |
-| `RampResultsLayout.tsx` | Shows "Indicative prices shown — final price confirmed on partner site", "Hizovo does not issue tickets" | Replace with OTA disclaimer |
-| `FlightEmptyState.tsx` | Shows "Search Partner Site" CTA with ExternalLink, affiliate redirect, "partner's secure site" | Replace with OTA messaging |
-| `FlightTrustBadgesBar.tsx` | Shows "Secure Partner Checkout", "licensed airline partners" | Change to "Secure ZIVO Checkout" |
-| `FlightPriceCalendar.tsx` | Shows "indicative prices" | Change to "estimated" or remove |
-| `HeroSection.tsx` | Shows "Indicative prices shown", "Final booking completed on partner site", ExternalLink icon | Remove for flights context |
-| `FlightConsentGate.tsx` | Entire component is for partner redirect consent | Component likely unused now (OTA flow) - verify usage |
-| `FlightConsentCheckbox.tsx` | Comment says "REQUIRED before partner checkout redirect" | Update comment, verify if still needed |
-| `FlightCardWithModal.tsx` | Builds affiliate URL for partner redirect | Update to use internal navigation |
+**File:** `src/components/flight/HowBookingWorks.tsx`
+
+| Step | Current | New |
+|------|---------|-----|
+| 1 Title | "Search & compare flights" | "Search flights" |
+| 1 Description | "Compare options from 500+ airlines" | "Browse real-time flight options from global airlines." |
+| 2 Title | "Choose the best option" | "Select your flight" |
+| 2 Description | "Select the best deal for your travel needs" | "View final prices, baggage, and fare rules before booking." |
+| 3 Title | "Book directly on ZIVO" | Keep as-is |
+| 3 Description | "Pay securely and receive your e-ticket instantly" | Keep as-is (already correct) |
 
 ---
 
-## Implementation Plan
+### 2. HowItWorksSimple.tsx - Update for OTA Model
 
-### Phase 1: EmptyResults.tsx - Flight-Specific OTA Mode
+**File:** `src/components/home/HowItWorksSimple.tsx`
 
-**Current (lines 38-63):**
-```tsx
-flights: {
-  icon: Plane,
-  title: "Estimated prices shown",
-  titleFiltered: "No flights match your filters",
-  message: "We're comparing deals from our licensed travel partners.",
-  // ... mock indicative price cards
-}
-```
+| Step | Current | New |
+|------|---------|-----|
+| 1 | "Search & compare prices" | "Search flights" |
+| 1 Description | "Enter your travel details and compare options from 500+ airlines" | "Browse real-time flight options from global airlines." |
+| 2 | "Choose the best option" | "Select your flight" |
+| 2 Description | "Review prices, times, baggage..." | "View final prices, baggage, and fare rules before booking." |
+| 3 | "Complete booking securely" | "Book on ZIVO" |
+| 3 Description | "Book securely with our licensed travel partners" | "Pay securely on ZIVO and receive your e-ticket instantly." |
 
-**Updated:**
-```tsx
-flights: {
-  icon: Plane,
-  title: "No flights available",  // Changed
-  titleFiltered: "No flights match your filters",
-  message: "No flights found for these dates. Try different dates or nearby airports.",  // MoR text
-  defaultPrices: null,  // NO mock prices for flights
-}
-```
-
-**Also update:**
-- Line 230: Remove "Estimated" label for flights
-- Line 239: Remove "Indicative price. Final price confirmed on partner checkout."
-- Line 254-256: Remove ExternalLink icon and "Continue to secure booking" for flights
-- Line 270: Change disclaimer to "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers."
+Also update reassurance text:
+- Current: "We connect you to licensed partners for secure checkout"
+- New: "Tickets issued by licensed airline ticketing providers."
 
 ---
 
-### Phase 2: QuickStatsBar.tsx - Remove Partner Names
+### 3. TopTierHero.tsx - Update Flights Headline
 
-**Current (lines 42, 52, 63):**
-```tsx
-partner: cheapest.partner || "Aviasales",
-partner: fastest.partner || "JetRadar", 
-partner: bestValue.partner || "Kiwi",
-```
+**File:** `src/components/shared/TopTierHero.tsx`
 
-**Updated:**
-```tsx
-partner: undefined,  // Remove partner references
-```
-
-**Also update:**
-- Line 77: Change "Compare prices from multiple airlines and trusted partners" → "Compare prices from multiple airlines"
-- Line 105-107: Remove "via {stat.partner}" display
-- Line 117: Change "Final booking is completed securely on partner websites" → "Tickets issued instantly after payment"
+| Current | New |
+|---------|-----|
+| `headline: "Search & Compare Flights Worldwide"` | `headline: "Search Flights Worldwide"` |
+| `subheadline: "Compare 500+ airlines..."` | `subheadline: "Real-time prices from global airlines. Secure ZIVO checkout."` |
 
 ---
 
-### Phase 3: FlightTicketCard.tsx - Full OTA Conversion
+### 4. FlightFAQSection.tsx - Rewrite All Answers
 
-**Current (lines 320-370):**
-- Line 322: `{flight.isRealPrice ? "From" : "Estimated"}`
-- Line 334: "Indicative price. Final price confirmed on partner checkout."
-- Line 347-351: `window.open(AFFILIATE_LINKS.flights.url, "_blank")`
-- Line 369: ExternalLink icon
+**File:** `src/components/flight/FlightFAQSection.tsx`
 
-**Updated:**
-- Line 322: Always show "From" (all Duffel prices are exact)
-- Line 334: "Final prices shown — tickets issued instantly after payment." (or remove)
-- Line 347-351: Replace with internal navigation to `/flights/details/{id}`
-- Line 369: Replace ExternalLink with ArrowRight
+**Q1: "How does ZIVO find cheap flights?" → "How does ZIVO find flight prices?"**
+- Current: "ZIVO searches across 500+ airlines and travel sites in real-time to compare prices..."
+- New: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices."
 
----
+**Q2: "Does ZIVO sell tickets directly?"**
+- Current: "No, ZIVO is a flight comparison platform. We help you find and compare the best prices, then redirect you..."
+- New: "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules."
 
-### Phase 4: ResultsContainer.tsx - Remove Indicative for Flights
-
-**Current (lines 71-75):**
-```tsx
-{indicativePrice && (
-  <p className="text-xs text-muted-foreground mt-0.5">
-    *Indicative prices – final price shown on partner site
-  </p>
-)}
-```
-
-**Updated:**
-Keep `indicativePrice` prop but change the text:
-```tsx
-{indicativePrice && (
-  <p className="text-xs text-muted-foreground mt-0.5">
-    Final prices shown — tickets issued instantly after payment.
-  </p>
-)}
-```
-
-Or pass `indicativePrice={false}` from FlightResults.tsx (since Duffel = exact pricing).
+**Q3: "Are there hidden fees?"**
+- Current: "We display all-in prices including taxes and basic fees. However, airlines may charge extra..."
+- New: "No. Prices shown on ZIVO are final and confirmed before payment. Airline extras (bags, seats) are shown separately."
 
 ---
 
-### Phase 5: RampResultsLayout.tsx - Update Disclaimers
+### 5. FlightFAQWithSchema.tsx - Rewrite for OTA
 
-**Current (lines 64-67, 91-93):**
-```tsx
-<p className="text-xs text-muted-foreground mt-1">
-  Indicative prices shown — final price confirmed on partner site
-</p>
-...
-<p className="text-xs text-muted-foreground">
-  Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
-</p>
-```
+**File:** `src/components/seo/FlightFAQWithSchema.tsx`
 
-**Updated:**
-```tsx
-<p className="text-xs text-muted-foreground mt-1">
-  Final prices shown — tickets issued instantly after payment.
-</p>
-...
-<p className="text-xs text-muted-foreground">
-  ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
-</p>
-```
+Same updates as FlightFAQSection but this one affects SEO schema:
+
+| Question | New Answer |
+|----------|------------|
+| How does ZIVO find cheap flights? → How does ZIVO find flight prices? | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
+| Does ZIVO sell tickets directly? | "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
+| Are there hidden fees? | "No. Prices shown on ZIVO are final and confirmed before payment." |
+| Can I trust the prices shown? | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
+
+Remove references to "indicative prices", "partner's booking page", "redirect".
 
 ---
 
-### Phase 6: FlightEmptyState.tsx - Remove Partner Fallback
+### 6. ResultsFAQ.tsx - Update Flights FAQ Section
 
-**Current (lines 222-238):**
-```tsx
-{/* Partner Fallback CTA */}
-<Button onClick={handleSearchPartner}>
-  Search Partner Site
-  <ExternalLink className="w-4 h-4" />
-</Button>
-<p>You will complete your booking on our partner's secure site.</p>
-```
+**File:** `src/components/results/ResultsFAQ.tsx`
 
-**Updated:**
-Remove entire partner fallback section. Replace with:
-```tsx
-<p className="text-sm text-muted-foreground">
-  Can't find what you're looking for? Try adjusting your search criteria.
-</p>
-```
+Update the `flights` section in `faqContent`:
 
-Also remove the `handleSearchPartner` function and AFFILIATE_LINKS import.
+| Question | Current Answer | New Answer |
+|----------|----------------|------------|
+| How does ZIVO find flight prices? | "ZIVO searches across multiple trusted airline partners and travel agencies..." | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
+| Are prices final? | "Prices shown are indicative and may change. The final price will be confirmed when you complete your booking on our partner's website." | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
+| Do I book on ZIVO or another site? | "ZIVO is a search and comparison platform. When you click 'View Deal,' you'll be redirected to our partner's website..." | "You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
+| Is my payment secure? | "All payments are processed securely on our partner's websites. ZIVO never handles your payment information." | "All payments are processed securely on ZIVO using bank-grade encryption. Your payment data is protected." |
 
 ---
 
-### Phase 7: FlightTrustBadgesBar.tsx - OTA Language
+### 7. Footer.tsx - Update Description & Remove Affiliate Link
 
-**Current:**
-- Line 17: `"Secure Partner Checkout"`
-- Line 97: `"All bookings completed with licensed airline partners"`
+**File:** `src/components/Footer.tsx`
 
-**Updated:**
-- Line 17: `"Secure ZIVO Checkout"`
-- Line 97: `"ZIVO sells tickets as a sub-agent of licensed ticketing providers"`
+**Update brand description (line 125-127):**
+- Current: "Search & compare flights, hotels, and car rentals from trusted partners."
+- New: "Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment."
+
+**Remove Affiliate Disclosure link from legal (line 48):**
+```tsx
+// REMOVE this line:
+{ name: "Affiliate Disclosure", href: "/affiliate-disclosure" },
+```
+
+Keep Partner Disclosure (that's correct for partner ticketing disclosure).
 
 ---
 
-### Phase 8: FlightPriceCalendar.tsx - Update Text
+### 8. TrustBadges & Trust Components - Update Text
 
-**Current (line 69):**
-```tsx
-Explore indicative prices across the month to compare options
-```
+**Files to update:**
 
-**Updated:**
-```tsx
-Explore prices across the month to find the best deals
-```
+| File | Current | New |
+|------|---------|-----|
+| `TrustBadges.tsx` | "Trusted Partners" | "Secure ZIVO Checkout" |
+| `TrustCredibilityBar.tsx` | "Trusted Partners" | "Licensed Fulfillment" |
+| `TrustSection.tsx` | "Trusted Partners" | "Licensed Ticketing Partners" |
 
 ---
 
-### Phase 9: HeroSection.tsx - Remove Partner Language
+### 9. SEOContentBlock.tsx - Update Flights Content
 
-**Current (lines 39-41, 81-83, 98-100):**
-```tsx
-<p>Indicative prices shown · Final price confirmed before payment</p>
-...
-<ExternalLink /> Final booking completed on partner site.
-```
+**File:** `src/components/seo/SEOContentBlock.tsx`
 
-**Updated:**
-For flights context, these should not appear. Since this is a shared home page component, we could:
-1. Remove these lines entirely (affects hotels/cars too - keep for them)
-2. Add a service-specific conditional
+Update flights content block:
+- Current h1: "Search & Compare Flights Worldwide"
+- New h1: "Search Flights Worldwide"
 
-**Recommendation:** Keep for hotels/cars (affiliate), but remove ExternalLink icon.
+- Current intro: "Compare flight prices from 500+ airlines and travel sites..."
+- New intro: "Search real-time flight prices from global airlines. Book securely on ZIVO with instant e-tickets."
+
+- Remove: "When you find a flight you like, you'll be redirected to our partner's website..."
 
 ---
 
-### Phase 10: FlightConsentGate.tsx & FlightConsentCheckbox.tsx
+### 10. adsCompliance.ts - Update Flight Config
 
-These components were designed for affiliate partner redirect flow. Since OTA mode doesn't redirect externally:
-1. Verify if these are still used in the OTA flow
-2. If used for internal ZIVO checkout consent, update comments and text
-3. If unused, mark as deprecated or remove
+**File:** `src/config/adsCompliance.ts`
+
+| Current | New |
+|---------|-----|
+| `headline: 'Search & Compare Flights'` | `headline: 'Search Flights'` |
+| `disclaimer: 'Hizivo does not issue airline tickets...'` | `disclaimer: 'ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.'` |
 
 ---
 
-### Phase 11: FlightCardWithModal.tsx - Remove Affiliate URL
+### 11. DestinationHero.tsx - Update Badge
 
-**Current (line 25-27):**
-```tsx
-// Build affiliate URL for partner redirect
-const getAffiliateUrl = () => { ... }
-```
+**File:** `src/components/seo/DestinationHero.tsx`
 
-**Updated:**
-Remove affiliate URL logic, use internal navigation:
-```tsx
-const handleSelect = () => {
-  navigate(`/flights/details/${flight.id}`);
-};
-```
+| Current | New |
+|---------|-----|
+| `badge: "Search & Compare Flights"` | `badge: "Search Flights"` |
+
+---
+
+### 12. Landing Pages - Update Headlines
+
+**Files:**
+- `src/pages/FlightLanding.tsx`
+- `src/pages/FlightSearch.tsx`
+- `src/pages/creators/FlightsCreatorLanding.tsx`
+- `src/pages/lp/FlightsLP.tsx`
+- `src/pages/ads/FlightsAdLanding.tsx`
+
+**Pattern to replace:**
+- "Search & Compare Flights" → "Search Flights"
+- "Compare flight prices from trusted partners" → "Search real-time flight prices"
+
+---
+
+### 13. LaunchAnnouncements.tsx - Update Social Copy
+
+**File:** `src/components/home/LaunchAnnouncements.tsx`
+
+| Current | New |
+|---------|-----|
+| "Search & compare flights, hotels, and car rentals..." | "Book flights, hotels, and car rentals directly on ZIVO..." |
+| "Booking completed on partner sites." | "Secure checkout. Instant e-tickets." |
 
 ---
 
 ## File Changes Summary
 
-| File | Action | Description |
+| File | Action | Key Changes |
 |------|--------|-------------|
-| `src/components/results/EmptyResults.tsx` | MODIFY | Update flights config to OTA language, remove mock price cards |
-| `src/components/flight/QuickStatsBar.tsx` | MODIFY | Remove partner names, update footer text |
-| `src/components/flight/FlightTicketCard.tsx` | MODIFY | Remove affiliate redirect, use internal navigation, update price labels |
-| `src/components/results/ResultsContainer.tsx` | MODIFY | Update indicative price text to OTA language |
-| `src/components/results/RampResultsLayout.tsx` | MODIFY | Update disclaimers to OTA language |
-| `src/components/flight/FlightEmptyState.tsx` | MODIFY | Remove partner fallback CTA entirely |
-| `src/components/flight/FlightTrustBadgesBar.tsx` | MODIFY | Change "Partner Checkout" to "ZIVO Checkout" |
-| `src/components/flight/FlightPriceCalendar.tsx` | MODIFY | Remove "indicative" wording |
-| `src/components/home/HeroSection.tsx` | MODIFY | Remove ExternalLink icon, keep pricing text for hotels/cars |
-| `src/components/flight/FlightCardWithModal.tsx` | MODIFY | Remove affiliate URL, use internal navigation |
+| `src/components/flight/HowBookingWorks.tsx` | MODIFY | Update step titles and descriptions |
+| `src/components/home/HowItWorksSimple.tsx` | MODIFY | Remove "compare", update to OTA flow |
+| `src/components/shared/TopTierHero.tsx` | MODIFY | "Search Flights Worldwide" |
+| `src/components/flight/FlightFAQSection.tsx` | MODIFY | Rewrite all FAQ answers for OTA |
+| `src/components/seo/FlightFAQWithSchema.tsx` | MODIFY | Rewrite FAQs for SEO schema |
+| `src/components/results/ResultsFAQ.tsx` | MODIFY | Update flights section answers |
+| `src/components/Footer.tsx` | MODIFY | Update description, remove Affiliate Disclosure link |
+| `src/components/shared/TrustBadges.tsx` | MODIFY | "Secure ZIVO Checkout" |
+| `src/components/home/TrustCredibilityBar.tsx` | MODIFY | Update badge text |
+| `src/components/shared/TrustSection.tsx` | MODIFY | Update partner text |
+| `src/components/seo/SEOContentBlock.tsx` | MODIFY | Remove "compare", update flights content |
+| `src/config/adsCompliance.ts` | MODIFY | Update headline and disclaimer |
+| `src/components/seo/DestinationHero.tsx` | MODIFY | Update badge text |
+| `src/pages/FlightLanding.tsx` | MODIFY | Update headline |
+| `src/pages/FlightSearch.tsx` | MODIFY | Update SEO title |
+| `src/pages/creators/FlightsCreatorLanding.tsx` | MODIFY | Update headline |
+| `src/pages/lp/FlightsLP.tsx` | MODIFY | Update headline |
+| `src/pages/ads/FlightsAdLanding.tsx` | MODIFY | Update headline |
+| `src/components/home/LaunchAnnouncements.tsx` | MODIFY | Update social copy |
+| `src/utils/seoUtils.ts` | MODIFY | Update flight SEO defaults |
 
 ---
 
-## New Text Standards
+## New Text Standards (Flights Only)
 
-### Empty State
-**Old:** "Estimated prices shown"
-**New:** "No flights available for these dates. Try different dates or nearby airports."
+### Headlines
+- ❌ "Search & Compare Flights" 
+- ✅ "Search Flights"
 
-### Price Labels
-**Old:** "Estimated" / "Indicative"
-**New:** "From" (all Duffel prices are exact)
+### How It Works Steps
+1. **Search flights** - "Browse real-time flight options from global airlines."
+2. **Select your flight** - "View final prices, baggage, and fare rules before booking."
+3. **Book on ZIVO** - "Pay securely on ZIVO and receive your e-ticket instantly."
 
-### Price Disclaimers
-**Old:** "Indicative price. Final price confirmed on partner checkout."
-**New:** "Final prices shown — tickets issued instantly after payment."
-
-### Global Disclaimer
-**Old:** "Hizovo does not issue tickets. Payment and booking fulfilled by partners."
-**New:** "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under airline rules."
-
-### CTAs
-**Old:** "Search Partner Site" + ExternalLink
-**New:** "Book on ZIVO" + ArrowRight
+### FAQ Answers
+| Topic | OTA Answer |
+|-------|------------|
+| How ZIVO finds prices | "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices." |
+| Are prices final? | "Yes. Prices shown on ZIVO are final and confirmed before payment." |
+| Where do I book? | "You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules." |
 
 ### Trust Badges
-**Old:** "Secure Partner Checkout"
-**New:** "Secure ZIVO Checkout"
+- ✅ "Secure ZIVO Checkout"
+- ✅ "Tickets issued by licensed airline ticketing providers."
+- ❌ "Secure Partner Checkout"
+- ❌ "Trusted Partners" (for flights context)
+
+### Footer
+- ✅ "Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment."
+- ❌ "Search & compare flights, hotels, and car rentals from trusted partners."
 
 ---
 
-## Global Rule Enforcement
+## Words to Remove from Flights Pages
 
-When `DUFFEL_ENV = sandbox` or `live`:
-- Affiliate fallback UI must NEVER render
-- Partner redirect logic must NEVER execute
-- All prices are final (from Duffel API)
-- All bookings complete on ZIVO (Stripe checkout)
-- Tickets issued via Duffel after payment
+| Forbidden | Replacement |
+|-----------|-------------|
+| "compare" | "search" or remove |
+| "partner checkout" | "ZIVO checkout" |
+| "partner site" | Remove or "ZIVO" |
+| "indicative prices" | "final prices" |
+| "redirected to" | Remove |
+| "affiliate" | Remove from flights context |
 
 ---
 
 ## Verification Checklist
 
-After implementation, search codebase to confirm ZERO instances of:
-1. ❌ "Estimated prices" (for flights)
-2. ❌ "Indicative price"
-3. ❌ "partner site" / "partner checkout" (for flights)
-4. ❌ "does not issue tickets"
-5. ❌ "Continue to secure booking" with ExternalLink
-6. ❌ Mock Cheapest/Best Value/Flexible cards (for flights)
-7. ❌ Partner names (Aviasales, JetRadar, Kiwi)
-8. ❌ `window.open` for flights
-9. ❌ AFFILIATE_LINKS usage in flight components
-10. ❌ Hizivo/Hizovo references
-
-And confirm these ARE present:
-1. ✅ "Book on ZIVO" CTA
-2. ✅ "From $XXX" price labels
-3. ✅ "Final prices shown — tickets issued instantly"
-4. ✅ "Secure ZIVO Checkout"
-5. ✅ "ZIVO sells flight tickets as a sub-agent..."
-6. ✅ ArrowRight icons (internal navigation)
-7. ✅ Internal navigate() calls to `/flights/details/{id}`
+After implementation, confirm:
+1. ✅ "compare" does NOT appear on any Flights page
+2. ✅ No "partner checkout" or "partner site" for flights
+3. ✅ All FAQ answers reflect OTA model
+4. ✅ Footer says "Book...directly on ZIVO"
+5. ✅ Affiliate Disclosure link removed from footer
+6. ✅ Trust badges say "Secure ZIVO Checkout"
+7. ✅ How Booking Works uses new 3-step text
+8. ✅ All SEO titles/descriptions updated
