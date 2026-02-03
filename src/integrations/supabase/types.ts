@@ -3176,6 +3176,7 @@ export type Database = {
       }
       flight_bookings: {
         Row: {
+          admin_notes: string | null
           baggage_allowance: Json | null
           base_fare: number | null
           booking_reference: string
@@ -3185,6 +3186,9 @@ export type Database = {
           customer_id: string
           departure_date: string | null
           destination: string | null
+          dispute_created_at: string | null
+          dispute_id: string | null
+          dispute_status: string | null
           duffel_cost: number | null
           fare_rules: Json | null
           flight_id: string
@@ -3225,6 +3229,7 @@ export type Database = {
           zivo_markup: number | null
         }
         Insert: {
+          admin_notes?: string | null
           baggage_allowance?: Json | null
           base_fare?: number | null
           booking_reference: string
@@ -3234,6 +3239,9 @@ export type Database = {
           customer_id: string
           departure_date?: string | null
           destination?: string | null
+          dispute_created_at?: string | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           duffel_cost?: number | null
           fare_rules?: Json | null
           flight_id: string
@@ -3274,6 +3282,7 @@ export type Database = {
           zivo_markup?: number | null
         }
         Update: {
+          admin_notes?: string | null
           baggage_allowance?: Json | null
           base_fare?: number | null
           booking_reference?: string
@@ -3283,6 +3292,9 @@ export type Database = {
           customer_id?: string
           departure_date?: string | null
           destination?: string | null
+          dispute_created_at?: string | null
+          dispute_id?: string | null
+          dispute_status?: string | null
           duffel_cost?: number | null
           fare_rules?: Json | null
           flight_id?: string
@@ -3523,6 +3535,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "flight_passengers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_payment_audit_log: {
+        Row: {
+          amount: number | null
+          booking_id: string | null
+          created_at: string
+          currency: string | null
+          duffel_action: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          stripe_event_id: string | null
+          stripe_event_type: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string | null
+          duffel_action?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status: string
+          stripe_event_id?: string | null
+          stripe_event_type: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string | null
+          duffel_action?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_event_id?: string | null
+          stripe_event_type?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_payment_audit_log_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "flight_bookings"
