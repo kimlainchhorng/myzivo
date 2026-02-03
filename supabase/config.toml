@@ -116,3 +116,6 @@ verify_jwt = false
 
 [functions.notifications-api]
 verify_jwt = false
+
+[functions.assess-fraud]
+verify_jwt = false
