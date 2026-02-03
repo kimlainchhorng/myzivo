@@ -28,6 +28,139 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Get current environment
 const DUFFEL_ENV = Deno.env.get('DUFFEL_ENV') || 'sandbox';
 
+// Default cache TTL in seconds (2 minutes)
+const DEFAULT_CACHE_TTL = 120;
+
+/**
+ * Generate cache key for search params
+ */
+function generateCacheKey(params: {
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  cabinClass: string;
+}): string {
+  return `${params.origin}-${params.destination}-${params.departureDate}-${params.returnDate || 'OW'}-${params.passengers}-${params.cabinClass}`;
+}
+
+/**
+ * Check cache for existing results
+ */
+async function checkCache(cacheKey: string): Promise<{ hit: boolean; data?: unknown }> {
+  try {
+    const { data, error } = await supabase
+      .from('flight_search_cache')
+      .select('offers_data, offers_count, offer_request_id')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (error || !data) {
+      return { hit: false };
+    }
+
+    // Increment hit counter
+    await supabase
+      .from('flight_search_cache')
+      .update({ hits: supabase.rpc('increment_counter') })
+      .eq('cache_key', cacheKey);
+
+    console.log('[Cache] HIT for key:', cacheKey);
+    return { hit: true, data: data.offers_data };
+  } catch {
+    return { hit: false };
+  }
+}
+
+/**
+ * Store search results in cache
+ */
+async function setCache(params: {
+  cacheKey: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  passengers: number;
+  cabinClass: string;
+  offersData: unknown;
+  offersCount: number;
+  offerRequestId?: string;
+  ttlSeconds?: number;
+}): Promise<void> {
+  const ttl = params.ttlSeconds || DEFAULT_CACHE_TTL;
+  const expiresAt = new Date(Date.now() + ttl * 1000);
+
+  try {
+    await supabase
+      .from('flight_search_cache')
+      .upsert({
+        cache_key: params.cacheKey,
+        origin_iata: params.origin,
+        destination_iata: params.destination,
+        departure_date: params.departureDate,
+        return_date: params.returnDate || null,
+        passengers: params.passengers,
+        cabin_class: params.cabinClass,
+        offers_data: params.offersData,
+        offers_count: params.offersCount,
+        offer_request_id: params.offerRequestId,
+        expires_at: expiresAt.toISOString(),
+        hits: 0,
+      }, { onConflict: 'cache_key' });
+
+    console.log('[Cache] SET for key:', params.cacheKey, 'TTL:', ttl, 's');
+  } catch (err) {
+    console.error('[Cache] Failed to set:', err);
+  }
+}
+
+/**
+ * Check API limits and update usage
+ */
+async function checkAndUpdateApiUsage(isLive: boolean): Promise<{ allowed: boolean; reason?: string }> {
+  const today = new Date().toISOString().split('T')[0];
+
+  try {
+    // Get limits
+    const { data: limits } = await supabase
+      .from('flight_api_limits')
+      .select('daily_search_cap, daily_booking_cap, is_active')
+      .single();
+
+    if (!limits?.is_active) {
+      return { allowed: true };
+    }
+
+    // Get today's usage
+    const { data: usage } = await supabase
+      .from('flight_api_usage')
+      .select('searches_live, bookings_total')
+      .eq('date', today)
+      .single();
+
+    const currentSearches = usage?.searches_live || 0;
+
+    if (limits.daily_search_cap && currentSearches >= limits.daily_search_cap) {
+      return { allowed: false, reason: 'Daily search limit reached' };
+    }
+
+    // Update usage
+    if (isLive) {
+      await supabase.rpc('increment_flight_api_usage', { is_cached: false });
+    } else {
+      await supabase.rpc('increment_flight_api_usage', { is_cached: true });
+    }
+
+    return { allowed: true };
+  } catch (err) {
+    console.error('[API Limits] Check failed:', err);
+    return { allowed: true }; // Allow on error to not block searches
+  }
+}
+
 /**
  * Log search request and response to database for debugging
  */
@@ -43,6 +176,7 @@ async function logSearch(params: {
   error?: string;
   offersCount: number;
   responseTimeMs: number;
+  fromCache?: boolean;
 }) {
   try {
     await supabase.from('flight_search_logs').insert({
@@ -61,7 +195,6 @@ async function logSearch(params: {
     });
   } catch (err) {
     console.error('[Logging] Failed to log search:', err);
-    // Don't throw - logging failure shouldn't break the search
   }
 }
 
@@ -155,12 +288,12 @@ async function duffelRequest(
   }
 }
 
-// Create an offer request (start a search) with logging
+// Create an offer request (start a search) with caching
 async function createOfferRequest(params: CreateOfferRequestParams) {
   console.log('[Duffel] Creating offer request:', JSON.stringify(params));
   const startTime = Date.now();
   
-  // Extract search params for logging
+  // Extract search params for logging and caching
   const firstSlice = params.slices[0];
   const returnSlice = params.slices[1];
   const origin = firstSlice?.origin || '';
@@ -169,6 +302,52 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
   const returnDate = returnSlice?.departure_date;
   const passengerCount = params.passengers?.length || 1;
   const cabinClass = params.cabin_class || 'economy';
+  
+  // Generate cache key
+  const cacheKey = generateCacheKey({
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    passengers: passengerCount,
+    cabinClass,
+  });
+
+  // Check cache first
+  const cached = await checkCache(cacheKey);
+  if (cached.hit && cached.data) {
+    const responseTimeMs = Date.now() - startTime;
+    console.log('[Duffel] Serving from cache:', cacheKey);
+    
+    // Log cached response
+    await logSearch({
+      origin,
+      destination,
+      departureDate,
+      returnDate,
+      passengers: passengerCount,
+      cabinClass,
+      statusCode: 200,
+      offersCount: (cached.data as { offers?: unknown[] }).offers?.length || 0,
+      responseTimeMs,
+      fromCache: true,
+    });
+
+    // Update usage stats
+    await checkAndUpdateApiUsage(false); // false = cached
+
+    return {
+      ...(cached.data as object),
+      fromCache: true,
+      environment: DUFFEL_ENV,
+    };
+  }
+
+  // Check API limits before live call
+  const limitsCheck = await checkAndUpdateApiUsage(true); // true = live
+  if (!limitsCheck.allowed) {
+    return { error: limitsCheck.reason || 'API limit reached' };
+  }
   
   const result = await duffelRequest('/air/offer_requests', 'POST', {
     data: {
@@ -207,6 +386,7 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
   };
 
   const offersCount = offerRequest.offers?.length || 0;
+  const transformedOffers = transformOffers(offerRequest.offers || []);
   console.log('[Duffel] Offer request created:', offerRequest.id, 'with', offersCount, 'initial offers');
 
   // Log successful search
@@ -223,12 +403,28 @@ async function createOfferRequest(params: CreateOfferRequestParams) {
     responseTimeMs,
   });
 
-  return {
+  const responseData = {
     offer_request_id: offerRequest.id,
-    offers: transformOffers(offerRequest.offers || []),
+    offers: transformedOffers,
     created_at: offerRequest.created_at,
     environment: DUFFEL_ENV,
   };
+
+  // Cache the results (120 seconds default)
+  await setCache({
+    cacheKey,
+    origin,
+    destination,
+    departureDate,
+    returnDate,
+    passengers: passengerCount,
+    cabinClass,
+    offersData: responseData,
+    offersCount,
+    offerRequestId: offerRequest.id,
+  });
+
+  return responseData;
 }
 
 // Get offers for an existing offer request
@@ -540,7 +736,7 @@ serve(async (req) => {
         );
     }
 
-    if (result.error) {
+    if ('error' in result && result.error) {
       return new Response(
         JSON.stringify({ error: result.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
