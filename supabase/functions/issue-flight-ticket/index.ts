@@ -152,6 +152,27 @@ serve(async (req) => {
         console.log("[IssueTicket] Duffel order created:", orderId, "PNR:", pnr);
       } catch (duffelError) {
         console.error("[IssueTicket] Duffel error:", duffelError);
+        
+        // Auto-refund on ticketing failure
+        console.log("[IssueTicket] Triggering auto-refund for booking:", bookingId);
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/process-flight-refund`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseServiceKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bookingId,
+              reason: `Ticketing failed: ${duffelError instanceof Error ? duffelError.message : 'Unknown error'}`,
+              action: 'auto',
+            }),
+          });
+          console.log("[IssueTicket] Auto-refund triggered successfully");
+        } catch (refundErr) {
+          console.error("[IssueTicket] Auto-refund failed:", refundErr);
+        }
+        
         throw duffelError;
       }
     } else {

@@ -1,6 +1,7 @@
 /**
- * Flight Results Page - Unified Design
- * Uses shared results components for consistent UX
+ * Flight Results Page - Duffel MoR Integration
+ * Uses Duffel API for real flight search with exact pricing
+ * ZIVO is Merchant of Record - no affiliate redirects
  */
 
 import { useState, useMemo, useEffect } from "react";
@@ -15,16 +16,13 @@ import {
   X,
   AlertCircle,
   ShieldCheck,
-  ExternalLink,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { generateFlights, type GeneratedFlight } from "@/data/flightGenerator";
-import { useAviasalesFlightSearch, buildWhitelabelUrl, type ApiFlightResult } from "@/hooks/useAviasalesFlightSearch";
+import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
 import { useFlightFilters, defaultFlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
-import { AFFILIATE_DISCLOSURE_TEXT } from "@/config/affiliateLinks";
-import { trackAffiliateClick, trackPageView } from "@/lib/affiliateTracking";
+import { trackPageView } from "@/lib/affiliateTracking";
 import { parseFlightSearchParams } from "@/lib/flightSearchParams";
 import StickyBookingCTA from "@/components/flight/StickyBookingCTA";
 import TopSearchCTA from "@/components/flight/TopSearchCTA";
@@ -59,6 +57,7 @@ import {
   ApiPendingNotice,
 } from "@/components/results";
 import { FlightSearchFormPro } from "@/components/search";
+import { toast } from "@/hooks/use-toast";
 
 const FlightResults = () => {
   const navigate = useNavigate();
@@ -111,94 +110,71 @@ const FlightResults = () => {
     }
   }, [originIata, destinationIata, departureDate, isValid]);
 
-  // Fetch real flights using Aviasales API
+  // Fetch real flights using Duffel API (MoR model - exact pricing)
   const { 
-    data: apiResponse, 
+    data: duffelResult, 
     isLoading, 
     isError, 
     error 
-  } = useAviasalesFlightSearch({
+  } = useDuffelFlightSearch({
     origin: originIata,
     destination: destinationIata,
     departureDate: departureDate || '',
     returnDate: returnDate || undefined,
-    passengers,
-    cabinClass,
-    tripType,
+    passengers: { adults: passengers },
+    cabinClass: cabinClass as 'economy' | 'premium_economy' | 'business' | 'first',
     enabled: isValid,
   });
   
-  // Extract data from API response
-  const apiFlights = apiResponse?.flights || [];
-  const isRealPrice = apiResponse?.isRealPrice || false;
-  const fallbackWhitelabelUrl = apiResponse?.whitelabelUrl || 
-    (isValid ? buildWhitelabelUrl({ origin: originIata, destination: destinationIata, departureDate: departureDate || '', returnDate, passengers, cabinClass, tripType }) : '');
+  // Extract offers from Duffel response
+  const duffelOffers = duffelResult?.offers || [];
+  const isRealPrice = duffelOffers.length > 0; // Duffel always returns exact prices
 
-  // Generate fallback flights
-  const generatedFlights = useMemo(() => {
-    if (!isValid) return [];
-    return generateFlights(originIata, destinationIata, departDateParsed, 15);
-  }, [originIata, destinationIata, departDateParsed, isValid]);
-
-  // Convert API flights to GeneratedFlight format for compatibility
-  const convertedApiFlights: GeneratedFlight[] = useMemo(() => {
-    return apiFlights.map((f: ApiFlightResult) => ({
-      id: f.id,
-      proposalId: f.proposalId,  // Include proposal ID for clicks endpoint
-      airline: f.airline,
-      airlineCode: f.airlineCode,
-      flightNumber: f.flightNumber,
-      departure: f.departure,
-      arrival: f.arrival,
-      duration: f.duration,
-      stops: f.stops,
-      stopCities: f.stopCities,
-      price: f.pricePerPerson || f.price,
-      class: f.cabinClass === 'C' ? 'Business' : f.cabinClass === 'F' ? 'First' : 'Economy',
-      amenities: [],
-      seatsLeft: f.seatsAvailable || 5,
-      category: 'full-service' as const,
-      alliance: 'Independent',
-      aircraft: 'Various',
-      onTimePerformance: 85,
-      carbonOffset: 0,
-      baggageIncluded: f.baggageIncluded || 'Check with airline',
-      refundable: f.isRefundable || false,
-      wifi: false,
-      entertainment: false,
-      meals: false,
-      legroom: '31"',
-      logo: f.logo || getAirlineLogo(f.airlineCode),
-      isRealPrice: isRealPrice,
-      currency: f.currency || 'USD',
-      agentName: f.agentName,
+  // Convert Duffel offers to display format
+  const convertedOffers = useMemo(() => {
+    return duffelOffers.map((offer: DuffelOffer) => ({
+      id: offer.id,
+      airline: offer.airline,
+      airlineCode: offer.airlineCode,
+      flightNumber: offer.flightNumber,
+      departure: offer.departure,
+      arrival: offer.arrival,
+      duration: offer.duration,
+      durationMinutes: offer.durationMinutes,
+      stops: offer.stops,
+      stopCities: offer.stopCities,
+      price: offer.pricePerPerson,
+      totalPrice: offer.price,
+      class: offer.cabinClass,
+      baggageIncluded: offer.baggageIncluded,
+      isRefundable: offer.isRefundable,
+      conditions: offer.conditions,
+      segments: offer.segments,
+      expiresAt: offer.expiresAt,
+      passengers: offer.passengers,
+      currency: offer.currency,
+      logo: getAirlineLogo(offer.airlineCode),
+      isRealPrice: true,
     }));
-  }, [apiFlights, isRealPrice]);
+  }, [duffelOffers]);
   
-  // Combine and filter results - ONLY use real API prices, never fake/generated
+  // Filter and sort Duffel offers
   const flights = useMemo(() => {
-    if (!isValid) return [];
-    
-    // PHASE 1 FIX: Only use real API prices - never show fake/generated prices
-    // If API returns no real prices (403/pending), return empty array
-    // The ApiPendingNotice component will handle the fallback UI
-    if (!isRealPrice || convertedApiFlights.length === 0) {
-      return [];
-    }
+    if (!isValid || convertedOffers.length === 0) return [];
 
-    // Apply filters from unified hook
-    let filtered = convertedApiFlights.filter(f => f.price <= filters.maxPrice);
+    // Apply filters
+    let filtered = convertedOffers.filter((f: any) => f.price <= filters.maxPrice);
     
     if (filters.stops.length > 0) {
-      filtered = filtered.filter(f => filters.stops.includes(f.stops));
+      filtered = filtered.filter((f: any) => filters.stops.includes(f.stops));
     }
 
     if (filters.airlines.length > 0) {
-      filtered = filtered.filter(f => filters.airlines.includes(f.airlineCode));
+      filtered = filtered.filter((f: any) => filters.airlines.includes(f.airlineCode));
     }
 
     if (filters.departureTime.length > 0) {
-      filtered = filtered.filter(f => {
+      filtered = filtered.filter((f: any) => {
         const hour = parseInt(f.departure.time.split(":")[0]);
         if (filters.departureTime.includes("morning") && hour >= 5 && hour < 12) return true;
         if (filters.departureTime.includes("afternoon") && hour >= 12 && hour < 17) return true;
@@ -210,39 +186,38 @@ const FlightResults = () => {
 
     // Filter by duration
     if (filters.maxDuration < 24) {
-      filtered = filtered.filter(f => {
-        const hours = parseInt(f.duration.match(/(\d+)h/)?.[1] || "0");
-        return hours <= filters.maxDuration;
+      filtered = filtered.filter((f: any) => {
+        const minutes = f.durationMinutes || parseInt(f.duration.match(/(\d+)h/)?.[1] || "0") * 60;
+        return minutes <= filters.maxDuration * 60;
       });
     }
 
     // Sort
-    return filtered.sort((a, b) => {
+    return filtered.sort((a: any, b: any) => {
       switch (sortBy) {
         case "price":
           return a.price - b.price;
         case "duration":
-          const dA = parseInt(a.duration.match(/(\d+)h/)?.[1] || "0");
-          const dB = parseInt(b.duration.match(/(\d+)h/)?.[1] || "0");
+          const dA = a.durationMinutes || parseInt(a.duration.match(/(\d+)h/)?.[1] || "0") * 60;
+          const dB = b.durationMinutes || parseInt(b.duration.match(/(\d+)h/)?.[1] || "0") * 60;
           return dA - dB;
         case "departure":
           return a.departure.time.localeCompare(b.departure.time);
         case "best":
-          const scoreA = a.price + (parseInt(a.duration.match(/(\d+)h/)?.[1] || "0") * 20);
-          const scoreB = b.price + (parseInt(b.duration.match(/(\d+)h/)?.[1] || "0") * 20);
+          const scoreA = a.price + ((a.durationMinutes || 0) * 0.5);
+          const scoreB = b.price + ((b.durationMinutes || 0) * 0.5);
           return scoreA - scoreB;
         default:
           return 0;
       }
     });
-  }, [convertedApiFlights, sortBy, filters, isValid, isRealPrice]);
+  }, [convertedOffers, sortBy, filters, isValid]);
 
-  // Get unique airlines from unfiltered flights for filter options
+  // Get unique airlines for filter options
   const availableAirlines = useMemo(() => {
-    const combined = [...convertedApiFlights, ...generatedFlights];
     const airlineMap = new Map<string, { code: string; name: string; count: number }>();
     
-    combined.forEach(f => {
+    convertedOffers.forEach((f: any) => {
       if (airlineMap.has(f.airlineCode)) {
         const existing = airlineMap.get(f.airlineCode)!;
         existing.count++;
@@ -252,62 +227,37 @@ const FlightResults = () => {
     });
     
     return Array.from(airlineMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [convertedApiFlights, generatedFlights]);
-
+  }, [convertedOffers]);
   // Format price with currency
   const formatPrice = (price: number) => {
     const symbols: Record<string, string> = { USD: '$', EUR: '€', GBP: '£' };
     return `${symbols[currency]}${price.toLocaleString()}`;
   };
 
-  const lowestPrice = flights.length > 0 ? Math.min(...flights.map(f => f.price)) : 0;
-  const cheapestFlight = flights.length > 0 ? flights.find(f => f.price === lowestPrice) : null;
+  const lowestPrice = flights.length > 0 ? Math.min(...flights.map((f: any) => f.price)) : 0;
+  const cheapestFlight = flights.length > 0 ? flights.find((f: any) => f.price === lowestPrice) : null;
   
-  const fastestFlight = flights.length > 0 ? flights.reduce((a, b) => {
-    const dA = parseInt(a.duration.match(/(\d+)h/)?.[1] || "99");
-    const dB = parseInt(b.duration.match(/(\d+)h/)?.[1] || "99");
+  const fastestFlight = flights.length > 0 ? flights.reduce((a: any, b: any) => {
+    const dA = a.durationMinutes || parseInt(a.duration.match(/(\d+)h/)?.[1] || "99") * 60;
+    const dB = b.durationMinutes || parseInt(b.duration.match(/(\d+)h/)?.[1] || "99") * 60;
     return dA < dB ? a : b;
   }) : null;
 
-  // Calculate best value flight using weighted score: price + (duration_hours * 20)
+  // Calculate best value flight
   const bestValueFlight = useMemo(() => {
     if (flights.length === 0) return null;
-    return flights.reduce((best, flight) => {
-      const hours = parseInt(flight.duration.match(/(\d+)h/)?.[1] || "0");
-      const bestHours = parseInt(best.duration.match(/(\d+)h/)?.[1] || "0");
-      const score = flight.price + (hours * 20);
-      const bestScore = best.price + (bestHours * 20);
+    return flights.reduce((best: any, flight: any) => {
+      const minutes = flight.durationMinutes || parseInt(flight.duration.match(/(\d+)h/)?.[1] || "0") * 60;
+      const bestMinutes = best.durationMinutes || parseInt(best.duration.match(/(\d+)h/)?.[1] || "0") * 60;
+      const score = flight.price + (minutes * 0.5);
+      const bestScore = best.price + (bestMinutes * 0.5);
       return score < bestScore ? flight : best;
     });
   }, [flights]);
 
-  // Build flight summaries for ApiPendingNotice partner deal cards
-  const flightSummaries = useMemo(() => {
-    const buildSummary = (flight: GeneratedFlight | null) => {
-      if (!flight) return undefined;
-      return {
-        airline: flight.airline,
-        airlineCode: flight.airlineCode,
-        airlineLogo: flight.logo || getAirlineLogo(flight.airlineCode),
-        departureTime: flight.departure?.time,
-        arrivalTime: flight.arrival?.time,
-        duration: flight.duration,
-        stops: flight.stops,
-        stopCities: flight.stopCities,
-      };
-    };
-
-    return {
-      cheapest: buildSummary(cheapestFlight),
-      bestValue: buildSummary(bestValueFlight),
-      flexible: buildSummary(fastestFlight),
-    };
-  }, [cheapestFlight, bestValueFlight, fastestFlight]);
-
   // Convert to unified card format with badges
-  const flightCards: FlightCardData[] = flights.map((flight) => ({
+  const flightCards: FlightCardData[] = flights.map((flight: any) => ({
     id: flight.id,
-    proposalId: (flight as any).proposalId,  // Include proposal ID for clicks endpoint
     airline: flight.airline,
     airlineCode: flight.airlineCode,
     airlineLogo: flight.logo || getAirlineLogo(flight.airlineCode),
@@ -320,118 +270,47 @@ const FlightResults = () => {
     stops: flight.stops,
     stopLocations: flight.stopCities,
     price: flight.price,
-    currency: (flight as any).currency || currency,
+    currency: flight.currency || currency,
     cabinClass: flight.class || cabinClass,
-    amenities: flight.amenities || [],
+    amenities: [],
     baggageIncluded: flight.baggageIncluded,
-    isRealPrice: (flight as any).isRealPrice,
+    isRealPrice: true, // Duffel always returns exact prices
     isBestPrice: flight.price === lowestPrice,
     isFastest: flight === fastestFlight,
     isBestValue: flight === bestValueFlight && flight !== cheapestFlight && flight !== fastestFlight,
   }));
 
+  // Handle flight selection - navigate to details page (MoR flow)
   const handleViewDeal = async (flight: FlightCardData) => {
-    // Import toast for notifications
-    const { toast } = await import("@/hooks/use-toast");
-    const { supabase } = await import("@/integrations/supabase/client");
+    // Store flight data for details page
+    const selectedOffer = duffelOffers.find((o: DuffelOffer) => o.id === flight.id);
     
-    // Build fallback tracking params for /out redirect
-    const outParams = new URLSearchParams({
-      origin: originIata,
-      destination: destinationIata,
-      depart: departureDate || '',
-      passengers: String(passengers),
-      cabin: cabinClass,
-      airline: flight.airlineCode,
-      flightId: flight.id,
-      price: String(flight.price),
-      partner: 'aviasales',
-      product: 'flights',
-      source: 'result_card',
-    });
-    
-    if (returnDate) {
-      outParams.set('return', returnDate);
-    }
-    
-    // Add UTM params from current URL if present
-    const utmSource = searchParams.get('utm_source');
-    const utmCampaign = searchParams.get('utm_campaign');
-    const creator = searchParams.get('creator');
-    
-    if (utmSource) outParams.set('utm_source', utmSource);
-    if (utmCampaign) outParams.set('utm_campaign', utmCampaign);
-    if (creator) outParams.set('creator', creator);
-    
-    // Track affiliate click for analytics
-    trackAffiliateClick({
-      flightId: flight.id,
-      airline: flight.airline,
-      airlineCode: flight.airlineCode,
-      origin: originIata,
-      destination: destinationIata,
-      price: flight.price,
-      passengers,
-      cabinClass,
-      affiliatePartner: 'aviasales',
-      referralUrl: `/out?${outParams.toString()}`,
-      source: 'result_card',
-      ctaType: 'result_card',
-      serviceType: 'flights',
-    });
-    
-    // Try to get fresh booking link via clicks endpoint (reprice on click)
-    if (apiResponse?.searchId && apiResponse?.resultsUrl && flight.proposalId) {
+    if (selectedOffer) {
+      sessionStorage.setItem('selectedFlight', JSON.stringify({
+        ...selectedOffer,
+        logo: getAirlineLogo(selectedOffer.airlineCode),
+      }));
+      sessionStorage.setItem('flightSearchParams', JSON.stringify({
+        originIata,
+        destinationIata,
+        originDisplay,
+        destinationDisplay,
+        departDate: departureDate,
+        returnDate,
+        passengers,
+        cabinClass,
+        tripType,
+      }));
+      
       toast({
-        title: "Checking latest price...",
-        description: "Please wait while we confirm availability.",
-        duration: 3000,
+        title: "Flight selected",
+        description: "Reviewing your selection...",
+        duration: 2000,
       });
       
-      try {
-        const { data, error } = await supabase.functions.invoke('search-flights', {
-          body: {
-            action: 'getBookingLink',
-            searchId: apiResponse.searchId,
-            resultsUrl: apiResponse.resultsUrl,
-            proposalId: flight.proposalId
-          }
-        });
-        
-        if (data?.url) {
-          toast({
-            title: "Price updated — redirecting to live availability.",
-            duration: 2000,
-          });
-          
-          // Open partner URL directly
-          window.open(data.url, "_blank", "noopener,noreferrer");
-          return;
-        }
-      } catch (err) {
-        console.warn('[ViewDeal] Clicks endpoint failed, using fallback:', err);
-      }
+      // Navigate to flight details page
+      navigate(`/flights/details/${flight.id}`);
     }
-    
-    // Fallback: Open /out redirect which logs and redirects to partner
-    toast({
-      title: "Redirecting to partner...",
-      description: "Final pricing shown on partner site.",
-      duration: 3000,
-    });
-    window.open(`/out?${outParams.toString()}`, "_blank", "noopener,noreferrer");
-  };
-
-  const handleViewAllOnPartner = () => {
-    // Toast notification for partner redirect
-    import("@/hooks/use-toast").then(({ toast }) => {
-      toast({
-        title: "Redirecting to partner...",
-        description: "Final pricing shown on partner site.",
-        duration: 3000,
-      });
-    });
-    window.open(fallbackWhitelabelUrl, "_blank", "noopener,noreferrer");
   };
 
   const formatDisplayDate = (dateStr: string) => {
@@ -603,13 +482,6 @@ const FlightResults = () => {
                 sortElement={
                   <div className="flex items-center gap-2">
                     <SortSelect value={sortBy} onValueChange={setSortBy} options={flightSortOptions} />
-                    <Button
-                      onClick={handleViewAllOnPartner}
-                      className="hidden sm:flex bg-sky-500 hover:bg-sky-600 text-white gap-2"
-                    >
-                      Continue to secure booking
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
                   </div>
                 }
                 filterChips={
@@ -637,32 +509,11 @@ const FlightResults = () => {
               {/* Loading State */}
               {isLoading && <ResultsSkeletonList count={6} variant="flight" />}
 
-              {/* API Pending Notice - Show prominently when no real prices from API */}
-              {!isLoading && (!isRealPrice || flightCards.length === 0) && isValid && (
-                <ApiPendingNotice
-                  whitelabelUrl={fallbackWhitelabelUrl}
-                  origin={originDisplay || originIata}
-                  destination={destinationDisplay || destinationIata}
-                  departDate={departureDate || undefined}
-                  returnDate={returnDate || undefined}
-                  passengers={passengers}
-                  cabin={cabinClass}
-                  prices={
-                    isRealPrice && flights.length > 0 
-                      ? {
-                          cheapest: lowestPrice,
-                          bestValue: bestValueFlight?.price,
-                          flexible: fastestFlight?.price,
-                        }
-                      : undefined
-                  }
-                  flightSummaries={
-                    isRealPrice && flights.length > 0 
-                      ? flightSummaries
-                      : undefined
-                  }
-                  currency={currency}
-                  className="mb-6"
+              {/* No Results State */}
+              {!isLoading && flightCards.length === 0 && isValid && (
+                <EmptyResults 
+                  service="flights"
+                  message="No flights found for this route. Try adjusting your dates or filters."
                 />
               )}
 
