@@ -226,6 +226,7 @@ const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const SecurityReport = lazy(() => import("./pages/security/SecurityReport"));
 const ZeroTrustPolicy = lazy(() => import("./pages/security/ZeroTrustPolicy"));
 const ScaleProtection = lazy(() => import("./pages/security/ScaleProtection"));
+const RealtimeMonitoring = lazy(() => import("./pages/security/RealtimeMonitoring"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
@@ -533,6 +534,7 @@ const App = () => (
                 <Route path="/security/report" element={<SecurityReport />} />
                 <Route path="/security/zero-trust" element={<ZeroTrustPolicy />} />
                 <Route path="/security/scale-protection" element={<ScaleProtection />} />
+                <Route path="/security/monitoring" element={<RealtimeMonitoring />} />
                 <Route path="/privacy-security" element={<PrivacySecurity />} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
