@@ -278,6 +278,7 @@ const FlightEmailLogsPage = lazy(() => import("./pages/admin/FlightEmailLogsPage
 const FlightPerformancePage = lazy(() => import("./pages/admin/FlightPerformancePage"));
 const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
 const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOfTravelSettings"));
+const OperationsPlaybook = lazy(() => import("./pages/admin/modules/operations/OperationsPlaybook"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 const TravelOperationsCenter = lazy(() => import("./pages/admin/TravelOperationsCenter"));
 const MarketingDashboard = lazy(() => import("./pages/admin/MarketingDashboard"));
@@ -941,6 +942,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AdminPricingDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/operations-playbook"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <OperationsPlaybook />
                     </ProtectedRoute>
                   }
                 />

@@ -2118,6 +2118,30 @@ export type Database = {
           },
         ]
       }
+      checklist_templates: {
+        Row: {
+          checklist_type: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          items: Json
+        }
+        Insert: {
+          checklist_type: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+        }
+        Update: {
+          checklist_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+        }
+        Relationships: []
+      }
       commission_settings: {
         Row: {
           commission_percentage: number
@@ -6658,6 +6682,66 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_logs: {
+        Row: {
+          acknowledged_at: string | null
+          affected_bookings: number | null
+          affected_users: number | null
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          incident_type: string
+          prevention_steps: string | null
+          reported_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          root_cause: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          affected_bookings?: number | null
+          affected_users?: number | null
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          incident_type: string
+          prevention_steps?: string | null
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          affected_bookings?: number | null
+          affected_users?: number | null
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          incident_type?: string
+          prevention_steps?: string | null
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          root_cause?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       incident_templates: {
         Row: {
           body: string
@@ -6765,6 +6849,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      knowledge_base_articles: {
+        Row: {
+          category: string
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_published: boolean | null
+          last_reviewed_at: string | null
+          last_reviewed_by: string | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_published?: boolean | null
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_published?: boolean | null
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
       }
       launch_settings: {
         Row: {
@@ -7644,6 +7776,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operations_checklists: {
+        Row: {
+          checklist_date: string
+          checklist_type: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          id: string
+          items: Json
+          notes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          checklist_date: string
+          checklist_type: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          checklist_date?: string
+          checklist_type?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       p2p_bookings: {
         Row: {
@@ -12803,6 +12971,42 @@ export type Database = {
           updated_at?: string | null
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      team_role_definitions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          escalation_path: string | null
+          id: string
+          is_active: boolean | null
+          responsibilities: Json | null
+          role_name: string
+          sla_targets: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          escalation_path?: string | null
+          id?: string
+          is_active?: boolean | null
+          responsibilities?: Json | null
+          role_name: string
+          sla_targets?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          escalation_path?: string | null
+          id?: string
+          is_active?: boolean | null
+          responsibilities?: Json | null
+          role_name?: string
+          sla_targets?: Json | null
+          updated_at?: string | null
         }
         Relationships: []
       }
