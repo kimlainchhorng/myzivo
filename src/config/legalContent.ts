@@ -1320,4 +1320,243 @@ export const LEGAL_PROTECTION_SUMMARY = {
     "AI bias disclaimer",
     "Platform governance authority",
   ],
+  governmentProtection: [
+    "Government order compliance",
+    "Regulatory interpretation disclaimer",
+    "Emergency shutdown authority",
+    "Content removal rights",
+    "Safety incident disclaimer",
+    "No endorsement disclaimer",
+    "Marketplace volatility warning",
+    "Corporate event survival",
+  ],
 };
+
+// ============================================
+// GOVERNMENT & SHUTDOWN POLICIES (Clauses 93-108)
+// Government Enforcement, Shutdown Defense, Content Law, Safety
+// ============================================
+
+export const GOVERNMENT_SHUTDOWN_POLICIES = {
+  // Clause 93: Government Order Compliance
+  governmentOrders: {
+    id: "government_orders",
+    title: "Government Order Compliance",
+    version: "1.0",
+    content: `ZIVO may comply immediately with government orders, subpoenas, court orders, or regulatory directives. ZIVO is not required to notify users before compliance. ZIVO is not liable for any losses caused by compliance with legal requirements. Services may be restricted, modified, or suspended by region to comply with local laws.`,
+    complianceActions: [
+      "Immediate compliance with court orders",
+      "Response to regulatory subpoenas",
+      "Regional service restrictions",
+      "Data disclosure as required by law",
+      "Account actions per government directive",
+    ],
+  },
+
+  // Clause 94: Regulatory Interpretation Disclaimer
+  regulatoryInterpretation: {
+    id: "regulatory_interpretation",
+    title: "Regulatory Interpretation Disclaimer",
+    version: "1.0",
+    content: `ZIVO interprets applicable laws and regulations in good faith based on available guidance. ZIVO is not liable for changes in regulatory interpretation, enforcement priorities, or future legal developments. Users accept that legal requirements may evolve and ZIVO's policies will adapt accordingly.`,
+  },
+
+  // Clause 95: No Regulatory Guarantee
+  noRegulatoryGuarantee: {
+    id: "no_regulatory_guarantee",
+    title: "No Regulatory Guarantee",
+    version: "1.0",
+    content: `ZIVO does not guarantee regulatory approval, continued legality in all jurisdictions, or availability of services under future laws. Legal status may vary by location and may change without notice. Users are responsible for ensuring their use of ZIVO complies with local laws.`,
+    noGuarantees: [
+      "Regulatory approval in any jurisdiction",
+      "Continued legality of services",
+      "Availability under future laws",
+      "Licensing in all regions",
+      "Compliance with evolving regulations",
+    ],
+  },
+
+  // Clause 96: Emergency Shutdown Authority
+  emergencyShutdown: {
+    id: "emergency_shutdown",
+    title: "Emergency Shutdown Authority",
+    version: "1.0",
+    content: `ZIVO may disable all or part of the platform, freeze transactions, suspend payouts, and remove listings immediately if legal, safety, financial, or reputational risk is detected. This authority exists to protect users, partners, and the platform.`,
+    shutdownActions: [
+      "Disable platform services (partial or full)",
+      "Freeze all transactions",
+      "Suspend partner payouts",
+      "Remove listings without notice",
+      "Restrict access by region or user type",
+    ],
+  },
+
+  // Clause 97: No Liability for Shutdown
+  noShutdownLiability: {
+    id: "no_shutdown_liability",
+    title: "No Liability for Shutdown",
+    version: "1.0",
+    content: `ZIVO is not liable for lost profits, missed bookings, business interruption, consequential damages, or any losses caused by platform shutdowns, suspensions, or service restrictions. Users and partners assume all risks associated with platform availability.`,
+  },
+
+  // Clause 98: Platform Communication Disclaimer
+  communicationDisclaimer: {
+    id: "communication_disclaimer",
+    title: "Platform Communication Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not responsible for messages between users, miscommunication, misunderstandings, language translation errors, or any disputes arising from communications on the platform. Users are solely responsible for their communications.`,
+  },
+
+  // Clause 99: Content Removal Rights
+  contentRemoval: {
+    id: "content_removal",
+    title: "Content Removal Rights",
+    version: "1.0",
+    content: `ZIVO may remove listings, reviews, messages, profiles, or any user-generated content at its sole discretion, without prior notice or explanation. Content decisions are final and not subject to appeal except where required by law.`,
+    removalScope: [
+      "Listings and service offerings",
+      "Reviews and ratings",
+      "Messages and communications",
+      "Profile information",
+      "Photos and media",
+    ],
+  },
+
+  // Clause 100: Defamation & Review Disclaimer
+  defamationDisclaimer: {
+    id: "defamation_disclaimer",
+    title: "Defamation & Review Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not liable for reviews, ratings, opinions, allegations, or statements made by users. ZIVO does not verify the accuracy of user-generated content and provides a neutral platform for communication. Disputes about reviews are between the parties involved.`,
+  },
+
+  // Clause 101: Safety Incident Disclaimer
+  safetyIncidentDisclaimer: {
+    id: "safety_incident",
+    title: "Safety Incident Disclaimer",
+    version: "1.0",
+    content: `ZIVO is not liable for crimes, assaults, theft, injuries, accidents, property damage, or any other incidents occurring during use of the platform or services arranged through the platform. ZIVO is a technology platform only and does not provide the underlying services.`,
+    excludedLiability: [
+      "Criminal acts by any party",
+      "Physical assaults or injuries",
+      "Theft of property or valuables",
+      "Accidents during service delivery",
+      "Property damage",
+      "Personal injury claims",
+    ],
+  },
+
+  // Clause 102: No Background Check Guarantee
+  noBackgroundGuarantee: {
+    id: "no_background_guarantee",
+    title: "No Background Check Guarantee",
+    version: "1.0",
+    content: `ZIVO may perform background checks, identity verification, or screening but does not guarantee the accuracy of criminal history information, identity verification results, or the safety of any individual. Background checks have inherent limitations and may not reveal all relevant information.`,
+  },
+
+  // Clause 103: No Endorsement Disclaimer
+  noEndorsement: {
+    id: "no_endorsement",
+    title: "No Endorsement Disclaimer",
+    version: "1.0",
+    content: `ZIVO does not endorse, recommend, or vouch for any driver, car owner, restaurant, hotel, airline, or service provider. Presence on the platform does not constitute endorsement. Users must exercise their own judgment when selecting services.`,
+    noEndorsementFor: [
+      "Drivers or delivery partners",
+      "Car owners or fleet operators",
+      "Restaurants or food vendors",
+      "Hotels or accommodations",
+      "Airlines or travel providers",
+      "Any third-party service provider",
+    ],
+  },
+
+  // Clause 104: Public Statement Limitation
+  publicStatementLimit: {
+    id: "public_statement",
+    title: "Public Statement Limitation",
+    version: "1.0",
+    content: `Only official ZIVO channels represent the company. ZIVO is not liable for statements, claims, or representations made by users, partners, drivers, or any third parties. Official statements come only from @hizivo.com email addresses or official social media accounts.`,
+  },
+
+  // Clause 105: Marketplace Volatility Disclaimer
+  marketplaceVolatility: {
+    id: "marketplace_volatility",
+    title: "Marketplace Volatility Disclaimer",
+    version: "1.0",
+    content: `Users and partners acknowledge that demand may fluctuate, income is not guaranteed, listings may receive no bookings, and market conditions can change rapidly. ZIVO does not guarantee any level of business, revenue, or customer traffic.`,
+    acknowledgments: [
+      "Demand fluctuates based on market conditions",
+      "Income and earnings are not guaranteed",
+      "Listings may receive no bookings",
+      "Market conditions change without notice",
+      "Competition affects visibility and revenue",
+    ],
+  },
+
+  // Clause 106: Unilateral Rule Enforcement
+  unilateralEnforcement: {
+    id: "unilateral_enforcement",
+    title: "Unilateral Rule Enforcement",
+    version: "1.0",
+    content: `ZIVO may enforce rules without warning, apply penalties retroactively, remove access permanently, and take any action necessary to protect the platform. Enforcement decisions are at ZIVO's sole discretion and are not subject to external review.`,
+  },
+
+  // Clause 107: No Duty to Warn
+  noDutyToWarn: {
+    id: "no_duty_to_warn",
+    title: "No Duty to Warn",
+    version: "1.0",
+    content: `ZIVO has no duty to warn users about risks, behavior of other users or partners, market conditions, regulatory changes, or any other matters. Users are responsible for their own due diligence and risk assessment.`,
+  },
+
+  // Clause 108: Survival After Company Events
+  companyEventSurvival: {
+    id: "company_event_survival",
+    title: "Survival After Company Events",
+    version: "1.0",
+    content: `All liability protections, disclaimers, arbitration agreements, and user obligations survive: merger, acquisition, sale, bankruptcy, reorganization, dissolution, or any other corporate event. These terms bind successors and assigns.`,
+    survivingEvents: [
+      "Merger or consolidation",
+      "Acquisition by another company",
+      "Sale of assets or business",
+      "Bankruptcy proceedings",
+      "Corporate reorganization",
+      "Dissolution of the company",
+    ],
+  },
+};
+
+// Extreme FAQ for government/shutdown scenarios
+export const EXTREME_LEGAL_FAQ_EXTENDED = [
+  {
+    question: "Can ZIVO shut down services suddenly?",
+    answer: "Yes. ZIVO may disable services immediately to comply with law, protect safety, or manage platform risk. No prior notice is required.",
+  },
+  {
+    question: "Is ZIVO responsible for crimes or accidents?",
+    answer: "No. ZIVO is a technology platform only. Responsibility for incidents lies with the individuals involved and relevant authorities.",
+  },
+  {
+    question: "Can ZIVO remove my content or account?",
+    answer: "Yes. ZIVO may remove any content or terminate any account at its sole discretion, without explanation.",
+  },
+  {
+    question: "Does ZIVO guarantee legality in my country?",
+    answer: "No. Laws vary by jurisdiction and may change. Users are responsible for ensuring their use complies with local laws.",
+  },
+  {
+    question: "Can ZIVO comply with government requests without telling me?",
+    answer: "Yes. ZIVO may comply with legal orders without prior notice to affected users.",
+  },
+  {
+    question: "Is ZIVO responsible for what other users say or do?",
+    answer: "No. ZIVO is not liable for user communications, reviews, or behavior.",
+  },
+  {
+    question: "What happens to my rights if ZIVO is sold?",
+    answer: "All terms and protections survive corporate events like mergers, acquisitions, or bankruptcy.",
+  },
+];
+
+// Helper arrays
+export const GOVERNMENT_POLICIES_LIST = Object.values(GOVERNMENT_SHUTDOWN_POLICIES);
