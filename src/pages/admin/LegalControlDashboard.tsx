@@ -46,6 +46,7 @@ import {
   ADVANCED_POLICIES_LIST,
   GOVERNMENT_POLICIES_LIST,
   CORPORATE_POLICIES_LIST,
+  FINAL_POLICIES_LIST,
   LEGAL_FAQ
 } from "@/config/legalContent";
 import { format } from "date-fns";
@@ -514,6 +515,40 @@ export default function LegalControlDashboard() {
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {(policy as any).content?.substring(0, 80) || 
                          "Corporate & IP protection policy"}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Final Legal Policies (123-135) */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-amber-500" />
+                  Final Legal Policies (123-135)
+                </CardTitle>
+                <CardDescription>
+                  Payments, travel, rental, and platform neutrality protections
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {FINAL_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         "Final legal protection policy"}...
                       </p>
                     </div>
                   ))}
