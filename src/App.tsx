@@ -288,6 +288,7 @@ const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/modules/analyti
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
 const TrackingTest = lazy(() => import("./pages/TrackingTest"));
 const Offline = lazy(() => import("./pages/Offline"));
+const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -424,6 +425,7 @@ const App = () => (
                 <Route path="/cars/search" element={<CarSearch />} />
                 
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/trips" element={<TripHistory />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
