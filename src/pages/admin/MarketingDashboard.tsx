@@ -194,7 +194,6 @@ export default function MarketingDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
       </main>
     </div>
   );
