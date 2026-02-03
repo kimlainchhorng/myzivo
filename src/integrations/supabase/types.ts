@@ -56,6 +56,45 @@ export type Database = {
         }
         Relationships: []
       }
+      account_deletion_requests: {
+        Row: {
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          processed_by: string | null
+          reason: string | null
+          scheduled_for: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          processed_by?: string | null
+          reason?: string | null
+          scheduled_for: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          processed_by?: string | null
+          reason?: string | null
+          scheduled_for?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       achievement_definitions: {
         Row: {
           category: string
@@ -886,6 +925,48 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      app_installs: {
+        Row: {
+          app_version: string | null
+          created_at: string | null
+          device_id: string
+          first_open_at: string | null
+          id: string
+          install_source: string | null
+          is_active: boolean | null
+          last_active_at: string | null
+          platform: string
+          referral_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string | null
+          device_id: string
+          first_open_at?: string | null
+          id?: string
+          install_source?: string | null
+          is_active?: boolean | null
+          last_active_at?: string | null
+          platform: string
+          referral_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string | null
+          device_id?: string
+          first_open_at?: string | null
+          id?: string
+          install_source?: string | null
+          is_active?: boolean | null
+          last_active_at?: string | null
+          platform?: string
+          referral_code?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2746,6 +2827,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      device_tokens: {
+        Row: {
+          app_version: string | null
+          created_at: string | null
+          device_name: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          os_version: string | null
+          platform: string
+          token: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          os_version?: string | null
+          platform: string
+          token: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string | null
+          device_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          os_version?: string | null
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       dr_configuration: {
         Row: {
@@ -9749,6 +9872,62 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_notification_logs: {
+        Row: {
+          body: string | null
+          created_at: string | null
+          data: Json | null
+          delivered_at: string | null
+          device_token_id: string | null
+          error_message: string | null
+          id: string
+          notification_type: string
+          opened_at: string | null
+          sent_at: string | null
+          status: string | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          device_token_id?: string | null
+          error_message?: string | null
+          id?: string
+          notification_type: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string | null
+          data?: Json | null
+          delivered_at?: string | null
+          device_token_id?: string | null
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          opened_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_notification_logs_device_token_id_fkey"
+            columns: ["device_token_id"]
+            isOneToOne: false
+            referencedRelation: "device_tokens"
             referencedColumns: ["id"]
           },
         ]
