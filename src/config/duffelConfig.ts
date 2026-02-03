@@ -69,17 +69,23 @@ export function getDuffelEnvironment(): 'sandbox' | 'live' | 'unknown' {
 }
 
 /**
- * Whether to show debug UI (only in sandbox mode)
+ * Whether to show debug UI (only in sandbox mode + admin routes)
+ * NEVER shows in production - DUFFEL_MODE=live disables this
  */
 export function shouldShowDebugUI(): boolean {
+  // Production mode = no debug UI ever
+  if (DUFFEL_MODE === 'live') return false;
   return isSandboxMode();
 }
 
 /**
  * Whether to show sandbox-specific UI elements
  * Requires BOTH sandbox mode AND admin status
+ * NEVER shows to regular users - admin routes only
  */
 export function shouldShowSandboxUI(isAdmin: boolean): boolean {
+  // Production mode = no sandbox UI ever
+  if (DUFFEL_MODE === 'live') return false;
   return isSandboxMode() && isAdmin;
 }
 
