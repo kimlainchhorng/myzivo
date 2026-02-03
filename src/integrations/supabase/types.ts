@@ -7840,6 +7840,75 @@ export type Database = {
           },
         ]
       }
+      policy_consents: {
+        Row: {
+          accepted_at: string
+          id: string
+          ip_address: unknown
+          policy_type: string
+          policy_version: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          ip_address?: unknown
+          policy_type: string
+          policy_version: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          ip_address?: unknown
+          policy_type?: string
+          policy_version?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      policy_versions: {
+        Row: {
+          content_hash: string | null
+          created_at: string | null
+          current_version: string
+          effective_date: string
+          id: string
+          policy_type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string | null
+          current_version: string
+          effective_date: string
+          id?: string
+          policy_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string | null
+          current_version?: string
+          effective_date?: string
+          id?: string
+          policy_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       pricing: {
         Row: {
           base_fare: number
@@ -14777,6 +14846,10 @@ export type Database = {
           trusted_devices_count: number
         }[]
       }
+      has_policy_consent: {
+        Args: { _policy_type: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -14798,6 +14871,16 @@ export type Database = {
       is_vehicle_owner: { Args: { p_vehicle_id: string }; Returns: boolean }
       is_verified_car_owner: { Args: { user_uuid: string }; Returns: boolean }
       is_verified_renter: { Args: { user_uuid: string }; Returns: boolean }
+      log_pii_access: {
+        Args: {
+          _access_context?: string
+          _access_purpose: string
+          _accessor_id: string
+          _data_subject_id: string
+          _data_type: string
+        }
+        Returns: string
+      }
       log_security_event: {
         Args: {
           p_device_fingerprint?: string
