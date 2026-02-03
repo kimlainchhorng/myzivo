@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Bell, Search, Sparkles, ChevronDown, X, Car } from "lucide-react";
+import { Menu, User, Bell, Search, Sparkles, ChevronDown, X, Car, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,14 +18,12 @@ import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
-import { isSandboxMode } from "@/config/duffelConfig";
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, signOut, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const showTestBadge = isAdmin && isSandboxMode();
 
   return (
     <>
@@ -41,14 +39,13 @@ const Header = () => {
                 <ZivoLogo size="md" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
-              {showTestBadge && (
-                <Badge 
-                  variant="outline" 
-                  className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30 hidden sm:flex"
-                >
-                  Test Mode
-                </Badge>
-              )}
+              {/* Secure Booking Trust Indicator */}
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                  Secure Booking
+                </span>
+              </div>
             </div>
 
             {/* Desktop Navigation - Mega Menus */}
