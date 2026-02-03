@@ -198,12 +198,24 @@ const FlightConfirmation = () => {
             </CardContent>
           </Card>
 
+          {/* Booking Confidence Message - when ticket is issued */}
+          {isIssued && (
+            <div className="mb-6 p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
+              <p className="text-base font-semibold text-foreground">
+                Your booking is fully confirmed
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                You will receive your e-ticket by email within minutes.
+              </p>
+            </div>
+          )}
+
           {/* Email Confirmation Notice - when ticket is issued */}
           {isIssued && (
             <Alert className="mb-6 border-emerald-500/30 bg-emerald-500/5">
               <Send className="w-4 h-4 text-emerald-500" />
               <AlertDescription>
-                <strong>Confirmation email sent!</strong> Your e-ticket has been sent to the email addresses provided for each passenger.
+                <strong>Your e-ticket is on the way!</strong> Confirmation has been sent to the email addresses provided for each passenger.
               </AlertDescription>
             </Alert>
           )}
@@ -350,11 +362,11 @@ const FlightConfirmation = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-4">
-                <Mail className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <Mail className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Check your email</p>
+                  <p className="font-medium">Your e-ticket is on the way</p>
                   <p className="text-sm text-muted-foreground">
-                    Confirmation and e-ticket will be sent to the email addresses provided.
+                    You'll receive your e-ticket and booking confirmation within minutes.
                   </p>
                 </div>
               </div>

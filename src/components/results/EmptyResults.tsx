@@ -1,10 +1,10 @@
 /**
  * Empty Results State - OTA Version for Flights, Affiliate for Hotels/Cars
- * Flights: Simple "no results" message (ZIVO is MoR, real Duffel prices only)
+ * Flights: Simple "no results" message + "Why ZIVO" value proposition (ZIVO is MoR)
  * Hotels/Cars: Indicative pricing with partner CTA
  */
 
-import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, ArrowRight } from "lucide-react";
+import { Plane, Hotel, Car, ExternalLink, RefreshCw, FilterX, ArrowRight, ShieldCheck, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -235,6 +235,36 @@ export function EmptyResults({
               Try Again
             </Button>
           )}
+        </div>
+
+        {/* Why Book With ZIVO - Value Proposition */}
+        <div className="mt-8 pt-6 border-t border-border/30">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 justify-center">
+            <ShieldCheck className="w-5 h-5 text-primary" />
+            Why book flights with ZIVO?
+          </h3>
+          <ul className="text-sm text-muted-foreground space-y-2.5 text-left max-w-md mx-auto">
+            <li className="flex items-start gap-2.5">
+              <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Book and pay directly on ZIVO</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Final prices shown before payment</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Tickets issued by licensed airline partners</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Secure checkout powered by Stripe</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+              <span>Dedicated customer support</span>
+            </li>
+          </ul>
         </div>
 
         {/* OTA disclaimer for flights */}

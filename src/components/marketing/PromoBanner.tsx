@@ -24,42 +24,47 @@ const promoContent: Record<PromoVariant, {
   icon: LucideIcon;
   gradient: string;
   accentGradient: string;
+  badgeText: string;
 }> = {
   flights: {
-    headline: "Compare Flights Worldwide",
-    subtext: "Search & compare prices from 500+ airlines before you book",
+    headline: "Search Flights Worldwide",
+    subtext: "Browse prices from 500+ airlines and book securely on ZIVO",
     cta: "Search Flights",
     href: "/book-flight",
     icon: Plane,
     gradient: "from-sky-600 via-blue-600 to-indigo-700",
     accentGradient: "from-sky-400 to-cyan-400",
+    badgeText: "Search & Book",
   },
   hotels: {
     headline: "Find Hotels Anywhere",
-    subtext: "Compare real-time hotel prices from trusted partners",
+    subtext: "Browse real-time hotel prices from trusted partners",
     cta: "Search Hotels",
     href: "/book-hotel",
     icon: Hotel,
     gradient: "from-amber-500 via-orange-500 to-rose-600",
     accentGradient: "from-amber-400 to-yellow-400",
+    badgeText: "Search & Book",
   },
   cars: {
-    headline: "Compare Car Rentals Worldwide",
-    subtext: "Rent smarter — compare prices from top rental companies",
+    headline: "Search Car Rentals Worldwide",
+    subtext: "Rent smarter — browse prices from top rental companies",
     cta: "Rent a Car",
     href: "/rent-car",
     icon: CarFront,
     gradient: "from-violet-600 via-purple-600 to-fuchsia-700",
     accentGradient: "from-violet-400 to-purple-400",
+    badgeText: "Search & Book",
   },
   general: {
     headline: "Plan Your Trip in One Place",
-    subtext: "Flights, Hotels & Cars — Compare before you book",
+    subtext: "Flights, Hotels & Cars — Browse and book with confidence",
     cta: "Start Planning",
     href: "/book-flight",
     icon: Plane,
     gradient: "from-primary via-teal-500 to-cyan-600",
     accentGradient: "from-primary to-teal-400",
+    badgeText: "Book Travel",
   },
 };
 
@@ -96,7 +101,7 @@ export default function PromoBanner({ variant = "general", className }: PromoBan
               {/* Icon Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 mb-6">
                 <Icon className="w-5 h-5 text-white" />
-                <span className="text-sm font-medium text-white/90">Search & Compare</span>
+                <span className="text-sm font-medium text-white/90">{content.badgeText}</span>
               </div>
 
               <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">

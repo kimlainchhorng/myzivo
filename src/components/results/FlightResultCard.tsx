@@ -4,9 +4,10 @@
  * Exact pricing from Duffel API
  */
 
-import { Plane, Clock, ArrowRight, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star } from "lucide-react";
+import { Plane, Clock, ArrowRight, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -239,9 +240,23 @@ export function FlightResultCard({ flight, onViewDeal, className }: FlightResult
               <p className="text-[10px] text-sky-500 font-medium uppercase tracking-wide">
                 From
               </p>
-              <p className="text-2xl sm:text-3xl font-bold text-sky-500">
-                {formattedPrice}
-              </p>
+              <div className="flex items-center gap-1 justify-start lg:justify-center">
+                <p className="text-2xl sm:text-3xl font-bold text-sky-500">
+                  {formattedPrice}
+                </p>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[200px] text-center">
+                      <p className="text-xs">
+                        Prices shown are final. You will not be redirected to another site.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-[10px] text-muted-foreground">per person</p>
               {wasConverted && (
                 <p className="text-[9px] text-muted-foreground/70 mt-0.5">

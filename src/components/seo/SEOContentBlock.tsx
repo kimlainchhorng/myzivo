@@ -51,22 +51,22 @@ function generateContent(serviceType: 'flights' | 'hotels' | 'cars', destination
     case 'flights':
       if (hasRoute) {
         return {
-          h1: `Compare Flights from ${origin} to ${destination}`,
-          intro: `Search and compare flight options from ${origin} to ${destination} across 500+ airlines. Find the best prices and book with trusted travel partners. No booking fees on ZIVO.`,
-          details: `Whether you're planning a business trip or vacation, ZIVO helps you compare real-time prices for ${origin} to ${destination} flights. We search major airlines and travel sites to show you all available options in one place.`,
+          h1: `Flights from ${origin} to ${destination}`,
+          intro: `Search flight options from ${origin} to ${destination} across 500+ airlines. Find the best prices and book securely on ZIVO. No booking fees.`,
+          details: `Whether you're planning a business trip or vacation, ZIVO helps you find real-time prices for ${origin} to ${destination} flights. We search major airlines to show you all available options in one place.`,
         };
       }
       if (hasDestination) {
         return {
           h1: `Flights to ${destination}`,
-          intro: `Search flights to ${destination} from any city worldwide. Compare prices across 500+ airlines and find the best deals for your trip.`,
-          details: `Planning a trip to ${destination}? ZIVO searches multiple airlines and travel sites to help you find competitive prices. Compare departure times, airlines, and prices—all in one search.`,
+          intro: `Search flights to ${destination} from any city worldwide. Browse prices across 500+ airlines and find the best deals for your trip.`,
+          details: `Planning a trip to ${destination}? ZIVO searches multiple airlines to help you find competitive prices. Browse departure times, airlines, and prices—all in one search.`,
         };
       }
       if (hasOrigin) {
         return {
           h1: `Flights from ${origin}`,
-          intro: `Find flights departing from ${origin} to destinations worldwide. Compare 500+ airlines and book with trusted partners.`,
+          intro: `Find flights departing from ${origin} to destinations worldwide. Browse 500+ airlines and book securely on ZIVO.`,
           details: `Flying from ${origin}? Search all available routes and compare prices across airlines. ZIVO helps you find the best options for your next trip.`,
         };
       }
@@ -134,7 +134,7 @@ export default function SEOContentBlock({
         <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
           <Badge variant="outline" className={cn("gap-1", config.borderColor)}>
             <Search className={cn("w-3 h-3", config.color)} />
-            Search Flights
+            {serviceType === 'flights' ? 'Search & Book' : 'Search Flights'}
           </Badge>
           <Badge variant="outline" className="border-emerald-500/20">
             <span className="text-emerald-500">✓</span> No Booking Fees
