@@ -184,6 +184,8 @@ export default function Security() {
                   "Fraud & Payment Protection",
                   "24/7 Real-Time Monitoring",
                   "Automated Incident Response",
+                  "Encryption at Rest & Transit",
+                  "Data Isolation & Segmentation",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-2 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -200,6 +202,9 @@ export default function Security() {
                 </Button>
                 <Button variant="outline" asChild>
                   <Link to="/security/monitoring">Real-Time Monitoring</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/security/data-protection">Data Protection</Link>
                 </Button>
               </div>
             </CardContent>
