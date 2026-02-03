@@ -31,7 +31,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { useDuffelOffer, formatDuffelPrice, getDuffelAirlineLogo } from '@/hooks/useDuffelFlights';
 import { useCreateFlightCheckout, type FlightPassenger } from '@/hooks/useFlightBooking';
-import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS } from '@/config/flightMoRCompliance';
+import { FLIGHT_MOR_CTA, FLIGHT_MOR_DISCLAIMERS, FLIGHT_LEGAL_LINKS, ZIVO_SOT_REGISTRATION } from '@/config/flightMoRCompliance';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -349,7 +349,7 @@ const FlightCheckout = () => {
                   <div className="flex items-center justify-center gap-4 pt-2">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Shield className="w-4 h-4 text-emerald-500" />
-                      <span>Secure</span>
+                      <span>Licensed SOT</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <CreditCard className="w-4 h-4 text-primary" />
@@ -361,9 +361,12 @@ const FlightCheckout = () => {
                     </div>
                   </div>
 
-                  {/* MoR Disclaimer */}
+                  {/* SOT Registration */}
                   <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
-                    {FLIGHT_MOR_DISCLAIMERS.sellerFull}
+                    {ZIVO_SOT_REGISTRATION.status}
+                  </p>
+                  <p className="text-[10px] text-center text-muted-foreground leading-relaxed">
+                    {ZIVO_SOT_REGISTRATION.subAgent} {ZIVO_SOT_REGISTRATION.ticketing}
                   </p>
                 </CardContent>
               </Card>

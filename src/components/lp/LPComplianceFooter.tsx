@@ -13,18 +13,19 @@ export default function LPComplianceFooter() {
   return (
     <footer className="bg-muted/50 border-t border-border">
       <div className="container mx-auto px-4 py-8">
-        {/* Affiliate Disclosure */}
+        {/* Seller of Travel Disclosure */}
         <div className="max-w-xl mx-auto text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Shield className="w-4 h-4 text-emerald-500" />
-            <span className="text-sm font-medium text-foreground">Affiliate Disclosure</span>
+            <span className="text-sm font-medium text-foreground">Licensed Seller of Travel</span>
           </div>
           <p className="text-xs text-muted-foreground mb-2">
-            Hizivo may earn a commission when users book through partner links.
-            All bookings are completed on partner websites.
+            ZIVO is registered as a Seller of Travel where required by law.
+            California SOT: pending · Florida SOT: pending
           </p>
           <p className="text-xs text-muted-foreground font-medium">
-            ⚠️ {FLIGHT_DISCLAIMERS.ticketing}
+            ✓ ZIVO sells air travel as a sub-agent of licensed ticketing providers.
+            Airline tickets are issued by authorized partners.
           </p>
         </div>
 

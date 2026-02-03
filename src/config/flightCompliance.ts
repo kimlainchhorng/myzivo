@@ -8,6 +8,12 @@
  */
 
 // ============================================
+// SELLER OF TRAVEL REGISTRATION (Re-export)
+// ============================================
+
+export { ZIVO_SOT_REGISTRATION } from './flightMoRCompliance';
+
+// ============================================
 // LOCKED CTA TEXT (MoR Model)
 // ============================================
 

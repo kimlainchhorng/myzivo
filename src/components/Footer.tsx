@@ -266,14 +266,18 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Unified Partner Disclosure */}
+          {/* Seller of Travel Disclosure */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              ⚠️ Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              ZIVO is registered as a Seller of Travel where required by law.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              Hizivo does not issue airline tickets. Flight, Hotel, and Car Rental bookings are completed securely with licensed partners. 
-              ZIVO may earn a commission when users book through partner links.
+              California SOT: pending · Florida SOT: pending
+            </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              ZIVO sells air travel as a sub-agent of licensed ticketing providers. 
+              Airline tickets are issued by authorized partners and subject to airline rules.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
