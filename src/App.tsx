@@ -156,6 +156,8 @@ const AdminSecurity = lazy(() => import("./pages/admin/AdminSecurity"));
 const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const FlightDebugPage = lazy(() => import("./pages/admin/FlightDebugPage"));
+const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
+const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -354,6 +356,7 @@ const App = () => (
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
+                <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
@@ -435,6 +438,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <FlightDebugPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Flight Status Dashboard */}
+                <Route
+                  path="/admin/flights/status"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FlightStatusPage />
                     </ProtectedRoute>
                   }
                 />

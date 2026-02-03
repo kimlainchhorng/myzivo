@@ -1,6 +1,9 @@
 /**
  * Duffel Environment Configuration
  * Provides helper routes for sandbox testing and environment detection
+ * 
+ * LIVE MODE: When DUFFEL_ENV=live, strict validation is enforced
+ * SANDBOX MODE: Test routes available, debug UI enabled
  */
 
 // Sandbox test routes that reliably return results in Duffel test mode
@@ -29,6 +32,14 @@ export function isSandboxMode(): boolean {
 }
 
 /**
+ * Check if we're in Duffel LIVE mode
+ */
+export function isLiveMode(): boolean {
+  const stored = sessionStorage.getItem('duffel_env');
+  return stored === 'live';
+}
+
+/**
  * Set the Duffel environment from edge function response
  */
 export function setDuffelEnvironment(env: string): void {
@@ -43,4 +54,18 @@ export function getDuffelEnvironment(): 'sandbox' | 'live' | 'unknown' {
   if (stored === 'live') return 'live';
   if (stored === 'sandbox' || stored === 'test') return 'sandbox';
   return import.meta.env.MODE === 'development' ? 'sandbox' : 'unknown';
+}
+
+/**
+ * Whether to show debug UI (only in sandbox mode)
+ */
+export function shouldShowDebugUI(): boolean {
+  return isSandboxMode();
+}
+
+/**
+ * Whether to enforce strict validation (live mode requires stricter checks)
+ */
+export function shouldEnforceStrictValidation(): boolean {
+  return isLiveMode();
 }

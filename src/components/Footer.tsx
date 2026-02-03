@@ -45,6 +45,7 @@ const footerLinks = {
     { name: "Privacy Policy", href: "/privacy" },
     { name: "Cookie Policy", href: "/cookies" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
+    { name: "Seller of Travel", href: "/legal/seller-of-travel" },
   ],
 };
 

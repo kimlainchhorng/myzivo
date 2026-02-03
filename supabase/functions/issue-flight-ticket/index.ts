@@ -153,6 +153,24 @@ serve(async (req) => {
       } catch (duffelError) {
         console.error("[IssueTicket] Duffel error:", duffelError);
         
+        const errorMessage = duffelError instanceof Error ? duffelError.message : 'Unknown error';
+        
+        // Create admin alert for ticketing failure
+        console.log("[IssueTicket] Creating admin alert for ticketing failure");
+        try {
+          await supabase
+            .from('flight_admin_alerts')
+            .insert({
+              booking_id: bookingId,
+              alert_type: 'ticketing_failed',
+              message: `Ticketing failed for booking ${bookingId}: ${errorMessage}`,
+              severity: 'high',
+            });
+          console.log("[IssueTicket] Admin alert created");
+        } catch (alertErr) {
+          console.error("[IssueTicket] Failed to create admin alert:", alertErr);
+        }
+        
         // Auto-refund on ticketing failure
         console.log("[IssueTicket] Triggering auto-refund for booking:", bookingId);
         try {
@@ -164,13 +182,23 @@ serve(async (req) => {
             },
             body: JSON.stringify({
               bookingId,
-              reason: `Ticketing failed: ${duffelError instanceof Error ? duffelError.message : 'Unknown error'}`,
+              reason: `Ticketing failed: ${errorMessage}`,
               action: 'auto',
             }),
           });
           console.log("[IssueTicket] Auto-refund triggered successfully");
         } catch (refundErr) {
           console.error("[IssueTicket] Auto-refund failed:", refundErr);
+          
+          // Create alert for refund failure too
+          await supabase
+            .from('flight_admin_alerts')
+            .insert({
+              booking_id: bookingId,
+              alert_type: 'refund_failed',
+              message: `Auto-refund failed for booking ${bookingId}: ${refundErr instanceof Error ? refundErr.message : 'Unknown error'}`,
+              severity: 'critical',
+            });
         }
         
         throw duffelError;
