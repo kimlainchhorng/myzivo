@@ -12037,6 +12037,47 @@ export type Database = {
           },
         ]
       }
+      travel_email_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          order_id: string | null
+          resend_message_id: string | null
+          status: string | null
+          template: string
+          to_email: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          order_id?: string | null
+          resend_message_id?: string | null
+          status?: string | null
+          template: string
+          to_email: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          order_id?: string | null
+          resend_message_id?: string | null
+          status?: string | null
+          template?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_email_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "travel_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       travel_handoff_settings: {
         Row: {
           booking_timeout_seconds: number
@@ -12117,6 +12158,9 @@ export type Database = {
       travel_order_items: {
         Row: {
           adults: number
+          cancellable: boolean | null
+          cancellation_deadline: string | null
+          cancellation_policy: string | null
           children: number
           created_at: string
           end_date: string | null
@@ -12129,11 +12173,16 @@ export type Database = {
           quantity: number
           start_date: string
           status: string
+          supplier_payload: Json | null
+          supplier_status: string | null
           title: string
           type: string
         }
         Insert: {
           adults?: number
+          cancellable?: boolean | null
+          cancellation_deadline?: string | null
+          cancellation_policy?: string | null
           children?: number
           created_at?: string
           end_date?: string | null
@@ -12146,11 +12195,16 @@ export type Database = {
           quantity?: number
           start_date: string
           status?: string
+          supplier_payload?: Json | null
+          supplier_status?: string | null
           title: string
           type: string
         }
         Update: {
           adults?: number
+          cancellable?: boolean | null
+          cancellation_deadline?: string | null
+          cancellation_policy?: string | null
           children?: number
           created_at?: string
           end_date?: string | null
@@ -12163,6 +12217,8 @@ export type Database = {
           quantity?: number
           start_date?: string
           status?: string
+          supplier_payload?: Json | null
+          supplier_status?: string | null
           title?: string
           type?: string
         }
@@ -12178,6 +12234,11 @@ export type Database = {
       }
       travel_orders: {
         Row: {
+          cancellation_reason: string | null
+          cancellation_requested_at: string | null
+          cancellation_status: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string
           currency: string
           fees: number
@@ -12196,6 +12257,11 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cancellation_reason?: string | null
+          cancellation_requested_at?: string | null
+          cancellation_status?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           currency?: string
           fees?: number
@@ -12214,6 +12280,11 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cancellation_reason?: string | null
+          cancellation_requested_at?: string | null
+          cancellation_status?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string
           currency?: string
           fees?: number

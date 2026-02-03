@@ -22,6 +22,7 @@ import { format } from "date-fns";
 const serviceFilters: Array<{ id: ServiceType | "all"; label: string; icon?: React.ElementType }> = [
   { id: "all", label: "All" },
   { id: "flights", label: "Flights", icon: Plane },
+  { id: "hotels", label: "Hotels", icon: Plane },
   { id: "p2p_cars", label: "Cars", icon: Car },
   { id: "rides", label: "Rides", icon: MapPin },
   { id: "eats", label: "Eats", icon: UtensilsCrossed },
@@ -49,7 +50,46 @@ function TripCard({ trip }: { trip: UnifiedTrip }) {
     delivered: "bg-gray-100 text-gray-800",
     cancelled: "bg-red-100 text-red-800",
     rejected: "bg-red-100 text-red-800",
+    cancel_requested: "bg-orange-100 text-orange-800",
   }[trip.status] || "bg-gray-100 text-gray-800";
+
+  // Determine the link path - use travel detail page for travel orders
+  const detailPath = trip.orderNumber 
+    ? `/my-trips/${trip.orderNumber}` 
+    : undefined;
+
+  const cardContent = (
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-4">
+          <div className="text-3xl shrink-0">{trip.icon}</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="font-semibold">{trip.title}</p>
+                <p className="text-sm text-muted-foreground">{trip.subtitle}</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+            </div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary" className={`text-xs ${statusColor}`}>
+                {trip.status.replace(/_/g, " ")}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {format(new Date(trip.date), "MMM d, yyyy")}
+              </span>
+            </div>
+            
+            <div className="mt-2 pt-2 border-t flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{meta.label}</span>
+              <span className="font-semibold">${trip.amount.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <motion.div
@@ -57,36 +97,11 @@ function TripCard({ trip }: { trip: UnifiedTrip }) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
     >
-      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-4">
-            <div className="text-3xl shrink-0">{trip.icon}</div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="font-semibold">{trip.title}</p>
-                  <p className="text-sm text-muted-foreground">{trip.subtitle}</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
-              </div>
-              
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className={`text-xs ${statusColor}`}>
-                  {trip.status.replace("_", " ")}
-                </Badge>
-                <span className="text-xs text-muted-foreground">
-                  {format(new Date(trip.date), "MMM d, yyyy")}
-                </span>
-              </div>
-              
-              <div className="mt-2 pt-2 border-t flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">{meta.label}</span>
-                <span className="font-semibold">${trip.amount.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {detailPath ? (
+        <Link to={detailPath}>{cardContent}</Link>
+      ) : (
+        cardContent
+      )}
     </motion.div>
   );
 }
