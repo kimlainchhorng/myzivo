@@ -164,6 +164,12 @@ const PaymentProcessors = lazy(() => import("./pages/legal/PaymentProcessors"));
 const AIDisclosure = lazy(() => import("./pages/legal/AIDisclosure"));
 const InternationalPolicy = lazy(() => import("./pages/legal/InternationalPolicy"));
 const FraudPolicy = lazy(() => import("./pages/legal/FraudPolicy"));
+const ContractorStatus = lazy(() => import("./pages/legal/ContractorStatus"));
+const PlatformNeutrality = lazy(() => import("./pages/legal/PlatformNeutrality"));
+const DataPolicies = lazy(() => import("./pages/legal/DataPolicies"));
+const AIBiasPolicy = lazy(() => import("./pages/legal/AIBiasPolicy"));
+const DisputeProcess = lazy(() => import("./pages/legal/DisputeProcess"));
+const PlatformGovernance = lazy(() => import("./pages/legal/PlatformGovernance"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -372,6 +378,13 @@ const App = () => (
                 <Route path="/legal/ai-disclosure" element={<AIDisclosure />} />
                 <Route path="/legal/international" element={<InternationalPolicy />} />
                 <Route path="/legal/fraud" element={<FraudPolicy />} />
+                <Route path="/legal/contractor-status" element={<ContractorStatus />} />
+                <Route path="/legal/platform-neutrality" element={<PlatformNeutrality />} />
+                <Route path="/legal/accessibility" element={<AccessibilityStatement />} />
+                <Route path="/legal/data-policies" element={<DataPolicies />} />
+                <Route path="/legal/ai-bias" element={<AIBiasPolicy />} />
+                <Route path="/legal/dispute-process" element={<DisputeProcess />} />
+                <Route path="/legal/platform-governance" element={<PlatformGovernance />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
