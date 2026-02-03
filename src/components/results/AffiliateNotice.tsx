@@ -35,6 +35,11 @@ const serviceConfig = {
 };
 
 export function RedirectNotice({ service, className }: RedirectNoticeProps) {
+  // Flights use MoR model - no redirect notice needed
+  if (service === 'flights') {
+    return null;
+  }
+  
   const config = serviceConfig[service];
 
   return (
@@ -55,11 +60,6 @@ export function RedirectNotice({ service, className }: RedirectNoticeProps) {
         <p className="mt-1 text-xs opacity-75">
           Prices may vary. Final price shown on partner site.
         </p>
-        {service === "flights" && (
-          <p className="mt-2 text-xs font-medium text-foreground/80">
-            Hizivo does not issue airline tickets. Booking completed with airline partner.
-          </p>
-        )}
       </div>
     </div>
   );
@@ -72,8 +72,13 @@ interface IndicativePriceAlertProps {
 }
 
 export function IndicativePriceAlert({ service, className }: IndicativePriceAlertProps) {
+  // Flights use MoR model with exact Duffel pricing - no indicative alert needed
+  if (service === 'flights') {
+    return null;
+  }
+  
   const config = serviceConfig[service];
-  const serviceLabel = service === "flights" ? "flight" : service === "hotels" ? "hotel" : "rental";
+  const serviceLabel = service === "hotels" ? "hotel" : "rental";
 
   return (
     <Alert className={cn(config.border, config.bg, className)}>

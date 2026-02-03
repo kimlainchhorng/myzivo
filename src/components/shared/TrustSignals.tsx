@@ -14,9 +14,9 @@ interface TrustSignalsProps {
 }
 
 const TRUST_BADGES = [
-  { icon: Search, text: "Compare prices from trusted travel partners", shortText: "500+ Partners" },
+  { icon: Search, text: "Compare prices from 500+ airlines", shortText: "500+ Airlines" },
   { icon: CreditCard, text: "No booking fees on ZIVO", shortText: "No Fees" },
-  { icon: Shield, text: "Secure booking on partner sites", shortText: "Secure Booking" },
+  { icon: Shield, text: "Secure ZIVO checkout", shortText: "Secure Checkout" },
   { icon: Lock, text: "Your data is protected", shortText: "Data Protected" },
 ];
 
@@ -84,11 +84,11 @@ export default function TrustSignals({
         })}
       </div>
 
-      {/* Partner redirect notice */}
+      {/* Partner redirect notice - for hotels/cars only */}
       {showPartnerNotice && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <ExternalLink className="w-3.5 h-3.5" />
-          <span>You will be redirected to our trusted travel partner to complete your booking.</span>
+          <span>Hotels and car rentals complete on partner sites.</span>
         </div>
       )}
     </div>

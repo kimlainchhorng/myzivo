@@ -103,6 +103,7 @@ export type { QuickStat } from './QuickStatsBar';
 export { default as FlightConsentCheckbox } from './FlightConsentCheckbox';
 export { default as FlightConsentGate } from './FlightConsentGate';
 export { default as FlightPartnerDisclaimer, FlightTrustBadges, FlightPaymentDisclaimer } from './FlightPartnerDisclaimer';
+export { default as FlightsMoRFooter } from './FlightsMoRFooter';
 
 // UX/Trust Components
 export { default as HowBookingWorks } from './HowBookingWorks';

@@ -46,8 +46,6 @@ import {
   EmptyResults,
   FlightResultCard,
   type FlightCardData,
-  RedirectNotice,
-  AffiliateDisclaimer,
   ResultsBreadcrumbs,
   ResultsFAQ,
   FlightEditSearchForm,
@@ -56,6 +54,7 @@ import {
   ActiveFiltersChips,
   ApiPendingNotice,
 } from "@/components/results";
+import FlightsMoRFooter from "@/components/flight/FlightsMoRFooter";
 import { FlightSearchFormPro } from "@/components/search";
 import { toast } from "@/hooks/use-toast";
 
@@ -403,20 +402,20 @@ const FlightResults = () => {
           }
         />
 
-        {/* Trust Banner - Above Results */}
+        {/* Trust Banner - MoR Model */}
         <section className="border-b border-border/50 py-4 bg-gradient-to-r from-sky-500/5 via-transparent to-sky-500/5">
           <div className="container mx-auto px-4">
             <div className="flex flex-col items-center gap-2">
               <p className="text-sm font-medium text-foreground">
-                Compare flight options from licensed airline and travel partners
+                Book directly on ZIVO • Tickets issued instantly
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  ✓ Secure partner checkout
+                  Secure ZIVO checkout
                 </span>
                 <span className="hidden sm:inline text-border">•</span>
-                <span className="text-emerald-600 font-medium">✓ No hidden fees from ZIVO</span>
+                <span className="text-emerald-600 font-medium">Prices include all taxes & fees</span>
               </div>
             </div>
           </div>
@@ -530,9 +529,9 @@ const FlightResults = () => {
                 </div>
               )}
 
-              {/* Redirect Notice */}
+              {/* MoR Footer */}
               {flightCards.length > 0 && !isLoading && (
-                <RedirectNotice service="flights" className="mt-6" />
+                <FlightsMoRFooter variant="compact" className="mt-6" />
               )}
 
               {/* Cross-Sell Banner */}
@@ -596,8 +595,8 @@ const FlightResults = () => {
         {/* FAQ Section */}
         <ResultsFAQ service="flights" />
 
-        {/* Affiliate Disclaimer */}
-        <AffiliateDisclaimer />
+        {/* MoR Disclaimer Footer */}
+        <FlightsMoRFooter />
       </main>
 
       {/* Mobile Filters Sheet */}
