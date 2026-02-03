@@ -95,13 +95,42 @@ const FlightTravelerInfo = () => {
   const validateForm = (): boolean => {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
+      
+      // Required fields check
       if (!p.title || !p.given_name || !p.family_name || !p.born_on || !p.email) {
         setError(`Please complete all required fields for Passenger ${i + 1}`);
         return false;
       }
-      // Basic email validation
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
-        setError(`Please enter a valid email for Passenger ${i + 1}`);
+      
+      // Name format validation (letters, spaces, hyphens, apostrophes only)
+      const nameRegex = /^[a-zA-Z\s\-']+$/;
+      if (!nameRegex.test(p.given_name) || p.given_name.length < 2) {
+        setError(`Passenger ${i + 1}: First name must be at least 2 characters and contain only letters`);
+        return false;
+      }
+      if (!nameRegex.test(p.family_name) || p.family_name.length < 2) {
+        setError(`Passenger ${i + 1}: Last name must be at least 2 characters and contain only letters`);
+        return false;
+      }
+      
+      // Gender validation (required by airlines)
+      if (!p.gender || !['m', 'f'].includes(p.gender)) {
+        setError(`Passenger ${i + 1}: Gender is required`);
+        return false;
+      }
+      
+      // Date of birth validation
+      const dob = new Date(p.born_on);
+      const now = new Date();
+      if (isNaN(dob.getTime()) || dob >= now) {
+        setError(`Passenger ${i + 1}: Please enter a valid date of birth`);
+        return false;
+      }
+      
+      // Stricter email validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(p.email)) {
+        setError(`Passenger ${i + 1}: Please enter a valid email address`);
         return false;
       }
     }

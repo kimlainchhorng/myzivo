@@ -285,7 +285,7 @@ const FlightCheckout = () => {
                 </CardContent>
               </Card>
 
-              {/* Terms and Conditions */}
+              {/* Terms and Conditions - Enhanced for fare rules compliance */}
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-start gap-3">
@@ -303,9 +303,14 @@ const FlightCheckout = () => {
                       </label>
                       <p className="text-xs text-muted-foreground">
                         By booking, you agree to the{' '}
-                        <a href={FLIGHT_LEGAL_LINKS.terms} className="text-primary hover:underline">Terms of Service</a>,{' '}
-                        <a href={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">Flight Terms</a>, and{' '}
+                        <a href={FLIGHT_LEGAL_LINKS.flightTerms} className="text-primary hover:underline">Airline Fare Rules</a>,{' '}
+                        <a href={FLIGHT_LEGAL_LINKS.terms} className="text-primary hover:underline">Terms of Service</a>, and{' '}
                         <a href={FLIGHT_LEGAL_LINKS.privacy} className="text-primary hover:underline">Privacy Policy</a>.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        View our{' '}
+                        <a href="/legal/seller-of-travel" className="text-primary hover:underline">Seller of Travel</a>{' '}
+                        registration and partner disclosure.
                       </p>
                     </div>
                   </div>

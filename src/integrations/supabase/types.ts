@@ -3130,6 +3130,50 @@ export type Database = {
           },
         ]
       }
+      flight_admin_alerts: {
+        Row: {
+          alert_type: string
+          booking_id: string | null
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+        }
+        Insert: {
+          alert_type: string
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Update: {
+          alert_type?: string
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_admin_alerts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "flight_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flight_bookings: {
         Row: {
           baggage_allowance: Json | null

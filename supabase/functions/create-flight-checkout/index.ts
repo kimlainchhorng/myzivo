@@ -78,6 +78,45 @@ serve(async (req) => {
       throw new Error("Missing required fields");
     }
 
+    // Server-side passenger validation (LIVE safe)
+    for (let i = 0; i < passengers.length; i++) {
+      const p = passengers[i];
+      
+      // Required fields check
+      if (!p.given_name || !p.family_name || !p.born_on || !p.email) {
+        throw new Error(`Passenger ${i + 1}: Missing required information`);
+      }
+      
+      // Name format validation (letters, spaces, hyphens, apostrophes only)
+      const nameRegex = /^[a-zA-Z\s\-']+$/;
+      if (!nameRegex.test(p.given_name) || p.given_name.length < 2) {
+        throw new Error(`Passenger ${i + 1}: Invalid first name format`);
+      }
+      if (!nameRegex.test(p.family_name) || p.family_name.length < 2) {
+        throw new Error(`Passenger ${i + 1}: Invalid last name format`);
+      }
+      
+      // Gender validation (required by airlines)
+      if (!p.gender || !['m', 'f'].includes(p.gender)) {
+        throw new Error(`Passenger ${i + 1}: Gender is required`);
+      }
+      
+      // Email validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(p.email)) {
+        throw new Error(`Passenger ${i + 1}: Invalid email format`);
+      }
+      
+      // Date of birth validation
+      const dob = new Date(p.born_on);
+      const now = new Date();
+      if (isNaN(dob.getTime()) || dob >= now) {
+        throw new Error(`Passenger ${i + 1}: Invalid date of birth`);
+      }
+    }
+
+    console.log("[FlightCheckout] Passenger validation passed for", passengers.length, "passengers");
+
     console.log("[FlightCheckout] Creating booking for user:", userId, "offer:", offerId);
 
     // Get user email

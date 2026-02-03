@@ -81,8 +81,8 @@ export const FLIGHT_MOR_DISCLAIMERS = {
   /** Price breakdown */
   priceBreakdown: "Price includes all taxes, fees, and charges. No hidden costs.",
   
-  /** Terms checkbox text */
-  termsCheckbox: "I agree to the Terms and Conditions and Airline Rules.",
+  /** Terms checkbox text - Updated for fare rules compliance */
+  termsCheckbox: "I agree to the airline's fare rules and ZIVO's Terms & Conditions",
   
   /** Refund policy */
   refund: "Refunds are subject to airline fare rules. Cancellation fees may apply.",

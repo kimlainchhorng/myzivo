@@ -18,12 +18,14 @@ import { cn } from "@/lib/utils";
 import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
+import { isSandboxMode } from "@/config/duffelConfig";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const showTestBadge = isAdmin && isSandboxMode();
 
   return (
     <>
@@ -39,6 +41,14 @@ const Header = () => {
                 <ZivoLogo size="md" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
+              {showTestBadge && (
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] bg-amber-500/10 text-amber-600 border-amber-500/30 hidden sm:flex"
+                >
+                  Test Mode
+                </Badge>
+              )}
             </div>
 
             {/* Desktop Navigation - Mega Menus */}
