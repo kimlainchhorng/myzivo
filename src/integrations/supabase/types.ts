@@ -2275,6 +2275,184 @@ export type Database = {
           },
         ]
       }
+      compliance_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          new_status: string | null
+          notes: string | null
+          old_status: string | null
+          performed_by: string | null
+          requirement_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          performed_by?: string | null
+          requirement_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+          performed_by?: string | null
+          requirement_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_audit_logs_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          priority: number | null
+          slug: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          priority?: number | null
+          slug: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          priority?: number | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      compliance_requirements: {
+        Row: {
+          category_id: string | null
+          compliance_status: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          evidence_notes: string | null
+          evidence_url: string | null
+          id: string
+          last_reviewed_at: string | null
+          priority: number | null
+          requirement_type: string
+          reviewed_by: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          compliance_status?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          evidence_notes?: string | null
+          evidence_url?: string | null
+          id?: string
+          last_reviewed_at?: string | null
+          priority?: number | null
+          requirement_type?: string
+          reviewed_by?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          compliance_status?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          evidence_notes?: string | null
+          evidence_url?: string | null
+          id?: string
+          last_reviewed_at?: string | null
+          priority?: number | null
+          requirement_type?: string
+          reviewed_by?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_requirements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_reviews: {
+        Row: {
+          action_items: Json | null
+          completed_at: string | null
+          created_at: string | null
+          findings: Json | null
+          id: string
+          next_review_date: string | null
+          review_period: string
+          review_type: string | null
+          reviewed_by: string | null
+          started_at: string | null
+          status: string | null
+          summary: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_items?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          findings?: Json | null
+          id?: string
+          next_review_date?: string | null
+          review_period: string
+          review_type?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_items?: Json | null
+          completed_at?: string | null
+          created_at?: string | null
+          findings?: Json | null
+          id?: string
+          next_review_date?: string | null
+          review_period?: string
+          review_type?: string | null
+          reviewed_by?: string | null
+          started_at?: string | null
+          status?: string | null
+          summary?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       countries: {
         Row: {
           code: string
@@ -2793,6 +2971,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_retention_policies: {
+        Row: {
+          created_at: string | null
+          data_type: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_purge_at: string | null
+          legal_basis: string | null
+          retention_period_days: number
+        }
+        Insert: {
+          created_at?: string | null
+          data_type: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_purge_at?: string | null
+          legal_basis?: string | null
+          retention_period_days: number
+        }
+        Update: {
+          created_at?: string | null
+          data_type?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_purge_at?: string | null
+          legal_basis?: string | null
+          retention_period_days?: number
+        }
+        Relationships: []
       }
       delivery_batches: {
         Row: {
@@ -12129,6 +12340,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_of_travel_registrations: {
+        Row: {
+          application_date: string | null
+          approval_date: string | null
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          legal_opinion_url: string | null
+          notes: string | null
+          registration_number: string | null
+          registration_required: boolean | null
+          registration_status: string | null
+          renewal_reminder_sent: boolean | null
+          state_code: string
+          state_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          application_date?: string | null
+          approval_date?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          legal_opinion_url?: string | null
+          notes?: string | null
+          registration_number?: string | null
+          registration_required?: boolean | null
+          registration_status?: string | null
+          renewal_reminder_sent?: boolean | null
+          state_code: string
+          state_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          application_date?: string | null
+          approval_date?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          legal_opinion_url?: string | null
+          notes?: string | null
+          registration_number?: string | null
+          registration_required?: boolean | null
+          registration_status?: string | null
+          renewal_reminder_sent?: boolean | null
+          state_code?: string
+          state_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       seller_of_travel_status: {
         Row: {
