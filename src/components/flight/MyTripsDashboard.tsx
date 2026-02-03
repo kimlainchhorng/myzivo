@@ -46,11 +46,14 @@ import {
   Zap,
   Loader2,
   FileText,
-  CreditCard
+  CreditCard,
+  HelpCircle,
+  Mail,
 } from "lucide-react";
 import { format, addDays, subDays, isWithinInterval, startOfMonth, endOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useFlightBookings, useRequestFlightRefund, getTicketingStatusInfo, canRequestRefund } from "@/hooks/useFlightBooking";
+import { FLIGHT_SUPPORT_INFO } from "@/config/flightCompliance";
 import FlightTicketCard from "./FlightTicketCard";
 import { useToast } from "@/hooks/use-toast";
 
@@ -352,6 +355,24 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
 
   return (
     <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
+      {/* Support Info Box - OTA clarity */}
+      <div className="mx-4 mt-4 p-4 rounded-xl border border-primary/20 bg-primary/5 flex items-start gap-3">
+        <HelpCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="font-medium text-sm">{FLIGHT_SUPPORT_INFO.title}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {FLIGHT_SUPPORT_INFO.description}
+          </p>
+        </div>
+        <a 
+          href={`mailto:${FLIGHT_SUPPORT_INFO.email}`}
+          className="text-xs text-primary hover:underline flex items-center gap-1 shrink-0"
+        >
+          <Mail className="w-3 h-3" />
+          {FLIGHT_SUPPORT_INFO.email}
+        </a>
+      </div>
+
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">

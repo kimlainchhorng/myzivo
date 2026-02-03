@@ -17,28 +17,28 @@ interface FlightFAQSectionProps {
 export default function FlightFAQSection({ className }: FlightFAQSectionProps) {
   const faqs = [
     {
-      question: "How does ZIVO find flight prices?",
-      answer: "ZIVO connects directly to airline ticketing systems to display real-time availability and final prices."
+      question: "Do I book on ZIVO or another site?",
+      answer: "You book and pay directly on ZIVO. Your entire booking is processed securely on our platform."
     },
     {
-      question: "Does ZIVO sell tickets directly?",
-      answer: "Yes. You book and pay directly on ZIVO. Tickets are issued by licensed ticketing partners under airline rules."
+      question: "Who issues my ticket?",
+      answer: "Tickets are issued by licensed airline ticketing partners under airline rules. ZIVO operates as a sub-agent of these licensed providers."
     },
     {
-      question: "How do price alerts work?",
-      answer: "Set an alert for any route and we'll monitor prices 24/7. When prices drop or a great deal appears, we'll send you an instant notification via email or push notification so you never miss a bargain."
+      question: "Are prices final?",
+      answer: "Yes. Prices shown are final before payment. All taxes and fees are included. There are no hidden charges."
     },
     {
-      question: "Why do prices change so frequently?",
-      answer: "Airlines use dynamic pricing based on demand, time until departure, competition, and other factors. Prices can change multiple times per day. That's why we recommend booking quickly when you find a good deal."
+      question: "Who do I contact for support?",
+      answer: "Contact ZIVO support at support@hizivo.com for booking changes, cancellations, or any questions. We handle all support requests according to airline fare rules."
     },
     {
-      question: "What does 'flexible dates' mean?",
-      answer: "Our flexible dates feature shows you prices for days before and after your selected dates. This helps you find the cheapest days to fly, which can often save you hundreds of dollars."
+      question: "How do I get my e-ticket?",
+      answer: "After payment, your e-ticket is issued instantly and sent to the email address provided for each passenger. You'll typically receive it within minutes."
     },
     {
-      question: "Are there hidden fees?",
-      answer: "No. Prices shown on ZIVO are final and confirmed before payment. Airline extras (bags, seats) are shown separately."
+      question: "Can I change or cancel my booking?",
+      answer: "Changes and cancellations are subject to airline fare rules. Contact ZIVO support to request modifications. Fees may apply based on the airline's policy."
     },
   ];
 

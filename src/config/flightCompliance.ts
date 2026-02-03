@@ -14,6 +14,36 @@
 export { ZIVO_SOT_REGISTRATION } from './flightMoRCompliance';
 
 // ============================================
+// HEADER MICROCOPY - All Flight Pages
+// ============================================
+
+export const FLIGHT_HEADER_MICROCOPY = {
+  /** Standard header subtitle for all flight pages */
+  standard: "You book and pay on ZIVO. Tickets are issued by licensed airline ticketing partners.",
+  
+  /** Shorter version for mobile/compact areas */
+  short: "Book on ZIVO · Licensed ticketing partners",
+} as const;
+
+// ============================================
+// SUPPORT INFO - My Trips Dashboard
+// ============================================
+
+export const FLIGHT_SUPPORT_INFO = {
+  /** My Trips support box title */
+  title: "Need to change or cancel your flight?",
+  
+  /** Description */
+  description: "Requests are handled by ZIVO according to airline fare rules.",
+  
+  /** Support email */
+  email: "support@hizivo.com",
+  
+  /** Full message */
+  full: "Need to change or cancel your flight? Requests are handled by ZIVO according to airline fare rules. Contact support@hizivo.com for assistance.",
+} as const;
+
+// ============================================
 // LOCKED CTA TEXT (MoR Model)
 // ============================================
 

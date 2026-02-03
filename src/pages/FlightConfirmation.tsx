@@ -198,16 +198,35 @@ const FlightConfirmation = () => {
             </CardContent>
           </Card>
 
-          {/* Booking Confidence Message - when ticket is issued */}
+          {/* Booking Confirmed Block - Enhanced when ticket is issued */}
           {isIssued && (
-            <div className="mb-6 p-5 rounded-xl bg-primary/5 border border-primary/20 text-center">
-              <p className="text-base font-semibold text-foreground">
-                Your booking is fully confirmed
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                You will receive your e-ticket by email within minutes.
-              </p>
-            </div>
+            <Card className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                <h2 className="text-xl font-bold mb-2">Booking Confirmed ✅</h2>
+                <p className="text-muted-foreground mb-4">
+                  Your ticket has been issued. Your e-ticket and itinerary have been sent to your email.
+                </p>
+                
+                {/* Key details grid */}
+                <div className="grid grid-cols-3 gap-4 mt-4 text-left max-w-md mx-auto">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Airline</p>
+                    <p className="font-medium">{offerDetails?.airline || 'Airline'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Booking Reference</p>
+                    <p className="font-mono font-bold">{booking.pnr || booking.booking_reference}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Ticket Number</p>
+                    <p className="font-mono text-sm">
+                      {(booking.ticket_numbers as string[])?.[0] || 'Pending'}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Email Confirmation Notice - when ticket is issued */}

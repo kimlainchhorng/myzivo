@@ -276,8 +276,8 @@ const Footer = () => {
               California SOT: pending · Florida SOT: pending
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO sells air travel as a sub-agent of licensed ticketing providers. 
-              Airline tickets are issued by authorized partners and subject to airline rules.
+              ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
+              Tickets are issued by authorized partners under airline rules.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.

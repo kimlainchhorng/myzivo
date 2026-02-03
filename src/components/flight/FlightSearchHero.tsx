@@ -46,6 +46,7 @@ import AirportAutocomplete from "./AirportAutocomplete";
 import PriceCalendar from "./PriceCalendar";
 import flightHeroImage from "@/assets/flight-hero.jpg";
 import { cn } from "@/lib/utils";
+import { FLIGHT_HEADER_MICROCOPY } from "@/config/flightCompliance";
 
 interface FlightSearchHeroProps {
   tripType: "roundtrip" | "oneway";
@@ -183,8 +184,8 @@ export default function FlightSearchHero({
               Flights
             </span>
           </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed mb-3 sm:mb-4 px-2">
-            Compare prices from 500+ airlines worldwide
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mb-3 sm:mb-4 px-2">
+            {FLIGHT_HEADER_MICROCOPY.standard}
           </p>
 
           {/* Trust Badges - Horizontal scroll on mobile */}
