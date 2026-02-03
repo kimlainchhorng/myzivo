@@ -1,7 +1,6 @@
 import { useIsMobile } from "@/hooks/use-mobile";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
-import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 
 // Desktop components
 import NavBar from "@/components/home/NavBar";
@@ -11,6 +10,7 @@ import HowItWorksSimple from "@/components/home/HowItWorksSimple";
 import AirlineTrustSection from "@/components/home/AirlineTrustSection";
 import PopularRoutesSection from "@/components/home/PopularRoutesSection";
 import ExtrasSection from "@/components/home/ExtrasSection";
+import SocialProofSection from "@/components/home/SocialProofSection";
 
 // Mobile app home
 import AppHome from "@/pages/app/AppHome";
@@ -24,17 +24,17 @@ const DesktopHomePage = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* 1. Hero Section - Flights focused */}
+        {/* 1. Hero Section with Trust Bar built-in */}
         <HeroSection />
         
-        {/* 2. Trust Bar - Real-time prices, no fees, secure checkout */}
-        <GlobalTrustBar showDisclaimer={true} />
-        
-        {/* 3. Primary Services (Flights, Hotels, Cars) */}
+        {/* 2. Primary Services (Flights, Hotels, Cars) */}
         <PrimaryServicesSection />
         
-        {/* 4. How ZIVO Works (3 steps) */}
+        {/* 3. How ZIVO Works (3 steps) */}
         <HowItWorksSimple />
+        
+        {/* 4. Social Proof / Platform Trust */}
+        <SocialProofSection />
         
         {/* 5. Popular Flight Routes */}
         <PopularRoutesSection />

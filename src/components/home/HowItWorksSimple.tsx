@@ -1,25 +1,25 @@
-import { Search, GitCompare, ShieldCheck, ArrowRight } from "lucide-react";
+import { Search, MousePointer, ShieldCheck, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const steps = [
   {
     step: 1,
-    title: "Search flights",
-    description: "Browse real-time flight options from global airlines.",
+    title: "Search & Compare",
+    description: "Compare prices from hundreds of airlines and providers.",
     icon: Search,
     color: "from-sky-500 to-blue-600",
   },
   {
     step: 2,
-    title: "Select your flight",
-    description: "View final prices, baggage, and fare rules before booking.",
-    icon: GitCompare,
+    title: "Choose the Best Option",
+    description: "Pick the deal that fits your travel needs.",
+    icon: MousePointer,
     color: "from-violet-500 to-purple-600",
   },
   {
     step: 3,
-    title: "Book on ZIVO",
-    description: "Pay securely on ZIVO and receive your e-ticket instantly.",
+    title: "Book Securely on ZIVO",
+    description: "Pay securely and receive your e-ticket instantly.",
     icon: ShieldCheck,
     color: "from-emerald-500 to-teal-600",
   },
@@ -35,7 +35,7 @@ export default function HowItWorksSimple() {
             How ZIVO Works
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Finding cheap flights is easy with our simple 3-step process
+            Book your next trip in three simple steps
           </p>
         </div>
 

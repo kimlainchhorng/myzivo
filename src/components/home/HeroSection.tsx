@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plane, Hotel, CarFront, ArrowRight } from "lucide-react";
+import { Plane, Hotel, CarFront, ShieldCheck } from "lucide-react";
 import heroImage from "@/assets/hero-homepage.jpg";
 import { useImagePreload } from "@/hooks/useImagePreload";
+import HeroTrustBar from "./HeroTrustBar";
 
 export default function HeroSection() {
   // Preload hero image for LCP optimization
@@ -13,7 +14,7 @@ export default function HeroSection() {
       {/* Mobile: Stacked layout */}
       <div className="lg:hidden">
         {/* Photo at top */}
-        <div className="relative h-[40vh] overflow-hidden">
+        <div className="relative h-[35vh] overflow-hidden">
           <img
             src={heroImage}
             alt="Compare flights from 500+ airlines"
@@ -29,15 +30,15 @@ export default function HeroSection() {
         </div>
 
         {/* Content below */}
-        <div className="px-4 py-8 bg-background">
+        <div className="px-4 py-6 bg-background">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
             Book travel with clarity and confidence.
           </h1>
-          <p className="text-muted-foreground text-sm sm:text-base mb-4">
+          <p className="text-muted-foreground text-sm sm:text-base mb-3">
             Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
           </p>
-          <p className="text-xs text-muted-foreground/80 mb-6">
-            Compare real-time prices · Book securely on ZIVO
+          <p className="text-xs text-muted-foreground/80 mb-5">
+            Real-time prices • Secure checkout • Instant e-tickets
           </p>
 
           {/* Primary CTA - Flights */}
@@ -48,7 +49,6 @@ export default function HeroSection() {
             >
               <Plane className="w-5 h-5" />
               Search Flights
-              <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
 
@@ -61,7 +61,7 @@ export default function HeroSection() {
                 className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-hotels/40 text-hotels hover:bg-hotels/10"
               >
                 <Hotel className="w-4 h-4" />
-                Hotels
+                Compare Hotels
               </Button>
             </Link>
             <Link to="/rent-car" className="flex-1">
@@ -71,32 +71,40 @@ export default function HeroSection() {
                 className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-cars/40 text-cars hover:bg-cars/10"
               >
                 <CarFront className="w-4 h-4" />
-                Cars
+                Find Rental Cars
               </Button>
             </Link>
           </div>
 
-          {/* Helper Text */}
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <ArrowRight className="w-3.5 h-3.5" />
-            <span>Book flights securely on ZIVO.</span>
+          {/* Trust text */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mb-5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Book securely on ZIVO.</span>
           </div>
+
+          {/* Trust Bar - Visible without scrolling */}
+          <HeroTrustBar />
+
+          {/* Positioning Disclaimer */}
+          <p className="text-center text-[11px] text-muted-foreground/70 mt-4">
+            ZIVO is a travel booking platform. Services are fulfilled by licensed travel providers.
+          </p>
         </div>
       </div>
 
       {/* Desktop: Split layout */}
       <div className="hidden lg:grid lg:grid-cols-2 min-h-[85vh]">
         {/* Left: Content */}
-        <div className="flex items-center px-8 xl:px-16 py-16 bg-background">
+        <div className="flex items-center px-8 xl:px-16 py-12 bg-background">
           <div className="max-w-xl">
             <h1 className="text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight">
               Book travel with clarity and confidence.
             </h1>
-            <p className="text-lg text-muted-foreground mb-4">
+            <p className="text-lg text-muted-foreground mb-3">
               Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
             </p>
-            <p className="text-sm text-muted-foreground/80 mb-8">
-              Compare real-time prices · Book securely on ZIVO
+            <p className="text-sm text-muted-foreground/80 mb-6">
+              Real-time prices • Secure checkout • Instant e-tickets
             </p>
 
             {/* Primary CTA - Flights */}
@@ -107,12 +115,11 @@ export default function HeroSection() {
               >
                 <Plane className="w-6 h-6" />
                 Search Flights
-                <ArrowRight className="w-5 h-5" />
               </Button>
             </Link>
 
             {/* Secondary CTA - Hotels & Cars */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-3 mb-5">
               <Link to="/hotels">
                 <Button
                   variant="outline"
@@ -135,11 +142,19 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            {/* Helper Text */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ArrowRight className="w-4 h-4" />
-              <span>Book flights securely on ZIVO.</span>
+            {/* Trust text */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              <span>Book securely on ZIVO.</span>
             </div>
+
+            {/* Trust Bar - Visible without scrolling */}
+            <HeroTrustBar />
+
+            {/* Positioning Disclaimer */}
+            <p className="text-xs text-muted-foreground/70 mt-5 max-w-md">
+              ZIVO is a travel booking platform. Services are fulfilled by licensed travel providers.
+            </p>
           </div>
         </div>
 
