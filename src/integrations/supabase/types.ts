@@ -3348,6 +3348,63 @@ export type Database = {
           },
         ]
       }
+      flight_search_logs: {
+        Row: {
+          cabin_class: string
+          created_at: string
+          departure_date: string
+          destination_iata: string
+          duffel_error: string | null
+          duffel_request_id: string | null
+          duffel_status_code: number | null
+          environment: string | null
+          id: string
+          offers_count: number | null
+          origin_iata: string
+          passengers: number
+          response_time_ms: number | null
+          return_date: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          cabin_class?: string
+          created_at?: string
+          departure_date: string
+          destination_iata: string
+          duffel_error?: string | null
+          duffel_request_id?: string | null
+          duffel_status_code?: number | null
+          environment?: string | null
+          id?: string
+          offers_count?: number | null
+          origin_iata: string
+          passengers?: number
+          response_time_ms?: number | null
+          return_date?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          cabin_class?: string
+          created_at?: string
+          departure_date?: string
+          destination_iata?: string
+          duffel_error?: string | null
+          duffel_request_id?: string | null
+          duffel_status_code?: number | null
+          environment?: string | null
+          id?: string
+          offers_count?: number | null
+          origin_iata?: string
+          passengers?: number
+          response_time_ms?: number | null
+          return_date?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       flight_ticketing_logs: {
         Row: {
           action: string

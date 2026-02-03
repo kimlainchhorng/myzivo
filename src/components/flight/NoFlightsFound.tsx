@@ -1,14 +1,16 @@
 /**
  * NoFlightsFound Component
  * OTA Mode: Shows "No flights available" UI when Duffel returns 0 offers
- * Does NOT fallback to affiliate - keeps cross-sell for Hotels/Cars only
+ * Includes sandbox test helper for development
  */
-import { Plane, Search, ExternalLink, Hotel, Car, Ticket } from "lucide-react";
+import { Plane, Search, Hotel, Car, Ticket, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AFFILIATE_LINKS } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { useNavigate } from "react-router-dom";
+import SandboxTestHelper from "./SandboxTestHelper";
+import { isSandboxMode } from "@/config/duffelConfig";
 
 interface NoFlightsFoundProps {
   onClearFilters?: () => void;
@@ -24,6 +26,7 @@ export default function NoFlightsFound({
   destination 
 }: NoFlightsFoundProps) {
   const navigate = useNavigate();
+  const showSandboxHelper = isSandboxMode();
 
   const handleCrossSellClick = (type: 'hotel' | 'car' | 'activities') => {
     trackAffiliateClick({
@@ -51,6 +54,11 @@ export default function NoFlightsFound({
 
   return (
     <Card className="p-8 sm:p-12 text-center">
+      {/* Sandbox Helper Banner - Only in test mode */}
+      {showSandboxHelper && (
+        <SandboxTestHelper className="mb-6 text-left" />
+      )}
+
       <div className="w-20 h-20 rounded-full bg-sky-500/10 flex items-center justify-center mx-auto mb-6">
         <Plane className="w-10 h-10 text-sky-500" />
       </div>
