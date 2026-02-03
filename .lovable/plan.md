@@ -1,390 +1,559 @@
 
 
-# ZIVO Full Hotelbeds Integration Plan
-## Hotels + Activities + Transfers - Complete API Integration
+# ZIVO Booking Engine - Complete Implementation Plan
+## Orders, Payments, and Webhooks for Hotelbeds Integration
 
 ---
 
 ## Executive Summary
 
-Transform ZIVO from an affiliate-redirect travel platform to a **full-service booking platform** using Hotelbeds APIs for Hotels, Activities, and Transfers. Users will search, view real prices, and complete bookings entirely within ZIVO without external redirects.
+Build a unified booking engine that transforms ZIVO from an affiliate-redirect platform to a real travel booking platform. This system will handle Hotels, Activities, and Transfers through Hotelbeds APIs with Stripe payment integration, order tracking, and webhook-driven confirmations.
 
 ---
 
 ## Current State Analysis
 
-### Hotels
-- **Current**: Displays indicative (mock) prices and redirects users to Booking.com affiliate
-- **Components**: `HotelsPage.tsx`, `HotelResultCard.tsx`, `HotelFilters.tsx`
-- **Hook**: `useRealHotelSearch` generates fake hotel data
-- **Backend**: TripAdvisor Content API for discovery (no booking)
+### Existing Infrastructure
+- **Database**: Existing `profiles` table with `user_id`, `full_name`, `email`, `phone`
+- **Edge Functions**: Three Hotelbeds edge functions already created (`hotelbeds-hotels`, `hotelbeds-activities`, `hotelbeds-transfers`)
+- **Stripe Integration**: Existing `stripe-webhook` handler for rides, eats, flights, and P2P
+- **Payment Pattern**: `create-eats-checkout` demonstrates the checkout flow pattern
+- **Frontend Hooks**: `useHotelbedsSearch`, `useHotelbedsBooking`, `useHotelbedsActivities`, `useHotelbedsTransfers` already exist
 
-### Activities  
-- **Current**: Affiliate redirects to Tiqets, WeGoTrip, TicketNetwork
-- **Page**: `ThingsToDo.tsx` with hardcoded experiences
-- **No real search** - just static content with partner links
-
-### Transfers
-- **Current**: Affiliate redirects to KiwiTaxi, GetTransfer, Intui.travel
-- **Component**: `AirportTransfersSection.tsx` 
-- **No search** - displays partner cards with external links
+### What Needs to Be Built
+1. New database tables: `orders`, `order_items`, `payments`, `audit_logs`
+2. New edge functions: `create-order`, `create-checkout-session`, `confirm-hotelbeds-booking`
+3. Update existing `stripe-webhook` to handle Hotelbeds bookings
+4. Unified checkout page and confirmation flow
 
 ---
 
-## Target Architecture
+## Phase 1: Database Schema
+
+### 1.1 Orders Table
 
 ```text
-+------------------+     +----------------------+     +------------------+
-|   ZIVO Frontend  | --> | Supabase Edge Fns    | --> | Hotelbeds APIs   |
-+------------------+     +----------------------+     +------------------+
-     |                          |                           |
-     | Search/Book              | Secure Auth               | Hotels API
-     | Requests                 | Rate Limiting             | Activities API
-     |                          | Error Handling            | Transfers API
-     v                          v                           v
-+------------------+     +----------------------+     +------------------+
-| React Pages      |     | hotelbeds-hotels     |     | /hotel-api/1.0   |
-| - Search Forms   |     | hotelbeds-activities |     | /activity-api/1.0|
-| - Results Lists  |     | hotelbeds-transfers  |     | /transfer-api/1.0|
-| - Checkout Flows |     +----------------------+     +------------------+
-+------------------+
-```
+Table: orders
+Purpose: Central order record for all travel bookings
 
----
-
-## Phase 1: Secrets Configuration
-
-### Required Environment Variables
-
-**Hotels API**:
-- `HOTELBEDS_HOTEL_API_KEY`
-- `HOTELBEDS_HOTEL_SECRET`
-
-**Activities API**:
-- `HOTELBEDS_ACTIVITY_API_KEY`
-- `HOTELBEDS_ACTIVITY_SECRET`
-
-**Transfers API**:
-- `HOTELBEDS_TRANSFER_API_KEY`
-- `HOTELBEDS_TRANSFER_SECRET`
-
-**Shared**:
-- `HOTELBEDS_BASE_URL` = `https://api.test.hotelbeds.com` (TEST environment)
-
-All secrets are stored in Supabase Edge Function secrets - never exposed to frontend.
-
----
-
-## Phase 2: Edge Functions
-
-### 2.1 Hotels Edge Function: `hotelbeds-hotels`
-
-**File**: `supabase/functions/hotelbeds-hotels/index.ts`
-
-**Actions**:
-| Action | Method | Hotelbeds Endpoint | Purpose |
-|--------|--------|-------------------|---------|
-| `status` | GET | `/hotel-api/1.0/status` | Health check |
-| `search` | POST | `/hotel-api/1.0/hotels` | Availability search |
-| `checkrates` | POST | `/hotel-api/1.0/checkrates` | Price verification |
-| `book` | POST | `/hotel-api/1.0/bookings` | Create booking |
-
-**Authentication** (applies to all):
-```text
-Headers:
-  Api-key: {HOTELBEDS_HOTEL_API_KEY}
-  X-Signature: SHA256_HEX(apiKey + secret + unixTimestampSeconds)
-  Accept: application/json
-  Content-Type: application/json
-```
-
-### 2.2 Activities Edge Function: `hotelbeds-activities`
-
-**File**: `supabase/functions/hotelbeds-activities/index.ts`
-
-**Actions**:
-| Action | Method | Hotelbeds Endpoint | Purpose |
-|--------|--------|-------------------|---------|
-| `status` | GET | `/activity-api/1.0/status` | Health check |
-| `search` | POST | `/activity-api/1.0/activities/availability` | Search activities |
-| `details` | GET | `/activity-api/1.0/activities/{code}` | Activity details |
-| `book` | POST | `/activity-api/1.0/bookings` | Create booking |
-
-### 2.3 Transfers Edge Function: `hotelbeds-transfers`
-
-**File**: `supabase/functions/hotelbeds-transfers/index.ts`
-
-**Actions**:
-| Action | Method | Hotelbeds Endpoint | Purpose |
-|--------|--------|-------------------|---------|
-| `status` | GET | `/transfer-api/1.0/status` | Health check |
-| `availability` | POST | `/transfer-api/1.0/availability` | Search transfers |
-| `book` | POST | `/transfer-api/1.0/bookings` | Create booking |
-
----
-
-## Phase 3: TypeScript Types
-
-**File**: `src/types/hotelbeds.ts`
-
-```text
-Types to define:
-- HotelbedsHotel, HotelbedsRoom, HotelbedsRate
-- HotelbedsActivity, ActivityModality, ActivityRate
-- HotelbedsTransfer, TransferVehicle, TransferRate
-- SearchRequest/Response types for each service
-- BookingRequest/Response types for each service
-- Common types: HotelbedsError, GuestInfo, PaymentInfo
-```
-
----
-
-## Phase 4: Frontend Hooks
-
-### 4.1 Hotels Hooks
-
-**File**: `src/hooks/useHotelbedsSearch.ts`
-- `searchHotels(params)` - Search availability
-- Transform Hotelbeds response to ZIVO format
-- Handle loading, error, empty states
-
-**File**: `src/hooks/useHotelbedsBooking.ts`
-- `checkRates(rateKey)` - Verify current price
-- `createBooking(params)` - Submit booking
-- Handle rate changes and booking confirmation
-
-### 4.2 Activities Hooks
-
-**File**: `src/hooks/useHotelbedsActivities.ts`
-- `searchActivities(destination, date)` - Search by location/date
-- `getActivityDetails(code)` - Get full details
-- `bookActivity(params)` - Create booking
-
-### 4.3 Transfers Hooks
-
-**File**: `src/hooks/useHotelbedsTransfers.ts`
-- `searchTransfers(pickup, dropoff, date)` - Search availability
-- `bookTransfer(params)` - Create booking
-
----
-
-## Phase 5: UI Pages
-
-### 5.1 Hotels Module
-
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/hotels` | `HotelsPage.tsx` (update) | Search form + results |
-| `/hotels/:hotelCode` | `HotelDetailPage.tsx` (new) | Hotel details + room selection |
-| `/hotels/checkout` | `HotelCheckoutPage.tsx` (new) | Guest form + booking |
-| `/hotels/confirmation/:ref` | `HotelConfirmationPage.tsx` (new) | Booking confirmation |
-
-### 5.2 Activities Module
-
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/activities` | `ActivitiesPage.tsx` (update) | Search + browse |
-| `/activities/results` | `ActivityResultsPage.tsx` (new) | Search results |
-| `/activities/:code` | `ActivityDetailPage.tsx` (new) | Activity details |
-| `/activities/checkout` | `ActivityCheckoutPage.tsx` (new) | Booking form |
-| `/activities/confirmation/:ref` | `ActivityConfirmationPage.tsx` (new) | Confirmation |
-
-### 5.3 Transfers Module
-
-| Route | Page | Purpose |
-|-------|------|---------|
-| `/transfers` | `TransfersPage.tsx` (new) | Search form |
-| `/transfers/results` | `TransferResultsPage.tsx` (new) | Vehicle options |
-| `/transfers/checkout` | `TransferCheckoutPage.tsx` (new) | Passenger details |
-| `/transfers/confirmation/:ref` | `TransferConfirmationPage.tsx` (new) | Confirmation |
-
----
-
-## Phase 6: Components
-
-### Hotels Components
-```text
-src/components/hotels/
-├── HotelbedsResultCard.tsx     # Real hotel card
-├── HotelRoomCard.tsx           # Room option with rate
-├── HotelImageGallery.tsx       # Photo carousel  
-├── HotelFacilities.tsx         # Amenities list
-├── HotelGuestForm.tsx          # Booking form
-├── HotelPriceSummary.tsx       # Price breakdown
-└── HotelConfirmationCard.tsx   # Booking success
-```
-
-### Activities Components
-```text
-src/components/activities/
-├── ActivityResultCard.tsx      # Activity card
-├── ActivityModalityCard.tsx    # Tour option/timing
-├── ActivityDetailHero.tsx      # Hero with images
-├── ActivityBookingForm.tsx     # Participant details
-└── ActivityConfirmation.tsx    # Booking success
-```
-
-### Transfers Components
-```text
-src/components/transfers/
-├── TransferSearchForm.tsx      # Pickup/dropoff form
-├── TransferVehicleCard.tsx     # Vehicle option card
-├── TransferRouteDisplay.tsx    # Route visualization
-├── TransferPassengerForm.tsx   # Passenger details
-└── TransferConfirmation.tsx    # Booking success
-```
-
----
-
-## Phase 7: Database Schema
-
-### Hotels Bookings Table
-```text
-hotelbeds_hotel_bookings
-- id (UUID)
-- user_id (UUID, optional)
-- reference (TEXT) - Hotelbeds booking reference
-- hotel_code (TEXT)
-- hotel_name (TEXT)
-- check_in (DATE)
-- check_out (DATE)
-- room_code (TEXT)
-- rate_key (TEXT)
+Columns:
+- id (UUID, PK)
+- user_id (UUID, FK -> profiles.user_id, nullable for guest checkout)
+- order_number (TEXT, unique, format: ZIVO-YYYY-NNNNNN)
+- currency (TEXT, default 'USD')
+- subtotal (NUMERIC(10,2))
+- taxes (NUMERIC(10,2), default 0)
+- fees (NUMERIC(10,2), default 0)
+- total (NUMERIC(10,2))
+- status (TEXT: draft | pending_payment | confirmed | cancelled | failed | refunded)
+- provider (TEXT: hotelbeds)
 - holder_name (TEXT)
 - holder_email (TEXT)
-- total_amount (DECIMAL)
-- currency (TEXT)
-- status (TEXT) - confirmed, cancelled, pending
-- raw_response (JSONB)
+- holder_phone (TEXT)
+- created_at (TIMESTAMPTZ)
+- updated_at (TIMESTAMPTZ)
+```
+
+### 1.2 Order Items Table
+
+```text
+Table: order_items
+Purpose: Individual products within an order (hotel, activity, transfer)
+
+Columns:
+- id (UUID, PK)
+- order_id (UUID, FK -> orders.id, CASCADE)
+- type (TEXT: hotel | activity | transfer)
+- provider (TEXT: hotelbeds)
+- provider_reference (TEXT, nullable - set after booking confirmed)
+- title (TEXT - hotel name, activity name, or transfer route)
+- start_date (DATE)
+- end_date (DATE, nullable)
+- adults (INT)
+- children (INT, default 0)
+- quantity (INT, default 1)
+- price (NUMERIC(10,2))
+- meta (JSONB - rateKey, hotelCode, activityCode, etc.)
+- status (TEXT: reserved | confirmed | cancelled | failed)
 - created_at (TIMESTAMPTZ)
 ```
 
-### Activities Bookings Table
+### 1.3 Payments Table
+
 ```text
-hotelbeds_activity_bookings
-- id (UUID)
-- user_id (UUID, optional)
-- reference (TEXT)
-- activity_code (TEXT)
-- activity_name (TEXT)
-- activity_date (DATE)
-- modality_code (TEXT)
-- holder_name (TEXT)
-- holder_email (TEXT)
-- participants (JSONB)
-- total_amount (DECIMAL)
+Table: payments
+Purpose: Track Stripe payment status for orders
+
+Columns:
+- id (UUID, PK)
+- order_id (UUID, FK -> orders.id, CASCADE)
+- provider (TEXT: stripe)
+- stripe_payment_intent_id (TEXT)
+- stripe_checkout_session_id (TEXT)
+- amount (NUMERIC(10,2))
 - currency (TEXT)
-- status (TEXT)
-- raw_response (JSONB)
+- status (TEXT: pending | processing | succeeded | failed | canceled | refunded)
 - created_at (TIMESTAMPTZ)
 ```
 
-### Transfers Bookings Table
+### 1.4 Booking Audit Logs Table
+
 ```text
-hotelbeds_transfer_bookings
-- id (UUID)
-- user_id (UUID, optional)
-- reference (TEXT)
-- transfer_type (TEXT) - airport, hotel, etc.
-- pickup_location (TEXT)
-- dropoff_location (TEXT)
-- transfer_date (DATE)
-- transfer_time (TIME)
-- vehicle_type (TEXT)
-- passengers (INTEGER)
-- holder_name (TEXT)
-- holder_email (TEXT)
-- total_amount (DECIMAL)
-- currency (TEXT)
-- status (TEXT)
-- raw_response (JSONB)
+Table: booking_audit_logs
+Purpose: Security + debugging trail for all booking operations
+
+Columns:
+- id (UUID, PK)
+- order_id (UUID, nullable)
+- user_id (UUID, nullable)
+- event (TEXT: order_created | payment_initiated | payment_succeeded | booking_confirmed | booking_failed | refund_requested | etc.)
+- ip_address (TEXT, nullable)
+- user_agent (TEXT, nullable)
+- meta (JSONB - detailed event data)
 - created_at (TIMESTAMPTZ)
+```
+
+### 1.5 Database Function: Generate Order Number
+
+```sql
+CREATE OR REPLACE FUNCTION generate_order_number()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.order_number := 'ZIVO-' || TO_CHAR(NOW(), 'YYYY') || '-' || 
+    LPAD(FLOOR(RANDOM() * 1000000)::TEXT, 6, '0');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 ```
 
 ---
 
-## Phase 8: Error Handling
+## Phase 2: Row Level Security (RLS)
 
-### API Error Mapping
+### Orders Table RLS
 
-| HTTP Status | Error Type | User Message |
-|-------------|------------|--------------|
-| 400 | Bad Request | "Please check your search details" |
-| 401/403 | Auth Failed | "Authentication error. Please try again." |
-| 404 | Not Found | "This option is no longer available" |
-| 429 | Rate Limited | "Too many requests. Please wait a moment." |
-| 500+ | Server Error | "Service temporarily unavailable" |
+```text
+Policies:
+1. "Users can view own orders"
+   - SELECT: user_id = auth.uid() OR user_id IS NULL (guest with email verification)
 
-### Price Change Handling
-- If `checkrates` returns different price, show comparison
-- User must confirm new price before booking
-- Log price discrepancies for monitoring
+2. "Users can create orders"
+   - INSERT: user_id = auth.uid() OR user_id IS NULL
 
-### Signature Time Drift
-- Edge function uses server time (Deno.now())
-- No time drift issues expected
-- Log and alert if signature failures occur
+3. "Service role can manage all orders"
+   - ALL: For webhook and backend operations
+```
+
+### Order Items Table RLS
+
+```text
+Policies:
+1. "Users can view items for own orders"
+   - SELECT: EXISTS (SELECT 1 FROM orders WHERE id = order_items.order_id AND user_id = auth.uid())
+
+2. "Service role can manage all items"
+   - ALL: For backend operations
+```
+
+### Payments Table RLS
+
+```text
+Policies:
+1. "Users can view payments for own orders"
+   - SELECT: EXISTS (SELECT 1 FROM orders WHERE id = payments.order_id AND user_id = auth.uid())
+
+2. "Service role can manage all payments"
+   - ALL: For webhook operations
+```
+
+### Audit Logs Table RLS
+
+```text
+Policies:
+1. "Only admins can read audit logs"
+   - SELECT: public.has_role(auth.uid(), 'admin')
+
+2. "Service role can insert logs"
+   - INSERT: For backend logging
+```
 
 ---
 
-## Phase 9: Cross-Sell Integration
+## Phase 3: Edge Functions
 
-### Hotel Checkout Upsells
-- After hotel selection, suggest:
-  - Airport transfer to hotel
-  - Activities at destination
-- Use destination + dates context
+### 3.1 Create Order Edge Function
 
-### Activity Cross-Sell
-- After hotel booking confirmation:
-  - "Add things to do in [City]"
-  - Pre-filtered by booking dates
+**File**: `supabase/functions/create-travel-order/index.ts`
 
-### Transfer Integration
-- Offer during hotel checkout
-- "Add airport pickup for your arrival"
-- Pre-populated with hotel address
+**Purpose**: Create order + order_items from selected hotel/activity/transfer
+
+**Request Body**:
+```typescript
+{
+  items: Array<{
+    type: 'hotel' | 'activity' | 'transfer';
+    title: string;
+    startDate: string;
+    endDate?: string;
+    adults: number;
+    children?: number;
+    quantity?: number;
+    price: number;
+    meta: {
+      rateKey?: string;
+      hotelCode?: string;
+      activityCode?: string;
+      modalityCode?: string;
+      transferRoute?: object;
+    };
+  }>;
+  holder: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  currency?: string;
+}
+```
+
+**Response**:
+```typescript
+{
+  orderId: string;
+  orderNumber: string;
+  total: number;
+}
+```
+
+**Flow**:
+1. Validate input
+2. Calculate totals (subtotal + taxes + fees)
+3. Insert into `orders` with status='draft'
+4. Insert each item into `order_items` with status='reserved'
+5. Log to `booking_audit_logs`
+6. Return order details
+
+### 3.2 Create Checkout Session Edge Function
+
+**File**: `supabase/functions/create-travel-checkout/index.ts`
+
+**Purpose**: Create Stripe Checkout session for an order
+
+**Request Body**:
+```typescript
+{
+  orderId: string;
+  successUrl?: string;
+  cancelUrl?: string;
+}
+```
+
+**Response**:
+```typescript
+{
+  url: string;
+  sessionId: string;
+}
+```
+
+**Flow**:
+1. Fetch order + order_items from database
+2. Validate order status is 'draft'
+3. Build Stripe line items from order_items
+4. Create Stripe Checkout session with metadata: `{ type: 'travel', orderId, orderNumber }`
+5. Insert into `payments` table with status='pending'
+6. Update order status to 'pending_payment'
+7. Store `stripe_checkout_session_id` on order
+8. Log audit event
+9. Return checkout URL
+
+### 3.3 Confirm Hotelbeds Booking Edge Function
+
+**File**: `supabase/functions/confirm-hotelbeds-booking/index.ts`
+
+**Purpose**: Called by webhook after payment succeeds - confirms actual bookings with Hotelbeds
+
+**Request Body** (internal):
+```typescript
+{
+  orderId: string;
+}
+```
+
+**Flow**:
+1. Fetch order + order_items
+2. For each order_item:
+   - If type='hotel': Call `hotelbeds-hotels` with action='book'
+   - If type='activity': Call `hotelbeds-activities` with action='book'
+   - If type='transfer': Call `hotelbeds-transfers` with action='book'
+3. Update each item's `provider_reference` and `status='confirmed'`
+4. If all items confirmed: Update order `status='confirmed'`
+5. If any item fails: Update order `status='failed'`, create support ticket
+6. Log all events to audit_logs
+7. Trigger confirmation email
+
+### 3.4 Update Stripe Webhook Handler
+
+**File**: `supabase/functions/stripe-webhook/index.ts` (modify existing)
+
+**Add handler for travel bookings**:
+
+```typescript
+case "checkout.session.completed": {
+  // Existing handlers for ride, eats, flight, p2p...
+  
+  if (metadata.type === "travel") {
+    // Update order status
+    await supabase
+      .from("orders")
+      .update({ status: "pending_payment" }) // Already set, but confirm
+      .eq("id", metadata.orderId);
+    
+    // Update payment status
+    await supabase
+      .from("payments")
+      .update({ status: "succeeded" })
+      .eq("stripe_checkout_session_id", session.id);
+    
+    // Trigger booking confirmation
+    await fetch(`${supabaseUrl}/functions/v1/confirm-hotelbeds-booking`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${supabaseServiceKey}`,
+      },
+      body: JSON.stringify({ orderId: metadata.orderId }),
+    });
+  }
+}
+```
+
+---
+
+## Phase 4: Frontend - Checkout Flow
+
+### 4.1 Checkout Page
+
+**File**: `src/pages/TravelCheckoutPage.tsx`
+
+**Route**: `/checkout`
+
+**Features**:
+- Step 1: Review itinerary (display all order_items)
+- Step 2: Traveler details form (holder info)
+- Step 3: Payment method selection:
+  - Pay Now (Stripe)
+  - Pay at Hotel (only if rate supports it - check meta.paymentType)
+- Step 4: Terms acceptance + Confirm button
+- Loading/error states
+
+**Data Flow**:
+```text
+User selects hotel/activity/transfer
+  -> Adds to cart (localStorage/context)
+  -> Navigates to /checkout
+  -> Fills holder info
+  -> Clicks "Pay Now"
+  -> Calls create-travel-order
+  -> Calls create-travel-checkout
+  -> Redirect to Stripe Checkout
+  -> Stripe webhook triggers booking
+  -> User returns to confirmation page
+```
+
+### 4.2 Cart Context
+
+**File**: `src/contexts/TravelCartContext.tsx`
+
+**State**:
+```typescript
+interface CartItem {
+  id: string;
+  type: 'hotel' | 'activity' | 'transfer';
+  title: string;
+  startDate: string;
+  endDate?: string;
+  adults: number;
+  children: number;
+  price: number;
+  meta: object;
+}
+
+interface TravelCartState {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (id: string) => void;
+  clearCart: () => void;
+  getTotal: () => number;
+}
+```
+
+### 4.3 Order Confirmation Page
+
+**File**: `src/pages/TravelConfirmationPage.tsx`
+
+**Route**: `/confirmation/:orderNumber`
+
+**Display**:
+- Order number
+- Booking references for each item (from provider_reference)
+- Hotel/activity/transfer details
+- Check-in/out dates
+- Guest names
+- Total paid
+- Support contact info
+- Download confirmation (PDF future)
+
+### 4.4 My Orders Page
+
+**File**: `src/pages/MyOrdersPage.tsx`
+
+**Route**: `/my-orders`
+
+**Features**:
+- List all user's orders
+- Filter by status
+- Click to view order details
+- Cancel order (if cancellation allowed)
+
+---
+
+## Phase 5: Frontend Hooks
+
+### 5.1 useCreateOrder Hook
+
+**File**: `src/hooks/useCreateOrder.ts`
+
+```typescript
+export function useCreateOrder() {
+  const createOrder = async (items: CartItem[], holder: HolderInfo) => {
+    const { data, error } = await supabase.functions.invoke('create-travel-order', {
+      body: { items, holder }
+    });
+    return data;
+  };
+  
+  return { createOrder, isLoading, error };
+}
+```
+
+### 5.2 useCheckout Hook
+
+**File**: `src/hooks/useTravelCheckout.ts`
+
+```typescript
+export function useTravelCheckout() {
+  const startCheckout = async (orderId: string) => {
+    const { data, error } = await supabase.functions.invoke('create-travel-checkout', {
+      body: { orderId }
+    });
+    
+    if (data?.url) {
+      window.location.href = data.url; // Redirect to Stripe
+    }
+  };
+  
+  return { startCheckout, isLoading, error };
+}
+```
+
+### 5.3 useOrderDetails Hook
+
+**File**: `src/hooks/useOrderDetails.ts`
+
+```typescript
+export function useOrderDetails(orderNumber: string) {
+  return useQuery({
+    queryKey: ['order', orderNumber],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (*),
+          payments (*)
+        `)
+        .eq('order_number', orderNumber)
+        .single();
+      return data;
+    }
+  });
+}
+```
+
+---
+
+## Phase 6: Integration Points
+
+### 6.1 Hotel Detail Page Integration
+
+**Modify**: `src/pages/HotelDetailPage.tsx` (to be created)
+
+When user clicks "Book Now" on a room:
+1. Add hotel to cart context
+2. Navigate to `/checkout` or show cart drawer
+
+### 6.2 Activity Detail Page Integration
+
+**Modify**: `src/pages/ActivityDetailPage.tsx` (to be created)
+
+When user clicks "Book" on an activity:
+1. Add activity to cart context
+2. Navigate to `/checkout`
+
+### 6.3 Transfer Results Integration
+
+**Modify**: Transfer selection flow
+
+When user selects a transfer:
+1. Add transfer to cart context
+2. Continue to checkout or upsell activities
+
+---
+
+## Phase 7: Email Notifications
+
+### 7.1 Confirmation Email Edge Function
+
+**File**: `supabase/functions/send-travel-confirmation/index.ts`
+
+**Trigger**: Called after all items in order confirmed
+
+**Content**:
+- Order number
+- All booking references
+- Itinerary summary
+- Cancellation policy
+- Support contact
 
 ---
 
 ## Implementation Order
 
-### Week 1: Backend Foundation
-1. Add all Hotelbeds secrets to Supabase
-2. Create `hotelbeds-hotels` edge function
-3. Create `hotelbeds-activities` edge function
-4. Create `hotelbeds-transfers` edge function
-5. Test each endpoint with TEST environment
+### Week 1: Database + Core Backend
+1. Create database migration with all tables
+2. Add RLS policies
+3. Create `create-travel-order` edge function
+4. Create `create-travel-checkout` edge function
+5. Test order creation flow
 
-### Week 2: Hotels Flow
-1. Create TypeScript types for Hotels
-2. Build `useHotelbedsSearch` hook
-3. Update `HotelsPage.tsx` with real search
-4. Create `HotelDetailPage.tsx`
-5. Create `HotelCheckoutPage.tsx`
-6. Create `HotelConfirmationPage.tsx`
-7. Add database table + RLS policies
+### Week 2: Webhook + Booking Confirmation
+1. Create `confirm-hotelbeds-booking` edge function
+2. Update `stripe-webhook` to handle travel type
+3. Test end-to-end payment -> booking flow
+4. Add audit logging
 
-### Week 3: Activities Flow
-1. Add Activities types
-2. Build `useHotelbedsActivities` hook
-3. Create/update Activities pages
-4. Build booking flow components
-5. Add database table + RLS
+### Week 3: Frontend Checkout
+1. Create `TravelCartContext`
+2. Create `TravelCheckoutPage`
+3. Create `TravelConfirmationPage`
+4. Integrate with hotel/activity/transfer selection
 
-### Week 4: Transfers Flow
-1. Add Transfers types
-2. Build `useHotelbedsTransfers` hook
-3. Create Transfers pages
-4. Build booking flow
-5. Add database table + RLS
-
-### Week 5: Integration & Polish
-1. Cross-sell integration
-2. Error handling refinement
-3. End-to-end testing in TEST
-4. Performance optimization
-5. Switch to LIVE environment
+### Week 4: Polish + Testing
+1. Create `MyOrdersPage`
+2. Add email notifications
+3. Error handling refinement
+4. End-to-end testing in Hotelbeds TEST mode
 
 ---
 
@@ -394,50 +563,43 @@ hotelbeds_transfer_bookings
 
 | Category | Files |
 |----------|-------|
-| Edge Functions | `supabase/functions/hotelbeds-hotels/index.ts`, `supabase/functions/hotelbeds-activities/index.ts`, `supabase/functions/hotelbeds-transfers/index.ts` |
-| Types | `src/types/hotelbeds.ts` |
-| Hooks | `src/hooks/useHotelbedsSearch.ts`, `src/hooks/useHotelbedsBooking.ts`, `src/hooks/useHotelbedsActivities.ts`, `src/hooks/useHotelbedsTransfers.ts` |
-| Hotel Pages | `src/pages/HotelDetailPage.tsx`, `src/pages/HotelCheckoutPage.tsx`, `src/pages/HotelConfirmationPage.tsx` |
-| Activity Pages | `src/pages/ActivityResultsPage.tsx`, `src/pages/ActivityDetailPage.tsx`, `src/pages/ActivityCheckoutPage.tsx`, `src/pages/ActivityConfirmationPage.tsx` |
-| Transfer Pages | `src/pages/TransfersPage.tsx`, `src/pages/TransferResultsPage.tsx`, `src/pages/TransferCheckoutPage.tsx`, `src/pages/TransferConfirmationPage.tsx` |
-| Components | ~15 new components across hotels, activities, transfers |
+| Edge Functions | `create-travel-order/index.ts`, `create-travel-checkout/index.ts`, `confirm-hotelbeds-booking/index.ts`, `send-travel-confirmation/index.ts` |
+| Pages | `TravelCheckoutPage.tsx`, `TravelConfirmationPage.tsx`, `MyOrdersPage.tsx` |
+| Hooks | `useCreateOrder.ts`, `useTravelCheckout.ts`, `useOrderDetails.ts` |
+| Context | `TravelCartContext.tsx` |
+| Components | `CheckoutSummary.tsx`, `TravelerForm.tsx`, `PaymentMethodSelector.tsx`, `OrderConfirmationCard.tsx` |
 
 ### To Modify
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add new routes for all three modules |
-| `src/pages/HotelsPage.tsx` | Replace mock hook with Hotelbeds API |
-| `src/pages/ThingsToDo.tsx` | Replace affiliate cards with real search |
-| `src/components/travel-extras/AirportTransfersSection.tsx` | Link to new transfers flow |
-| `src/components/hotels/HotelFilters.tsx` | Add board type, refundable filters |
-| `supabase/config.toml` | Add three new function configurations |
+| `stripe-webhook/index.ts` | Add travel booking handler |
+| `supabase/config.toml` | Add new function configs |
+| `src/App.tsx` | Add checkout, confirmation, my-orders routes |
 
 ---
 
-## Security Checklist
+## Security Considerations
 
-- [ ] All API keys stored in Supabase secrets only
-- [ ] No secrets logged in edge functions
-- [ ] Signature generated server-side only
-- [ ] Rate limiting applied to all endpoints
-- [ ] Input validation on all requests
-- [ ] RLS policies on all booking tables
-- [ ] Error messages don't leak internal details
-- [ ] CORS headers properly configured
+1. **API Keys**: All Hotelbeds API calls remain server-side only
+2. **RLS**: Users can only see their own orders
+3. **Audit Trail**: All operations logged to `booking_audit_logs`
+4. **Webhook Verification**: Stripe signature verification required
+5. **Rate Limiting**: Apply to all checkout endpoints
+6. **PII Minimization**: Store only essential traveler info
+7. **Guest Checkout**: Secured by email verification link for order access
 
 ---
 
 ## Success Criteria
 
-- [ ] Hotels: Search returns real availability from Hotelbeds TEST
-- [ ] Hotels: Booking flow completes successfully
-- [ ] Activities: Search returns real activities
-- [ ] Activities: Booking creates valid reservation
-- [ ] Transfers: Availability returns vehicle options
-- [ ] Transfers: Booking creates confirmed transfer
-- [ ] All booking references stored in database
-- [ ] No external redirects for booking completion
-- [ ] Error states handled gracefully
-- [ ] Mobile-responsive UI throughout
+- [ ] Order creation stores all items correctly
+- [ ] Stripe Checkout redirects work properly
+- [ ] Webhook successfully triggers Hotelbeds bookings
+- [ ] Booking references stored in database
+- [ ] Confirmation page shows all booking details
+- [ ] Users can view their order history
+- [ ] Failed bookings create support tickets
+- [ ] Audit logs capture all events
+- [ ] Works in Hotelbeds TEST environment
 
