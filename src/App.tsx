@@ -192,6 +192,9 @@ const DataBreachPolicy = lazy(() => import("./pages/legal/DataBreachPolicy"));
 const ChildrenPrivacy = lazy(() => import("./pages/legal/ChildrenPrivacy"));
 const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
 const LegalNoticesPolicy = lazy(() => import("./pages/legal/LegalNoticesPolicy"));
+const ComplianceOperations = lazy(() => import("./pages/legal/ComplianceOperations"));
+const RegulatoryResponse = lazy(() => import("./pages/legal/RegulatoryResponse"));
+const ComplianceRecords = lazy(() => import("./pages/legal/ComplianceRecords"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -430,6 +433,9 @@ const App = () => (
                 <Route path="/legal/children-privacy" element={<ChildrenPrivacy />} />
                 <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
                 <Route path="/legal/legal-notices" element={<LegalNoticesPolicy />} />
+                <Route path="/legal/compliance-operations" element={<ComplianceOperations />} />
+                <Route path="/legal/regulatory-response" element={<RegulatoryResponse />} />
+                <Route path="/legal/compliance-records" element={<ComplianceRecords />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />

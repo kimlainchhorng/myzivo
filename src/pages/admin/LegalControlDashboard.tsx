@@ -48,6 +48,7 @@ import {
   CORPORATE_POLICIES_LIST,
   FINAL_POLICIES_LIST,
   COMMUNICATIONS_POLICIES_LIST,
+  ONGOING_COMPLIANCE_POLICIES_LIST,
   LEGAL_FAQ
 } from "@/config/legalContent";
 import { format } from "date-fns";
@@ -584,6 +585,40 @@ export default function LegalControlDashboard() {
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {(policy as any).content?.substring(0, 80) || 
                          "Communications compliance policy"}...
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ongoing Compliance Policies (147-157) */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-emerald-500" />
+                  Ongoing Compliance & Operations (147-157)
+                </CardTitle>
+                <CardDescription>
+                  Monitoring, enforcement, documentation, and operational protections
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {ONGOING_COMPLIANCE_POLICIES_LIST.map((policy) => (
+                    <div
+                      key={policy.id}
+                      className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/5 hover:border-emerald-500/50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h5 className="font-medium text-sm line-clamp-1">{policy.title}</h5>
+                        <Badge variant="secondary" className="text-xs shrink-0">
+                          v{policy.version}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {(policy as any).content?.substring(0, 80) || 
+                         "Ongoing compliance policy"}...
                       </p>
                     </div>
                   ))}
