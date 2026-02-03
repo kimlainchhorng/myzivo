@@ -148,6 +148,9 @@ const AccessibilityStatement = lazy(() => import("./pages/legal/AccessibilitySta
 const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
 const CancellationPolicy = lazy(() => import("./pages/legal/CancellationPolicy"));
 const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
+const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
+const CommunityStandards = lazy(() => import("./pages/legal/CommunityStandards"));
+const LegalFAQ = lazy(() => import("./pages/legal/LegalFAQ"));
 // P2P Legal pages
 const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
@@ -334,9 +337,15 @@ const App = () => (
                 <Route path="/hotels-dashboard" element={<HotelDashboard />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/legal/terms" element={<TermsOfService />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/legal/privacy" element={<PrivacyPolicy />} />
                 <Route path="/refund-policy" element={<RefundPolicy />} />
+                <Route path="/legal/refunds" element={<RefundPolicy />} />
                 <Route path="/partner-agreement" element={<PartnerAgreement />} />
+                <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+                <Route path="/legal/community-standards" element={<CommunityStandards />} />
+                <Route path="/legal/faq" element={<LegalFAQ />} />
                 <Route path="/help" element={<HelpCenter />} />
                 <Route path="/promotions" element={<Promotions />} />
                 <Route path="/restaurant-registration" element={<RestaurantRegistration />} />
