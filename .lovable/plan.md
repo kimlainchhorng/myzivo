@@ -1,253 +1,662 @@
 
-# Flights Trust, Conversion & Confidence Layer (OTA-Ready)
+# Production Safety, Rate Limiting & Monitoring for ZIVO Flights
 
 ## Summary
 
-This plan enhances user trust and conversion on ZIVO Flights by adding prominent trust indicators, clear messaging about the booking process, support visibility, and removing all "compare" language from the Flights experience.
+This plan implements comprehensive production safety measures to prepare ZIVO Flights for public traffic under Duffel LIVE. It adds search rate limiting, bot protection, payment safety locks, system health monitoring, an admin system status page, and customer-friendly error messaging.
 
 ---
 
 ## Current State Analysis
 
-| Component | Status | Issue |
-|-----------|--------|-------|
-| **Trust strip above results** | Partial | Exists but needs enhancement with all 4 required items |
-| **Why Book With ZIVO (empty state)** | Missing | EmptyResults doesn't explain ZIVO's value proposition |
-| **Price confidence tooltip** | Missing | No tooltip explaining final pricing |
-| **Support visibility** | Minimal | Only `/support` link at bottom of confirmation |
-| **Post-booking confidence** | Partial | Email notice exists but needs stronger reassurance |
-| **"Compare" language in Flights** | Present | Found in page title, description, SEO, and multiple components |
+| Requirement | Status | Details |
+|-------------|--------|---------|
+| **Rate limiting infrastructure** | ✅ Exists | `rate-limiter` edge function + client `rateLimiter.ts` |
+| **Rate limiting for flights** | ⚠️ Partial | Config exists (`flights_search: 30/min`) but NOT integrated into `useDuffelFlightSearch` |
+| **Bot detection** | ✅ Exists | Edge function has `detectBot()` with user-agent analysis |
+| **Duplicate search detection** | ❌ Missing | No protection against rapid identical searches |
+| **Payment safety (offer verification)** | ❌ Missing | No offer re-validation before checkout |
+| **System health monitoring** | ⚠️ Partial | Generic `AdminSystemStatus` exists but no Duffel/Stripe-specific monitoring |
+| **Flights system status page** | ✅ Exists | `/admin/flights/status` shows booking stats and alerts |
+| **Customer-friendly errors** | ⚠️ Partial | Some errors shown but API errors can leak through |
+| **Admin alerts for failures** | ✅ Exists | `flight_admin_alerts` table with severity levels |
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Enhanced Trust Strip Component
+### Phase 1: Integrate Rate Limiting into Flight Search Hook
 
-**Goal:** Create a reusable trust strip that always shows above results, even when empty.
+**Goal:** Enforce rate limits on every flight search call.
 
-**File:** `src/components/flight/FlightTrustStrip.tsx` (NEW)
+**File:** `src/hooks/useDuffelFlights.ts`
 
-This component will include all 4 required trust points:
-- Secure ZIVO Checkout (Lock icon)
-- Tickets Issued Instantly (Ticket icon)
-- No Hidden Fees (BadgeCheck icon)
-- 24/7 Customer Support (Headphones icon)
+Add rate limit check before search:
+```typescript
+import { checkRateLimit, RateLimitError } from '@/lib/security/rateLimiter';
 
-```tsx
-// Key structure:
-const trustItems = [
-  { icon: Lock, label: "Secure ZIVO Checkout", color: "text-emerald-500" },
-  { icon: Ticket, label: "Tickets Issued Instantly", color: "text-sky-500" },
-  { icon: BadgeCheck, label: "No Hidden Fees", color: "text-amber-500" },
-  { icon: Headphones, label: "24/7 Customer Support", color: "text-purple-500" },
-];
+export function useDuffelFlightSearch(params: DuffelSearchParams & { enabled?: boolean }) {
+  const { enabled = true, ...searchParams } = params;
+
+  return useQuery({
+    queryKey: ['duffel-flights', searchParams],
+    queryFn: async (): Promise<DuffelSearchResult> => {
+      // Rate limit check
+      const rateLimitResult = await checkRateLimit('flights_search');
+      if (!rateLimitResult.allowed) {
+        throw new RateLimitError(
+          'Too many searches. Please wait a moment and try again.',
+          rateLimitResult.retryAfter
+        );
+      }
+
+      // Existing search logic...
+    },
+    // ...
+  });
+}
 ```
 
-**File:** `src/pages/FlightResults.tsx` (MODIFY)
+**File:** `src/lib/security/rateLimiter.ts`
 
-Replace existing trust banner (lines 397-414) with the new FlightTrustStrip:
-```tsx
-{/* Trust Strip - Always visible */}
-<FlightTrustStrip className="sticky top-16 z-40" />
+Update limits to match requirements (10 user, 30 IP):
+```typescript
+const CLIENT_LIMITS: Record<RateLimitAction, { windowMs: number; max: number }> = {
+  flights_search: { windowMs: 60000, max: 10 },  // Changed from 30 to 10
+  // ...
+};
+```
+
+**File:** `supabase/functions/rate-limiter/index.ts`
+
+Update server-side limits:
+```typescript
+const RATE_LIMITS: Record<string, RateLimitConfig> = {
+  'flights_search': { windowMs: 60000, maxRequests: 10 },  // 10 per user/minute
+  'flights_search_ip': { windowMs: 60000, maxRequests: 30 }, // 30 per IP/minute
+  // ...
+};
 ```
 
 ---
 
-### Phase 2: "Why Book With ZIVO" Section for Empty State
+### Phase 2: Add Bot & Abuse Protection (Duplicate Search Detection)
 
-**Goal:** Add a compelling value proposition when no flights are available.
+**Goal:** Block repeated identical searches and detect rapid cycling behavior.
 
-**File:** `src/components/results/EmptyResults.tsx` (MODIFY)
+**File:** `src/lib/security/searchProtection.ts` (NEW)
 
-Add a new section after the suggestions list for flights only:
+Create a new module for search abuse protection:
+```typescript
+/**
+ * Search Protection - Detect and block abusive search patterns
+ */
 
-```tsx
-{/* Why Book With ZIVO - Flights Empty State */}
-{service === "flights" && (
-  <div className="mt-8 pt-6 border-t border-border/30">
-    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 justify-center">
-      <ShieldCheck className="w-5 h-5 text-primary" />
-      Why book flights with ZIVO?
-    </h3>
-    <ul className="text-sm text-muted-foreground space-y-2 text-left max-w-md mx-auto">
-      <li className="flex items-start gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-        Book and pay directly on ZIVO
-      </li>
-      <li className="flex items-start gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-        Final prices shown before payment
-      </li>
-      <li className="flex items-start gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-        Tickets issued by licensed airline partners
-      </li>
-      <li className="flex items-start gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-        Secure checkout powered by Stripe
-      </li>
-      <li className="flex items-start gap-2">
-        <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-        Dedicated customer support
-      </li>
-    </ul>
-  </div>
+// Track recent searches to detect duplicates
+const recentSearches = new Map<string, { count: number; lastSearch: number }>();
+const DUPLICATE_WINDOW_MS = 10000; // 10 seconds
+const MAX_DUPLICATES = 3;
+
+// Track rapid cycling (changing airports/dates rapidly)
+const cyclingTracker = new Map<string, { changes: number; lastChange: number }>();
+const CYCLING_WINDOW_MS = 30000; // 30 seconds
+const MAX_CYCLING_CHANGES = 10;
+
+export interface SearchProtectionResult {
+  allowed: boolean;
+  reason?: 'duplicate' | 'cycling' | 'throttled';
+  message?: string;
+  waitMs?: number;
+}
+
+export function checkSearchAbuse(
+  origin: string,
+  destination: string,
+  departureDate: string,
+  sessionId: string
+): SearchProtectionResult {
+  const now = Date.now();
+  
+  // Check for duplicate searches
+  const searchKey = `${origin}-${destination}-${departureDate}-${sessionId}`;
+  const existing = recentSearches.get(searchKey);
+  
+  if (existing && now - existing.lastSearch < DUPLICATE_WINDOW_MS) {
+    existing.count++;
+    existing.lastSearch = now;
+    
+    if (existing.count > MAX_DUPLICATES) {
+      return {
+        allowed: false,
+        reason: 'duplicate',
+        message: 'You\'ve searched this route multiple times. Please wait a moment.',
+        waitMs: DUPLICATE_WINDOW_MS - (now - existing.lastSearch),
+      };
+    }
+  } else {
+    recentSearches.set(searchKey, { count: 1, lastSearch: now });
+  }
+
+  // Check for rapid cycling (changing search params too fast)
+  const cycleKey = sessionId;
+  const cycleData = cyclingTracker.get(cycleKey) || { changes: 0, lastChange: 0 };
+  
+  if (now - cycleData.lastChange < 2000) { // Less than 2 seconds since last change
+    cycleData.changes++;
+    
+    if (cycleData.changes > MAX_CYCLING_CHANGES) {
+      return {
+        allowed: false,
+        reason: 'cycling',
+        message: 'Please slow down. Too many searches in a short time.',
+        waitMs: CYCLING_WINDOW_MS - (now - cycleData.lastChange),
+      };
+    }
+  } else if (now - cycleData.lastChange > CYCLING_WINDOW_MS) {
+    // Reset after window expires
+    cycleData.changes = 1;
+  }
+  
+  cycleData.lastChange = now;
+  cyclingTracker.set(cycleKey, cycleData);
+
+  // Cleanup old entries periodically
+  cleanupOldEntries(now);
+
+  return { allowed: true };
+}
+
+function cleanupOldEntries(now: number) {
+  // Run cleanup every 100 calls
+  if (Math.random() > 0.01) return;
+  
+  for (const [key, value] of recentSearches) {
+    if (now - value.lastSearch > DUPLICATE_WINDOW_MS * 2) {
+      recentSearches.delete(key);
+    }
+  }
+  
+  for (const [key, value] of cyclingTracker) {
+    if (now - value.lastChange > CYCLING_WINDOW_MS * 2) {
+      cyclingTracker.delete(key);
+    }
+  }
+}
+
+export function clearSearchProtection(sessionId: string) {
+  for (const key of recentSearches.keys()) {
+    if (key.endsWith(sessionId)) {
+      recentSearches.delete(key);
+    }
+  }
+  cyclingTracker.delete(sessionId);
+}
+```
+
+**File:** `src/hooks/useDuffelFlights.ts`
+
+Integrate search protection:
+```typescript
+import { checkSearchAbuse } from '@/lib/security/searchProtection';
+import { getSearchSessionId } from '@/config/trackingParams';
+
+// In queryFn:
+const sessionId = getSearchSessionId();
+const abuseCheck = checkSearchAbuse(
+  searchParams.origin,
+  searchParams.destination,
+  searchParams.departureDate,
+  sessionId
+);
+
+if (!abuseCheck.allowed) {
+  throw new Error(abuseCheck.message || 'Please wait before searching again.');
+}
+```
+
+---
+
+### Phase 3: Payment Safety Locks (Offer Verification)
+
+**Goal:** Verify offer is still valid and price matches before creating PaymentIntent.
+
+**File:** `supabase/functions/create-flight-checkout/index.ts`
+
+Add offer verification before checkout:
+```typescript
+// After passenger validation, before creating booking:
+
+// PAYMENT SAFETY: Verify offer is still valid
+const DUFFEL_API_KEY = Deno.env.get("DUFFEL_API_KEY");
+if (DUFFEL_API_KEY && isLiveMode) {
+  console.log("[FlightCheckout] Verifying offer validity...");
+  
+  try {
+    const offerResponse = await fetch(`https://api.duffel.com/air/offers/${offerId}`, {
+      headers: {
+        "Authorization": `Bearer ${DUFFEL_API_KEY}`,
+        "Duffel-Version": "v2",
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!offerResponse.ok) {
+      const errorData = await offerResponse.json();
+      console.error("[FlightCheckout] Offer verification failed:", errorData);
+      throw new Error("This fare is no longer available. Please search again.");
+    }
+
+    const offerData = await offerResponse.json();
+    const duffelOffer = offerData.data;
+
+    // Verify price matches (with small tolerance for rounding)
+    const duffelPrice = parseFloat(duffelOffer.total_amount);
+    const expectedPrice = totalAmount * passengers.length;
+    const priceDiff = Math.abs(duffelPrice - expectedPrice);
+    
+    if (priceDiff > 1) { // $1 tolerance
+      console.error("[FlightCheckout] Price mismatch:", { duffelPrice, expectedPrice, priceDiff });
+      throw new Error("The price has changed. Please search again for updated fares.");
+    }
+
+    // Verify offer hasn't expired
+    const expiresAt = new Date(duffelOffer.expires_at);
+    if (expiresAt < new Date()) {
+      throw new Error("This offer has expired. Please search again.");
+    }
+
+    console.log("[FlightCheckout] Offer verified successfully");
+  } catch (verifyError) {
+    if (verifyError instanceof Error && verifyError.message.includes("no longer available")) {
+      throw verifyError;
+    }
+    // Log but continue in sandbox mode
+    if (!isLiveMode) {
+      console.warn("[FlightCheckout] Offer verification skipped in sandbox");
+    } else {
+      throw verifyError;
+    }
+  }
+}
+```
+
+---
+
+### Phase 4: System Health Monitoring with Alerts
+
+**Goal:** Monitor Duffel/Stripe health and create alerts for failures.
+
+**File:** `src/hooks/useSystemHealth.ts` (NEW)
+
+Create a hook for system health monitoring:
+```typescript
+/**
+ * System Health Monitoring Hook
+ * Tracks Duffel API, Stripe, and booking system health
+ */
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { subHours, subMinutes } from "date-fns";
+
+export interface FlightSystemHealth {
+  duffel: {
+    status: 'ok' | 'degraded' | 'down';
+    errorRate: number;
+    avgResponseTime: number;
+    lastError?: string;
+  };
+  stripe: {
+    status: 'ok' | 'degraded' | 'down';
+    failedPayments: number;
+    mode: 'test' | 'live' | 'unknown';
+  };
+  bookings: {
+    status: 'ok' | 'warning' | 'critical';
+    lastSuccessAt: string | null;
+    failedToday: number;
+    pendingTickets: number;
+    paymentToFailureRate: number; // Payments that succeeded but ticketing failed
+  };
+  alerts: {
+    critical: number;
+    warning: number;
+    unresolved: number;
+  };
+}
+
+export function useFlightSystemHealth() {
+  return useQuery({
+    queryKey: ['flight-system-health'],
+    queryFn: async (): Promise<FlightSystemHealth> => {
+      const now = new Date();
+      const oneHourAgo = subHours(now, 1);
+      const twentyFourHoursAgo = subHours(now, 24);
+      const fiveMinutesAgo = subMinutes(now, 5);
+
+      // Get recent search logs for Duffel health
+      const { data: searchLogs } = await supabase
+        .from('flight_search_logs')
+        .select('duffel_error, response_time_ms, created_at')
+        .gte('created_at', oneHourAgo.toISOString());
+
+      const errorSearches = searchLogs?.filter(s => s.duffel_error)?.length || 0;
+      const totalSearches = searchLogs?.length || 0;
+      const duffelErrorRate = totalSearches > 0 ? (errorSearches / totalSearches) * 100 : 0;
+      const avgResponseTime = searchLogs?.length 
+        ? searchLogs.reduce((sum, s) => sum + (s.response_time_ms || 0), 0) / searchLogs.length 
+        : 0;
+
+      // Get booking stats for last 24h
+      const { data: bookings } = await supabase
+        .from('flight_bookings')
+        .select('id, payment_status, ticketing_status, created_at, ticketed_at')
+        .gte('created_at', twentyFourHoursAgo.toISOString());
+
+      const failedBookings = bookings?.filter(b => 
+        b.ticketing_status === 'failed' || b.payment_status === 'refunded'
+      )?.length || 0;
+      
+      const pendingTickets = bookings?.filter(b => 
+        b.ticketing_status === 'pending' || b.ticketing_status === 'processing'
+      )?.length || 0;
+
+      // Calculate payment success but ticketing failure rate
+      const paidButFailed = bookings?.filter(b => 
+        b.payment_status === 'paid' && b.ticketing_status === 'failed'
+      )?.length || 0;
+      const paidTotal = bookings?.filter(b => b.payment_status === 'paid')?.length || 0;
+      const paymentToFailureRate = paidTotal > 0 ? (paidButFailed / paidTotal) * 100 : 0;
+
+      // Get last successful booking
+      const { data: lastSuccess } = await supabase
+        .from('flight_bookings')
+        .select('ticketed_at')
+        .eq('ticketing_status', 'issued')
+        .order('ticketed_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Get unresolved alerts
+      const { data: alerts } = await supabase
+        .from('flight_admin_alerts')
+        .select('severity, resolved')
+        .eq('resolved', false);
+
+      const criticalAlerts = alerts?.filter(a => a.severity === 'critical')?.length || 0;
+      const warningAlerts = alerts?.filter(a => a.severity === 'high' || a.severity === 'medium')?.length || 0;
+
+      // Determine statuses
+      const duffelStatus = duffelErrorRate > 50 ? 'down' : duffelErrorRate > 20 ? 'degraded' : 'ok';
+      const bookingStatus = criticalAlerts > 0 ? 'critical' : failedBookings > 5 ? 'warning' : 'ok';
+
+      return {
+        duffel: {
+          status: duffelStatus,
+          errorRate: Math.round(duffelErrorRate * 10) / 10,
+          avgResponseTime: Math.round(avgResponseTime),
+          lastError: searchLogs?.find(s => s.duffel_error)?.duffel_error || undefined,
+        },
+        stripe: {
+          status: 'ok', // Would need actual Stripe health check
+          failedPayments: 0,
+          mode: 'unknown',
+        },
+        bookings: {
+          status: bookingStatus,
+          lastSuccessAt: lastSuccess?.ticketed_at || null,
+          failedToday: failedBookings,
+          pendingTickets,
+          paymentToFailureRate: Math.round(paymentToFailureRate * 10) / 10,
+        },
+        alerts: {
+          critical: criticalAlerts,
+          warning: warningAlerts,
+          unresolved: alerts?.length || 0,
+        },
+      };
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000, // Auto-refresh every minute
+  });
+}
+```
+
+---
+
+### Phase 5: Admin System Status Page
+
+**Goal:** Create a dedicated `/admin/system/status` page for overall system health.
+
+**File:** `src/pages/admin/SystemStatusPage.tsx` (NEW)
+
+Create comprehensive system status page with:
+- Duffel API status (OK/degraded/down) based on error rate
+- Stripe status indicator
+- Last successful flight booking timestamp
+- Failed bookings count (24h)
+- Active alert count
+- Response latency trends
+
+Key components:
+```typescript
+const SystemStatusPage = () => {
+  const { data: health, isLoading } = useFlightSystemHealth();
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header with overall status */}
+      <div className="flex items-center gap-3">
+        <h1>System Status</h1>
+        <Badge variant={health?.alerts.critical > 0 ? "destructive" : "outline"}>
+          {health?.alerts.critical > 0 ? "Issues Detected" : "All Systems Operational"}
+        </Badge>
+      </div>
+
+      {/* Status Grid */}
+      <div className="grid md:grid-cols-4 gap-4">
+        {/* Duffel API Status */}
+        <Card>
+          <CardContent>
+            <p>Duffel API</p>
+            <StatusBadge status={health?.duffel.status} />
+            <p>Error Rate: {health?.duffel.errorRate}%</p>
+            <p>Avg Response: {health?.duffel.avgResponseTime}ms</p>
+          </CardContent>
+        </Card>
+
+        {/* Stripe Status */}
+        <Card>
+          <CardContent>
+            <p>Stripe Payments</p>
+            <StatusBadge status={health?.stripe.status} />
+            <p>Mode: {health?.stripe.mode}</p>
+          </CardContent>
+        </Card>
+
+        {/* Last Success */}
+        <Card>
+          <CardContent>
+            <p>Last Issued Ticket</p>
+            <p>{health?.bookings.lastSuccessAt ? formatRelative(new Date(health.bookings.lastSuccessAt)) : 'None'}</p>
+          </CardContent>
+        </Card>
+
+        {/* Failed Bookings */}
+        <Card>
+          <CardContent>
+            <p>Failed Bookings (24h)</p>
+            <p className="text-destructive">{health?.bookings.failedToday}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Alert Thresholds */}
+      <AlertThresholdsCard />
+    </div>
+  );
+};
+```
+
+**File:** `src/App.tsx`
+
+Add route:
+```typescript
+<Route path="/admin/system/status" element={<SystemStatusPage />} />
+```
+
+---
+
+### Phase 6: Customer-Friendly Error Messages
+
+**Goal:** Replace all technical errors with user-friendly messages.
+
+**File:** `src/hooks/useDuffelFlights.ts`
+
+Add error message transformation:
+```typescript
+import { transformFlightError } from '@/lib/errors/flightErrors';
+
+// In catch block:
+if (error) {
+  throw new Error(transformFlightError(error.message || 'Unknown error'));
+}
+```
+
+**File:** `src/lib/errors/flightErrors.ts` (NEW)
+
+Create error transformation utility:
+```typescript
+/**
+ * Flight Error Message Transformation
+ * Converts technical API errors to user-friendly messages
+ */
+
+const ERROR_MAP: Record<string, string> = {
+  // Network errors
+  'Failed to fetch': "We're having trouble retrieving flights. Please try again shortly.",
+  'Network Error': "Connection issue. Please check your internet and try again.",
+  'timeout': "Search is taking longer than expected. Please try again.",
+  
+  // Duffel API errors
+  'DUFFEL_API_KEY not configured': "Flight search is temporarily unavailable. Please try again later.",
+  'Duffel API error': "We're having trouble retrieving flights. Please try again shortly.",
+  'rate limit': "Too many searches. Please wait a moment and try again.",
+  
+  // Offer errors
+  'offer not found': "This fare is no longer available. Please search again.",
+  'offer expired': "This offer has expired. Please search again for current prices.",
+  'no offers': "No flights available for these dates. Try different dates or airports.",
+  
+  // Payment errors
+  'payment failed': "Payment could not be processed. Please try a different payment method.",
+  'card declined': "Your card was declined. Please try a different payment method.",
+  
+  // Booking errors
+  'booking failed': "We couldn't complete your booking. Please try again or contact support.",
+  'ticketing failed': "There was an issue issuing your ticket. Our team has been notified.",
+};
+
+const GENERIC_ERROR = "Something went wrong. Please try again or contact support.";
+
+export function transformFlightError(technicalError: string): string {
+  const lowerError = technicalError.toLowerCase();
+  
+  // Check for matching patterns
+  for (const [pattern, userMessage] of Object.entries(ERROR_MAP)) {
+    if (lowerError.includes(pattern.toLowerCase())) {
+      return userMessage;
+    }
+  }
+  
+  // Check if it's already a user-friendly message (starts with capital, ends with period)
+  if (/^[A-Z].*\.$/.test(technicalError) && !technicalError.includes('Error:')) {
+    return technicalError;
+  }
+  
+  // Return generic error for unrecognized technical errors
+  console.warn('[FlightErrors] Unmapped error:', technicalError);
+  return GENERIC_ERROR;
+}
+
+export function isRetryableError(error: string): boolean {
+  const retryable = ['timeout', 'network', 'fetch', 'temporarily'];
+  const lowerError = error.toLowerCase();
+  return retryable.some(pattern => lowerError.includes(pattern));
+}
+```
+
+**File:** `src/pages/FlightResults.tsx`
+
+Update error display:
+```typescript
+import { transformFlightError, isRetryableError } from '@/lib/errors/flightErrors';
+
+// In error state rendering:
+{isError && (
+  <Card className="max-w-lg mx-auto mt-12">
+    <CardContent className="p-8 text-center">
+      <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+      <h3 className="text-lg font-semibold mb-2">Unable to load flights</h3>
+      <p className="text-muted-foreground mb-6">
+        {transformFlightError(error?.message || 'Unknown error')}
+      </p>
+      {isRetryableError(error?.message || '') && (
+        <Button onClick={() => refetch()} className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Try Again
+        </Button>
+      )}
+    </CardContent>
+  </Card>
 )}
 ```
 
 ---
 
-### Phase 3: Price Confidence Tooltip
+### Phase 7: Production Readiness When DUFFEL_ENV=live
 
-**Goal:** Add a tooltip next to price showing final price guarantee.
+**Goal:** Ensure all safety measures are automatically enforced in live mode.
 
-**File:** `src/components/results/FlightResultCard.tsx` (MODIFY)
+**File:** `src/config/productionSafety.ts` (NEW)
 
-Add tooltip to the price section (around line 242):
+Create production configuration:
+```typescript
+/**
+ * Production Safety Configuration
+ * Enforces strict rules when DUFFEL_ENV=live
+ */
 
-```tsx
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { isLiveMode } from './duffelConfig';
 
-// In the price display section:
-<div className="flex items-center gap-1">
-  <p className="text-2xl sm:text-3xl font-bold text-sky-500">
-    {formattedPrice}
-  </p>
-  <TooltipProvider>
-    <Tooltip>
-      <TooltipTrigger>
-        <Info className="w-4 h-4 text-muted-foreground hover:text-primary" />
-      </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[200px] text-center">
-        <p className="text-sm">
-          Prices shown are final. You will not be redirected to another site.
-        </p>
-      </TooltipContent>
-    </Tooltip>
-  </TooltipProvider>
-</div>
-```
+export interface ProductionRules {
+  enforceRateLimits: boolean;
+  enforceBotProtection: boolean;
+  enforceOfferVerification: boolean;
+  enableFullLogging: boolean;
+  showSandboxHelpers: boolean;
+  allowMockData: boolean;
+}
 
----
+export function getProductionRules(): ProductionRules {
+  const isLive = isLiveMode();
 
-### Phase 4: Support Visibility Component
+  return {
+    enforceRateLimits: true, // Always enforce
+    enforceBotProtection: true, // Always enforce
+    enforceOfferVerification: isLive, // Only in live
+    enableFullLogging: true, // Always log
+    showSandboxHelpers: !isLive, // Only in sandbox
+    allowMockData: !isLive, // Only in sandbox
+  };
+}
 
-**Goal:** Add visible support entry point on Flights pages.
-
-**File:** `src/components/flight/FlightSupportCTA.tsx` (NEW)
-
-Create a compact support banner:
-```tsx
-export default function FlightSupportCTA({ className }: { className?: string }) {
-  return (
-    <div className={cn(
-      "flex items-center justify-center gap-4 py-3 px-4 rounded-xl bg-muted/30 border border-border/50",
-      className
-    )}>
-      <div className="flex items-center gap-2">
-        <Mail className="w-4 h-4 text-primary" />
-        <span className="text-sm">Need help?</span>
-        <a 
-          href="mailto:support@hizivo.com" 
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          support@hizivo.com
-        </a>
-      </div>
-      <div className="h-4 w-px bg-border hidden sm:block" />
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        className="text-muted-foreground hover:text-foreground gap-1.5"
-        disabled
-      >
-        <MessageCircle className="w-4 h-4" />
-        <span className="hidden sm:inline">Live Chat</span>
-        <Badge variant="outline" className="text-[9px] ml-1">Soon</Badge>
-      </Button>
-    </div>
-  );
+export function assertProductionSafe(operation: string): void {
+  if (isLiveMode()) {
+    console.log(`[PRODUCTION] ${operation}`);
+  }
 }
 ```
-
-**File:** `src/pages/FlightResults.tsx` (MODIFY)
-
-Add the support CTA after results:
-```tsx
-{/* Support CTA */}
-<FlightSupportCTA className="mt-6" />
-```
-
----
-
-### Phase 5: Enhanced Post-Booking Confidence Message
-
-**Goal:** Add stronger reassurance on confirmation page.
-
-**File:** `src/pages/FlightConfirmation.tsx` (MODIFY)
-
-Add a confidence message after the email notice (after line 209):
-
-```tsx
-{/* Booking Confidence Message */}
-<div className="mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20 text-center">
-  <p className="text-sm font-medium text-foreground">
-    Your booking is fully confirmed
-  </p>
-  <p className="text-sm text-muted-foreground mt-1">
-    You will receive your e-ticket by email within minutes.
-  </p>
-</div>
-```
-
-Also update the existing "Check your email" section to be more reassuring:
-```tsx
-<div className="flex gap-4">
-  <Mail className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-  <div>
-    <p className="font-medium">Your e-ticket is on the way</p>
-    <p className="text-sm text-muted-foreground">
-      You'll receive your e-ticket and booking confirmation within minutes.
-    </p>
-  </div>
-</div>
-```
-
----
-
-### Phase 6: Remove "Compare" Language from Flights
-
-**Goal:** Replace all "compare" with "search", "browse", or "book".
-
-**Files to modify:**
-
-1. **`src/pages/FlightResults.tsx`** (lines 361-362)
-   - Before: `Flights ${originIata} to ${destinationIata} – Compare Prices | ZIVO`
-   - After: `Flights ${originIata} to ${destinationIata} – Search & Book | ZIVO`
-   - Before: `Compare flight prices from...`
-   - After: `Search flights from...`
-
-2. **`src/components/marketing/PromoBanner.tsx`** (lines 29-30)
-   - Before: `Compare Flights Worldwide`
-   - After: `Search Flights Worldwide`
-   - Before: `Search & compare prices from 500+ airlines`
-   - After: `Search prices from 500+ airlines before you book`
-   - Remove `Search & Compare` badge text
-
-3. **`src/components/seo/SEOContentBlock.tsx`** (flights section)
-   - Replace "Compare Flights" with "Search Flights"
-   - Replace "compare options" with "find options"
-
-4. **`src/pages/FlightBooking.tsx`**
-   - Remove or rename `FlightCompareWidget` import/usage
-
-5. **`src/pages/Help.tsx`** and **`src/pages/HelpCenter.tsx`**
-   - Update help text from "compare" to "search"
-
-6. **`src/pages/creators/FlightsCreatorLanding.tsx`** (if exists)
-   - Update headlines
 
 ---
 
@@ -255,96 +664,83 @@ Also update the existing "Check your email" section to be more reassuring:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/flight/FlightTrustStrip.tsx` | CREATE | New trust strip with 4 icons |
-| `src/components/flight/FlightSupportCTA.tsx` | CREATE | Support visibility with email + chat placeholder |
-| `src/components/flight/index.ts` | MODIFY | Export new components |
-| `src/pages/FlightResults.tsx` | MODIFY | Replace trust banner, add support CTA, fix SEO title |
-| `src/components/results/EmptyResults.tsx` | MODIFY | Add "Why Book With ZIVO" section |
-| `src/components/results/FlightResultCard.tsx` | MODIFY | Add price confidence tooltip |
-| `src/pages/FlightConfirmation.tsx` | MODIFY | Add confidence message, update text |
-| `src/components/marketing/PromoBanner.tsx` | MODIFY | Remove "compare" language |
-| `src/components/seo/SEOContentBlock.tsx` | MODIFY | Remove "compare" for flights |
-| `src/pages/Help.tsx` | MODIFY | Update help text |
-| `src/pages/HelpCenter.tsx` | MODIFY | Update help text |
+| `src/hooks/useDuffelFlights.ts` | MODIFY | Add rate limiting and abuse protection |
+| `src/lib/security/rateLimiter.ts` | MODIFY | Update limits to 10/user/min |
+| `supabase/functions/rate-limiter/index.ts` | MODIFY | Update server limits, add IP-based limiting |
+| `src/lib/security/searchProtection.ts` | CREATE | Bot/abuse protection for duplicate searches |
+| `supabase/functions/create-flight-checkout/index.ts` | MODIFY | Add offer verification before payment |
+| `src/hooks/useSystemHealth.ts` | CREATE | System health monitoring hook |
+| `src/pages/admin/SystemStatusPage.tsx` | CREATE | Admin system status dashboard |
+| `src/lib/errors/flightErrors.ts` | CREATE | User-friendly error message transformation |
+| `src/pages/FlightResults.tsx` | MODIFY | Use friendly error messages |
+| `src/config/productionSafety.ts` | CREATE | Production rules configuration |
+| `src/App.tsx` | MODIFY | Add system status route |
 
 ---
 
-## Technical Details
+## Database Changes
 
-### FlightTrustStrip.tsx Structure
-```tsx
-interface FlightTrustStripProps {
-  className?: string;
-  variant?: 'default' | 'compact';
-}
+No schema changes required. Uses existing tables:
+- `flight_search_logs` - Already has error and response time fields
+- `flight_admin_alerts` - Already has severity and alert types
+- `flight_bookings` - Already tracks payment/ticketing status
 
-const trustItems = [
-  { icon: Lock, label: "Secure ZIVO Checkout", color: "text-emerald-500" },
-  { icon: Ticket, label: "Tickets Issued Instantly", color: "text-sky-500" },
-  { icon: BadgeCheck, label: "No Hidden Fees", color: "text-amber-500" },
-  { icon: Headphones, label: "24/7 Customer Support", color: "text-purple-500" },
-];
+---
 
-export default function FlightTrustStrip({ className, variant = 'default' }: FlightTrustStripProps) {
-  return (
-    <section className={cn(
-      "border-b border-border/50 py-3 bg-gradient-to-r from-primary/5 via-transparent to-primary/5",
-      className
-    )}>
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8">
-          {trustItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-1.5 text-sm">
-              <item.icon className={cn("w-4 h-4", item.color)} />
-              <span className="font-medium text-foreground/80">{item.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-```
+## Rate Limiting Summary
 
-### Language Replacement Matrix
-| Before | After |
-|--------|-------|
-| Compare Flights | Search Flights |
-| Compare prices | Search prices |
-| Search & Compare | Search & Book |
-| compare options | find options |
-| compare flight prices | search flight prices |
+| Action | User Limit | IP Limit | Window |
+|--------|-----------|----------|--------|
+| `flights_search` | 10/min | 30/min | 60 seconds |
+| Duplicate search | 3 identical | - | 10 seconds |
+| Rapid cycling | 10 changes | - | 30 seconds |
+
+---
+
+## Error Message Examples
+
+| Technical Error | User-Friendly Message |
+|-----------------|----------------------|
+| `Failed to fetch` | "We're having trouble retrieving flights. Please try again shortly." |
+| `DUFFEL_API_KEY not configured` | "Flight search is temporarily unavailable. Please try again later." |
+| `offer not found` | "This fare is no longer available. Please search again." |
+| `payment failed` | "Payment could not be processed. Please try a different payment method." |
+| `[Any unrecognized error]` | "Something went wrong. Please try again or contact support." |
+
+---
+
+## Admin System Status Alerts
+
+Auto-generated alerts for:
+- **Duffel API error spike** - When error rate exceeds 20%
+- **Payment success but order failure** - When payment succeeds but ticketing fails
+- **Search error rate high** - When >30% of searches fail
+- **Long response times** - When avg response >5 seconds
 
 ---
 
 ## Testing Checklist
 
-1. **Trust Strip**
-   - [ ] Visible on FlightResults page
-   - [ ] Shows all 4 trust items with icons
-   - [ ] Stays visible when scrolling (sticky)
-   - [ ] Responsive on mobile
+1. **Rate Limiting**
+   - [ ] Search 11 times rapidly - should see rate limit message
+   - [ ] Wait 60 seconds, search again - should work
+   - [ ] Try identical search 4x in 10s - should be blocked
 
-2. **Empty State**
-   - [ ] "Why Book With ZIVO" section appears
-   - [ ] All 5 bullet points visible
-   - [ ] Links correctly styled
+2. **Bot Protection**
+   - [ ] Change airports rapidly 11 times in 30s - should throttle
+   - [ ] Normal search pattern - should work fine
 
-3. **Price Tooltip**
-   - [ ] Tooltip appears on hover/tap
-   - [ ] Shows "Prices shown are final" message
-   - [ ] Works on mobile (touch)
+3. **Payment Safety**
+   - [ ] Attempt checkout with expired offer - should show "no longer available"
+   - [ ] Valid offer proceeds to Stripe checkout
 
-4. **Support CTA**
-   - [ ] Email link works
-   - [ ] "Soon" badge on Live Chat
-   - [ ] Responsive layout
+4. **Error Messages**
+   - [ ] Network error shows friendly message
+   - [ ] API error shows friendly message
+   - [ ] No technical details visible to users
 
-5. **Confirmation Page**
-   - [ ] Confidence message appears
-   - [ ] Correct timing text ("within minutes")
-
-6. **Language Audit**
-   - [ ] Search FlightResults for "compare" - none found
-   - [ ] Search PromoBanner for "compare" - none found
-   - [ ] Search SEOContentBlock for "compare" in flights - none found
+5. **System Status Page**
+   - [ ] Shows Duffel API status
+   - [ ] Shows last successful booking
+   - [ ] Shows failed bookings count
+   - [ ] Admin-only access enforced
