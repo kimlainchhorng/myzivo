@@ -17,16 +17,19 @@ interface NoFlightsFoundProps {
   onModifySearch?: () => void;
   origin?: string;
   destination?: string;
+  isAdmin?: boolean;
 }
 
 export default function NoFlightsFound({ 
   onClearFilters, 
   onModifySearch,
   origin,
-  destination 
+  destination,
+  isAdmin = false
 }: NoFlightsFoundProps) {
   const navigate = useNavigate();
-  const showSandboxHelper = isSandboxMode();
+  // Only show sandbox helper for admin users in sandbox mode
+  const showSandboxHelper = isSandboxMode() && isAdmin;
 
   const handleCrossSellClick = (type: 'hotel' | 'car' | 'activities') => {
     trackAffiliateClick({

@@ -1,10 +1,11 @@
 /**
  * Admin Flight Debug Page
  * Shows Duffel search logs for diagnosing issues
+ * ADMIN ONLY - Non-admins are redirected
  */
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
 import { 
   Plane, 
@@ -15,7 +16,8 @@ import {
   Search,
   ArrowRight,
   ArrowLeft,
-  TestTube
+  TestTube,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -25,9 +27,25 @@ import { Input } from "@/components/ui/input";
 import { useFlightSearchLogs, useFlightSearchStats, type FlightSearchLog } from "@/hooks/useFlightSearchLogs";
 import { isSandboxMode, DUFFEL_SANDBOX_ROUTES } from "@/config/duffelConfig";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function FlightDebugPage() {
   const navigate = useNavigate();
+  const { isAdmin, isLoading: authLoading } = useAuth();
+
+  // Redirect non-admins
+  if (!authLoading && !isAdmin) {
+    return <Navigate to="/flights" replace />;
+  }
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   const [routeFilter, setRouteFilter] = useState("");
   const { data: logs, isLoading, refetch } = useFlightSearchLogs(50);
   const { stats } = useFlightSearchStats();

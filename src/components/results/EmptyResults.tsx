@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import SandboxTestHelper from "@/components/flight/SandboxTestHelper";
+import { isSandboxMode } from "@/config/duffelConfig";
 
 interface IndicativePrice {
   label: string;
@@ -33,6 +35,8 @@ interface EmptyResultsProps {
   indicativePrices?: IndicativePrice[];
   origin?: string;
   destination?: string;
+  // Admin status for sandbox UI (flights only)
+  isAdmin?: boolean;
 }
 
 const serviceConfig = {
@@ -122,12 +126,16 @@ export function EmptyResults({
   indicativePrices,
   origin,
   destination,
+  isAdmin = false,
 }: EmptyResultsProps) {
   const config = serviceConfig[service];
   const Icon = hasActiveFilters ? FilterX : config.icon;
   const title = hasActiveFilters ? config.titleFiltered : config.title;
   const defaultMessage = hasActiveFilters ? config.messageFiltered : config.message;
   const suggestions = hasActiveFilters ? config.suggestionsFiltered : config.suggestions;
+  
+  // Show sandbox helper only for admins in sandbox mode (flights only)
+  const showSandboxHelper = service === "flights" && isSandboxMode() && isAdmin;
   
   // For flights: NO mock prices (OTA mode)
   // For hotels/cars: Use indicative prices
@@ -186,6 +194,11 @@ export function EmptyResults({
   if (service === "flights") {
     return (
       <div className={cn("text-center py-16 px-6 bg-muted/20 rounded-2xl border border-border/50", className)}>
+        {/* Sandbox Helper - Only for admins in test mode */}
+        {showSandboxHelper && (
+          <SandboxTestHelper className="mb-6 text-left" />
+        )}
+
         <div
           className={cn(
             "w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center",
