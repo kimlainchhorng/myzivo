@@ -25,6 +25,10 @@ const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppRides = lazy(() => import("./pages/app/AppRides"));
 const AppEats = lazy(() => import("./pages/app/AppEats"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
+const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
+const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
+const WalletPage = lazy(() => import("./pages/app/WalletPage"));
+const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
@@ -248,7 +252,11 @@ const App = () => (
                 <Route path="/signup" element={<Signup />} />
                 
                 {/* App (Mobile-first) Routes */}
-                <Route path="/app" element={<AppHome />} />
+                <Route path="/app" element={<UnifiedDashboard />} />
+                <Route path="/app/home" element={<AppHome />} />
+                <Route path="/my-trips" element={<MyTripsPage />} />
+                <Route path="/wallet" element={<WalletPage />} />
+                <Route path="/support" element={<SupportCenterPage />} />
                 <Route path="/travel" element={<AppTravel />} />
                 <Route path="/rides" element={<Rides />} />
                 <Route path="/ride" element={<Rides />} />
