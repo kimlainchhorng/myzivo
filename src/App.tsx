@@ -36,6 +36,7 @@ const SecurityDashboard = lazy(() => import("./pages/admin/SecurityDashboard"));
 const GlobalDashboard = lazy(() => import("./pages/admin/GlobalDashboard"));
 const AIInsightsDashboard = lazy(() => import("./pages/admin/AIInsightsDashboard"));
 const RecoveryDashboard = lazy(() => import("./pages/admin/RecoveryDashboard"));
+const LegalControlDashboard = lazy(() => import("./pages/admin/LegalControlDashboard"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
@@ -663,6 +664,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <RecoveryDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Legal Control Dashboard */}
+                <Route
+                  path="/admin/legal-control"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <LegalControlDashboard />
                     </ProtectedRoute>
                   }
                 />

@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Car, UtensilsCrossed, Plane, Hotel, Key } from "lucide-react";
+import { ArrowLeft, FileText, Shield, AlertTriangle, Scale, Users, Car, UtensilsCrossed, Plane, Hotel, Key, Gavel, Lock, Globe, FileWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ADVANCED_LEGAL_CLAUSES, COMPANY_INFO } from "@/config/legalContent";
 
 const TermsOfService = () => {
   const lastUpdated = "January 26, 2026";
@@ -519,7 +520,7 @@ const TermsOfService = () => {
             <AccordionContent className="text-muted-foreground space-y-4 pb-6">
               <h4 className="font-semibold text-foreground">12.1 Governing Law</h4>
               <p>
-                These Terms are governed by the laws of the State of Delaware, USA, without regard to conflict 
+                These Terms are governed by the laws of the State of {COMPANY_INFO.stateOfFormation}, USA, without regard to conflict 
                 of law principles.
               </p>
 
@@ -546,11 +547,291 @@ const TermsOfService = () => {
                 For questions about these Terms, contact us at:
               </p>
               <div className="mt-2 p-4 bg-muted rounded-lg">
-                <p><strong>{companyName}</strong></p>
+                <p><strong>{COMPANY_INFO.name}</strong></p>
                 <p>Legal Department</p>
-                <p>Email: legal@zivo.com</p>
-                <p>Address: 123 Innovation Drive, Wilmington, DE 19801, USA</p>
+                <p>Email: {COMPANY_INFO.email}</p>
               </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* ADVANCED LEGAL PROTECTIONS (Sections 13-30) */}
+          <div className="pt-8 pb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Advanced Legal Protections
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Maximum liability shielding and enterprise-grade legal protection
+            </p>
+          </div>
+
+          {/* Section 13: No Agency */}
+          <AccordionItem value="no-agency" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-violet-500">13</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.noAgencyClause.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.noAgencyClause.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 14: Platform Disclaimer */}
+          <AccordionItem value="platform-disclaimer" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-blue-500">14</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.platformDisclaimer.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.platformDisclaimer.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 15: Assumption of Risk */}
+          <AccordionItem value="assumption-risk" className="border border-destructive/50 rounded-lg px-4 bg-destructive/5">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
+                  <FileWarning className="h-4 w-4 text-destructive" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.assumptionOfRisk.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p className="text-destructive font-medium">{ADVANCED_LEGAL_CLAUSES.assumptionOfRisk.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 16: Release of Liability */}
+          <AccordionItem value="release-liability" className="border border-destructive/50 rounded-lg px-4 bg-destructive/5">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-destructive">16</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.releaseOfLiability.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p className="text-destructive font-medium">{ADVANCED_LEGAL_CLAUSES.releaseOfLiability.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 17: Force Majeure Expanded */}
+          <AccordionItem value="force-majeure" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-amber-500">17</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.forceMajeureExpanded.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.forceMajeureExpanded.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 18: Third-Party Beneficiary */}
+          <AccordionItem value="third-party" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.thirdPartyBeneficiary.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.thirdPartyBeneficiary.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 19: Strong Indemnification */}
+          <AccordionItem value="indemnification" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.strongIndemnification.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.strongIndemnification.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 20: Damage Limit Cap */}
+          <AccordionItem value="damage-cap" className="border border-destructive/50 rounded-lg px-4 bg-destructive/5">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-destructive">20</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.damageLimitCap.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p className="text-destructive font-medium">{ADVANCED_LEGAL_CLAUSES.damageLimitCap.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 21: Jury Trial Waiver */}
+          <AccordionItem value="jury-waiver" className="border border-destructive/50 rounded-lg px-4 bg-destructive/5">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-destructive/20 flex items-center justify-center">
+                  <Gavel className="h-4 w-4 text-destructive" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.juryTrialWaiver.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p className="text-destructive font-medium">{ADVANCED_LEGAL_CLAUSES.juryTrialWaiver.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 22: Class Action Opt-Out */}
+          <AccordionItem value="class-action-optout" className="border border-amber-500/50 rounded-lg px-4 bg-amber-500/5">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                  <span className="text-sm font-bold text-amber-500">22</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.classActionOptOut.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.classActionOptOut.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 23: Government Requests */}
+          <AccordionItem value="gov-requests" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">23</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.governmentRequests.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.governmentRequests.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 24: Content Disclaimer */}
+          <AccordionItem value="content-disclaimer" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">24</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.contentDisclaimer.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.contentDisclaimer.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 25: Intellectual Property */}
+          <AccordionItem value="ip-protection" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Lock className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.intellectualProperty.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.intellectualProperty.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 26: Service Modification */}
+          <AccordionItem value="service-mod" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">26</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.serviceModification.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.serviceModification.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 27: Termination Without Cause */}
+          <AccordionItem value="termination" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">27</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.terminationWithoutCause.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.terminationWithoutCause.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 28: Severability & Survival */}
+          <AccordionItem value="severability" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">28</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.severabilitySurvival.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.severabilitySurvival.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 29: International Users */}
+          <AccordionItem value="international" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Globe className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.internationalUsers.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.internationalUsers.content}</p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Section 30: Entire Agreement */}
+          <AccordionItem value="entire-agreement" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-bold text-primary">30</span>
+                </div>
+                <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.entireAgreement.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground pb-6">
+              <p>{ADVANCED_LEGAL_CLAUSES.entireAgreement.content}</p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
