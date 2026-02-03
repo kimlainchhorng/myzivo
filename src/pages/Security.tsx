@@ -217,6 +217,9 @@ export default function Security() {
                 <Button variant="outline" asChild>
                   <Link to="/security/scams">Scam Prevention</Link>
                 </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/security/operations">Security Operations</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
