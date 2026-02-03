@@ -123,6 +123,63 @@ serve(async (req) => {
 
     console.log("[FlightCheckout] Passenger validation passed for", passengers.length, "passengers");
 
+    // PAYMENT SAFETY: Verify offer is still valid before creating booking
+    const DUFFEL_API_KEY = Deno.env.get("DUFFEL_API_KEY");
+    
+    if (DUFFEL_API_KEY && isLiveMode) {
+      console.log("[FlightCheckout] Verifying offer validity (LIVE mode)...");
+      
+      try {
+        const offerResponse = await fetch(`https://api.duffel.com/air/offers/${offerId}`, {
+          headers: {
+            "Authorization": `Bearer ${DUFFEL_API_KEY}`,
+            "Duffel-Version": "v2",
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!offerResponse.ok) {
+          const errorData = await offerResponse.json().catch(() => ({}));
+          console.error("[FlightCheckout] Offer verification failed:", offerResponse.status, errorData);
+          throw new Error("This fare is no longer available. Please search again.");
+        }
+
+        const offerData = await offerResponse.json();
+        const duffelOffer = offerData.data;
+
+        // Verify price matches (with $1 tolerance for rounding)
+        const duffelPrice = parseFloat(duffelOffer.total_amount);
+        const expectedPrice = totalAmount * passengers.length;
+        const priceDiff = Math.abs(duffelPrice - expectedPrice);
+        
+        if (priceDiff > 1) {
+          console.error("[FlightCheckout] Price mismatch:", { duffelPrice, expectedPrice, priceDiff });
+          throw new Error("The price has changed. Please search again for updated fares.");
+        }
+
+        // Verify offer hasn't expired
+        const expiresAt = new Date(duffelOffer.expires_at);
+        if (expiresAt < new Date()) {
+          console.error("[FlightCheckout] Offer expired at:", expiresAt);
+          throw new Error("This offer has expired. Please search again.");
+        }
+
+        console.log("[FlightCheckout] Offer verified successfully - price:", duffelPrice, "expires:", expiresAt);
+      } catch (verifyError) {
+        // Re-throw user-friendly errors
+        if (verifyError instanceof Error && 
+            (verifyError.message.includes("no longer available") || 
+             verifyError.message.includes("has changed") ||
+             verifyError.message.includes("expired"))) {
+          throw verifyError;
+        }
+        // Log unexpected errors but continue (may be network issue)
+        console.warn("[FlightCheckout] Offer verification error (continuing):", verifyError);
+      }
+    } else if (!isLiveMode) {
+      console.log("[FlightCheckout] Skipping offer verification (sandbox mode)");
+    }
+
     console.log("[FlightCheckout] Creating booking for user:", userId, "offer:", offerId);
 
     // Get user email

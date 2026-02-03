@@ -16,10 +16,12 @@ import {
   X,
   AlertCircle,
   ShieldCheck,
+  RefreshCw,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useDuffelFlightSearch, type DuffelOffer } from "@/hooks/useDuffelFlights";
+import { transformFlightError, isRetryableError, getErrorSeverity } from "@/lib/errors/flightErrors";
 import { useFlightFilters, defaultFlightFilters } from "@/hooks/useResultsFilters";
 import { getAirlineLogo } from "@/data/airlines";
 // Page view tracking (analytics only - no affiliate tracking)

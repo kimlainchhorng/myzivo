@@ -157,6 +157,7 @@ const AdminEmail = lazy(() => import("./pages/admin/AdminEmail"));
 const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
 const FlightDebugPage = lazy(() => import("./pages/admin/FlightDebugPage"));
 const FlightStatusPage = lazy(() => import("./pages/admin/FlightStatusPage"));
+const SystemStatusPage = lazy(() => import("./pages/admin/SystemStatusPage"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 
 // Outbound redirect page
@@ -447,6 +448,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <FlightStatusPage />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* System Status Dashboard */}
+                <Route
+                  path="/admin/system/status"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <SystemStatusPage />
                     </ProtectedRoute>
                   }
                 />
