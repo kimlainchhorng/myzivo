@@ -271,6 +271,294 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_fraud_alerts: {
+        Row: {
+          action_taken: string | null
+          alert_type: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          indicators: Json
+          model_version: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_score: number | null
+          severity: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          alert_type: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          indicators: Json
+          model_version?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_score?: number | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          alert_type?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          indicators?: Json
+          model_version?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_score?: number | null
+          severity?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_model_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_value: number | null
+          model_name: string
+          model_version: string
+          period_end: string
+          period_start: string
+          sample_size: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_value?: number | null
+          model_name: string
+          model_version: string
+          period_end: string
+          period_start: string
+          sample_size?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_value?: number | null
+          model_name?: string
+          model_version?: string
+          period_end?: string
+          period_start?: string
+          sample_size?: number | null
+        }
+        Relationships: []
+      }
+      ai_partner_insights: {
+        Row: {
+          actioned_at: string | null
+          benchmark_value: number | null
+          created_at: string
+          current_value: number | null
+          description: string
+          expires_at: string | null
+          id: string
+          impact_estimate: string | null
+          insight_type: string
+          is_actioned: boolean | null
+          is_read: boolean | null
+          metric_name: string | null
+          partner_id: string
+          partner_type: string
+          priority: number | null
+          read_at: string | null
+          title: string
+        }
+        Insert: {
+          actioned_at?: string | null
+          benchmark_value?: number | null
+          created_at?: string
+          current_value?: number | null
+          description: string
+          expires_at?: string | null
+          id?: string
+          impact_estimate?: string | null
+          insight_type: string
+          is_actioned?: boolean | null
+          is_read?: boolean | null
+          metric_name?: string | null
+          partner_id: string
+          partner_type: string
+          priority?: number | null
+          read_at?: string | null
+          title: string
+        }
+        Update: {
+          actioned_at?: string | null
+          benchmark_value?: number | null
+          created_at?: string
+          current_value?: number | null
+          description?: string
+          expires_at?: string | null
+          id?: string
+          impact_estimate?: string | null
+          insight_type?: string
+          is_actioned?: boolean | null
+          is_read?: boolean | null
+          metric_name?: string | null
+          partner_id?: string
+          partner_type?: string
+          priority?: number | null
+          read_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      ai_pricing_suggestions: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          current_value: number | null
+          expires_at: string | null
+          factors: Json | null
+          id: string
+          reason: string
+          responded_at: string | null
+          status: string
+          suggested_value: number | null
+          suggestion_type: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          current_value?: number | null
+          expires_at?: string | null
+          factors?: Json | null
+          id?: string
+          reason: string
+          responded_at?: string | null
+          status?: string
+          suggested_value?: number | null
+          suggestion_type: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          current_value?: number | null
+          expires_at?: string | null
+          factors?: Json | null
+          id?: string
+          reason?: string
+          responded_at?: string | null
+          status?: string
+          suggested_value?: number | null
+          suggestion_type?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
+      ai_recommendations: {
+        Row: {
+          clicked_at: string | null
+          context: Json | null
+          converted_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_clicked: boolean | null
+          is_converted: boolean | null
+          is_shown: boolean | null
+          recommendation_type: string
+          recommended_service: string
+          relevance_score: number | null
+          shown_at: string | null
+          source_booking_id: string | null
+          source_service: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_at?: string | null
+          context?: Json | null
+          converted_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_clicked?: boolean | null
+          is_converted?: boolean | null
+          is_shown?: boolean | null
+          recommendation_type: string
+          recommended_service: string
+          relevance_score?: number | null
+          shown_at?: string | null
+          source_booking_id?: string | null
+          source_service: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_at?: string | null
+          context?: Json | null
+          converted_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_clicked?: boolean | null
+          is_converted?: boolean | null
+          is_shown?: boolean | null
+          recommendation_type?: string
+          recommended_service?: string
+          relevance_score?: number | null
+          shown_at?: string | null
+          source_booking_id?: string | null
+          source_service?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_search_rankings: {
+        Row: {
+          created_at: string
+          id: string
+          model_version: string | null
+          rankings: Json
+          search_params: Json
+          service_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model_version?: string | null
+          rankings: Json
+          search_params: Json
+          service_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model_version?: string | null
+          rankings?: Json
+          search_params?: Json
+          service_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       airlines: {
         Row: {
           code: string
@@ -11600,6 +11888,90 @@ export type Database = {
           },
         ]
       }
+      user_behavior_signals: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          service_type: string
+          session_id: string | null
+          signal_type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          service_type: string
+          session_id?: string | null
+          signal_type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          service_type?: string
+          session_id?: string | null
+          signal_type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_clv_scores: {
+        Row: {
+          avg_order_value: number | null
+          booking_frequency: number | null
+          churn_risk: number | null
+          clv_score: number
+          clv_tier: string
+          created_at: string
+          factors: Json | null
+          id: string
+          last_activity_at: string | null
+          model_version: string | null
+          total_bookings: number | null
+          total_spend: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avg_order_value?: number | null
+          booking_frequency?: number | null
+          churn_risk?: number | null
+          clv_score?: number
+          clv_tier?: string
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          last_activity_at?: string | null
+          model_version?: string | null
+          total_bookings?: number | null
+          total_spend?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avg_order_value?: number | null
+          booking_frequency?: number | null
+          churn_risk?: number | null
+          clv_score?: number
+          clv_tier?: string
+          created_at?: string
+          factors?: Json | null
+          id?: string
+          last_activity_at?: string | null
+          model_version?: string | null
+          total_bookings?: number | null
+          total_spend?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_locale_preferences: {
         Row: {
           country_code: string | null
@@ -15141,6 +15513,7 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_clv_tier: { Args: { p_clv_score: number }; Returns: string }
       calculate_p2p_booking_fees: {
         Args: {
           p_daily_rate: number
