@@ -189,6 +189,7 @@ const PlatformReliancePolicy = lazy(() => import("./pages/legal/PlatformReliance
 const TermsPrecedence = lazy(() => import("./pages/legal/TermsPrecedence"));
 const CommunicationsConsent = lazy(() => import("./pages/legal/CommunicationsConsent"));
 const DataBreachPolicy = lazy(() => import("./pages/legal/DataBreachPolicy"));
+const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
 const ChildrenPrivacy = lazy(() => import("./pages/legal/ChildrenPrivacy"));
 const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
 const LegalNoticesPolicy = lazy(() => import("./pages/legal/LegalNoticesPolicy"));
@@ -219,6 +220,9 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Refunds = lazy(() => import("./pages/Refunds"));
 const Company = lazy(() => import("./pages/Company"));
+const Security = lazy(() => import("./pages/Security"));
+const PrivacySecurity = lazy(() => import("./pages/PrivacySecurity"));
+const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
 
@@ -522,9 +526,13 @@ const App = () => (
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
+                <Route path="/security" element={<Security />} />
+                <Route path="/privacy-security" element={<PrivacySecurity />} />
+                <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
+                <Route path="/legal/security-incident" element={<SecurityIncident />} />
                 <Route path="/faq" element={<FAQPage />} />
                 <Route path="/booking/return" element={<BookingReturn />} />
                 <Route path="/package-delivery" element={<PackageDelivery />} />
