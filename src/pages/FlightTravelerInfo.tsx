@@ -19,6 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import SecureCheckoutHeader from "@/components/checkout/SecureCheckoutHeader";
+import PassengerInfoHeader from "@/components/checkout/PassengerInfoHeader";
+import SecureCheckoutButton from "@/components/checkout/SecureCheckoutButton";
 import {
   Plane,
   User,
@@ -40,6 +43,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getSearchSessionId } from "@/config/trackingParams";
 import { useToast } from "@/hooks/use-toast";
 import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
+import { CHECKOUT_CTA } from "@/config/checkoutCompliance";
 
 interface PassengerForm {
   title: string;
@@ -245,6 +249,14 @@ const FlightTravelerInfo = () => {
 
       <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 max-w-4xl">
+          {/* Secure Checkout Header */}
+          <SecureCheckoutHeader 
+            variant="flights" 
+            currentStep={2} 
+            showProgress={true} 
+            className="mb-6" 
+          />
+
           {/* Back button */}
           <Button
             variant="ghost"
@@ -313,6 +325,9 @@ const FlightTravelerInfo = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Passenger Info Header */}
+          <PassengerInfoHeader className="mb-6" />
 
           {/* Passenger Forms */}
           <div className="space-y-6">
@@ -479,24 +494,16 @@ const FlightTravelerInfo = () => {
                 >
                   Back
                 </Button>
-                <Button
-                  onClick={handleContinueToPayment}
-                  disabled={isSubmitting || !consentGiven}
-                  className="sm:flex-[2] gap-2 bg-gradient-to-r from-primary to-sky-600"
-                  size="lg"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="w-4 h-4" />
-                      {FLIGHT_CTA_TEXT.proceedToPayment}
-                    </>
-                  )}
-                </Button>
+                <div className="sm:flex-[2]">
+                  <SecureCheckoutButton
+                    onClick={handleContinueToPayment}
+                    isLoading={isSubmitting}
+                    disabled={!consentGiven}
+                    variant="flights"
+                    buttonText={CHECKOUT_CTA.buttonAlt}
+                    showSubtext={false}
+                  />
+                </div>
               </div>
 
               {/* CTA Disclosure */}

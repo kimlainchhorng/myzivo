@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Receipt, Shield, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FLIGHT_MOR_DISCLAIMERS } from '@/config/flightMoRCompliance';
+import { CHECKOUT_PRICE } from '@/config/checkoutCompliance';
 
 interface FlightPriceBreakdownProps {
   baseFare: number;
@@ -19,6 +20,7 @@ interface FlightPriceBreakdownProps {
   className?: string;
   showPerPerson?: boolean;
   compact?: boolean;
+  showNoHiddenFees?: boolean;
 }
 
 function formatPrice(amount: number, currency: string = 'USD'): string {
@@ -37,6 +39,7 @@ export default function FlightPriceBreakdown({
   className,
   showPerPerson = true,
   compact = false,
+  showNoHiddenFees = false,
 }: FlightPriceBreakdownProps) {
   const totalPerPerson = baseFare + taxesFees;
   const grandTotal = totalPerPerson * passengers;
@@ -148,6 +151,15 @@ export default function FlightPriceBreakdown({
             No hidden fees
           </Badge>
         </div>
+
+        {/* No Hidden Fees Message */}
+        {showNoHiddenFees && (
+          <div className="pt-2 text-center">
+            <p className="text-xs text-emerald-600 font-medium">
+              {CHECKOUT_PRICE.noHiddenFees}
+            </p>
+          </div>
+        )}
 
         {/* MoR Disclaimer */}
         <p className="text-[10px] text-muted-foreground leading-relaxed">

@@ -17,6 +17,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ExternalLink } from 'lucide-react';
 import FlightPriceBreakdown from '@/components/flight/FlightPriceBreakdown';
+import SecureCheckoutHeader from '@/components/checkout/SecureCheckoutHeader';
+import AcceptedPaymentMethods from '@/components/checkout/AcceptedPaymentMethods';
+import ImportantBookingNotice from '@/components/checkout/ImportantBookingNotice';
+import SecureCheckoutButton from '@/components/checkout/SecureCheckoutButton';
+import CheckoutTrustFooter from '@/components/checkout/CheckoutTrustFooter';
 import {
   Plane,
   Clock,
@@ -257,13 +262,13 @@ const FlightCheckout = () => {
 
       <main className="pt-20 pb-20">
         <div className="container mx-auto px-4 max-w-5xl">
-          {/* Page Header with Microcopy */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold mb-2">Secure Checkout</h1>
-            <p className="text-sm text-muted-foreground">
-              {FLIGHT_HEADER_MICROCOPY.standard}
-            </p>
-          </div>
+          {/* Secure Checkout Header */}
+          <SecureCheckoutHeader 
+            variant="flights" 
+            currentStep={3} 
+            showProgress={true} 
+            className="mb-6" 
+          />
 
           {/* Back button */}
           <Button
@@ -435,6 +440,9 @@ const FlightCheckout = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Important Booking Notice */}
+              <ImportantBookingNotice variant="flights" />
             </div>
 
             {/* Sidebar - Price & Payment */}
@@ -445,7 +453,11 @@ const FlightCheckout = () => {
                 taxesFees={taxesFees}
                 passengers={passengerCount}
                 currency={offer.currency}
+                showNoHiddenFees
               />
+
+              {/* Accepted Payment Methods */}
+              <AcceptedPaymentMethods />
 
               {/* Pay Button */}
               <Card className="border-primary/30 bg-primary/5">
@@ -457,24 +469,13 @@ const FlightCheckout = () => {
                     </p>
                   </div>
 
-                  <Button
-                    size="lg"
-                    className="w-full gap-2 text-lg h-14"
+                  <SecureCheckoutButton
                     onClick={handlePayment}
-                    disabled={createCheckout.isPending || !termsAccepted || !sotDisclosureAccepted || passengersData.length === 0}
-                  >
-                    {createCheckout.isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-5 h-5" />
-                        {FLIGHT_MOR_CTA.pay}
-                      </>
-                    )}
-                  </Button>
+                    isLoading={createCheckout.isPending}
+                    disabled={!termsAccepted || !sotDisclosureAccepted || passengersData.length === 0}
+                    variant="flights"
+                    buttonText={FLIGHT_MOR_CTA.pay}
+                  />
 
                   {/* Trust Badges */}
                   <div className="flex items-center justify-center gap-4 pt-2">

@@ -2,22 +2,24 @@
  * Mobile Checkout Footer
  * Shows price summary and CTA for details/checkout pages
  */
-import { ExternalLink, Shield, Loader2 } from "lucide-react";
+import { ExternalLink, Shield, Loader2, Lock, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import MobileStickyFooter from "./MobileStickyFooter";
+import { CHECKOUT_PRICE } from "@/config/checkoutCompliance";
 
 interface MobileCheckoutFooterProps {
   price?: number | string;
   priceLabel?: string;
   currency?: string;
   ctaText?: string;
-  ctaIcon?: "external" | "shield" | "none";
+  ctaIcon?: "external" | "shield" | "lock" | "none";
   onClick?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
   variant?: "flights" | "hotels" | "cars" | "default";
   show?: boolean;
+  showNoHiddenFees?: boolean;
 }
 
 const MobileCheckoutFooter = ({
@@ -25,12 +27,13 @@ const MobileCheckoutFooter = ({
   priceLabel = "Total",
   currency = "$",
   ctaText = "Continue to secure checkout",
-  ctaIcon = "external",
+  ctaIcon = "lock",
   onClick,
   isLoading = false,
   disabled = false,
   variant = "default",
   show = true,
+  showNoHiddenFees = false,
 }: MobileCheckoutFooterProps) => {
   const variantColors = {
     flights: "bg-flights hover:bg-flights/90",
@@ -49,6 +52,12 @@ const MobileCheckoutFooter = ({
             {currency}
             {typeof price === "number" ? price.toLocaleString() : price}
           </p>
+          {showNoHiddenFees && (
+            <p className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+              <Check className="w-2.5 h-2.5" />
+              No hidden fees
+            </p>
+          )}
         </div>
       )}
 
@@ -69,6 +78,7 @@ const MobileCheckoutFooter = ({
         ) : (
           <>
             {ctaIcon === "shield" && <Shield className="w-4 h-4" />}
+            {ctaIcon === "lock" && <Lock className="w-4 h-4" />}
             {ctaText}
             {ctaIcon === "external" && <ExternalLink className="w-4 h-4" />}
           </>
