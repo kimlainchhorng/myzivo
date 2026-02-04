@@ -1,39 +1,30 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { TrendingDown, TrendingUp, Minus, Calendar, Bell, Info } from "lucide-react";
+import { TrendingDown, TrendingUp, Calendar, Bell, Info, Sparkles, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import PriceConfidenceBadge from "@/components/shared/PriceConfidenceBadge";
 
-interface PricePoint {
-  date: string;
-  price: number;
-  label: string;
+/**
+ * FLIGHT PRICE HISTORY COMPONENT
+ * 
+ * COMPLIANCE NOTE: This component displays price trend guidance ONLY.
+ * No specific prices are shown. All price data comes from live API results.
+ * 
+ * Purpose: Educate users on best booking timing + collect price alert signups.
+ */
+
+interface FlightPriceHistoryProps {
+  origin?: string;
+  destination?: string;
+  onSetAlert?: () => void;
 }
 
-const mockPriceHistory: PricePoint[] = [
-  { date: "Dec 1", price: 420, label: "6 weeks ago" },
-  { date: "Dec 15", price: 385, label: "4 weeks ago" },
-  { date: "Jan 1", price: 450, label: "2 weeks ago" },
-  { date: "Jan 10", price: 410, label: "1 week ago" },
-  { date: "Jan 17", price: 375, label: "3 days ago" },
-  { date: "Today", price: 349, label: "Now" },
-];
-
-const FlightPriceHistory = () => {
+const FlightPriceHistory = ({ origin, destination, onSetAlert }: FlightPriceHistoryProps) => {
   const [showAlert, setShowAlert] = useState(false);
-  
-  const currentPrice = mockPriceHistory[mockPriceHistory.length - 1].price;
-  const previousPrice = mockPriceHistory[mockPriceHistory.length - 2].price;
-  const lowestPrice = Math.min(...mockPriceHistory.map(p => p.price));
-  const highestPrice = Math.max(...mockPriceHistory.map(p => p.price));
-  const priceChange = previousPrice - currentPrice;
-  const percentChange = ((priceChange / previousPrice) * 100).toFixed(1);
 
-  const getBarHeight = (price: number) => {
-    const range = highestPrice - lowestPrice;
-    const normalized = (price - lowestPrice) / range;
-    return 30 + normalized * 70; // 30% to 100%
+  const handleSetAlert = () => {
+    setShowAlert(true);
+    onSetAlert?.();
   };
 
   return (
@@ -44,88 +35,45 @@ const FlightPriceHistory = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30">
-                  <TrendingDown className="w-3 h-3 mr-1" /> Price Tracker
+                  <Sparkles className="w-3 h-3 mr-1" /> Smart Booking Tips
                 </Badge>
-                <PriceConfidenceBadge level="good" percentFromAvg={-15} />
               </div>
               <h3 className="text-xl md:text-2xl font-display font-bold">
-                Price History & Predictions
+                When to Book for Best Prices
               </h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Track price trends to find the best time to book
+                General guidance based on industry trends
               </p>
             </div>
-            
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "px-4 py-2 rounded-xl",
-                priceChange > 0 ? "bg-emerald-500/10" : "bg-rose-500/10"
-              )}>
-                {priceChange > 0 ? (
-                  <div className="flex items-center gap-2 text-emerald-500">
-                    <TrendingDown className="w-4 h-4" />
-                    <span className="font-bold">${priceChange} ({percentChange}%)</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-rose-500">
-                    <TrendingUp className="w-4 h-4" />
-                    <span className="font-bold">+${Math.abs(priceChange)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
-          {/* Price Chart */}
-          <div className="bg-card/50 rounded-2xl p-4 mb-6">
-            <div className="flex items-end justify-between gap-2 h-32">
-              {mockPriceHistory.map((point, index) => (
-                <div key={point.date} className="flex-1 flex flex-col items-center gap-2">
-                  <span className="text-xs font-bold text-foreground">${point.price}</span>
-                  <div 
-                    className={cn(
-                      "w-full rounded-t-lg transition-all duration-500",
-                      index === mockPriceHistory.length - 1 
-                        ? "bg-gradient-to-t from-sky-500 to-sky-400" 
-                        : point.price === lowestPrice 
-                          ? "bg-gradient-to-t from-emerald-500 to-emerald-400"
-                          : "bg-gradient-to-t from-muted to-muted/50"
-                    )}
-                    style={{ height: `${getBarHeight(point.price)}%` }}
-                  />
-                  <span className="text-[10px] text-muted-foreground">{point.date}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Insights */}
+          {/* Booking Tips - No Specific Prices */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
               <div className="flex items-center gap-2 text-emerald-500 mb-1">
                 <TrendingDown className="w-4 h-4" />
-                <span className="text-sm font-bold">Lowest Price</span>
+                <span className="text-sm font-bold">Book Early</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-500">${lowestPrice}</p>
-              <p className="text-xs text-muted-foreground">Current price is the lowest!</p>
+              <p className="text-sm font-medium text-foreground">21-60 days ahead</p>
+              <p className="text-xs text-muted-foreground">Best window for domestic flights</p>
             </div>
             
             <div className="p-4 bg-sky-500/10 rounded-xl border border-sky-500/20">
               <div className="flex items-center gap-2 text-sky-500 mb-1">
                 <Calendar className="w-4 h-4" />
-                <span className="text-sm font-bold">Best Time to Book</span>
+                <span className="text-sm font-bold">Flexible Dates</span>
               </div>
-              <p className="text-2xl font-bold text-sky-500">Now</p>
-              <p className="text-xs text-muted-foreground">Prices may rise soon</p>
+              <p className="text-sm font-medium text-foreground">Tue, Wed, Sat</p>
+              <p className="text-xs text-muted-foreground">Often lower demand days</p>
             </div>
             
             <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
               <div className="flex items-center gap-2 text-amber-500 mb-1">
                 <Info className="w-4 h-4" />
-                <span className="text-sm font-bold">Price Confidence</span>
+                <span className="text-sm font-bold">Avoid Peak</span>
               </div>
-              <p className="text-2xl font-bold text-amber-500">High</p>
-              <p className="text-xs text-muted-foreground">Based on historical data</p>
+              <p className="text-sm font-medium text-foreground">Holidays & Events</p>
+              <p className="text-xs text-muted-foreground">Prices typically higher</p>
             </div>
           </div>
 
@@ -135,17 +83,27 @@ const FlightPriceHistory = () => {
               <Bell className={cn("w-5 h-5", showAlert ? "text-primary" : "text-muted-foreground")} />
               <div>
                 <p className="font-semibold text-sm">Price Drop Alerts</p>
-                <p className="text-xs text-muted-foreground">Get notified when prices drop below $349</p>
+                <p className="text-xs text-muted-foreground">
+                  Get notified when prices drop for{" "}
+                  {origin && destination ? `${origin} → ${destination}` : "your route"}
+                </p>
               </div>
             </div>
             <Button 
               variant={showAlert ? "default" : "outline"} 
               size="sm"
-              onClick={() => setShowAlert(!showAlert)}
+              onClick={handleSetAlert}
+              className="min-h-[44px] touch-manipulation"
             >
-              {showAlert ? "Alert Set" : "Set Alert"}
+              {showAlert ? "Alert Set ✓" : "Set Alert"}
             </Button>
           </div>
+
+          {/* Disclaimer */}
+          <p className="text-[10px] text-muted-foreground text-center mt-4 leading-relaxed">
+            Tips are general guidance only. Actual prices vary by route, airline, and availability. 
+            Prices provided by trusted travel partners.
+          </p>
         </div>
       </div>
     </section>
