@@ -1,314 +1,293 @@
 
-# ZIVO GO-LIVE CHECKLIST: Final Audit & Launch Readiness
+# ZIVO Revenue Model Enhancement Plan
 
 ## Executive Summary
 
-Based on my comprehensive audit of the ZIVO codebase, the platform has **substantial launch infrastructure already in place**. This plan identifies what's complete, what needs minor updates, and creates the final launch configuration page for a safe go-live.
+This plan enhances ZIVO's revenue documentation to include detailed financial projections, scaling scenarios, and investor-grade revenue breakdowns. The existing infrastructure (`HowZivoMakesMoney.tsx`, `revenueAssumptions.ts`, `InvestorRelations.tsx`, `FinancialTransparency.tsx`) provides a strong foundation that will be extended with your specific commission rates and projections.
 
 ---
 
-## Current State Assessment
+## Current State vs. Target State
 
-### 1) LAUNCH MODE CONFIGURATION
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Production mode locked | COMPLETE | `src/config/environment.ts` sets `APP_ENV = 'production'`, `STRIPE_MODE = 'live'`, `DUFFEL_MODE = 'live'` |
-| Test badges disabled | COMPLETE | `SHOW_TEST_BADGE = false`, `ALLOW_TEST_PAYMENTS = false` |
-| Announcement banner system | COMPLETE | `AnnouncementBanner.tsx` reads from `launch_settings` table |
-| Launch settings hooks | COMPLETE | `useLaunchSettings.ts` with mode toggle, emergency pause, announcement control |
-
-**Action Needed:** Create a "Soft Launch Banner" configuration with copy: "ZIVO is live. Compare prices from trusted travel partners."
+| Aspect | Current | Target |
+|--------|---------|--------|
+| Flight commission display | Generic "commission-based" | "$3–$12 per booking" with examples |
+| Hotel commission display | Generic "referral commission" | "10–25% per booking" with $60 example |
+| Car rental commission | Generic description | "$5–$30 per booking" with examples |
+| Monthly projections | Hidden in admin config | Public-facing breakdown |
+| Scale scenarios | Not shown | 12-18 month growth projection |
+| Why ZIVO scales | Not explained | Clear bullet points on business model advantages |
 
 ---
 
-### 2) AFFILIATE LINKS & TRACKING
+## Implementation Approach
 
-| Item | Status | Finding |
-|------|--------|---------|
-| Affiliate tracking system | COMPLETE | `affiliateTracking.ts` with session tracking, UTM params, partner click logging |
-| Partner redirect logging | COMPLETE | `partnerRedirectLog.ts`, `partner_redirect_logs` table |
-| Outbound tracking | COMPLETE | `/out` route with tracking interstitial |
-| UTM parameters | COMPLETE | `utm_source=hizovo`, `utm_medium=affiliate`, `subid={sessionId}` |
-| Partner disclosure notice | COMPLETE | Multiple components: `ServiceDisclaimer.tsx`, `CTAAffiliateNotice.tsx` |
+### Phase 1: Update Revenue Assumptions Config
 
-**Status:** All affiliate tracking infrastructure is production-ready.
+**File:** `src/config/revenueAssumptions.ts`
 
----
+Update the commission rates to match your exact specifications:
 
-### 3) PAYMENT SAFETY CONFIRMATION
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Stripe integration | COMPLETE | Stripe used for MoR payments (flights), PCI-compliant |
-| No card storage | COMPLETE | `PaymentSafetyNotice.tsx`: "Card data encrypted, not stored by ZIVO" |
-| Payment disclaimers | COMPLETE | "Payments are processed by PCI-compliant providers" in footer and checkout |
-| Chargeback prevention | COMPLETE | Contact support notice before disputing with bank |
-
-**Status:** Payment infrastructure is compliant and production-ready.
-
----
-
-### 4) LEGAL & COMPLIANCE CHECK
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Terms of Service | COMPLETE | `/terms` route |
-| Privacy Policy | COMPLETE | `/privacy` route |
-| Affiliate Disclosure | COMPLETE | `/partner-disclosure` route |
-| Refund Policy | COMPLETE | `/refunds` route |
-| Cookie Policy | COMPLETE | `/cookies` route |
-| Seller of Travel notice | COMPLETE | `/legal/seller-of-travel` + footer disclosure |
-| Sub-agent disclosure | COMPLETE | "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers" |
-| Footer legal links | COMPLETE | All 8 required legal links present in `Footer.tsx` |
-
-**Status:** All legal pages exist and are linked. 74+ legal pages total.
-
----
-
-### 5) SEARCH & RESULTS VALIDATION
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Duffel flight search | COMPLETE | `useDuffelFlights.ts`, `duffel-flights` edge function |
-| Real-time pricing | COMPLETE | `isRealPrice = true` for Duffel offers |
-| Error handling | COMPLETE | `flightErrors.ts` with user-friendly messages |
-| Filter system | COMPLETE | `useFlightFilters`, `useResultsFilters` hooks |
-| Empty results handling | COMPLETE | `EmptyResults.tsx` with search suggestions |
-
-**Action Needed:** Create a pre-launch test script to validate search flows.
-
----
-
-### 6) USER FLOW TEST
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Search → Results | COMPLETE | `/flights` → `/flights/results` |
-| Results → Details | COMPLETE | `/flights/details/{offerId}` |
-| Details → Traveler Info | COMPLETE | `/flights/traveler-info` |
-| Traveler Info → Checkout | COMPLETE | `/flights/checkout` (MoR) |
-| CTA clarity | COMPLETE | `FLIGHT_CTA_TEXT` in `flightCompliance.ts` with locked copy |
-| Partner redirect (hotels/cars) | COMPLETE | `PartnerConsentModal.tsx` with consent flow |
-
-**Action Needed:** Create end-to-end test checklist component.
-
----
-
-### 7) EMAIL & NOTIFICATION SAFETY
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Email edge functions | COMPLETE | `send-flight-email`, `send-travel-confirmation`, `send-travel-email` |
-| Notification preferences | COMPLETE | `PushNotificationPreferences.tsx` with opt-in toggles |
-| Price alert opt-in | COMPLETE | `PriceAlertModal.tsx`, `PriceAlertTrigger.tsx` |
-| Marketing email controls | COMPLETE | Consent checkboxes in forms |
-
-**Status:** Email system is opt-in only, compliant.
-
----
-
-### 8) TRUST SIGNALS
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Secure checkout notice | COMPLETE | `FlightTrustBadgesBar.tsx`, `PaymentSafetyNotice.tsx` |
-| Trusted partners text | COMPLETE | "Trusted partners" throughout, `TrustSection.tsx` |
-| Transparent pricing | COMPLETE | "No hidden fees" badges in multiple components |
-| "No hidden fees" copy | COMPLETE | `FLIGHT_TRUST_BADGES.noHiddenFees`, footer, results pages |
-
-**Status:** Trust signals are comprehensive and production-ready.
-
----
-
-### 9) MOBILE CHECK
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Mobile detection | COMPLETE | `use-mobile.tsx` hook with 768px breakpoint |
-| Mobile homepage | COMPLETE | `AppHome.tsx` renders for mobile users |
-| Mobile results bar | COMPLETE | `FlightMobileResultsBar.tsx` |
-| Sticky mobile CTA | COMPLETE | `StickyBookingCTA.tsx` with touch-friendly sizing |
-| Mobile search forms | COMPLETE | `FlightSearchFormPro.tsx` with responsive design |
-| PWA support | COMPLETE | `vite-plugin-pwa` installed |
-
-**Action Needed:** Create mobile testing checklist.
-
----
-
-### 10) MONITORING AFTER LAUNCH
-
-| Item | Status | Finding |
-|------|--------|---------|
-| Launch monitoring panel | COMPLETE | `PostLaunchMonitoringPanel.tsx` with alerts, metrics |
-| Health check function | COMPLETE | `check-flight-health` edge function |
-| Error logging | COMPLETE | `flightErrors.ts` with error transformation |
-| Analytics events | COMPLETE | `analytics_events` table, `useFlightFunnel` hook |
-| Price change warning | COMPLETE | `PriceChangedWarning.tsx`, "Prices may change" notices throughout |
-| Emergency pause | COMPLETE | `useEmergencyPause` hook, instant booking suspension |
-
-**Status:** Monitoring infrastructure is comprehensive.
-
----
-
-## Implementation Plan
-
-### Phase 1: Create Go-Live Admin Page
-
-**New Page:** `src/pages/admin/GoLiveChecklist.tsx`
-
-Route: `/admin/go-live`
-
-A comprehensive admin checklist that:
-- Shows all 10 checklist categories with pass/fail status
-- Provides one-click tests for critical flows
-- Allows setting the soft launch banner
-- Provides a "GO LIVE" button that:
-  - Enables public access
-  - Enables announcement banner with launch copy
-  - Logs the go-live event
-
-**Sections:**
-1. Environment Verification (auto-checks production mode)
-2. Legal Pages Status (links to all required pages)
-3. Payment Configuration (Stripe status)
-4. Affiliate Tracking Status (tracking verification)
-5. Search Flow Tests (one-click test buttons)
-6. Mobile Readiness (viewport test)
-7. Monitoring Setup (alert configuration)
-8. Final Launch Controls
-
----
-
-### Phase 2: Create Mobile Test Checklist
-
-**New Component:** `src/components/launch/MobileTestChecklist.tsx`
-
-Interactive checklist for manual mobile testing:
-- [ ] Flight search on mobile
-- [ ] Filters usable on small screens
-- [ ] Book Now buttons easy to tap (44px+ touch targets)
-- [ ] Pages load fast (< 3s)
-- [ ] Sticky CTA visible during scroll
-- [ ] Forms submit correctly
-
----
-
-### Phase 3: Create Search Flow Validator
-
-**New Component:** `src/components/launch/SearchFlowValidator.tsx`
-
-Automated checks for search functionality:
-- Test NYC → LAX one-way
-- Test NYC → LAX round-trip
-- Test different dates (today + 7, today + 30)
-- Verify prices load correctly
-- Verify no empty results
-- Verify error handling works
-
----
-
-### Phase 4: Update Announcement Banner
-
-**Update:** `src/components/shared/AnnouncementBanner.tsx`
-
-Ensure default launch copy is ready:
+**Current Flight Rate:**
 ```text
-"ZIVO is live. Compare prices from trusted travel partners."
+$3–$12 per booking, base case: $6
 ```
 
-Add variant support for soft launch messaging.
+**Updated Values:**
+```text
+Flights: $3–$12 per booking (international: $15+)
+Hotels: 10–25% (update from 4% to match your doc)
+Cars: $5–$30 per booking (update from 2%)
+```
+
+Add new scale scenario data:
+- Conservative: $44,500/month, $534K/year
+- Scale (12-18 months): 5,000 bookings, $100K/month, $1.2M/year
 
 ---
 
-### Phase 5: Create Launch Day Runbook
+### Phase 2: Enhance HowZivoMakesMoney Page
 
-**New Page:** `src/pages/admin/LaunchDayRunbook.tsx`
+**File:** `src/pages/HowZivoMakesMoney.tsx`
 
-Step-by-step launch procedure:
-1. Pre-launch final checks (all green)
-2. Enable announcement banner
-3. Monitor first 10 bookings
-4. Check error rates
-5. Verify affiliate tracking
-6. 24-hour monitoring protocol
+Transform into a comprehensive revenue transparency page with:
+
+**New Sections:**
+1. **Revenue by Service (Detailed)**
+   - Flights: $3–$12 per booking
+   - Hotels: 10–25% commission
+   - Car Rentals: $5–$30 per booking
+   - Add-ons: $3–$10 per booking
+
+2. **Monthly Revenue Example**
+   - Visual breakdown card showing:
+   - Flights: 1,000 bookings × $7 = $7,000
+   - Hotels: 500 bookings × $60 = $30,000
+   - Cars: 300 bookings × $15 = $4,500
+   - Add-ons: $3,000
+   - Total: $44,500/month
+
+3. **Annual Projection**
+   - Conservative: $534,000/year
+   - Growth scenario teaser
+
+4. **Scale Scenario Card**
+   - Traffic growth + SEO
+   - 5,000 bookings/month
+   - $20 blended commission
+   - $100K/month → $1.2M+/year
+
+5. **Why ZIVO Scales (Business Model Advantages)**
+   - No inventory cost
+   - No ticket issuing risk
+   - No customer payment storage
+   - Commission-based pure margin
+   - Highly scalable with traffic
 
 ---
 
-## File Changes Summary
+### Phase 3: Create Revenue Projection Component
 
-### New Files to Create
+**New File:** `src/components/revenue/RevenueProjectionCard.tsx`
 
-| File | Description |
-|------|-------------|
-| `src/pages/admin/GoLiveChecklist.tsx` | Master go-live admin page |
-| `src/components/launch/MobileTestChecklist.tsx` | Mobile testing checklist |
-| `src/components/launch/SearchFlowValidator.tsx` | Automated search tests |
-| `src/components/launch/LegalPagesAudit.tsx` | Legal page status display |
-| `src/pages/admin/LaunchDayRunbook.tsx` | Launch day procedures |
+Reusable visual component showing:
+- Service breakdown with icons
+- Monthly/yearly toggle
+- Commission rates per service
+- Total projections
+
+**New File:** `src/components/revenue/ScaleScenarioCard.tsx`
+
+Visual card for growth projections:
+- Conservative vs. Scale scenarios
+- Timeline (12-18 months)
+- Key metrics display
+
+---
+
+### Phase 4: Update Investor Relations Page
+
+**File:** `src/pages/InvestorRelations.tsx`
+
+Add specific revenue data to the Revenue Streams section:
+
+```text
+| Service | Model | Rate | Example |
+|---------|-------|------|---------|
+| Flights | Fixed | $3-$12 | $7,000/mo (1K bookings) |
+| Hotels | % | 10-25% | $30,000/mo (500 bookings) |
+| Cars | Fixed | $5-$30 | $4,500/mo (300 bookings) |
+```
+
+Add new "Unit Economics" section with blended commission and scale path.
+
+---
+
+### Phase 5: Update Financial Transparency Page
+
+**File:** `src/pages/FinancialTransparency.tsx`
+
+Enhance Commission by Service section with actual ranges:
+- Show commission rates transparently
+- Add example calculations
+- Include the "no hidden markups" messaging
+
+---
+
+### Phase 6: Create Admin Revenue Calculator
+
+**New File:** `src/components/admin/RevenueCalculator.tsx`
+
+Interactive calculator for admins showing:
+- Input: Number of bookings per service
+- Output: Estimated revenue
+- Uses `revenueAssumptions.ts` rates
+- Useful for planning and investor discussions
+
+---
+
+## Detailed File Changes
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/components/shared/AnnouncementBanner.tsx` | Add soft launch variant |
-| `src/App.tsx` | Add admin routes |
+| `src/config/revenueAssumptions.ts` | Update commission rates to match documentation |
+| `src/pages/HowZivoMakesMoney.tsx` | Complete enhancement with detailed projections |
+| `src/pages/InvestorRelations.tsx` | Add unit economics and revenue breakdown |
+| `src/pages/FinancialTransparency.tsx` | Add commission rate details |
+
+### Files to Create
+
+| File | Description |
+|------|-------------|
+| `src/components/revenue/RevenueProjectionCard.tsx` | Visual revenue breakdown component |
+| `src/components/revenue/ScaleScenarioCard.tsx` | Growth scenario display |
+| `src/components/revenue/BusinessModelAdvantages.tsx` | "Why ZIVO Scales" section |
+| `src/components/admin/RevenueCalculator.tsx` | Interactive admin calculator |
 
 ---
 
-## Routes to Add
+## Revenue Data Structure
 
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/admin/go-live` | GoLiveChecklist | Master launch checklist |
-| `/admin/launch-runbook` | LaunchDayRunbook | Launch day procedures |
+### Commission Rates (Updated)
+
+```text
+┌─────────────┬────────────┬─────────────────┬────────────────┐
+│ Service     │ Model      │ Rate Range      │ Base Case      │
+├─────────────┼────────────┼─────────────────┼────────────────┤
+│ Flights     │ Fixed      │ $3 – $12        │ $7             │
+│ Hotels      │ Percentage │ 10% – 25%       │ 15%            │
+│ Car Rentals │ Fixed      │ $5 – $30        │ $15            │
+│ Add-ons     │ Fixed      │ $3 – $10        │ $5             │
+└─────────────┴────────────┴─────────────────┴────────────────┘
+```
+
+### Conservative Scenario (Monthly)
+
+```text
+┌─────────────┬──────────┬────────────┬────────────┐
+│ Service     │ Bookings │ Commission │ Revenue    │
+├─────────────┼──────────┼────────────┼────────────┤
+│ Flights     │ 1,000    │ $7         │ $7,000     │
+│ Hotels      │ 500      │ $60        │ $30,000    │
+│ Cars        │ 300      │ $15        │ $4,500     │
+│ Add-ons     │ –        │ –          │ $3,000     │
+├─────────────┼──────────┼────────────┼────────────┤
+│ TOTAL       │          │            │ $44,500/mo │
+│ ANNUAL      │          │            │ $534,000   │
+└─────────────┴──────────┴────────────┴────────────┘
+```
+
+### Scale Scenario (12-18 Months)
+
+```text
+┌─────────────────────────────────────────────────┐
+│ Traffic growth + SEO                             │
+├─────────────────────────────────────────────────┤
+│ Total Bookings: 5,000/month                      │
+│ Blended Commission: $20/booking                  │
+│ Monthly Revenue: $100,000                        │
+│ Annual Revenue: $1.2M+                           │
+└─────────────────────────────────────────────────┘
+```
 
 ---
 
-## Technical Considerations
+## UI Design Notes
 
-### Launch Safety
-- All checks must pass before "GO LIVE" button enables
-- Emergency pause is always one-click accessible
-- Rollback procedure documented
+### Revenue Projection Card Layout
 
-### Monitoring
-- First 24 hours: 15-minute monitoring intervals
-- Alert thresholds: > 5% error rate, > 3 failed bookings
-- Slack/email notifications for critical alerts
+```text
+┌────────────────────────────────────────────────┐
+│  ✈️ Flights                                     │
+│  $3-$12 per booking                             │
+│  Example: 1,000 bookings × $7 = $7,000/mo      │
+├────────────────────────────────────────────────┤
+│  🏨 Hotels                                      │
+│  10-25% commission                              │
+│  Example: 500 × $400 × 15% = $30,000/mo        │
+├────────────────────────────────────────────────┤
+│  🚗 Car Rentals                                 │
+│  $5-$30 per booking                             │
+│  Example: 300 bookings × $15 = $4,500/mo       │
+├────────────────────────────────────────────────┤
+│  📦 Add-ons & Upsells                          │
+│  Insurance, baggage, flexible tickets           │
+│  Average: $3-$10/booking → ~$3,000/mo          │
+└────────────────────────────────────────────────┘
+                    │
+         ┌──────────▼──────────┐
+         │ Total: $44,500/mo   │
+         │ Annual: $534,000    │
+         └─────────────────────┘
+```
 
-### Compliance
-- All legal pages verified present
-- All disclaimers verified visible
-- Affiliate disclosure on every results page
+### Why ZIVO Scales Section
+
+```text
+┌────────────────────────────────────────────────┐
+│  Why This Business Model Scales                │
+├────────────────────────────────────────────────┤
+│  ✓ No inventory cost                           │
+│  ✓ No ticket issuing risk                      │
+│  ✓ No customer payment storage                 │
+│  ✓ Commission-based = pure margin              │
+│  ✓ Highly scalable with traffic                │
+└────────────────────────────────────────────────┘
+```
 
 ---
 
-## Pre-Launch Verification Summary
+## Copy Updates
 
-| Category | Status | Action Required |
-|----------|--------|-----------------|
-| 1. Launch Mode | READY | Update announcement text |
-| 2. Affiliate Links | READY | None |
-| 3. Payment Safety | READY | None |
-| 4. Legal Compliance | READY | None |
-| 5. Search Validation | READY | Run test suite |
-| 6. User Flow | READY | Complete E2E test |
-| 7. Email Safety | READY | None |
-| 8. Trust Signals | READY | None |
-| 9. Mobile | READY | Complete mobile test |
-| 10. Monitoring | READY | Configure alert thresholds |
+### Key Messaging
+
+**Tagline:**
+> "ZIVO is a high-margin, low-risk, commission-driven travel platform designed to scale with user growth."
+
+**Transparency Statement:**
+> "ZIVO earns through transparent partner commissions. We never add hidden fees to the prices you see."
+
+**Scale Statement:**
+> "With traffic growth and SEO, ZIVO projects $1.2M+ annual revenue at scale."
 
 ---
 
-## Final Outcome
+## Technical Notes
+
+- All financial projections use data from `revenueAssumptions.ts` for consistency
+- Investor-facing pages include forward-looking statement disclaimers
+- Admin calculator uses same calculation functions as revenue dashboard
+- Mobile-responsive design for all new components
+
+---
+
+## Success Metrics
 
 After implementation:
-- Admin can see all checklist items in one dashboard
-- One-click test buttons for critical flows
-- Soft launch banner configured
-- GO LIVE button with safety checks
-- Post-launch monitoring enabled
-- Emergency pause always accessible
-
-**ZIVO will be officially LIVE, safe, compliant, and monetized.**
+- Complete revenue model transparency on public pages
+- Investor-grade unit economics documentation
+- Clear scaling narrative for fundraising
+- Interactive admin tools for planning
+- Consistent numbers across all revenue-related pages
