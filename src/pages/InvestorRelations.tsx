@@ -1,6 +1,6 @@
 /**
  * Investor Relations Page
- * Investor-focused content for funding and acquisition discussions
+ * Investor-focused content with unit economics and revenue projections
  */
 
 import Header from "@/components/Header";
@@ -23,9 +23,19 @@ import {
   ArrowRight,
   Building2,
   PieChart,
-  MapPin,
+  Plane,
+  Car,
+  Package,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ScaleScenarioCard } from "@/components/revenue/ScaleScenarioCard";
+import { BusinessModelAdvantages } from "@/components/revenue/BusinessModelAdvantages";
+import { 
+  REVENUE_EXAMPLES, 
+  MONTHLY_TOTALS,
+  formatCommissionRate 
+} from "@/config/revenueAssumptions";
+import { formatPrice } from "@/lib/currency";
 
 const highlights = [
   {
@@ -50,26 +60,69 @@ const highlights = [
   },
 ];
 
+const unitEconomics = [
+  {
+    service: 'flights' as const,
+    icon: Plane,
+    model: 'Fixed',
+    rate: '$3–$12',
+    example: '$7,000/mo (1K bookings)',
+    color: 'text-sky-500',
+    bgColor: 'bg-sky-500/10',
+  },
+  {
+    service: 'hotels' as const,
+    icon: Building2,
+    model: 'Percentage',
+    rate: '10–25%',
+    example: '$30,000/mo (500 bookings)',
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10',
+  },
+  {
+    service: 'cars' as const,
+    icon: Car,
+    model: 'Fixed',
+    rate: '$5–$30',
+    example: '$4,500/mo (300 bookings)',
+    color: 'text-violet-500',
+    bgColor: 'bg-violet-500/10',
+  },
+  {
+    service: 'addons' as const,
+    icon: Package,
+    model: 'Fixed',
+    rate: '$3–$10',
+    example: '$3,000/mo',
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+  },
+];
+
 const revenueStreams = [
   {
     title: "Affiliate Commissions",
     description: "Partner commissions from flight, hotel, and car rental bookings.",
     status: "Active",
+    revenue: "$44.5K/mo",
   },
   {
     title: "Premium Subscriptions",
     description: "ZIVO Plus membership with exclusive benefits and rewards.",
     status: "Launching",
+    revenue: "TBD",
   },
   {
     title: "B2B Data Insights",
     description: "Anonymized travel demand data for partners and enterprises.",
     status: "Roadmap",
+    revenue: "TBD",
   },
   {
     title: "White-Label Solutions",
     description: "Travel search technology licensed to third parties.",
     status: "Roadmap",
+    revenue: "TBD",
   },
 ];
 
@@ -103,7 +156,7 @@ const InvestorRelations = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Investor Relations | ZIVO"
-        description="ZIVO investor relations - business highlights, revenue streams, market opportunity, and growth strategy."
+        description="ZIVO investor relations - unit economics, revenue projections, market opportunity, and growth strategy."
         canonical="https://hizivo.com/investors"
       />
       <Header />
@@ -120,8 +173,8 @@ const InvestorRelations = () => {
               Building the Future of Travel & Mobility
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              ZIVO is building a global travel and mobility ecosystem that unifies 
-              how people move—across the globe and across town.
+              ZIVO is a high-margin, low-risk, commission-driven travel platform 
+              designed to scale with user growth.
             </p>
           </div>
 
@@ -157,6 +210,61 @@ const InvestorRelations = () => {
             </CardContent>
           </Card>
 
+          {/* Unit Economics */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-8 text-center">Unit Economics</h2>
+            <Card className="border-border/50 mb-6">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/50">
+                        <th className="text-left p-4 font-semibold">Service</th>
+                        <th className="text-left p-4 font-semibold">Model</th>
+                        <th className="text-left p-4 font-semibold">Rate</th>
+                        <th className="text-left p-4 font-semibold">Example</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {unitEconomics.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <tr key={item.service} className="border-b border-border/30">
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-lg ${item.bgColor} flex items-center justify-center`}>
+                                  <Icon className={`w-4 h-4 ${item.color}`} />
+                                </div>
+                                <span className="font-medium capitalize">{item.service}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-muted-foreground">{item.model}</td>
+                            <td className="p-4 font-semibold">{item.rate}</td>
+                            <td className="p-4 text-muted-foreground">{item.example}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-muted/30">
+                        <td className="p-4 font-bold" colSpan={3}>Conservative Monthly Total</td>
+                        <td className="p-4 font-bold text-emerald-500">{formatPrice(MONTHLY_TOTALS.total)}/mo</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+            <p className="text-center text-sm text-muted-foreground">
+              Annual run rate at conservative projections: <strong className="text-foreground">{formatPrice(MONTHLY_TOTALS.annual)}</strong>
+            </p>
+          </section>
+
+          {/* Scale Scenarios */}
+          <section className="mb-16">
+            <ScaleScenarioCard />
+          </section>
+
           {/* Business Highlights */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-8 text-center">Business Highlights</h2>
@@ -175,6 +283,11 @@ const InvestorRelations = () => {
             </div>
           </section>
 
+          {/* Why ZIVO Scales */}
+          <section className="mb-16">
+            <BusinessModelAdvantages variant="compact" />
+          </section>
+
           {/* Revenue Streams */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-8 text-center">Revenue Streams</h2>
@@ -186,9 +299,14 @@ const InvestorRelations = () => {
                       <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                         <DollarSign className="w-5 h-5 text-emerald-500" />
                       </div>
-                      <Badge variant={stream.status === "Active" ? "default" : "secondary"}>
-                        {stream.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={stream.status === "Active" ? "default" : "secondary"}>
+                          {stream.status}
+                        </Badge>
+                        {stream.status === "Active" && (
+                          <span className="text-sm font-semibold text-emerald-500">{stream.revenue}</span>
+                        )}
+                      </div>
                     </div>
                     <h3 className="font-semibold mb-2">{stream.title}</h3>
                     <p className="text-sm text-muted-foreground">{stream.description}</p>
