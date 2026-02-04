@@ -1,17 +1,21 @@
 
-# ZIVO Production Launch, Go-Live & Scale System
+# ZIVO AI Personalization, Retention & Optimization Engine
 
 ## Overview
 
-This plan implements a comprehensive Production Launch Dashboard that consolidates all pre-launch verification, live booking tests, and post-launch monitoring into a unified admin interface. The system will ensure ZIVO can safely transition from staging to production with complete visibility into all critical systems.
+This plan implements a comprehensive AI-powered personalization system to increase conversion rates, drive repeat bookings, and maximize customer lifetime value (LTV). The system builds on ZIVO's existing AI infrastructure (user behavior signals, CLV scores, recommendations) while adding new personalization, retention, and optimization capabilities.
 
-## Architecture
+## Existing Infrastructure (Reused)
 
-The Production Launch system builds on existing infrastructure:
-- Uses existing `src/config/environment.ts` (already locked to production mode)
-- Integrates with existing launch systems (`useLaunchSettings`, `useFlightsLaunchStatus`)
-- Extends existing admin modules pattern
-- Leverages existing Disaster Recovery, Compliance, and Automation dashboards
+The platform already has foundational AI components we'll extend:
+- `user_behavior_signals` table for tracking user actions
+- `ai_recommendations` table for cross-sell suggestions
+- `user_clv_scores` table for customer value tiers
+- `useAIOptimization.ts` hooks for behavior tracking and recommendations
+- `useEventTracking.ts` for analytics events
+- `abandoned_searches` table with email recovery flow
+- `zivo_credits` and loyalty infrastructure via `useCredits.ts` and `useGrowthIncentives.ts`
+- Existing `SavedSearches.tsx` and `RecentlyViewed.tsx` UI components (currently static)
 
 ---
 
@@ -19,221 +23,262 @@ The Production Launch system builds on existing infrastructure:
 
 ### 1. Database Schema (Migration)
 
-New tables to support production launch tracking:
+New tables and extensions:
 
 ```text
-production_launch_checklist
-- id, category, item_key, item_title, item_description
-- is_verified, verified_at, verified_by
-- is_critical, verification_notes, evidence_url
+user_personalization_settings
+- id, user_id (unique)
+- personalization_enabled (default true)
+- show_price_badges, show_urgency_indicators
+- preferred_currency, preferred_language
 - created_at, updated_at
 
-production_test_bookings
-- id, service_type (hotel | activity | transfer | flight)
-- test_status (pending | success | failed)
-- booking_reference, supplier_confirmation
-- payment_captured, amount_cents, currency
-- email_sent, admin_visible, my_trips_visible
-- error_message, tested_by, tested_at
+user_saved_searches (dynamic, replacing static)
+- id, user_id
+- service_type (flights | hotels | cars)
+- search_params (JSONB)
+- title, created_at
+- price_alert_enabled, target_price
+- current_price, last_price_check_at
+- notifications (email, push)
+
+user_favorites
+- id, user_id
+- item_type (hotel | activity | flight_route)
+- item_id, item_data (JSONB for cache)
 - created_at
 
-launch_phase_log
-- id, phase (pre_launch | soft_launch | full_launch | scaling)
-- started_at, completed_at, started_by
-- notes, metrics_snapshot
+user_recently_viewed
+- id, user_id
+- item_type, item_id
+- item_data (JSONB snapshot)
+- viewed_at
 
-launch_monitoring_alerts
-- id, alert_type (booking_failure | payment_failure | api_outage | fraud_spike | refund_spike)
-- severity (info | warning | critical)
-- message, details, acknowledged, acknowledged_by
+smart_sort_rules
+- id, service_type
+- rule_name, rule_key
+- scoring_weights (JSONB)
+- is_default, is_active
+- created_at, updated_at
+
+price_intelligence_cache
+- id, service_type
+- item_id, current_price, historical_avg
+- historical_low, demand_level
+- availability_level, updated_at
+
+optimization_metrics
+- id, segment_type, segment_value
+- metric_name (conversion_rate, repeat_rate, abandonment_rate, revenue_per_user)
+- metric_value, period_start, period_end
 - created_at
+
+loyalty_points (Phase 1)
+- id, user_id
+- points_balance, lifetime_points
+- tier (standard | bronze | silver | gold)
+- created_at, updated_at
+
+loyalty_transactions
+- id, user_id
+- points_amount, transaction_type (earn | redeem)
+- reference_type, reference_id
+- description, created_at
 ```
 
-Seed data for checklist items across 8 categories matching the specification.
+### 2. Personalization Engine
 
-### 2. Environment Verification System
+#### A. Smart Search Results Hook
 
-A component that validates all critical environment settings:
+New hook: `src/hooks/usePersonalizedResults.ts`
 
 ```text
-Environment Switch Panel
-+-------------------------------------------------+
-| API MODE VERIFICATION                           |
-|-------------------------------------------------|
-| Hotelbeds Hotels    | LIVE ✓ | HOTELBEDS_BASE_URL |
-| Hotelbeds Activities| LIVE ✓ | verified         |
-| Hotelbeds Transfers | LIVE ✓ | verified         |
-| Stripe              | LIVE ✓ | STRIPE_MODE      |
-| Duffel (Flights)    | LIVE ✓ | DUFFEL_MODE      |
-| Email (Resend)      | LIVE ✓ | RESEND_API_KEY   |
-+-------------------------------------------------+
-| Debug/Test Checks                               |
-|-------------------------------------------------|
-| Test badges hidden  | ✓ SHOW_TEST_BADGE=false   |
-| Debug logs disabled | ✓ Production mode         |
-| Sandbox UI hidden   | ✓ shouldShowDebugUI=false |
-+-------------------------------------------------+
+Features:
+- Fetches user location (useGeoLocation)
+- Loads past searches and bookings
+- Calculates personalization scores per result
+- Applies smart sorting based on user profile
+- Prioritizes refundable for new users, premium for repeat
+
+Scoring factors:
+- Distance from user location
+- Price sensitivity (derived from past bookings)
+- Recency of similar searches
+- Device type adjustments (mobile = speed priority)
+- Travel date proximity (urgent = flexible options)
 ```
 
-### 3. Live Booking Test Runner
+#### B. Smart Sorting System
 
-An interactive panel to execute and verify real test bookings:
+New hook: `src/hooks/useSmartSorting.ts`
 
 ```text
-LIVE BOOKING VERIFICATION
-+-------------------------------------------------+
-| Service      | Status  | Payment | Supplier | Email |
-|--------------|---------|---------|----------|-------|
-| Hotel        | Pending | -       | -        | -     |
-| Activity     | Success | $19.00  | HB12345  | Sent  |
-| Transfer     | Success | $35.00  | HB67890  | Sent  |
-| Flight       | -       | (Duffel partner handles) |
-+-------------------------------------------------+
-| [Run Hotel Test] [Run Activity Test] [Run All] |
-+-------------------------------------------------+
+Sort options per service:
+- Best Value (AI-weighted price + rating + cancellation)
+- Most Booked (popularity signals)
+- Closest Match (to user preferences)
+- Best Flexibility (cancellation-friendly)
+
+Admin configurable weights via smart_sort_rules table
+Sorting evolves based on A/B test conversion data
 ```
 
-Each test will:
-1. Create a low-value real booking via edge function
-2. Verify payment capture in Stripe
-3. Verify supplier confirmation
-4. Verify confirmation email sent
-5. Verify order appears in My Trips
-6. Verify order visible in Admin dashboard
+### 3. Price & Deal Intelligence
 
-### 4. Pre-Launch Checklist Dashboard
+#### A. Deal Badge Component
 
-Interactive checklist with 8 categories from the specification:
-
-**Category A: Environment Switch**
-- All APIs switched to LIVE mode
-- Test banners disabled
-- Debug logging disabled
-- Sandbox endpoints disabled
-
-**Category B: Final Booking Tests**
-- Hotel booking verified
-- Activity booking verified
-- Transfer booking verified
-- Payment success confirmed
-- Supplier confirmation received
-- Email delivery confirmed
-- My Trips display verified
-- Admin visibility confirmed
-
-**Category C: Legal & Trust**
-- Terms of Service published
-- Privacy Policy published
-- Refund & Cancellation Policy published
-- Company legal name visible
-- Support email displayed
-- Partner disclosure visible
-
-**Category D: Security**
-- HTTPS enforced
-- Rate limits active
-- Admin routes protected
-- API keys in env only
-- Backups enabled
-
-**Category E: Support Readiness**
-- Support inbox active
-- Auto-replies enabled
-- SLA timers active
-- Escalation contacts set
-
-**Category F: Monitoring & Alerts**
-- Booking failure alerts enabled
-- Payment failure alerts enabled
-- Supplier API monitoring active
-- Fraud detection active
-- High refund alerts enabled
-
-**Category G: Soft Launch Config**
-- Soft launch phase defined (24-72h)
-- Traffic controls ready
-- Monitoring dashboard accessible
-
-**Category H: Full Launch Config**
-- Paid ads ready to enable
-- SEO pages published
-- Public announcement prepared
-
-### 5. Launch Phase Manager
-
-Controls for managing launch phases:
+New component: `src/components/shared/DealBadge.tsx`
 
 ```text
-LAUNCH PHASE CONTROL
-+-------------------------------------------------+
-| Current Phase: PRE_LAUNCH                       |
-|-------------------------------------------------|
-| ○ Pre-Launch    - Final verification            |
-| ● Soft Launch   - Limited traffic (24-72h)      |
-| ○ Full Launch   - Public + paid ads             |
-| ○ Scaling       - Optimizing for growth         |
-+-------------------------------------------------+
-| Blockers: 2 items incomplete                    |
-| [View Blockers] [Advance Phase]                 |
-+-------------------------------------------------+
+Badge types:
+- "Good Deal" - Price below historical average
+- "Great Deal" - Price near historical low
+- "High Demand" - Booking velocity high
+- "Limited Availability" - Supplier inventory low
+
+All badges based on real data only (no fake urgency)
+Configurable thresholds in admin
 ```
 
-### 6. Post-Launch Monitoring Panel
+#### B. Price Intelligence Hook
 
-Real-time metrics for the first 7 days:
+New hook: `src/hooks/usePriceIntelligence.ts`
 
 ```text
-POST-LAUNCH MONITORING (Day 3 of 7)
-+-------------------------------------------------+
-| Metric                | Today | Yesterday | Δ   |
-|-----------------------|-------|-----------|-----|
-| Bookings              | 47    | 32        | +46%|
-| Revenue               | $8,420| $5,100    | +65%|
-| Failed Bookings       | 2     | 1         | +1  |
-| Failed Payments       | 0     | 0         | -   |
-| Refund Rate           | 2.1%  | 3.1%      | -1% |
-| Fraud Flags           | 1     | 0         | +1  |
-+-------------------------------------------------+
-| ALERTS (3 active)                               |
-| ⚠ High refund request from user@email.com      |
-| ⚠ Hotelbeds response time >2s                  |
-| ✓ All systems operational                       |
-+-------------------------------------------------+
+- Fetches price history from cache
+- Calculates deal score (0-100)
+- Determines badge eligibility
+- Caches results with TTL
 ```
 
-### 7. React Query Hooks
+### 4. Abandonment Recovery (Enhanced)
 
-New hook file: `src/hooks/useProductionLaunch.ts`
+Extends existing `abandoned_searches` flow:
+
+#### A. Enhanced Tracking
+
+Update `useEventTracking.ts`:
+- Track checkout step reached
+- Track time spent on each step
+- Track cart value at abandonment
+
+#### B. Smart Recovery Hook
+
+New hook: `src/hooks/useAbandonmentRecovery.ts`
 
 ```text
-Hooks:
-- useProductionLaunchChecklist() - fetch/update checklist items
-- useProductionTestBookings() - manage test booking runs
-- useLaunchPhase() - current phase and controls
-- usePostLaunchMetrics() - real-time monitoring data
-- useLaunchMonitoringAlerts() - active alerts
-- useAdvanceLaunchPhase() - mutation to progress phases
-- useRunTestBooking() - trigger a live test booking
+- Detects abandonment patterns
+- Triggers intent save
+- Schedules recovery notifications
+- Optional: promo code for return visits
 ```
 
-### 8. Admin Dashboard Page
+### 5. Retention Features
 
-New page: `src/pages/admin/modules/launch/ProductionLaunchDashboard.tsx`
+#### A. Dynamic Saved Searches
 
-Tabbed interface:
-- **Overview**: Phase status, blockers, quick actions
-- **Environment**: API mode verification, debug checks
-- **Checklist**: All 8 category checklists with verification
-- **Test Bookings**: Live booking test runner
-- **Monitoring**: Post-launch metrics and alerts
-- **Logs**: Phase transition history
+Upgrade `src/components/shared/SavedSearches.tsx`:
+- Connect to `user_saved_searches` table
+- Real price tracking (indicative from APIs)
+- Enable/disable alerts per search
+- Delete functionality
 
-### 9. Route Registration
+New hook: `src/hooks/useSavedSearches.ts`
 
-Add to `App.tsx`:
+#### B. Favorites System
+
+New component: `src/components/shared/FavoriteButton.tsx`
+New hook: `src/hooks/useFavorites.ts`
+
 ```text
-/admin/production-launch → ProductionLaunchDashboard
+- Heart icon toggle on hotel/flight/activity cards
+- Persisted to user_favorites table
+- Accessible from profile favorites page
+- "Book Again" shortcut for past purchases
 ```
+
+#### C. Recently Viewed (Dynamic)
+
+Upgrade `src/components/shared/RecentlyViewed.tsx`:
+- Connect to `user_recently_viewed` table
+- Auto-track on item view
+- Display in profile and homepage
+- Clear all functionality
+
+New hook: `src/hooks/useRecentlyViewed.ts`
+
+### 6. Loyalty System (Phase 1)
+
+#### A. Points Engine
+
+New hook: `src/hooks/useLoyaltyPoints.ts`
+
+```text
+Earning rules:
+- 1 point per $1 spent on bookings
+- 50 bonus points on first booking per service
+- 25 bonus points for referral conversion
+
+Redemption:
+- 100 points = $1 discount
+- Minimum redemption: 500 points ($5)
+- Apply at checkout
+
+Tiers (simple):
+- Standard: 0-999 points
+- Bronze: 1,000-4,999 points (5% bonus earning)
+- Silver: 5,000-14,999 points (10% bonus)
+- Gold: 15,000+ points (15% bonus + priority support)
+```
+
+#### B. Loyalty Display Component
+
+New component: `src/components/loyalty/LoyaltyStatusCard.tsx`
+
+- Points balance and tier
+- Progress to next tier
+- Recent transactions
+- Redemption button
+
+### 7. Admin Optimization Dashboard
+
+New page: `src/pages/admin/modules/optimization/OptimizationDashboard.tsx`
+
+Route: `/admin/optimization`
+
+Tabs:
+- **Overview**: Key metrics (conversion, repeat rate, abandonment, revenue/user)
+- **Segments**: Conversion by user segment (new vs returning, device, source)
+- **Retention**: Repeat booking analysis, churn prediction
+- **Promotions**: Promo code performance, redemption rates
+- **Personalization**: A/B test results, sorting effectiveness
+
+Metrics sourced from:
+- `analytics_events` table
+- `optimization_metrics` aggregated data
+- Real-time calculations
+
+### 8. Privacy Controls
+
+#### A. Personalization Settings
+
+Add to existing Privacy Controls page (`/account/privacy`):
+
+```text
+New toggles:
+- Enable personalized recommendations
+- Show deal/urgency badges
+- Allow search history tracking
+- Allow recently viewed tracking
+```
+
+Stored in `user_personalization_settings` table.
+
+#### B. Transparency
+
+- Clear messaging about what data is used
+- No sensitive attribute inference
+- One-click disable for all personalization
 
 ---
 
@@ -241,48 +286,72 @@ Add to `App.tsx`:
 
 | File | Action |
 |------|--------|
-| `supabase/migrations/xxx_production_launch.sql` | Create |
-| `src/types/productionLaunch.ts` | Create |
-| `src/hooks/useProductionLaunch.ts` | Create |
-| `src/integrations/supabase/types.ts` | Update (auto) |
-| `src/pages/admin/modules/launch/ProductionLaunchDashboard.tsx` | Create |
-| `src/components/launch/EnvironmentVerificationPanel.tsx` | Create |
-| `src/components/launch/LaunchChecklistPanel.tsx` | Create |
-| `src/components/launch/TestBookingRunner.tsx` | Create |
-| `src/components/launch/PostLaunchMonitoringPanel.tsx` | Create |
-| `src/components/launch/LaunchPhaseControl.tsx` | Create |
+| `supabase/migrations/xxx_personalization_engine.sql` | Create |
+| `src/types/personalization.ts` | Create |
+| `src/hooks/usePersonalizedResults.ts` | Create |
+| `src/hooks/useSmartSorting.ts` | Create |
+| `src/hooks/usePriceIntelligence.ts` | Create |
+| `src/hooks/useSavedSearches.ts` | Create |
+| `src/hooks/useFavorites.ts` | Create |
+| `src/hooks/useRecentlyViewed.ts` | Create |
+| `src/hooks/useLoyaltyPoints.ts` | Create |
+| `src/hooks/useAbandonmentRecovery.ts` | Create |
+| `src/hooks/usePersonalizationSettings.ts` | Create |
+| `src/hooks/useOptimizationMetrics.ts` | Create |
+| `src/components/shared/DealBadge.tsx` | Create |
+| `src/components/shared/FavoriteButton.tsx` | Create |
+| `src/components/loyalty/LoyaltyStatusCard.tsx` | Create |
+| `src/components/loyalty/PointsRedemption.tsx` | Create |
+| `src/components/shared/SavedSearches.tsx` | Update (dynamic) |
+| `src/components/shared/RecentlyViewed.tsx` | Update (dynamic) |
+| `src/pages/admin/modules/optimization/OptimizationDashboard.tsx` | Create |
+| `src/pages/account/PrivacyControls.tsx` | Update (add settings) |
 | `src/App.tsx` | Update (add route) |
 
 ---
 
 ## Integration Points
 
-1. **Environment Config**: Reads from `src/config/environment.ts` to verify production mode
-2. **Compliance**: Links to `/admin/compliance` for legal verification
-3. **Disaster Recovery**: Links to DR dashboard for backup status
-4. **Automation**: Links to automation dashboard for alert configuration
-5. **Support**: Links to support dashboard for SLA verification
-6. **Flights Launch**: Integrates with existing `useFlightsLaunchStatus` for flights-specific checks
+1. **Search Results**: Inject personalization scoring into hotel/flight/activity result lists
+2. **Card Components**: Add FavoriteButton and DealBadge to result cards
+3. **Checkout**: Integrate loyalty points redemption
+4. **Profile**: Add Loyalty, Favorites, Saved Searches tabs
+5. **Event Tracking**: Extended abandonment tracking
+6. **Email System**: Recovery emails with personalized content
 
 ---
 
-## Security Considerations
+## Technical Approach
 
-- All launch controls require admin authentication
-- Phase transitions logged with user ID and timestamp
-- Test bookings use real but low-value amounts ($10-50)
-- Environment checks validate secrets exist without exposing values
-- All actions logged to `launch_phase_log`
+### Personalization Algorithm
+
+```text
+For each search result:
+1. Base score = normalized_price × price_weight
+2. + rating × rating_weight
+3. + cancellation_flexibility × flex_weight
+4. + distance_relevance × location_weight
+5. + past_booking_affinity × history_weight
+6. → Final personalized_score
+```
+
+Weights configured per service type and A/B tested.
+
+### Privacy-First Design
+
+- All personalization is opt-out with clear controls
+- No sensitive demographic inference
+- Data minimization (only track what's needed)
+- Full transparency in Privacy Controls
 
 ---
 
-## Success Criteria
+## Success Metrics
 
-After implementation, admins can:
-1. Verify all APIs are in LIVE mode with one click
-2. Run and verify real test bookings for each service
-3. Track all 40+ checklist items across 8 categories
-4. Progress through launch phases with blocker awareness
-5. Monitor post-launch metrics in real-time
-6. Receive and acknowledge critical alerts
-7. Review complete launch history and audit trail
+After implementation:
+- Personalized search results increase CTR by 15-25%
+- Deal badges improve conversion on badged items
+- Saved searches drive 10%+ return visits
+- Loyalty points increase repeat booking rate
+- Abandonment recovery captures 5-10% of lost bookings
+- Admin dashboard provides actionable optimization insights
