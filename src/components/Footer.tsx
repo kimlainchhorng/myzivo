@@ -20,6 +20,7 @@ const footerLinks = {
     { name: "Hotels", href: "/hotels" },
     { name: "Car Rental", href: "/rent-car" },
     { name: "Extras", href: "/extras" },
+    { name: "Deals", href: "/deals" },
   ],
   mobility: [
     { name: "Rides", href: "/rides" },

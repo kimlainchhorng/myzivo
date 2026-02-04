@@ -339,9 +339,16 @@ const ActivitiesAdLanding = lazy(() => import("./pages/ads/ActivitiesAdLanding")
 
 // Creator pages - lazy load
 const Creators = lazy(() => import("./pages/Creators"));
+const CreatorDashboard = lazy(() => import("./pages/creators/CreatorDashboard"));
 const FlightsCreatorLanding = lazy(() => import("./pages/creators/FlightsCreatorLanding"));
 const HotelsCreatorLanding = lazy(() => import("./pages/creators/HotelsCreatorLanding"));
 const CarsCreatorLanding = lazy(() => import("./pages/creators/CarsCreatorLanding"));
+
+// Monetization pages - lazy load
+const Deals = lazy(() => import("./pages/Deals"));
+const LastMinute = lazy(() => import("./pages/LastMinute"));
+const TravelWallet = lazy(() => import("./pages/TravelWallet"));
+const DataInsights = lazy(() => import("./pages/business/DataInsights"));
 
 // LP (Ad-safe landing pages) - lazy load
 const FlightsLP = lazy(() => import("./pages/lp/FlightsLP"));
@@ -1049,10 +1056,17 @@ const App = () => (
                 <Route path="/ads/activities" element={<ActivitiesAdLanding />} />
                 {/* Creator Pages - for influencer traffic */}
                 <Route path="/creators" element={<Creators />} />
+                <Route path="/creators/dashboard" element={<ProtectedRoute><CreatorDashboard /></ProtectedRoute>} />
                 <Route path="/creators/flights" element={<FlightsCreatorLanding />} />
                 <Route path="/creators/hotels" element={<HotelsCreatorLanding />} />
                 <Route path="/creators/car-rental" element={<CarsCreatorLanding />} />
                 <Route path="/creators/extras" element={<ExtrasCreatorLanding />} />
+                {/* Monetization Pages */}
+                <Route path="/deals" element={<Deals />} />
+                <Route path="/last-minute" element={<LastMinute />} />
+                <Route path="/wallet" element={<ProtectedRoute><TravelWallet /></ProtectedRoute>} />
+                <Route path="/business/insights" element={<DataInsights />} />
+                <Route path="/data-insights" element={<DataInsights />} />
                 {/* LP Pages - Ad-safe landing pages for paid traffic */}
                 <Route path="/lp/flights" element={<FlightsLP />} />
                 <Route path="/lp/hotels" element={<HotelsLP />} />
