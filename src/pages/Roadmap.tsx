@@ -1,0 +1,407 @@
+/**
+ * Roadmap - Public product roadmap page
+ */
+
+import { Helmet } from "react-helmet-async";
+import {
+  Sparkles,
+  Rocket,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  Lightbulb,
+  Smartphone,
+  Brain,
+  Globe2,
+  Users,
+  CreditCard,
+  Plane,
+  Building2,
+  Car,
+  Gift,
+  MessageSquare,
+  ThumbsUp,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+
+type RoadmapStatus = "completed" | "in_progress" | "coming_soon" | "planned";
+
+interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: typeof Sparkles;
+  status: RoadmapStatus;
+  category: string;
+  quarter?: string;
+  votes?: number;
+}
+
+const statusConfig: Record<RoadmapStatus, { label: string; color: string }> = {
+  completed: {
+    label: "Completed",
+    color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  },
+  in_progress: {
+    label: "In Progress",
+    color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  },
+  coming_soon: {
+    label: "Coming Soon",
+    color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
+  },
+  planned: {
+    label: "Planned",
+    color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+  },
+};
+
+const roadmapItems: RoadmapItem[] = [
+  // Now - In Progress
+  {
+    id: "miles-expansion",
+    title: "ZIVO Miles Expansion",
+    description: "Earn and redeem miles across all travel categories with enhanced rewards",
+    icon: Gift,
+    status: "in_progress",
+    category: "Rewards",
+    quarter: "Q1 2024",
+  },
+  {
+    id: "corporate-portal",
+    title: "Corporate Travel Portal",
+    description: "Full-featured business travel management with policy controls and reporting",
+    icon: Building2,
+    status: "in_progress",
+    category: "Business",
+    quarter: "Q1 2024",
+  },
+  {
+    id: "multi-currency",
+    title: "Multi-Currency Support",
+    description: "Book and pay in your local currency with real-time exchange rates",
+    icon: CreditCard,
+    status: "in_progress",
+    category: "Global",
+    quarter: "Q1 2024",
+  },
+
+  // Next - Coming Soon
+  {
+    id: "mobile-apps",
+    title: "Mobile Apps (iOS & Android)",
+    description: "Native mobile apps with offline access and push notifications",
+    icon: Smartphone,
+    status: "coming_soon",
+    category: "Platform",
+    quarter: "Q2 2024",
+    votes: 342,
+  },
+  {
+    id: "ai-trip-planner",
+    title: "AI Trip Planner",
+    description: "Get personalized trip recommendations powered by AI",
+    icon: Brain,
+    status: "coming_soon",
+    category: "Features",
+    quarter: "Q2 2024",
+    votes: 256,
+  },
+  {
+    id: "group-discounts",
+    title: "Group Booking Discounts",
+    description: "Automatic discounts for group travel with 6+ travelers",
+    icon: Users,
+    status: "coming_soon",
+    category: "Pricing",
+    quarter: "Q2 2024",
+    votes: 189,
+  },
+
+  // Future - Planned
+  {
+    id: "multi-city",
+    title: "Multi-City Booking",
+    description: "Book complex multi-city itineraries in a single transaction",
+    icon: Plane,
+    status: "planned",
+    category: "Features",
+    votes: 423,
+  },
+  {
+    id: "car-subscriptions",
+    title: "Car Rental Subscriptions",
+    description: "Monthly car rental plans for frequent travelers",
+    icon: Car,
+    status: "planned",
+    category: "Products",
+    votes: 156,
+  },
+  {
+    id: "global-expansion",
+    title: "APAC & LATAM Expansion",
+    description: "Localized experience for Asia-Pacific and Latin America",
+    icon: Globe2,
+    status: "planned",
+    category: "Global",
+    votes: 234,
+  },
+  {
+    id: "travel-chat",
+    title: "In-App Travel Chat",
+    description: "Real-time support and travel assistance via chat",
+    icon: MessageSquare,
+    status: "planned",
+    category: "Support",
+    votes: 178,
+  },
+];
+
+const completedItems: RoadmapItem[] = [
+  {
+    id: "flight-search",
+    title: "Real-Time Flight Search",
+    description: "Search and compare flights from 500+ airlines",
+    icon: Plane,
+    status: "completed",
+    category: "Features",
+  },
+  {
+    id: "hotel-booking",
+    title: "Hotel Booking",
+    description: "Book from 1M+ hotel properties worldwide",
+    icon: Building2,
+    status: "completed",
+    category: "Features",
+  },
+  {
+    id: "miles-program",
+    title: "ZIVO Miles Program",
+    description: "Earn miles on every booking",
+    icon: Gift,
+    status: "completed",
+    category: "Rewards",
+  },
+];
+
+export default function Roadmap() {
+  const groupedItems = {
+    now: roadmapItems.filter((i) => i.status === "in_progress"),
+    next: roadmapItems.filter((i) => i.status === "coming_soon"),
+    future: roadmapItems.filter((i) => i.status === "planned"),
+  };
+
+  return (
+    <>
+      <Helmet>
+        <title>Product Roadmap | ZIVO</title>
+        <meta
+          name="description"
+          content="See what's coming next at ZIVO. Our public roadmap shows features we're building and what's planned for the future."
+        />
+      </Helmet>
+
+      <Header />
+
+      <main className="min-h-screen bg-background">
+        {/* Hero */}
+        <section className="relative py-16 sm:py-20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
+          <div className="container mx-auto px-4 relative">
+            <div className="max-w-2xl mx-auto text-center">
+              <Badge className="mb-4">
+                <Rocket className="w-3 h-3 mr-1" />
+                Product Roadmap
+              </Badge>
+              <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+                What We're Building
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                A look at what's in progress, coming soon, and planned for the future.
+                Your feedback shapes our priorities.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Roadmap Sections */}
+        <section className="py-12 sm:py-16">
+          <div className="container mx-auto px-4">
+            {/* Now - In Progress */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Now</h2>
+                  <p className="text-muted-foreground">Currently in development</p>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groupedItems.now.map((item) => (
+                  <RoadmapCard key={item.id} item={item} />
+                ))}
+              </div>
+            </div>
+
+            {/* Next - Coming Soon */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Next</h2>
+                  <p className="text-muted-foreground">Coming in the next quarter</p>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {groupedItems.next.map((item) => (
+                  <RoadmapCard key={item.id} item={item} showVotes />
+                ))}
+              </div>
+            </div>
+
+            {/* Future - Planned */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Lightbulb className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Future</h2>
+                  <p className="text-muted-foreground">On our long-term roadmap</p>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {groupedItems.future.map((item) => (
+                  <RoadmapCard key={item.id} item={item} compact showVotes />
+                ))}
+              </div>
+            </div>
+
+            {/* Recently Completed */}
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Recently Shipped</h2>
+                  <p className="text-muted-foreground">Features we've launched</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {completedItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-medium">{item.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Feedback CTA */}
+        <section className="py-12 sm:py-16 bg-muted/30">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-2xl font-bold mb-4">Have a Feature Request?</h2>
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+              We build ZIVO based on your feedback. Let us know what features would make
+              your travel experience better.
+            </p>
+            <Button asChild className="gap-2">
+              <Link to="/feedback">
+                <Lightbulb className="w-4 h-4" />
+                Submit Feedback
+              </Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </>
+  );
+}
+
+function RoadmapCard({
+  item,
+  compact = false,
+  showVotes = false,
+}: {
+  item: RoadmapItem;
+  compact?: boolean;
+  showVotes?: boolean;
+}) {
+  const status = statusConfig[item.status];
+
+  if (compact) {
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <item.icon className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-sm mb-1">{item.title}</h3>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {item.description}
+              </p>
+              {showVotes && item.votes && (
+                <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                  <ThumbsUp className="w-3 h-3" />
+                  <span>{item.votes} votes</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+            <item.icon className="w-5 h-5 text-primary" />
+          </div>
+          <Badge className={cn("shrink-0", status.color)}>{status.label}</Badge>
+        </div>
+        <CardTitle className="text-lg mt-3">{item.title}</CardTitle>
+        <CardDescription>{item.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between text-sm">
+          <Badge variant="outline">{item.category}</Badge>
+          {item.quarter && (
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {item.quarter}
+            </span>
+          )}
+          {showVotes && item.votes && (
+            <span className="text-muted-foreground flex items-center gap-1">
+              <ThumbsUp className="w-3.5 h-3.5" />
+              {item.votes}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
