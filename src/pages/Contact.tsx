@@ -31,6 +31,21 @@ const contactEmails = [
     email: "kimlain@hizivo.com",
     color: "text-violet-500",
   },
+  {
+    label: "Press & media inquiries",
+    email: "press@hizivo.com",
+    color: "text-amber-500",
+  },
+  {
+    label: "Corporate travel accounts",
+    email: "business@hizivo.com",
+    color: "text-rose-500",
+  },
+  {
+    label: "Partner integrations",
+    email: "partners@hizivo.com",
+    color: "text-teal-500",
+  },
 ];
 
 const Contact = () => {

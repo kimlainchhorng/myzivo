@@ -314,6 +314,11 @@ const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
 // Referral program
 const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
+// Operations & Launch pages
+const BookingManagement = lazy(() => import("./pages/BookingManagement"));
+const HowZivoMakesMoney = lazy(() => import("./pages/HowZivoMakesMoney"));
+const Press = lazy(() => import("./pages/Press"));
+
 // Admin analytics
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 
@@ -602,6 +607,13 @@ const App = () => (
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
+                
+                {/* Operations & Launch Routes */}
+                <Route path="/bookings/:bookingId" element={<BookingManagement />} />
+                <Route path="/how-zivo-makes-money" element={<HowZivoMakesMoney />} />
+                <Route path="/transparency" element={<HowZivoMakesMoney />} />
+                <Route path="/press" element={<Press />} />
+                <Route path="/media" element={<Press />} />
                 <Route path="/security/report" element={<SecurityReport />} />
                 <Route path="/security/zero-trust" element={<ZeroTrustPolicy />} />
                 <Route path="/security/scale-protection" element={<ScaleProtection />} />
