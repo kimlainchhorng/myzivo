@@ -2,6 +2,8 @@
  * Hotel Result Normalizer Service
  * Transforms supplier-specific hotel data into unified ZIVO format
  * Supports Hotelbeds, TripAdvisor, and mock data
+ * 
+ * For ZivoProperty unified schema, see: src/services/propertyNormalizer.ts
  */
 
 import {
@@ -16,6 +18,14 @@ import {
   ZivoHotel,
 } from "@/types/hotelbeds";
 import { HotelResult } from "@/components/hotels/HotelResultCard";
+
+// Re-export ZivoProperty normalizers for convenience
+export {
+  normalizeHotelbedsToZivoProperty,
+  normalizeRateHawkToZivoProperty,
+  mergeMultiSourceProperties,
+  markCheapestProperties,
+} from "./propertyNormalizer";
 
 // ==================== HOTELBEDS NORMALIZER ====================
 
