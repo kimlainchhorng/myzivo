@@ -14,6 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import CheckoutTrustFooter from '@/components/checkout/CheckoutTrustFooter';
+import { CHECKOUT_CONFIRMATION } from '@/config/checkoutCompliance';
 import {
   Plane,
   CheckCircle,
@@ -29,6 +31,8 @@ import {
   Copy,
   Briefcase,
   Send,
+  Home,
+  Headphones,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useFlightBooking, getTicketingStatusInfo } from '@/hooks/useFlightBooking';
@@ -158,11 +162,16 @@ const FlightConfirmation = () => {
             ) : null}
 
             <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-              {isIssued ? 'Booking Confirmed!' : isProcessing ? 'Processing Your Booking' : 'Booking Status'}
+              {isIssued ? `${CHECKOUT_CONFIRMATION.success} ✈️` : isProcessing ? 'Processing Your Booking' : 'Booking Status'}
             </h1>
             <p className="text-muted-foreground">
-              {statusInfo.description}
+              {isIssued ? CHECKOUT_CONFIRMATION.received : statusInfo.description}
             </p>
+            {isIssued && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {CHECKOUT_CONFIRMATION.email}
+              </p>
+            )}
           </div>
 
           {/* Booking Reference */}
@@ -445,21 +454,27 @@ const FlightConfirmation = () => {
               onClick={() => navigate('/dashboard/trips')}
             >
               <Briefcase className="w-4 h-4" />
-              View My Trips
+              {CHECKOUT_CONFIRMATION.buttons.view}
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={() => window.location.href = 'mailto:support@hizovo.com'}
+            >
+              <Headphones className="w-4 h-4" />
+              {CHECKOUT_CONFIRMATION.buttons.support}
             </Button>
             <Button
               className="flex-1 gap-2"
-              onClick={() => navigate('/flights')}
+              onClick={() => navigate('/')}
             >
-              <Plane className="w-4 h-4" />
-              Book Another Flight
+              <Home className="w-4 h-4" />
+              {CHECKOUT_CONFIRMATION.buttons.home}
             </Button>
           </div>
 
-          {/* Support */}
-          <p className="text-center text-sm text-muted-foreground mt-8">
-            Need help? <a href="/support" className="text-primary hover:underline">Contact Support</a>
-          </p>
+          {/* Trust Footer */}
+          <CheckoutTrustFooter className="mt-8" />
         </div>
       </main>
 

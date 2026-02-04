@@ -4,7 +4,7 @@
  */
 import React, { useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle, XCircle, Loader2, Hotel, MapPin, Car, ArrowLeft, Copy, Download, Mail } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Hotel, MapPin, Car, ArrowLeft, Copy, Download, Mail, Home, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -13,6 +13,8 @@ import { useOrderDetails } from "@/hooks/useOrderDetails";
 import { useTravelCart } from "@/contexts/TravelCartContext";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
+import { CHECKOUT_CONFIRMATION } from "@/config/checkoutCompliance";
 
 const TravelConfirmationPage = () => {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -122,9 +124,9 @@ const TravelConfirmationPage = () => {
           {isSuccess ? (
             <>
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-              <h1 className="text-2xl font-bold mb-2">Booking Confirmed!</h1>
+              <h1 className="text-2xl font-bold mb-2">{CHECKOUT_CONFIRMATION.success} 🎉</h1>
               <p className="text-muted-foreground">
-                Thank you for booking with ZIVO. Your confirmation details are below.
+                {CHECKOUT_CONFIRMATION.received}
               </p>
             </>
           ) : order.status === "failed" ? (
@@ -252,23 +254,22 @@ const TravelConfirmationPage = () => {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button variant="outline" onClick={() => navigate("/my-orders")}>
-            View All Orders
+          <Button variant="outline" onClick={() => navigate("/my-orders")} className="gap-2">
+            <Mail className="w-4 h-4" />
+            {CHECKOUT_CONFIRMATION.buttons.view}
           </Button>
-          <Button onClick={() => navigate("/")}>
-            Continue Browsing
+          <Button variant="outline" onClick={() => window.location.href = 'mailto:support@hizovo.com'} className="gap-2">
+            <Headphones className="w-4 h-4" />
+            {CHECKOUT_CONFIRMATION.buttons.support}
+          </Button>
+          <Button onClick={() => navigate("/")} className="gap-2">
+            <Home className="w-4 h-4" />
+            {CHECKOUT_CONFIRMATION.buttons.home}
           </Button>
         </div>
 
-        {/* Support */}
-        <div className="text-center mt-8 text-sm text-muted-foreground">
-          <p>
-            Need help?{" "}
-            <a href="mailto:support@hizovo.com" className="text-primary hover:underline">
-              Contact Support
-            </a>
-          </p>
-        </div>
+        {/* Trust Footer */}
+        <CheckoutTrustFooter className="mt-8" />
       </main>
     </div>
   );
