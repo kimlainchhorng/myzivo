@@ -27,6 +27,8 @@ import { getCityBySlug, cityNameToSlug } from "@/data/cities";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
 import { cn } from "@/lib/utils";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
+import HotelFeaturesGrid from "@/components/hotel/HotelFeaturesGrid";
+import HotelComplianceFooter from "@/components/hotel/HotelComplianceFooter";
 
 const trustBadges = [
   { icon: Shield, text: "Secure booking with partners" },
@@ -296,6 +298,9 @@ export default function HotelsPage() {
             {/* Partner Logos */}
             <PartnerLogosStrip service="hotels" />
 
+            {/* Hotel Features Grid */}
+            <HotelFeaturesGrid className="border-b border-border/50 bg-muted/5" />
+
             {/* Popular Destinations with Photos */}
             <PhotoDestinationGrid
               service="hotels"
@@ -358,6 +363,9 @@ export default function HotelsPage() {
 
         {/* Service Disclaimer */}
         <ServiceDisclaimer type="travel" />
+
+        {/* Hotel Compliance Footer */}
+        <HotelComplianceFooter />
       </main>
       
       <Footer />
