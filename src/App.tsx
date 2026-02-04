@@ -358,6 +358,11 @@ const BookingManagement = lazy(() => import("./pages/BookingManagement"));
 const HowZivoMakesMoney = lazy(() => import("./pages/HowZivoMakesMoney"));
 const Press = lazy(() => import("./pages/Press"));
 
+// Internal investor/acquisition pages
+const InvestorOverview = lazy(() => import("./pages/internal/InvestorOverview"));
+const TechArchitecture = lazy(() => import("./pages/internal/TechArchitecture"));
+const GrowthRoadmap = lazy(() => import("./pages/internal/GrowthRoadmap"));
+
 // Admin analytics
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const KPIDashboard = lazy(() => import("./pages/admin/KPIDashboard"));
@@ -1173,6 +1178,10 @@ const App = () => (
                 <Route path="/investor-relations" element={<InvestorRelations />} />
                 <Route path="/strategic-partnerships" element={<StrategicPartnerships />} />
                 <Route path="/financial-transparency" element={<FinancialTransparency />} />
+                {/* Internal Investor & Acquisition Pages */}
+                <Route path="/internal/investor-overview" element={<InvestorOverview />} />
+                <Route path="/internal/tech-architecture" element={<TechArchitecture />} />
+                <Route path="/internal/growth-roadmap" element={<GrowthRoadmap />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/jobs" element={<Careers />} />
                 <Route path="/ecosystem" element={<EcosystemMap />} />
