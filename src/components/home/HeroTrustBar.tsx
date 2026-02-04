@@ -7,9 +7,10 @@ import { CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const trustItems = [
-  "Live bookings",
-  "Secure payments", 
-  "Licensed travel partners",
+  "500+ Airlines Compared",
+  "500,000+ Hotels Worldwide", 
+  "Trusted Rental Partners",
+  "No Hidden Fees",
 ];
 
 interface HeroTrustBarProps {

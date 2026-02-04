@@ -12,6 +12,7 @@ import PopularRoutesSection from "@/components/home/PopularRoutesSection";
 import ExtrasSection from "@/components/home/ExtrasSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
 import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
+import PriceAlertPromo from "@/components/home/PriceAlertPromo";
 
 // Mobile app home
 import AppHome from "@/pages/app/AppHome";
@@ -28,7 +29,7 @@ const DesktopHomePage = () => {
         {/* 1. Hero Section with Trust Bar built-in */}
         <HeroSection />
         
-        {/* 2. Why Book with ZIVO (3 value props) */}
+        {/* 2. Why Compare with ZIVO (3 value props) */}
         <WhyBookWithZivo />
         
         {/* 3. Primary Services (Flights, Hotels, Cars) */}
@@ -37,16 +38,19 @@ const DesktopHomePage = () => {
         {/* 4. How ZIVO Works (3 steps) */}
         <HowItWorksSimple />
         
-        {/* 5. Social Proof / Platform Trust */}
-        <SocialProofSection />
-        
-        {/* 6. Popular Flight Routes */}
+        {/* 5. Popular Routes */}
         <PopularRoutesSection />
         
-        {/* 7. Airline Trust Section */}
+        {/* 6. Price Alert Promo */}
+        <PriceAlertPromo />
+        
+        {/* 7. Social Proof / Platform Trust */}
+        <SocialProofSection />
+        
+        {/* 8. Airline Trust Section */}
         <AirlineTrustSection />
         
-        {/* 8. ZIVO Extras */}
+        {/* 9. ZIVO Extras */}
         <ExtrasSection />
       </main>
       
