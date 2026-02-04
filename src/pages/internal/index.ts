@@ -8,3 +8,4 @@ export { default as TechArchitecture } from "./TechArchitecture";
 export { default as GrowthRoadmap } from "./GrowthRoadmap";
 export { default as CompetitiveMoat } from "./CompetitiveMoat";
 export { default as FiveYearVision } from "./FiveYearVision";
+export { default as APIIntegrationStatus } from "./APIIntegrationStatus";
