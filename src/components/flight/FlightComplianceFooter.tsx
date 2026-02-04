@@ -60,6 +60,7 @@ export default function FlightComplianceFooter({
         <p className="text-xs text-muted-foreground max-w-3xl mx-auto text-center leading-relaxed">
           {text}{' '}
           ZIVO compares prices from multiple travel partners to help you find the best deals.{' '}
+          ZIVO may earn a commission when users book through partner links.{' '}
           <Link to="/partner-disclosure" className="underline hover:text-foreground">
             Partner Disclosure
           </Link>

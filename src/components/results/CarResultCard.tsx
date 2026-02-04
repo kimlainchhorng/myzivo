@@ -95,7 +95,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
         <div className="flex gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {car.isBestDeal && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              Best Deal
+              Best Value
             </Badge>
           )}
           {isElectric && (
@@ -148,6 +148,7 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
                   )}
                   {car.company}
                 </p>
+                <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Rental Partner</p>
               </div>
               <Badge variant="outline" className="text-[10px] text-muted-foreground shrink-0">
                 or similar
@@ -230,16 +231,19 @@ export function CarResultCard({ car, onViewDeal, className }: CarResultCardProps
               onClick={() => onViewDeal(car)}
               className="mt-3 w-full gap-2 font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30 text-primary-foreground"
             >
-              View Deal
+              Book with Provider
               <ExternalLink className="w-4 h-4" />
             </Button>
+            <p className="text-[9px] text-muted-foreground mt-2 text-center">
+              Continue to Partner
+            </p>
           </div>
         </div>
 
         {/* Redirect notice */}
         <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
           <p className="text-[10px] text-muted-foreground">
-            Redirects to partner site to complete booking
+            Prices may change until booking is completed with the provider.
           </p>
         </div>
       </CardContent>

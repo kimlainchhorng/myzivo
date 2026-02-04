@@ -1,7 +1,7 @@
 /**
- * Flights MoR (Merchant of Record) Footer
+ * Flights Partner Footer
  * 
- * ZIVO is the seller - no affiliate language
+ * Affiliate-safe messaging - no MoR language
  * Required on all flight results/checkout pages
  */
 
@@ -9,7 +9,7 @@ import { Shield, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 
-interface FlightsMoRFooterProps {
+interface FlightsPartnerFooterProps {
   className?: string;
   variant?: 'full' | 'compact' | 'inline';
 }
@@ -17,7 +17,7 @@ interface FlightsMoRFooterProps {
 export default function FlightsMoRFooter({ 
   className,
   variant = 'full' 
-}: FlightsMoRFooterProps) {
+}: FlightsPartnerFooterProps) {
   if (variant === 'inline') {
     return (
       <p className={cn(
@@ -54,7 +54,7 @@ export default function FlightsMoRFooter({
           <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
             <Shield className="w-5 h-5 text-sky-500" />
           </div>
-          <h3 className="font-semibold text-sm">Secure ZIVO Booking</h3>
+          <h3 className="font-semibold text-sm">Trusted Travel Partners</h3>
         </div>
         
         <p className="text-xs text-muted-foreground max-w-3xl mx-auto text-center leading-relaxed">
@@ -64,10 +64,10 @@ export default function FlightsMoRFooter({
         <div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-emerald-500" />
-            {FLIGHT_DISCLAIMERS.checkout.split('·')[0].trim()}
+            Secure partner checkout
           </span>
           <span className="text-border">•</span>
-          <span>{FLIGHT_DISCLAIMERS.checkout.split('·')[1]?.trim() || 'Prices include all taxes and fees'}</span>
+          <span>Prices may change until booking is completed</span>
         </div>
       </div>
     </section>

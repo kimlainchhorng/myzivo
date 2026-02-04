@@ -62,7 +62,7 @@ export function RampResultsHeader({
         </p>
         {!isLoading && count > 0 && (
           <p className="text-xs text-muted-foreground mt-1">
-            Final prices shown — tickets issued instantly after payment.
+            Prices may change until booking is completed with the provider.
           </p>
         )}
       </div>
@@ -89,7 +89,7 @@ export function RampGlobalDisclaimer({ className }: RampGlobalDisclaimerProps) {
       className
     )}>
       <p className="text-xs text-muted-foreground">
-        ZIVO sells flight tickets as a sub-agent of licensed ticketing providers.
+        ZIVO compares prices from licensed travel partners. Bookings are completed on partner websites.
       </p>
     </div>
   );
@@ -106,7 +106,7 @@ export function RampIndicativeNotice({ className }: RampIndicativeNoticeProps) {
       className
     )}>
       <p className="text-sm text-foreground">
-        <span className="font-medium">Indicative prices</span> – Prices are estimates and may change. Final price shown on partner site. View real-time rental prices by clicking "Continue to secure booking".
+        <span className="font-medium">Compare prices</span> – Prices are provided by travel partners and may change until booking is completed. Click "Book with Provider" to view real-time pricing.
       </p>
     </div>
   );

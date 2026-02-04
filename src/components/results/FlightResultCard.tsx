@@ -92,12 +92,12 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
         <div className="flex flex-wrap gap-2 px-4 py-2 bg-muted/30 border-b border-border/50">
           {flight.priceUpdated && (
             <Badge className="bg-amber-500/20 text-amber-500 text-[10px] gap-1">
-              <AlertTriangle className="w-3 h-3" /> Price updated on partner site
+              <AlertTriangle className="w-3 h-3" /> Updated recently
             </Badge>
           )}
           {flight.isBestPrice && !flight.priceUpdated && (
             <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
-              💰 Cheapest
+              💰 Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (
@@ -107,12 +107,12 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
           )}
           {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
             <Badge className="bg-purple-500 text-white text-[10px] gap-1">
-              <Clock className="w-3 h-3" /> Fastest
+              <Clock className="w-3 h-3" /> Fastest Route
             </Badge>
           )}
           {flight.isRealPrice && (
             <Badge className="bg-sky-500/20 text-sky-500 text-[10px] gap-1">
-              <Zap className="w-3 h-3" /> Live Price
+              <Zap className="w-3 h-3" /> Updated recently
             </Badge>
           )}
         </div>
@@ -139,6 +139,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold truncate text-sm">{flight.airline}</p>
+              <p className="text-[10px] text-muted-foreground/80">via Travel Partner</p>
               <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
               <p className="text-xs text-muted-foreground capitalize mt-0.5">{flight.cabinClass}</p>
             </div>
@@ -253,9 +254,9 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
                     <TooltipTrigger asChild>
                       <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-primary cursor-help" />
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[200px] text-center">
+                    <TooltipContent side="top" className="max-w-[240px] text-center">
                       <p className="text-xs">
-                        Prices shown are final. You will not be redirected to another site.
+                        Prices are provided by travel partners and may change until booking is completed on the provider's site.
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -280,8 +281,8 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
               }}
               className="gap-2 font-semibold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-lg shadow-sky-500/20 hover:shadow-sky-500/30 transition-all w-full lg:w-auto text-white min-h-[48px] touch-manipulation active:scale-[0.98]"
             >
-              <span className="hidden sm:inline">{FLIGHT_CTA_TEXT.viewDeal}</span>
-              <span className="sm:hidden">Select</span>
+              <span className="hidden sm:inline">Book with Provider</span>
+              <span className="sm:hidden">View Deal</span>
               <ArrowRight className="w-4 h-4" />
             </Button>
             
@@ -301,9 +302,9 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
               </Button>
             )}
             
-            {/* MoR disclosure */}
+            {/* Provider disclosure */}
             <p className="text-[9px] text-muted-foreground text-center leading-relaxed max-w-[160px]">
-              Secure ZIVO checkout
+              Continue to Partner
             </p>
           </div>
         </div>

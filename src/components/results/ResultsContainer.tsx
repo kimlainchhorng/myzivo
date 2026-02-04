@@ -70,13 +70,14 @@ export function ResultsHeader({
               </h2>
               {indicativePrice && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Final prices shown — tickets issued instantly after payment.
+                  Prices may change until booking is completed with the provider.
                 </p>
               )}
             </>
           )}
         </div>
 
+        {/* Mobile: Sticky sort/filter controls */}
         <div className="flex items-center gap-2">
           {filterTrigger}
           {sortElement}
