@@ -26,7 +26,7 @@ export default function CTAAffiliateNotice({
       )}>
         <ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground/70" />
         <span>
-          Redirecting to a partner site to complete booking. ZIVO may earn a commission.
+          Continue to partner site to complete booking. Prices may change. ZIVO may earn a commission.
         </span>
       </div>
     );
@@ -39,7 +39,7 @@ export default function CTAAffiliateNotice({
       className
     )}>
       <ExternalLink className="w-3 h-3 shrink-0" />
-      <span>Redirects to partner site. ZIVO may earn a commission.</span>
+      <span>Continue to Partner · ZIVO may earn a commission.</span>
     </p>
   );
 }
