@@ -350,6 +350,15 @@ const LastMinute = lazy(() => import("./pages/LastMinute"));
 const TravelWallet = lazy(() => import("./pages/TravelWallet"));
 const DataInsights = lazy(() => import("./pages/business/DataInsights"));
 
+// Compliance & Enterprise Trust pages - lazy load
+const ComplianceCenter = lazy(() => import("./pages/ComplianceCenter"));
+const EnterpriseTrust = lazy(() => import("./pages/security/EnterpriseTrust"));
+const PaymentTransparency = lazy(() => import("./pages/legal/PaymentTransparency"));
+const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
+const Reliability = lazy(() => import("./pages/Reliability"));
+const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
+const RegulatoryStatus = lazy(() => import("./pages/legal/RegulatoryStatus"));
+
 // LP (Ad-safe landing pages) - lazy load
 const FlightsLP = lazy(() => import("./pages/lp/FlightsLP"));
 const HotelsLP = lazy(() => import("./pages/lp/HotelsLP"));
@@ -606,6 +615,19 @@ const App = () => (
                 
                 <Route path="/community-guidelines" element={<CommunityGuidelines />} />
                 <Route path="/insurance" element={<InsurancePolicy />} />
+                
+                {/* Compliance & Enterprise Trust Routes */}
+                <Route path="/compliance" element={<ComplianceCenter />} />
+                <Route path="/legal/compliance-center" element={<ComplianceCenter />} />
+                <Route path="/security/enterprise" element={<EnterpriseTrust />} />
+                <Route path="/trust" element={<EnterpriseTrust />} />
+                <Route path="/legal/payment-transparency" element={<PaymentTransparency />} />
+                <Route path="/business/partner-audit" element={<PartnerAuditDocs />} />
+                <Route path="/reliability" element={<Reliability />} />
+                <Route path="/business/enterprise" element={<EnterpriseReady />} />
+                <Route path="/enterprise" element={<EnterpriseReady />} />
+                <Route path="/legal/regulatory-status" element={<RegulatoryStatus />} />
+                
                 {/* P2P Legal Pages */}
                 <Route path="/terms/renter" element={<RenterTerms />} />
                 <Route path="/terms/owner" element={<OwnerTerms />} />

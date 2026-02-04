@@ -55,7 +55,8 @@ const footerLinks = {
     { name: "Cookie Policy", href: "/cookies" },
     { name: "Partner Disclosure", href: "/partner-disclosure" },
     { name: "Seller of Travel", href: "/legal/seller-of-travel" },
-    { name: "Incident Response", href: "/legal/security-incident" },
+    { name: "Compliance Center", href: "/compliance" },
+    { name: "Enterprise Trust", href: "/security/enterprise" },
   ],
 };
 

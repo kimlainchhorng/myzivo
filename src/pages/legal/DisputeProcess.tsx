@@ -3,10 +3,11 @@
  */
 
 import { Link } from "react-router-dom";
-import { ArrowLeft, Scale, FileText, AlertTriangle, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, Scale, FileText, AlertTriangle, CheckCircle, Clock, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ADVANCED_PLATFORM_POLICIES, COMPANY_INFO } from "@/config/legalContent";
+import { DisputeFlowDiagram } from "@/components/legal/DisputeFlowDiagram";
 
 export default function DisputeProcess() {
   const massArbitration = ADVANCED_PLATFORM_POLICIES.massArbitrationRules;
@@ -68,6 +69,19 @@ export default function DisputeProcess() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Visual Escalation Flow */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Escalation Flow & Response Times
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DisputeFlowDiagram />
           </CardContent>
         </Card>
 
