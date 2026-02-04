@@ -1,6 +1,6 @@
 /**
  * Financial Transparency Page
- * Revenue model and pricing transparency
+ * Revenue model and pricing transparency with detailed commission rates
  */
 
 import Header from "@/components/Header";
@@ -18,8 +18,18 @@ import {
   Building2,
   FileText,
   Scale,
+  Plane,
+  Car,
+  Package,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { 
+  COMMISSION_RATES, 
+  formatCommissionRate,
+  MONTHLY_TOTALS 
+} from "@/config/revenueAssumptions";
+import { formatPrice } from "@/lib/currency";
 
 const revenueExplanation = [
   {
@@ -66,28 +76,19 @@ const pricingPromises = [
   },
 ];
 
-const commissionModel = [
-  {
-    service: "Flights",
-    description: "Commission from airline booking platforms and consolidators.",
-    note: "Tickets issued by licensed partners",
-  },
-  {
-    service: "Hotels",
-    description: "Referral commission from hotel booking networks.",
-    note: "Booking handled by partner site",
-  },
-  {
-    service: "Car Rentals",
-    description: "Commission from car rental aggregators and providers.",
-    note: "Rental agreement with provider",
-  },
-  {
-    service: "Travel Extras",
-    description: "Affiliate commission from travel insurance, activities, and transfers.",
-    note: "Services provided by partners",
-  },
-];
+const serviceIcons = {
+  flights: Plane,
+  hotels: Building2,
+  cars: Car,
+  addons: Package,
+};
+
+const serviceLabels = {
+  flights: 'Flight Bookings',
+  hotels: 'Hotel Bookings',
+  cars: 'Car Rentals',
+  addons: 'Add-ons & Extras',
+};
 
 const complianceItems = [
   {
@@ -113,7 +114,7 @@ const FinancialTransparency = () => {
     <div className="min-h-screen bg-background">
       <SEOHead
         title="Financial Transparency | ZIVO"
-        description="How ZIVO earns money - transparent commission-based model with no hidden fees or price markups."
+        description="How ZIVO earns money - transparent commission-based model with no hidden fees or price markups. View our actual commission rates."
         canonical="https://hizivo.com/financial-transparency"
       />
       <Header />
@@ -216,26 +217,71 @@ const FinancialTransparency = () => {
             </div>
           </section>
 
-          {/* Commission by Service */}
+          {/* Commission by Service - With Actual Rates */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold mb-8 text-center">Commission by Service</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center">Commission Rates by Service</h2>
             <div className="space-y-4">
-              {commissionModel.map((service) => (
-                <Card key={service.service} className="border-border/50">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{service.service}</h3>
-                        <p className="text-muted-foreground">{service.description}</p>
+              {COMMISSION_RATES.map((rate) => {
+                const Icon = serviceIcons[rate.service];
+                return (
+                  <Card key={rate.service} className="border-border/50">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                            <Icon className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-lg">{serviceLabels[rate.service]}</h3>
+                            <p className="text-sm text-muted-foreground">{rate.description}</p>
+                            {rate.examples && (
+                              <ul className="mt-2 space-y-1">
+                                {rate.examples.map((ex, i) => (
+                                  <li key={i} className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <span className="w-1 h-1 rounded-full bg-primary" />
+                                    {ex}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="text-base px-4 py-1">
+                            {formatCommissionRate(rate.service)}
+                          </Badge>
+                          <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+                            {rate.type === 'fixed' ? 'Fixed' : '%'}
+                          </Badge>
+                        </div>
                       </div>
-                      <Badge variant="secondary" className="w-fit">
-                        {service.note}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
+            
+            {/* Monthly Example */}
+            <Card className="mt-6 border-primary/20 bg-gradient-to-r from-primary/5 to-emerald-500/5">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-1">Conservative Monthly Revenue</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Based on 1,000 flights + 500 hotels + 300 cars + add-ons
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-emerald-500">
+                      {formatPrice(MONTHLY_TOTALS.total)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatPrice(MONTHLY_TOTALS.annual)}/year
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           {/* Compliance */}
@@ -264,7 +310,7 @@ const FinancialTransparency = () => {
           </section>
 
           {/* Trust Statement */}
-          <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-primary/10 border border-emerald-500/20">
+          <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-primary/10 border border-emerald-500/20 mb-8">
             <Shield className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-4">Our Transparency Commitment</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
@@ -272,6 +318,22 @@ const FinancialTransparency = () => {
               deserve to know exactly how we operate and how we earn money. No hidden 
               fees, no inflated prices, no tricks.
             </p>
+          </div>
+
+          {/* Related Links */}
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button variant="outline" asChild>
+              <Link to="/how-zivo-makes-money" className="gap-2">
+                Revenue Model Details
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/investors" className="gap-2">
+                Investor Relations
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </main>

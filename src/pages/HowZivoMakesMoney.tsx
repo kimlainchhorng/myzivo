@@ -1,6 +1,6 @@
 /**
  * How ZIVO Makes Money - Transparency Page
- * Explains revenue model with full disclosure
+ * Full disclosure of revenue model with detailed projections
  */
 
 import Header from "@/components/Header";
@@ -28,37 +28,46 @@ import {
   Handshake,
   TrendingUp,
   Lock,
+  Package,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { RevenueProjectionCard } from "@/components/revenue/RevenueProjectionCard";
+import { ScaleScenarioCard } from "@/components/revenue/ScaleScenarioCard";
+import { BusinessModelAdvantages } from "@/components/revenue/BusinessModelAdvantages";
+import { formatCommissionRate, COMMISSION_RATES } from "@/config/revenueAssumptions";
 
 const revenueSources = [
   {
     icon: Plane,
+    service: 'flights' as const,
     title: "Flight Bookings",
-    description: "We earn a commission from our ticketing partners when you book a flight through ZIVO.",
-    model: "Commission-based",
+    description: "We earn a fixed commission from our ticketing partners when you book a flight through ZIVO.",
+    model: "Fixed per booking",
     note: "Price you pay = Partner price. No markup.",
   },
   {
     icon: Building2,
+    service: 'hotels' as const,
     title: "Hotel Bookings",
-    description: "Hotels pay us a referral fee for successful bookings made through our platform.",
-    model: "Referral commission",
+    description: "Hotels pay us a percentage-based referral fee for successful bookings made through our platform.",
+    model: "Percentage commission",
     note: "You see the same rates as booking direct.",
   },
   {
     icon: Car,
+    service: 'cars' as const,
     title: "Car Rentals",
-    description: "We receive a commission from car rental providers for bookings facilitated through ZIVO.",
-    model: "Commission-based",
+    description: "We receive a fixed commission from car rental providers for bookings facilitated through ZIVO.",
+    model: "Fixed per booking",
     note: "Compare prices across multiple providers.",
   },
   {
-    icon: Shield,
-    title: "Travel Insurance & Add-ons",
-    description: "When you purchase optional travel protection, our insurance partners share a portion of the premium.",
+    icon: Package,
+    service: 'addons' as const,
+    title: "Add-ons & Extras",
+    description: "When you purchase optional travel protection, extra baggage, or flexible tickets, our partners share a portion.",
     model: "Partner commission",
-    note: "Insurance is always optional.",
+    note: "All add-ons are always optional.",
   },
 ];
 
@@ -99,6 +108,10 @@ const faqs = [
     answer: "Results are sorted by price and relevance by default, not by commission. You always see the best deal first.",
   },
   {
+    question: "What are the actual commission rates?",
+    answer: "Flights: $3-$12 per booking. Hotels: 10-25% of booking value. Car Rentals: $5-$30 per booking. Add-ons: $3-$10 per item.",
+  },
+  {
     question: "Is travel insurance required?",
     answer: "No. Travel insurance is always optional. We offer it because many travelers find it valuable, but you can skip it at checkout.",
   },
@@ -112,14 +125,14 @@ const HowZivoMakesMoney = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="How ZIVO Makes Money | Transparency"
-        description="Learn how ZIVO generates revenue. We believe in full transparency about our business model and commitment to fair pricing."
+        title="How ZIVO Makes Money | Revenue Model Transparency"
+        description="Learn how ZIVO generates revenue through affiliate commissions. Full transparency about our commission rates and commitment to fair pricing."
         canonical="https://hizivo.com/how-zivo-makes-money"
       />
       <Header />
 
       <main className="pt-24 pb-20">
-        <div className="container mx-auto px-4 max-w-4xl">
+        <div className="container mx-auto px-4 max-w-5xl">
           {/* Hero Section */}
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
@@ -129,13 +142,16 @@ const HowZivoMakesMoney = () => {
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
               How ZIVO Makes Money
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
               We believe you deserve to know how we operate. Here's a clear breakdown 
               of our revenue model and our commitments to you.
             </p>
+            <p className="text-sm font-medium text-primary">
+              ZIVO earns through transparent partner commissions. We never add hidden fees to the prices you see.
+            </p>
           </div>
 
-          {/* Revenue Sources */}
+          {/* Revenue Sources with Rates */}
           <section className="mb-16">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Handshake className="w-6 h-6 text-primary" />
@@ -161,14 +177,38 @@ const HowZivoMakesMoney = () => {
                     <p className="text-muted-foreground mb-3">
                       {source.description}
                     </p>
-                    <p className="text-sm font-medium text-primary flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" />
-                      {source.note}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-primary flex items-center gap-1">
+                        <CheckCircle2 className="w-4 h-4" />
+                        {source.note}
+                      </p>
+                      <Badge variant="outline" className="text-xs">
+                        {formatCommissionRate(source.service)}
+                      </Badge>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
+          </section>
+
+          {/* Revenue Projection */}
+          <section className="mb-16">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <TrendingUp className="w-6 h-6 text-primary" />
+              Revenue Model Example
+            </h2>
+            <RevenueProjectionCard />
+          </section>
+
+          {/* Scale Scenarios */}
+          <section className="mb-16">
+            <ScaleScenarioCard />
+          </section>
+
+          {/* Why This Scales */}
+          <section className="mb-16">
+            <BusinessModelAdvantages />
           </section>
 
           {/* Our Commitments */}
@@ -232,6 +272,12 @@ const HowZivoMakesMoney = () => {
             <Button variant="outline" asChild>
               <Link to="/partner-disclosure" className="gap-2">
                 Partner Disclosure
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/investors" className="gap-2">
+                Investor Relations
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>

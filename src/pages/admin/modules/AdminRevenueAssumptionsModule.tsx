@@ -431,7 +431,7 @@ export default function AdminRevenueAssumptionsModule() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-bold text-emerald-500">
-                      ${example.commission}
+                      ${example.avgCommission}
                     </p>
                     <p className="text-xs text-muted-foreground">per booking</p>
                   </div>
