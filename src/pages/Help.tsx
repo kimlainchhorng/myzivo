@@ -1,6 +1,6 @@
 /**
  * Help Center Page
- * Public support hub with sections for Flights, Hotels, Cars, Account, Technical
+ * ZIVO Help Center with Support and Company sections
  */
 
 import { useState } from "react";
@@ -9,148 +9,135 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   HelpCircle, 
-  Plane, 
-  Hotel, 
-  Car, 
-  User, 
-  Monitor, 
   Search,
-  ExternalLink,
-  Shield,
   MessageCircle,
+  Mail,
+  Plane,
+  Monitor,
+  Building2,
+  Workflow,
+  Users,
+  FileText,
   ChevronRight,
-  Mail
+  Shield,
+  ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const helpSections = [
+// Support links
+const supportLinks = [
   {
-    id: "flights",
-    icon: Plane,
-    title: "Flights",
-    description: "Flight search, booking, and changes",
+    icon: HelpCircle,
+    title: "Help Center",
+    description: "FAQs & guides",
+    href: "#faqs",
     color: "text-sky-500",
     bgColor: "bg-sky-500/10",
-    faqs: [
-      {
-        q: "How do I search for flights?",
-        a: "Enter your departure and arrival cities, dates, and number of passengers on our Flights page. We'll compare options from our travel partners."
-      },
-      {
-        q: "How do I change or cancel my flight?",
-        a: "Flight changes and cancellations are handled by the travel partner who processed your booking. Check your confirmation email for their contact details."
-      },
-      {
-        q: "Why did I get redirected to another site?",
-        a: "Hizovo is a travel search platform. We help you find and compare options, then redirect you to our trusted travel partners to complete your booking securely."
-      },
-      {
-        q: "Is my payment secure?",
-        a: "Yes. All payments are processed directly by our licensed travel partners using industry-standard security. Hizovo never handles your payment information."
-      },
-    ],
   },
   {
-    id: "hotels",
-    icon: Hotel,
-    title: "Hotels",
-    description: "Hotel search, reservations, and policies",
-    color: "text-violet-500",
-    bgColor: "bg-violet-500/10",
-    faqs: [
-      {
-        q: "How do I book a hotel?",
-        a: "Search for hotels by destination and dates. Click 'View Deal' on any result to continue to our partner's checkout page."
-      },
-      {
-        q: "Can I modify my hotel reservation?",
-        a: "Reservation changes must be made through the travel partner who completed your booking. Check your confirmation email for their support contact."
-      },
-      {
-        q: "What is the cancellation policy?",
-        a: "Cancellation policies vary by hotel and rate. The policy is shown during booking on the partner site. Check your confirmation for specific terms."
-      },
-    ],
-  },
-  {
-    id: "cars",
-    icon: Car,
-    title: "Car Rentals",
-    description: "Car rental search and reservations",
+    icon: MessageCircle,
+    title: "Contact Us",
+    description: "Customer support",
+    href: "/contact",
     color: "text-emerald-500",
     bgColor: "bg-emerald-500/10",
-    faqs: [
-      {
-        q: "How do I rent a car?",
-        a: "Enter your pickup location, dates, and times. We'll show you options from rental partners. Click 'View Deal' to complete your booking."
-      },
-      {
-        q: "What documents do I need?",
-        a: "Typically you'll need a valid driver's license and credit card. Requirements vary by rental company and destination. Check with the partner directly."
-      },
-      {
-        q: "How do I cancel a car rental?",
-        a: "Contact the rental company directly using the information in your booking confirmation email."
-      },
-    ],
   },
   {
-    id: "account",
-    icon: User,
-    title: "Account",
-    description: "Account settings and preferences",
+    icon: Plane,
+    title: "Travel Bookings",
+    description: "Partner booking help",
+    href: "/support/travel-bookings",
+    color: "text-violet-500",
+    bgColor: "bg-violet-500/10",
+  },
+  {
+    icon: Monitor,
+    title: "Site Issues",
+    description: "Technical support",
+    href: "/support/site-issues",
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
-    faqs: [
-      {
-        q: "Do I need an account to search?",
-        a: "No. You can search and compare travel options without an account. Creating an account lets you save searches and view your search history."
-      },
-      {
-        q: "How do I reset my password?",
-        a: "Click 'Forgot Password' on the sign-in page and follow the email instructions."
-      },
-    ],
+  },
+];
+
+// Company links
+const companyLinks = [
+  {
+    icon: Building2,
+    title: "About ZIVO",
+    description: "Our story & mission",
+    href: "/about",
+    color: "text-primary",
+    bgColor: "bg-primary/10",
   },
   {
-    id: "technical",
-    icon: Monitor,
-    title: "Technical Issues",
-    description: "Site issues and troubleshooting",
+    icon: Workflow,
+    title: "How It Works",
+    description: "Search, compare, book",
+    href: "/how-it-works",
+    color: "text-teal-500",
+    bgColor: "bg-teal-500/10",
+  },
+  {
+    icon: Users,
+    title: "Partners",
+    description: "Travel providers",
+    href: "/partners",
     color: "text-rose-500",
     bgColor: "bg-rose-500/10",
-    faqs: [
-      {
-        q: "The site isn't loading properly",
-        a: "Try clearing your browser cache, disabling browser extensions, or using a different browser. For persistent issues, contact us."
-      },
-      {
-        q: "I'm getting an error message",
-        a: "Take a screenshot of the error and contact us through our support form. Include details about what you were trying to do."
-      },
-    ],
+  },
+  {
+    icon: FileText,
+    title: "Legal & Policies",
+    description: "Terms & privacy",
+    href: "/terms",
+    color: "text-slate-500",
+    bgColor: "bg-slate-500/10",
+  },
+];
+
+// Common FAQs
+const faqs = [
+  {
+    q: "What is ZIVO?",
+    a: "ZIVO is a travel search and comparison platform. We help you find and compare flights, hotels, and car rentals from multiple travel partners in one place."
+  },
+  {
+    q: "How do I book a flight/hotel/car?",
+    a: "Search for your travel options on ZIVO, then click 'View Deal' or 'Book' to continue to our travel partner's website where you'll complete your booking and payment."
+  },
+  {
+    q: "Who do I contact for booking changes or cancellations?",
+    a: "Booking changes, cancellations, and refunds are handled by the travel partner who processed your booking. Check your confirmation email for their contact details."
+  },
+  {
+    q: "Is my payment secure?",
+    a: "Yes. All payments are processed directly by our licensed travel partners using industry-standard encryption. ZIVO does not process payments or store credit card information."
+  },
+  {
+    q: "Why was I redirected to another site?",
+    a: "ZIVO is a search platform, not a booking agent. We connect you with trusted travel partners who fulfill your booking. This ensures you get the best service from licensed providers."
+  },
+  {
+    q: "What if the site isn't working properly?",
+    a: "Try clearing your browser cache, disabling extensions, or using a different browser. For persistent issues, contact us at support@hizivo.com with details about the problem."
   },
 ];
 
 export default function Help() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState<string | null>(null);
 
-  const filteredSections = helpSections.filter(section => {
+  const filteredFaqs = faqs.filter(faq => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      section.title.toLowerCase().includes(query) ||
-      section.description.toLowerCase().includes(query) ||
-      section.faqs.some(faq => 
-        faq.q.toLowerCase().includes(query) || 
-        faq.a.toLowerCase().includes(query)
-      )
+      faq.q.toLowerCase().includes(query) || 
+      faq.a.toLowerCase().includes(query)
     );
   });
 
@@ -158,7 +145,7 @@ export default function Help() {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Help Center – ZIVO"
-        description="Get help with flights, hotels, car rentals, and technical issues. Find answers to common questions about booking travel on Hizovo."
+        description="Get help with flights, hotels, car rentals, and technical issues. Find answers to common questions about booking travel on ZIVO."
         canonical="https://hizivo.com/help"
       />
       <Header />
@@ -169,13 +156,13 @@ export default function Help() {
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30">
               <HelpCircle className="w-3 h-3 mr-1" />
-              Help Center
+              ZIVO Help Center
             </Badge>
             <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
               How can we help?
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find answers to common questions or contact us for support.
+              Find answers to common questions or get in touch with our team.
             </p>
           </div>
 
@@ -190,110 +177,121 @@ export default function Help() {
             />
           </div>
 
-          {/* Quick Links */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
-            <Link to="/support/travel-bookings">
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                    <ExternalLink className="w-6 h-6 text-sky-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Booking Support</p>
-                    <p className="text-sm text-muted-foreground">Changes & cancellations</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/support/site-issues">
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                    <Monitor className="w-6 h-6 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Site Issues</p>
-                    <p className="text-sm text-muted-foreground">Troubleshooting</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link to="/contact">
-              <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <MessageCircle className="w-6 h-6 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Contact Us</p>
-                    <p className="text-sm text-muted-foreground">Get in touch</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
+          {/* Support Section */}
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Badge variant="outline" className="text-xs">Support</Badge>
+              <h2 className="font-semibold text-lg">Get Help</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {supportLinks.map((link) => {
+                const Icon = link.icon;
+                const isAnchor = link.href.startsWith("#");
+                const Component = isAnchor ? "a" : Link;
+                const props = isAnchor ? { href: link.href } : { to: link.href };
+                
+                return (
+                  <Component key={link.title} {...props as any}>
+                    <Card className="hover:border-primary/50 transition-all cursor-pointer h-full group">
+                      <CardContent className="p-5">
+                        <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                          <Icon className={`w-5 h-5 ${link.color}`} />
+                        </div>
+                        <p className="font-semibold mb-0.5">{link.title}</p>
+                        <p className="text-sm text-muted-foreground">{link.description}</p>
+                      </CardContent>
+                    </Card>
+                  </Component>
+                );
+              })}
+            </div>
+          </section>
 
-          {/* Section Cards */}
-          <div className="grid gap-6">
-            {filteredSections.map((section) => {
-              const Icon = section.icon;
-              const isActive = activeSection === section.id;
-              
-              return (
-                <Card key={section.id} className="overflow-hidden">
-                  <CardHeader 
-                    className="cursor-pointer"
-                    onClick={() => setActiveSection(isActive ? null : section.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-xl ${section.bgColor} flex items-center justify-center`}>
-                          <Icon className={`w-6 h-6 ${section.color}`} />
+          {/* Company Section */}
+          <section className="mb-12">
+            <div className="flex items-center gap-2 mb-6">
+              <Badge variant="outline" className="text-xs">Company</Badge>
+              <h2 className="font-semibold text-lg">About ZIVO</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {companyLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link key={link.title} to={link.href}>
+                    <Card className="hover:border-primary/50 transition-all cursor-pointer h-full group">
+                      <CardContent className="p-5">
+                        <div className={`w-11 h-11 rounded-xl ${link.bgColor} flex items-center justify-center mb-3 group-hover:scale-105 transition-transform`}>
+                          <Icon className={`w-5 h-5 ${link.color}`} />
                         </div>
-                        <div>
-                          <CardTitle className="text-xl">{section.title}</CardTitle>
-                          <CardDescription>{section.description}</CardDescription>
-                        </div>
-                      </div>
-                      <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform ${isActive ? 'rotate-90' : ''}`} />
-                    </div>
-                  </CardHeader>
-                  
-                  {isActive && (
-                    <CardContent className="pt-0">
-                      <Accordion type="single" collapsible className="w-full">
-                        {section.faqs.map((faq, idx) => (
-                          <AccordionItem key={idx} value={`faq-${idx}`}>
-                            <AccordionTrigger className="text-left">
-                              {faq.q}
-                            </AccordionTrigger>
-                            <AccordionContent className="text-muted-foreground">
-                              {faq.a}
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
-          </div>
+                        <p className="font-semibold mb-0.5">{link.title}</p>
+                        <p className="text-sm text-muted-foreground">{link.description}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* FAQs Section */}
+          <section id="faqs" className="mb-12 scroll-mt-24">
+            <div className="flex items-center gap-2 mb-6">
+              <Badge variant="outline" className="text-xs">FAQs</Badge>
+              <h2 className="font-semibold text-lg">Common Questions</h2>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <Accordion type="single" collapsible className="w-full">
+                  {filteredFaqs.map((faq, idx) => (
+                    <AccordionItem key={idx} value={`faq-${idx}`} className="border-border/50">
+                      <AccordionTrigger className="text-left hover:no-underline py-4">
+                        {faq.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-muted-foreground pb-4">
+                        {faq.a}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+                {filteredFaqs.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>No matching questions found</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
           {/* Partner Disclosure */}
-          <div className="mt-12 p-6 rounded-2xl bg-muted/50 border border-border/50">
+          <div className="p-6 rounded-2xl bg-muted/50 border border-border/50 mb-8">
             <div className="flex items-start gap-4">
               <Shield className="w-6 h-6 text-muted-foreground flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold mb-2">Important Notice</p>
                 <p className="text-muted-foreground text-sm">
-                  Hizovo is a travel search and comparison platform. We help you find and compare options 
+                  ZIVO is a travel search and comparison platform. We help you find and compare options 
                   from trusted travel partners. All bookings, payments, and fulfillment are handled by 
                   our licensed travel partners. For booking changes, cancellations, or refunds, please 
                   contact the travel partner directly using the information in your confirmation email.
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Footer Links */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground border-t border-border/50 pt-8">
+            <Link to="/terms" className="hover:text-foreground transition-colors">
+              Terms of Service
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/partner-disclosure" className="hover:text-foreground transition-colors">
+              Partner Disclosure
+            </Link>
           </div>
 
           {/* Contact CTA */}
