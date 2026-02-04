@@ -283,8 +283,12 @@ const Footer = () => {
             </p>
           </div>
           
-          {/* Seller of Travel Disclosure */}
+          {/* Seller of Travel & Legal Disclosure */}
           <div className="text-center space-y-2">
+            {/* REQUIRED EXACT COPY - Do not modify */}
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-semibold p-2 rounded-lg bg-muted/50 border border-border/50">
+              ZIVO acts as a booking facilitator and sub-agent for licensed travel providers.
+            </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-3 h-3 text-emerald-500" />
               ZIVO is registered as a Seller of Travel where required by law.
