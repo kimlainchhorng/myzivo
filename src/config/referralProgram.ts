@@ -1,6 +1,8 @@
 /**
  * Referral Program Configuration
  * Rewards structure for user referrals
+ * 
+ * COMPLIANCE: Uses ZIVO Points (not cash, not airline miles)
  */
 
 export interface ReferralTierBonus {
@@ -13,43 +15,43 @@ export interface ReferralTierBonus {
 export interface ReferralRewards {
   newUser: {
     credit: number;
-    miles: number;
+    points: number;
     description: string;
   };
   referrer: {
     creditPerReferral: number;
-    milesPerReferral: number;
+    pointsPerReferral: number;
     tierBonuses: ReferralTierBonus[];
   };
 }
 
 export const REFERRAL_REWARDS: ReferralRewards = {
   newUser: {
-    credit: 10, // $10 travel credit
-    miles: 2500, // bonus miles
-    description: "Get $10 off your first booking + 2,500 ZIVO Miles",
+    credit: 0, // No cash credit
+    points: 500, // ZIVO Points
+    description: "Get 500 ZIVO Points when you sign up",
   },
   referrer: {
-    creditPerReferral: 10,
-    milesPerReferral: 2500,
+    creditPerReferral: 0,
+    pointsPerReferral: 1000,
     tierBonuses: [
       {
         count: 3,
-        bonus: 5000,
-        title: "Starter",
-        description: "Refer 3 friends and earn 5,000 bonus miles",
+        bonus: 500,
+        title: "Connector",
+        description: "Refer 3 friends and earn 500 bonus points",
       },
       {
         count: 10,
-        bonus: 15000,
-        title: "Advocate",
-        description: "Refer 10 friends and earn 15,000 bonus miles",
+        bonus: 2500,
+        title: "Influencer",
+        description: "Refer 10 friends and earn 2,500 bonus points",
       },
       {
         count: 25,
-        bonus: 50000,
+        bonus: 10000,
         title: "Ambassador",
-        description: "Refer 25 friends and become a ZIVO Ambassador with 50,000 bonus miles",
+        description: "Refer 25 friends and become a ZIVO Ambassador with 10,000 bonus points",
       },
     ],
   },
@@ -57,18 +59,24 @@ export const REFERRAL_REWARDS: ReferralRewards = {
 
 export const REFERRAL_TERMS = [
   "Referred friend must be a new ZIVO user",
-  "Credit is applied after friend's first completed booking",
-  "Miles are credited within 48 hours of booking completion",
-  "Referral credits expire after 12 months",
+  "Points are credited after friend's first completed booking",
+  "Points are credited within 48 hours of booking completion",
+  "ZIVO Points have no cash value and cannot be exchanged for money",
   "ZIVO reserves the right to modify program terms",
 ];
 
 export const SHARE_MESSAGES = {
-  default: "Join me on ZIVO and get $10 off your first trip! Use my referral link:",
+  default: "Join me on ZIVO and earn 500 ZIVO Points! Use my referral link:",
   email: {
-    subject: "You're invited to ZIVO - Get $10 off your first trip!",
-    body: "Hey! I've been using ZIVO to book my trips and thought you'd love it. Sign up with my link and you'll get $10 off your first booking plus 2,500 bonus miles!",
+    subject: "You're invited to ZIVO - Earn bonus points!",
+    body: "Hey! I've been using ZIVO to find great travel deals. Sign up with my link and you'll get 500 bonus ZIVO Points to start!",
   },
-  twitter: "I just discovered @ZIVOtravel - amazing deals on flights, hotels & more! Get $10 off your first trip:",
-  whatsapp: "Check out ZIVO for amazing travel deals! Sign up with my link and get $10 off + 2,500 bonus miles 🎉",
+  twitter: "I just discovered @ZIVOtravel - amazing deals on flights, hotels & more! Earn points on your first trip:",
+  whatsapp: "Check out ZIVO for amazing travel deals! Sign up with my link and get 500 bonus points 🎉",
+};
+
+// Compliance copy
+export const REFERRAL_COMPLIANCE = {
+  disclaimer: "ZIVO Points have no cash value and cannot be exchanged for money. Points are not airline miles.",
+  note: "Rewards are promotional and subject to change.",
 };
