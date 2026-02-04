@@ -14,7 +14,13 @@ import { SEOContentBlock, InternalLinkGrid, PopularRoutesGrid } from "@/componen
 import { FlightSearchFormPro } from "@/components/search";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 import { FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
-import { HowBookingWorks, FlightTrustBadgesBar, AirlineLogosCarousel } from "@/components/flight";
+import { 
+  HowBookingWorks, 
+  FlightTrustBadgesBar, 
+  AirlineLogosCarousel,
+  FlightFeaturesGrid,
+  FlightComplianceFooter
+} from "@/components/flight";
 
 /**
  * ZIVO FLIGHTS - Top-Tier Travel Search
@@ -52,6 +58,9 @@ const FlightSearch = () => {
         {/* How Booking Works - RIGHT AFTER SEARCH */}
         <HowBookingWorks className="border-b border-border/50" />
 
+        {/* Flight Features Grid - Cabin Classes, Flight Types, Extras, Deals */}
+        <FlightFeaturesGrid className="border-b border-border/50 bg-muted/5" />
+
         {/* SEO Content Block - H1 and intro for search engines */}
         <SEOContentBlock serviceType="flights" className="bg-muted/5" />
 
@@ -88,6 +97,9 @@ const FlightSearch = () => {
 
         {/* Service Disclaimer */}
         <ServiceDisclaimer type="travel" />
+
+        {/* Flight Compliance Footer */}
+        <FlightComplianceFooter />
       </main>
 
       <Footer />
