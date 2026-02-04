@@ -331,6 +331,8 @@ const FlightToCity = lazy(() => import("./pages/seo/FlightToCity"));
 const FlightRoutePage = lazy(() => import("./pages/seo/FlightRoutePage"));
 const DealsPage = lazy(() => import("./pages/seo/DealsPage"));
 const SeasonalDealPage = lazy(() => import("./pages/seo/SeasonalDealPage"));
+const CountryHubPage = lazy(() => import("./pages/seo/CountryHubPage"));
+const LocalizedFlightRoutePage = lazy(() => import("./pages/seo/LocalizedFlightRoutePage"));
 
 // Admin scaling dashboards
 const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard"));
@@ -716,6 +718,11 @@ const App = () => (
                 <Route path="/extras" element={<TravelExtras />} />
                 <Route path="/deals" element={<DealsPage />} />
                 <Route path="/deals/:slug" element={<SeasonalDealPage />} />
+                
+                {/* Country Hub Pages - International SEO */}
+                <Route path="/:countrySlug" element={<CountryHubPage />} />
+                <Route path="/:countrySlug/flights/:routeSlug" element={<LocalizedFlightRoutePage />} />
+                
                 <Route path="/install" element={<Install />} />
                 
                 {/* Admin SEO Scaling Dashboard */}
