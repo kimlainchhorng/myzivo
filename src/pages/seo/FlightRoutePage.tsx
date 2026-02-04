@@ -1,26 +1,53 @@
+/**
+ * SEO FLIGHT ROUTE PAGE
+ * 
+ * Dynamic landing page for routes like /flights/new-york-to-london
+ * COMPLIANCE: No mock/hardcoded prices. Only shows booking tips and search CTA.
+ * All price data comes from live API on results page.
+ */
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, MapPin, Clock, DollarSign, ChevronRight, Calendar, TrendingUp } from "lucide-react";
+import { ArrowLeft, Plane, MapPin, Clock, Calendar, TrendingDown, Bell, Info, Sparkles, CheckCircle, ShieldCheck, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 import FlightSearchSchema from "@/components/seo/FlightSearchSchema";
+import TravelFAQ from "@/components/shared/TravelFAQ";
+import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
+import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
+import { FlightSearchFormPro } from "@/components/search";
 import { FLIGHT_SEO_H1, FLIGHT_SEO_INTRO, FLIGHT_SEO_DISCLAIMERS } from "@/config/flightSEOContent";
+import { cn } from "@/lib/utils";
 
-// Mock flight data for the route
-const MOCK_FLIGHTS = [
-  { airline: "Delta", price: 349, duration: "5h 30m", stops: 0, departure: "6:00 AM", arrival: "11:30 AM" },
-  { airline: "United", price: 379, duration: "5h 45m", stops: 0, departure: "8:15 AM", arrival: "2:00 PM" },
-  { airline: "American", price: 299, duration: "7h 15m", stops: 1, departure: "10:00 AM", arrival: "5:15 PM" },
-  { airline: "JetBlue", price: 329, duration: "5h 35m", stops: 0, departure: "2:30 PM", arrival: "8:05 PM" },
+// Booking tips (no prices - general guidance only)
+const BOOKING_TIPS = [
+  { 
+    icon: TrendingDown, 
+    title: "Book Early", 
+    desc: "21-60 days ahead for best rates",
+    color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+  },
+  { 
+    icon: Calendar, 
+    title: "Flexible Dates", 
+    desc: "Tue, Wed, Sat often cheaper",
+    color: "text-sky-500 bg-sky-500/10 border-sky-500/20"
+  },
+  { 
+    icon: Clock, 
+    title: "Off-Peak Hours", 
+    desc: "Early AM or late PM departures",
+    color: "text-violet-500 bg-violet-500/10 border-violet-500/20"
+  },
 ];
 
-const PRICE_CALENDAR = [
-  { month: "Feb", avgPrice: 320 },
-  { month: "Mar", avgPrice: 380 },
-  { month: "Apr", avgPrice: 340 },
-  { month: "May", avgPrice: 290 },
-  { month: "Jun", avgPrice: 420 },
-  { month: "Jul", avgPrice: 480 },
+// Trust badges
+const TRUST_BADGES = [
+  { icon: ShieldCheck, text: "Secure booking" },
+  { icon: CheckCircle, text: "No hidden fees" },
+  { icon: Plane, text: "500+ airlines" },
 ];
 
 export default function FlightRoutePage() {
@@ -46,172 +73,225 @@ export default function FlightRoutePage() {
 
   const h1Title = FLIGHT_SEO_H1.route(originCity, destCity);
   const introText = FLIGHT_SEO_INTRO.routeIntro(originCity, destCity);
-  const lowestPrice = Math.min(...MOCK_FLIGHTS.map((f) => f.price));
+
+  const pageTitle = `${h1Title} - Compare Prices | ZIVO`;
+  const pageDescription = `Compare flights from ${originCity} to ${destCity}. Search real-time prices from 500+ airlines and book securely on ZIVO. No booking fees.`;
+
+  // Build search URL
+  const searchUrl = `/flights?from=${encodeURIComponent(originSlug)}&to=${encodeURIComponent(destSlug)}`;
 
   return (
-    <div className="min-h-screen bg-background safe-area-top safe-area-bottom">
-      {/* SEO Schema */}
+    <div className="min-h-screen bg-background">
+      {/* SEO Meta */}
+      <SEOHead 
+        title={pageTitle} 
+        description={pageDescription}
+        canonical={`https://hizivo.com/flights/${originSlug}-to-${destSlug}`}
+      />
       <FlightSearchSchema origin={originCity} destination={destCity} />
+      
+      <Header />
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border/50 px-4 py-3">
-        <div className="max-w-6xl mx-auto flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="rounded-xl"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="font-display font-bold text-lg">{h1Title}</h1>
-            <p className="text-xs text-muted-foreground">From ${lowestPrice} • Compare airlines</p>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-8">
+      <main className="pt-16">
         {/* Hero Section */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500/20 to-blue-600/20 p-6 sm:p-10">
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-                <DollarSign className="h-3 w-3 mr-1" />
-                From ${lowestPrice}
-              </Badge>
-              <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30">
-                <Clock className="h-3 w-3 mr-1" />
-                ~5h 30m
-              </Badge>
+        <section className="relative py-16 sm:py-24 overflow-hidden bg-gradient-to-br from-sky-500/10 via-background to-blue-500/5">
+          <div className="container mx-auto px-4 relative z-10">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+              <Link to="/" className="hover:text-foreground">Home</Link>
+              <span>/</span>
+              <Link to="/flights" className="hover:text-foreground">Flights</Link>
+              <span>/</span>
+              <span className="text-foreground">{originCity} to {destCity}</span>
+            </nav>
+            
+            <div className="max-w-3xl mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 text-sm font-medium mb-6">
+                <Plane className="w-4 h-4 text-sky-500" />
+                <span className="text-muted-foreground">Compare flight prices</span>
+              </div>
+              
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4">
+                {h1Title}
+              </h1>
+              
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl">
+                {introText}
+              </p>
+
+              {/* Route visualization */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-card/50 backdrop-blur border border-border/50 max-w-md mb-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{originSlug.slice(0, 3).toUpperCase()}</p>
+                  <p className="text-xs text-muted-foreground">{originCity}</p>
+                </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="h-0.5 flex-1 bg-gradient-to-r from-sky-500 to-blue-500" />
+                  <Plane className="h-5 w-5 text-sky-500" />
+                  <div className="h-0.5 flex-1 bg-gradient-to-r from-blue-500 to-sky-500" />
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{destSlug.slice(0, 3).toUpperCase()}</p>
+                  <p className="text-xs text-muted-foreground">{destCity}</p>
+                </div>
+              </div>
+
+              <Link to={searchUrl}>
+                <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
+                  <Plane className="h-5 w-5 mr-2" />
+                  Search {originCity} to {destCity}
+                </Button>
+              </Link>
             </div>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">
-              {h1Title}
+
+            {/* Trust Badges */}
+            <div className="flex flex-wrap items-center gap-6">
+              {TRUST_BADGES.map((badge) => (
+                <div key={badge.text} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <badge.icon className="w-4 h-4 text-sky-500" />
+                  <span>{badge.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Trust Bar */}
+        <GlobalTrustBar variant="compact" />
+
+        {/* Partner Logos */}
+        <PartnerLogosStrip service="flights" />
+
+        {/* Search Form Section */}
+        <section className="py-12 bg-muted/20">
+          <div className="container mx-auto px-4">
+            <h2 className="font-display text-xl font-bold mb-6 text-center">
+              Search Flights from {originCity} to {destCity}
             </h2>
-            <p className="text-muted-foreground max-w-2xl mb-6">
-              {introText}
+            <FlightSearchFormPro 
+              className="max-w-4xl mx-auto"
+              initialFrom={originCity}
+              initialTo={destCity}
+            />
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              Prices provided by trusted travel partners. {FLIGHT_SEO_DISCLAIMERS.priceNote}
             </p>
+          </div>
+        </section>
 
-            {/* Route visualization */}
-            <div className="flex items-center gap-4 mb-6 p-4 rounded-xl bg-card/50 backdrop-blur max-w-md">
-              <div className="text-center">
-                <p className="text-2xl font-bold">{originSlug.slice(0, 3).toUpperCase()}</p>
-                <p className="text-xs text-muted-foreground">{originCity}</p>
-              </div>
-              <div className="flex-1 flex items-center gap-2">
-                <div className="h-0.5 flex-1 bg-gradient-to-r from-primary to-teal-400" />
-                <Plane className="h-5 w-5 text-primary" />
-                <div className="h-0.5 flex-1 bg-gradient-to-r from-teal-400 to-primary" />
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold">{destSlug.slice(0, 3).toUpperCase()}</p>
-                <p className="text-xs text-muted-foreground">{destCity}</p>
-              </div>
+        {/* Booking Tips (No prices - general guidance only) */}
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <Badge className="mb-3 bg-sky-500/10 text-sky-500 border-sky-500/20">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Smart Booking Tips
+              </Badge>
+              <h2 className="font-display text-2xl font-bold mb-2">
+                When to Book for Best Prices
+              </h2>
+              <p className="text-muted-foreground">
+                General guidance based on industry trends — actual prices vary
+              </p>
             </div>
 
-            <Link to={`/flights?from=${originSlug}&to=${destSlug}`}>
-              <Button className="bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
-                <Plane className="h-4 w-4 mr-2" />
-                Search This Route
+            <div className="grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+              {BOOKING_TIPS.map((tip) => (
+                <Card key={tip.title} className={cn("border", tip.color.split(" ").slice(1).join(" "))}>
+                  <CardContent className="p-4 text-center">
+                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3", tip.color.split(" ").slice(0, 2).join(" "))}>
+                      <tip.icon className={cn("w-5 h-5", tip.color.split(" ")[0])} />
+                    </div>
+                    <h3 className="font-semibold mb-1">{tip.title}</h3>
+                    <p className="text-sm text-muted-foreground">{tip.desc}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Price Alert CTA */}
+        <section className="py-12 bg-gradient-to-br from-sky-500/5 to-blue-500/5">
+          <div className="container mx-auto px-4">
+            <Card className="max-w-2xl mx-auto border-sky-500/20 bg-card/50">
+              <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
+                <div className="w-16 h-16 rounded-2xl bg-sky-500/10 flex items-center justify-center shrink-0">
+                  <Bell className="w-8 h-8 text-sky-500" />
+                </div>
+                <div className="text-center sm:text-left flex-1">
+                  <h3 className="font-bold text-lg mb-1">Track Price Drops</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Set a price alert and get notified when fares drop for {originCity} → {destCity}
+                  </p>
+                </div>
+                <Link to={searchUrl}>
+                  <Button className="bg-sky-500 hover:bg-sky-600">
+                    Set Alert
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Related Routes */}
+        <section className="py-12 border-t border-border/50">
+          <div className="container mx-auto px-4">
+            <h2 className="font-display text-xl font-bold mb-6 text-center">
+              More Flights from {originCity}
+            </h2>
+            <div className="flex flex-wrap justify-center gap-3">
+              {["London", "Paris", "Tokyo", "Miami", "Los Angeles", "Dubai"].map((city) => {
+                if (city.toLowerCase() === destCity.toLowerCase()) return null;
+                const slug = city.toLowerCase().replace(/\s+/g, "-");
+                return (
+                  <Link 
+                    key={city}
+                    to={`/flights/${originSlug}-to-${slug}`}
+                    className="px-4 py-2 rounded-full bg-muted/50 hover:bg-muted border border-border/50 text-sm font-medium transition-colors"
+                  >
+                    {originCity} → {city}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ with Schema */}
+        <TravelFAQ serviceType="flights" className="bg-muted/20" />
+
+        {/* Compliance Disclaimer */}
+        <section className="py-6 bg-sky-500/5 border-y border-sky-500/20">
+          <div className="container mx-auto px-4 text-center">
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Info className="w-4 h-4 text-sky-500" />
+              <span>{FLIGHT_SEO_DISCLAIMERS.otaClarification}</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="py-12">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="font-display text-2xl font-bold mb-3">
+              Ready to Book Your Flight?
+            </h2>
+            <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
+              Compare real-time prices from trusted travel partners and book securely on ZIVO.
+            </p>
+            <Link to={searchUrl}>
+              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
+                <Plane className="h-5 w-5 mr-2" />
+                Search Flights Now
               </Button>
             </Link>
           </div>
         </section>
-
-        {/* Available Flights */}
-        <section>
-          <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
-            <Plane className="h-5 w-5 text-primary" />
-            Sample Flights on This Route
-          </h2>
-          <div className="space-y-3">
-            {MOCK_FLIGHTS.map((flight, i) => (
-              <Card key={i} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
-                <CardContent className="p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center">
-                        <Plane className="h-6 w-6 text-sky-500" />
-                      </div>
-                      <div>
-                        <p className="font-semibold">{flight.airline}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {flight.departure} - {flight.arrival}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-center">
-                        <p className="text-sm font-medium">{flight.duration}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {flight.stops === 0 ? "Nonstop" : `${flight.stops} stop`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-bold text-primary">${flight.price}</p>
-                        <p className="text-xs text-muted-foreground">per person</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3 text-center">
-            {FLIGHT_SEO_DISCLAIMERS.priceNote}
-          </p>
-        </section>
-
-        {/* Price Calendar */}
-        <section className="bg-gradient-to-br from-card/90 to-card rounded-2xl p-6 shadow-xl">
-          <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Price Trends by Month
-          </h2>
-          <div className="grid grid-cols-6 gap-2">
-            {PRICE_CALENDAR.map((month) => (
-              <div
-                key={month.month}
-                className={`p-3 rounded-xl text-center ${
-                  month.avgPrice === Math.min(...PRICE_CALENDAR.map((m) => m.avgPrice))
-                    ? "bg-emerald-500/20 border border-emerald-500/30"
-                    : "bg-muted/30"
-                }`}
-              >
-                <p className="text-xs text-muted-foreground">{month.month}</p>
-                <p className="font-bold">${month.avgPrice}</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            <Badge className="bg-emerald-500/20 text-emerald-400 mr-2">Best Value</Badge>
-            May typically offers the lowest prices for this route
-          </p>
-        </section>
-
-        {/* Disclaimer */}
-        <div className="bg-muted/20 rounded-xl p-4 text-center">
-          <p className="text-xs text-muted-foreground">
-            {FLIGHT_SEO_DISCLAIMERS.otaClarification}
-          </p>
-        </div>
-
-        {/* CTA */}
-        <section className="text-center py-8">
-          <h3 className="font-display text-2xl font-bold mb-3">
-            Find the Best Fare for Your Trip
-          </h3>
-          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-            Compare real-time prices from multiple airlines and book securely on ZIVO.
-          </p>
-          <Link to={`/flights?from=${originSlug}&to=${destSlug}`}>
-            <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg">
-              <Plane className="h-5 w-5 mr-2" />
-              Search {originCity} to {destCity}
-            </Button>
-          </Link>
-        </section>
       </main>
+
+      <Footer />
     </div>
   );
 }
