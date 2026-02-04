@@ -35,7 +35,7 @@ export default function HeroSection() {
             Book travel with clarity and confidence.
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mb-3">
-            Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
+            Compare flights, hotels, and car rentals from trusted travel partners.
           </p>
           <p className="text-xs text-muted-foreground/80 mb-5">
             Real-time prices • Secure checkout • Instant e-tickets
@@ -101,7 +101,7 @@ export default function HeroSection() {
               Book travel with clarity and confidence.
             </h1>
             <p className="text-lg text-muted-foreground mb-3">
-              Compare flights, hotels, and car rentals from licensed travel partners — all in one place.
+              Compare flights, hotels, and car rentals from trusted travel partners.
             </p>
             <p className="text-sm text-muted-foreground/80 mb-6">
               Real-time prices • Secure checkout • Instant e-tickets
