@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import heroEats from "@/assets/hero-eats.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
+import { MobilityFeaturesGrid, MobilityComplianceFooter } from "@/components/mobility";
 
 const ZIVO_DRIVER_URL = "https://zivo-driver-app.rork.app";
 
@@ -306,6 +307,9 @@ export default function Eats() {
           </div>
         </section>
 
+        {/* Mobility Services Grid */}
+        <MobilityFeaturesGrid className="bg-muted/20" showDriverCTA={true} />
+
         {/* CTA Section */}
         <section className="py-20 bg-eats/5">
           <div className="container mx-auto px-4 text-center">
@@ -326,12 +330,12 @@ export default function Eats() {
                 Open ZIVO Driver
                 <ExternalLink className="w-5 h-5" />
               </Button>
-              <p className="mt-4 text-xs text-muted-foreground">
-                Delivery services are provided by independent drivers using the ZIVO platform.
-              </p>
             </div>
           </div>
         </section>
+
+        {/* Compliance Footer */}
+        <MobilityComplianceFooter />
       </main>
 
       <Footer />
