@@ -1,9 +1,9 @@
 
-# ZIVO Launch, Operations & Risk Control Implementation
+# ZIVO Growth, Automation & Enterprise Readiness Implementation
 
 ## Overview
 
-This plan prepares ZIVO for public launch with comprehensive refund/dispute handling, booking management, fraud protection, chargeback safety, partner trust pages, currency support, and launch control infrastructure.
+This plan enables ZIVO to grow automatically, reduce manual work, attract enterprise clients, and scale internationally. The implementation builds on ZIVO's substantial existing infrastructure while adding missing components for high-traffic scaling and automation.
 
 ## Current State Assessment
 
@@ -11,239 +11,384 @@ This plan prepares ZIVO for public launch with comprehensive refund/dispute hand
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **Flight Confirmation Page** | Complete | `FlightConfirmation.tsx` with PNR, ticket status, support contact |
-| **Refund Policy Page** | Complete | `Refunds.tsx` with clear partner routing, service-specific handling |
-| **Partner Disclosure Page** | Complete | `legal/PartnerDisclosure.tsx` with hybrid model explanation |
-| **Affiliate Disclosure Page** | Complete | `AffiliateDisclosure.tsx` with commission transparency |
-| **Public Status Page** | Complete | `Status.tsx` with service health, incidents, third-party dependencies |
-| **Fraud Detection System** | Complete | `AdminFraudDashboard.tsx`, `useFraudData.ts`, fraud_assessments table |
-| **Beta Mode / Launch Control** | Complete | `useRenterBetaSettings.ts`, `useProductionLaunch.ts`, soft/full launch phases |
-| **Footer with Legal Notices** | Complete | `Footer.tsx` with Seller of Travel, sub-agent disclosure, mobility separation |
-| **Contact Page** | Complete | `Contact.tsx` with support/payments/business emails |
-| **MultiCurrency Component** | Complete | `MultiCurrency.tsx` with USD/EUR/GBP toggle, conversion display |
-| **Security Pages** | Complete | `Security.tsx`, `DisasterRecovery.tsx`, `SecurityIncident.tsx` |
-| **System Status (Admin)** | Complete | `SystemStatusPage.tsx`, `FlightStatusPage.tsx` |
-| **Cancellation Policy** | Complete | `legal/CancellationPolicy.tsx` |
+| **Onboarding Email Sequence** | Complete | `onboardingEmails.ts` - Welcome, How It Works, Trust, Popular emails |
+| **Abandoned Search Processing** | Complete | `process-abandoned-searches/index.ts` edge function with email recovery |
+| **Travel Email System** | Complete | `send-travel-email/index.ts` - abandoned search, redirect, booking status emails |
+| **Abandonment Recovery Hook** | Complete | `useAbandonmentRecovery.ts` - tracks checkout abandonment |
+| **Email Preferences** | Complete | `EmailPreferences.tsx` with booking/price alerts/marketing toggles |
+| **Push Notification Preferences** | Complete | `PushNotificationPreferences.tsx` for price drops/reminders |
+| **Corporate Travel Page** | Complete | `CorporateTravel.tsx` with waitlist, features, FAQ |
+| **Group Booking Components** | Complete | `GroupBooking.tsx`, `GroupBookingBanner.tsx`, `GroupBookingManager.tsx` |
+| **Business Account Hook** | Exists | `useBusinessAccount.ts` |
+| **Global Expansion Types** | Complete | `global.ts` with Country, Tax, Language, Currency types |
+| **i18n Hook** | Exists | `useI18n.ts`, `useGlobalExpansion.ts` |
+| **Testimonials Carousel** | Complete | `TestimonialsCarousel.tsx` with auto-rotation |
+| **Trust Badges/Signals** | Complete | `TrustBadges.tsx`, `TrustSignals.tsx`, `TrustBadgesBar.tsx` |
+| **Referral Program** | Complete | `ReferralProgram.tsx`, `useReferrals.ts` |
 
 ### Missing/Needs Enhancement
 
 | Feature | Status | Required |
 |---------|--------|----------|
-| **Booking Management Page** | Missing | User-facing page to view/manage bookings with all details |
-| **Booking Rules Section (Results)** | Missing | Change/cancel/refund policy preview on booking cards |
-| **Chargeback Prevention Copy** | Partial | Needs explicit PCI compliance and dispute handling notice |
-| **How ZIVO Makes Money Page** | Missing | Dedicated page (currently section in About) |
-| **Press/Media Contact Page** | Missing | Dedicated press page with media inquiries form |
-| **Currency Selector (Global)** | Partial | Need header-level currency toggle |
-| **Location Auto-Detect** | Missing | Geo-IP based currency/locale detection |
-| **Launch Mode Banner** | Partial | Need visible user-facing soft launch/invite-only banner |
-| **Duplicate Booking Prevention UI** | Missing | Warning when user attempts duplicate booking |
-| **Payment Verification Step UI** | Missing | Visual indicator for high-risk verification |
+| **Automated Email Admin Panel** | Missing | Visual admin for email flows, triggers, templates |
+| **Upcoming Trip Reminder Emails** | Missing | Pre-departure notifications |
+| **Post-Trip Feedback Email** | Missing | Feedback request after trip completion |
+| **Urgency Banner Component** | Missing | "Prices may increase" conversion boost |
+| **API & White-label Page** | Missing | Partner API documentation placeholder |
+| **Public Roadmap Page** | Missing | Feature preview and voting |
+| **User Feedback System** | Missing | Rating/report price mismatch interface |
+| **Trust Score Badges** | Partial | Real-time price check indicators |
+| **Regional Tax Disclaimers** | Partial | VAT/GST display components |
+| **Performance Loading States** | Partial | Enhanced "Finding best prices..." UX |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Booking Management Page
+### Phase 1: Automated Email System Admin
 
-Create a comprehensive user-facing booking management page at `/bookings/:bookingId` or `/my-trips/:bookingId`.
+Create an admin interface to manage all automated email flows.
 
-**New Page:** `src/pages/BookingManagement.tsx`
+**New Page:** `src/pages/admin/EmailAutomationDashboard.tsx`
+
+Route: `/admin/email-automation`
 
 Features:
-- Booking reference (PNR / confirmation code)
-- Airline/provider confirmation code
-- Provider contact info with click-to-call/email
-- Ticket status badge (Issued / Pending / Changed / Cancelled)
-- Download e-ticket button (PDF placeholder)
-- Trip details (dates, passengers, itinerary)
-- "Request Support" button linking to help center
-- Booking rules accordion (change policy, cancel policy, refund eligibility)
+- Email flow overview (Welcome, Abandoned Search, Booking, Trip Reminders)
+- Enable/disable toggles per email type
+- Trigger timing configuration (delay minutes)
+- Template preview
+- Send stats (sent, opened, clicked)
+- Test email sender
 
-Route: `/bookings/:bookingId`
+**New Edge Functions:**
+- `send-trip-reminder/index.ts` - Upcoming trip reminder (24h before)
+- `send-feedback-request/index.ts` - Post-trip feedback email
 
-**Integration:**
-- Add link from FlightConfirmation page
-- Add link from CustomerDashboard trips tab
+**Email Types to Add:**
+| Email | Trigger | Timing |
+|-------|---------|--------|
+| Upcoming Trip Reminder | Flight departure | 24h before |
+| Check-in Reminder | Flight departure | 48h before |
+| Post-Trip Feedback | Trip end date | 24h after |
 
-### Phase 2: Booking Rules Section (Results Pages)
-
-Add booking rules preview to flight/hotel/car result cards before selection.
-
-**New Component:** `src/components/shared/BookingRulesPreview.tsx`
-
+**Compliance Notice:**
 ```text
-Booking Rules Preview:
-+--------------------------------------------------+
-| 📋 Booking Rules                                  |
-+--------------------------------------------------+
-| ✓ Refundable with $50 fee (before 24h)          |
-| ✓ Changes allowed ($75 fee)                      |
-| ⚠️ Non-refundable after departure                |
-| ℹ️ Airline rules apply for all changes            |
-+--------------------------------------------------+
+"Emails are informational and booking-related only."
 ```
 
-**Update:** Add to `FlightResultCard.tsx`, `HotelMultiProviderCard.tsx`
+---
 
-Compliance copy in results:
-```text
-"Refunds and changes are governed by the airline or travel provider's rules.
-ZIVO facilitates the booking but does not control fare conditions."
-```
+### Phase 2: Conversion Boost - Urgency Components
 
-### Phase 3: Chargeback & Payment Safety
+Add urgency messaging to increase conversion when users hesitate.
 
-Enhance payment safety messaging and add explicit chargeback prevention copy.
-
-**Update:** `src/pages/FlightCheckout.tsx`
-
-Add payment safety section:
-```text
-"All payments are processed by PCI-compliant providers.
-ZIVO does not store card details.
-
-In case of disputes, documentation is shared with payment providers and partners."
-```
-
-**New Component:** `src/components/checkout/PaymentSafetyNotice.tsx`
-
-Features:
-- PCI-DSS compliance badge
-- "No card data stored" statement
-- Dispute handling notice
-- Contact support before disputing message
-
-**Update:** `src/components/checkout/TravelInsuranceSelector.tsx`
-- Add verification notice: "To protect users, some transactions may require verification."
-
-### Phase 4: How ZIVO Makes Money Page
-
-Create dedicated transparency page explaining the business model.
-
-**New Page:** `src/pages/HowZivoMakesMoney.tsx`
-
-Route: `/how-zivo-makes-money` or `/transparency`
-
-Content:
-- Hero: "Transparency Matters to Us"
-- Revenue Sources:
-  - Flight bookings (commissions from partners)
-  - Hotel bookings (MoR margin)
-  - Car rentals (MoR margin)
-  - Insurance/add-ons (partner commissions)
-- "Your Price = Partner Price" statement
-- "No hidden fees" commitment
-- FAQ section
-- Link to affiliate disclosure
-
-### Phase 5: Press & Business Contact Pages
-
-Create dedicated pages for press inquiries and business partnerships.
-
-**New Page:** `src/pages/Press.tsx`
-
-Route: `/press`
-
-Content:
-- Hero: "Press & Media Inquiries"
-- Press kit download (placeholder)
-- Media contact: press@hizivo.com
-- Company facts/stats (placeholder)
-- Recent coverage (placeholder)
-- Brand guidelines link (placeholder)
-
-**Update:** `src/pages/Contact.tsx`
-
-Add additional contact categories:
-- press@hizivo.com (Media inquiries)
-- partners@hizivo.com (Business partnerships)
-- business@hizivo.com (Corporate accounts)
-
-### Phase 6: Global Currency Selector
-
-Add header-level currency selector with auto-detection.
-
-**New Component:** `src/components/shared/CurrencySelector.tsx`
-
-Features:
-- Dropdown with USD / EUR / GBP / JPY + more
-- Persist selection to localStorage
-- Update all displayed prices
-
-**New Hook:** `src/hooks/useGlobalCurrency.ts`
-
-Features:
-- Get/set global currency preference
-- Auto-detect from browser locale
-- Provide formatting utilities
-
-**Integration:**
-- Add to `Header.tsx` near user menu
-- Use in all price display components
-
-### Phase 7: Launch Mode Banner
-
-Create user-facing launch mode indicators.
-
-**New Component:** `src/components/shared/LaunchModeBanner.tsx`
+**New Component:** `src/components/shared/UrgencyBanner.tsx`
 
 Variants:
-- Soft launch: "We're in early access. Some features may be limited."
-- Invite-only: "Currently invite-only. Request access below."
-- Public launch: No banner (hidden)
+- Price increase warning: "Prices may increase — complete your booking"
+- Limited availability: "Only 3 seats left at this price"
+- Session expiring: "Your selected offer expires in 10:00"
+
+Features:
+- Sticky positioning on results/checkout pages
+- Countdown timer for time-sensitive offers
+- Dismiss option
+- Analytics tracking
+
+**New Component:** `src/components/shared/PriceVolatilityNotice.tsx`
+
+```text
+"Prices may change based on demand. Book now to lock in your rate."
+```
 
 **Integration:**
-- Add below Header in main layout
-- Controlled by admin launch settings
+- Add to `FlightResults.tsx` above results list
+- Add to `FlightCheckout.tsx` before payment
 
-### Phase 8: Fraud & Duplicate Prevention UI
+---
 
-Add user-facing notices for fraud prevention and duplicate booking detection.
+### Phase 3: Corporate & Business Travel Enhancement
 
-**New Component:** `src/components/checkout/DuplicateBookingWarning.tsx`
+Enhance existing `CorporateTravel.tsx` with more B2B features.
 
-Shows when:
-- Same route + dates within 24 hours
-- Same hotel + dates within 24 hours
+**Update:** `src/pages/business/CorporateTravel.tsx`
 
-Content:
-```text
-"It looks like you may have already booked this trip. Please check your bookings before proceeding."
-[View My Bookings] [Continue Anyway]
-```
+Add sections:
+- Company profile management (placeholder)
+- Multiple traveler accounts
+- Central billing portal (future-ready)
+- Invoice-ready checkout toggle
+- Travel policy settings
 
-**New Component:** `src/components/checkout/VerificationNotice.tsx`
+**New Component:** `src/components/business/InvoiceCheckoutToggle.tsx`
 
-Shows for high-risk transactions:
-```text
-"To protect your payment, we may request additional verification."
-```
+For business accounts:
+- Toggle to request invoice instead of immediate payment
+- Company VAT/Tax ID field
+- PO number field
 
-### Phase 9: Footer Hardening
+**New Page:** `src/pages/business/BusinessDashboard.tsx`
 
-Enhance footer with complete legal notices and service separation.
+Route: `/business/dashboard`
 
-**Update:** `src/components/Footer.tsx`
+Features:
+- Team travel overview
+- Expense summary
+- Policy compliance status
+- Quick book for team
 
-Ensure includes:
-- Seller of Travel notice with registration numbers
-- Sub-agent disclosure for flights
-- Mobility services separation notice (already exists)
-- Security notice (already exists)
-- Add: "Payment disputes - contact support before disputing"
+---
 
-### Phase 10: Status Page Enhancements
+### Phase 4: Group & Family Bookings Enhancement
 
-Enhance public status page with partner uptime indicators.
+Enhance existing group booking components with fare messaging.
 
-**Update:** `src/pages/Status.tsx`
+**Update:** `src/components/booking/GroupBookingBanner.tsx`
 
 Add:
-- Partner availability section (Duffel, Hotelbeds, etc.)
-- Uptime percentage display
-- Historical uptime chart (placeholder)
-- Notice: "We monitor partner availability to ensure reliable bookings."
+- Seat availability notice
+- Group fare messaging
+- Special rules notice
+
+**New Component:** `src/components/booking/GroupFareNotice.tsx`
+
+```text
+"Group fares may have special rules and conditions. Contact us for details."
+```
+
+Shows when:
+- 6+ passengers selected
+- Special group rates available
+
+**Update:** `src/components/flight/GroupBooking.tsx`
+
+Add:
+- Multi-passenger management improvements
+- Group discount calculation display
+- Seat availability indicator per flight
+
+---
+
+### Phase 5: Partner API & White-Label Page
+
+Create placeholder page for future API partnerships.
+
+**New Page:** `src/pages/business/APIPartners.tsx`
+
+Route: `/api-partners` or `/developers`
+
+Content:
+- Hero: "API & White-label Solutions"
+- "Coming Soon" badge
+- Features preview:
+  - Flight Search API
+  - Hotel Booking API
+  - White-label booking pages
+  - Affiliate sub-accounts
+- API documentation placeholder
+- Waitlist form
+
+**New Component:** `src/components/business/APIFeaturePreview.tsx`
+
+Shows:
+- Endpoint examples
+- Response format preview
+- Rate limits info
+- Authentication flow
+
+---
+
+### Phase 6: International Expansion Enhancements
+
+Enhance existing global expansion infrastructure.
+
+**New Component:** `src/components/shared/RegionalDisclaimer.tsx`
+
+Dynamic disclaimers based on user's detected country:
+- EU: VAT notice, GDPR reference
+- UK: VAT at checkout, FCA disclaimer
+- AU: GST inclusive pricing
+- US: State taxes may apply
+
+**New Component:** `src/components/shared/TaxBreakdown.tsx`
+
+Displays:
+- Base price
+- VAT/GST/Sales tax (where applicable)
+- Total with tax
+
+**Update:** `src/hooks/useGlobalExpansion.ts`
+
+Add:
+- Auto-detect country from IP
+- Apply country-specific tax config
+- Load regional legal notices
+
+**New Config:** `src/config/regionalTaxes.ts`
+
+```typescript
+export const REGIONAL_TAX_CONFIG = {
+  EU: { type: 'VAT', rate: 0.20, inclusive: true },
+  UK: { type: 'VAT', rate: 0.20, inclusive: true },
+  AU: { type: 'GST', rate: 0.10, inclusive: true },
+  CA: { type: 'GST+PST', rate: 0.13, inclusive: false },
+  US: { type: 'Sales Tax', rate: 0, inclusive: false, note: 'Varies by state' },
+};
+```
+
+---
+
+### Phase 7: Performance & Loading States
+
+Optimize UX with better loading states and caching.
+
+**New Component:** `src/components/shared/SearchLoadingState.tsx`
+
+Premium loading experience:
+- "Finding best prices..." message
+- Partner logos animation
+- Progress indicators
+- Estimated time remaining
+
+**Update:** `src/hooks/useRealFlightSearch.ts`
+
+Add:
+- Request caching (5-minute TTL)
+- Stale-while-revalidate pattern
+- Reduced duplicate API calls
+
+**New Component:** `src/components/shared/CachedResultsNotice.tsx`
+
+```text
+"Showing recent prices. Refresh for latest availability."
+```
+
+Shows when results are from cache.
+
+**Update:** Result card components
+
+Add:
+- Skeleton loading states
+- Image lazy loading
+- Intersection observer for result cards
+
+---
+
+### Phase 8: Trust Score & Transparency Badges
+
+Add visual trust indicators throughout the booking flow.
+
+**New Component:** `src/components/shared/TrustScoreBadges.tsx`
+
+Badge types:
+- "Real-time prices" - Shows when prices are fresh from API
+- "Verified partner" - On provider cards
+- "No hidden fees" - Near price displays
+- "Price checked just now" - Timestamp
+
+**New Component:** `src/components/shared/TransparentPricingNotice.tsx`
+
+```text
+"No hidden fees. What you see is what you pay."
+```
+
+Placement:
+- Checkout summary
+- Results header
+- Price comparison cards
+
+**Update:** `src/components/results/FlightMultiProviderCard.tsx`
+
+Add:
+- "Verified Partner" badge
+- Last price check timestamp
+- Trust score indicator
+
+---
+
+### Phase 9: User Feedback & Ratings System
+
+Create a user feedback collection system.
+
+**New Page:** `src/pages/Feedback.tsx`
+
+Route: `/feedback`
+
+Features:
+- Rate booking experience (1-5 stars)
+- Report price mismatch form
+- Suggest improvements
+- Quick feedback buttons
+
+**New Component:** `src/components/shared/FeedbackWidget.tsx`
+
+Floating widget on booking pages:
+- Quick thumbs up/down
+- Expandable for detailed feedback
+- Report issue button
+
+**New Component:** `src/components/feedback/PriceMismatchReport.tsx`
+
+Form fields:
+- Expected price
+- Actual price at partner
+- Partner name
+- Screenshot upload (optional)
+- Contact preference
+
+**Database Table:**
+```sql
+user_feedback
+- id: uuid
+- user_id: uuid
+- feedback_type: 'rating' | 'price_mismatch' | 'suggestion' | 'bug'
+- rating: int (1-5)
+- details: text
+- metadata: jsonb
+- status: 'new' | 'reviewed' | 'resolved'
+- created_at: timestamp
+```
+
+---
+
+### Phase 10: Public Roadmap Page
+
+Create a public-facing product roadmap.
+
+**New Page:** `src/pages/Roadmap.tsx`
+
+Route: `/roadmap`
+
+Content sections:
+- "Now" - Currently building
+- "Next" - Coming soon
+- "Future" - Long-term vision
+
+Features to display:
+| Phase | Feature | Status |
+|-------|---------|--------|
+| Now | ZIVO Miles Expansion | In Progress |
+| Now | Corporate Travel Portal | In Progress |
+| Next | Mobile Apps (iOS/Android) | Coming Soon |
+| Next | AI Trip Planner | Coming Soon |
+| Future | Multi-city Booking | Planned |
+| Future | Group Booking Discounts | Planned |
+
+**New Component:** `src/components/roadmap/RoadmapItem.tsx`
+
+Shows:
+- Feature name
+- Description
+- Status badge
+- Upvote button (future)
+- Expected date (if known)
+
+**New Component:** `src/components/roadmap/FeatureVote.tsx`
+
+Placeholder for future voting:
+- Upvote count
+- "Request this feature" link
 
 ---
 
@@ -253,154 +398,116 @@ Add:
 
 | File | Description |
 |------|-------------|
-| `src/pages/BookingManagement.tsx` | User booking management page |
-| `src/pages/HowZivoMakesMoney.tsx` | Revenue transparency page |
-| `src/pages/Press.tsx` | Press/media contact page |
-| `src/components/shared/BookingRulesPreview.tsx` | Fare rules preview |
-| `src/components/checkout/PaymentSafetyNotice.tsx` | PCI/chargeback notice |
-| `src/components/checkout/DuplicateBookingWarning.tsx` | Duplicate detection |
-| `src/components/checkout/VerificationNotice.tsx` | High-risk verification |
-| `src/components/shared/CurrencySelector.tsx` | Global currency toggle |
-| `src/components/shared/LaunchModeBanner.tsx` | Launch mode indicator |
-| `src/hooks/useGlobalCurrency.ts` | Currency preference hook |
+| `src/pages/admin/EmailAutomationDashboard.tsx` | Email automation admin panel |
+| `src/pages/business/APIPartners.tsx` | API & white-label landing page |
+| `src/pages/business/BusinessDashboard.tsx` | B2B dashboard placeholder |
+| `src/pages/Feedback.tsx` | User feedback collection page |
+| `src/pages/Roadmap.tsx` | Public product roadmap |
+| `src/components/shared/UrgencyBanner.tsx` | Price increase warning |
+| `src/components/shared/PriceVolatilityNotice.tsx` | Price change notice |
+| `src/components/shared/SearchLoadingState.tsx` | Enhanced loading UX |
+| `src/components/shared/CachedResultsNotice.tsx` | Cache indicator |
+| `src/components/shared/TrustScoreBadges.tsx` | Trust indicators |
+| `src/components/shared/TransparentPricingNotice.tsx` | No hidden fees notice |
+| `src/components/shared/RegionalDisclaimer.tsx` | Country-specific disclaimers |
+| `src/components/shared/TaxBreakdown.tsx` | VAT/GST display |
+| `src/components/shared/FeedbackWidget.tsx` | Floating feedback widget |
+| `src/components/feedback/PriceMismatchReport.tsx` | Price mismatch form |
+| `src/components/business/InvoiceCheckoutToggle.tsx` | Invoice option for B2B |
+| `src/components/business/APIFeaturePreview.tsx` | API docs preview |
+| `src/components/booking/GroupFareNotice.tsx` | Group rules notice |
+| `src/components/roadmap/RoadmapItem.tsx` | Roadmap feature card |
+| `src/config/regionalTaxes.ts` | Tax config by region |
+| `supabase/functions/send-trip-reminder/index.ts` | Trip reminder email |
+| `supabase/functions/send-feedback-request/index.ts` | Feedback request email |
+| `supabase/migrations/xxx_user_feedback.sql` | Feedback table |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/FlightCheckout.tsx` | Add payment safety, verification notices |
-| `src/pages/FlightConfirmation.tsx` | Link to booking management |
-| `src/components/results/FlightResultCard.tsx` | Add booking rules preview |
-| `src/components/Footer.tsx` | Add chargeback prevention copy |
-| `src/pages/Contact.tsx` | Add press/partners/business emails |
-| `src/pages/Status.tsx` | Add partner uptime section |
-| `src/components/Header.tsx` | Add currency selector |
+| `src/pages/business/CorporateTravel.tsx` | Add invoice checkout, policy settings |
+| `src/components/booking/GroupBookingBanner.tsx` | Add group fare messaging |
+| `src/components/flight/GroupBooking.tsx` | Seat availability, discounts |
+| `src/hooks/useGlobalExpansion.ts` | Country detection, tax config |
+| `src/pages/FlightResults.tsx` | Add urgency banner, trust badges |
+| `src/pages/FlightCheckout.tsx` | Add tax breakdown, trust notices |
 | `src/App.tsx` | Add new routes |
+| `src/components/Footer.tsx` | Add roadmap link |
 
 ---
 
-## Detailed Component Specifications
+## Database Schema Changes
 
-### BookingManagement.tsx Structure
+### New Tables
 
-```text
-+--------------------------------------------------+
-| BOOKING MANAGEMENT                                |
-+--------------------------------------------------+
-| Booking Reference: ABC123         Status: ISSUED  |
-+--------------------------------------------------+
-| FLIGHT DETAILS                                    |
-| NYC → LAX | Feb 10, 2024 | 2 Adults              |
-| Delta DL1234 | Economy | Direct                   |
-+--------------------------------------------------+
-| BOOKING RULES                          [Expand ▼] |
-| • Change Policy: $75 fee, 24h before              |
-| • Cancel Policy: Refundable with $50 fee          |
-| • Baggage: 1 carry-on included                    |
-+--------------------------------------------------+
-| PROVIDER CONTACT                                  |
-| Airline: Delta Air Lines                          |
-| Phone: 1-800-XXX-XXXX | Email: support@delta.com  |
-+--------------------------------------------------+
-| ACTIONS                                           |
-| [📄 Download E-Ticket]  [📞 Request Support]      |
-+--------------------------------------------------+
-| Important: For changes or refunds, contact the    |
-| airline directly using the details above.         |
-+--------------------------------------------------+
-```
+**user_feedback**
+- Stores all user feedback, ratings, and reports
+- Links to user account if logged in
+- Status tracking for admin review
 
-### CurrencySelector.tsx Structure
+**email_automation_config**
+- Stores email automation settings
+- Trigger timing configuration
+- Enable/disable flags
 
-```text
-+------------------+
-| $ USD       [▼]  |
-+------------------+
-| $ USD (US Dollar)|
-| € EUR (Euro)     |
-| £ GBP (Pound)    |
-| ¥ JPY (Yen)      |
-| ─────────────────|
-| Auto-detect      |
-+------------------+
-```
+### Updates to Existing Tables
 
-### PaymentSafetyNotice.tsx Content
-
-```text
-+--------------------------------------------------+
-| 🔒 SECURE PAYMENT                                 |
-+--------------------------------------------------+
-| ✓ PCI-DSS compliant payment processing           |
-| ✓ Card data encrypted, not stored by ZIVO        |
-| ✓ Protected by industry-standard security        |
-+--------------------------------------------------+
-| In case of disputes, contact ZIVO support before |
-| disputing with your bank. We're here to help.    |
-+--------------------------------------------------+
-```
-
----
-
-## Routes to Add
-
-| Route | Component | Description |
-|-------|-----------|-------------|
-| `/bookings/:bookingId` | BookingManagement | User booking management |
-| `/how-zivo-makes-money` | HowZivoMakesMoney | Revenue transparency |
-| `/transparency` | HowZivoMakesMoney | Alias route |
-| `/press` | Press | Media contact page |
-| `/media` | Press | Alias route |
+**email_settings**
+- Add trip_reminder settings
+- Add feedback_request settings
 
 ---
 
 ## Technical Considerations
 
-### Currency Auto-Detection
-- Use browser `navigator.language` for initial locale
-- Fall back to USD for unsupported locales
-- Store preference in localStorage with key `zivo_currency`
-- Sync with user preferences if logged in
+### Performance Optimization
+- Use React.lazy for roadmap/feedback pages
+- Implement stale-while-revalidate for search results
+- Add 5-minute cache TTL for flight searches
+- Use Intersection Observer for lazy loading results
 
-### Duplicate Booking Detection
-- Check session storage for recent bookings
-- Compare route + dates within 24-hour window
-- Allow user to bypass with confirmation
+### Internationalization
+- Tax display respects user's locale
+- Regional disclaimers based on IP detection
+- Currency formatting follows locale
 
-### Launch Mode Control
-- Read from existing `useProductionLaunch` hook
-- Map phases to banner visibility:
-  - `pre_launch`: Show invite-only
-  - `soft_launch`: Show early access
-  - `full_launch`: Hide banner
+### Analytics
+- Track urgency banner impressions and clicks
+- Monitor feedback submission rates
+- Measure conversion impact of trust badges
 
-### Chargeback Prevention
-- Keep prominent support contact on all confirmation pages
-- Add "Contact us before disputing" to checkout and confirmation
-- Log all user actions for evidence trail (existing infrastructure)
+### Compliance
+- Email consent checkboxes on feedback forms
+- GDPR-compliant feedback data handling
+- Clear unsubscribe links in all emails
 
 ---
 
-## Compliance Checklist
+## Implementation Priority
 
-After implementation:
-- Booking rules visible before purchase
-- Clear refund/change policy per service
-- PCI compliance notice on checkout
-- Chargeback prevention messaging
-- Partner support routing clear
-- Currency preference persisted
-- Launch mode communicated to users
-- Press/business contacts available
-- Duplicate booking prevention active
+1. **High Priority (Revenue Impact)**
+   - Urgency banners and conversion boost
+   - Trust score badges
+   - Enhanced loading states
+
+2. **Medium Priority (Automation)**
+   - Email automation dashboard
+   - Trip reminder emails
+   - Feedback collection system
+
+3. **Lower Priority (Enterprise)**
+   - API partners page
+   - Business dashboard
+   - Public roadmap
 
 ---
 
 ## Success Metrics
 
 After implementation:
-- Chargeback rate target: < 0.1%
-- Support ticket clarity: Fewer "who do I contact?" tickets
-- User trust: Clear payment safety messaging
-- Partner compliance: All required disclosures visible
-- Launch readiness: All checklist items complete
+- Conversion rate increase from urgency messaging: +5-10%
+- Abandoned cart recovery via email: +15% return rate
+- Feedback collection rate: 5% of completed bookings
+- Trust badge visibility: 100% of checkout pages
+- Enterprise leads from API page: Track waitlist signups
