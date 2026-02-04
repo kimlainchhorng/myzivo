@@ -33,7 +33,7 @@ const STEPS = [
   {
     icon: Gift,
     title: "Earn Rewards",
-    description: `Get $${REFERRAL_REWARDS.referrer.creditPerReferral} credit + ${REFERRAL_REWARDS.referrer.milesPerReferral.toLocaleString()} ZIVO Miles per referral.`,
+    description: `Earn ${REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} ZIVO Points per referral.`,
   },
 ];
 
@@ -82,8 +82,7 @@ export default function ReferralProgram() {
               </h1>
               
               <p className="text-lg text-muted-foreground mb-8 max-w-xl mx-auto">
-                Share ZIVO with friends and earn ${REFERRAL_REWARDS.referrer.creditPerReferral} travel credit 
-                plus {REFERRAL_REWARDS.referrer.milesPerReferral.toLocaleString()} ZIVO Miles for every successful referral.
+                Share ZIVO with friends and earn {REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} ZIVO Points for every successful referral.
               </p>
 
               {user ? (
@@ -118,20 +117,15 @@ export default function ReferralProgram() {
         {/* Reward Highlights */}
         <section className="py-12 border-y border-border">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="text-center p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
-                <DollarSign className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-                <p className="text-3xl font-bold text-emerald-500">${REFERRAL_REWARDS.referrer.creditPerReferral}</p>
-                <p className="text-sm text-muted-foreground">Travel credit per referral</p>
-              </div>
+            <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
               <div className="text-center p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
                 <Gift className="w-10 h-10 text-amber-500 mx-auto mb-3" />
-                <p className="text-3xl font-bold text-amber-500">{REFERRAL_REWARDS.referrer.milesPerReferral.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">ZIVO Miles per referral</p>
+                <p className="text-3xl font-bold text-amber-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">ZIVO Points per referral</p>
               </div>
               <div className="text-center p-6 rounded-2xl bg-violet-500/5 border border-violet-500/20">
                 <Users className="w-10 h-10 text-violet-500 mx-auto mb-3" />
-                <p className="text-3xl font-bold text-violet-500">${REFERRAL_REWARDS.newUser.credit}</p>
+                <p className="text-3xl font-bold text-violet-500">{REFERRAL_REWARDS.newUser.points.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Your friend gets too</p>
               </div>
             </div>

@@ -335,7 +335,9 @@ const SeasonalDealPage = lazy(() => import("./pages/seo/SeasonalDealPage"));
 // Admin scaling dashboards
 const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard"));
 
-// Business pages
+// Rewards/Loyalty
+const RewardsPage = lazy(() => import("./pages/RewardsPage"));
+
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
 
@@ -718,6 +720,11 @@ const App = () => (
                 
                 {/* Admin SEO Scaling Dashboard */}
                 <Route path="/admin/seo-scaling" element={<ProtectedRoute requireAdmin><SEOScalingDashboard /></ProtectedRoute>} />
+                
+                {/* Rewards / Loyalty */}
+                <Route path="/rewards" element={<RewardsPage />} />
+                <Route path="/rewards/redeem" element={<RewardsPage />} />
+                
                 <Route
                   path="/admin"
                   element={
