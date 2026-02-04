@@ -303,6 +303,16 @@ const FlightRoutePage = lazy(() => import("./pages/seo/FlightRoutePage"));
 
 // Business pages
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
+const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
+
+// Guide pages
+const GuidesIndex = lazy(() => import("./pages/guides/GuidesIndex"));
+const CheapFlightsGuide = lazy(() => import("./pages/guides/CheapFlightsGuide"));
+const CityGuide = lazy(() => import("./pages/guides/CityGuide"));
+const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
+
+// Referral program
+const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 
 // Admin analytics
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -1028,6 +1038,16 @@ const App = () => (
                 <Route path="/lp/hotels" element={<HotelsLP />} />
                 <Route path="/lp/cars" element={<CarsLP />} />
                 <Route path="/lp/extras" element={<ExtrasLP />} />
+                {/* Guide Pages */}
+                <Route path="/guides" element={<GuidesIndex />} />
+                <Route path="/guides/cheap-flights" element={<CheapFlightsGuide />} />
+                <Route path="/guides/best-time-to-book" element={<BestTimeToBook />} />
+                <Route path="/guides/:citySlug" element={<CityGuide />} />
+                {/* Referral & Corporate */}
+                <Route path="/referrals" element={<ReferralProgram />} />
+                <Route path="/invite" element={<ReferralProgram />} />
+                <Route path="/corporate" element={<CorporateTravel />} />
+                <Route path="/business-travel" element={<CorporateTravel />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
