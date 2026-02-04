@@ -9,8 +9,16 @@ export interface Airline {
   hub: string;
 }
 
-// Get real airline logo from CDN
-export const getAirlineLogo = (code: string, size: number = 100) => 
+// Get real airline logo from AirHex CDN (primary source)
+// Falls back to AVS for compatibility
+export const getAirlineLogo = (code: string, size: number = 64) => {
+  // Use AirHex CDN as primary source with proper size variants
+  const airHexSize = size <= 32 ? 32 : size <= 64 ? 64 : size <= 100 ? 100 : 200;
+  return `https://content.airhex.com/content/logos/airlines_${airHexSize}/${code.toUpperCase()}.png`;
+};
+
+// Legacy AVS CDN (kept for backward compatibility)
+export const getAirlineLogoLegacy = (code: string, size: number = 100) => 
   `https://pics.avs.io/${size}/${size}/${code}.png`;
 
 export const premiumAirlines: Airline[] = [

@@ -27,6 +27,24 @@ export const FLIGHT_HEADER_MICROCOPY = {
 } as const;
 
 // ============================================
+// OTA RESULTS PAGE COMPLIANCE
+// ============================================
+
+export const FLIGHT_RESULTS_COMPLIANCE = {
+  /** Results page header - OTA mode */
+  header: "Select your itinerary and complete your booking with ZIVO.",
+  
+  /** Below results small text */
+  fareRulesNote: "Fare rules, baggage, and refund policies vary by airline and fare.",
+  
+  /** Seat selection fallback when not available */
+  seatSelectionFallback: "Seat selection available after ticketing with the airline.",
+  
+  /** Aircraft info fallback when not provided */
+  aircraftFallback: "Aircraft info shown at confirmation.",
+} as const;
+
+// ============================================
 // SUPPORT INFO - My Trips Dashboard
 // ============================================
 
