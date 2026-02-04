@@ -363,6 +363,7 @@ const InvestorOverview = lazy(() => import("./pages/internal/InvestorOverview"))
 const TechArchitecture = lazy(() => import("./pages/internal/TechArchitecture"));
 const GrowthRoadmap = lazy(() => import("./pages/internal/GrowthRoadmap"));
 const CompetitiveMoat = lazy(() => import("./pages/internal/CompetitiveMoat"));
+const FiveYearVision = lazy(() => import("./pages/internal/FiveYearVision"));
 
 // Admin analytics
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -1184,6 +1185,7 @@ const App = () => (
                 <Route path="/internal/tech-architecture" element={<TechArchitecture />} />
                 <Route path="/internal/growth-roadmap" element={<GrowthRoadmap />} />
                 <Route path="/internal/competitive-moat" element={<CompetitiveMoat />} />
+                <Route path="/internal/5-year-vision" element={<FiveYearVision />} />
                 <Route path="/careers" element={<Careers />} />
                 <Route path="/jobs" element={<Careers />} />
                 <Route path="/ecosystem" element={<EcosystemMap />} />
