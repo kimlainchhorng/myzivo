@@ -104,3 +104,41 @@ export const CHECKOUT_PRICING_LEGAL = {
   /** Transparent pricing promise */
   transparentPricing: "No hidden fees. What you see is what you pay.",
 };
+
+// ============================================
+// CHECKOUT TERMS ACCEPTANCE (MANDATORY)
+// ============================================
+
+export const CHECKOUT_TERMS = {
+  /** Required pre-booking acceptance */
+  mainCheckbox: "By completing this booking, you agree to ZIVO's Terms of Service and the airline or supplier's fare rules.",
+  
+  /** Fare rules acknowledgment */
+  fareRulesCheckbox: "I have reviewed the fare rules and cancellation policy.",
+  
+  /** Terms acknowledgment */
+  termsCheckbox: "I accept ZIVO's Terms of Service.",
+  
+  /** Processor-friendly language */
+  processorCompliant: {
+    otaStatement: "ZIVO is an online travel agency.",
+    paymentDisclosure: "ZIVO processes payments and issues tickets using authorized suppliers.",
+    pricingTransparency: [
+      "Clear pricing breakdown",
+      "No hidden fees", 
+      "Service fees disclosed before payment",
+    ],
+  },
+};
+
+// ============================================
+// SUPPLIER FOOTER DISCLOSURE
+// ============================================
+
+export const SUPPLIER_DISCLOSURE = {
+  /** Full footer disclosure for OTA compliance */
+  footer: "ZIVO is an online travel agency. ZIVO processes payments and issues travel services using authorized suppliers including Duffel, TravelFusion, and RateHawk. Airline and supplier rules apply to all bookings.",
+  
+  /** Short supplier attribution */
+  attribution: "Powered by ZIVO and authorized travel partners.",
+};

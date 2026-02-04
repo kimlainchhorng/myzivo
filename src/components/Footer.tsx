@@ -283,10 +283,10 @@ const Footer = () => {
               ZIVO is an online travel agency.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO sells and issues airline tickets either directly or through authorized ticketing partners.
+              ZIVO processes payments and issues travel services using authorized suppliers including Duffel, TravelFusion, and RateHawk.
             </p>
             <p className="text-xs text-muted-foreground max-w-3xl mx-auto font-medium p-3 rounded-lg bg-primary/5 border border-primary/10">
-              ZIVO is responsible for payment processing and customer support. Airline rules and fare conditions apply to all bookings.
+              Airline and supplier rules apply to all bookings.
             </p>
           </div>
           
