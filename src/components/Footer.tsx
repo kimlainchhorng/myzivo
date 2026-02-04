@@ -276,8 +276,15 @@ const Footer = () => {
             </div>
           </div>
           
+          {/* AFFILIATE DISCLOSURE - Required for partner compliance */}
+          <div className="mt-6 pt-4 border-t border-border/50 text-center">
+            <p className="text-xs text-muted-foreground max-w-3xl mx-auto font-medium mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
+              ZIVO may earn a commission when users book through our travel partners.
+            </p>
+          </div>
+          
           {/* Seller of Travel Disclosure */}
-          <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
+          <div className="text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-3 h-3 text-emerald-500" />
               ZIVO is registered as a Seller of Travel where required by law.
@@ -292,12 +299,16 @@ const Footer = () => {
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
             </p>
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium mt-3 pt-3 border-t border-border/30">
-              🔒 ZIVO uses enterprise-grade security standards to protect user data and transactions.
+          </div>
+          
+          {/* PAYMENT & DATA SAFETY - Required for affiliate compliance */}
+          <div className="mt-4 pt-4 border-t border-border/30 text-center space-y-2">
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
+              🔒 Payments are processed securely by our travel partners. ZIVO does not store credit card information.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              💳 All payments are processed by PCI-compliant providers. For payment disputes, please{" "}
-              <a href="/help" className="text-primary hover:underline">contact support</a> before disputing with your bank.
+              For payment disputes, please{" "}
+              <a href="/support" className="text-primary hover:underline">contact support</a> before disputing with your bank.
             </p>
           </div>
         </div>
