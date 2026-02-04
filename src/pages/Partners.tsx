@@ -109,7 +109,7 @@ export default function Partners() {
 
           {/* Traffic sources */}
           <div className="mb-12">
-            <h2 className="text-xl font-bold mb-6">Traffic sources:</h2>
+            <h2 className="text-xl font-bold mb-6">Traffic sources used by ZIVO:</h2>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-muted-foreground">
                 <TrendingUp className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
@@ -117,17 +117,46 @@ export default function Partners() {
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <TrendingUp className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                Educational content creators
+                Direct traffic
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <TrendingUp className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                Social media discovery
+                Social media
               </li>
               <li className="flex items-start gap-3 text-muted-foreground">
                 <TrendingUp className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                Paid ads using "search & compare" messaging only
+                Email notifications (opt-in only)
               </li>
             </ul>
+            <div className="mt-4 p-4 rounded-lg bg-muted/30 border border-border/50">
+              <p className="text-sm text-muted-foreground font-medium mb-2">We do NOT use:</p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>❌ Incentivized traffic</li>
+                <li>❌ Trademark bidding</li>
+                <li>❌ Spam or pop-ups</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Partner Description - Standard Answer */}
+          <div className="mb-12 p-6 rounded-2xl bg-primary/5 border border-primary/20">
+            <h2 className="text-lg font-bold mb-4">About ZIVO (Partner Description)</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              "ZIVO is a travel search and booking platform that compares flights, hotels, and car rentals 
+              from licensed travel providers. ZIVO acts as a booking facilitator and sub-agent. 
+              All bookings are fulfilled by authorized partners."
+            </p>
+          </div>
+
+          {/* Launch Status */}
+          <div className="mb-12 p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              Launch Status
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Yes, the site is live in soft-launch mode with real users and compliant traffic sources.
+            </p>
           </div>
 
           {/* Contact CTA */}
