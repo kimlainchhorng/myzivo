@@ -100,6 +100,8 @@ const defaultFilters: HotelFilters = {
   amenities: [],
   propertyType: [],
   distance: null,
+  payAtHotelOnly: false,
+  freeCancellation: false,
 };
 
 export default function HotelResultsPage() {
