@@ -257,6 +257,7 @@ const Feedback = lazy(() => import("./pages/Feedback"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const APIPartners = lazy(() => import("./pages/business/APIPartners"));
 const BusinessDashboard = lazy(() => import("./pages/business/BusinessDashboard"));
+const BusinessLandingPage = lazy(() => import("./pages/business/BusinessLandingPage"));
 const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const Vision = lazy(() => import("./pages/Vision"));
@@ -1157,6 +1158,7 @@ const App = () => (
                 <Route path="/corporate" element={<CorporateTravel />} />
                 <Route path="/business-travel" element={<CorporateTravel />} />
                 {/* Business & Enterprise */}
+                <Route path="/business" element={<BusinessLandingPage />} />
                 <Route path="/api-partners" element={<APIPartners />} />
                 <Route path="/developers" element={<APIPartners />} />
                 <Route path="/business/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
