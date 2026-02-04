@@ -1,499 +1,291 @@
 
-# ZIVO Mobile App Structure: iOS & Android Enhancement Plan
 
-## Executive Summary
+# Flight UI Upgrades for Duffel-Based Search
 
-This plan restructures ZIVO's mobile app experience to match top travel apps (Booking, Expedia, Skyscanner) with a clean 5-tab navigation: **Home | Search | Trips | Alerts | Account**. The current architecture has a solid foundation with existing components (`ZivoSuperAppNav`, `MyTripsPage`, `PriceAlertsDashboard`, `Profile`), but requires restructuring navigation and creating dedicated mobile-first screens.
-
----
-
-## Current State vs. Target State
-
-| Aspect | Current | Target |
-|--------|---------|--------|
-| Bottom nav tabs | Home, Travel, Rides, Eats, More | Home, Search, Trips, Alerts, Account |
-| Search experience | Split across multiple pages | Unified Search tab with Flights/Hotels/Cars tabs |
-| Trips view | `/my-trips` with service filters | Dedicated Trips tab with Upcoming/Past sections |
-| Price alerts | Buried in Profile page | Dedicated Alerts tab with notification management |
-| Account | Full Profile page with many sections | Streamlined Account tab with quick links |
-| Home screen | Multi-service grid | Travel-focused with search box, deals, trending |
+## Overview
+Upgrade the Flights results page and related components to meet OTA standards, using Duffel API data with proper airline logos, enhanced result cards, comprehensive filters, and compliance copy.
 
 ---
 
-## Implementation Phases
+## 1. Airline Logo Service with Fallback
 
-### Phase 1: Create New Mobile Navigation
-
-**File:** `src/components/app/ZivoMobileNav.tsx` (NEW)
-
-New travel-focused 5-tab navigation:
-
-| Tab | Icon | Path | Description |
-|-----|------|------|-------------|
-| Home | `Home` | `/` | Main discovery screen |
-| Search | `Search` | `/search` | Unified search with tabs |
-| Trips | `Briefcase` | `/trips` | Upcoming & past bookings |
-| Alerts | `Bell` | `/alerts` | Price drop notifications |
-| Account | `User` | `/account` | Profile & settings |
-
-**Design Notes:**
-- 64px height with safe area inset
-- 48px touch targets
-- Active state: filled icon + pill background + bold label
-- Inactive: outlined icon + muted label
-
----
-
-### Phase 2: Create Mobile Home Screen
-
-**File:** `src/pages/mobile/MobileHome.tsx` (NEW)
-
-Content sections:
+### New Utility: `src/lib/airlineLogo.ts`
+Create a robust airline logo utility with multi-source fallback:
 
 ```text
-┌────────────────────────────────────────┐
-│ Good morning, John 👋                   │
-│ Where to today?                        │
-├────────────────────────────────────────┤
-│ ┌────────────────────────────────────┐ │
-│ │ 🔍 Flight Search Box               │ │
-│ │ From    │    To                    │ │
-│ │ Dates   │    Passengers            │ │
-│ │ [Search Flights]                   │ │
-│ └────────────────────────────────────┘ │
-├────────────────────────────────────────┤
-│ [✈️ Flights] [🏨 Hotels] [🚗 Cars]     │
-│ Quick tabs - highlight Flights         │
-├────────────────────────────────────────┤
-│ 🔥 Best Deals Today                    │
-│ [Deal 1] [Deal 2] [Deal 3] →          │
-├────────────────────────────────────────┤
-│ 🌎 Trending Destinations               │
-│ [City 1] [City 2] [City 3] →          │
-├────────────────────────────────────────┤
-│ 🕐 Recently Searched (if logged in)   │
-│ [Route 1] [Route 2] →                  │
-├────────────────────────────────────────┤
-│ 🛡️ Compare prices from trusted        │
-│    travel partners.                    │
-└────────────────────────────────────────┘
++-------------------------------------------+
+|  getAirlineLogo(iataCode, size)           |
++-------------------------------------------+
+         |
+         v
++-------------------------------------------+
+| Primary: AirHex CDN                        |
+| https://content.airhex.com/content/logos/ |
+| airlines_{size}/{CODE}.png                 |
++-------------------------------------------+
+         |
+         | (on error)
+         v
++-------------------------------------------+
+| Fallback 1: Try lowercase code             |
+| airlines_{size}/{code}.png                 |
++-------------------------------------------+
+         |
+         | (on error)
+         v
++-------------------------------------------+
+| Fallback 2: Duffel SVG                     |
+| assets.duffel.com/img/airlines/.../{CODE} |
++-------------------------------------------+
+         |
+         | (on error)
+         v
++-------------------------------------------+
+| Fallback 3: Default Plane Icon             |
+| Render <Plane /> Lucide icon               |
++-------------------------------------------+
 ```
 
-**Features:**
-- Integrated `FlightSearchFormPro` in compact mode
-- Quick service tabs (Flights highlighted by default)
-- Horizontal scroll carousels for deals/destinations
-- Recently searched routes (persisted in localStorage/Supabase)
-- Trust strip with partner logos
+Features:
+- Primary: AirHex CDN at `https://content.airhex.com/content/logos/airlines_64/{IATA}.png`
+- Fallback 1: Lowercase code attempt
+- Fallback 2: Duffel SVG logos
+- Fallback 3: Generic airplane icon (Lucide `Plane`)
+- Memoized for performance
+- Size variants: 32, 64, 100, 200
 
 ---
 
-### Phase 3: Create Unified Search Screen
+## 2. Enhanced Flight Result Card
 
-**File:** `src/pages/mobile/MobileSearch.tsx` (NEW)
+### File: `src/components/results/FlightResultCard.tsx`
 
-Full-screen search experience with sub-tabs:
+#### Card Structure Updates:
 
 ```text
-┌────────────────────────────────────────┐
-│ ← Search                               │
-├────────────────────────────────────────┤
-│ [✈️ Flights] [🏨 Hotels] [🚗 Cars]     │
-│ (Tabs with colored underline)          │
-├────────────────────────────────────────┤
-│                                        │
-│ FLIGHTS TAB:                           │
-│ ┌──────────────────────────────────┐  │
-│ │ From: ____________________       │  │
-│ │ To:   ____________________       │  │
-│ │ Departure: _______ Return: _____ │  │
-│ │ Passengers: 1 Adult, Economy     │  │
-│ └──────────────────────────────────┘  │
-│                                        │
-│ [🔍 Search Flights]                    │
-│                                        │
-├────────────────────────────────────────┤
-│ Popular Routes                         │
-│ NYC → LA  ·  $99                       │
-│ CHI → MIA ·  $129                      │
-└────────────────────────────────────────┘
++------------------------------------------------------------------+
+| [Best Value] [Cheapest] [Fastest] badges                          |
++------------------------------------------------------------------+
+| +--------+ | DEP --> ARR Timeline           | From $XXX           |
+| |  LOGO  | | 08:30    5h 30m    14:00       | per person          |
+| | Airline| | JFK  ----●----→    LHR         | [Cabin Class]       |
+| +--------+ | [Nonstop] / [1 stop via DXB]   | [Refundable badge]  |
+|            |                                  |                     |
+| UA 123     | 🧳 Carry-on ✓ | 🛄 Checked ✓   | [ Select ]          |
++------------------------------------------------------------------+
+| Fare rules, baggage, and refund policies vary by airline.         |
++------------------------------------------------------------------+
 ```
 
-**Components:**
-- Reuses existing `FlightSearchFormPro`, `HotelSearchFormPro`, `CarSearchFormPro`
-- Full-screen overlays for location/date pickers
-- Skeleton loaders during search
-- Redirects to results pages on submit
+Key Display Elements:
+- **Airline logo** using new utility with fallback chain
+- **Airline name + flight number**
+- **Value badges**: Best Value (default sort), Cheapest, Fastest
+- **Timeline**: Departure → Duration → Arrival with airport codes
+- **Stops indicator**: Nonstop (green) or "1 stop via {city}" (amber)
+- **Cabin class**: Economy, Premium Economy, Business, First
+- **Baggage summary**: Icons for carry-on and checked with checkmark/strikethrough
+- **Refundable indicator**: Green shield for refundable, gray for non-refundable
+- **Price**: Total price with currency, "per person" label
+- **Select button**: Primary CTA to expand details
 
 ---
 
-### Phase 4: Enhance Search Results (Mobile)
+## 3. Expandable Flight Details Panel
 
-**Updates to:** `src/pages/FlightResults.tsx`
+### New Component: `src/components/flight/FlightDetailsExpanded.tsx`
 
-Mobile-specific enhancements:
+When user clicks "Select", expand inline to show:
 
 ```text
-┌────────────────────────────────────────┐
-│ JFK → LAX · Feb 15 · 1 Adult           │
-│ [Edit Search]                          │
-├────────────────────────────────────────┤
-│ Sort: Cheapest ▼                       │
-│ [Filters] (badge with count)           │
-├────────────────────────────────────────┤
-│ ┌────────────────────────────────────┐ │
-│ │ [Delta Logo]                       │ │
-│ │ 06:30 ────✈️──── 09:45            │ │
-│ │ JFK           LAX                  │ │
-│ │ 5h 30m · Nonstop                   │ │
-│ │                                    │ │
-│ │ ⭐ Best Deal         [$199] →     │ │
-│ └────────────────────────────────────┘ │
-│ ┌────────────────────────────────────┐ │
-│ │ [United Logo]                      │ │
-│ │ 08:15 ────✈️──── 11:30            │ │
-│ │ JFK           LAX                  │ │
-│ │ 5h 15m · Nonstop                   │ │
-│ │                        [$215] →   │ │
-│ └────────────────────────────────────┘ │
-└────────────────────────────────────────┘
-│ [Filter]  [Sort]                       │
-└────────────────────────────────────────┘
++------------------------------------------------------------------+
+| SEGMENT LIST                                                       |
+|   Segment 1: JFK → LHR                                            |
+|   - Flight: UA 123                                                 |
+|   - Depart: 08:30 Terminal 4 | Arrive: 20:00 Terminal 5           |
+|   - Duration: 7h 30m                                               |
+|   - Aircraft: Boeing 787-9 Dreamliner                              |
+|   - Operated by: United Airlines                                   |
++------------------------------------------------------------------+
+| FARE RULES SUMMARY                                                 |
+|   ✓ Changes allowed (fee may apply)                               |
+|   ✗ Non-refundable                                                |
+|   ℹ Fare rules confirmed at checkout                              |
++------------------------------------------------------------------+
+| SEAT SELECTION                                                     |
+|   [Choose seats] button (if available)                             |
+|   OR: "Seat selection available after ticketing with airline"     |
++------------------------------------------------------------------+
+|                            [ Continue to Checkout ]               |
++------------------------------------------------------------------+
 ```
 
-**Key Features:**
-- Airline logo from CDN (already implemented)
-- Departure/arrival times prominently displayed
-- Stops and duration visible
-- "Best deal" badge for cheapest option
-- Bottom sheet for filters and sort (existing `FlightMobileResultsBar`)
+Features:
+- **Segment list**: Each leg with full details
+- **Aircraft info**: Display if available, fallback text if not
+- **Fare rules summary**: Change/refund conditions from Duffel
+- **Seat selection**: CTA if Duffel provides seat map, fallback message if not
+- **Continue to Checkout**: Routes to `/flights/checkout/{offerId}`
 
 ---
 
-### Phase 5: Create Flight Details Screen (Mobile)
+## 4. Filters & Sorting Enhancement
 
-**Updates to:** `src/pages/FlightDetails.tsx`
+### Update: `src/components/results/FlightFiltersContent.tsx`
 
-Mobile-optimized layout:
-
+#### Sorting Options (update `SortSelect`):
 ```text
-┌────────────────────────────────────────┐
-│ ← Flight Details                       │
-├────────────────────────────────────────┤
-│ [Delta Logo]                           │
-│ Delta Air Lines · DL 123               │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ ITINERARY                          │ │
-│ │                                    │ │
-│ │ 06:30 ──────────────────── 09:45  │ │
-│ │ JFK                        LAX    │ │
-│ │ New York                   Los Angeles │
-│ │                                    │ │
-│ │ 5h 30m · Nonstop · Economy        │ │
-│ └────────────────────────────────────┘ │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 🧳 Baggage                         │ │
-│ │ Carry-on: 1 × 7kg                  │ │
-│ │ Checked:  1 × 23kg                 │ │
-│ └────────────────────────────────────┘ │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 📋 Fare Rules                      │ │
-│ │ ✗ Non-refundable                   │ │
-│ │ ✓ Changes allowed ($75 fee)        │ │
-│ └────────────────────────────────────┘ │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 🎫 Providers                       │ │
-│ │ ┌──────────────────────────────┐  │ │
-│ │ │ Booking.com          $199 ✓ │  │ │
-│ │ └──────────────────────────────┘  │ │
-│ │ ┌──────────────────────────────┐  │ │
-│ │ │ Expedia              $205   │  │ │
-│ │ └──────────────────────────────┘  │ │
-│ └────────────────────────────────────┘ │
-└────────────────────────────────────────┘
-│ $199                                   │
-│ [Continue to Secure Booking →]         │
-└────────────────────────────────────────┘
+Best Value (default) - Price + duration score
+Cheapest            - Lowest price first
+Fastest             - Shortest duration first  
+Fewest Stops        - Nonstop → 1 stop → 2+ stops
 ```
 
-**Features:**
-- Full itinerary timeline
-- Baggage and fare rules sections
-- Provider comparison (if multi-provider)
-- Sticky CTA at bottom
+#### Filter Categories:
+| Filter | Type | Notes |
+|--------|------|-------|
+| Price | Slider | $0 - $5,000 range |
+| Stops | Checkbox | Nonstop, 1 Stop, 2+ Stops |
+| Airline | Checkbox + Logo | Dynamic from results |
+| Departure Time | 4 buttons | Morning/Afternoon/Evening/Night |
+| Arrival Time | 4 buttons | Same time slots |
+| Duration | Slider | 2h - 24h max |
+| Cabin Class | Checkbox | Economy, Prem Economy, Business, First |
+| Baggage Included | Toggle | Show only flights with checked bag |
 
 ---
 
-### Phase 6: Create Trips Screen
+## 5. Aircraft & Seat Information
 
-**File:** `src/pages/mobile/MobileTrips.tsx` (NEW)
-
-Dedicated trips management:
-
-```text
-┌────────────────────────────────────────┐
-│ My Trips                               │
-├────────────────────────────────────────┤
-│ [Upcoming] [Past]                      │
-│ (Toggle tabs)                          │
-├────────────────────────────────────────┤
-│ UPCOMING                               │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ ✈️ New York → Los Angeles          │ │
-│ │ Feb 15, 2026 · 10:30 AM            │ │
-│ │ Delta DL 123                       │ │
-│ │                                    │ │
-│ │ Booking: ABC123XYZ                 │ │
-│ │ Status: ✅ Confirmed               │ │
-│ │                                    │ │
-│ │ [Manage Booking →]                 │ │
-│ └────────────────────────────────────┘ │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 🏨 Marriott Downtown Miami         │ │
-│ │ Feb 15-18, 2026                    │ │
-│ │                                    │ │
-│ │ Booking: HTL987654                 │ │
-│ │ Status: ✅ Confirmed               │ │
-│ │                                    │ │
-│ │ [Manage Booking →]                 │ │
-│ └────────────────────────────────────┘ │
-├────────────────────────────────────────┤
-│ PAST (when tab selected)              │
-│ [Past trip cards with "Rebook" CTA]   │
-└────────────────────────────────────────┘
+### Aircraft Display Logic:
+```typescript
+// In FlightDetailsExpanded
+const aircraftDisplay = segment.aircraft 
+  ? segment.aircraft 
+  : "Aircraft info shown at confirmation";
 ```
 
-**Features:**
-- Upcoming/Past toggle
-- Booking reference and ticket status
-- "Manage booking" links to partner or internal page
-- Pull-to-refresh
+### Seat Selection Logic:
+```typescript
+// Check if Duffel offer has seat services
+const hasSeatSelection = offer.available_services?.some(
+  s => s.type === 'seat'
+);
 
----
-
-### Phase 7: Create Alerts Screen
-
-**File:** `src/pages/mobile/MobileAlerts.tsx` (NEW)
-
-Price alerts management:
-
-```text
-┌────────────────────────────────────────┐
-│ Price Alerts 🔔                        │
-├────────────────────────────────────────┤
-│ [Active] [History]                     │
-│ (Toggle tabs)                          │
-├────────────────────────────────────────┤
-│ ACTIVE ALERTS (3)                      │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 🔔 JFK → LAX                       │ │
-│ │ Any dates in February              │ │
-│ │ Target: $150 or less               │ │
-│ │ Current: $199                      │ │
-│ │                                    │ │
-│ │ [Remove] [View Prices]             │ │
-│ └────────────────────────────────────┘ │
-│                                        │
-│ ┌────────────────────────────────────┐ │
-│ │ 🔔 NYC → MIA                       │ │
-│ │ Mar 1-7, 2026                      │ │
-│ │ Target: $100 or less               │ │
-│ │ Current: $129                      │ │
-│ │ 📉 Dropped $20 since yesterday!    │ │
-│ │                                    │ │
-│ │ [Remove] [Book Now!]               │ │
-│ └────────────────────────────────────┘ │
-├────────────────────────────────────────┤
-│ [+ Track New Route]                    │
-└────────────────────────────────────────┘
-
-HISTORY TAB:
-│ 📩 Price dropped to $89! (2 days ago) │
-│ 📩 Alert expired (1 week ago)         │
-```
-
-**Features:**
-- Active alerts with current price vs. target
-- Price drop indicators
-- Alert history (triggered/expired)
-- "Track new route" CTA opens modal
-- Integrates with existing `usePriceAlerts` hook
-
----
-
-### Phase 8: Create Account Screen
-
-**File:** `src/pages/mobile/MobileAccount.tsx` (NEW)
-
-Streamlined account section:
-
-```text
-┌────────────────────────────────────────┐
-│ Account                                │
-├────────────────────────────────────────┤
-│ ┌────────────────────────────────────┐ │
-│ │ [Avatar] John Doe                  │ │
-│ │          john@email.com            │ │
-│ │          ⭐ Gold Member            │ │
-│ │ [Edit Profile →]                   │ │
-│ └────────────────────────────────────┘ │
-├────────────────────────────────────────┤
-│ 👤 Saved Travelers              →     │
-│ 📧 Email Preferences            →     │
-│ 🔔 Notification Settings        →     │
-│ 💳 Payment Methods              →     │
-│ 🎁 ZIVO Rewards                 →     │
-├────────────────────────────────────────┤
-│ 📞 Support & Help               →     │
-│ 📜 Terms of Service             →     │
-│ 🔒 Privacy Policy               →     │
-│ 📋 Partner Disclosure           →     │
-├────────────────────────────────────────┤
-│ [Log Out]                             │
-└────────────────────────────────────────┘
-```
-
-**Features:**
-- Profile summary card with avatar
-- Quick links to settings sections
-- Legal pages (Terms, Privacy, Partner Disclosure)
-- Log out button
-
----
-
-### Phase 9: Checkout & Confirmation (Mobile)
-
-**Updates to:** Existing checkout pages
-
-Mobile-optimized checkout flow:
-
-```text
-CHECKOUT SCREEN:
-┌────────────────────────────────────────┐
-│ 🔒 Secure Checkout                     │
-│ You're being redirected to complete    │
-│ your booking securely with our partner.│
-├────────────────────────────────────────┤
-│ [Loading spinner]                      │
-│ Connecting to partner...               │
-├────────────────────────────────────────┤
-│ 🛡️ Secure payments                     │
-│ ✅ Licensed providers                  │
-│ 💰 No hidden fees                      │
-└────────────────────────────────────────┘
-
-CONFIRMATION SCREEN:
-┌────────────────────────────────────────┐
-│            ✅                          │
-│ Thank You for Your Booking ✈️          │
-│                                        │
-│ Your booking request has been received.│
-│ A confirmation email will be sent      │
-│ once your ticket is issued.            │
-├────────────────────────────────────────┤
-│ Booking: ABC123XYZ                     │
-│ Status:  Confirmed                     │
-├────────────────────────────────────────┤
-│ [View Booking]                         │
-│ [Contact Support]                      │
-│ [Back to Home]                         │
-└────────────────────────────────────────┘
+// Render conditionally
+{hasSeatSelection ? (
+  <Button onClick={() => navigate(`/flights/seats/${offerId}`)}>
+    Choose Seats
+  </Button>
+) : (
+  <p className="text-sm text-muted-foreground">
+    Seat selection available after ticketing with the airline.
+  </p>
+)}
 ```
 
 ---
 
-### Phase 10: Push Notifications Configuration
+## 6. Compliance Copy Updates
 
-**File:** `src/config/pushNotifications.ts` (NEW)
+### Update: `src/config/flightCompliance.ts`
 
-Notification configuration:
+Add new OTA-mode copy:
 
 ```typescript
-export const PUSH_NOTIFICATION_TYPES = {
-  PRICE_DROP: {
-    title: "Price Drop Alert! 📉",
-    body: "Prices for {route} dropped to ${price}!",
-  },
-  BOOKING_CONFIRMED: {
-    title: "Booking Confirmed ✅",
-    body: "Your {service} booking is confirmed.",
-  },
-  TRIP_REMINDER: {
-    title: "Trip Reminder 🗓️",
-    body: "Your flight to {destination} departs in 24 hours.",
-  },
-};
+export const FLIGHT_RESULTS_COMPLIANCE = {
+  // Results page header
+  header: "Select your itinerary and complete your booking with ZIVO.",
+  
+  // Below results small text
+  fareRulesNote: "Fare rules, baggage, and refund policies vary by airline and fare.",
+  
+  // Seat selection fallback
+  seatSelectionFallback: "Seat selection available after ticketing with the airline.",
+  
+  // Aircraft fallback
+  aircraftFallback: "Aircraft info shown at confirmation.",
+} as const;
+```
 
-export const NOTIFICATION_PREFERENCES = {
-  priceAlerts: true,
-  bookingConfirmations: true,
-  tripReminders: true,
-  marketing: false, // Default off
+### Update: `src/pages/FlightResults.tsx`
+
+Add header compliance copy:
+```tsx
+<section className="py-4 border-b border-border/50">
+  <div className="container mx-auto px-4">
+    <p className="text-sm text-center font-medium">
+      {FLIGHT_RESULTS_COMPLIANCE.header}
+    </p>
+    <p className="text-xs text-center text-muted-foreground mt-1">
+      {FLIGHT_RESULTS_COMPLIANCE.fareRulesNote}
+    </p>
+  </div>
+</section>
+```
+
+---
+
+## Files to Create/Modify
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `src/lib/airlineLogo.ts` | **Create** | Robust logo utility with AirHex + fallbacks |
+| `src/components/flight/FlightDetailsExpanded.tsx` | **Create** | Expandable segment/fare details panel |
+| `src/components/results/FlightResultCard.tsx` | **Modify** | Enhanced card with badges, baggage, refund indicator |
+| `src/components/results/SortSelect.tsx` | **Modify** | Add "Best Value" as default, rename options |
+| `src/components/results/FlightFiltersContent.tsx` | **Modify** | Add arrival time, cabin class, baggage filters |
+| `src/config/flightCompliance.ts` | **Modify** | Add OTA results page compliance copy |
+| `src/pages/FlightResults.tsx` | **Modify** | Add header compliance, integrate expanded details |
+| `src/hooks/useResultsFilters.ts` | **Modify** | Add new filter types for cabin, baggage |
+| `src/data/airlines.ts` | **Modify** | Update to use AirHex as primary CDN |
+
+---
+
+## Technical Details
+
+### Airline Logo Component Pattern
+```tsx
+// Usage in FlightResultCard
+<AirlineLogo 
+  iataCode={flight.airlineCode}
+  size={48}
+  className="w-12 h-12"
+/>
+
+// Internal implementation with useState for error tracking
+const [logoSrc, setLogoSrc] = useState(getAirlineLogoUrl(iataCode, size));
+const [fallbackIndex, setFallbackIndex] = useState(0);
+
+const handleError = () => {
+  const nextFallback = FALLBACK_SOURCES[fallbackIndex + 1];
+  if (nextFallback) {
+    setLogoSrc(nextFallback(iataCode, size));
+    setFallbackIndex(i => i + 1);
+  } else {
+    setLogoSrc(null); // Show Plane icon
+  }
 };
 ```
 
-**Note:** Actual push notification implementation requires Capacitor or PWA service worker setup.
+### Best Value Score Calculation
+```typescript
+// Already exists in FlightResults.tsx, ensure it's default sort
+const bestValueScore = (flight) => {
+  return flight.price + (flight.durationMinutes * 0.5);
+};
+```
 
 ---
 
-## File Summary
+## Acceptance Criteria
 
-### New Files to Create
+1. Airline logos load from AirHex with graceful fallbacks to Duffel then Plane icon
+2. Result cards show all required elements: logo, badges, timeline, baggage, refund status
+3. "Select" expands inline details with segments, aircraft, fare rules, and checkout CTA
+4. Filters include all specified options with working filtering logic
+5. "Best Value" is default sort option
+6. Compliance header displays on results page
+7. Seat selection shows CTA or fallback message based on Duffel data
+8. Aircraft shows real data or "Aircraft info shown at confirmation"
 
-| File | Description |
-|------|-------------|
-| `src/components/app/ZivoMobileNav.tsx` | New 5-tab navigation (Home, Search, Trips, Alerts, Account) |
-| `src/pages/mobile/MobileHome.tsx` | Travel-focused home with search box and deals |
-| `src/pages/mobile/MobileSearch.tsx` | Unified search with Flights/Hotels/Cars tabs |
-| `src/pages/mobile/MobileTrips.tsx` | Upcoming & past bookings management |
-| `src/pages/mobile/MobileAlerts.tsx` | Price alerts dashboard |
-| `src/pages/mobile/MobileAccount.tsx` | Streamlined account settings |
-| `src/pages/mobile/index.ts` | Barrel export for mobile pages |
-| `src/config/pushNotifications.ts` | Push notification templates |
-
-### Files to Update
-
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add routes for new mobile pages |
-| `src/components/app/ZivoSuperAppLayout.tsx` | Add option for new nav variant |
-| `src/pages/FlightResults.tsx` | Mobile-specific result card enhancements |
-| `src/pages/FlightDetails.tsx` | Mobile layout optimization |
-
----
-
-## Technical Considerations
-
-### Design Rules (from spec)
-
-| Rule | Implementation |
-|------|----------------|
-| Touch-friendly buttons | 48px+ min height, 44px+ touch targets |
-| Clear typography | 16px base, bold headings, muted secondary |
-| Fast loading | Skeleton loaders on all async content |
-| Skeleton loaders | Existing `ResultCardSkeleton` reused |
-| One-hand usability | Important actions in bottom 60% of screen |
-
-### Performance
-
-- Code-split mobile pages using lazy loading
-- Use existing hooks (`useDuffelFlightSearch`, `useUnifiedTrips`, `usePriceAlerts`)
-- Leverage React Query caching for search results
-- Skeleton loaders while data fetches
-
-### Navigation Detection
-
-Auto-detect mobile context using existing `useIsMobile()` hook and route accordingly.
-
----
-
-## Summary
-
-This plan transforms ZIVO into a professional travel app experience matching Booking, Expedia, and Skyscanner. The new 5-tab navigation (Home | Search | Trips | Alerts | Account) provides a cleaner user journey focused on the core travel booking workflow. All new components build on existing infrastructure (search forms, trips hooks, price alerts, profile) while optimizing the mobile experience with proper touch targets, skeleton loaders, and one-hand usability.
