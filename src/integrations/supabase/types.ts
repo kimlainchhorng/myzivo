@@ -13075,6 +13075,69 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_travelers: {
+        Row: {
+          born_on: string | null
+          created_at: string
+          email: string | null
+          family_name: string
+          gender: string | null
+          given_name: string
+          id: string
+          is_primary: boolean
+          known_traveler_number: string | null
+          nationality: string | null
+          passport_country: string | null
+          passport_expiry: string | null
+          passport_number: string | null
+          phone_number: string | null
+          title: string | null
+          traveler_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          born_on?: string | null
+          created_at?: string
+          email?: string | null
+          family_name: string
+          gender?: string | null
+          given_name: string
+          id?: string
+          is_primary?: boolean
+          known_traveler_number?: string | null
+          nationality?: string | null
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone_number?: string | null
+          title?: string | null
+          traveler_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          born_on?: string | null
+          created_at?: string
+          email?: string | null
+          family_name?: string
+          gender?: string | null
+          given_name?: string
+          id?: string
+          is_primary?: boolean
+          known_traveler_number?: string | null
+          nationality?: string | null
+          passport_country?: string | null
+          passport_expiry?: string | null
+          passport_number?: string | null
+          phone_number?: string | null
+          title?: string | null
+          traveler_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_reports: {
         Row: {
           created_at: string
@@ -15678,6 +15741,39 @@ export type Database = {
           policy_type?: string
           policy_version?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_email_preferences: {
+        Row: {
+          booking_updates: boolean
+          created_at: string
+          id: string
+          marketing_emails: boolean
+          newsletter: boolean
+          price_alerts: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_updates?: boolean
+          created_at?: string
+          id?: string
+          marketing_emails?: boolean
+          newsletter?: boolean
+          price_alerts?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_updates?: boolean
+          created_at?: string
+          id?: string
+          marketing_emails?: boolean
+          newsletter?: boolean
+          price_alerts?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

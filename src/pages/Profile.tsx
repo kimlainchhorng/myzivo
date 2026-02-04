@@ -117,6 +117,7 @@ const Profile = () => {
   };
 
   const quickLinks = [
+    { icon: User, label: "Saved Travelers", href: "#travelers", description: "Manage traveler profiles" },
     { icon: CreditCard, label: "Payment Methods", href: "/dashboard", description: "Manage cards & wallets" },
     { icon: Bell, label: "Notifications", href: "/dashboard", description: "Preferences & alerts" },
     { icon: Lock, label: "Security", href: "/dashboard", description: "Password & 2FA" },
