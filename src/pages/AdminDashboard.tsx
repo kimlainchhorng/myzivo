@@ -373,6 +373,43 @@ const AdminDashboard = () => {
       </div>
 
       <ScrollArea className="flex-1 px-3 py-2">
+        {/* Launch Section - External Routes */}
+        <div className="mb-4">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">Launch</p>
+          <div className="space-y-1">
+            <button
+              onClick={() => navigate("/admin/go-live")}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg">
+                <Rocket className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+              </div>
+              <span className="font-medium text-xs sm:text-sm flex-1">Go-Live Checklist</span>
+              <ExternalLink className="w-3 h-3 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => navigate("/admin/launch-runbook")}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all bg-gradient-to-br from-amber-500 to-orange-500 shadow-lg">
+                <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+              </div>
+              <span className="font-medium text-xs sm:text-sm flex-1">Launch Runbook</span>
+              <ExternalLink className="w-3 h-3 text-muted-foreground" />
+            </button>
+            <button
+              onClick={() => navigate("/admin/launch")}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-left group touch-manipulation active:scale-[0.98] hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+            >
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center transition-all bg-gradient-to-br from-violet-500 to-purple-500 shadow-lg">
+                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+              </div>
+              <span className="font-medium text-xs sm:text-sm flex-1">Launch Monitoring</span>
+              <ExternalLink className="w-3 h-3 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+        
         {navSections.map((section) => (
           <div key={section.title} className="mb-4">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-2">{section.title}</p>
