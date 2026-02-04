@@ -3,8 +3,7 @@
  * Desktop: sidebar, Mobile: bottom sheet
  */
 
-import { useState } from "react";
-import { Filter, Star, Wifi, Car, Waves, Coffee, Building2, MapPin, X } from "lucide-react";
+import { Filter, Star, Wifi, Car, Waves, Coffee, Building2, MapPin, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -20,6 +19,8 @@ export interface HotelFilters {
   amenities: string[];
   propertyType: string[];
   distance: number | null;
+  payAtHotelOnly: boolean;
+  freeCancellation: boolean;
 }
 
 interface HotelFiltersProps {
@@ -55,9 +56,53 @@ const distanceOptions = [
   { value: 10, label: "Within 10 km" },
 ];
 
+const paymentOptions = [
+  { id: "payAtHotel", label: "Pay at Hotel", icon: Building2, description: "No upfront payment required" },
+  { id: "freeCancellation", label: "Free Cancellation", icon: CreditCard, description: "Cancel anytime for free" },
+];
+
 function FilterContent({ filters, onFilterChange }: HotelFiltersProps) {
   return (
     <div className="space-y-6">
+      {/* Payment & Cancellation Options - Featured at top */}
+      <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
+        <Label className="text-sm font-semibold mb-3 block">Payment Options</Label>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="pay-at-hotel"
+              checked={filters.payAtHotelOnly}
+              onCheckedChange={(checked) => 
+                onFilterChange({ ...filters, payAtHotelOnly: checked === true })
+              }
+            />
+            <div className="flex-1">
+              <Label htmlFor="pay-at-hotel" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-emerald-600" />
+                Pay at Hotel
+              </Label>
+              <p className="text-[11px] text-muted-foreground mt-0.5">No upfront payment required</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="free-cancellation"
+              checked={filters.freeCancellation}
+              onCheckedChange={(checked) => 
+                onFilterChange({ ...filters, freeCancellation: checked === true })
+              }
+            />
+            <div className="flex-1">
+              <Label htmlFor="free-cancellation" className="text-sm font-medium cursor-pointer flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-blue-600" />
+                Free Cancellation
+              </Label>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Cancel anytime for full refund</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Price Range */}
       <div>
         <Label className="text-sm font-semibold mb-3 block">Price per night</Label>
@@ -206,6 +251,8 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
     filters.propertyType.length > 0,
     filters.distance !== null,
     filters.priceRange[0] > 0 || filters.priceRange[1] < 500,
+    filters.payAtHotelOnly,
+    filters.freeCancellation,
   ].filter(Boolean).length;
 
   return (
@@ -230,6 +277,8 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
                   amenities: [],
                   propertyType: [],
                   distance: null,
+                  payAtHotelOnly: false,
+                  freeCancellation: false,
                 })}
               >
                 Clear all
@@ -272,6 +321,8 @@ export default function HotelFiltersComponent({ filters, onFilterChange, classNa
                       amenities: [],
                       propertyType: [],
                       distance: null,
+                      payAtHotelOnly: false,
+                      freeCancellation: false,
                     })}
                   >
                     Clear all
