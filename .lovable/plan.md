@@ -1,349 +1,425 @@
 
-# ZIVO Compliance, Audit & Enterprise Trust Implementation
+# ZIVO Global Brand, IPO & Acquisition Readiness Implementation
 
 ## Overview
 
-This plan enhances ZIVO to be fully compliant, audit-ready, and trusted by banks, affiliates, airlines, and enterprise partners. ZIVO already has substantial compliance infrastructure - this update fills gaps and creates unified public-facing trust pages.
+This plan positions ZIVO as a world-class travel & mobility company ready for acquisition, large funding, or public markets. Building on existing corporate infrastructure (About, Company, Press, Vision, Partners pages), we'll create investor-grade documentation, unified brand system, and strategic positioning pages.
 
 ## Current State Assessment
 
-### Already Implemented (Extensive)
+### Already Implemented
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **Legal Pages (74+ pages)** | Complete | `/src/pages/legal/*` - Terms, Privacy, Cookie, Seller of Travel, Dispute, etc. |
-| **Security Hub** | Complete | `/security` - Zero-Trust, encryption, monitoring, DLP |
-| **Privacy Compliance** | Complete | `/security/privacy-compliance` - GDPR/CCPA, DSAR, consent management |
-| **Seller of Travel** | Complete | `/legal/seller-of-travel` - Sub-agent disclosure, state registrations |
-| **Dispute Process** | Complete | `/legal/dispute-process` - Arbitration, escalation flow |
-| **Payment Processors** | Complete | `/legal/payment-processors` - PCI compliance, Stripe integration |
-| **Disaster Recovery** | Complete | `/security/disaster-recovery` - BCP, RTO/RPO, backups |
-| **Admin Compliance Center** | Complete | AdminComplianceCenter.tsx - Regulatory tracking |
-| **Audit Logging** | Complete | `auditLog.ts` + `audit_logs` table - Security events |
-| **Legal Doc Center (Admin)** | Complete | `/admin/legal-docs` - Document versioning |
-| **Evidence Logging (Admin)** | Complete | `/admin/evidence-logging` - Consent tracking |
-| **Legal Content Config** | Complete | `legalContent.ts` - 2800+ lines, 180+ clauses |
+| **About Page** | Complete | `About.tsx` - Company overview, business model, services |
+| **Company Page** | Complete | `Company.tsx` - ZIVO LLC info, contacts |
+| **Press Page** | Complete | `Press.tsx` - Media inquiries, company facts, contact form |
+| **Vision Page** | Complete | `Vision.tsx` - Future of travel, AI, sustainability |
+| **Partners Page** | Complete | `Partners.tsx` - Partner program overview |
+| **Partner With ZIVO** | Complete | `PartnerWithZivo.tsx` - Partnership form |
+| **Roadmap Page** | Complete | `Roadmap.tsx` - Product roadmap with timeline |
+| **Corporate Travel** | Complete | `CorporateTravel.tsx` - B2B travel solutions |
+| **Data Insights** | Complete | `DataInsights.tsx` - B2B data offering |
+| **Enterprise Ready** | Complete | `EnterpriseReady.tsx` - Procurement docs |
+| **Brand Tokens** | Complete | `brandTokens.ts` - Colors, typography, spacing |
+| **How ZIVO Makes Money** | Complete | `HowZivoMakesMoney.tsx` - Revenue transparency |
 
 ### Missing/Needs Enhancement
 
 | Feature | Status | Required |
 |---------|--------|----------|
-| **Public Compliance Center** | Missing | Unified hub linking all legal pages |
-| **Enterprise Security Signals Page** | Partial | Dedicated trust badges page for partners |
-| **Payment Transparency Page** | Missing | Clear explanation for banks/processors |
-| **Affiliate Audit Pages** | Missing | Partner review documentation |
-| **Dispute Escalation Policy** | Partial | Detailed response times and flow |
-| **Enterprise/Government Readiness** | Missing | Procurement-friendly documentation |
-| **Audit Log Visibility Notice** | Missing | Public-facing audit notice |
-| **Business Continuity Public Page** | Partial | Simplified reliability page |
+| **Brand Mission & Vision Page** | Missing | Unified brand identity page |
+| **Executive Profile Page** | Missing | Leadership & company profile |
+| **Investor Relations Page** | Missing | Investor-focused content |
+| **Strategic Positioning Page** | Missing | Acquisition/partnership value |
+| **Press Kit Assets** | Partial | Logo downloads, brand colors, screenshots |
+| **Careers Page** | Missing | Join ZIVO, job openings |
+| **Platform Ecosystem Map** | Missing | Visual ecosystem diagram |
+| **5-Year Roadmap** | Partial | Long-term strategic view |
+| **Public Trust Statement** | Missing | Transparency commitment |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Public Compliance Center (Hub Page)
+### Phase 1: Brand Mission & Vision System
 
-**New Page:** `src/pages/ComplianceCenter.tsx`
+**New Page:** `src/pages/BrandMission.tsx`
 
-Route: `/compliance` or `/legal/compliance-center`
+Route: `/brand` or `/mission`
 
-A unified hub page linking to all compliance resources with clear, user-friendly language.
+A unified brand identity page showcasing ZIVO's mission, vision, and values.
 
 **Sections:**
-- Legal Documents (Terms, Privacy, Cookie, Refund)
-- Regulatory Compliance (Seller of Travel, Consumer Disclosures)
-- Data Rights (GDPR, CCPA, Privacy Controls)
-- Partner Transparency (Affiliate Disclosure, Partner Disclosure)
-- Security & Trust (Security Hub link)
+1. **Mission Statement**
+   - "ZIVO connects how the world moves."
+   - Core purpose and impact
 
-**Key Features:**
-- Category cards with icons
-- "Last updated" badges
-- Search/filter by topic
-- Download PDF option (placeholder)
+2. **Vision**
+   - "The future of travel and mobility - unified, intelligent, seamless."
 
-**Compliance Copy:**
-```text
-"All policies are written in clear, user-friendly language. 
-We believe in transparent communication with our users."
-```
+3. **Brand Values**
+   - Transparency
+   - Innovation
+   - User-First
+   - Trust
+
+4. **Brand Architecture**
+   - ZIVO Flights
+   - ZIVO Hotels
+   - ZIVO Cars
+   - ZIVO Rides
+   - ZIVO Eats
+   - ZIVO Move
+
+5. **Brand Tone**
+   - Trusted
+   - Modern
+   - Transparent
+   - Global
 
 ---
 
-### Phase 2: Enterprise Security Signals Page
+### Phase 2: Executive & Company Profile
 
-**New Page:** `src/pages/security/EnterpriseTrust.tsx`
+**New Page:** `src/pages/CompanyProfile.tsx`
 
-Route: `/security/enterprise` or `/trust`
+Route: `/company-profile` or `/about/company`
 
-A dedicated page showcasing enterprise-grade security for bank reviews, payment processors, and enterprise partners.
+Professional company profile for banks, partners, investors, and press.
 
-**Badge Sections:**
-- Secure Infrastructure (AWS/Supabase hosting)
-- Encrypted Data (AES-256, TLS 1.3)
-- Trusted Payments (PCI-DSS Level 1)
-- Access Control (RBAC, MFA)
-- Continuous Monitoring (24/7)
-- Incident Response (documented procedures)
+**Sections:**
+1. **Company Overview**
+   - ZIVO LLC - Travel & Mobility Ecosystem
+   - Founded: 2024
+   - Headquarters: United States
+   - Website: hizivo.com
 
-**Compliance Signals:**
-- GDPR Ready
-- CCPA Ready
-- SOC 2 Type II (Roadmap)
+2. **Business Model Summary**
+   - Commission-based travel search platform
+   - Affiliate revenue from partner bookings
+   - No direct ticket sales or payment processing
+   - Expansion into mobility and logistics
 
-**Copy:**
-```text
-"ZIVO implements enterprise-grade security controls to protect user data, 
-payments, and platform integrity."
-```
+3. **Global Vision**
+   - Super-app for travel and mobility
+   - AI-powered personalization
+   - Global expansion roadmap
+
+4. **Leadership (Placeholders)**
+   - Founder & CEO
+   - Chief Technology Officer
+   - Chief Operating Officer
+   - Advisory Board
+
+5. **Contact Information**
+   - Business: kimlain@hizivo.com
+   - Press: press@hizivo.com
+   - Investors: investors@hizivo.com
+   - Partnerships: partners@hizivo.com
 
 ---
 
-### Phase 3: Payment Transparency Page
+### Phase 3: Investor Relations Page
 
-**New Page:** `src/pages/legal/PaymentTransparency.tsx`
+**New Page:** `src/pages/InvestorRelations.tsx`
 
-Route: `/legal/payment-transparency` or `/payments/how-it-works`
+Route: `/investors` or `/investor-relations`
 
-Clear documentation for banks and payment processors.
+Professional investor-facing content for funding and acquisition discussions.
 
 **Sections:**
-1. **How Payments Work**
-   - User initiates payment on ZIVO
-   - Stripe (PCI-DSS Level 1) processes the transaction
-   - ZIVO is merchant of record for flights
-   - Partner is merchant of record for hotels/cars (affiliate model)
+1. **Company Overview**
+   - "ZIVO is building a global travel and mobility ecosystem."
+   - Market position and differentiation
 
-2. **Who Charges Your Card**
-   - Flights: "ZIVO LLC" or "HIZIVO"
-   - Hotels: "Partner Name" (redirect model)
-   - Cars: "Partner Name" (redirect model)
+2. **Business Highlights**
+   - Global travel search platform
+   - Multi-vertical ecosystem (Flights, Hotels, Cars, Rides, Eats, Move)
+   - AI-powered personalization
+   - Mobile-first architecture
 
-3. **Refund Process**
-   - Who issues refunds (by service type)
-   - Timeline expectations
-   - Dispute resolution
+3. **Revenue Streams**
+   - Affiliate commissions (travel partners)
+   - Premium subscriptions (ZIVO Plus)
+   - B2B data insights (roadmap)
+   - White-label opportunities (roadmap)
 
-4. **Data Security**
-   - No card storage
-   - Tokenization via Stripe
-   - PCI-DSS compliance
+4. **Market Opportunity**
+   - $1.7T global travel market
+   - Growing demand for unified travel platforms
+   - Super-app model proven in Asia
+
+5. **Growth Strategy**
+   - Geographic expansion (APAC, LATAM)
+   - Service expansion (Rides, Eats, Move)
+   - B2B partnerships
+   - Technology leadership (AI, personalization)
+
+6. **Contact**
+   - investors@hizivo.com
+   - Confidential inquiries welcome
+
+---
+
+### Phase 4: Strategic Partnership & Acquisition Page
+
+**New Page:** `src/pages/StrategicPartnerships.tsx`
+
+Route: `/strategic-partnerships` or `/business/strategic`
+
+Positioning page for potential acquirers and strategic partners.
+
+**Sections:**
+1. **Why Partner with ZIVO**
+   - Unified travel + mobility platform
+   - Modern tech stack
+   - Growing user base
+   - AI-first architecture
+
+2. **White-Label Opportunities**
+   - Flight search as a service
+   - Hotel booking integration
+   - Complete travel stack licensing
+
+3. **Data & Distribution Value**
+   - Aggregated travel demand data
+   - User behavior insights
+   - Multi-channel distribution
+
+4. **Ecosystem Advantage**
+   - Cross-service synergies
+   - Unified loyalty program
+   - Single customer view
+
+5. **Contact for Strategic Discussions**
+   - kimlain@hizivo.com
+   - Confidential discussions available
+
+---
+
+### Phase 5: Financial Transparency Section
+
+**New Page:** `src/pages/FinancialTransparency.tsx`
+
+Route: `/financial-transparency` or `/about/financials`
+
+Trust-building page explaining revenue model.
+
+**Sections:**
+1. **Revenue Sources Explained**
+   - Affiliate commissions from travel partners
+   - No hidden fees or markups
+   - User pays partner price only
+
+2. **Commission-Based Model**
+   - Partners pay ZIVO for referrals
+   - User price is unchanged
+   - Transparent disclosure on all pages
+
+3. **No Hidden Markups Policy**
+   - ZIVO never adds fees to partner prices
+   - Final price confirmed on partner checkout
+   - Price matching transparency
+
+4. **Compliance & Reporting**
+   - Tax-compliant revenue recognition
+   - Partner payment transparency
+   - Regular financial audits (roadmap)
 
 **Key Copy:**
 ```text
-"Payments are processed by PCI-compliant providers. 
-ZIVO does not store card data. Your payment information is tokenized 
-and securely handled by Stripe."
+"ZIVO earns through transparent partner commissions. 
+We never add hidden fees to the prices you see."
 ```
 
 ---
 
-### Phase 4: Affiliate & Partner Audit Pages
+### Phase 6: Press Kit & Media Assets
 
-**New Page:** `src/pages/business/PartnerAuditDocs.tsx`
+**Update:** `src/pages/Press.tsx`
 
-Route: `/business/partner-audit` or `/partners/compliance`
+Enhance with downloadable assets.
 
-Documentation specifically for affiliate network reviews (Travelpayouts, Booking.com, car rental partners).
+**New Component:** `src/components/press/PressKitAssets.tsx`
+
+**Press Kit Sections:**
+1. **Logo Downloads**
+   - Primary logo (PNG, SVG)
+   - White logo for dark backgrounds
+   - Icon only versions
+   - Usage guidelines
+
+2. **Brand Colors**
+   - Primary: Electric Teal (#38BDF8)
+   - Product colors (Flights, Hotels, Cars)
+   - Color codes and usage
+
+3. **Product Screenshots**
+   - Homepage screenshot
+   - Search results
+   - Mobile app preview
+   - Booking flow
+
+4. **Company Boilerplate**
+   - Short (50 words)
+   - Medium (100 words)
+   - Long (200 words)
+
+**Boilerplate Copy:**
+```text
+"ZIVO is a global travel search and comparison platform that helps 
+travelers find and compare flights, hotels, car rentals, and travel 
+services from trusted partners worldwide. Founded in 2024, ZIVO is 
+building a unified travel and mobility ecosystem powered by AI."
+```
+
+---
+
+### Phase 7: Careers Page
+
+**New Page:** `src/pages/Careers.tsx`
+
+Route: `/careers` or `/jobs`
+
+Talent attraction page.
 
 **Sections:**
-1. **How ZIVO Sources Prices**
-   - Real-time API integration
-   - No price manipulation
-   - Display of partner prices as-is
+1. **Join ZIVO**
+   - "Build the future of travel"
+   - Mission-driven culture
 
-2. **How Commissions Work**
-   - Affiliate model explanation
-   - No hidden fees to users
-   - Commission paid by partners, not users
+2. **Our Culture**
+   - Global-first mindset
+   - Remote-ready structure
+   - Innovation culture
+   - Transparency
 
-3. **User Transparency**
-   - Affiliate disclosure visible on results
-   - Partner attribution on checkout
-   - Clear redirect notices
+3. **Open Positions** (Placeholder)
+   - Engineering
+   - Product
+   - Design
+   - Operations
 
-4. **Compliance Checklist**
-   - FTC disclosure requirements
-   - No false advertising
-   - Price accuracy commitment
+4. **Benefits**
+   - Competitive compensation
+   - Remote flexibility
+   - Learning & development
+   - Travel perks
 
-**Partner-Specific Sections:**
-- Travel Affiliate Requirements
-- Hotel Partner Requirements
-- Car Rental Partner Requirements
-
-**Copy:**
-```text
-"ZIVO maintains full transparency with users about our affiliate relationships. 
-All sponsored content and partner referrals are clearly disclosed."
-```
+5. **Apply**
+   - careers@hizivo.com
+   - "No open positions at this time" (placeholder)
 
 ---
 
-### Phase 5: Dispute & Escalation Policy Enhancement
+### Phase 8: Platform Ecosystem Map
 
-**Update:** `src/pages/legal/DisputeProcess.tsx`
+**New Page:** `src/pages/EcosystemMap.tsx`
 
-Add detailed escalation flow with response times:
+Route: `/ecosystem` or `/platform`
 
-**Escalation Flow:**
-```text
-Step 1: User contacts partner directly (booking issues)
-        Response time: Per partner SLA
-        
-Step 2: User contacts ZIVO support (platform issues)
-        Response time: 24-48 hours
-        
-Step 3: Formal complaint submission
-        Response time: 5 business days
-        
-Step 4: External escalation (if unresolved)
-        - State consumer protection
-        - Arbitration (per Terms)
-```
+Visual ecosystem diagram page.
 
-**New Component:** `src/components/legal/DisputeFlowDiagram.tsx`
+**Diagram Sections:**
+1. **Travel Core**
+   - ZIVO Flights
+   - ZIVO Hotels
+   - ZIVO Cars
 
-Visual flowchart showing the escalation process.
+2. **Mobility Services**
+   - ZIVO Rides
+   - ZIVO Eats
+   - ZIVO Move (Logistics)
 
-**Documentation Requirements:**
-- What information to provide
-- How to submit screenshots/evidence
-- Expected resolution timeline
+3. **Platform Layer**
+   - AI Intelligence
+   - ZIVO Miles (Loyalty)
+   - ZIVO Wallet
+
+4. **Infrastructure**
+   - Payment Processing
+   - Partner Integrations
+   - Data & Analytics
+
+**Visual Representation:**
+Text-based diagram showing interconnections between services, with each vertical linked to the central ZIVO platform layer.
 
 ---
 
-### Phase 6: Business Reliability Page
+### Phase 9: 5-Year Strategic Roadmap
 
-**New Page:** `src/pages/Reliability.tsx`
+**Update:** `src/pages/Roadmap.tsx` or **New Page:** `src/pages/StrategicRoadmap.tsx`
 
-Route: `/reliability` or `/trust/reliability`
+Route: `/strategic-roadmap` or `/roadmap/long-term`
 
-Public-facing simplified business continuity information.
+Long-term vision for investors and partners.
+
+**Timeline:**
+1. **2024-2025: Foundation**
+   - Core travel platform (Flights, Hotels, Cars)
+   - ZIVO Miles launch
+   - AI Trip Planner
+   - US market focus
+
+2. **2025-2026: Expansion**
+   - Mobile apps (iOS, Android)
+   - ZIVO Rides & Eats
+   - LATAM expansion
+   - Corporate portal
+
+3. **2026-2027: Scale**
+   - Super-app consolidation
+   - APAC expansion
+   - B2B platform
+   - ZIVO Move (Logistics)
+
+4. **2027-2028: Leadership**
+   - AI-first travel
+   - Global presence
+   - Premium tier growth
+   - Data monetization
+
+5. **2028-2029: Dominance**
+   - Market leadership position
+   - Full super-app ecosystem
+   - Cross-border payments
+   - IPO readiness
+
+---
+
+### Phase 10: Public Trust Statement
+
+**New Page:** `src/pages/TrustStatement.tsx`
+
+Route: `/trust` or `/trust-statement`
+
+Public commitment to transparency.
 
 **Sections:**
-1. **Service Monitoring**
-   - Partner availability checks
-   - API health monitoring
-   - Automated failover
+1. **Transparency Promise**
+   - Clear pricing at all times
+   - No hidden fees or markups
+   - Honest affiliate disclosures
 
-2. **Partner Redundancy**
-   - Multiple flight providers (Duffel + affiliates)
-   - Multiple hotel sources
-   - Backup payment processing
+2. **User-First Pricing**
+   - Partner prices shown as-is
+   - No ZIVO surcharges
+   - Best price matching
 
-3. **Data Protection**
-   - Automated backups
-   - Encrypted storage
-   - Disaster recovery
+3. **Partner Fairness**
+   - Honest partner representation
+   - Fair commission structures
+   - No preferential ranking for payment
 
-**Key Copy:**
-```text
-"We continuously monitor partner availability to ensure reliable service. 
-If one provider experiences issues, our system automatically routes to alternatives."
-```
-
----
-
-### Phase 7: Enterprise & Government Readiness Page
-
-**New Page:** `src/pages/business/EnterpriseReady.tsx`
-
-Route: `/business/enterprise` or `/enterprise`
-
-Procurement-friendly documentation for corporate and government buyers.
-
-**Sections:**
-1. **Corporate Travel Compatibility**
-   - Business account structure
-   - Multi-traveler support
-   - Expense reporting ready
-
-2. **Invoice-Ready Structure**
-   - VAT/Tax ID support
-   - Invoice generation
-   - PO number tracking
-
-3. **Procurement Documentation**
-   - Company information
-   - Insurance certificates (placeholder)
-   - Security questionnaire responses
-
-4. **Compliance Attestations**
-   - Data processing agreement ready
+4. **Data Protection**
    - GDPR/CCPA compliance
-   - Security certifications (roadmap)
+   - No data selling
+   - User control over data
 
-**Copy:**
-```text
-"ZIVO is designed to meet enterprise procurement requirements. 
-Contact our business team for custom agreements and documentation."
-```
-
----
-
-### Phase 8: Audit Visibility Notice Component
-
-**New Component:** `src/components/shared/AuditNotice.tsx`
-
-Visible notice about activity logging for compliance.
-
-**Placement:**
-- Account settings
-- Checkout pages
-- Admin dashboard
-
-**Copy:**
-```text
-"Activity logs are maintained for security and compliance purposes. 
-This includes login events, booking actions, and payment transactions."
-```
-
-**Update:** `src/pages/account/Security.tsx`
-
-Add section showing user's audit activity (login history, etc.)
-
----
-
-### Phase 9: Regulatory Readiness Enhancement
-
-**New Page:** `src/pages/legal/RegulatoryStatus.tsx`
-
-Route: `/legal/regulatory-status`
-
-Consolidated view of all regulatory statuses.
-
-**Sections:**
-1. **Seller of Travel**
-   - California: Application submitted
-   - Florida: Application submitted
-   - Other states: Exempt or pending
-
-2. **Consumer Protection**
-   - Sub-agent model explanation
-   - Refund rights
-   - Complaint process
-
-3. **Data Protection**
-   - GDPR (EU users)
-   - CCPA (California users)
-   - UK GDPR (UK users)
-
----
-
-### Phase 10: Update Footer & Navigation
-
-**Update:** `src/components/Footer.tsx`
-
-Add Compliance Center link in legal section.
-
-**Update:** `src/pages/Security.tsx`
-
-Add links to new trust pages.
-
-**Update:** `src/App.tsx`
-
-Add routes for all new pages.
+5. **Our Commitment**
+   - Signed by leadership
+   - Dated and versioned
 
 ---
 
@@ -353,23 +429,24 @@ Add routes for all new pages.
 
 | File | Description |
 |------|-------------|
-| `src/pages/ComplianceCenter.tsx` | Unified legal/compliance hub |
-| `src/pages/security/EnterpriseTrust.tsx` | Enterprise security signals |
-| `src/pages/legal/PaymentTransparency.tsx` | Payment flow documentation |
-| `src/pages/business/PartnerAuditDocs.tsx` | Affiliate review documentation |
-| `src/pages/Reliability.tsx` | Service reliability page |
-| `src/pages/business/EnterpriseReady.tsx` | Procurement documentation |
-| `src/pages/legal/RegulatoryStatus.tsx` | Regulatory status overview |
-| `src/components/shared/AuditNotice.tsx` | Activity logging notice |
-| `src/components/legal/DisputeFlowDiagram.tsx` | Visual escalation flow |
+| `src/pages/BrandMission.tsx` | Brand mission, vision, values |
+| `src/pages/CompanyProfile.tsx` | Executive company profile |
+| `src/pages/InvestorRelations.tsx` | Investor-focused content |
+| `src/pages/StrategicPartnerships.tsx` | Acquisition/partnership page |
+| `src/pages/FinancialTransparency.tsx` | Revenue model transparency |
+| `src/pages/Careers.tsx` | Jobs and culture page |
+| `src/pages/EcosystemMap.tsx` | Platform ecosystem visual |
+| `src/pages/StrategicRoadmap.tsx` | 5-year strategic vision |
+| `src/pages/TrustStatement.tsx` | Public trust commitment |
+| `src/components/press/PressKitAssets.tsx` | Downloadable assets |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/legal/DisputeProcess.tsx` | Add response times, documentation requirements |
-| `src/pages/Security.tsx` | Add enterprise trust links |
-| `src/components/Footer.tsx` | Add Compliance Center link |
+| `src/pages/Press.tsx` | Add press kit assets section |
+| `src/config/brandTokens.ts` | Add Rides, Eats, Move service colors |
+| `src/components/Footer.tsx` | Add Investors, Careers links |
 | `src/App.tsx` | Add new routes |
 
 ---
@@ -378,59 +455,84 @@ Add routes for all new pages.
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/compliance` | ComplianceCenter | Legal hub page |
-| `/legal/compliance-center` | ComplianceCenter | Alias |
-| `/security/enterprise` | EnterpriseTrust | Enterprise security |
-| `/trust` | EnterpriseTrust | Alias |
-| `/legal/payment-transparency` | PaymentTransparency | Payment docs |
-| `/business/partner-audit` | PartnerAuditDocs | Affiliate docs |
-| `/reliability` | Reliability | Service reliability |
-| `/business/enterprise` | EnterpriseReady | Enterprise docs |
-| `/legal/regulatory-status` | RegulatoryStatus | Reg status |
+| `/brand` | BrandMission | Brand mission & vision |
+| `/mission` | BrandMission | Alias |
+| `/company-profile` | CompanyProfile | Executive profile |
+| `/investors` | InvestorRelations | Investor relations |
+| `/investor-relations` | InvestorRelations | Alias |
+| `/strategic-partnerships` | StrategicPartnerships | Strategic positioning |
+| `/financial-transparency` | FinancialTransparency | Revenue model |
+| `/careers` | Careers | Jobs page |
+| `/jobs` | Careers | Alias |
+| `/ecosystem` | EcosystemMap | Platform diagram |
+| `/platform` | EcosystemMap | Alias |
+| `/strategic-roadmap` | StrategicRoadmap | 5-year vision |
+| `/trust-statement` | TrustStatement | Trust commitment |
 
 ---
 
 ## Technical Considerations
 
-### Compliance Focus
-- All pages include proper disclaimers
-- Clear attribution of third-party services
-- No promises of uptime or SLAs (liability protection)
-- Partner-specific disclosures maintained
+### Brand Consistency
+- Extend `brandTokens.ts` with Rides, Eats, Move colors
+- Consistent messaging across all corporate pages
+- Professional, investor-grade design
 
-### Audit Trail
-- Extend existing `auditLog.ts` with new action types
-- Add booking, payment, and refund actions
-- User-facing activity log in account settings
+### Placeholder Content
+- Leadership section with "To be announced" placeholders
+- Careers with "No current openings" state
+- Financial data as descriptive text (no specific numbers)
 
-### Partner Reviews
-- Documentation structured for affiliate network requirements
-- FTC disclosure compliance throughout
-- Clear separation of ZIVO vs partner responsibilities
+### SEO & Discoverability
+- Proper meta tags for corporate pages
+- Schema.org Organization markup
+- Canonical URLs for all pages
 
-### Enterprise Readiness
-- Procurement-friendly language
-- Security questionnaire compatibility
-- Invoice/billing structure documentation
+### Compliance
+- No specific financial projections
+- Appropriate forward-looking statement disclaimers
+- Partner attribution maintained
+
+---
+
+## Brand Architecture Extension
+
+**New Service Colors for brandTokens.ts:**
+
+```typescript
+rides: {
+  DEFAULT: "hsl(340 75% 55%)",  // Rose
+  gradient: "from-rose-500 to-pink-600",
+  text: "text-rose-500",
+  bg: "bg-rose-500",
+  border: "border-rose-500/30",
+},
+
+eats: {
+  DEFAULT: "hsl(25 95% 53%)",  // Orange
+  gradient: "from-orange-500 to-red-500",
+  text: "text-orange-500",
+  bg: "bg-orange-500",
+  border: "border-orange-500/30",
+},
+
+move: {
+  DEFAULT: "hsl(165 80% 45%)",  // Teal
+  gradient: "from-teal-500 to-emerald-600",
+  text: "text-teal-500",
+  bg: "bg-teal-500",
+  border: "border-teal-500/30",
+},
+```
 
 ---
 
 ## Success Metrics
 
 After implementation:
-- Compliance Center: Central access to all 74+ legal pages
-- Partner audit pass rate: 100% (for affiliate networks)
-- Bank/processor confidence: Clear payment documentation
-- Enterprise leads: Procurement-ready documentation
-- Audit coverage: All critical actions logged
-
----
-
-## Compliance Checklist
-
-- [ ] All new pages include appropriate disclaimers
-- [ ] FTC disclosure requirements met on affiliate pages
-- [ ] PCI-DSS language accurate for payment pages
-- [ ] GDPR/CCPA rights clearly explained
-- [ ] No SLA guarantees that create liability
-- [ ] Partner attribution maintained throughout
+- Complete corporate presence for due diligence
+- Investor-ready documentation
+- Clear brand architecture for all 6 verticals
+- Professional press kit for media coverage
+- Talent attraction infrastructure
+- Strategic positioning for M&A discussions
