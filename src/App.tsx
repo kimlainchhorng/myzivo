@@ -246,6 +246,11 @@ const VulnerabilityDisclosure = lazy(() => import("./pages/security/Vulnerabilit
 const Status = lazy(() => import("./pages/Status"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
+const Feedback = lazy(() => import("./pages/Feedback"));
+const Roadmap = lazy(() => import("./pages/Roadmap"));
+const APIPartners = lazy(() => import("./pages/business/APIPartners"));
+const BusinessDashboard = lazy(() => import("./pages/business/BusinessDashboard"));
+const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
 
 // Support pages
 const Help = lazy(() => import("./pages/Help"));
@@ -1060,6 +1065,15 @@ const App = () => (
                 <Route path="/invite" element={<ReferralProgram />} />
                 <Route path="/corporate" element={<CorporateTravel />} />
                 <Route path="/business-travel" element={<CorporateTravel />} />
+                {/* Business & Enterprise */}
+                <Route path="/api-partners" element={<APIPartners />} />
+                <Route path="/developers" element={<APIPartners />} />
+                <Route path="/business/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
+                {/* Feedback & Roadmap */}
+                <Route path="/feedback" element={<Feedback />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                {/* Admin Email Automation */}
+                <Route path="/admin/email-automation" element={<ProtectedRoute requireAdmin><EmailAutomationDashboard /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

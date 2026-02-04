@@ -43,6 +43,9 @@ const footerLinks = {
     { name: "FAQ", href: "/faq" },
     { name: "Security", href: "/security" },
     { name: "Transparency", href: "/how-zivo-makes-money" },
+    { name: "Roadmap", href: "/roadmap" },
+    { name: "Feedback", href: "/feedback" },
+    { name: "API Partners", href: "/api-partners" },
   ],
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
