@@ -1,9 +1,9 @@
 
-# ZIVO Production + Scale Readiness Implementation
+# ZIVO Revenue, Retention & Scale Implementation
 
 ## Overview
 
-This plan prepares ZIVO for production deployment with real users, affiliate approvals, payment processing, support workflows, SEO traffic, and mobile apps. The implementation builds on ZIVO's substantial existing infrastructure while adding missing components for production readiness.
+This plan implements comprehensive revenue optimization, loyalty enhancements, referral improvements, content strategy, and business scaling features to transform ZIVO into a repeat-use, revenue-focused travel platform.
 
 ## Current State Assessment
 
@@ -11,371 +11,490 @@ This plan prepares ZIVO for production deployment with real users, affiliate app
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **User Authentication** | Complete | `AuthContext.tsx`, `Login.tsx`, `Signup.tsx` |
-| **Social Login (Google/Apple/Facebook)** | Complete | OAuth in AuthContext with `signInWithProvider` |
-| **User Profile** | Complete | `Profile.tsx` with avatar, name, phone, status |
-| **Customer Dashboard** | Complete | `CustomerDashboard.tsx` with tabs for all services |
-| **Checkout Flow (Flights)** | Complete | `FlightTravelerInfo.tsx` → `FlightCheckout.tsx` → `FlightConfirmation.tsx` |
-| **Price Breakdown** | Complete | `FlightPriceBreakdown.tsx` component |
-| **Help Center** | Complete | `HelpCenter.tsx` with FAQs, contact, ticket system |
-| **SEO City Pages** | Partial | `FlightCityPage.tsx` at `/flights/cities/:citySlug` |
-| **Analytics Tracking** | Complete | `useEventTracking.ts`, `analytics_events` table |
-| **Security Pages** | Complete | `Security.tsx`, `SecurityIncident.tsx` |
-| **Error Handling (No Results)** | Complete | Empty states in result pages |
-| **Mobile-First Design** | Complete | Bottom nav, touch targets, app-style cards |
-| **Travelers Table** | Partial | Basic `travelers` table exists but not user-linked |
+| **ZIVO Miles Program** | Complete | `ZivoMilesProgram.tsx` with tiers (Bronze/Silver/Gold/Platinum), earning, redemption |
+| **Loyalty Redemption at Checkout** | Complete | `LoyaltyRedemption.tsx` in `FlightResultsSection.tsx` |
+| **Referral Center** | Complete | `ReferralCenter.tsx` with codes, sharing, tier bonuses |
+| **Travel Insurance Page** | Complete | `TravelInsurance.tsx` with Basic/Standard/Premium plans |
+| **Admin Rewards Program** | Complete | `AdminRewardsProgram.tsx` with tier distribution, points activity |
+| **Revenue Dashboard** | Complete | `RevenueDashboard.tsx` with clicks, conversions, revenue tracking |
+| **Trust Badges** | Partial | `TrustBadgesBar.tsx`, scattered across pages |
+| **Multi-Provider Cards** | Complete | `FlightMultiProviderCard.tsx`, `HotelMultiProviderCard.tsx` |
+| **SEO Pages** | Partial | `FlightToCity.tsx`, `FlightRoutePage.tsx`, `AirportPage.tsx` |
 
 ### Missing/Needs Enhancement
 
 | Feature | Status | Required |
 |---------|--------|----------|
-| **Saved Travelers System** | Missing | User-linked persistent profiles |
-| **Saved Payment Methods UI** | Missing | Stripe stored cards display |
-| **User Email Preferences** | Missing | Marketing opt-in/out settings |
-| **Price Changed Warning** | Missing | Real-time price validation |
-| **Partner Unavailable Fallback** | Missing | Graceful degradation |
-| **SEO Destination Pages** | Partial | Need `/flights/to/:city` routes |
-| **Analytics Admin Dashboard** | Partial | Need consolidated view |
-| **Session Timeout Handling** | Missing | Auth expiry detection |
+| **Checkout Upsells** | Missing | Insurance, baggage, seat selection blocks |
+| **Best Deal Provider Highlighting** | Partial | Needs default selection + badge |
+| **Travel Guides/Content Pages** | Missing | Cheap flights, city guides, airport guides |
+| **Referral Landing Page** | Missing | Dedicated `/referral` or `/invite` page |
+| **Push Notifications UI** | Missing | Price drop alerts, booking reminders |
+| **Business Dashboard Enhancement** | Partial | Consolidated admin view for all metrics |
+| **Testimonials Section** | Missing | Social proof with customer reviews |
+| **As Seen On Section** | Missing | Media/partner logos |
+| **Corporate Travel Placeholder** | Missing | Future B2B structure |
+| **Group Booking Placeholder** | Missing | Multi-passenger booking flow |
 
 ---
 
-## Implementation Phases
+## Phase 1: Revenue Optimization (Checkout Upsells)
 
-### Phase 1: Saved Travelers System
+### 1.1 Checkout Upsell Block Component
 
-Create a persistent traveler profiles system linked to user accounts for auto-fill during checkout.
+Create a modular upsell system for the checkout flow.
 
-**Database Migration:**
+**New Component:** `src/components/checkout/CheckoutUpsells.tsx`
+
 ```text
-saved_travelers
-- id: uuid (PK)
-- user_id: uuid (FK → auth.users, ON DELETE CASCADE)
-- traveler_type: text ('adult' | 'child' | 'infant')
-- title: text
-- given_name: text
-- family_name: text
-- born_on: date
-- gender: text
-- email: text
-- phone_number: text
-- passport_number: text (encrypted)
-- passport_expiry: date
-- passport_country: text
-- nationality: text
-- known_traveler_number: text
-- is_primary: boolean (default false)
-- created_at, updated_at
-- UNIQUE(user_id, given_name, family_name, born_on)
+Upsell Block Structure:
++--------------------------------------------------+
+| ENHANCE YOUR TRIP                    Most Popular ↓
++--------------------------------------------------+
+| ☑️ Travel Insurance .............. +$59/trip      |
+|    Flight cancellation, medical emergencies       |
+|    "Most travelers choose this"                   |
++--------------------------------------------------+
+| ☐ Extra Baggage .................. +$35/bag       |
+|    Add a 23kg checked bag                         |
++--------------------------------------------------+
+| ☐ Seat Selection ................. +$15/seat      |
+|    Choose your preferred seat (partner site)      |
++--------------------------------------------------+
+| ☐ Flexible Ticket ................ +$45           |
+|    Change dates with reduced fees                 |
++--------------------------------------------------+
 ```
 
-RLS Policies:
-- Users can only view/edit their own travelers
-- Insert requires authentication
+**Features:**
+- Checkbox-based selection
+- "Most popular" / "Best value" badges
+- Clear pricing per item
+- Compliance: "Insurance provided by third-party partners. ZIVO is not an insurer."
+- Auto-calculate total with selections
 
-**New Files:**
-- `src/hooks/useSavedTravelers.ts` - CRUD operations for saved travelers
-- `src/components/travel/SavedTravelersManager.tsx` - UI for managing travelers
-- `src/components/travel/TravelerAutoFill.tsx` - Dropdown for selecting saved travelers
-
-**Integration Points:**
-- Add to `FlightTravelerInfo.tsx` - Auto-fill from saved travelers
-- Add to `Profile.tsx` - Quick Links section for "Saved Travelers"
-
-### Phase 2: User Dashboard Enhancements
-
-**2A: Saved Payment Methods Display**
-
-The platform uses Stripe for payments. We'll add a component to display saved cards.
-
-**New Files:**
-- `src/components/payment/SavedPaymentMethods.tsx` - Lists user's Stripe saved cards
-- `src/hooks/usePaymentMethods.ts` - Fetches saved payment methods via edge function
-
-**Edge Function:** `get-payment-methods`
-- Calls Stripe Customer API to list payment methods
-- Returns masked card info (last 4, brand, expiry)
-
-**2B: Email Preferences**
-
-**Database Migration:**
-```text
-user_email_preferences
-- id: uuid
-- user_id: uuid (unique)
-- marketing_emails: boolean (default true)
-- price_alerts: boolean (default true)
-- booking_updates: boolean (default true)
-- newsletter: boolean (default true)
-- updated_at
-```
-
-**New Files:**
-- `src/hooks/useEmailPreferences.ts`
-- `src/components/settings/EmailPreferences.tsx`
+**Files to Create:**
+- `src/components/checkout/CheckoutUpsells.tsx` - Main upsell block
+- `src/components/checkout/UpsellItem.tsx` - Individual upsell item
+- `src/config/checkoutUpsells.ts` - Upsell products configuration
 
 **Integration:**
-- Add to Profile page in Settings quick link
-- Use in email sending edge functions
+- Add to `FlightCheckout.tsx` between passenger summary and terms
+- Add to `CarCheckoutPage.tsx` and `HotelCheckout.tsx`
 
-### Phase 3: Checkout UX Improvements
+### 1.2 Best Deal Provider Highlighting
 
-**3A: Price Changed Warning**
+Enhance `FlightMultiProviderCard.tsx` to:
+- Default-select the lowest price provider (Best Deal)
+- Show prominent "Best Deal" badge with glow effect
+- Show "Official Airline" badge for direct bookings
+- Pre-select the best deal radio button
 
-Add real-time price validation before payment.
+**Update:** `src/components/results/FlightMultiProviderCard.tsx`
 
-**New Component:** `src/components/checkout/PriceChangedWarning.tsx`
-- Shows when offer price differs from stored price
-- Options: Continue at new price / Cancel
+Add:
+- `defaultSelected` prop
+- Visual hierarchy with "Best Deal" being most prominent
+- "Official Airline" trust indicator
 
-**Integration:**
-- Add to `FlightCheckout.tsx` before payment button
-- Fetch fresh offer price on checkout load
-- Compare with session-stored price
+### 1.3 Price Comparison Transparency
 
-**3B: Billing Address Collection**
+**New Component:** `src/components/shared/PriceComparisonDisclaimer.tsx`
 
-**New Component:** `src/components/checkout/BillingAddressForm.tsx`
-- Country, State, City, ZIP, Address line
-- Pass to Stripe checkout session
-
-**3C: Apple Pay / Google Pay Placeholders**
-
-Update `FlightPaymentModal.tsx`:
-- Already has placeholders for Apple Pay, Google Pay, PayPal
-- Add "Coming Soon" tooltip on disabled buttons
-
-### Phase 4: Error Handling & Edge Cases
-
-**4A: Partner Unavailable Fallback**
-
-**New Component:** `src/components/shared/PartnerUnavailable.tsx`
-- Friendly message when API fails
-- Retry button
-- Alternative suggestions
-
-**Integration:**
-- Wrap flight/hotel/car results with error boundary
-- Show fallback on API errors
-
-**4B: Session Timeout Handling**
-
-**New Hook:** `src/hooks/useSessionTimeout.ts`
-- Monitor session expiry
-- Show warning modal 5 minutes before expiry
-- Auto-redirect to login on expiry
-
-**New Component:** `src/components/auth/SessionTimeoutWarning.tsx`
-- Modal warning about session expiry
-- "Stay signed in" button to refresh session
-
-### Phase 5: SEO & Growth Foundation
-
-**5A: Indexable Destination Pages**
-
-Create route pattern `/flights/to/:city` for organic SEO.
-
-**New Routes in App.tsx:**
-```tsx
-<Route path="/flights/to/:citySlug" element={<FlightToCity />} />
-<Route path="/flights/:origin-to-:destination" element={<FlightRoutePage />} />
-```
-
-**New Pages:**
-- `src/pages/seo/FlightToCity.tsx` - Flights TO a city
-- `src/pages/seo/FlightRoutePage.tsx` - Specific route (e.g., /flights/new-york-to-london)
-
-**SEO Metadata:**
-- Dynamic title: "Flights to {City} from ${price} | ZIVO"
-- Structured data (FlightSearch schema)
-- Canonical URLs
-
-**5B: Schema-Ready Metadata**
-
-**New Component:** `src/components/seo/TravelServiceSchema.tsx`
-- Generates JSON-LD for travel services
-- Supports flights, hotels, cars
-
-### Phase 6: Admin Analytics Dashboard
-
-**6A: Consolidated Analytics View**
-
-**New Page:** `src/pages/admin/AnalyticsDashboard.tsx`
-
-Route: `/admin/analytics`
-
-Metrics Display:
-- Total searches (by service)
-- Total clicks (outbound partner clicks)
-- Bookings count
-- Conversion rates (search → click → book)
-- Revenue tracking
-
-Data Sources:
-- `analytics_events` table (already tracking)
-- `outbound_click_log` table
-- `travel_orders` table
-
-**6B: Conversion Tracking Placeholders**
-
-Update `src/components/analytics/ConversionPixel.tsx`:
-- Google Analytics 4 event structure
-- Facebook Pixel event structure
-- Ready for user to add their tracking IDs
-
-### Phase 7: Customer Support Enhancement
-
-**7A: Support Page Updates**
-
-Update `HelpCenter.tsx`:
-- Add "How Booking Works" section
-- Add "Baggage Rules" section
-- Enhance contact options with response time notice
-
-**New FAQ Sections:**
-- How booking works (step-by-step)
-- Changes & cancellations
-- Baggage rules by airline
-
-**7B: Partner Support Routing**
-
-Add clear messaging:
 ```text
-"Booking issues (refunds, changes, cancellations):
-Contact your travel partner directly using the details in your confirmation email.
-
-Technical issues (website, app, account):
-Contact ZIVO Support at support@hizivo.com"
+"We compare prices across hundreds of airlines and travel sites to help you find the best deal."
 ```
 
-### Phase 8: Mobile App Readiness
+**Tooltip Content:**
+```text
+"Prices may differ by provider due to fees, baggage, or ticket rules."
+```
 
-**8A: Verify Mobile-First Components**
+Place in:
+- Results page header
+- Checkout summary
 
-Audit all new components for:
-- Touch targets ≥ 44px
-- Bottom navigation compatibility
-- Safe area insets
-- App-style cards and spacing
+---
 
-**8B: PWA Optimization**
+## Phase 2: Travel Insurance & Add-ons at Checkout
 
-Already has `vite-plugin-pwa`. Verify:
-- Service worker caching strategies
-- Offline fallback pages
-- Install prompt on mobile
+### 2.1 Insurance Selector Component
 
-### Phase 9: Business & Partner Pages
+**New Component:** `src/components/checkout/TravelInsuranceSelector.tsx`
 
-**9A: Partner with ZIVO Page**
+Simplified version for checkout (not the full `/travel-insurance` page):
 
-**New Page:** `src/pages/business/PartnerWithZivo.tsx`
+```text
++--------------------------------------------------+
+| 🛡️ TRAVEL PROTECTION                              |
++--------------------------------------------------+
+| ⚪ Skip Protection                                 |
+| ⚪ Basic ($29) - Trip cancellation, basic medical |
+| ◉ Standard ($59) - Recommended - Full coverage   |
+| ⚪ Premium ($99) - Everything + cancel any reason  |
++--------------------------------------------------+
+| Insurance provided by third-party partners.       |
+| ZIVO is not an insurer.                          |
++--------------------------------------------------+
+```
 
-Route: `/partner-with-zivo`
+**Integration:**
+- Add to `FlightCheckout.tsx`
+- Pass selected plan to Stripe as line item
+
+### 2.2 Add-on Calculation Hook
+
+**New Hook:** `src/hooks/useCheckoutAddons.ts`
+
+- Track selected add-ons
+- Calculate total with add-ons
+- Format for Stripe checkout
+
+---
+
+## Phase 3: Loyalty & Rewards Enhancements
+
+### 3.1 Rewards Dashboard Enhancement
+
+The existing `ZivoMilesProgram.tsx` is comprehensive. Enhancements needed:
+
+**Update:** `src/components/flight/ZivoMilesProgram.tsx`
+
+Add:
+- "Priority Price Alerts" as redemption option
+- "Promo Code Generator" - Redeem miles for discount codes
+- Clearer "Earn Miles" section showing earning rates
+
+### 3.2 Points Display in Navigation
+
+**New Component:** `src/components/shared/MilesBalanceChip.tsx`
+
+Small badge showing miles balance in header/nav for logged-in users.
+
+**Integration:**
+- Add to `Header.tsx` for desktop
+- Add to mobile profile section
+
+---
+
+## Phase 4: Referral Program Enhancement
+
+### 4.1 Dedicated Referral Landing Page
+
+**New Page:** `src/pages/ReferralProgram.tsx`
+
+Route: `/referrals` or `/invite`
 
 Content:
-- For airlines, hotels, car rental companies
-- For affiliate marketers
-- Contact form for partnership inquiries
+- Hero: "Invite Friends, Earn Rewards"
+- How it works (3 steps)
+- Reward tiers
+- Share options
+- FAQ
+- CTA: "Get Your Referral Link"
 
-**9B: Update Existing Legal Pages**
+### 4.2 Referral Rewards Configuration
 
-Already have most pages. Verify copy includes:
-- Partner Disclosure: "ZIVO acts as a booking facilitator and sub-agent"
-- Seller of Travel: CA/FL registration status
-- Affiliate Disclosure: Commission disclosure
+**New Config:** `src/config/referralProgram.ts`
+
+```typescript
+export const REFERRAL_REWARDS = {
+  newUser: {
+    credit: 10, // $10 travel credit
+    miles: 2500, // bonus miles
+  },
+  referrer: {
+    creditPerReferral: 10,
+    milesPerReferral: 2500,
+    tierBonuses: [
+      { count: 3, bonus: 5000, title: 'Starter' },
+      { count: 10, bonus: 15000, title: 'Advocate' },
+      { count: 25, bonus: 50000, title: 'Ambassador' },
+    ],
+  },
+};
+```
 
 ---
 
-## File Changes Summary
+## Phase 5: Content & SEO Pages (Traffic Engine)
+
+### 5.1 Travel Guides Page Structure
+
+**New Pages:**
+- `src/pages/guides/CheapFlightsGuide.tsx` - Route: `/guides/cheap-flights`
+- `src/pages/guides/CityGuide.tsx` - Route: `/guides/:citySlug`
+- `src/pages/guides/AirportGuide.tsx` - Route: `/airports/:airportCode`
+- `src/pages/guides/BestTimeToBook.tsx` - Route: `/guides/best-time-to-book`
+
+**Content Structure for `/guides/cheap-flights`:**
+- H1: "How to Find Cheap Flights in 2024"
+- Tips with icons
+- Best booking times
+- Price calendar example
+- Related routes
+- CTA: Search flights
+
+**Content Structure for City Guide `/guides/new-york`:**
+- H1: "New York Travel Guide"
+- Best time to visit
+- Popular attractions
+- Flight deals to NYC
+- Hotels in NYC
+- Airport info (JFK, LGA, EWR)
+- Cross-sell CTAs
+
+### 5.2 Guides Index Page
+
+**New Page:** `src/pages/guides/GuidesIndex.tsx`
+
+Route: `/guides`
+
+Categories:
+- Booking Tips (cheap flights, best times)
+- City Guides (alphabetical)
+- Airport Guides (by code)
+
+---
+
+## Phase 6: Push Notifications (UI Ready)
+
+### 6.1 Notification Preferences
+
+**New Component:** `src/components/settings/PushNotificationPreferences.tsx`
+
+```text
++--------------------------------------------------+
+| 🔔 PUSH NOTIFICATIONS                            |
++--------------------------------------------------+
+| ☑️ Price Drop Alerts                              |
+|    Get notified when tracked prices drop          |
++--------------------------------------------------+
+| ☑️ Booking Reminders                              |
+|    Check-in reminders, departure alerts           |
++--------------------------------------------------+
+| ☐ Deals & Promotions                              |
+|    Exclusive offers and flash sales               |
++--------------------------------------------------+
+| Note: Push notifications available on mobile app  |
++--------------------------------------------------+
+```
+
+### 6.2 Price Alert Trigger Component
+
+**New Component:** `src/components/shared/PriceAlertTrigger.tsx`
+
+Small component with bell icon + "Alert me when price drops" that appears on:
+- Flight result cards
+- Hotel result cards
+- Saved searches
+
+---
+
+## Phase 7: Business Dashboard (Admin)
+
+### 7.1 Consolidated Business Metrics
+
+**Update:** `src/pages/admin/RevenueDashboard.tsx`
+
+Add tabs/sections for:
+- Total searches (by service)
+- Click-through rates (CTR)
+- Bookings count
+- Revenue by provider/partner
+- Top routes/destinations
+- Conversion funnel visualization
+
+### 7.2 Top Routes Analytics
+
+**New Section in Dashboard:**
+
+```text
+TOP ROUTES THIS MONTH
++--------------------------------------------------+
+| 1. NYC → LAX ........... 2,340 searches, 12% CVR |
+| 2. LAX → NYC ........... 2,180 searches, 11% CVR |
+| 3. CHI → MIA ........... 1,890 searches, 14% CVR |
+| 4. SFO → NYC ........... 1,650 searches, 10% CVR |
+| 5. NYC → LHR ........... 1,420 searches, 8% CVR  |
++--------------------------------------------------+
+```
+
+---
+
+## Phase 8: Brand Authority & Trust
+
+### 8.1 Testimonials Section
+
+**New Component:** `src/components/marketing/TestimonialsCarousel.tsx`
+
+```text
++--------------------------------------------------+
+| "ZIVO made booking my trip so easy!" ★★★★★      |
+| - Sarah M., New York                              |
++--------------------------------------------------+
+| "Best prices I found anywhere. Highly recommend." |
+| - Mike T., Los Angeles                ★★★★★      |
++--------------------------------------------------+
+```
+
+Features:
+- Auto-rotating carousel
+- Star ratings
+- User avatars (generic)
+- Mobile swipe support
+
+**Note:** Placeholder content - real testimonials to be added later
+
+### 8.2 As Seen On / Media Section
+
+**New Component:** `src/components/marketing/AsSeenOnSection.tsx`
+
+```text
++--------------------------------------------------+
+| AS SEEN ON                                        |
+| [TechCrunch] [Forbes] [Travel+Leisure] [CNN]     |
++--------------------------------------------------+
+```
+
+**Note:** Placeholder logos - greyscale for credibility
+Add disclaimer: "ZIVO has been featured in various publications"
+
+### 8.3 Enhanced Trust Badges
+
+**Update:** `src/components/shared/TrustBadgesBar.tsx`
+
+Add:
+- "SSL Secured" badge
+- "Licensed Travel Partners" badge
+- "PCI Compliant" badge
+- "24/7 Support" badge
+
+---
+
+## Phase 9: Scalability & Future Expansion
+
+### 9.1 Corporate Travel Placeholder
+
+**New Page:** `src/pages/business/CorporateTravel.tsx`
+
+Route: `/corporate` or `/business-travel`
+
+Content:
+- Hero: "ZIVO for Business"
+- Benefits (expense management, team booking, reporting)
+- "Coming Soon" indicator
+- Waitlist signup form
+
+### 9.2 Group Booking Placeholder
+
+**New Component:** `src/components/booking/GroupBookingBanner.tsx`
+
+Shows on search pages when passengers > 6:
+```text
+"Booking for a group? Contact us for special rates."
+[Request Quote]
+```
+
+### 9.3 Multi-City Trip Placeholder
+
+**Update:** `FlightSearchFormPro.tsx`
+
+Add "Multi-City" tab (disabled with "Coming Soon" tooltip)
+
+---
+
+## Files Summary
 
 ### New Files to Create
 
 | File | Description |
 |------|-------------|
-| `supabase/migrations/xxx_saved_travelers.sql` | Saved travelers table + email preferences |
-| `src/types/travelers.ts` | TypeScript types for travelers |
-| `src/hooks/useSavedTravelers.ts` | CRUD hook for saved travelers |
-| `src/hooks/usePaymentMethods.ts` | Fetch Stripe payment methods |
-| `src/hooks/useEmailPreferences.ts` | User email preferences |
-| `src/hooks/useSessionTimeout.ts` | Session expiry monitoring |
-| `src/components/travel/SavedTravelersManager.tsx` | Manage saved travelers UI |
-| `src/components/travel/TravelerAutoFill.tsx` | Auto-fill dropdown |
-| `src/components/payment/SavedPaymentMethods.tsx` | Display saved cards |
-| `src/components/settings/EmailPreferences.tsx` | Email preference toggles |
-| `src/components/checkout/PriceChangedWarning.tsx` | Price validation warning |
-| `src/components/checkout/BillingAddressForm.tsx` | Billing address collection |
-| `src/components/shared/PartnerUnavailable.tsx` | API error fallback |
-| `src/components/auth/SessionTimeoutWarning.tsx` | Session expiry modal |
-| `src/pages/seo/FlightToCity.tsx` | SEO city landing page |
-| `src/pages/seo/FlightRoutePage.tsx` | SEO route page |
-| `src/pages/admin/AnalyticsDashboard.tsx` | Consolidated analytics |
-| `src/pages/business/PartnerWithZivo.tsx` | Partnership page |
-| `supabase/functions/get-payment-methods/index.ts` | Stripe payment methods API |
+| `src/components/checkout/CheckoutUpsells.tsx` | Upsell block for checkout |
+| `src/components/checkout/UpsellItem.tsx` | Individual upsell item |
+| `src/components/checkout/TravelInsuranceSelector.tsx` | Compact insurance selector |
+| `src/config/checkoutUpsells.ts` | Upsell products config |
+| `src/hooks/useCheckoutAddons.ts` | Addon calculation hook |
+| `src/components/shared/PriceComparisonDisclaimer.tsx` | Comparison transparency |
+| `src/components/shared/MilesBalanceChip.tsx` | Miles display in nav |
+| `src/pages/ReferralProgram.tsx` | Dedicated referral landing page |
+| `src/config/referralProgram.ts` | Referral rewards config |
+| `src/pages/guides/GuidesIndex.tsx` | Guides hub page |
+| `src/pages/guides/CheapFlightsGuide.tsx` | Booking tips content |
+| `src/pages/guides/CityGuide.tsx` | Dynamic city guide template |
+| `src/pages/guides/AirportGuide.tsx` | Airport info template |
+| `src/pages/guides/BestTimeToBook.tsx` | Booking timing guide |
+| `src/components/settings/PushNotificationPreferences.tsx` | Push prefs UI |
+| `src/components/shared/PriceAlertTrigger.tsx` | Quick alert button |
+| `src/components/marketing/TestimonialsCarousel.tsx` | Customer testimonials |
+| `src/components/marketing/AsSeenOnSection.tsx` | Media logos |
+| `src/pages/business/CorporateTravel.tsx` | B2B placeholder |
+| `src/components/booking/GroupBookingBanner.tsx` | Group booking CTA |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/FlightTravelerInfo.tsx` | Add saved travelers auto-fill |
-| `src/pages/FlightCheckout.tsx` | Add price validation, billing address |
-| `src/pages/Profile.tsx` | Add saved travelers quick link |
-| `src/pages/HelpCenter.tsx` | Add new FAQ sections |
-| `src/App.tsx` | Add new routes |
-| `src/components/Header.tsx` | Session timeout listener |
-
----
-
-## Database Schema Changes
-
-### New Tables
-
-**saved_travelers**
-- Stores user's frequently used traveler profiles
-- Encrypted passport data
-- Primary traveler flag for quick selection
-
-**user_email_preferences**
-- Marketing communication preferences
-- Price alert preferences
-- Booking update preferences
-
-### RLS Policies
-
-All new tables will have:
-- Users can only access their own data
-- Insert/Update requires authentication
-- No public access
+| `src/pages/FlightCheckout.tsx` | Add upsells, insurance selector |
+| `src/components/results/FlightMultiProviderCard.tsx` | Best deal highlighting |
+| `src/components/flight/ZivoMilesProgram.tsx` | Add priority alerts redemption |
+| `src/pages/admin/RevenueDashboard.tsx` | Add top routes, enhanced metrics |
+| `src/components/shared/TrustBadgesBar.tsx` | Add more trust badges |
+| `src/pages/Index.tsx` | Add testimonials, as seen on sections |
+| `src/App.tsx` | Add new routes for guides, referrals, corporate |
+| `src/components/Header.tsx` | Add miles balance chip for logged-in users |
+| `src/components/search/FlightSearchFormPro.tsx` | Multi-city placeholder |
 
 ---
 
 ## Technical Considerations
 
-### Security
-- Passport numbers stored encrypted using Supabase Vault
-- Stripe payment method IDs only (no raw card data)
-- Session timeout forces re-authentication
-
-### Performance
-- Lazy load new components
-- Cache saved travelers in React Query
-- Prefetch email preferences on profile load
+### Revenue Attribution
+- All upsell selections tracked in analytics
+- Insurance selections passed to Stripe as separate line items
+- Commission tracking for insurance partner
 
 ### Compliance
-- Clear consent for data storage
-- Delete travelers on account deletion (cascade)
-- Email preferences honor GDPR/CCPA
+- Insurance disclaimer: "Insurance is provided by third-party partners. ZIVO is not an insurer."
+- Price comparison: "Prices may differ by provider due to fees, baggage, or ticket rules."
+- Testimonials: Use placeholder content marked for future replacement
+
+### Performance
+- Lazy load guide pages (SEO content)
+- Testimonials carousel uses lightweight animation
+- Upsell calculations happen client-side before checkout
+
+### SEO
+- All guide pages have proper meta tags
+- Structured data for FAQPage, Article schemas
+- Internal linking between guides and booking pages
 
 ---
 
-## Success Criteria
+## Implementation Priority
+
+1. **High Priority (Revenue Impact)**
+   - Checkout upsells
+   - Best deal provider highlighting
+   - Insurance selector at checkout
+
+2. **Medium Priority (Retention)**
+   - Referral landing page
+   - Push notification preferences UI
+   - Miles balance chip in header
+
+3. **Lower Priority (Growth)**
+   - Travel guides/content pages
+   - Testimonials section
+   - Corporate travel placeholder
+
+---
+
+## Success Metrics
 
 After implementation:
-- Users can save and reuse traveler profiles
-- Users can view saved payment methods
-- Users control email preferences
-- Price changes are detected before payment
-- SEO pages rank for destination searches
-- Admin has visibility into conversion metrics
-- Support flow clearly routes to partners
-- Mobile experience is production-ready
+- Upsell attach rate target: 15-25%
+- Referral program engagement: 10% of users share link
+- Content pages drive organic traffic
+- Trust signals improve conversion rate
+- Corporate waitlist captures B2B leads
