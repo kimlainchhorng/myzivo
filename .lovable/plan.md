@@ -1,386 +1,349 @@
 
-# ZIVO Monetization, Ads & Data Moat Implementation
+# ZIVO Compliance, Audit & Enterprise Trust Implementation
 
 ## Overview
 
-This plan implements multiple revenue streams, personalization infrastructure, and data advantages to transform ZIVO from a booking platform into a monetized travel intelligence ecosystem.
+This plan enhances ZIVO to be fully compliant, audit-ready, and trusted by banks, affiliates, airlines, and enterprise partners. ZIVO already has substantial compliance infrastructure - this update fills gaps and creates unified public-facing trust pages.
 
 ## Current State Assessment
 
-### Already Implemented
+### Already Implemented (Extensive)
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **Sponsored/Promoted Labels** | Complete | `EatsSection.tsx`, `PremiumRestaurantCard.tsx` - "Promoted" badges for restaurants |
-| **Price History Chart** | Complete | `FlightPriceHistory.tsx` - 6-point price chart with trends, low/high indicators |
-| **Price Prediction** | Complete | `PricePrediction.tsx` - AI-powered price forecasting |
-| **Deals Carousel** | Complete | `FlightDealsCarousel.tsx`, `FlightSeasonalDeals.tsx`, `FlightBundleDeals.tsx` |
-| **Promotions Page** | Complete | `Promotions.tsx` - coupon codes, offers, rewards |
-| **ZIVO Miles Program** | Complete | `ZivoMilesProgram.tsx` - tiers (Bronze/Silver/Gold/Platinum), earn/redeem, transactions |
-| **Referral Program** | Complete | `ReferralProgram.tsx`, `useReferrals.ts`, `ReferralCenter.tsx` |
-| **Creator Program** | Complete | `Creators.tsx` - tracking link generator, toolkit, FAQs |
-| **Saved Searches** | Complete | `useSavedSearches.ts`, `SavedSearches.tsx` - price alerts |
-| **Price Drop Alerts** | Complete | `FlightPriceHistory.tsx` - "Set Alert" functionality |
-| **Analytics Infrastructure** | Complete | `AdminAnalytics.tsx`, `analytics_events` table, cohort analysis |
-| **Personalization Types** | Complete | `personalization.ts` - saved searches, preferences types |
-| **Business Dashboard** | Partial | `BusinessDashboard.tsx` - placeholder B2B dashboard |
+| **Legal Pages (74+ pages)** | Complete | `/src/pages/legal/*` - Terms, Privacy, Cookie, Seller of Travel, Dispute, etc. |
+| **Security Hub** | Complete | `/security` - Zero-Trust, encryption, monitoring, DLP |
+| **Privacy Compliance** | Complete | `/security/privacy-compliance` - GDPR/CCPA, DSAR, consent management |
+| **Seller of Travel** | Complete | `/legal/seller-of-travel` - Sub-agent disclosure, state registrations |
+| **Dispute Process** | Complete | `/legal/dispute-process` - Arbitration, escalation flow |
+| **Payment Processors** | Complete | `/legal/payment-processors` - PCI compliance, Stripe integration |
+| **Disaster Recovery** | Complete | `/security/disaster-recovery` - BCP, RTO/RPO, backups |
+| **Admin Compliance Center** | Complete | AdminComplianceCenter.tsx - Regulatory tracking |
+| **Audit Logging** | Complete | `auditLog.ts` + `audit_logs` table - Security events |
+| **Legal Doc Center (Admin)** | Complete | `/admin/legal-docs` - Document versioning |
+| **Evidence Logging (Admin)** | Complete | `/admin/evidence-logging` - Consent tracking |
+| **Legal Content Config** | Complete | `legalContent.ts` - 2800+ lines, 180+ clauses |
 
 ### Missing/Needs Enhancement
 
 | Feature | Status | Required |
 |---------|--------|----------|
-| **Sponsored Flight/Hotel Badges** | Missing | Sponsored labels for travel results |
-| **Price Confidence Badge** | Partial | "Good/Average/High" price indicator |
-| **Dedicated Deals Hub** | Missing | `/deals` and `/last-minute` pages |
-| **User Behavior Intelligence** | Missing | Preference tracking and personalization engine |
-| **Personalized Homepage** | Missing | Different views for logged-in vs guests |
-| **Travel Wallet UI** | Missing | Unified credits/refunds/promos view |
-| **Influencer Dashboard** | Partial | Enhanced creator analytics |
-| **B2B Data Insights** | Missing | Anonymized insights offering page |
-| **Retention Emails** | Partial | Monthly inspiration, birthday offers |
+| **Public Compliance Center** | Missing | Unified hub linking all legal pages |
+| **Enterprise Security Signals Page** | Partial | Dedicated trust badges page for partners |
+| **Payment Transparency Page** | Missing | Clear explanation for banks/processors |
+| **Affiliate Audit Pages** | Missing | Partner review documentation |
+| **Dispute Escalation Policy** | Partial | Detailed response times and flow |
+| **Enterprise/Government Readiness** | Missing | Procurement-friendly documentation |
+| **Audit Log Visibility Notice** | Missing | Public-facing audit notice |
+| **Business Continuity Public Page** | Partial | Simplified reliability page |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Sponsored Results System
+### Phase 1: Public Compliance Center (Hub Page)
 
-Create a non-intrusive sponsored content system for travel results.
+**New Page:** `src/pages/ComplianceCenter.tsx`
 
-**New Component:** `src/components/shared/SponsoredBadge.tsx`
+Route: `/compliance` or `/legal/compliance-center`
 
-A reusable badge for sponsored content:
-- "Sponsored" or "Ad" label
-- Clearly distinguished styling
-- Tooltip explaining sponsored content
+A unified hub page linking to all compliance resources with clear, user-friendly language.
 
-**New Component:** `src/components/flight/SponsoredFlightCard.tsx`
+**Sections:**
+- Legal Documents (Terms, Privacy, Cookie, Refund)
+- Regulatory Compliance (Seller of Travel, Consumer Disclosures)
+- Data Rights (GDPR, CCPA, Privacy Controls)
+- Partner Transparency (Affiliate Disclosure, Partner Disclosure)
+- Security & Trust (Security Hub link)
 
-Enhanced flight card for sponsored results:
-- Standard flight details
-- "Sponsored" badge (top-left)
-- Partner logo highlight
-- Same price transparency
-
-**New Component:** `src/components/hotel/SponsoredHotelCard.tsx`
-
-Sponsored hotel placement:
-- "Sponsored" indicator
-- Partner attribution
-- Same booking flow
+**Key Features:**
+- Category cards with icons
+- "Last updated" badges
+- Search/filter by topic
+- Download PDF option (placeholder)
 
 **Compliance Copy:**
 ```text
-"Sponsored results are clearly labeled and do not affect price transparency. 
-All prices shown are the final prices from our partners."
+"All policies are written in clear, user-friendly language. 
+We believe in transparent communication with our users."
 ```
 
-**Integration Points:**
-- Add sponsored slot at position 2-3 in flight results
-- Add sponsored slot in hotel grid
-- Add sponsored destination cards on homepage
-
 ---
 
-### Phase 2: Price Confidence Indicator
+### Phase 2: Enterprise Security Signals Page
 
-Enhance the existing price history with confidence badges.
+**New Page:** `src/pages/security/EnterpriseTrust.tsx`
 
-**New Component:** `src/components/shared/PriceConfidenceBadge.tsx`
+Route: `/security/enterprise` or `/trust`
 
-Visual indicator showing:
-- "Good Price" (green) - Below average
-- "Average Price" (amber) - Within normal range  
-- "High Price" (red) - Above average
+A dedicated page showcasing enterprise-grade security for bank reviews, payment processors, and enterprise partners.
 
-Mini chart option:
-- Sparkline showing 30-day trend
-- Current position indicator
+**Badge Sections:**
+- Secure Infrastructure (AWS/Supabase hosting)
+- Encrypted Data (AES-256, TLS 1.3)
+- Trusted Payments (PCI-DSS Level 1)
+- Access Control (RBAC, MFA)
+- Continuous Monitoring (24/7)
+- Incident Response (documented procedures)
 
-**Update:** `src/components/flight/FlightPriceHistory.tsx`
+**Compliance Signals:**
+- GDPR Ready
+- CCPA Ready
+- SOC 2 Type II (Roadmap)
 
-Add:
-- Confidence badge integration
-- Tooltip: "Based on recent partner pricing data"
-- Historical context ("15% below 30-day average")
-
----
-
-### Phase 3: Deals & Promotions Hub
-
-Create dedicated deals pages for better SEO and user engagement.
-
-**New Page:** `src/pages/Deals.tsx`
-
-Route: `/deals`
-
-Sections:
-- Flash Deals (time-limited, countdown)
-- Last-Minute Flights (departing within 7 days)
-- Seasonal Promos (holiday/event-based)
-- Member-Only Deals (ZIVO Plus exclusive)
-- Price Drops (from saved searches)
-
-**New Page:** `src/pages/LastMinute.tsx`
-
-Route: `/last-minute`
-
-Features:
-- Flights departing in next 7 days
-- Hotels for tonight/this weekend
-- Quick filters (budget, destination type)
-- Price drop alerts
-
-**New Component:** `src/components/deals/FlashDealCard.tsx`
-
-Features:
-- Countdown timer
-- Original/discounted price
-- "X claimed" social proof
-- Limited quantity indicator
-
-**New Component:** `src/components/deals/DealCategoryTabs.tsx`
-
-Tab navigation:
-- All Deals
-- Flights
-- Hotels
-- Cars
-- Last Minute
-
----
-
-### Phase 4: User Behavior Intelligence
-
-Build anonymized behavior tracking for personalization.
-
-**New Hook:** `src/hooks/useUserBehavior.ts`
-
-Tracks (anonymized):
-- Search patterns (routes, dates, frequency)
-- Preferred airlines/hotel chains
-- Budget ranges (economy/mid/luxury)
-- Booking windows (advance days)
-- Time of day patterns
-
-**New Hook:** `src/hooks/usePersonalization.ts`
-
-Uses behavior data for:
-- Homepage recommendations
-- Email targeting segments
-- Search suggestions
-- Price alert thresholds
-
-**New Type:** `src/types/behaviorAnalytics.ts`
-
-```typescript
-interface UserBehaviorProfile {
-  searchPatterns: {
-    topRoutes: string[];
-    preferredDays: string[];
-    avgAdvanceBooking: number;
-  };
-  preferences: {
-    airlines: string[];
-    hotelChains: string[];
-    budgetTier: 'budget' | 'mid' | 'luxury';
-    travelStyle: string[];
-  };
-  engagement: {
-    searchFrequency: number;
-    conversionRate: number;
-    avgSessionTime: number;
-  };
-}
-```
-
-**Privacy Notice:**
+**Copy:**
 ```text
-"We use anonymized browsing data to personalize your experience. 
-No personal information is shared. Learn more in our Privacy Policy."
+"ZIVO implements enterprise-grade security controls to protect user data, 
+payments, and platform integrity."
 ```
 
 ---
 
-### Phase 5: Personalized Homepage
+### Phase 3: Payment Transparency Page
 
-Create different homepage experiences for logged-in vs guest users.
+**New Page:** `src/pages/legal/PaymentTransparency.tsx`
 
-**New Component:** `src/components/home/PersonalizedHomeSection.tsx`
+Route: `/legal/payment-transparency` or `/payments/how-it-works`
 
-For logged-in users:
-- Recently searched routes (last 5)
-- Recommended destinations (based on behavior)
-- Price alerts summary (active alerts + recent drops)
-- Saved trips quick access
-- ZIVO Miles summary
+Clear documentation for banks and payment processors.
 
-**New Component:** `src/components/home/GuestHomeSection.tsx`
+**Sections:**
+1. **How Payments Work**
+   - User initiates payment on ZIVO
+   - Stripe (PCI-DSS Level 1) processes the transaction
+   - ZIVO is merchant of record for flights
+   - Partner is merchant of record for hotels/cars (affiliate model)
 
-For guests:
-- Trending deals (top 5)
-- Popular routes this week
-- Best-value destinations
-- "Sign up for personalized deals" CTA
+2. **Who Charges Your Card**
+   - Flights: "ZIVO LLC" or "HIZIVO"
+   - Hotels: "Partner Name" (redirect model)
+   - Cars: "Partner Name" (redirect model)
 
-**Update:** `src/pages/Index.tsx`
+3. **Refund Process**
+   - Who issues refunds (by service type)
+   - Timeline expectations
+   - Dispute resolution
 
-Add conditional rendering:
-- Check auth state
-- Show PersonalizedHomeSection for logged-in
-- Show GuestHomeSection for guests
+4. **Data Security**
+   - No card storage
+   - Tokenization via Stripe
+   - PCI-DSS compliance
 
----
-
-### Phase 6: Travel Wallet UI
-
-Create a unified wallet view for all credits and rewards.
-
-**New Page:** `src/pages/TravelWallet.tsx`
-
-Route: `/wallet`
-
-Sections:
-- **Booking Credits** - Promotional credits for future bookings
-- **Refund Status** - Pending refunds and their status
-- **Promo Credits** - From referrals, campaigns, etc.
-- **ZIVO Miles** - Link to full miles program
-- Transaction History
-
-**Key Features:**
-- Clear balance display (non-cash)
-- Credit expiration dates
-- "Use on next booking" CTA
-- Filter by credit type
-
-**Compliance Notice:**
+**Key Copy:**
 ```text
-"No cash balance stored. Credits are promotional only and cannot be 
-converted to cash. See Terms for credit expiration and usage policies."
+"Payments are processed by PCI-compliant providers. 
+ZIVO does not store card data. Your payment information is tokenized 
+and securely handled by Stripe."
 ```
 
 ---
 
-### Phase 7: Influencer & Affiliate Enhancement
+### Phase 4: Affiliate & Partner Audit Pages
 
-Enhance the creator program with dashboard features.
+**New Page:** `src/pages/business/PartnerAuditDocs.tsx`
 
-**New Page:** `src/pages/creators/CreatorDashboard.tsx`
+Route: `/business/partner-audit` or `/partners/compliance`
 
-Route: `/creators/dashboard`
+Documentation specifically for affiliate network reviews (Travelpayouts, Booking.com, car rental partners).
 
-Features:
-- Earnings overview (clicks, conversions, commission)
-- Performance charts (30-day trend)
-- Top performing links
-- Payout history (placeholder)
-- Link generator (existing)
+**Sections:**
+1. **How ZIVO Sources Prices**
+   - Real-time API integration
+   - No price manipulation
+   - Display of partner prices as-is
 
-**Update:** `src/pages/Creators.tsx`
+2. **How Commissions Work**
+   - Affiliate model explanation
+   - No hidden fees to users
+   - Commission paid by partners, not users
 
-Add:
-- "Dashboard" link for logged-in creators
-- Enhanced commission tiers display
-- Success stories section
+3. **User Transparency**
+   - Affiliate disclosure visible on results
+   - Partner attribution on checkout
+   - Clear redirect notices
 
-**New Component:** `src/components/creators/CreatorStats.tsx`
+4. **Compliance Checklist**
+   - FTC disclosure requirements
+   - No false advertising
+   - Price accuracy commitment
 
-Visual stats:
-- Total clicks
-- Conversion rate
-- Earnings this month
-- Rank/tier status
+**Partner-Specific Sections:**
+- Travel Affiliate Requirements
+- Hotel Partner Requirements
+- Car Rental Partner Requirements
 
-**Landing Copy:**
+**Copy:**
 ```text
-"Earn with ZIVO - Share travel tools, earn commission when users book 
-on partner sites. No minimum followers required."
+"ZIVO maintains full transparency with users about our affiliate relationships. 
+All sponsored content and partner referrals are clearly disclosed."
 ```
 
 ---
 
-### Phase 8: B2B Data Insights Page
+### Phase 5: Dispute & Escalation Policy Enhancement
 
-Create a placeholder for future B2B data offering.
+**Update:** `src/pages/legal/DisputeProcess.tsx`
 
-**New Page:** `src/pages/business/DataInsights.tsx`
+Add detailed escalation flow with response times:
 
-Route: `/business/insights` or `/data-insights`
-
-Content:
-- Hero: "Travel Intelligence for Business"
-- Available Insights:
-  - Popular routes and demand trends
-  - Pricing signals and seasonality
-  - Booking window patterns
-  - Regional demand forecasting
-- Use Cases (airlines, hotels, tourism boards)
-- Request Access form (waitlist)
-
-**Privacy Emphasis:**
+**Escalation Flow:**
 ```text
-"All data insights are anonymized and aggregated. No individual user 
-data is ever shared. Data is derived from aggregate platform activity."
+Step 1: User contacts partner directly (booking issues)
+        Response time: Per partner SLA
+        
+Step 2: User contacts ZIVO support (platform issues)
+        Response time: 24-48 hours
+        
+Step 3: Formal complaint submission
+        Response time: 5 business days
+        
+Step 4: External escalation (if unresolved)
+        - State consumer protection
+        - Arbitration (per Terms)
 ```
 
-**Coming Soon Badge:**
+**New Component:** `src/components/legal/DisputeFlowDiagram.tsx`
+
+Visual flowchart showing the escalation process.
+
+**Documentation Requirements:**
+- What information to provide
+- How to submit screenshots/evidence
+- Expected resolution timeline
+
+---
+
+### Phase 6: Business Reliability Page
+
+**New Page:** `src/pages/Reliability.tsx`
+
+Route: `/reliability` or `/trust/reliability`
+
+Public-facing simplified business continuity information.
+
+**Sections:**
+1. **Service Monitoring**
+   - Partner availability checks
+   - API health monitoring
+   - Automated failover
+
+2. **Partner Redundancy**
+   - Multiple flight providers (Duffel + affiliates)
+   - Multiple hotel sources
+   - Backup payment processing
+
+3. **Data Protection**
+   - Automated backups
+   - Encrypted storage
+   - Disaster recovery
+
+**Key Copy:**
 ```text
-"B2B Data API – Coming 2025"
+"We continuously monitor partner availability to ensure reliable service. 
+If one provider experiences issues, our system automatically routes to alternatives."
 ```
 
 ---
 
-### Phase 9: Platform Positioning & Moat
+### Phase 7: Enterprise & Government Readiness Page
 
-Add strategic positioning copy throughout the platform.
+**New Page:** `src/pages/business/EnterpriseReady.tsx`
 
-**New Component:** `src/components/marketing/PlatformMoat.tsx`
+Route: `/business/enterprise` or `/enterprise`
 
-Positioning section for key pages:
+Procurement-friendly documentation for corporate and government buyers.
+
+**Sections:**
+1. **Corporate Travel Compatibility**
+   - Business account structure
+   - Multi-traveler support
+   - Expense reporting ready
+
+2. **Invoice-Ready Structure**
+   - VAT/Tax ID support
+   - Invoice generation
+   - PO number tracking
+
+3. **Procurement Documentation**
+   - Company information
+   - Insurance certificates (placeholder)
+   - Security questionnaire responses
+
+4. **Compliance Attestations**
+   - Data processing agreement ready
+   - GDPR/CCPA compliance
+   - Security certifications (roadmap)
+
+**Copy:**
 ```text
-"ZIVO combines travel, mobility, and AI planning into one ecosystem."
+"ZIVO is designed to meet enterprise procurement requirements. 
+Contact our business team for custom agreements and documentation."
 ```
-
-Differentiators:
-- Cross-service intelligence (Flight → Hotel → Car suggestions)
-- AI-powered personalization
-- Unified rewards (ZIVO Miles across services)
-- One account, one app, complete journey
-
-**Integration Points:**
-- About page
-- Vision page
-- Footer tagline
-- App store descriptions
 
 ---
 
-### Phase 10: Retention & Re-engagement
+### Phase 8: Audit Visibility Notice Component
 
-Implement long-term retention mechanisms.
+**New Component:** `src/components/shared/AuditNotice.tsx`
 
-**Update:** `src/pages/admin/EmailAutomationDashboard.tsx`
+Visible notice about activity logging for compliance.
 
-Add email types:
-- Monthly travel inspiration (personalized destinations)
-- Birthday offer (bonus miles/discount)
-- Anniversary offer (account anniversary)
-- Win-back (inactive user re-engagement)
-- Price drop digest (weekly summary)
+**Placement:**
+- Account settings
+- Checkout pages
+- Admin dashboard
 
-**New Component:** `src/components/profile/BirthdayOffer.tsx`
+**Copy:**
+```text
+"Activity logs are maintained for security and compliance purposes. 
+This includes login events, booking actions, and payment transactions."
+```
 
-Birthday reward display:
-- Special discount code
-- Bonus miles
-- Limited-time validity
+**Update:** `src/pages/account/Security.tsx`
 
-**New Component:** `src/components/email/MonthlyInspirationPreview.tsx`
+Add section showing user's audit activity (login history, etc.)
 
-Preview template:
-- Personalized destination recommendations
-- Price trends for saved routes
-- Exclusive member deals
+---
+
+### Phase 9: Regulatory Readiness Enhancement
+
+**New Page:** `src/pages/legal/RegulatoryStatus.tsx`
+
+Route: `/legal/regulatory-status`
+
+Consolidated view of all regulatory statuses.
+
+**Sections:**
+1. **Seller of Travel**
+   - California: Application submitted
+   - Florida: Application submitted
+   - Other states: Exempt or pending
+
+2. **Consumer Protection**
+   - Sub-agent model explanation
+   - Refund rights
+   - Complaint process
+
+3. **Data Protection**
+   - GDPR (EU users)
+   - CCPA (California users)
+   - UK GDPR (UK users)
+
+---
+
+### Phase 10: Update Footer & Navigation
+
+**Update:** `src/components/Footer.tsx`
+
+Add Compliance Center link in legal section.
+
+**Update:** `src/pages/Security.tsx`
+
+Add links to new trust pages.
+
+**Update:** `src/App.tsx`
+
+Add routes for all new pages.
 
 ---
 
@@ -390,36 +353,24 @@ Preview template:
 
 | File | Description |
 |------|-------------|
-| `src/pages/Deals.tsx` | Main deals hub page |
-| `src/pages/LastMinute.tsx` | Last-minute bookings page |
-| `src/pages/TravelWallet.tsx` | Unified wallet/credits view |
-| `src/pages/creators/CreatorDashboard.tsx` | Influencer analytics dashboard |
-| `src/pages/business/DataInsights.tsx` | B2B data offering page |
-| `src/components/shared/SponsoredBadge.tsx` | Reusable sponsored label |
-| `src/components/shared/PriceConfidenceBadge.tsx` | Price rating indicator |
-| `src/components/flight/SponsoredFlightCard.tsx` | Sponsored flight display |
-| `src/components/hotel/SponsoredHotelCard.tsx` | Sponsored hotel display |
-| `src/components/deals/FlashDealCard.tsx` | Time-limited deal card |
-| `src/components/deals/DealCategoryTabs.tsx` | Deal filtering tabs |
-| `src/components/home/PersonalizedHomeSection.tsx` | Logged-in homepage |
-| `src/components/home/GuestHomeSection.tsx` | Guest homepage |
-| `src/components/creators/CreatorStats.tsx` | Creator performance stats |
-| `src/components/marketing/PlatformMoat.tsx` | Positioning copy |
-| `src/components/profile/BirthdayOffer.tsx` | Birthday reward display |
-| `src/hooks/useUserBehavior.ts` | Behavior tracking hook |
-| `src/hooks/usePersonalization.ts` | Personalization engine |
-| `src/types/behaviorAnalytics.ts` | Behavior tracking types |
+| `src/pages/ComplianceCenter.tsx` | Unified legal/compliance hub |
+| `src/pages/security/EnterpriseTrust.tsx` | Enterprise security signals |
+| `src/pages/legal/PaymentTransparency.tsx` | Payment flow documentation |
+| `src/pages/business/PartnerAuditDocs.tsx` | Affiliate review documentation |
+| `src/pages/Reliability.tsx` | Service reliability page |
+| `src/pages/business/EnterpriseReady.tsx` | Procurement documentation |
+| `src/pages/legal/RegulatoryStatus.tsx` | Regulatory status overview |
+| `src/components/shared/AuditNotice.tsx` | Activity logging notice |
+| `src/components/legal/DisputeFlowDiagram.tsx` | Visual escalation flow |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/Index.tsx` | Add personalized/guest conditional sections |
-| `src/components/flight/FlightPriceHistory.tsx` | Add confidence badge integration |
-| `src/pages/Creators.tsx` | Add dashboard link, enhanced tiers |
-| `src/pages/admin/EmailAutomationDashboard.tsx` | Add retention email types |
+| `src/pages/legal/DisputeProcess.tsx` | Add response times, documentation requirements |
+| `src/pages/Security.tsx` | Add enterprise trust links |
+| `src/components/Footer.tsx` | Add Compliance Center link |
 | `src/App.tsx` | Add new routes |
-| `src/components/Footer.tsx` | Add Deals, Wallet links |
 
 ---
 
@@ -427,48 +378,59 @@ Preview template:
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/deals` | Deals | Main deals hub |
-| `/last-minute` | LastMinute | Last-minute bookings |
-| `/wallet` | TravelWallet | Credits and rewards |
-| `/creators/dashboard` | CreatorDashboard | Influencer analytics |
-| `/business/insights` | DataInsights | B2B data page |
-| `/data-insights` | DataInsights | Alias route |
+| `/compliance` | ComplianceCenter | Legal hub page |
+| `/legal/compliance-center` | ComplianceCenter | Alias |
+| `/security/enterprise` | EnterpriseTrust | Enterprise security |
+| `/trust` | EnterpriseTrust | Alias |
+| `/legal/payment-transparency` | PaymentTransparency | Payment docs |
+| `/business/partner-audit` | PartnerAuditDocs | Affiliate docs |
+| `/reliability` | Reliability | Service reliability |
+| `/business/enterprise` | EnterpriseReady | Enterprise docs |
+| `/legal/regulatory-status` | RegulatoryStatus | Reg status |
 
 ---
 
 ## Technical Considerations
 
-### Sponsored Content
-- Maximum 1 sponsored result per 10 organic results
-- Clear visual distinction (border, badge)
-- Same price transparency requirements
-- Tracking via existing analytics events
+### Compliance Focus
+- All pages include proper disclaimers
+- Clear attribution of third-party services
+- No promises of uptime or SLAs (liability protection)
+- Partner-specific disclosures maintained
 
-### Behavior Tracking
-- Client-side only, localStorage persistence
-- No PII stored in behavior profiles
-- Aggregate patterns only
-- User can clear via privacy settings
+### Audit Trail
+- Extend existing `auditLog.ts` with new action types
+- Add booking, payment, and refund actions
+- User-facing activity log in account settings
 
-### Personalization
-- Graceful fallback for new users
-- Progressive profiling (improves with usage)
-- Cross-device sync when logged in
+### Partner Reviews
+- Documentation structured for affiliate network requirements
+- FTC disclosure compliance throughout
+- Clear separation of ZIVO vs partner responsibilities
 
-### Compliance
-- Sponsored content clearly labeled (FTC)
-- Data anonymization for B2B insights
-- Credits non-transferable, non-cash
-- Unsubscribe links in all emails
+### Enterprise Readiness
+- Procurement-friendly language
+- Security questionnaire compatibility
+- Invoice/billing structure documentation
 
 ---
 
 ## Success Metrics
 
 After implementation:
-- Sponsored content CTR: Target 2-3%
-- Deals page engagement: 15% of visitors
-- Wallet page visits: 20% of logged-in users
-- Creator program signups: +25%
-- Email open rate: 25%+ for personalized content
-- Repeat booking rate: +10% from personalization
+- Compliance Center: Central access to all 74+ legal pages
+- Partner audit pass rate: 100% (for affiliate networks)
+- Bank/processor confidence: Clear payment documentation
+- Enterprise leads: Procurement-ready documentation
+- Audit coverage: All critical actions logged
+
+---
+
+## Compliance Checklist
+
+- [ ] All new pages include appropriate disclaimers
+- [ ] FTC disclosure requirements met on affiliate pages
+- [ ] PCI-DSS language accurate for payment pages
+- [ ] GDPR/CCPA rights clearly explained
+- [ ] No SLA guarantees that create liability
+- [ ] Partner attribution maintained throughout
