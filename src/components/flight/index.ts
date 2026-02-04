@@ -104,6 +104,10 @@ export { default as FlightConsentCheckbox } from './FlightConsentCheckbox';
 export { default as FlightConsentGate } from './FlightConsentGate';
 export { default as FlightPartnerDisclaimer, FlightTrustBadges, FlightPaymentDisclaimer } from './FlightPartnerDisclaimer';
 export { default as FlightsMoRFooter } from './FlightsMoRFooter';
+export { default as FlightComplianceFooter } from './FlightComplianceFooter';
+
+// Features & Discovery
+export { default as FlightFeaturesGrid } from './FlightFeaturesGrid';
 
 // UX/Trust Components
 export { default as HowBookingWorks } from './HowBookingWorks';
