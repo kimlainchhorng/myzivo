@@ -65,27 +65,27 @@ export default function FlightsLP() {
             
             {/* Headline */}
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-              Search Flights
+              Compare Flight Prices
             </h1>
             
             {/* Subheadline */}
             <p className="text-lg md:text-xl text-white/90 mb-8 max-w-xl mx-auto">
-              Real-time prices from global airlines. Book securely on ZIVO.
+              Search real-time prices from global airlines. Book securely with trusted partners.
             </p>
             
             {/* Trust Badges */}
             <div className="flex flex-wrap items-center justify-center gap-4 mb-8 text-white/80 text-sm">
               <span className="flex items-center gap-1.5">
                 <Search className="w-4 h-4" />
-                Global Airlines
+                500+ Airlines
               </span>
               <span className="flex items-center gap-1.5">
                 <Shield className="w-4 h-4" />
-                Licensed Ticketing
+                Trusted Partners
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4" />
-                Secure ZIVO Checkout
+                Secure Booking
               </span>
             </div>
             
@@ -108,10 +108,10 @@ export default function FlightsLP() {
             {/* Partner Disclosure */}
             <div className="mt-8 p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 max-w-lg mx-auto">
               <div className="flex items-start gap-3 text-left">
-                <Shield className="w-4 h-4 text-white/80 shrink-0 mt-0.5" />
+                <ExternalLink className="w-4 h-4 text-white/80 shrink-0 mt-0.5" />
                 <p className="text-sm text-white/80">
-                  ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
-                  Book securely and receive your e-ticket instantly.
+                  ZIVO helps you find flights from trusted travel partners. 
+                  Complete your booking securely on our partner's checkout.
                 </p>
               </div>
             </div>
@@ -149,11 +149,11 @@ export default function FlightsLP() {
             
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-sky-600" />
+                <ExternalLink className="w-8 h-8 text-sky-600" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">3. Book on ZIVO</h3>
+              <h3 className="font-semibold text-lg mb-2">3. Book Securely</h3>
               <p className="text-sm text-muted-foreground">
-                Pay securely on ZIVO and receive your e-ticket instantly.
+                Complete your booking on our partner's secure checkout page.
               </p>
             </div>
           </div>
