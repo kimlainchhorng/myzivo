@@ -1,144 +1,149 @@
 
 
-# ZIVO Unified Hotel Property Schema Implementation
+# SEO City Landing Page Template Implementation
 
 ## Overview
 
-Implement the `ZivoProperty` unified schema to normalize hotel data from multiple suppliers (Hotelbeds, RateHawk) into a single, consistent format. This enables ZIVO to compare prices across providers, display the cheapest option, and track inventory status for each property.
+Create a premium, animated SEO landing page template for city destinations that showcases real-time supplier data from the ZivoProperty normalization layer. This template serves as a reusable pattern for generating SEO-optimized pages for Flights and Hotels with immersive hero sections and live pricing displays.
 
 ---
 
 ## Current State Analysis
 
-The project already has:
-- **Existing Types**: `NormalizedHotel`, `NormalizedRoom`, `NormalizedRate` in `src/types/hotels.ts`
-- **Hotelbeds Types**: `HotelbedsHotel`, `ZivoHotel` in `src/types/hotelbeds.ts`
-- **Normalizer Service**: `src/services/hotelNormalizer.ts` with functions for Hotelbeds, TripAdvisor, and legacy data
-- **Pricing Config**: Markup rules for `hotelbeds` (8%) and `ratehawk` (10%) in `src/config/pricing.ts`
+The project has:
+- **Existing SEO Pages**: `FlightToCity.tsx`, `DestinationHotelsPage.tsx`, `FlightRoutePage.tsx` with static content
+- **Destination Photos**: 20+ cities with local AI-generated imagery in `src/config/photos.ts`
+- **Hero Component**: `DestinationHero.tsx` for service-specific hero sections (no animations)
+- **ZivoProperty Schema**: Unified property format with multi-supplier comparison logic
+- **framer-motion**: Already installed (`^12.29.2`)
 
-The provided `ZivoProperty` schema is a simplified version focused on:
-1. **Source attribution** (`HOTELBEDS` | `RATEHAWK`)
-2. **Meta information** (name, stars, coordinates)
-3. **Pricing with comparison logic** (`isCheapest` flag)
-4. **Inventory status tracking**
+The provided template adds:
+1. **Ken Burns Animation** - Slow zoom effect on hero background image
+2. **60vh Hero Height** - More immersive viewport takeover
+3. **Dynamic Year Tag** - "2026" styling for freshness signals
+4. **Real-time Rates Grid** - Live supplier data display
 
 ---
 
 ## Implementation Approach
 
-### Phase 1: Define the ZivoProperty Types
+### Phase 1: Create Animated Hero Component
 
-**File**: `src/types/zivoProperty.ts` (new file)
+**File**: `src/components/seo/AnimatedCityHero.tsx`
 
 ```text
-┌────────────────────────────────────────────────────────────────┐
-│  ZivoProperty Schema                                            │
-├────────────────────────────────────────────────────────────────┤
-│  id: string                  // ZIVO internal UUID              │
-│  source: "HOTELBEDS" | "RATEHAWK"                               │
-│  meta: {                                                        │
-│    name: string                                                 │
-│    starRating: number                                           │
-│    coordinates: { lat: number; lng: number }                    │
-│  }                                                              │
-│  pricing: {                                                     │
-│    amount: number            // Net price after markup          │
-│    currency: string                                             │
-│    type: "PREPAID" | "PAY_AT_HOTEL"                             │
-│    isCheapest: boolean       // Computed by comparison          │
-│  }                                                              │
-│  inventory: {                                                   │
-│    providerId: string        // Original supplier ID            │
-│    status: "AVAILABLE" | "ON_REQUEST" | "SOLD_OUT"              │
-│  }                                                              │
-└────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------+
+|  [City Photo - Ken Burns zoom animation]                         |
+|                                                                   |
+|                                                                   |
+|                    PARIS  2026                                   |
+|          Book the best NDC flights and hand-picked              |
+|          hotels in Paris via ZIVO.                              |
+|                                                                   |
+|  [Trust badges: Secure Booking | 500+ Airlines | 24/7 Support]  |
++------------------------------------------------------------------+
 ```
 
-### Phase 2: Extended ZivoProperty for Full Display
+Features:
+- `motion.img` with `scale: 1.2 → 1.0` over 10 seconds for Ken Burns
+- 60vh height with `flex items-end` for bottom-aligned content
+- Dynamic year from `new Date().getFullYear() + 1` (for forward-looking SEO)
+- Gradient overlay optimized for text legibility
+- Configurable for flights, hotels, or combined
 
-Since UI components need more data than the minimal schema, we'll extend it:
+### Phase 2: Create Unified SEO Page Template
+
+**File**: `src/pages/seo/CityLandingPage.tsx`
+
+Template structure:
+1. **AnimatedCityHero** - Immersive photo header
+2. **Trust Bar** - Existing `GlobalTrustBar`
+3. **Real-time Rates Grid** - Multi-supplier comparison
+4. **Search Form** - Service-specific form (Flight/Hotel/Unified)
+5. **Popular Routes** - Internal linking for SEO
+6. **FAQ Section** - Structured data
+7. **Compliance Footer** - OTA disclaimers
+
+### Phase 3: Live Supplier Data Component
+
+**File**: `src/components/seo/LiveRatesGrid.tsx`
+
+Displays normalized ZivoProperty data:
+- Source badges (Hotelbeds/RateHawk)
+- "Best Price" indicators
+- Availability status
+- Starting prices with disclaimers
+
+```text
++---------------------------+---------------------------+
+|  [Hotel A - Hotelbeds]    |  [Hotel A - RateHawk]     |
+|  ★★★★☆  4.5 rating        |  ★★★★☆  4.5 rating        |
+|  From $189/night          |  From $175/night ✓ Best   |
+|  [Available] [Book Now]   |  [Available] [Book Now]   |
++---------------------------+---------------------------+
+```
+
+### Phase 4: Service-Specific Variants
+
+Create specialized variants:
+
+| File | Service | Data Source |
+|------|---------|-------------|
+| `FlightCityLandingPage.tsx` | Flights | Flight routes from city |
+| `HotelCityLandingPage.tsx` | Hotels | ZivoPropertyExtended |
+| `CombinedCityLandingPage.tsx` | Both | Unified city hub |
+
+---
+
+## Technical Implementation
+
+### AnimatedCityHero Props
 
 ```typescript
-interface ZivoPropertyExtended extends ZivoProperty {
-  // Display fields
-  imageUrl: string;
-  images: string[];
-  destination: string;
-  zone?: string;
-  address?: string;
-  
-  // Reviews
-  reviewScore?: number;
-  reviewCount?: number;
-  
-  // Amenities
-  facilities: string[];
-  
-  // Rooms & Rates (for detailed view)
-  rooms?: ZivoPropertyRoom[];
-  
-  // Booking flags
-  hasFreeCancellation: boolean;
-  cancellationDeadline?: string;
+interface AnimatedCityHeroProps {
+  city: string;
+  citySlug: string;
+  serviceType: "flights" | "hotels" | "combined";
+  subtitle?: string;
+  children?: React.ReactNode; // For search form overlay
 }
 ```
 
-### Phase 3: Update Normalizer Service
+### Animation Configuration
 
-**File**: `src/services/hotelNormalizer.ts`
-
-Add new normalizer functions:
-
-1. `normalizeToZivoProperty(source, data)` - Convert supplier data to ZivoProperty
-2. `compareAndMarkCheapest(properties[])` - Set `isCheapest` flag by comparing prices
-3. `mergeMultiSourceProperties(hotelbeds[], ratehawk[])` - Deduplicate and merge
-
-The comparison logic:
-- Group properties by name + coordinates proximity (within 100m)
-- For each group, mark the lowest-priced property as `isCheapest: true`
-- Return unified array sorted by price
-
-### Phase 4: RateHawk Integration Preparation
-
-**Files to create**:
-- `src/types/ratehawk.ts` - RateHawk API response types
-- `supabase/functions/ratehawk-hotels/index.ts` - Edge function for RateHawk API
-- `src/hooks/useRateHawkSearch.ts` - Frontend hook
-
-RateHawk type mapping:
-| RateHawk Field | ZivoProperty Field |
-|----------------|-------------------|
-| `id` | `inventory.providerId` |
-| `name` | `meta.name` |
-| `star_rating` | `meta.starRating` |
-| `geo.lat/lon` | `meta.coordinates` |
-| `rates[0].amount` | `pricing.amount` |
-| `payment_options.payment_types` | `pricing.type` |
-| `availability` | `inventory.status` |
-
-### Phase 5: Multi-Provider Search Hook
-
-**File**: `src/hooks/useMultiProviderHotelSearch.ts`
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│  useMultiProviderHotelSearch                                 │
-├─────────────────────────────────────────────────────────────┤
-│  1. Parallel fetch from Hotelbeds & RateHawk                │
-│  2. Normalize each response to ZivoProperty[]               │
-│  3. Merge and deduplicate by property match                 │
-│  4. Compare prices and set isCheapest flags                 │
-│  5. Apply filters and sorting                               │
-│  6. Return unified results                                   │
-└─────────────────────────────────────────────────────────────┘
+```typescript
+const kenBurnsVariants = {
+  initial: { scale: 1.2 },
+  animate: { 
+    scale: 1,
+    transition: { duration: 10, ease: "easeOut" }
+  }
+};
 ```
 
-### Phase 6: Update Result Cards
+### Photo Resolution
 
-Modify `HotelResultCard` to show:
-- Source badge ("Hotelbeds" | "RateHawk")
-- "Best Price" badge when `isCheapest: true`
-- Availability status indicator
+The template expects city photos at `/assets/cities/{city}.jpg`. However, ZIVO already uses:
+- `destinationPhotos` from `src/config/photos.ts`
+- Local imports like `destParis`, `destNewYork`, etc.
+
+Modify to use existing photo system:
+```typescript
+const cityPhoto = destinationPhotos[citySlug as DestinationCity];
+const heroSrc = cityPhoto?.src || `/assets/dest-${citySlug}.jpg`;
+```
+
+### Real-time Data Integration
+
+Connect to multi-provider search:
+```typescript
+const { properties, isLoading } = useMultiProviderHotelSearch({
+  destination: citySlug,
+  checkIn: defaultCheckIn,
+  checkOut: defaultCheckOut,
+  occupancy: { adults: 2 }
+});
+```
 
 ---
 
@@ -146,91 +151,48 @@ Modify `HotelResultCard` to show:
 
 | File | Purpose |
 |------|---------|
-| `src/types/zivoProperty.ts` | ZivoProperty interface + extended version |
-| `src/types/ratehawk.ts` | RateHawk API response types |
-| `supabase/functions/ratehawk-hotels/index.ts` | RateHawk API edge function |
-| `src/hooks/useRateHawkSearch.ts` | RateHawk search hook |
-| `src/hooks/useMultiProviderHotelSearch.ts` | Unified multi-source search |
+| `src/components/seo/AnimatedCityHero.tsx` | Immersive Ken Burns hero |
+| `src/components/seo/LiveRatesGrid.tsx` | Multi-supplier comparison grid |
+| `src/pages/seo/CityLandingPage.tsx` | Unified template with slots |
+| `src/pages/seo/HotelCityLandingPage.tsx` | Hotels-specific variant |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/services/hotelNormalizer.ts` | Add ZivoProperty normalizers, comparison logic |
-| `src/types/hotels.ts` | Add SupplierCode "ratehawk" if not present |
-| `src/components/results/HotelResultCard.tsx` | Add source badge, best price indicator |
-| `src/pages/HotelResultsPage.tsx` | Switch to multi-provider hook |
+| `src/components/seo/index.ts` | Export new components |
+| `src/pages/seo/index.ts` | Export new pages |
+| `src/App.tsx` | Add route `/city/:citySlug` |
 
 ---
 
-## Technical Details
+## SEO Compliance Considerations
 
-### Price Comparison Algorithm
-
-```typescript
-function markCheapestProperties(properties: ZivoProperty[]): ZivoProperty[] {
-  // Group by property (same name + nearby coordinates)
-  const groups = groupByPropertyMatch(properties);
-  
-  return groups.flatMap(group => {
-    // Find minimum price in group
-    const minPrice = Math.min(...group.map(p => p.pricing.amount));
-    
-    // Mark cheapest
-    return group.map(p => ({
-      ...p,
-      pricing: {
-        ...p.pricing,
-        isCheapest: p.pricing.amount === minPrice
-      }
-    }));
-  });
-}
-```
-
-### Property Matching (Deduplication)
-
-Properties are considered the same if:
-- Names match (case-insensitive, after removing common suffixes)
-- Coordinates within 100 meters of each other
-
-### Inventory Status Mapping
-
-| Supplier Status | ZivoProperty Status |
-|-----------------|---------------------|
-| Hotelbeds `BOOKABLE` | `AVAILABLE` |
-| Hotelbeds `RECHECK` | `ON_REQUEST` |
-| RateHawk `available` | `AVAILABLE` |
-| RateHawk `on_request` | `ON_REQUEST` |
-| Any sold out | `SOLD_OUT` |
+1. **No Hardcoded Prices**: Display "From $X" only from live API, or show "Search for rates"
+2. **Dynamic Content**: Year badge updates automatically
+3. **Canonical URLs**: Follow pattern `https://hizivo.com/hotels/{city}` or `/flights/to-{city}`
+4. **Structured Data**: Extend existing `BreadcrumbSchema`, add `TravelAction` schema
+5. **Accessibility**: Proper alt text, focus management for animations
 
 ---
 
-## Environment Variables Required
+## Route Structure
 
-```env
-# Existing
-HOTELBEDS_HOTEL_API_KEY
-HOTELBEDS_HOTEL_SECRET
-
-# New (for RateHawk)
-RATEHAWK_API_KEY
-RATEHAWK_AFFILIATE_ID
-```
+| URL Pattern | Component | Purpose |
+|-------------|-----------|---------|
+| `/city/:citySlug` | `CityLandingPage` | Combined hub |
+| `/hotels/:city` | `HotelCityLandingPage` | Hotels focus |
+| `/flights/to-:city` | Existing `FlightToCity` | Flights focus |
 
 ---
 
 ## Implementation Order
 
-1. Create `src/types/zivoProperty.ts` with full schema
-2. Add RateHawk types in `src/types/ratehawk.ts`
-3. Create RateHawk edge function `supabase/functions/ratehawk-hotels/`
-4. Update `hotelNormalizer.ts` with:
-   - `normalizeHotelbedsToZivoProperty()`
-   - `normalizeRateHawkToZivoProperty()`
-   - `compareAndMarkCheapest()`
-   - `mergeMultiSourceProperties()`
-5. Create `useMultiProviderHotelSearch` hook
-6. Update result card with source/cheapest badges
-7. Integrate into HotelResultsPage
+1. Create `AnimatedCityHero.tsx` with Ken Burns effect
+2. Create `LiveRatesGrid.tsx` for supplier comparison
+3. Build `CityLandingPage.tsx` template using slots pattern
+4. Create hotel-specific `HotelCityLandingPage.tsx`
+5. Update existing `DestinationHotelsPage.tsx` to use new hero
+6. Add routes to `App.tsx`
+7. Test across all destination cities
 
