@@ -29,6 +29,13 @@ const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const WalletPage = lazy(() => import("./pages/app/WalletPage"));
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
+
+// New Mobile-first pages (5-tab nav: Home, Search, Trips, Alerts, Account)
+const MobileHome = lazy(() => import("./pages/mobile/MobileHome"));
+const MobileSearch = lazy(() => import("./pages/mobile/MobileSearch"));
+const MobileTrips = lazy(() => import("./pages/mobile/MobileTrips"));
+const MobileAlerts = lazy(() => import("./pages/mobile/MobileAlerts"));
+const MobileAccount = lazy(() => import("./pages/mobile/MobileAccount"));
 const RevenueDashboard = lazy(() => import("./pages/admin/RevenueDashboard"));
 const CommissionsPage = lazy(() => import("./pages/admin/CommissionsPage"));
 const GrowthDashboard = lazy(() => import("./pages/admin/GrowthDashboard"));
@@ -433,6 +440,12 @@ const App = () => (
                 <Route path="/food" element={<Eats />} />
                 <Route path="/move" element={<Move />} />
                 <Route path="/more" element={<AppMore />} />
+                
+                {/* New Mobile App Routes (5-tab nav) */}
+                <Route path="/search" element={<MobileSearch />} />
+                <Route path="/trips" element={<MobileTrips />} />
+                <Route path="/alerts" element={<MobileAlerts />} />
+                <Route path="/account" element={<MobileAccount />} />
                 
                 {/* Legacy routes - redirect with query params preserved */}
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
