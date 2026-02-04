@@ -42,14 +42,14 @@ interface EmptyResultsProps {
 const serviceConfig = {
   flights: {
     icon: Plane,
-    title: "No flights available",
+    title: "No results found for your search",
     titleFiltered: "No flights match your filters",
-    message: "No flights found for these dates. Try different dates or nearby airports.",
+    message: "Try different dates or nearby airports.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
-      "Try nearby airports (e.g., EWR instead of JFK)",
-      "Use flexible dates (+/- 3 days)",
-      "Consider fewer passengers",
+      "Try flexible dates",
+      "Check nearby airports",
+      "Adjust filters",
     ],
     suggestionsFiltered: [
       "Remove some filters",
@@ -59,17 +59,16 @@ const serviceConfig = {
     color: "text-sky-500",
     bg: "bg-sky-500",
     bgLight: "bg-sky-500/10",
-    // NO mock prices for flights - ZIVO is MoR
     defaultPrices: null,
   },
   hotels: {
     icon: Hotel,
-    title: "Estimated prices shown",
+    title: "No results found for your search",
     titleFiltered: "No hotels match your filters",
-    message: "We're comparing deals from our trusted hotel partners.",
+    message: "Try different dates or expand your search area.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
-      "Try different dates",
+      "Try flexible dates",
       "Expand your search area",
       "Adjust star rating",
     ],
@@ -82,19 +81,19 @@ const serviceConfig = {
     bg: "bg-amber-500",
     bgLight: "bg-amber-500/10",
     defaultPrices: [
-      { label: "Budget", price: 89, badge: "💰 Value", badgeColor: "bg-emerald-500" },
-      { label: "Comfort", price: 149, badge: "⭐ Popular", badgeColor: "bg-amber-500" },
-      { label: "Luxury", price: 279, badge: "✨ Premium", badgeColor: "bg-purple-500" },
+      { label: "Budget", price: 89, badge: "💰 Good Value Today", badgeColor: "bg-emerald-500" },
+      { label: "Comfort", price: 149, badge: "⭐ Frequently Booked", badgeColor: "bg-amber-500" },
+      { label: "Luxury", price: 279, badge: "✨ Popular Choice", badgeColor: "bg-purple-500" },
     ],
   },
   cars: {
     icon: Car,
-    title: "Estimated prices shown",
+    title: "No results found for your search",
     titleFiltered: "No cars match your filters",
-    message: "We're comparing deals from our car rental partners.",
+    message: "Try different dates or check nearby locations.",
     messageFiltered: "Try adjusting your filters to see more results.",
     suggestions: [
-      "Try different dates or times",
+      "Try flexible dates",
       "Check nearby locations",
       "Try different car categories",
     ],
@@ -107,9 +106,9 @@ const serviceConfig = {
     bg: "bg-violet-500",
     bgLight: "bg-violet-500/10",
     defaultPrices: [
-      { label: "Economy", price: 35, badge: "💰 Budget", badgeColor: "bg-emerald-500" },
-      { label: "Midsize", price: 52, badge: "⭐ Popular", badgeColor: "bg-amber-500" },
-      { label: "SUV", price: 78, badge: "🚐 Family", badgeColor: "bg-violet-500" },
+      { label: "Economy", price: 35, badge: "💰 Good Value Today", badgeColor: "bg-emerald-500" },
+      { label: "Midsize", price: 52, badge: "⭐ Frequently Booked", badgeColor: "bg-amber-500" },
+      { label: "SUV", price: 78, badge: "🚐 Popular Choice", badgeColor: "bg-violet-500" },
     ],
   },
 };

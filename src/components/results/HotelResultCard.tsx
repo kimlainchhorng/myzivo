@@ -70,7 +70,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
           )}
           {hotel.isMostPopular && !hotel.isBestValue && (
             <Badge className="bg-amber-500 text-white text-[10px] gap-1">
-              <Sparkles className="w-3 h-3" /> Popular
+              <Sparkles className="w-3 h-3" /> Popular Choice
             </Badge>
           )}
         </div>
@@ -101,6 +101,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="min-w-0">
                   <h3 className="font-bold text-lg leading-tight line-clamp-2">{hotel.name}</h3>
+                  <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Booking Partner</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                     <div className="flex shrink-0">
                       {Array.from({ length: hotel.starRating }).map((_, i) => (
@@ -171,12 +172,12 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
               onClick={() => onViewDeal(hotel)}
               className="mt-3 w-full gap-2 font-semibold bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/30 text-white"
             >
-              View deal on partner site
+              Book with Provider
               <ExternalLink className="w-4 h-4" />
             </Button>
             {/* Price confirmation micro-copy */}
             <p className="text-[9px] text-muted-foreground mt-2 text-center">
-              Final price confirmed by partner.
+              Continue to Partner
             </p>
           </div>
         </div>
@@ -184,7 +185,7 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
         {/* Redirect notice with booking handled by partner */}
         <div className="px-4 py-2 bg-muted/30 border-t border-border/30 text-center">
           <p className="text-[10px] text-muted-foreground">
-            Booking handled by partner
+            Prices may change until booking is completed with the provider.
           </p>
         </div>
       </CardContent>

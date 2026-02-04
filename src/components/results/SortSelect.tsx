@@ -26,25 +26,26 @@ interface SortSelectProps {
   className?: string;
 }
 
-// Flights: cheapest first, then duration-based options
+// Flights: Best Value default, then price/speed options
 export const flightSortOptions: SortOption[] = [
-  { value: "price", label: "Sort by: Cheapest" },
-  { value: "best", label: "Sort by: Best Value" },
-  { value: "duration", label: "Sort by: Fastest" },
-  { value: "departure", label: "Sort by: Departure" },
+  { value: "best", label: "Best Value" },
+  { value: "price", label: "Cheapest" },
+  { value: "duration", label: "Fastest" },
+  { value: "stops", label: "Fewest Stops" },
 ];
 
-// Hotels: value-focused, then ratings
+// Hotels: Best Value default, then price/rating options
 export const hotelSortOptions: SortOption[] = [
-  { value: "price", label: "Lowest Price" },
+  { value: "best", label: "Best Value" },
+  { value: "price", label: "Cheapest" },
   { value: "rating", label: "Guest Rating" },
   { value: "stars", label: "Star Rating" },
-  { value: "distance", label: "Distance" },
 ];
 
-// Cars: price and practical options
+// Cars: Best Value default, then price/category options
 export const carSortOptions: SortOption[] = [
-  { value: "price", label: "Lowest Price" },
+  { value: "best", label: "Best Value" },
+  { value: "price", label: "Cheapest" },
   { value: "category", label: "Car Category" },
   { value: "company", label: "Supplier A-Z" },
 ];

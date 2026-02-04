@@ -13,6 +13,9 @@ export { ResultCardSkeleton, ResultsSkeletonList } from "./ResultCardSkeleton";
 export { EmptyResults } from "./EmptyResults";
 export { RedirectNotice, IndicativePriceAlert, AffiliateDisclaimer } from "./AffiliateNotice";
 
+// Results page header
+export { default as ResultsPageHeader, HowZivoWorks, FilterNote } from "./ResultsPageHeader";
+
 // ApiPendingNotice removed - OTA mode only (no affiliate comparison hub)
 
 // Filter components

@@ -1,10 +1,11 @@
 /**
- * ZIVO TRAVEL - MOR (Merchant of Record) COMPLIANCE TEXT
+ * ZIVO TRAVEL - AFFILIATE-SAFE COMPLIANCE TEXT
  * 
- * ZIVO is the seller of travel. Tickets issued by licensed partners.
+ * ZIVO compares travel prices from licensed partners.
+ * Bookings are completed on partner sites.
  * 
- * Last Updated: February 3, 2026
- * Model: Merchant of Record (MoR)
+ * Last Updated: February 4, 2026
+ * Model: Affiliate / Partner Referral
  */
 
 // ============================================
@@ -19,10 +20,10 @@ export { ZIVO_SOT_REGISTRATION } from './flightMoRCompliance';
 
 export const FLIGHT_HEADER_MICROCOPY = {
   /** Standard header subtitle for all flight pages */
-  standard: "You book and pay on ZIVO. Tickets are issued by licensed airline ticketing partners.",
+  standard: "Compare flights from 500+ airlines worldwide. Bookings completed with licensed travel partners.",
   
   /** Shorter version for mobile/compact areas */
-  short: "Book on ZIVO · Licensed ticketing partners",
+  short: "Compare prices · Book with partners",
 } as const;
 
 // ============================================
@@ -31,100 +32,100 @@ export const FLIGHT_HEADER_MICROCOPY = {
 
 export const FLIGHT_SUPPORT_INFO = {
   /** My Trips support box title */
-  title: "Need to change or cancel your flight?",
+  title: "Need help with your booking?",
   
   /** Description */
-  description: "Requests are handled by ZIVO according to airline fare rules.",
+  description: "For changes, cancellations, or refunds, please contact the booking provider directly.",
   
   /** Support email */
   email: "support@hizivo.com",
   
   /** Full message */
-  full: "Need to change or cancel your flight? Requests are handled by ZIVO according to airline fare rules. Contact support@hizivo.com for assistance.",
+  full: "Need help with your booking? For changes, cancellations, or refunds, please contact the booking provider directly. For site issues, contact support@hizivo.com.",
 } as const;
 
 // ============================================
-// LOCKED CTA TEXT (MoR Model)
+// LOCKED CTA TEXT (Affiliate-Safe Model)
 // ============================================
 
 export const FLIGHT_CTA_TEXT = {
   /** Primary CTA button text - use on all flight booking buttons */
-  primary: "Book Now",
+  primary: "Book with Provider",
   
   /** Secondary/alternative CTA text */
-  secondary: "Select Flight",
+  secondary: "View Deal",
   
   /** Mobile sticky CTA */
-  mobile: "Book Flight",
+  mobile: "View Deal",
   
   /** View deal variant (results page) */
-  viewDeal: "Book on ZIVO",
+  viewDeal: "Book with Provider",
   
   /** Select flight variant */
-  select: "Select",
+  select: "View Deal",
   
   /** Traveler info to checkout */
-  proceedToPayment: "Continue to Payment",
+  proceedToPayment: "Continue to Partner",
   
   /** Checkout page */
-  checkout: "Pay Securely",
+  checkout: "Complete on Partner Site",
   
   /** Confirm booking */
-  confirm: "Complete Booking",
+  confirm: "Book with Provider",
 } as const;
 
 // ============================================
-// LOCKED DISCLAIMERS (MoR Model)
+// LOCKED DISCLAIMERS (Affiliate-Safe Model)
 // ============================================
 
 export const FLIGHT_DISCLAIMERS = {
   /** Main ticketing disclaimer - REQUIRED on all booking pages */
-  ticketing: "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under applicable airline rules.",
+  ticketing: "Flight bookings are completed with licensed travel partners. Prices may change until booking is completed.",
   
   /** Shorter version for inline use */
-  ticketingShort: "ZIVO sells flight tickets. Tickets issued by licensed partners.",
+  ticketingShort: "Bookings completed with licensed travel partners.",
   
   /** Footer disclaimer */
-  footer: "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. Tickets are issued by authorized partners under applicable airline rules.",
+  footer: "ZIVO compares prices from licensed travel partners. Bookings are completed on partner websites. ZIVO may earn a commission when users book through partner links.",
   
   /** Under CTA notice */
-  checkout: "Secure ZIVO checkout · Final price confirmed before payment",
+  checkout: "Continue to Partner · Final price confirmed on partner site",
   
-  /** Price disclaimer - NO indicative language */
-  price: "All prices include taxes and fees. Final total shown at checkout.",
+  /** Price disclaimer */
+  price: "Prices may change until booking is completed with the provider.",
   
   /** Support disclaimer */
-  support: "For booking changes, cancellations, or refunds, contact ZIVO Support. Airline fare rules apply.",
+  support: "For changes, cancellations, or refunds, please contact the booking provider directly.",
   
-  /** Payment disclaimer - ZIVO is MoR */
-  payment: "Payment is processed securely by ZIVO. Your payment details are encrypted and protected.",
+  /** Payment disclaimer */
+  payment: "Payment is processed securely on the partner's website.",
   
   /** Results page notice */
-  liveDeals: "Live flight prices from airline partners",
+  liveDeals: "Compare prices from multiple travel providers",
   
   /** Detail page disclosure */
-  detailDisclosure: "Complete your booking securely with ZIVO. Tickets issued by licensed airline partners.",
+  detailDisclosure: "Complete your booking securely with our trusted travel partner.",
   
   /** Refund policy */
-  refund: "Refunds are subject to airline fare rules. Cancellation fees may apply.",
+  refund: "Refunds are subject to partner and airline policies. Contact the booking provider for assistance.",
 } as const;
 
 // ============================================
-// LOCKED CONSENT TEXT (MoR Model)
+// LOCKED CONSENT TEXT (Affiliate-Safe Model)
 // ============================================
 
 export const FLIGHT_CONSENT = {
-  /** Checkbox label - REQUIRED before payment */
-  checkboxLabel: "I agree to the Terms and Conditions and Airline Rules.",
+  /** Checkbox label - REQUIRED before redirect */
+  checkboxLabel: "I agree to the Terms and Conditions.",
   
   /** Full consent description */
-  description: "By proceeding, you agree to ZIVO's Terms of Service, Privacy Policy, and the applicable airline fare rules and conditions of carriage.",
+  description: "By proceeding, you agree to ZIVO's Terms of Service and Privacy Policy. You will be redirected to complete your booking with our travel partner.",
   
   /** Privacy notice */
-  privacy: "Your data is encrypted and securely stored. ZIVO uses your information to process your booking and provide customer support.",
+  privacy: "Your data is encrypted and securely stored. ZIVO uses your information to facilitate your booking with our travel partners.",
   
   /** Terms link text */
-  termsLink: "View Flight Terms",
+  termsLink: "View Terms",
 } as const;
 
 // ============================================
@@ -132,12 +133,12 @@ export const FLIGHT_CONSENT = {
 // ============================================
 
 export const FLIGHT_TRUST_BADGES = {
-  secureCheckout: "Secure ZIVO checkout",
+  secureCheckout: "Secure partner checkout",
   transparentPricing: "Transparent pricing",
-  licensedPartner: "Licensed ticketing partner",
+  licensedPartner: "Licensed travel partners",
   noHiddenFees: "No hidden fees",
   dataEncrypted: "256-bit encryption",
-  moneyBackGuarantee: "Booking guarantee",
+  moneyBackGuarantee: "Partner booking guarantee",
 } as const;
 
 // ============================================

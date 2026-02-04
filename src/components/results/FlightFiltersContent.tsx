@@ -234,6 +234,11 @@ export function FlightFiltersContent({
           </div>
         </div>
       </div>
+
+      {/* Filter Note */}
+      <p className="text-[10px] text-muted-foreground italic mt-4 px-1">
+        Filters adjust partner-provided results only.
+      </p>
     </div>
   );
 }

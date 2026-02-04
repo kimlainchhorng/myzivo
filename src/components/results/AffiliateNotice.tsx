@@ -99,12 +99,14 @@ interface AffiliateDisclaimerProps {
 export function AffiliateDisclaimer({ className }: AffiliateDisclaimerProps) {
   return (
     <section className={cn("py-8 border-t border-border/50 bg-muted/20", className)}>
-      <div className="container mx-auto px-4 text-center">
+      <div className="container mx-auto px-4 text-center space-y-2">
         <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          *Prices shown are indicative estimates only and may change due to real-time availability, 
-          taxes, fees, and supplier pricing. Final prices are displayed on partner booking sites.
-          ZIVO is a meta-search travel comparison platform – we do not sell tickets or handle payments. 
-          All bookings are completed directly with our trusted travel partners.
+          ZIVO compares prices from licensed travel partners.
+        </p>
+        <p className="text-xs text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          Bookings are completed on partner websites.
+        </p>
+        <p className="text-[10px] text-muted-foreground/80 max-w-3xl mx-auto leading-relaxed">
           ZIVO may earn a commission when users book through partner links.
         </p>
       </div>
