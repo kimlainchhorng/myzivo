@@ -4,22 +4,22 @@ import { cn } from "@/lib/utils";
 const steps = [
   {
     step: 1,
-    title: "Search & Compare",
-    description: "Compare prices from hundreds of airlines and providers.",
+    title: "Search & Compare Prices",
+    description: "Compare options from multiple travel providers in one search.",
     icon: Search,
     color: "from-sky-500 to-blue-600",
   },
   {
     step: 2,
-    title: "Choose the Best Option",
-    description: "Pick the deal that fits your travel needs.",
+    title: "Choose a Trusted Partner",
+    description: "Select the deal that fits your needs from licensed providers.",
     icon: MousePointer,
     color: "from-violet-500 to-purple-600",
   },
   {
     step: 3,
-    title: "Book Securely on ZIVO",
-    description: "Pay securely and receive your e-ticket instantly.",
+    title: "Book Securely",
+    description: "Complete your booking on the partner's website.",
     icon: ShieldCheck,
     color: "from-emerald-500 to-teal-600",
   },
@@ -76,10 +76,9 @@ export default function HowItWorksSimple() {
 
         {/* Reassurance Text */}
         <div className="text-center max-w-lg mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-            <ShieldCheck className="w-4 h-4" />
-            Tickets issued by licensed airline ticketing providers.
-          </div>
+          <p className="text-xs text-muted-foreground">
+            ZIVO does not issue tickets or process payments. All bookings are completed with licensed travel partners.
+          </p>
         </div>
       </div>
     </section>

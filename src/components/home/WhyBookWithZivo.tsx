@@ -10,22 +10,22 @@ import { cn } from "@/lib/utils";
 const valueProps = [
   {
     icon: Search,
-    title: "Compare Prices",
-    description: "Search across hundreds of airlines, hotels, and rental partners to find the best options for your trip.",
+    title: "Compare Multiple Providers",
+    description: "Search across hundreds of airlines, hotels, and rental partners to compare prices per trip.",
     gradient: "from-sky-500/20 to-blue-500/10",
     iconColor: "text-sky-500",
   },
   {
     icon: ShieldCheck,
-    title: "Secure Payments",
-    description: "Book with confidence using our encrypted checkout. Your payment data is protected with bank-level security.",
+    title: "Transparent Pricing",
+    description: "See prices from multiple providers upfront. No hidden fees from ZIVO — what you see is what partners charge.",
     gradient: "from-emerald-500/20 to-teal-500/10",
     iconColor: "text-emerald-500",
   },
   {
     icon: BadgeCheck,
-    title: "Trusted Partners",
-    description: "All bookings are fulfilled by licensed travel providers. Get real tickets and confirmed reservations.",
+    title: "Price Alerts",
+    description: "Track routes you care about and get notified when prices change. Never miss a price drop.",
     gradient: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-500",
   },
@@ -58,7 +58,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
             "font-display font-bold",
             isCompact ? "text-xl" : "text-2xl sm:text-3xl lg:text-4xl"
           )}>
-            Why Book with{" "}
+            Why Compare with{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
               ZIVO
             </span>
@@ -66,7 +66,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
           </h2>
           {!isCompact && (
             <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto mt-3">
-              Your trusted travel booking platform
+              Your trusted travel comparison platform
             </p>
           )}
         </div>
@@ -125,7 +125,7 @@ export function WhyBookWithZivo({ className, variant = "default" }: WhyBookWithZ
           "text-center text-muted-foreground/70 max-w-lg mx-auto",
           isCompact ? "text-[10px] mt-4" : "text-xs mt-8"
         )}>
-          ZIVO is a travel booking platform. Services are fulfilled by licensed travel providers.
+          ZIVO does not issue tickets or process payments. All bookings are completed on partner sites.
         </p>
       </div>
     </section>

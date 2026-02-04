@@ -10,17 +10,17 @@ const trustPoints = [
   {
     icon: Globe,
     title: "Trusted worldwide",
-    description: "Travelers in 50+ countries use ZIVO to book flights, hotels, and cars.",
+    description: "Travelers worldwide use ZIVO to compare travel prices from licensed providers.",
   },
   {
     icon: Lock,
-    title: "Secure payments",
-    description: "Your payment info is encrypted and protected with bank-level security.",
+    title: "Secure bookings",
+    description: "Complete your booking securely on trusted partner websites.",
   },
   {
     icon: Shield,
     title: "Licensed partners",
-    description: "We work with licensed travel providers for reliable bookings.",
+    description: "All travel services are fulfilled by licensed travel providers.",
   },
 ];
 
@@ -31,10 +31,10 @@ export default function SocialProofSection() {
         {/* Trust Statement */}
         <div className="text-center mb-10">
           <p className="text-lg sm:text-xl font-medium text-foreground mb-2">
-            Trusted by travelers worldwide
+            Trusted by travelers worldwide to compare travel prices
           </p>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Built with secure payments and licensed partners
+            from licensed providers
           </p>
         </div>
 

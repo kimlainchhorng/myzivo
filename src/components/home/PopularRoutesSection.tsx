@@ -78,10 +78,10 @@ export default function PopularRoutesSection() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold mb-1">
-              Popular Flight Routes
+              Popular Right Now
             </h2>
             <p className="text-muted-foreground text-sm">
-              Click to search deals on trending routes
+              Compare prices on trending routes
             </p>
           </div>
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-medium">
@@ -141,7 +141,7 @@ export default function PopularRoutesSection() {
                       
                       {/* Micro CTA */}
                       <p className="text-xs text-sky-500 font-medium mt-1 group-hover:underline flex items-center gap-1">
-                        Search deals
+                        Compare prices
                         <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                       </p>
                     </div>
@@ -156,7 +156,7 @@ export default function PopularRoutesSection() {
         <div className="text-center">
           <Link to="/flights">
             <Button variant="outline" className="rounded-xl gap-2">
-              Search All Routes
+              Compare prices
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

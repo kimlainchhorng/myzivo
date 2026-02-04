@@ -277,28 +277,27 @@ const Footer = () => {
           </div>
           
           {/* AFFILIATE DISCLOSURE - Required for partner compliance */}
-          <div className="mt-6 pt-4 border-t border-border/50 text-center">
-            <p className="text-xs text-muted-foreground max-w-3xl mx-auto font-medium mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10">
-              ZIVO may earn a commission when users book through our travel partners.
+          <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-3">
+            {/* REQUIRED EXACT COPY - Do not modify */}
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-semibold">
+              ZIVO is a travel comparison platform.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              ZIVO acts as a booking facilitator and sub-agent. Travel services are fulfilled by licensed providers.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-3xl mx-auto font-medium p-3 rounded-lg bg-primary/5 border border-primary/10">
+              ZIVO may earn a commission when users book through partner links.
             </p>
           </div>
           
           {/* Seller of Travel & Legal Disclosure */}
-          <div className="text-center space-y-2">
-            {/* REQUIRED EXACT COPY - Do not modify */}
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-semibold p-2 rounded-lg bg-muted/50 border border-border/50">
-              ZIVO acts as a booking facilitator and sub-agent for licensed travel providers.
-            </p>
+          <div className="text-center space-y-2 mt-4">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-3 h-3 text-emerald-500" />
               ZIVO is registered as a Seller of Travel where required by law.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               California SOT: pending · Florida SOT: pending
-            </p>
-            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
-              Tickets are issued by authorized partners under airline rules.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
