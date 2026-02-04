@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAirlineLogo } from "@/data/airlines";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 
 const popularRoutes = [
   {
@@ -107,13 +107,11 @@ export default function PopularRoutesSection() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     {/* Airline Logo */}
-                    <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
-                      <img
-                        src={getAirlineLogo(route.airline, 32)}
-                        alt="Airline logo"
-                        className="w-8 h-8 object-contain"
-                      />
-                    </div>
+                    <AirlineLogo
+                      iataCode={route.airline}
+                      size={40}
+                      className="bg-white border border-border/50"
+                    />
                     
                     {/* Route Details */}
                     <div className="flex-1 min-w-0">

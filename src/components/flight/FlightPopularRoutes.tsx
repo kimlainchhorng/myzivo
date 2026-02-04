@@ -4,7 +4,7 @@ import { TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFlightRedirect } from "@/hooks/useAffiliateRedirect";
 import { format, addDays } from "date-fns";
-import { getAirlineLogo } from "@/data/airlines";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 
 const routes = [
   { from: "LAX", fromCity: "Los Angeles", to: "JFK", toCity: "New York", price: 149, searches: "50K+", trending: true, airline: "AA" },
@@ -77,13 +77,11 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-white border border-border/50 flex items-center justify-center shrink-0 overflow-hidden">
-                      <img
-                        src={getAirlineLogo(route.airline, 32)}
-                        alt="Airline logo"
-                        className="w-8 h-8 object-contain"
-                      />
-                    </div>
+                    <AirlineLogo
+                      iataCode={route.airline}
+                      size={40}
+                      className="shrink-0 bg-white border border-border/50"
+                    />
                     <div className="text-center">
                       <p className="font-bold text-lg">{route.from}</p>
                       <p className="text-xs text-muted-foreground truncate max-w-[60px]">{route.fromCity}</p>
