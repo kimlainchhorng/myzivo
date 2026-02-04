@@ -297,6 +297,16 @@ const TrackingTest = lazy(() => import("./pages/TrackingTest"));
 const Offline = lazy(() => import("./pages/Offline"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 
+// SEO pages
+const FlightToCity = lazy(() => import("./pages/seo/FlightToCity"));
+const FlightRoutePage = lazy(() => import("./pages/seo/FlightRoutePage"));
+
+// Business pages
+const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
+
+// Admin analytics
+const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
+
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
 const HotelsAdLanding = lazy(() => import("./pages/ads/HotelsAdLanding"));
@@ -387,8 +397,17 @@ const App = () => (
                 <Route path="/flights" element={<FlightLanding />} />
                 <Route path="/flights/from-:fromCity" element={<FlightLanding />} />
                 <Route path="/flights/to-:toCity" element={<FlightLanding />} />
+                <Route path="/flights/to/:citySlug" element={<FlightToCity />} />
                 <Route path="/flights/cities/:citySlug" element={<FlightCityPage />} />
+                <Route path="/flights/:origin-to-:destination" element={<FlightRoutePage />} />
                 <Route path="/flights/:route" element={<FlightLanding />} />
+                
+                {/* Business pages */}
+                <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
+                <Route path="/partners" element={<PartnerWithZivo />} />
+                
+                {/* Admin analytics */}
+                <Route path="/admin/analytics-dashboard" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
                 
                 {/* Airport Pages - SEO */}
                 <Route path="/airports/:iata" element={<AirportPage />} />
