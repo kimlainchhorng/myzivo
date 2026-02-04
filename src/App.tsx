@@ -309,6 +309,10 @@ const ComplianceDashboard = lazy(() => import("./pages/admin/modules/compliance/
 const AutomationDashboard = lazy(() => import("./pages/admin/modules/automation/AutomationDashboard"));
 const ProductionLaunchDashboard = lazy(() => import("./pages/admin/modules/launch/ProductionLaunchDashboard"));
 
+// Go-Live & Launch Runbook
+const GoLiveChecklist = lazy(() => import("./pages/admin/GoLiveChecklist"));
+const LaunchDayRunbook = lazy(() => import("./pages/admin/LaunchDayRunbook"));
+
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
 const TrackingTest = lazy(() => import("./pages/TrackingTest"));
@@ -1137,6 +1141,9 @@ const App = () => (
                 <Route path="/trust-statement" element={<TrustStatement />} />
                 {/* Admin Email Automation */}
                 <Route path="/admin/email-automation" element={<ProtectedRoute requireAdmin><EmailAutomationDashboard /></ProtectedRoute>} />
+                {/* Go-Live Checklist & Launch Runbook */}
+                <Route path="/admin/go-live" element={<ProtectedRoute requireAdmin><GoLiveChecklist /></ProtectedRoute>} />
+                <Route path="/admin/launch-runbook" element={<ProtectedRoute requireAdmin><LaunchDayRunbook /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
