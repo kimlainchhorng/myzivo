@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { TrendingDown, TrendingUp, Minus, Calendar, Bell, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import PriceConfidenceBadge from "@/components/shared/PriceConfidenceBadge";
 
 interface PricePoint {
   date: string;
@@ -41,9 +42,12 @@ const FlightPriceHistory = () => {
         <div className="bg-gradient-to-br from-sky-500/10 via-card/50 to-blue-500/10 border border-sky-500/20 rounded-3xl p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div>
-              <Badge className="mb-2 bg-sky-500/20 text-sky-400 border-sky-500/30">
-                <TrendingDown className="w-3 h-3 mr-1" /> Price Tracker
-              </Badge>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30">
+                  <TrendingDown className="w-3 h-3 mr-1" /> Price Tracker
+                </Badge>
+                <PriceConfidenceBadge level="good" percentFromAvg={-15} />
+              </div>
               <h3 className="text-xl md:text-2xl font-display font-bold">
                 Price History & Predictions
               </h3>
