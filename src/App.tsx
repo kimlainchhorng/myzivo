@@ -289,6 +289,7 @@ const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/modules/analyti
 const AdminPricingDashboard = lazy(() => import("./pages/admin/modules/pricing/AdminPricingDashboard"));
 const ComplianceDashboard = lazy(() => import("./pages/admin/modules/compliance/ComplianceDashboard"));
 const AutomationDashboard = lazy(() => import("./pages/admin/modules/automation/AutomationDashboard"));
+const ProductionLaunchDashboard = lazy(() => import("./pages/admin/modules/launch/ProductionLaunchDashboard"));
 
 // Outbound redirect page
 const OutboundRedirect = lazy(() => import("./pages/OutboundRedirect"));
@@ -968,6 +969,14 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AutomationDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/production-launch"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <ProductionLaunchDashboard />
                     </ProtectedRoute>
                   }
                 />

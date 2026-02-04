@@ -7699,6 +7699,90 @@ export type Database = {
         }
         Relationships: []
       }
+      launch_monitoring_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: Database["public"]["Enums"]["launch_alert_type"]
+          created_at: string
+          details: Json | null
+          id: string
+          is_acknowledged: boolean
+          is_resolved: boolean
+          message: string
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: Database["public"]["Enums"]["launch_alert_severity"]
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: Database["public"]["Enums"]["launch_alert_type"]
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_acknowledged?: boolean
+          is_resolved?: boolean
+          message: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["launch_alert_severity"]
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: Database["public"]["Enums"]["launch_alert_type"]
+          created_at?: string
+          details?: Json | null
+          id?: string
+          is_acknowledged?: boolean
+          is_resolved?: boolean
+          message?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: Database["public"]["Enums"]["launch_alert_severity"]
+          title?: string
+        }
+        Relationships: []
+      }
+      launch_phase_log: {
+        Row: {
+          blockers_at_start: Json | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          metrics_snapshot: Json | null
+          notes: string | null
+          phase: Database["public"]["Enums"]["launch_phase"]
+          started_at: string
+          started_by: string | null
+        }
+        Insert: {
+          blockers_at_start?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metrics_snapshot?: Json | null
+          notes?: string | null
+          phase: Database["public"]["Enums"]["launch_phase"]
+          started_at?: string
+          started_by?: string | null
+        }
+        Update: {
+          blockers_at_start?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          metrics_snapshot?: Json | null
+          notes?: string | null
+          phase?: Database["public"]["Enums"]["launch_phase"]
+          started_at?: string
+          started_by?: string | null
+        }
+        Relationships: []
+      }
       launch_settings: {
         Row: {
           announcement_cities: string[] | null
@@ -7756,6 +7840,51 @@ export type Database = {
           mode_changed_at?: string | null
           mode_changed_by?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      launch_status: {
+        Row: {
+          created_at: string
+          current_phase: Database["public"]["Enums"]["launch_phase"]
+          full_launch_started_at: string | null
+          go_live_date: string | null
+          id: string
+          is_paused: boolean
+          pause_reason: string | null
+          paused_at: string | null
+          paused_by: string | null
+          phase_started_at: string
+          soft_launch_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_phase?: Database["public"]["Enums"]["launch_phase"]
+          full_launch_started_at?: string | null
+          go_live_date?: string | null
+          id?: string
+          is_paused?: boolean
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          phase_started_at?: string
+          soft_launch_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_phase?: Database["public"]["Enums"]["launch_phase"]
+          full_launch_started_at?: string | null
+          go_live_date?: string | null
+          id?: string
+          is_paused?: boolean
+          pause_reason?: string | null
+          paused_at?: string | null
+          paused_by?: string | null
+          phase_started_at?: string
+          soft_launch_started_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -10759,6 +10888,114 @@ export type Database = {
           setting_key?: string
           setting_value?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      production_launch_checklist: {
+        Row: {
+          category: Database["public"]["Enums"]["launch_checklist_category"]
+          created_at: string
+          evidence_url: string | null
+          id: string
+          is_critical: boolean
+          is_verified: boolean
+          item_description: string | null
+          item_key: string
+          item_title: string
+          sort_order: number
+          updated_at: string
+          verification_notes: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["launch_checklist_category"]
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          is_critical?: boolean
+          is_verified?: boolean
+          item_description?: string | null
+          item_key: string
+          item_title: string
+          sort_order?: number
+          updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["launch_checklist_category"]
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          is_critical?: boolean
+          is_verified?: boolean
+          item_description?: string | null
+          item_key?: string
+          item_title?: string
+          sort_order?: number
+          updated_at?: string
+          verification_notes?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
+      production_test_bookings: {
+        Row: {
+          admin_visible: boolean | null
+          amount_cents: number | null
+          booking_reference: string | null
+          created_at: string
+          currency: string | null
+          email_sent: boolean | null
+          error_message: string | null
+          id: string
+          my_trips_visible: boolean | null
+          payment_captured: boolean | null
+          service_type: string
+          supplier_confirmation: string | null
+          test_details: Json | null
+          test_status: Database["public"]["Enums"]["test_booking_status"]
+          tested_at: string | null
+          tested_by: string | null
+        }
+        Insert: {
+          admin_visible?: boolean | null
+          amount_cents?: number | null
+          booking_reference?: string | null
+          created_at?: string
+          currency?: string | null
+          email_sent?: boolean | null
+          error_message?: string | null
+          id?: string
+          my_trips_visible?: boolean | null
+          payment_captured?: boolean | null
+          service_type: string
+          supplier_confirmation?: string | null
+          test_details?: Json | null
+          test_status?: Database["public"]["Enums"]["test_booking_status"]
+          tested_at?: string | null
+          tested_by?: string | null
+        }
+        Update: {
+          admin_visible?: boolean | null
+          amount_cents?: number | null
+          booking_reference?: string | null
+          created_at?: string
+          currency?: string | null
+          email_sent?: boolean | null
+          error_message?: string | null
+          id?: string
+          my_trips_visible?: boolean | null
+          payment_captured?: boolean | null
+          service_type?: string
+          supplier_confirmation?: string | null
+          test_details?: Json | null
+          test_status?: Database["public"]["Enums"]["test_booking_status"]
+          tested_at?: string | null
+          tested_by?: string | null
         }
         Relationships: []
       }
@@ -19145,6 +19382,25 @@ export type Database = {
         | "denied"
         | "paid_out"
         | "closed"
+      launch_alert_severity: "info" | "warning" | "critical"
+      launch_alert_type:
+        | "booking_failure"
+        | "payment_failure"
+        | "api_outage"
+        | "fraud_spike"
+        | "refund_spike"
+        | "supplier_error"
+        | "sla_breach"
+      launch_checklist_category:
+        | "environment_switch"
+        | "booking_tests"
+        | "legal_trust"
+        | "security"
+        | "support_readiness"
+        | "monitoring_alerts"
+        | "soft_launch"
+        | "full_launch"
+      launch_phase: "pre_launch" | "soft_launch" | "full_launch" | "scaling"
       notification_category:
         | "transactional"
         | "account"
@@ -19227,6 +19483,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "suspended"
+      test_booking_status: "pending" | "running" | "success" | "failed"
       travel_booking_status:
         | "pending"
         | "redirected"
@@ -19432,6 +19689,27 @@ export const Constants = {
         "paid_out",
         "closed",
       ],
+      launch_alert_severity: ["info", "warning", "critical"],
+      launch_alert_type: [
+        "booking_failure",
+        "payment_failure",
+        "api_outage",
+        "fraud_spike",
+        "refund_spike",
+        "supplier_error",
+        "sla_breach",
+      ],
+      launch_checklist_category: [
+        "environment_switch",
+        "booking_tests",
+        "legal_trust",
+        "security",
+        "support_readiness",
+        "monitoring_alerts",
+        "soft_launch",
+        "full_launch",
+      ],
+      launch_phase: ["pre_launch", "soft_launch", "full_launch", "scaling"],
       notification_category: [
         "transactional",
         "account",
@@ -19525,6 +19803,7 @@ export const Constants = {
         "rejected",
         "suspended",
       ],
+      test_booking_status: ["pending", "running", "success", "failed"],
       travel_booking_status: [
         "pending",
         "redirected",
