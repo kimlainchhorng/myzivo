@@ -19653,6 +19653,10 @@ export type Database = {
         Args: { p_order_id: string; p_trip_id: string }
         Returns: boolean
       }
+      is_damage_report_party: {
+        Args: { _damage_report_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_hotel_owner: { Args: { _hotel_id: string }; Returns: boolean }
       is_rental_car_owner: { Args: { _car_id: string }; Returns: boolean }
       is_restaurant_owner: {
