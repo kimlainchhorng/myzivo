@@ -250,6 +250,9 @@ const Feedback = lazy(() => import("./pages/Feedback"));
 const Roadmap = lazy(() => import("./pages/Roadmap"));
 const APIPartners = lazy(() => import("./pages/business/APIPartners"));
 const BusinessDashboard = lazy(() => import("./pages/business/BusinessDashboard"));
+const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
+const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
+const Vision = lazy(() => import("./pages/Vision"));
 const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
 
 // Support pages
