@@ -9,23 +9,23 @@ import { cn } from "@/lib/utils";
 const valueProps = [
   {
     icon: Search,
-    title: "Compare Prices from Trusted Partners",
-    description: "Search across 500+ airlines, hotels, and car rental companies worldwide.",
+    title: "Compare Multiple Providers",
+    description: "Search across hundreds of airlines, hotels, and rental partners per trip.",
   },
   {
     icon: DollarSign,
-    title: "No Booking Fees on ZIVO",
-    description: "We don't charge any fees. Book directly with our trusted travel partners.",
+    title: "Transparent Pricing",
+    description: "See prices from multiple providers upfront. No hidden fees from ZIVO.",
   },
   {
     icon: Lock,
-    title: "Secure Booking on Partner Sites",
-    description: "Complete your reservation safely on verified partner websites.",
+    title: "Price Alerts",
+    description: "Track routes you care about and get notified when prices change.",
   },
   {
     icon: Globe,
-    title: "Worldwide Coverage",
-    description: "Find travel options for any destination around the globe.",
+    title: "Flexible Search",
+    description: "Flexible dates and nearby airport suggestions for better options.",
   },
 ];
 
@@ -40,14 +40,14 @@ export default function WhyZivo() {
         {/* Section Header */}
         <div className="text-center mb-12 sm:mb-16">
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
-            Why Use{" "}
+            Why Compare with{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
               ZIVO
             </span>
             ?
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-xl mx-auto">
-            The smarter way to search and compare travel deals
+            Your trusted travel comparison platform
           </p>
         </div>
 
@@ -80,12 +80,9 @@ export default function WhyZivo() {
 
         {/* Trust Indicator */}
         <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card/80 backdrop-blur-sm border border-border/50">
-            <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <span className="text-sm font-medium text-muted-foreground">
-              Trusted by travelers in <span className="text-foreground font-bold">150+ countries</span>
-            </span>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            ZIVO does not issue tickets or process payments. All bookings are completed on partner sites.
+          </p>
         </div>
       </div>
     </section>
