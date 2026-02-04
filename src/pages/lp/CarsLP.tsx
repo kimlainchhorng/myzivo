@@ -37,7 +37,7 @@ export default function CarsLP() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
-        title="Compare Car Rentals – Hizivo"
+        title="Compare Car Rentals – ZIVO"
         description="Compare car rental prices from trusted partners. Search, compare, and book securely on partner sites."
         noIndex={true}
       />
@@ -110,7 +110,7 @@ export default function CarsLP() {
               <div className="flex items-start gap-3 text-left">
                 <ExternalLink className="w-4 h-4 text-white/80 shrink-0 mt-0.5" />
                 <p className="text-sm text-white/80">
-                  Hizivo compares car rentals from licensed partners. When you're ready to book, 
+                  ZIVO compares car rentals from licensed partners. When you're ready to book, 
                   you'll be redirected to our partner's secure checkout.
                 </p>
               </div>
