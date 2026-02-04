@@ -1,378 +1,386 @@
 
-
-# ZIVO AI, Smart Features & Market Leadership Implementation
+# ZIVO Monetization, Ads & Data Moat Implementation
 
 ## Overview
 
-This plan differentiates ZIVO from competitors using smart automation, AI-assisted travel planning, and premium user experience. Building on ZIVO's existing AI infrastructure (trip suggestions, pricing recommendations, smart cards), we'll expand with new intelligent features and a premium tier.
+This plan implements multiple revenue streams, personalization infrastructure, and data advantages to transform ZIVO from a booking platform into a monetized travel intelligence ecosystem.
 
 ## Current State Assessment
 
-### Already Implemented (Existing)
+### Already Implemented
 
 | Feature | Status | Location |
 |---------|--------|----------|
-| **AI Trip Suggestions** | Complete | `AITripSuggestions.tsx` with Lovable AI integration, preferences, destination cards |
-| **Smart Recommendation Card** | Complete | `SmartRecommendationCard.tsx` for cross-service AI suggestions |
-| **Pricing Suggestion Banner** | Complete | `PricingSuggestionBanner.tsx` for dynamic pricing |
-| **Price Calendar** | Complete | `PriceCalendar.tsx` with real-time prices, lowest day highlighting |
-| **Nearby Airports** | Complete | `NearbyAirports.tsx` comparing prices from alternate airports |
-| **Travel Bundle Card** | Complete | `TravelBundleCard.tsx` with Flight + Hotel + Car bundles |
-| **Flexible Dates Toggle** | Complete | In search forms with +/- 3 days flexibility |
-| **Alternative Dates Section** | Complete | `FlightAlternativeDates.tsx` showing day-by-day prices |
-| **Popular Routes Section** | Complete | `PopularRoutesSection.tsx` with trending badges |
-| **Saved Searches** | Complete | `useSavedSearches.ts` with price alerts, synced to account |
-| **Urgency Banner** | Complete | `UrgencyBanner.tsx` with "Only X seats left" |
-| **ZIVO Miles Tiers** | Complete | `ZivoMilesProgram.tsx` with Bronze/Silver/Gold/Platinum |
-| **Abandonment Recovery** | Complete | `useAbandonmentRecovery.ts` for resuming bookings |
+| **Sponsored/Promoted Labels** | Complete | `EatsSection.tsx`, `PremiumRestaurantCard.tsx` - "Promoted" badges for restaurants |
+| **Price History Chart** | Complete | `FlightPriceHistory.tsx` - 6-point price chart with trends, low/high indicators |
+| **Price Prediction** | Complete | `PricePrediction.tsx` - AI-powered price forecasting |
+| **Deals Carousel** | Complete | `FlightDealsCarousel.tsx`, `FlightSeasonalDeals.tsx`, `FlightBundleDeals.tsx` |
+| **Promotions Page** | Complete | `Promotions.tsx` - coupon codes, offers, rewards |
+| **ZIVO Miles Program** | Complete | `ZivoMilesProgram.tsx` - tiers (Bronze/Silver/Gold/Platinum), earn/redeem, transactions |
+| **Referral Program** | Complete | `ReferralProgram.tsx`, `useReferrals.ts`, `ReferralCenter.tsx` |
+| **Creator Program** | Complete | `Creators.tsx` - tracking link generator, toolkit, FAQs |
+| **Saved Searches** | Complete | `useSavedSearches.ts`, `SavedSearches.tsx` - price alerts |
+| **Price Drop Alerts** | Complete | `FlightPriceHistory.tsx` - "Set Alert" functionality |
+| **Analytics Infrastructure** | Complete | `AdminAnalytics.tsx`, `analytics_events` table, cohort analysis |
+| **Personalization Types** | Complete | `personalization.ts` - saved searches, preferences types |
+| **Business Dashboard** | Partial | `BusinessDashboard.tsx` - placeholder B2B dashboard |
 
 ### Missing/Needs Enhancement
 
 | Feature | Status | Required |
 |---------|--------|----------|
-| **AI Trip Planner Page** | Missing | Dedicated page with full AI planning experience |
-| **Best Time to Book Suggestion** | Partial | Inline AI-powered booking time hints |
-| **Smart Calendar (Price per Week)** | Partial | Weekly view with cheapest week highlighted |
-| **Airport Savings Suggestion Inline** | Missing | Auto-show savings on results page |
-| **ZIVO Plus Premium Tier** | Missing | Premium subscription UI and benefits |
-| **Real-Time Price Confidence Badges** | Partial | "Recently booked", "High demand" badges |
-| **Multi-Device Continuity UI** | Missing | Visible sync status and resume banner |
-| **Social Proof - Trending Section** | Partial | Enhanced trending destinations, most booked |
-| **Vision/Future Page** | Missing | "The future of travel with ZIVO" page |
-| **Smart Savings Suggestions Banner** | Missing | "Fly one day earlier to save $X" |
+| **Sponsored Flight/Hotel Badges** | Missing | Sponsored labels for travel results |
+| **Price Confidence Badge** | Partial | "Good/Average/High" price indicator |
+| **Dedicated Deals Hub** | Missing | `/deals` and `/last-minute` pages |
+| **User Behavior Intelligence** | Missing | Preference tracking and personalization engine |
+| **Personalized Homepage** | Missing | Different views for logged-in vs guests |
+| **Travel Wallet UI** | Missing | Unified credits/refunds/promos view |
+| **Influencer Dashboard** | Partial | Enhanced creator analytics |
+| **B2B Data Insights** | Missing | Anonymized insights offering page |
+| **Retention Emails** | Partial | Monthly inspiration, birthday offers |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: AI Smart Search & Recommendations
+### Phase 1: Sponsored Results System
 
-#### 1.1 Smart Booking Suggestions Component
+Create a non-intrusive sponsored content system for travel results.
 
-**New Component:** `src/components/ai/SmartBookingSuggestions.tsx`
+**New Component:** `src/components/shared/SponsoredBadge.tsx`
 
-Display AI-powered contextual suggestions:
-- "Best time to book" - Based on price trends
-- "Cheapest dates nearby" - Alternative date hints
-- "Flexible dates save money" - Savings comparison
-- "Travelers save up to 30% by flying one day earlier"
+A reusable badge for sponsored content:
+- "Sponsored" or "Ad" label
+- Clearly distinguished styling
+- Tooltip explaining sponsored content
 
-Features:
-- Collapsible card format
-- Sparkles icon for AI branding
-- Dismissible with localStorage persistence
-- Route-specific suggestions
+**New Component:** `src/components/flight/SponsoredFlightCard.tsx`
 
-#### 1.2 Smart Savings Banner
+Enhanced flight card for sponsored results:
+- Standard flight details
+- "Sponsored" badge (top-left)
+- Partner logo highlight
+- Same price transparency
 
-**New Component:** `src/components/ai/SmartSavingsBanner.tsx`
+**New Component:** `src/components/hotel/SponsoredHotelCard.tsx`
 
-Sticky banner showing potential savings:
+Sponsored hotel placement:
+- "Sponsored" indicator
+- Partner attribution
+- Same booking flow
+
+**Compliance Copy:**
 ```text
-+--------------------------------------------------+
-| ✨ AI Insight: Fly Tuesday instead of Friday to  |
-| save $120 on this route. [View Dates]            |
-+--------------------------------------------------+
+"Sponsored results are clearly labeled and do not affect price transparency. 
+All prices shown are the final prices from our partners."
 ```
 
-Features:
-- Shows on results pages
-- Calculates savings based on price calendar data
-- Links to alternative dates view
-- Dismissible
+**Integration Points:**
+- Add sponsored slot at position 2-3 in flight results
+- Add sponsored slot in hotel grid
+- Add sponsored destination cards on homepage
 
 ---
 
-### Phase 2: AI Trip Planner Page (Core Feature)
+### Phase 2: Price Confidence Indicator
 
-**New Page:** `src/pages/AITripPlanner.tsx`
+Enhance the existing price history with confidence badges.
 
-Route: `/ai-trip-planner` or `/trip-planner`
+**New Component:** `src/components/shared/PriceConfidenceBadge.tsx`
 
-A dedicated, immersive AI-powered trip planning experience.
+Visual indicator showing:
+- "Good Price" (green) - Below average
+- "Average Price" (amber) - Within normal range  
+- "High Price" (red) - Above average
 
-**User Inputs:**
-- Destination (optional - can be "Anywhere")
-- Travel dates (or flexible date range)
-- Budget slider (Budget / Mid-Range / Luxury)
-- Interests/activities (multi-select chips)
-- Number of travelers
+Mini chart option:
+- Sparkline showing 30-day trend
+- Current position indicator
 
-**AI Outputs:**
-- Personalized flight suggestions
-- Recommended hotel areas
-- Estimated total trip cost
-- Best travel tips for the destination
-- Suggested itinerary highlights
-- Weather forecast
+**Update:** `src/components/flight/FlightPriceHistory.tsx`
+
+Add:
+- Confidence badge integration
+- Tooltip: "Based on recent partner pricing data"
+- Historical context ("15% below 30-day average")
+
+---
+
+### Phase 3: Deals & Promotions Hub
+
+Create dedicated deals pages for better SEO and user engagement.
+
+**New Page:** `src/pages/Deals.tsx`
+
+Route: `/deals`
+
+Sections:
+- Flash Deals (time-limited, countdown)
+- Last-Minute Flights (departing within 7 days)
+- Seasonal Promos (holiday/event-based)
+- Member-Only Deals (ZIVO Plus exclusive)
+- Price Drops (from saved searches)
+
+**New Page:** `src/pages/LastMinute.tsx`
+
+Route: `/last-minute`
+
+Features:
+- Flights departing in next 7 days
+- Hotels for tonight/this weekend
+- Quick filters (budget, destination type)
+- Price drop alerts
+
+**New Component:** `src/components/deals/FlashDealCard.tsx`
+
+Features:
+- Countdown timer
+- Original/discounted price
+- "X claimed" social proof
+- Limited quantity indicator
+
+**New Component:** `src/components/deals/DealCategoryTabs.tsx`
+
+Tab navigation:
+- All Deals
+- Flights
+- Hotels
+- Cars
+- Last Minute
+
+---
+
+### Phase 4: User Behavior Intelligence
+
+Build anonymized behavior tracking for personalization.
+
+**New Hook:** `src/hooks/useUserBehavior.ts`
+
+Tracks (anonymized):
+- Search patterns (routes, dates, frequency)
+- Preferred airlines/hotel chains
+- Budget ranges (economy/mid/luxury)
+- Booking windows (advance days)
+- Time of day patterns
+
+**New Hook:** `src/hooks/usePersonalization.ts`
+
+Uses behavior data for:
+- Homepage recommendations
+- Email targeting segments
+- Search suggestions
+- Price alert thresholds
+
+**New Type:** `src/types/behaviorAnalytics.ts`
+
+```typescript
+interface UserBehaviorProfile {
+  searchPatterns: {
+    topRoutes: string[];
+    preferredDays: string[];
+    avgAdvanceBooking: number;
+  };
+  preferences: {
+    airlines: string[];
+    hotelChains: string[];
+    budgetTier: 'budget' | 'mid' | 'luxury';
+    travelStyle: string[];
+  };
+  engagement: {
+    searchFrequency: number;
+    conversionRate: number;
+    avgSessionTime: number;
+  };
+}
+```
+
+**Privacy Notice:**
+```text
+"We use anonymized browsing data to personalize your experience. 
+No personal information is shared. Learn more in our Privacy Policy."
+```
+
+---
+
+### Phase 5: Personalized Homepage
+
+Create different homepage experiences for logged-in vs guest users.
+
+**New Component:** `src/components/home/PersonalizedHomeSection.tsx`
+
+For logged-in users:
+- Recently searched routes (last 5)
+- Recommended destinations (based on behavior)
+- Price alerts summary (active alerts + recent drops)
+- Saved trips quick access
+- ZIVO Miles summary
+
+**New Component:** `src/components/home/GuestHomeSection.tsx`
+
+For guests:
+- Trending deals (top 5)
+- Popular routes this week
+- Best-value destinations
+- "Sign up for personalized deals" CTA
+
+**Update:** `src/pages/Index.tsx`
+
+Add conditional rendering:
+- Check auth state
+- Show PersonalizedHomeSection for logged-in
+- Show GuestHomeSection for guests
+
+---
+
+### Phase 6: Travel Wallet UI
+
+Create a unified wallet view for all credits and rewards.
+
+**New Page:** `src/pages/TravelWallet.tsx`
+
+Route: `/wallet`
+
+Sections:
+- **Booking Credits** - Promotional credits for future bookings
+- **Refund Status** - Pending refunds and their status
+- **Promo Credits** - From referrals, campaigns, etc.
+- **ZIVO Miles** - Link to full miles program
+- Transaction History
 
 **Key Features:**
-- Uses existing `ai-trip-suggestions` Edge Function
-- Step-by-step wizard interface
-- Save trip plans to account
-- Share trip plans
-- "Explore similar trips" recommendations
+- Clear balance display (non-cash)
+- Credit expiration dates
+- "Use on next booking" CTA
+- Filter by credit type
 
-**Compliance:**
+**Compliance Notice:**
 ```text
-"AI suggestions are estimates based on current data. Actual prices may vary. Book directly with partners for confirmed pricing."
+"No cash balance stored. Credits are promotional only and cannot be 
+converted to cash. See Terms for credit expiration and usage policies."
 ```
 
 ---
 
-### Phase 3: Smart Flexible Dates Calendar
+### Phase 7: Influencer & Affiliate Enhancement
 
-#### 3.1 Enhanced Price Calendar with Weekly View
+Enhance the creator program with dashboard features.
 
-**Update:** `src/components/flight/PriceCalendar.tsx`
+**New Page:** `src/pages/creators/CreatorDashboard.tsx`
+
+Route: `/creators/dashboard`
+
+Features:
+- Earnings overview (clicks, conversions, commission)
+- Performance charts (30-day trend)
+- Top performing links
+- Payout history (placeholder)
+- Link generator (existing)
+
+**Update:** `src/pages/Creators.tsx`
 
 Add:
-- "Cheapest Week" view toggle
-- Week-by-week price comparison
-- Highlight cheapest consecutive 7 days
-- Price trend indicators (rising/falling)
+- "Dashboard" link for logged-in creators
+- Enhanced commission tiers display
+- Success stories section
 
-**New Component:** `src/components/flight/WeeklyPriceView.tsx`
+**New Component:** `src/components/creators/CreatorStats.tsx`
 
+Visual stats:
+- Total clicks
+- Conversion rate
+- Earnings this month
+- Rank/tier status
+
+**Landing Copy:**
 ```text
-+--------------------------------------------------+
-| Week of Jan 8    | Week of Jan 15   | Week of Jan 22
-| Avg: $329        | Avg: $289 ⭐      | Avg: $356
-| (Standard)       | (Best Value)      | (Peak)
-+--------------------------------------------------+
-```
-
-#### 3.2 Flexible Dates Tooltip
-
-**New Component:** `src/components/shared/FlexibleDatesTooltip.tsx`
-
-```text
-"Prices change frequently. Select flexible dates for better deals."
-```
-
-Add to date pickers across flights, hotels, and cars.
-
----
-
-### Phase 4: Nearby Airport & City Smart Suggestions
-
-#### 4.1 Inline Airport Savings Alert
-
-**New Component:** `src/components/flight/AirportSavingsAlert.tsx`
-
-Auto-detect and show inline on results:
-```text
-+--------------------------------------------------+
-| 💡 Flying from Newark (EWR) instead of JFK may   |
-| save you $120 on this route. [Compare Airports]  |
-+--------------------------------------------------+
-```
-
-Features:
-- Compares prices from nearby airports automatically
-- Uses existing `NearbyAirports` data
-- Shows only when savings exceed $50
-- One-click to switch search
-
-#### 4.2 Nearby City Suggestions
-
-**New Component:** `src/components/shared/NearbyCitySuggestions.tsx`
-
-For hotels and activities:
-```text
-"Consider staying in Jersey City instead of Manhattan - save 35% on hotels with 15-min subway access."
+"Earn with ZIVO - Share travel tools, earn commission when users book 
+on partner sites. No minimum followers required."
 ```
 
 ---
 
-### Phase 5: Smart Bundles Enhancement
+### Phase 8: B2B Data Insights Page
 
-#### 5.1 Bundle Comparison Card
+Create a placeholder for future B2B data offering.
 
-**Update:** `src/components/flight/TravelBundleCard.tsx`
+**New Page:** `src/pages/business/DataInsights.tsx`
 
-Add visual comparison:
+Route: `/business/insights` or `/data-insights`
+
+Content:
+- Hero: "Travel Intelligence for Business"
+- Available Insights:
+  - Popular routes and demand trends
+  - Pricing signals and seasonality
+  - Booking window patterns
+  - Regional demand forecasting
+- Use Cases (airlines, hotels, tourism boards)
+- Request Access form (waitlist)
+
+**Privacy Emphasis:**
 ```text
-+--------------------------------------------------+
-| COMPARE & SAVE                                   |
-+--------------------------------------------------+
-| ⚪ Flight Only .............. $450               |
-| ◉ Flight + Hotel ............ $699 (Save $120)  |
-| ⚪ Flight + Hotel + Car ..... $849 (Save $180)  |
-+--------------------------------------------------+
-| 🏷️ "Save more when you bundle"                   |
-+--------------------------------------------------+
+"All data insights are anonymized and aggregated. No individual user 
+data is ever shared. Data is derived from aggregate platform activity."
 ```
 
-Features:
-- Radio button selection
-- Real-time savings calculation
-- "Most Popular" badge on Flight + Hotel
-- Animated selection transitions
-
----
-
-### Phase 6: ZIVO Plus Premium Tier
-
-**New Page:** `src/pages/ZivoPlus.tsx`
-
-Route: `/zivo-plus` or `/plus`
-
-Premium subscription landing page (UI only for now).
-
-**Benefits Displayed:**
-- Early access to flash deals (24h before public)
-- Priority price alerts (instant notifications)
-- Ad-free experience
-- Dedicated support line
-- 2x ZIVO Miles earning rate
-- Exclusive member discounts (5% off select bookings)
-
-**Pricing Tiers (Placeholder):**
-- Monthly: $9.99/month
-- Annual: $79.99/year (Save 33%)
-
-**Copy:**
+**Coming Soon Badge:**
 ```text
-"ZIVO Plus – Travel smarter. Get exclusive deals, priority support, and more miles on every trip."
-```
-
-**New Component:** `src/components/premium/ZivoPlusBadge.tsx`
-
-Small badge indicator for Plus members shown in header.
-
-**New Component:** `src/components/premium/ZivoPlusPromo.tsx`
-
-Promotional card shown to non-members on results pages.
-
----
-
-### Phase 7: Real-Time Price Confidence Badges
-
-#### 7.1 Enhanced Trust Badges
-
-**Update:** `src/components/shared/TrustScoreBadges.tsx`
-
-Add new badge types:
-- "Recently Booked" - Shows when others booked recently
-- "High Demand" - Hot route indicator
-- "Only X seats left" - Scarcity signal (integrate with existing UrgencyBanner)
-- "Price Verified" - Timestamp of last price check
-
-**New Component:** `src/components/flight/SocialProofBadges.tsx`
-
-```text
-+--------------------------------------------------+
-| 👥 12 people booked this route in the last hour  |
-| 🔥 High demand - 3 seats left at this price      |
-+--------------------------------------------------+
-```
-
-**Compliance:**
-```text
-"Availability based on partner data. Final availability confirmed at checkout."
+"B2B Data API – Coming 2025"
 ```
 
 ---
 
-### Phase 8: Multi-Device Continuity
+### Phase 9: Platform Positioning & Moat
 
-#### 8.1 Sync Status Indicator
+Add strategic positioning copy throughout the platform.
 
-**New Component:** `src/components/shared/SyncStatusIndicator.tsx`
+**New Component:** `src/components/marketing/PlatformMoat.tsx`
 
-Small cloud icon in header showing sync status:
-- Green check: "All synced"
-- Spinning: "Syncing..."
-- Offline indicator
-
-#### 8.2 Resume Booking Banner
-
-**New Component:** `src/components/shared/ResumeBookingBanner.tsx`
-
-Shows when user has incomplete bookings:
+Positioning section for key pages:
 ```text
-+--------------------------------------------------+
-| 🔄 Continue where you left off                   |
-| JFK → LAX on Jan 15 • Saved 2 hours ago          |
-| [Resume Booking]                [Dismiss]        |
-+--------------------------------------------------+
+"ZIVO combines travel, mobility, and AI planning into one ecosystem."
 ```
 
-Features:
-- Synced via `user_saved_searches` table
-- Shows on homepage and relevant service pages
-- Links directly to checkout step
+Differentiators:
+- Cross-service intelligence (Flight → Hotel → Car suggestions)
+- AI-powered personalization
+- Unified rewards (ZIVO Miles across services)
+- One account, one app, complete journey
+
+**Integration Points:**
+- About page
+- Vision page
+- Footer tagline
+- App store descriptions
 
 ---
 
-### Phase 9: Social Proof & Trending
+### Phase 10: Retention & Re-engagement
 
-#### 9.1 Trending Destinations Section
+Implement long-term retention mechanisms.
 
-**New Component:** `src/components/home/TrendingDestinationsSection.tsx`
+**Update:** `src/pages/admin/EmailAutomationDashboard.tsx`
 
-```text
-+--------------------------------------------------+
-| 🔥 TRENDING NOW                                   |
-+--------------------------------------------------+
-| [Cancun 🇲🇽] [Tokyo 🇯🇵] [Paris 🇫🇷] [Dubai 🇦🇪]    |
-| Most searched this week                           |
-+--------------------------------------------------+
-```
+Add email types:
+- Monthly travel inspiration (personalized destinations)
+- Birthday offer (bonus miles/discount)
+- Anniversary offer (account anniversary)
+- Win-back (inactive user re-engagement)
+- Price drop digest (weekly summary)
 
-Features:
-- Real-time trending data (mock for now)
-- Clickable destination chips
-- Weekly refresh badge
+**New Component:** `src/components/profile/BirthdayOffer.tsx`
 
-#### 9.2 Most Booked This Week Section
+Birthday reward display:
+- Special discount code
+- Bonus miles
+- Limited-time validity
 
-**New Component:** `src/components/home/MostBookedSection.tsx`
+**New Component:** `src/components/email/MonthlyInspirationPreview.tsx`
 
-```text
-+--------------------------------------------------+
-| 📈 MOST BOOKED THIS WEEK                          |
-+--------------------------------------------------+
-| 1. NYC → Miami ............ 2,340 bookings       |
-| 2. LAX → Cancun ........... 1,890 bookings       |
-| 3. SFO → Tokyo ............ 1,650 bookings       |
-+--------------------------------------------------+
-```
-
-#### 9.3 Popular Routes Today
-
-**Update:** `src/components/home/PopularRoutesSection.tsx`
-
-Add:
-- "Today" filter toggle
-- Booking count badges
-- Live activity indicator
-
----
-
-### Phase 10: Vision & Future Page
-
-**New Page:** `src/pages/Vision.tsx`
-
-Route: `/vision` or `/future`
-
-Inspiring page about ZIVO's future.
-
-**Content:**
-- Hero: "The Future of Travel with ZIVO"
-- AI Travel Planning vision
-- One App for Travel + Mobility
-- Global Expansion roadmap
-- Sustainability initiatives
-- Technology innovations
-
-**Sections:**
-1. "AI That Understands You" - Personalization vision
-2. "Seamless Journeys" - Multi-modal travel
-3. "Global Reach" - Expansion plans
-4. "Sustainable Travel" - Green initiatives
-5. "Join the Journey" - Newsletter/waitlist CTA
+Preview template:
+- Personalized destination recommendations
+- Price trends for saved routes
+- Exclusive member deals
 
 ---
 
@@ -382,62 +390,36 @@ Inspiring page about ZIVO's future.
 
 | File | Description |
 |------|-------------|
-| `src/pages/AITripPlanner.tsx` | AI Trip Planner page with wizard interface |
-| `src/pages/ZivoPlus.tsx` | Premium tier landing page |
-| `src/pages/Vision.tsx` | Future of travel vision page |
-| `src/components/ai/SmartBookingSuggestions.tsx` | AI-powered booking hints |
-| `src/components/ai/SmartSavingsBanner.tsx` | Savings suggestions banner |
-| `src/components/flight/WeeklyPriceView.tsx` | Weekly price comparison |
-| `src/components/flight/AirportSavingsAlert.tsx` | Nearby airport savings |
-| `src/components/flight/SocialProofBadges.tsx` | Recently booked, high demand |
-| `src/components/shared/FlexibleDatesTooltip.tsx` | Flexible dates hint |
-| `src/components/shared/NearbyCitySuggestions.tsx` | Nearby city alternatives |
-| `src/components/shared/SyncStatusIndicator.tsx` | Cloud sync status |
-| `src/components/shared/ResumeBookingBanner.tsx` | Continue booking banner |
-| `src/components/premium/ZivoPlusBadge.tsx` | Plus member badge |
-| `src/components/premium/ZivoPlusPromo.tsx` | Plus promotional card |
-| `src/components/home/TrendingDestinationsSection.tsx` | Trending destinations |
-| `src/components/home/MostBookedSection.tsx` | Most booked routes |
+| `src/pages/Deals.tsx` | Main deals hub page |
+| `src/pages/LastMinute.tsx` | Last-minute bookings page |
+| `src/pages/TravelWallet.tsx` | Unified wallet/credits view |
+| `src/pages/creators/CreatorDashboard.tsx` | Influencer analytics dashboard |
+| `src/pages/business/DataInsights.tsx` | B2B data offering page |
+| `src/components/shared/SponsoredBadge.tsx` | Reusable sponsored label |
+| `src/components/shared/PriceConfidenceBadge.tsx` | Price rating indicator |
+| `src/components/flight/SponsoredFlightCard.tsx` | Sponsored flight display |
+| `src/components/hotel/SponsoredHotelCard.tsx` | Sponsored hotel display |
+| `src/components/deals/FlashDealCard.tsx` | Time-limited deal card |
+| `src/components/deals/DealCategoryTabs.tsx` | Deal filtering tabs |
+| `src/components/home/PersonalizedHomeSection.tsx` | Logged-in homepage |
+| `src/components/home/GuestHomeSection.tsx` | Guest homepage |
+| `src/components/creators/CreatorStats.tsx` | Creator performance stats |
+| `src/components/marketing/PlatformMoat.tsx` | Positioning copy |
+| `src/components/profile/BirthdayOffer.tsx` | Birthday reward display |
+| `src/hooks/useUserBehavior.ts` | Behavior tracking hook |
+| `src/hooks/usePersonalization.ts` | Personalization engine |
+| `src/types/behaviorAnalytics.ts` | Behavior tracking types |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/components/flight/PriceCalendar.tsx` | Add weekly view toggle |
-| `src/components/flight/TravelBundleCard.tsx` | Enhanced comparison UI |
-| `src/components/shared/TrustScoreBadges.tsx` | Add new badge types |
-| `src/components/home/PopularRoutesSection.tsx` | Add booking counts, live indicator |
-| `src/pages/FlightResults.tsx` | Add smart savings banner, airport alert |
-| `src/pages/Index.tsx` | Add trending sections |
-| `src/components/Header.tsx` | Add Plus badge, sync indicator |
+| `src/pages/Index.tsx` | Add personalized/guest conditional sections |
+| `src/components/flight/FlightPriceHistory.tsx` | Add confidence badge integration |
+| `src/pages/Creators.tsx` | Add dashboard link, enhanced tiers |
+| `src/pages/admin/EmailAutomationDashboard.tsx` | Add retention email types |
 | `src/App.tsx` | Add new routes |
-| `src/components/Footer.tsx` | Add Vision link |
-
----
-
-## Technical Considerations
-
-### AI Integration
-- All AI features use existing Lovable AI Gateway via `ai-trip-suggestions` edge function
-- Add new edge function `ai-booking-insights` for real-time suggestions
-- Rate limiting and fallback content for when AI is unavailable
-- Clear disclaimers on all AI-generated content
-
-### Performance
-- Lazy load AI components
-- Cache AI suggestions for 5 minutes
-- Use stale-while-revalidate for trending data
-- Skeleton loading for all AI sections
-
-### Personalization
-- Leverage existing saved searches and preferences
-- Track user interactions for better suggestions
-- Sync across devices via existing auth system
-
-### Compliance
-- AI suggestions clearly labeled as estimates
-- Price availability disclaimers
-- Partner data attribution notices
+| `src/components/Footer.tsx` | Add Deals, Wallet links |
 
 ---
 
@@ -445,21 +427,48 @@ Inspiring page about ZIVO's future.
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/ai-trip-planner` | AITripPlanner | AI-powered trip planning wizard |
-| `/trip-planner` | AITripPlanner | Alias route |
-| `/zivo-plus` | ZivoPlus | Premium tier landing page |
-| `/plus` | ZivoPlus | Alias route |
-| `/vision` | Vision | Future of travel page |
-| `/future` | Vision | Alias route |
+| `/deals` | Deals | Main deals hub |
+| `/last-minute` | LastMinute | Last-minute bookings |
+| `/wallet` | TravelWallet | Credits and rewards |
+| `/creators/dashboard` | CreatorDashboard | Influencer analytics |
+| `/business/insights` | DataInsights | B2B data page |
+| `/data-insights` | DataInsights | Alias route |
+
+---
+
+## Technical Considerations
+
+### Sponsored Content
+- Maximum 1 sponsored result per 10 organic results
+- Clear visual distinction (border, badge)
+- Same price transparency requirements
+- Tracking via existing analytics events
+
+### Behavior Tracking
+- Client-side only, localStorage persistence
+- No PII stored in behavior profiles
+- Aggregate patterns only
+- User can clear via privacy settings
+
+### Personalization
+- Graceful fallback for new users
+- Progressive profiling (improves with usage)
+- Cross-device sync when logged in
+
+### Compliance
+- Sponsored content clearly labeled (FTC)
+- Data anonymization for B2B insights
+- Credits non-transferable, non-cash
+- Unsubscribe links in all emails
 
 ---
 
 ## Success Metrics
 
 After implementation:
-- AI Trip Planner engagement: 10% of visitors use wizard
-- Bundle attach rate: +5% from comparison UI
-- Plus tier interest: Track waitlist signups
-- Resume booking conversion: 25% of incomplete bookings resumed
-- Trending section CTR: 15% click-through rate
-
+- Sponsored content CTR: Target 2-3%
+- Deals page engagement: 15% of visitors
+- Wallet page visits: 20% of logged-in users
+- Creator program signups: +25%
+- Email open rate: 25%+ for personalized content
+- Repeat booking rate: +10% from personalization
