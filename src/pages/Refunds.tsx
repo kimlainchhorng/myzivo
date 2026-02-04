@@ -14,7 +14,10 @@ import {
   AlertCircle,
   Mail,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Building2,
+  Car,
+  Plane
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -51,12 +54,24 @@ const Refunds = () => {
               <div className="flex items-start gap-4">
                 <AlertCircle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-bold text-lg mb-2">Important</h3>
-                  <p className="text-muted-foreground">
-                    ZIVO is a travel search and comparison platform. We do not process payments, 
-                    issue tickets, or handle refunds. All bookings are completed directly with our 
-                    travel partners, who are responsible for refunds and cancellations.
+                  <h3 className="font-bold text-lg mb-2">Refund Eligibility</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Refund eligibility depends on the fare rules, hotel policy, or rental provider terms applicable to your booking.
                   </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <span>ZIVO processes refunds only when authorized by the supplier</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <span>Service fees may be non-refundable</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                      <span>ZIVO is not responsible for provider-imposed penalties</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </CardContent>
@@ -120,6 +135,47 @@ const Refunds = () => {
             </div>
           </section>
 
+          {/* Refund Handling by Service */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-bold mb-6">How Refunds Work by Service</h2>
+            
+            <div className="space-y-4">
+              <Card className="border-emerald-500/30 bg-emerald-500/5">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Hotels & Car Rentals</h3>
+                      <p className="text-sm text-muted-foreground">
+                        ZIVO is the merchant of record. Refunds are processed according to the hotel or rental company's 
+                        cancellation policy shown at checkout. Contact ZIVO support for assistance.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-amber-500/30 bg-amber-500/5">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                      <Plane className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Flights</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Airline partners handle payment and ticketing. Contact the airline partner listed in your 
+                        confirmation email for changes, cancellations, and refunds.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
           {/* What ZIVO Can/Cannot Do */}
           <section className="mb-12">
             <h2 className="text-2xl font-bold mb-6">What ZIVO Can & Cannot Do</h2>
@@ -134,11 +190,11 @@ const Refunds = () => {
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      Help you find partner contact information
+                      Process refunds for hotels/cars when authorized by supplier
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
-                      Explain how our search platform works
+                      Help you find partner contact information
                     </li>
                     <li className="flex items-start gap-2">
                       <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
@@ -157,15 +213,15 @@ const Refunds = () => {
                   <ul className="space-y-3 text-sm text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <XCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
-                      Process refunds or issue credits
+                      Override supplier cancellation policies
                     </li>
                     <li className="flex items-start gap-2">
                       <XCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
-                      Change or cancel your bookings
+                      Process flight refunds (handled by airline partner)
                     </li>
                     <li className="flex items-start gap-2">
                       <XCircle className="w-4 h-4 text-destructive mt-0.5 flex-shrink-0" />
-                      Access your payment information
+                      Waive provider-imposed penalties
                     </li>
                   </ul>
                 </CardContent>

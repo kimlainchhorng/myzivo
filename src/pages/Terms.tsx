@@ -171,28 +171,73 @@ const Terms = () => {
             </div>
           </section>
 
-          {/* 7. Limitation of Liability */}
+          {/* 7. Platform Role */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Shield className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">7. Platform Role</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed">
+                Hizivo acts as a travel booking platform and sub-agent. Hizivo does not operate airlines, hotels, or transportation services. All services are provided by independent third-party providers.
+              </p>
+            </div>
+          </section>
+
+          {/* 8. Limitation of Liability */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-purple-500/10">
                 <Scale className="w-5 h-5 text-purple-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">7. Limitation of Liability</h2>
+              <h2 className="text-2xl font-bold text-foreground">8. Limitation of Liability</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground leading-relaxed">
-                To the maximum extent permitted by law, Hizivo shall not be liable for any indirect, incidental, or consequential damages. For flights, Hizivo is not responsible for airline partner actions, delays, cancellations, or service quality.
+                To the maximum extent permitted by law, Hizivo shall not be liable for any indirect, incidental, or consequential damages. Hizivo is not responsible for delays, cancellations, overbookings, or service failures caused by third-party providers.
               </p>
             </div>
           </section>
 
-          {/* 8. Changes */}
+          {/* 9. Force Majeure */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">9. Force Majeure</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed">
+                Hizivo is not liable for disruptions caused by events beyond reasonable control, including natural disasters, strikes, system outages, pandemics, acts of terrorism, or government actions.
+              </p>
+            </div>
+          </section>
+
+          {/* 10. Fraud Prevention */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-red-500/10">
+                <Shield className="w-5 h-5 text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-foreground">10. Fraud Prevention</h2>
+            </div>
+            <div className="bg-card/50 rounded-2xl p-6 border border-border">
+              <p className="text-foreground leading-relaxed">
+                Hizivo reserves the right to cancel bookings, suspend accounts, or refuse service in cases of suspected fraud or abuse. We employ automated fraud detection systems to protect users and partners.
+              </p>
+            </div>
+          </section>
+
+          {/* 11. Changes */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 rounded-lg bg-indigo-500/10">
                 <RefreshCw className="w-5 h-5 text-indigo-500" />
               </div>
-              <h2 className="text-2xl font-bold text-foreground">8. Changes</h2>
+              <h2 className="text-2xl font-bold text-foreground">11. Changes</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <p className="text-foreground leading-relaxed">

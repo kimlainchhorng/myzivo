@@ -18,7 +18,7 @@ import { COMPANY_INFO } from "@/config/legalContent";
 const securityPractices = [
   {
     icon: Lock,
-    title: "Encryption in Transit",
+    title: "HTTPS / TLS Encryption",
     description: "All data transmitted between your browser and ZIVO is encrypted using TLS 1.3, the latest industry standard for secure communications.",
   },
   {
@@ -27,24 +27,24 @@ const securityPractices = [
     description: "Your personal information is encrypted using AES-256 encryption when stored in our databases, protecting it even in the unlikely event of unauthorized access.",
   },
   {
+    icon: CreditCard,
+    title: "PCI-DSS Compliant Payments",
+    description: "We partner with Stripe for PCI-DSS Level 1 compliant payment processing. Your card details are tokenized—ZIVO never stores full card numbers.",
+  },
+  {
     icon: Users,
-    title: "Least-Privilege Access",
-    description: "Our staff only have access to the minimum data necessary to perform their duties. All access is logged and regularly audited.",
+    title: "Role-Based Access Control",
+    description: "Internal systems use role-based access control. Staff only have access to the minimum data necessary to perform their duties.",
   },
   {
     icon: Eye,
-    title: "Monitoring & Anomaly Detection",
-    description: "We continuously monitor our systems for suspicious activity and employ automated anomaly detection to identify potential threats before they become breaches.",
-  },
-  {
-    icon: CreditCard,
-    title: "Secure Payments via Stripe",
-    description: "We partner with Stripe for payment processing. Your card details are never stored on ZIVO servers—they're tokenized and secured by Stripe's PCI DSS Level 1 certified infrastructure.",
+    title: "Continuous Monitoring",
+    description: "We continuously monitor our systems for unauthorized access and employ automated anomaly detection to identify potential threats before they become breaches.",
   },
   {
     icon: FileSearch,
-    title: "Regular Security Audits",
-    description: "We conduct regular security assessments and penetration testing to identify and address vulnerabilities proactively.",
+    title: "Regular Vulnerability Scans",
+    description: "We conduct regular security assessments, vulnerability scans, and penetration testing to identify and address vulnerabilities proactively.",
   },
 ];
 
@@ -64,9 +64,9 @@ export default function Security() {
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Shield className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl font-bold mb-4">Security at ZIVO</h1>
+            <h1 className="text-4xl font-bold mb-4">ZIVO Security & Data Protection</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Protecting your data and privacy is our top priority. Learn about the measures we take to keep your information safe.
+              At ZIVO, protecting your data and transactions is a top priority. We use industry-leading security standards to safeguard personal information, payments, and bookings.
             </p>
           </div>
 
@@ -104,6 +104,31 @@ export default function Security() {
             ))}
           </div>
 
+          {/* Account Protection */}
+          <Card className="mb-12 border-primary/30 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5 text-primary" />
+                Account Protection
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                {[
+                  "Secure authentication with multi-factor options",
+                  "Session monitoring to detect unauthorized access",
+                  "Suspicious activity detection and alerting",
+                  "Forced logout on detected security risks",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
           {/* What We Don't Do */}
           <Card className="mb-12 border-green-500/30 bg-green-500/5">
             <CardHeader>
@@ -113,6 +138,9 @@ export default function Security() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <p className="text-muted-foreground font-medium mb-4">
+                ZIVO does not sell or misuse personal data.
+              </p>
               <ul className="space-y-3">
                 {[
                   "Store your credit card numbers on our servers",

@@ -286,6 +286,9 @@ const Footer = () => {
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
               Mobility services (Rides, Eats, Move) are provided by independent drivers via ZIVO Driver.
             </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium mt-3 pt-3 border-t border-border/30">
+              🔒 ZIVO uses enterprise-grade security standards to protect user data and transactions.
+            </p>
           </div>
         </div>
       </div>

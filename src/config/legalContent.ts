@@ -343,16 +343,19 @@ export const EXTENDED_LEGAL_POLICIES = {
     title: "Acceptable Use Policy",
     version: "1.0",
     prohibitions: [
+      "Attempting to access systems, networks, or data without authorization",
+      "Scraping, crawling, or abusing APIs without permission",
+      "Performing fraudulent bookings or using stolen payment methods",
+      "Using automated bots or scripts to access the platform",
       "Fraudulent activity or misrepresentation",
       "Creating false listings, reviews, or accounts",
       "Abuse, harassment, threats, or intimidation",
       "Circumventing platform fees or payment systems",
-      "Scraping, bots, automated access, or data harvesting",
       "Illegal goods, services, or activities",
       "Impersonating others or ZIVO representatives",
       "Interfering with platform operations or security",
     ],
-    enforcement: `ZIVO may suspend or terminate accounts immediately for violations without prior notice. Violators may be reported to law enforcement authorities.`,
+    enforcement: `Violations may result in account suspension, booking cancellation, and legal action. ZIVO reserves the right to report violations to law enforcement authorities.`,
   },
 
   // Clause 32: Community Standards
