@@ -37,9 +37,8 @@ export function RedirectDisclaimer({
         className
       )}>
         <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-          ZIVO is a search and comparison platform. We help you find great options, 
-          but all bookings are completed directly with our trusted travel partners. 
-          Prices shown are indicative and may change. ZIVO may earn a commission when you book through partner links.
+          ZIVO compares prices from licensed travel partners. Bookings are completed on partner websites. 
+          Prices may change until booking is confirmed. ZIVO may earn a commission when you book through partner links.
         </p>
       </div>
     );
@@ -68,7 +67,7 @@ export function PriceDisclaimer({ className }: PriceDisclaimerProps) {
       "text-xs text-muted-foreground text-center",
       className
     )}>
-      *Prices are indicative and may change. Final price will be shown on our travel partner's website.
+      *Prices may change until booking is completed with the provider.
     </p>
   );
 }

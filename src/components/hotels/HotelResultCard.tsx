@@ -66,6 +66,7 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
                   <h3 className="font-bold text-lg leading-tight">{hotel.name}</h3>
+                  <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Booking Partner</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                     <div className="flex">
                       {Array.from({ length: hotel.starRating }).map((_, i) => (
@@ -126,13 +127,13 @@ export default function HotelResultCard({ hotel, onViewDeal }: HotelResultCardPr
                 onClick={() => onViewDeal(hotel)}
                 className="bg-hotels hover:bg-hotels/90 text-white font-semibold gap-2"
               >
-                View deal on partner site
+                Book with Provider
                 <ExternalLink className="w-4 h-4" />
               </Button>
-              <p className="text-[9px] text-muted-foreground mt-1.5 text-right">
-                Final price confirmed by partner.
-              </p>
             </div>
+            <p className="text-[9px] text-muted-foreground mt-1.5 text-right">
+              Prices may change until booking is completed.
+            </p>
           </div>
         </div>
       </CardContent>

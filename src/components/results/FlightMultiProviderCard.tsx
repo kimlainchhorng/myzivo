@@ -73,8 +73,8 @@ export function FlightMultiProviderCard({
             </Badge>
           )}
           {flight.isBestPrice && (
-            <Badge className="bg-sky-500 text-white text-[10px] gap-1">
-              💰 Cheapest
+            <Badge className="bg-emerald-500 text-white text-[10px] gap-1">
+              💰 Cheapest Option
             </Badge>
           )}
           {flight.isBestValue && !flight.isBestPrice && (
@@ -84,11 +84,11 @@ export function FlightMultiProviderCard({
           )}
           {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
             <Badge className="bg-purple-500 text-white text-[10px] gap-1">
-              <Clock className="w-3 h-3" /> Fastest
+              <Clock className="w-3 h-3" /> Fastest Route
             </Badge>
           )}
           <Badge className="bg-sky-500/20 text-sky-500 text-[10px] gap-1">
-            <Zap className="w-3 h-3" /> {providers.length} providers
+            <Zap className="w-3 h-3" /> Compare {providers.length} providers
           </Badge>
         </div>
       )}
@@ -115,8 +115,8 @@ export function FlightMultiProviderCard({
             </div>
             <div className="min-w-0 flex-1">
               <p className="font-semibold truncate text-sm">{flight.airline}</p>
-              <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
-              <p className="text-xs text-muted-foreground capitalize mt-0.5">{flight.cabinClass}</p>
+              <p className="text-[10px] text-muted-foreground/80">via Travel Partner</p>
+              <p className="text-xs text-muted-foreground">{flight.flightNumber} · <span className="capitalize">{flight.cabinClass}</span></p>
             </div>
           </div>
 
@@ -222,7 +222,7 @@ export function FlightMultiProviderCard({
         <div className="border-t border-border/50 bg-muted/20">
           <div className="px-4 py-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-              Book with:
+              Compare Providers:
             </p>
             <div className="space-y-2">
               {visibleProviders.map((provider) => {
@@ -277,7 +277,7 @@ export function FlightMultiProviderCard({
                             : "bg-primary hover:bg-primary/90 text-primary-foreground"
                         )}
                       >
-                        {provider.isOfficialPrice ? "Select" : "View"}
+                        Book with Provider
                         <ArrowRight className="w-3 h-3" />
                       </Button>
                     </div>
@@ -304,7 +304,7 @@ export function FlightMultiProviderCard({
         {/* Legal disclaimer */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            {FLIGHT_DISCLAIMERS.ticketingShort}
+            Prices may change until booking is completed with the provider. {FLIGHT_DISCLAIMERS.ticketingShort}
           </p>
         </div>
       </CardContent>

@@ -61,7 +61,7 @@ export default function FlightPartnerDisclaimer({
       )}>
         <div className="flex items-center gap-2">
           <Plane className="w-5 h-5 text-sky-500" />
-          <p className="font-medium text-sm">{FLIGHT_DISCLAIMERS.ticketingShort}</p>
+          <p className="font-medium text-sm">Bookings completed with licensed travel partners.</p>
         </div>
         <p className="text-sm text-muted-foreground">
           {FLIGHT_DISCLAIMERS.ticketing}

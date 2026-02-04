@@ -91,6 +91,7 @@ export function HotelMultiProviderCard({
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
                   <h3 className="font-bold text-lg leading-tight">{hotel.name}</h3>
+                  <p className="text-[10px] text-muted-foreground/80 mt-0.5">via Booking Partner</p>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                     <div className="flex">
                       {Array.from({ length: hotel.starRating }).map((_, i) => (
@@ -217,7 +218,7 @@ export function HotelMultiProviderCard({
                         onClick={() => onSelectProvider(hotel, provider)}
                         className="gap-1 font-medium min-h-[36px] touch-manipulation bg-hotels hover:bg-hotels/90 text-white"
                       >
-                        View deal
+                        Book with Provider
                         <ExternalLink className="w-3 h-3" />
                       </Button>
                     </div>
@@ -244,7 +245,7 @@ export function HotelMultiProviderCard({
         {/* Disclaimer */}
         <div className="px-4 py-2.5 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Final price confirmed on partner site. ZIVO may earn a commission.
+            Prices may change until booking is completed with the provider. ZIVO may earn a commission.
           </p>
         </div>
       </CardContent>
