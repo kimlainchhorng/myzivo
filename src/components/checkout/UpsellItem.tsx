@@ -3,7 +3,7 @@
  * Individual add-on item with checkbox selection
  */
 
-import { Check, Shield, Luggage, Armchair, RefreshCw, Car, Clock, ShieldCheck, Navigation, Users } from "lucide-react";
+import { Check, Shield, Luggage, Armchair, RefreshCw, Car, Clock, ShieldCheck, Navigation, Users, Baby } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ const iconMap: Record<string, React.ElementType> = {
   ShieldCheck,
   Navigation,
   Users,
+  Baby,
 };
 
 interface UpsellItemProps {
