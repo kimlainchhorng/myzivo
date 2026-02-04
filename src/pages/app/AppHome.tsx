@@ -6,12 +6,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles,
-  ChevronRight, Shield, Star, Clock, MapPin, Bus, Smartphone, Ticket
+  ChevronRight, Shield, Star, Clock, MapPin, Bus, Smartphone, Ticket, Search
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import OneAppSection from "@/components/home/OneAppSection";
+import { PremiumSearchOverlay } from "@/components/search";
 
 // Quick action cards (2 rows of 3)
 const quickActions = [
@@ -49,6 +50,7 @@ const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [city] = useState("Current Location");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -76,7 +78,27 @@ const AppHome = () => {
               <span className="max-w-[100px] truncate">{city}</span>
             </button>
           </div>
+
+          {/* Unified Search Button */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-card border border-border shadow-sm text-left touch-manipulation active:scale-[0.99] transition-transform mb-4"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
+              <Search className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-foreground">Search flights, hotels, cars...</p>
+              <p className="text-xs text-muted-foreground">Anywhere • Any dates • Any travelers</p>
+            </div>
+          </button>
         </div>
+
+        {/* Premium Search Overlay */}
+        <PremiumSearchOverlay 
+          isOpen={isSearchOpen} 
+          onClose={() => setIsSearchOpen(false)} 
+        />
 
         {/* Quick Actions Grid */}
         <section className="px-4">
