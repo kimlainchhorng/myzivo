@@ -329,6 +329,7 @@ const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage")
 // SEO pages
 const FlightToCity = lazy(() => import("./pages/seo/FlightToCity"));
 const FlightRoutePage = lazy(() => import("./pages/seo/FlightRoutePage"));
+const DealsPage = lazy(() => import("./pages/seo/DealsPage"));
 
 // Business pages
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
@@ -707,6 +708,7 @@ const App = () => (
                 <Route path="/experiences" element={<ThingsToDo />} />
                 <Route path="/travel-insurance" element={<TravelInsurance />} />
                 <Route path="/extras" element={<TravelExtras />} />
+                <Route path="/deals" element={<DealsPage />} />
                 <Route path="/install" element={<Install />} />
                 <Route
                   path="/admin"
