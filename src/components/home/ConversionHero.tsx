@@ -6,19 +6,19 @@ import heroImage from "@/assets/hero-homepage.jpg";
 
 const primaryCTAs = [
   {
-    label: "Search Flights",
-    href: "/book-flight",
+    label: "Compare Flights",
+    href: "/flights",
     icon: Plane,
     gradient: "from-sky-500 to-blue-600",
   },
   {
-    label: "Search Hotels",
-    href: "/book-hotel",
+    label: "Compare Hotels",
+    href: "/hotels",
     icon: Hotel,
     gradient: "from-amber-500 to-orange-500",
   },
   {
-    label: "Rent a Car",
+    label: "Compare Car Rentals",
     href: "/rent-car",
     icon: CarFront,
     gradient: "from-violet-500 to-purple-600",
@@ -26,9 +26,10 @@ const primaryCTAs = [
 ];
 
 const trustBadges = [
-  { icon: Shield, label: "Secure Booking" },
-  { icon: Globe, label: "Worldwide Coverage" },
-  { icon: Zap, label: "No Booking Fees" },
+  { icon: Plane, label: "500+ Airlines Compared" },
+  { icon: Globe, label: "500,000+ Hotels Worldwide" },
+  { icon: Shield, label: "Trusted Rental Partners" },
+  { icon: Zap, label: "No Hidden Fees" },
 ];
 
 export default function ConversionHero() {
@@ -51,14 +52,14 @@ export default function ConversionHero() {
         {/* Main Headline */}
         <div className="max-w-4xl mx-auto mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Search & Compare{" "}
+            Compare Flights, Hotels, and Car Rentals{" "}
             <span className="bg-gradient-to-r from-primary via-teal-400 to-cyan-400 bg-clip-text text-transparent">
-              Travel Worldwide
+              — All in One Place
             </span>
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Flights, Hotels, and Car Rentals from trusted partners.{" "}
-            <span className="text-white font-semibold">No booking fees on ZIVO.</span>
+            ZIVO helps you compare travel prices from licensed partners worldwide.{" "}
+            <span className="text-white font-semibold">Choose a provider and complete your booking securely on their site.</span>
           </p>
         </div>
 
@@ -101,7 +102,7 @@ export default function ConversionHero() {
 
         {/* Partner Note */}
         <p className="mt-10 text-sm text-white/50 animate-in fade-in duration-700 delay-500">
-          Compare prices from 500+ airlines, hotels, and car rental companies
+          Prices provided by licensed travel partners.
         </p>
       </div>
 

@@ -2,18 +2,10 @@ import { Shield, CheckCircle, Clock, Globe, Users, Award, Lock, CreditCard } fro
 import { cn } from "@/lib/utils";
 
 const trustBadges = [
-  { icon: Shield, label: "Secure Booking", description: "256-bit encryption" },
-  { icon: CheckCircle, label: "No Booking Fees", description: "On ZIVO" },
-  { icon: Globe, label: "Licensed Fulfillment", description: "Global coverage" },
-  { icon: Clock, label: "24/7 Support", description: "Always here" },
-];
-
-const partnerLogos = [
-  "Booking.com",
-  "Expedia",
-  "Skyscanner",
-  "Kayak",
-  "Hotels.com",
+  { icon: Globe, label: "500+ Airlines", description: "Compared" },
+  { icon: CheckCircle, label: "500,000+ Hotels", description: "Worldwide" },
+  { icon: Shield, label: "Trusted Partners", description: "Licensed providers" },
+  { icon: Clock, label: "No Hidden Fees", description: "On ZIVO" },
 ];
 
 export default function TrustCredibilityBar() {
@@ -43,19 +35,9 @@ export default function TrustCredibilityBar() {
 
         {/* Partner Trust Line */}
         <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-3">
-            Compare prices from trusted travel partners
+          <p className="text-xs text-muted-foreground">
+            Prices provided by licensed travel partners.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
-            {partnerLogos.map((partner) => (
-              <span
-                key={partner}
-                className="text-xs sm:text-sm font-medium text-muted-foreground/70 hover:text-muted-foreground transition-colors"
-              >
-                {partner}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
     </section>

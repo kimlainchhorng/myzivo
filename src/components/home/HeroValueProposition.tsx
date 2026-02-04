@@ -2,30 +2,30 @@ import { Car, Plane, Hotel, Utensils, Shield, Clock, Award, Headphones } from "l
 
 const values = [
   {
-    icon: Shield,
-    title: "100% Secure",
-    description: "Bank-level encryption protects every transaction",
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-  },
-  {
-    icon: Clock,
-    title: "24/7 Available",
-    description: "Book anytime, anywhere in the world",
+    icon: Plane,
+    title: "500+ Airlines",
+    description: "Compare prices from major carriers worldwide",
     color: "text-sky-400",
     bgColor: "bg-sky-500/10",
   },
   {
-    icon: Award,
-    title: "Compare & Save",
-    description: "Search across trusted travel partners",
+    icon: Hotel,
+    title: "500,000+ Hotels",
+    description: "Search accommodations globally",
     color: "text-amber-400",
     bgColor: "bg-amber-500/10",
   },
   {
-    icon: Headphones,
-    title: "Expert Support",
-    description: "Real humans ready to help instantly",
+    icon: Shield,
+    title: "Trusted Partners",
+    description: "Book securely on licensed provider sites",
+    color: "text-emerald-400",
+    bgColor: "bg-emerald-500/10",
+  },
+  {
+    icon: Award,
+    title: "No Hidden Fees",
+    description: "Transparent pricing from ZIVO",
     color: "text-purple-400",
     bgColor: "bg-purple-500/10",
   },
@@ -43,13 +43,13 @@ const HeroValueProposition = () => {
         <div className="text-center mb-12 md:mb-16">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Award className="w-4 h-4" />
-            Why Choose ZIVO
+            Why Compare with ZIVO
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-4">
-            Travel Made <span className="text-primary">Effortless</span>
+            Compare <span className="text-primary">Travel Prices</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Experience seamless booking with industry-leading technology and world-class service
+            Search across licensed travel partners and complete your booking securely on their sites
           </p>
         </div>
 
@@ -76,22 +76,11 @@ const HeroValueProposition = () => {
           })}
         </div>
 
-        {/* Service Icons Row */}
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 md:gap-16">
-          {[
-            { icon: Car, label: "Rides", count: "10M+" },
-            { icon: Utensils, label: "Orders", count: "50M+" },
-            { icon: Plane, label: "Flights", count: "5M+" },
-            { icon: Hotel, label: "Stays", count: "2M+" },
-          ].map((service, index) => (
-            <div key={index} className="flex flex-col items-center gap-2">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20">
-                <service.icon className="w-8 h-8 text-primary" />
-              </div>
-              <span className="text-2xl font-bold">{service.count}</span>
-              <span className="text-sm text-muted-foreground">{service.label}</span>
-            </div>
-          ))}
+        {/* Disclaimer */}
+        <div className="mt-12 text-center">
+          <p className="text-xs text-muted-foreground">
+            Prices provided by licensed travel partners.
+          </p>
         </div>
       </div>
     </section>
