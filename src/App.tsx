@@ -359,6 +359,7 @@ const Press = lazy(() => import("./pages/Press"));
 
 // Admin analytics
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
+const KPIDashboard = lazy(() => import("./pages/admin/KPIDashboard"));
 
 // Ad landing pages - lazy load
 const FlightsAdLanding = lazy(() => import("./pages/ads/FlightsAdLanding"));
@@ -481,8 +482,9 @@ const App = () => (
                 <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 
-                {/* Admin analytics */}
+{/* Admin analytics */}
                 <Route path="/admin/analytics-dashboard" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/kpi-dashboard" element={<ProtectedRoute><KPIDashboard /></ProtectedRoute>} />
                 
                 {/* Airport Pages - SEO */}
                 <Route path="/airports/:iata" element={<AirportPage />} />
