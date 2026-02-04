@@ -1,256 +1,464 @@
 
-# Enhanced Airlines Display with More Airlines and Premium UX/UI
+# ZIVO Master Admin Control Center
 
 ## Overview
-Upgrade all airline display sections across ZIVO with an expanded airline database (80+ airlines), modern premium card designs, smooth animations, and comprehensive fallback logo handling using the `AirlineLogo` component.
+Consolidate and enhance the existing admin infrastructure into a unified **Master Admin Control Center** that provides centralized management of Travel OTA, Driver/Eats operations, Support, and Global Settings with proper role-based access control.
 
 ---
 
-## 1. Expand Airline Database
+## Current State Analysis
 
-### File: `src/data/airlines.ts`
-
-Add 20+ new airlines across all categories:
-
-**New Premium Airlines:**
-| Code | Name | Alliance | Country |
-|------|------|----------|---------|
-| HU | Hainan Airlines | Star Alliance | China |
-| TG | Thai Airways | Star Alliance | Thailand |
-| OZ | Asiana Airlines | Star Alliance | South Korea |
-
-**New Full-Service Airlines:**
-| Code | Name | Alliance | Country |
-|------|------|----------|---------|
-| ET | Ethiopian Airlines | Star Alliance | Ethiopia |
-| SU | Aeroflot | SkyTeam | Russia |
-| CA | Air China | Star Alliance | China |
-| MU | China Eastern | SkyTeam | China |
-| CZ | China Southern | SkyTeam | China |
-| SA | South African Airways | Star Alliance | South Africa |
-| MS | EgyptAir | Star Alliance | Egypt |
-| RJ | Royal Jordanian | Oneworld | Jordan |
-| SV | Saudia | SkyTeam | Saudi Arabia |
-| GF | Gulf Air | Oneworld | Bahrain |
-| EI | Aer Lingus | Independent | Ireland |
-| A3 | Aegean Airlines | Star Alliance | Greece |
-
-**New Low-Cost Airlines:**
-| Code | Name | Country |
-|------|------|---------|
-| DY | Norwegian | Norway |
-| EW | Eurowings | Germany |
-| HV | Transavia | Netherlands |
-| LS | Jet2 | UK |
-| TO | Transavia France | France |
+The project already has substantial admin infrastructure:
+- **Role System**: `app_role` enum with `admin`, `super_admin`, `operations`, `finance`, `support` roles already defined
+- **Admin Dashboard**: Comprehensive dashboard at `/admin` with 50+ modules
+- **Travel Admin**: `/admin/travel` with partner management, redirect logs, analytics
+- **Driver Hub**: Full driver management with tracking, documents, payouts
+- **Database**: `travel_bookings`, `drivers`, `support_tickets`, `user_roles` tables exist
 
 ---
 
-## 2. New Premium Airline Trust Section
+## Phase 1: Unified Admin Entry Point
 
-### File: `src/components/home/AirlineTrustSection.tsx`
-
-Redesigned layout with:
+### A. New Admin Login Page
+**File**: `src/pages/admin/AdminLogin.tsx`
 
 ```text
-+------------------------------------------------------------------+
-|               Trusted by 500+ Airlines Worldwide                  |
-|        Compare prices across major carriers and alliances         |
-+------------------------------------------------------------------+
-|                                                                   |
-| [Alliance Pills: ⭐ Star Alliance | ⭐ SkyTeam | ⭐ Oneworld]     |
-|                                                                   |
-| +------+ +------+ +------+ +------+ +------+ +------+            |
-| | LOGO | | LOGO | | LOGO | | LOGO | | LOGO | | LOGO | ...        |
-| |  AA  | |  DL  | |  UA  | |  EK  | |  QR  | |  SQ  | scroll -->  |
-| +------+ +------+ +------+ +------+ +------+ +------+            |
-|                                                                   |
-| Infinite scroll carousel with hover glow effects                  |
-+------------------------------------------------------------------+
++--------------------------------------------------+
+|                 ZIVO ADMIN PORTAL                 |
+|                                                   |
+|  [Email Input]                                    |
+|  [Password Input]                                 |
+|                                                   |
+|  [Login Button]                                   |
+|                                                   |
+|  Forgot password? | Magic link login             |
++--------------------------------------------------+
 ```
 
-Design Features:
-- **Glass card design** with subtle backdrop blur
-- **Horizontal scroll carousel** with momentum on mobile
-- **Hover glow effect** with airline category colors (premium = amber, full-service = sky, low-cost = emerald)
-- **48px+ touch targets** for mobile accessibility
-- **Fade gradients** on edges for smooth infinite feel
-- Use `AirlineLogo` component with proper fallback chain
+- Dedicated admin login at `/admin/login`
+- Redirect to `/admin` on success
+- Block non-admin roles with clear messaging
+
+### B. Enhanced Role-Based Route Protection
+**File**: `src/components/auth/AdminProtectedRoute.tsx`
+
+New component supporting granular role checks:
+- `requireAdmin` - full admin access
+- `requireOps` - operations team (drivers, support, trips)
+- `requireFinance` - financial access (payouts, reports)
+- `requireSupport` - support team (tickets, refunds)
 
 ---
 
-## 3. New Airline Partners Grid Component
+## Phase 2: Master Admin Layout
 
-### File: `src/components/flight/AirlinePartnersGrid.tsx` (NEW)
-
-Modern grid layout showing airlines by alliance:
+### A. Unified Admin Shell
+**File**: `src/layouts/AdminLayout.tsx`
 
 ```text
 +------------------------------------------------------------------+
-|  ⭐ Star Alliance            ⭐ SkyTeam           ⭐ Oneworld      |
+| [ZIVO Logo] ADMIN CONTROL CENTER     [User] [Role Badge] [Logout]|
 +------------------------------------------------------------------+
-| +--------+  +--------+     +--------+  +--------+  +--------+     |
-| |  LOGO  |  |  LOGO  |     |  LOGO  |  |  LOGO  |  |  LOGO  |     |
-| |   UA   |  |   LH   |     |   DL   |  |   AF   |  |   BA   |     |
-| | United |  | Lufth. |     | Delta  |  |Air Fra.|  |British |     |
-| +--------+  +--------+     +--------+  +--------+  +--------+     |
-|                                                                   |
-| +--------+  +--------+     +--------+  +--------+  +--------+     |
-| |  LOGO  |  |  LOGO  |     |  LOGO  |  |  LOGO  |  |  LOGO  |     |
-| |   SQ   |  |   NH   |     |   KL   |  |   AM   |  |   QR   |     |
-| |Singap. |  |  ANA   |     |  KLM   |  |Aeromex.|  | Qatar  |     |
-| +--------+  +--------+     +--------+  +--------+  +--------+     |
-+------------------------------------------------------------------+
-| [View All 80+ Airlines]                                           |
+|           |                                                       |
+| SIDEBAR   |   MAIN CONTENT AREA                                   |
+|           |                                                       |
+| Dashboard |   [Tab/Module Content]                                |
+| Travel    |                                                       |
+| Drivers   |                                                       |
+| Eats      |                                                       |
+| Support   |                                                       |
+| Payouts   |                                                       |
+| Settings  |                                                       |
+| Reports   |                                                       |
+|           |                                                       |
 +------------------------------------------------------------------+
 ```
 
 Features:
-- **Tab navigation** by alliance (All | Star Alliance | SkyTeam | Oneworld | Independent)
-- **Responsive grid**: 3 cols mobile, 4 cols tablet, 6 cols desktop
-- **Premium badge** for 5-star airlines (crown icon)
-- **Hover scale + shadow** animation
-- **Staggered fade-in** on scroll into view
+- Collapsible sidebar with icons
+- Role-based menu visibility
+- Breadcrumb navigation
+- Quick search across admin
 
 ---
 
-## 4. Enhanced Airline Logo Card Component
+## Phase 3: Admin Routes Structure
 
-### File: `src/components/flight/AirlineLogoCard.tsx` (NEW)
+### New Route Hierarchy
 
-Reusable card with premium styling:
+| Route | Access | Description |
+|-------|--------|-------------|
+| `/admin/login` | Public | Admin login page |
+| `/admin` | All Admins | Master dashboard |
+| `/admin/travel/bookings` | Ops, Admin | Travel bookings list |
+| `/admin/travel/refunds` | Ops, Admin | Refund requests |
+| `/admin/travel/suppliers` | Admin | API status page |
+| `/admin/drivers` | Ops, Admin | Driver management hub |
+| `/admin/eats` | Ops, Admin | Eats operations |
+| `/admin/jobs` | Ops, Admin | Rides + deliveries |
+| `/admin/payouts` | Finance, Admin | Driver/partner payouts |
+| `/admin/support` | Support, Admin | Ticket management |
+| `/admin/settings` | Admin only | Global configuration |
+| `/admin/reports` | Finance, Admin | Analytics & exports |
 
+---
+
+## Phase 4: Master Dashboard Home
+
+### File: `src/pages/admin/MasterDashboard.tsx`
+
+**KPI Cards Row:**
 ```text
-+------------------------+
-|  [Crown for Premium]   |
-| +--------------------+ |
-| |                    | |
-| |    AIRLINE LOGO    | |
-| |      (48x48)       | |
-| |                    | |
-| +--------------------+ |
-|                        |
-|     Airline Name       |
-|     [SkyTeam]          |
-+------------------------+
++-------------+ +-------------+ +-------------+ +-------------+
+| Today       | | Today       | | Active      | | Active      |
+| Bookings    | | Revenue     | | Drivers     | | Deliveries  |
+|    145      | |   $12,450   | |    89       | |    34       |
++-------------+ +-------------+ +-------------+ +-------------+
++-------------+ +-------------+
+| Open        | | Pending     |
+| Tickets     | | Payouts     |
+|    12       | |   $8,200    |
++-------------+ +-------------+
 ```
 
-Props:
-- `airline: Airline` - Airline data object
-- `size?: 'sm' | 'md' | 'lg'` - Card size variant
-- `showAlliance?: boolean` - Show alliance badge
-- `showCategory?: boolean` - Show premium/full-service/low-cost
-- `interactive?: boolean` - Enable hover effects
+**Quick Actions Panel:**
+- Approve pending drivers (count badge)
+- Review documents (count badge)
+- View failed bookings (count badge)
+- Process chargebacks (count badge)
 
-Styling by category:
-- **Premium**: Amber glow, crown badge, gradient border
-- **Full-Service**: Sky blue accent, clean design
-- **Low-Cost**: Emerald accent, value badge
-
----
-
-## 5. Infinite Scroll Airlines Carousel
-
-### File: `src/components/flight/AirlineLogosCarousel.tsx`
-
-Upgrade existing carousel:
-- **Fix marquee animation** for smoother looping
-- **Add pause on hover** for accessibility
-- **Increase logo count** to show all 80+ airlines
-- **Add loading states** with skeleton shimmer
-- **Optimize with virtualization** for performance
+**Activity Stream:**
+- Real-time feed of admin actions
+- "Driver approved by John"
+- "Refund processed for booking #123"
 
 ---
 
-## 6. Update Components to Use New Airline Data
+## Phase 5: Travel Module (OTA)
 
-### Files to Modify:
+### A. Bookings Page
+**File**: `src/pages/admin/travel/TravelBookingsPage.tsx`
 
-| File | Change |
-|------|--------|
-| `FlightAirlinePartners.tsx` | Use expanded airline list, add tabs for alliances |
-| `AirlinePartnersBadges.tsx` | Show 20 airlines instead of 14, use new card design |
-| `PopularRoutesSection.tsx` | Already uses `AirlineLogo` - no change needed |
-| `FlightPopularRoutes.tsx` | Already uses `AirlineLogo` - no change needed |
-| `AirlinePartnersHub.tsx` | Add real logos via `AirlineLogo` component |
+Table columns:
+- Booking ID / Order Number
+- Customer Name & Email
+- Product Type (Flight/Hotel/Car)
+- Supplier (Duffel/Aviasales/Hotelbeds)
+- Status with color badges
+- Amount
+- Date
+- Actions dropdown
+
+Filters:
+- Date range picker
+- Status filter (Pending/Confirmed/Cancelled/Refunded)
+- Supplier filter
+- Search by booking ID or email
+
+### B. Booking Detail Page
+**File**: `src/pages/admin/travel/BookingDetailPage.tsx`
+
+Sections:
+- **Header**: Booking ID, status badge, quick actions
+- **Customer Info**: Name, email, phone, user account link
+- **Booking Details**: PNR, confirmation ref, passengers
+- **Payment Info**: Amount, payment status, Stripe link
+- **Fare Rules**: Cancellation policy, baggage, change fees
+- **Timeline**: Booking created, payment processed, confirmed
+- **Actions**: Resend email, initiate refund, add note
+
+### C. Refunds Queue
+**File**: `src/pages/admin/travel/TravelRefundsPage.tsx`
+
+Workflow states:
+1. Requested
+2. Supplier Processing
+3. Approved
+4. Paid to Customer
+
+Table with:
+- Original booking link
+- Customer info
+- Refund amount
+- Request reason
+- Status progression
+- Approve/Deny actions
+
+### D. Suppliers Health Page
+**File**: `src/pages/admin/travel/SuppliersStatusPage.tsx`
+
+Cards for each supplier:
+- **Duffel**: API status, last successful call, error count
+- **Aviasales/TravelPayouts**: Widget status, affiliate tracking
+- **Hotelbeds**: API health, booking success rate
+- **RateHawk**: Connection status (placeholder)
 
 ---
 
-## 7. CSS Animations
+## Phase 6: Driver + Eats Module
 
-### File: `src/index.css`
+### A. Enhanced Driver Hub
+**Route**: `/admin/drivers`
 
-Add/update keyframes:
+Leverages existing `AdminDriverManagement.tsx` with:
+- Status filter tabs: All | Pending | Approved | Suspended | Rejected
+- Bulk actions: Approve selected, suspend selected
+- Enhanced search by name, email, phone, vehicle plate
 
-```css
-/* Smooth marquee animations */
-@keyframes marquee-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
+### B. Driver Profile Detail
+**File**: `src/pages/admin/drivers/DriverDetailPage.tsx`
 
-@keyframes marquee-right {
-  0% { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
+Sections:
+- Personal info card
+- Vehicle info with photos
+- Documents with verification status
+- Performance metrics chart
+- Earnings history
+- Trip history table
+- Admin notes/actions log
 
-/* Glow pulse for premium airlines */
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
-  50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); }
-}
+### C. Documents Review Queue
+Enhance existing `AdminDocumentReview.tsx`:
+- Queue priority sorting
+- SLA countdown timer
+- Batch approve/reject
+- Rejection reason templates
 
-/* Staggered fade in */
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+### D. Jobs (Rides + Deliveries)
+**File**: `src/pages/admin/JobsPage.tsx`
+
+Unified view of:
+- Ride requests (from `trips` table)
+- Food deliveries (from `food_orders` table)
+
+Columns:
+- Job ID
+- Type (Ride/Delivery)
+- Customer
+- Driver (assigned or "Unassigned")
+- Status
+- Payout amount
+- Map link
+
+---
+
+## Phase 7: Support Center
+
+### A. Ticket Queue Enhancement
+**Route**: `/admin/support`
+
+Improve existing `AdminSupportTickets.tsx`:
+- Category filter (Booking/Driver/Eats/Payment)
+- Priority sorting (Urgent/High/Normal/Low)
+- SLA indicators
+- Assign to agent dropdown
+- Quick response templates
+
+### B. Ticket Detail Page
+**File**: `src/pages/admin/support/TicketDetailPage.tsx`
+
+- Conversation thread (customer + agent messages)
+- Internal notes section (staff only)
+- Linked booking/trip/order
+- Customer profile sidebar
+- Action buttons: Resolve, Escalate, Transfer
+
+---
+
+## Phase 8: Payouts (Finance)
+
+### A. Payout Queue
+**Route**: `/admin/payouts`
+
+Table with:
+- Driver/Partner name
+- Amount
+- Status: Ready | Processing | Paid | Failed
+- Bank method (placeholder)
+- Request date
+- Paid date
+
+Actions:
+- Approve payout (Finance/Admin only)
+- Reject with reason
+- Bulk process
+
+### B. Payout Processing
+Enhance existing `AdminPayoutProcessing.tsx`:
+- Weekly payout schedule view
+- Instant payout requests
+- Failed payout retry queue
+
+---
+
+## Phase 9: Settings (Global Control)
+
+### A. Settings Hub
+**File**: `src/pages/admin/settings/SettingsHub.tsx`
+
+Tabs:
+1. **Fees & Pricing**
+   - Travel service fee % by product
+   - Driver commission % by service type
+   - Delivery fee rules
+
+2. **Dispatch Rules**
+   - Service zones (link to zone management)
+   - Peak pricing multipliers (text config)
+
+3. **Risk Settings**
+   - Fraud detection thresholds
+   - Refund auto-approval limits
+   - Cancellation window hours
+
+4. **Branding**
+   - Logo upload
+   - App name
+   - Support email/phone
+
+---
+
+## Phase 10: Database Enhancements
+
+### A. New/Enhanced Tables
+
+**admin_audit_logs** (enhance existing):
+```sql
+-- Already exists, add more event types
+INSERT INTO event examples:
+- 'driver_approved'
+- 'refund_requested'
+- 'payout_sent'
+- 'settings_changed'
+```
+
+**travel_refund_requests** (if not exists):
+```sql
+CREATE TABLE travel_refund_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id uuid REFERENCES travel_bookings(id),
+  requested_by uuid REFERENCES auth.users(id),
+  amount numeric(10,2) NOT NULL,
+  reason text,
+  status text DEFAULT 'requested',
+  supplier_ref text,
+  processed_at timestamptz,
+  processed_by uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now()
+);
+```
+
+### B. Role-Based Access Functions
+
+```sql
+-- Function to check multiple roles
+CREATE OR REPLACE FUNCTION public.has_any_role(_user_id uuid, _roles app_role[])
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = _user_id AND role = ANY(_roles)
+  )
+$$;
 ```
 
 ---
 
-## Files Summary
+## Phase 11: Security Requirements
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `src/data/airlines.ts` | **Modify** | Add 20+ new airlines |
-| `src/components/flight/AirlineLogoCard.tsx` | **Create** | Reusable premium airline card |
-| `src/components/flight/AirlinePartnersGrid.tsx` | **Create** | Alliance-grouped grid display |
-| `src/components/home/AirlineTrustSection.tsx` | **Modify** | Horizontal scroll carousel design |
-| `src/components/flight/FlightAirlinePartners.tsx` | **Modify** | Use new grid, add tab filtering |
-| `src/components/flight/AirlineLogosCarousel.tsx` | **Modify** | Smoother animation, more airlines |
-| `src/components/flight/AirlinePartnersBadges.tsx` | **Modify** | Use new card component |
-| `src/components/flight/AirlinePartnersHub.tsx` | **Modify** | Replace emoji with AirlineLogo |
-| `src/index.css` | **Modify** | Add animation keyframes |
+### A. Route Protection Matrix
 
----
+| Route Pattern | Allowed Roles |
+|--------------|---------------|
+| `/admin/login` | Public |
+| `/admin` (dashboard) | admin, super_admin, operations, finance, support |
+| `/admin/travel/*` | admin, operations |
+| `/admin/drivers/*` | admin, operations |
+| `/admin/support/*` | admin, support |
+| `/admin/payouts/*` | admin, finance |
+| `/admin/settings/*` | admin, super_admin |
+| `/admin/reports/*` | admin, finance |
 
-## Technical Details
-
-### Logo Fallback Chain (via AirlineLogo component):
-1. AVS CDN: `https://pics.avs.io/{size}/{size}/{CODE}.png`
-2. Duffel SVG: `https://assets.duffel.com/img/airlines/.../full-color-lockup/{CODE}.svg`
-3. UI Avatars: `https://ui-avatars.com/api/?name={CODE}&background=0ea5e9&color=fff`
-4. Plane icon: Lucide `<Plane />` component
-
-### Touch Target Requirements:
-- Minimum 48px height/width for all interactive elements
-- Adequate spacing (12px+) between touch targets
-
-### Animation Performance:
-- Use CSS transforms only (no layout-triggering properties)
-- `will-change: transform` for smooth marquee
-- Lazy loading for images outside viewport
+### B. Audit Logging
+Every admin action logs:
+- User ID
+- Action type
+- Target entity (booking, driver, etc.)
+- Before/after values (for updates)
+- IP address
+- Timestamp
 
 ---
 
-## Acceptance Criteria
+## Files to Create/Modify
 
-1. 80+ airlines displayed across premium, full-service, and low-cost categories
-2. All airline logos load from AVS CDN with graceful fallbacks
-3. Alliance filtering works correctly (Star Alliance, SkyTeam, Oneworld, Independent)
-4. Premium airlines have distinct amber glow and crown badges
-5. Carousel animates smoothly with pause-on-hover
-6. Touch targets are 48px+ on mobile
-7. Animations perform at 60fps with no jank
-8. All components use the `AirlineLogo` component for consistent fallback handling
+### New Files:
+| File | Purpose |
+|------|---------|
+| `src/pages/admin/AdminLogin.tsx` | Admin login page |
+| `src/layouts/AdminLayout.tsx` | Unified admin shell |
+| `src/pages/admin/MasterDashboard.tsx` | Master dashboard home |
+| `src/pages/admin/travel/TravelBookingsPage.tsx` | Bookings table |
+| `src/pages/admin/travel/BookingDetailPage.tsx` | Booking detail |
+| `src/pages/admin/travel/TravelRefundsPage.tsx` | Refunds queue |
+| `src/pages/admin/travel/SuppliersStatusPage.tsx` | API health |
+| `src/pages/admin/drivers/DriverDetailPage.tsx` | Driver profile |
+| `src/pages/admin/JobsPage.tsx` | Unified jobs view |
+| `src/pages/admin/support/TicketDetailPage.tsx` | Ticket detail |
+| `src/pages/admin/settings/SettingsHub.tsx` | Settings sections |
+| `src/components/auth/AdminProtectedRoute.tsx` | Role-based protection |
+| `src/hooks/useAdminRole.ts` | Role checking hook |
+
+### Modified Files:
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Add new admin routes |
+| `src/contexts/AuthContext.tsx` | Add role checking methods |
+| `src/components/admin/AdminRoleManagement.tsx` | Add operations/finance/support roles |
+
+---
+
+## Environment Variables Required
+
+```env
+# Already configured:
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+
+# For travel suppliers (placeholders):
+DUFFEL_API_KEY
+HOTELBEDS_API_KEY
+RATEHAWK_API_KEY
+STRIPE_SECRET_KEY
+```
+
+---
+
+## Development Credentials (Dev Only)
+
+For development testing:
+1. Create admin user in Supabase Auth
+2. Add role via SQL:
+```sql
+INSERT INTO user_roles (user_id, role)
+VALUES ('your-user-id', 'admin');
+```
+
+---
+
+## Implementation Order
+
+1. **Phase 1-2**: Admin login + layout (foundation)
+2. **Phase 3**: Route structure + protection
+3. **Phase 4**: Master dashboard home
+4. **Phase 5**: Travel module pages
+5. **Phase 6**: Driver + Eats enhancements
+6. **Phase 7**: Support center
+7. **Phase 8**: Payouts processing
+8. **Phase 9**: Settings hub
+9. **Phase 10**: Database migrations
+10. **Phase 11**: Security hardening + audit
