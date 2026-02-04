@@ -1,26 +1,26 @@
-import { Search, MousePointer, ShieldCheck, ArrowRight } from "lucide-react";
+import { Search, CreditCard, Mail, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const steps = [
   {
     step: 1,
-    title: "Search & Compare Prices",
-    description: "Compare options from multiple travel providers in one search.",
+    title: "Search and Select Your Trip",
+    description: "Search flights, hotels, or car rentals and choose the best option for you.",
     icon: Search,
     color: "from-sky-500 to-blue-600",
   },
   {
     step: 2,
-    title: "Choose a Trusted Partner",
-    description: "Select the deal that fits your needs from licensed providers.",
-    icon: MousePointer,
+    title: "Enter Details & Pay Securely",
+    description: "Provide traveler information and complete payment securely with ZIVO.",
+    icon: CreditCard,
     color: "from-violet-500 to-purple-600",
   },
   {
     step: 3,
-    title: "Book Securely",
-    description: "Complete your booking on the partner's website.",
-    icon: ShieldCheck,
+    title: "Receive Confirmation",
+    description: "Get your ticket confirmation by email after successful payment.",
+    icon: Mail,
     color: "from-emerald-500 to-teal-600",
   },
 ];
@@ -72,13 +72,6 @@ export default function HowItWorksSimple() {
               </p>
             </div>
           ))}
-        </div>
-
-        {/* Reassurance Text */}
-        <div className="text-center max-w-lg mx-auto">
-          <p className="text-xs text-muted-foreground">
-            ZIVO does not issue tickets or process payments. All bookings are completed with licensed travel partners.
-          </p>
         </div>
       </div>
     </section>

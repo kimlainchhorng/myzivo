@@ -1,16 +1,16 @@
 /**
  * Checkout Compliance Copy Configuration
- * Centralized copy for trusted & conversion-optimized checkout experience
+ * Centralized copy for OTA checkout experience
  */
 
 export const CHECKOUT_HEADER = {
   title: "Secure Checkout",
   icon: "🔒",
-  subtitle: "Your booking is protected and processed securely by licensed travel partners.",
+  subtitle: "Your booking is processed securely by ZIVO.",
 };
 
 export const CHECKOUT_PRICE = {
-  noHiddenFees: "No hidden fees. Final price shown before booking.",
+  noHiddenFees: "No hidden fees. Final price shown before payment.",
   finalPrice: "Final price",
 };
 
@@ -23,50 +23,51 @@ export const CHECKOUT_PASSENGER = {
 
 export const CHECKOUT_PAYMENT = {
   title: "Payment Information",
-  security: "Payments are processed securely by our trusted travel partners using PCI-compliant systems.",
-  noStorage: "ZIVO does not store your payment information.",
+  security: "Payments are processed securely by ZIVO using PCI-compliant systems.",
+  noStorage: "Your payment data is encrypted and protected.",
   accepted: "Accepted payment methods:",
+  methods: ["Credit / Debit Card", "Apple Pay", "Google Pay"],
 };
 
 export const CHECKOUT_NOTICE = {
-  title: "Before you book:",
+  title: "Important notice:",
   flights: {
     items: [
-      "Prices may change until booking is completed",
-      "Ticket rules are set by the airline or provider",
-      "Refunds and changes follow partner policies",
+      "All fares are subject to airline rules and conditions",
+      "Tickets are issued after successful payment",
+      "Changes and cancellations follow fare rules",
     ],
-    disclaimer: "ZIVO acts as a booking facilitator. Tickets are issued by licensed providers.",
+    disclaimer: "Ticket rules, baggage, and refund policies vary by fare and airline.",
   },
   hotels: {
     items: [
-      "Rates may change until booking is completed",
-      "Cancellation policies are set by the property",
-      "Refunds and changes follow hotel policies",
+      "Rates are confirmed at time of booking",
+      "Cancellation policies vary by property",
+      "Confirmation sent after successful payment",
     ],
-    disclaimer: "ZIVO acts as a booking facilitator. Reservations are confirmed by hotel partners.",
+    disclaimer: "Hotel reservations are confirmed by ZIVO or its accommodation partners.",
   },
   cars: {
     items: [
-      "Rates may change until booking is completed",
-      "Rental terms are set by the rental provider",
-      "Refunds and changes follow partner policies",
+      "Rates are confirmed at time of booking",
+      "Rental terms set by the rental company",
+      "Confirmation sent after successful payment",
     ],
-    disclaimer: "ZIVO acts as a booking facilitator. Rentals are provided by licensed partners.",
+    disclaimer: "Car rentals are fulfilled by rental companies through ZIVO.",
   },
 };
 
 export const CHECKOUT_CTA = {
-  button: "Continue to Secure Booking",
-  subtext: "You will be redirected to complete your booking securely.",
-  buttonAlt: "Proceed to Secure Payment",
+  button: "Complete Booking",
+  subtext: "Tickets are issued after successful payment and confirmation.",
+  buttonAlt: "Pay Securely",
 };
 
 export const CHECKOUT_CONFIRMATION = {
   success: "Thank You for Your Booking",
   icon: "✈️",
-  received: "Your booking request has been received.",
-  email: "A confirmation email will be sent once your ticket is issued by the provider.",
+  received: "Your booking has been confirmed.",
+  email: "A confirmation email with your ticket has been sent.",
   buttons: {
     view: "View Booking",
     support: "Contact Support",
@@ -76,9 +77,9 @@ export const CHECKOUT_CONFIRMATION = {
 
 export const CHECKOUT_FOOTER = {
   help: "Need help?",
-  contact: "Contact our support team or your booking provider directly.",
-  trust: ["Secure payments", "Trusted partners", "Transparent pricing"],
-  final: "ZIVO helps you compare and book travel options. All travel services are fulfilled by authorized providers.",
+  contact: "Contact ZIVO support for assistance with your booking.",
+  trust: ["Secure payments", "PCI compliant", "24/7 support"],
+  final: "ZIVO is an online travel agency. All travel services are fulfilled by ZIVO or its authorized suppliers.",
   supportEmail: "support@hizovo.com",
 };
 
@@ -86,5 +87,5 @@ export const CHECKOUT_TRUST_SIGNALS = {
   ssl: "SSL Encrypted",
   pci: "PCI Compliant",
   secure: "256-bit Encryption",
-  verified: "Verified Partners",
+  verified: "ZIVO Secured",
 };

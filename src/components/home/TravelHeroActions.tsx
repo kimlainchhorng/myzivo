@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 const travelActions = [
   {
     id: "flights",
-    title: "Compare Flights",
-    description: "500+ airlines compared",
+    title: "Book Flights",
+    description: "Airline tickets worldwide",
     icon: Plane,
     href: "/flights",
     gradient: "from-sky-500 to-blue-600",
@@ -14,12 +14,12 @@ const travelActions = [
     borderColor: "border-sky-500/30",
     iconColor: "text-sky-400",
     hoverShadow: "hover:shadow-sky-500/20",
-    badge: "Compare Prices",
+    badge: "Book Now",
   },
   {
     id: "hotels",
-    title: "Compare Hotels",
-    description: "500,000+ hotels worldwide",
+    title: "Book Hotels",
+    description: "500,000+ properties",
     icon: Hotel,
     href: "/hotels",
     gradient: "from-amber-500 to-orange-500",
@@ -27,12 +27,12 @@ const travelActions = [
     borderColor: "border-amber-500/30",
     iconColor: "text-amber-400",
     hoverShadow: "hover:shadow-amber-500/20",
-    badge: "Compare Prices",
+    badge: "Book Now",
   },
   {
     id: "cars",
-    title: "Compare Car Rentals",
-    description: "Trusted rental partners",
+    title: "Book Car Rentals",
+    description: "Worldwide locations",
     icon: CarFront,
     href: "/car-rental",
     gradient: "from-emerald-500 to-teal-500",
@@ -40,13 +40,13 @@ const travelActions = [
     borderColor: "border-emerald-500/30",
     iconColor: "text-emerald-400",
     hoverShadow: "hover:shadow-emerald-500/20",
-    badge: "No Hidden Fees",
+    badge: "Book Now",
   },
 ];
 
 const trustPoints = [
-  { icon: Shield, text: "Book securely on partner sites" },
-  { icon: Clock, text: "Prices provided by licensed partners" },
+  { icon: Shield, text: "Secure checkout with ZIVO" },
+  { icon: Clock, text: "Instant confirmation" },
 ];
 
 export default function TravelHeroActions() {
@@ -60,16 +60,16 @@ export default function TravelHeroActions() {
         <div className="text-center mb-10 sm:mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium mb-4">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-muted-foreground">Compare with confidence</span>
+            <span className="text-muted-foreground">Book with confidence</span>
           </div>
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-3">
-            Compare prices from{" "}
+            Book travel directly with{" "}
             <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-              licensed travel partners
+              ZIVO
             </span>
           </h2>
           <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
-            Choose a provider and complete your booking securely on their site.
+            Secure checkout, instant confirmation, and 24/7 customer support.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ export default function TravelHeroActions() {
                 "flex items-center gap-2 text-sm font-semibold transition-colors",
                 action.iconColor
               )}>
-                <span>Compare prices</span>
+                <span>Book now</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
@@ -135,7 +135,7 @@ export default function TravelHeroActions() {
             </div>
           ))}
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 border border-border/50">
-            <span className="text-xs text-muted-foreground">No hidden fees</span>
+            <span className="text-xs text-muted-foreground">No booking fees</span>
             <span className="text-primary font-bold text-xs">✓</span>
           </div>
         </div>

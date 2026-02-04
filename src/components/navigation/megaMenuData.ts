@@ -106,9 +106,9 @@ export const megaMenuData: MegaMenuData[] = [
     icon: Plane,
     color: "text-sky-500",
     hoverColor: "hover:text-sky-500",
-    description: "Compare flights from 500+ airlines worldwide",
+    description: "Book airline tickets worldwide at competitive prices",
     mainAction: {
-      label: "Compare Flights",
+      label: "Book Flights",
       href: "/flights",
     },
     sections: [
@@ -127,29 +127,29 @@ export const megaMenuData: MegaMenuData[] = [
           { icon: Route, label: "Round Trip", description: "Depart and return", href: "/flights?type=round", color: "text-sky-500" },
           { icon: PlaneTakeoff, label: "One Way", description: "Single destination", href: "/flights?type=oneway", color: "text-sky-500" },
           { icon: Globe, label: "Multi-City", description: "Multiple destinations", href: "/flights?type=multi", color: "text-sky-500" },
-          { icon: Compass, label: "Explore Anywhere", description: "Flexible travel ideas", href: "/flights?explore=true", color: "text-primary" },
         ],
       },
       {
-        title: "Travel Extras",
+        title: "Travel Services",
         items: [
-          { icon: Shield, label: "Travel Insurance", description: "Provided by partners", href: "/travel-insurance", color: "text-emerald-500" },
-          { icon: BaggageClaim, label: "Extra Baggage", description: "Airline-dependent", href: "/flights?addon=baggage", color: "text-sky-500" },
-          { icon: Car, label: "Airport Transfers", description: "Partner services", href: "/extras", color: "text-primary" },
-          { icon: Hotel, label: "Hotels & Stays", description: "Compare accommodation options", href: "/hotels", color: "text-amber-500" },
+          { icon: FileText, label: "Flight Ticketing", description: "Issued by ZIVO", href: "/flights", color: "text-sky-500" },
+          { icon: Calendar, label: "Changes & Cancellations", description: "Manage your booking", href: "/help/changes", color: "text-sky-500" },
+          { icon: Armchair, label: "Seat Selection", description: "Choose your seat", href: "/flights?addon=seat", color: "text-sky-500" },
+          { icon: BaggageClaim, label: "Baggage Options", description: "Add checked bags", href: "/flights?addon=baggage", color: "text-sky-500" },
+          { icon: Shield, label: "Travel Protection", description: "Trip insurance", href: "/travel-insurance", color: "text-emerald-500" },
         ],
       },
       {
         title: "Deals & Tools",
         items: [
-          { icon: BadgePercent, label: "Flash Deals", description: "Limited-time partner offers", href: "/flights?deals=flash", color: "text-rose-500" },
-          { icon: TrendingUp, label: "Price Alerts", description: "Track price changes", href: "/profile?tab=alerts", color: "text-sky-500" },
-          { icon: Compass, label: "Fare Insights", description: "When to book & save", href: "/flights?insights=true", color: "text-primary" },
+          { icon: BadgePercent, label: "Flight Deals", description: "Limited-time offers", href: "/flights?deals=flash", color: "text-rose-500" },
+          { icon: Calendar, label: "Fare Calendar", description: "Find best prices", href: "/flights?calendar=true", color: "text-sky-500" },
+          { icon: TrendingUp, label: "Price Drop Alerts", description: "Track price changes", href: "/profile?tab=alerts", color: "text-primary" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Booking Notice", description: "Flight bookings are completed with licensed travel partners. Prices may change until booking is completed.", href: "/partner-disclosure" },
+      { icon: FileText, label: "Ticketing", description: "Flight tickets are issued by ZIVO or its authorized airline ticketing partners.", href: "/partner-disclosure" },
     ],
   },
   {
@@ -158,50 +158,41 @@ export const megaMenuData: MegaMenuData[] = [
     icon: Hotel,
     color: "text-amber-500",
     hoverColor: "hover:text-amber-500",
-    description: "Compare 500,000+ properties worldwide",
+    description: "Book hotels and accommodations worldwide",
     mainAction: {
-      label: "Compare Hotels",
+      label: "Book Hotels",
       href: "/hotels",
     },
     sections: [
       {
         title: "Stay Types",
         items: [
-          { icon: Hotel, label: "Hotels", description: "Verified partner properties", href: "/hotels", color: "text-amber-500" },
+          { icon: Hotel, label: "Hotels", description: "Verified properties", href: "/hotels", color: "text-amber-500" },
           { icon: Building2, label: "Apartments", description: "Home-style stays", href: "/hotels?type=apartment", color: "text-amber-500" },
           { icon: TreePine, label: "Resorts", description: "All-inclusive options", href: "/hotels?type=resort", color: "text-emerald-500" },
-          { icon: Crown, label: "Luxury", description: "Premium accommodations", href: "/hotels?type=luxury", color: "text-amber-500" },
+          { icon: Crown, label: "Luxury Stays", description: "Premium accommodations", href: "/hotels?type=luxury", color: "text-amber-500" },
         ],
       },
       {
-        title: "Unique Stays",
+        title: "Services",
         items: [
-          { icon: Bed, label: "Boutique Hotels", description: "Unique character stays", href: "/hotels?type=boutique", color: "text-pink-500" },
-          { icon: Mountain, label: "Villas & Cabins", description: "Private retreats", href: "/hotels?type=villa", color: "text-emerald-500" },
-          { icon: Waves, label: "Beach Resorts", description: "Oceanfront options", href: "/hotels?type=beach", color: "text-sky-500" },
-          { icon: Building, label: "City Center Hotels", description: "Central locations", href: "/hotels?location=city", color: "text-amber-500" },
+          { icon: CheckCircle, label: "Instant Confirmation", description: "Book with confidence", href: "/hotels", color: "text-emerald-500" },
+          { icon: Calendar, label: "Flexible Cancellation", description: "Where available", href: "/hotels?flex=true", color: "text-sky-500" },
+          { icon: Users, label: "Group Bookings", description: "Multiple rooms", href: "/hotels?group=true", color: "text-amber-500" },
         ],
       },
       {
         title: "Popular Destinations",
         items: [
-          { icon: Landmark, label: "New York", description: "Compare NYC hotels", href: "/hotels?city=new-york", color: "text-sky-500" },
+          { icon: Landmark, label: "New York", description: "NYC hotels", href: "/hotels?city=new-york", color: "text-sky-500" },
           { icon: Palmtree, label: "Miami", description: "Beach & city stays", href: "/hotels?city=miami", color: "text-emerald-500" },
           { icon: Sunrise, label: "Los Angeles", description: "LA accommodations", href: "/hotels?city=los-angeles", color: "text-orange-500" },
-          { icon: Sun, label: "Las Vegas", description: "Vegas hotel options", href: "/hotels?city=las-vegas", color: "text-amber-500" },
-        ],
-      },
-      {
-        title: "Tools & Savings",
-        items: [
-          { icon: BadgePercent, label: "Last-Minute Deals", description: "Partner offers", href: "/hotels?deals=lastminute", color: "text-rose-500" },
-          { icon: Heart, label: "Saved Hotels", description: "Wishlist", href: "/profile?tab=saved", color: "text-pink-500" },
-          { icon: Users, label: "Group Bookings", description: "Partner discounts", href: "/hotels?group=true", color: "text-muted-foreground" },
+          { icon: Sun, label: "Las Vegas", description: "Vegas hotels", href: "/hotels?city=las-vegas", color: "text-amber-500" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Booking Notice", description: "Hotel bookings are completed with licensed accommodation partners.", href: "/partner-disclosure" },
+      { icon: FileText, label: "Reservations", description: "Hotel reservations are confirmed by ZIVO or its accommodation partners.", href: "/partner-disclosure" },
     ],
   },
   {
@@ -210,51 +201,33 @@ export const megaMenuData: MegaMenuData[] = [
     icon: Car,
     color: "text-primary",
     hoverColor: "hover:text-primary",
-    description: "Rent cars from 800+ locations worldwide",
+    description: "Reserve rental cars worldwide",
     mainAction: {
-      label: "Compare Car Rentals",
+      label: "Book Car Rentals",
       href: "/rent-car",
     },
     sections: [
       {
-        title: "Vehicle Categories",
+        title: "Vehicle Types",
         items: [
           { icon: Car, label: "Economy", description: "Budget-friendly options", href: "/rent-car?type=economy", color: "text-primary" },
-          { icon: Car, label: "Compact", description: "City driving options", href: "/rent-car?type=compact", color: "text-primary" },
-          { icon: Car, label: "SUV & Crossover", description: "Space for groups", href: "/rent-car?type=suv", color: "text-primary" },
-          { icon: Crown, label: "Luxury & Premium", description: "Premium vehicles", href: "/rent-car?type=luxury", color: "text-amber-500" },
+          { icon: Car, label: "SUV", description: "Space for groups", href: "/rent-car?type=suv", color: "text-primary" },
+          { icon: Crown, label: "Luxury", description: "Premium vehicles", href: "/rent-car?type=luxury", color: "text-amber-500" },
+          { icon: Truck, label: "Vans", description: "Cargo & passengers", href: "/rent-car?type=van", color: "text-muted-foreground" },
         ],
       },
       {
-        title: "Specialty Vehicles",
+        title: "Rental Services",
         items: [
-          { icon: Zap, label: "Electric Vehicles", description: "Eco-friendly options", href: "/rent-car?type=electric", color: "text-emerald-500" },
-          { icon: Car, label: "Sports Cars", description: "Performance vehicles", href: "/rent-car?type=sports", color: "text-rose-500" },
-          { icon: Car, label: "Convertibles", description: "Open-air vehicles", href: "/rent-car?type=convertible", color: "text-sky-500" },
-          { icon: Truck, label: "Vans & Trucks", description: "Cargo options", href: "/rent-car?type=van", color: "text-muted-foreground" },
-        ],
-      },
-      {
-        title: "Rental Options",
-        items: [
-          { icon: Timer, label: "Hourly Rental", description: "Short-term options", href: "/rent-car?duration=hourly", color: "text-primary" },
-          { icon: Calendar, label: "Weekly Deals", description: "Extended rentals", href: "/rent-car?duration=weekly", color: "text-primary" },
-          { icon: Navigation, label: "One-Way Rental", description: "Flexible drop-off", href: "/rent-car?oneway=true", color: "text-sky-500" },
-          { icon: MapPin, label: "Airport Pickup", description: "Airport locations", href: "/rent-car?location=airport", color: "text-primary" },
-        ],
-      },
-      {
-        title: "Protection & Extras",
-        items: [
-          { icon: Shield, label: "Insurance Options", description: "Offered by partners", href: "/rent-car?addon=insurance", color: "text-emerald-500" },
-          { icon: Fuel, label: "Prepaid Fuel", description: "Optional", href: "/rent-car?addon=fuel", color: "text-amber-500" },
-          { icon: Settings, label: "GPS Navigation", description: "Add-on available", href: "/rent-car?addon=gps", color: "text-sky-500" },
-          { icon: Key, label: "Additional Driver", description: "Partner add-on", href: "/rent-car?addon=driver", color: "text-muted-foreground" },
+          { icon: MapPin, label: "Airport Pickup", description: "Convenient locations", href: "/rent-car?location=airport", color: "text-primary" },
+          { icon: Navigation, label: "One-Way Rentals", description: "Flexible drop-off", href: "/rent-car?oneway=true", color: "text-sky-500" },
+          { icon: Shield, label: "Optional Insurance", description: "Protection plans", href: "/rent-car?addon=insurance", color: "text-emerald-500" },
+          { icon: Key, label: "Additional Driver", description: "Share the driving", href: "/rent-car?addon=driver", color: "text-muted-foreground" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Booking Notice", description: "Car rentals are provided by licensed rental partners.", href: "/partner-disclosure" },
+      { icon: FileText, label: "Rentals", description: "Car rentals are fulfilled by rental companies through ZIVO.", href: "/partner-disclosure" },
     ],
   },
   {
@@ -272,24 +245,24 @@ export const megaMenuData: MegaMenuData[] = [
       {
         title: "Support",
         items: [
-          { icon: HelpCircle, label: "Help Center", description: "FAQs & guides", href: "/help", color: "text-primary" },
-          { icon: Phone, label: "Contact Us", description: "Customer support", href: "/contact", color: "text-primary" },
-          { icon: MessageCircle, label: "Travel Bookings", description: "Partner booking assistance", href: "/support/travel-bookings", color: "text-sky-500" },
-          { icon: Globe, label: "Site Issues", description: "Technical support", href: "/support/site-issues", color: "text-muted-foreground" },
+          { icon: FileText, label: "Manage Booking", description: "View & modify trips", href: "/trips", color: "text-primary" },
+          { icon: Calendar, label: "Changes & Cancellations", description: "Modify reservations", href: "/help/changes", color: "text-sky-500" },
+          { icon: Receipt, label: "Refund Requests", description: "Request a refund", href: "/help/refunds", color: "text-amber-500" },
+          { icon: BaggageClaim, label: "Baggage & Seat Policies", description: "Airline rules", href: "/help/baggage", color: "text-sky-500" },
+          { icon: Headphones, label: "Customer Support", description: "Contact us", href: "/contact", color: "text-primary" },
         ],
       },
       {
         title: "Company",
         items: [
           { icon: Globe, label: "About ZIVO", description: "Our story", href: "/about", color: "text-primary" },
-          { icon: Compass, label: "How It Works", description: "Search & compare", href: "/how-it-works", color: "text-primary" },
-          { icon: Users, label: "Partners", description: "Travel providers", href: "/partners", color: "text-primary" },
+          { icon: Compass, label: "How It Works", description: "Book with ZIVO", href: "/how-it-works", color: "text-primary" },
           { icon: FileText, label: "Legal & Policies", description: "Terms & privacy", href: "/terms", color: "text-muted-foreground" },
         ],
       },
     ],
     policies: [
-      { icon: FileText, label: "Booking Help", description: "ZIVO compares prices and redirects users to trusted partners. For changes, cancellations, or refunds, please contact the booking provider directly.", href: "/partner-disclosure" },
+      { icon: Headphones, label: "Support", description: "ZIVO provides customer support for all bookings made on this platform.", href: "/help" },
     ],
   },
 ];

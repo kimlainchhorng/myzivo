@@ -32,11 +32,11 @@ export default function HeroSection() {
         {/* Content below */}
         <div className="px-4 py-6 bg-background">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-3 leading-tight">
-            Compare Flights, Hotels, and Car Rentals — All in One Place
+            Book Flights, Hotels, and Car Rentals — All in One Place
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mb-5">
-            ZIVO helps you compare travel prices from licensed partners worldwide. 
-            Choose a provider and complete your booking securely on their site.
+            ZIVO is an online travel agency. Book travel directly with secure checkout 
+            and instant confirmation.
           </p>
 
           {/* Primary CTA - Flights */}
@@ -46,7 +46,7 @@ export default function HeroSection() {
               className="w-full h-14 text-base font-semibold rounded-xl gap-2 bg-flights hover:bg-flights/90 text-white shadow-lg"
             >
               <Plane className="w-5 h-5" />
-              Compare Flights
+              Book Flights
             </Button>
           </Link>
 
@@ -59,7 +59,7 @@ export default function HeroSection() {
                 className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-hotels/40 text-hotels hover:bg-hotels/10"
               >
                 <Hotel className="w-4 h-4" />
-                Compare Hotels
+                Book Hotels
               </Button>
             </Link>
             <Link to="/rent-car" className="flex-1">
@@ -69,7 +69,7 @@ export default function HeroSection() {
                 className="w-full h-12 text-sm font-medium rounded-xl gap-1.5 border-cars/40 text-cars hover:bg-cars/10"
               >
                 <CarFront className="w-4 h-4" />
-                Compare Car Rentals
+                Book Car Rentals
               </Button>
             </Link>
           </div>
@@ -91,7 +91,7 @@ export default function HeroSection() {
 
           {/* Positioning Disclaimer */}
           <p className="text-center text-[11px] text-muted-foreground/70 mt-4">
-            Prices provided by licensed travel partners.
+            Prices are final at checkout unless otherwise stated.
           </p>
         </div>
       </div>
@@ -102,11 +102,11 @@ export default function HeroSection() {
         <div className="flex items-center px-8 xl:px-16 py-12 bg-background">
           <div className="max-w-xl">
             <h1 className="text-4xl xl:text-5xl font-bold text-foreground mb-4 leading-tight">
-              Compare Flights, Hotels, and Car Rentals — All in One Place
+              Book Flights, Hotels, and Car Rentals — All in One Place
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              ZIVO helps you compare travel prices from licensed partners worldwide. 
-              Choose a provider and complete your booking securely on their site.
+              ZIVO is an online travel agency. Book travel directly with secure checkout 
+              and instant confirmation.
             </p>
 
             {/* Primary CTA - Flights */}
@@ -116,7 +116,7 @@ export default function HeroSection() {
                 className="h-14 px-8 text-lg font-semibold rounded-xl gap-3 bg-flights hover:bg-flights/90 text-white shadow-xl mb-4"
               >
                 <Plane className="w-6 h-6" />
-                Compare Flights
+                Book Flights
               </Button>
             </Link>
 
@@ -129,7 +129,7 @@ export default function HeroSection() {
                   className="h-12 px-5 text-base font-medium rounded-xl gap-2 border-hotels/40 text-hotels hover:bg-hotels/10"
                 >
                   <Hotel className="w-5 h-5" />
-                  Compare Hotels
+                  Book Hotels
                 </Button>
               </Link>
               <Link to="/rent-car">
@@ -139,7 +139,7 @@ export default function HeroSection() {
                   className="h-12 px-5 text-base font-medium rounded-xl gap-2 border-cars/40 text-cars hover:bg-cars/10"
                 >
                   <CarFront className="w-5 h-5" />
-                  Compare Car Rentals
+                  Book Car Rentals
                 </Button>
               </Link>
             </div>
@@ -161,7 +161,7 @@ export default function HeroSection() {
 
             {/* Positioning Disclaimer */}
             <p className="text-xs text-muted-foreground/70 mt-5 max-w-md">
-              Prices provided by licensed travel partners.
+              Prices are final at checkout unless otherwise stated.
             </p>
           </div>
         </div>
