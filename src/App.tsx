@@ -330,6 +330,10 @@ const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage")
 const FlightToCity = lazy(() => import("./pages/seo/FlightToCity"));
 const FlightRoutePage = lazy(() => import("./pages/seo/FlightRoutePage"));
 const DealsPage = lazy(() => import("./pages/seo/DealsPage"));
+const SeasonalDealPage = lazy(() => import("./pages/seo/SeasonalDealPage"));
+
+// Admin scaling dashboards
+const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard"));
 
 // Business pages
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
@@ -709,7 +713,11 @@ const App = () => (
                 <Route path="/travel-insurance" element={<TravelInsurance />} />
                 <Route path="/extras" element={<TravelExtras />} />
                 <Route path="/deals" element={<DealsPage />} />
+                <Route path="/deals/:slug" element={<SeasonalDealPage />} />
                 <Route path="/install" element={<Install />} />
+                
+                {/* Admin SEO Scaling Dashboard */}
+                <Route path="/admin/seo-scaling" element={<ProtectedRoute requireAdmin><SEOScalingDashboard /></ProtectedRoute>} />
                 <Route
                   path="/admin"
                   element={
@@ -1113,7 +1121,6 @@ const App = () => (
                 <Route path="/creators/car-rental" element={<CarsCreatorLanding />} />
                 <Route path="/creators/extras" element={<ExtrasCreatorLanding />} />
                 {/* Monetization Pages */}
-                <Route path="/deals" element={<Deals />} />
                 <Route path="/last-minute" element={<LastMinute />} />
                 <Route path="/wallet" element={<ProtectedRoute><TravelWallet /></ProtectedRoute>} />
                 <Route path="/business/insights" element={<DataInsights />} />
