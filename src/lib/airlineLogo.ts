@@ -1,46 +1,37 @@
 /**
  * Airline Logo Service with Fallback Chain
- * Primary: AirHex CDN
- * Fallback 1: Lowercase IATA
- * Fallback 2: Duffel SVG
+ * Primary: AVS CDN (free, no auth required)
+ * Fallback 1: Duffel SVG
+ * Fallback 2: UI Avatars
  * Fallback 3: Plane icon (via React component)
  */
 
-// AirHex CDN - Primary source (high quality PNGs)
-export const AIRHEX_CDN = 'https://content.airhex.com/content/logos/airlines';
-
-// Duffel SVG CDN - Fallback 2
-export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup';
-
-// Legacy AVS CDN (deprecated, kept for compatibility)
+// AVS CDN - Primary source (free, no auth required)
 export const AVS_CDN = 'https://pics.avs.io';
 
-// Supported sizes for AirHex
+// Duffel SVG CDN - Fallback
+export const DUFFEL_CDN = 'https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup';
+
+// Supported sizes for logos
 export type AirHexSize = 32 | 64 | 100 | 200;
 
 /**
- * Get AirHex logo URL with specific size
+ * Get AVS logo URL with specific size (primary - free, no auth)
  */
-export function getAirHexLogoUrl(iataCode: string, size: AirHexSize = 64): string {
-  return `${AIRHEX_CDN}_${size}/${iataCode.toUpperCase()}.png`;
+export function getAVSLogoUrl(iataCode: string, size: number = 64): string {
+  // AVS format: https://pics.avs.io/{SIZE}/{SIZE}/{CODE}.png
+  return `${AVS_CDN}/${size}/${size}/${iataCode.toUpperCase()}.png`;
 }
 
 /**
- * Get AirHex logo URL with lowercase code (fallback 1)
- */
-export function getAirHexLogoUrlLowercase(iataCode: string, size: AirHexSize = 64): string {
-  return `${AIRHEX_CDN}_${size}/${iataCode.toLowerCase()}.png`;
-}
-
-/**
- * Get Duffel SVG logo URL (fallback 2)
+ * Get Duffel SVG logo URL (fallback)
  */
 export function getDuffelLogoUrl(iataCode: string): string {
   return `${DUFFEL_CDN}/${iataCode.toUpperCase()}.svg`;
 }
 
 /**
- * Get UI Avatars fallback (fallback 3 - before icon)
+ * Get UI Avatars fallback (before plane icon)
  */
 export function getPlaceholderLogoUrl(iataCode: string): string {
   return `https://ui-avatars.com/api/?name=${iataCode.toUpperCase()}&background=0ea5e9&color=fff&size=64&bold=true`;
@@ -52,10 +43,9 @@ export function getPlaceholderLogoUrl(iataCode: string): string {
 export function getLogoFallbackChain(iataCode: string, size: AirHexSize = 64): string[] {
   const code = iataCode.toUpperCase();
   return [
-    getAirHexLogoUrl(code, size),           // Primary: AirHex uppercase
-    getAirHexLogoUrlLowercase(code, size),  // Fallback 1: AirHex lowercase
-    getDuffelLogoUrl(code),                  // Fallback 2: Duffel SVG
-    getPlaceholderLogoUrl(code),             // Fallback 3: UI Avatars
+    getAVSLogoUrl(code, size),       // Primary: AVS CDN
+    getDuffelLogoUrl(code),           // Fallback 1: Duffel SVG
+    getPlaceholderLogoUrl(code),      // Fallback 2: UI Avatars
   ];
 }
 
@@ -64,7 +54,7 @@ export function getLogoFallbackChain(iataCode: string, size: AirHexSize = 64): s
  * Use AirlineLogo component for fallback handling
  */
 export function getAirlineLogoUrl(iataCode: string, size: AirHexSize = 64): string {
-  return getAirHexLogoUrl(iataCode, size);
+  return getAVSLogoUrl(iataCode, size);
 }
 
 // Memoization cache for preloaded logos
@@ -80,7 +70,7 @@ export async function preloadAirlineLogo(iataCode: string, size: AirHexSize = 64
     return preloadCache.get(cacheKey)!;
   }
   
-  const url = getAirHexLogoUrl(iataCode, size);
+  const url = getAVSLogoUrl(iataCode, size);
   
   try {
     const response = await fetch(url, { method: 'HEAD' });
