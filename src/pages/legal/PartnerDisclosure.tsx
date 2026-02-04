@@ -49,6 +49,10 @@ const PartnerDisclosure = () => {
             {/* Introduction */}
             <section className="prose prose-neutral dark:prose-invert max-w-none">
               <p className="text-muted-foreground leading-relaxed text-lg">
+                ZIVO works exclusively with licensed travel providers, payment processors, and technology partners.
+                All bookings are fulfilled by authorized suppliers under their own terms and conditions.
+              </p>
+              <p className="text-muted-foreground leading-relaxed mt-4">
                 Hizivo is an online travel platform that allows users to search, compare, and book 
                 flights, hotels, and car rentals. We operate a <strong>hybrid business model</strong> with 
                 different handling for each service type.

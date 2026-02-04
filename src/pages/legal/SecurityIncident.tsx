@@ -128,7 +128,9 @@ export default function SecurityIncident() {
                   "24/7 security monitoring capabilities",
                   "Documented incident response procedures",
                   "Trained security response team",
+                  "Coordinate with payment providers and partners",
                   "Relationships with law enforcement and security researchers",
+                  "Report incidents to authorities when applicable",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -248,19 +250,24 @@ export default function SecurityIncident() {
           </Card>
 
           {/* Contact */}
-          <div className="text-center p-8 rounded-xl bg-muted/50 border border-border">
-            <h3 className="text-lg font-semibold mb-2">Report a Security Concern</h3>
-            <p className="text-muted-foreground mb-4">
-              If you believe you've discovered a security vulnerability or your account has been compromised:
-            </p>
-            <a 
-              href="mailto:security@hizivo.com"
-              className="inline-flex items-center gap-2 text-primary hover:underline"
-            >
-              <Mail className="w-4 h-4" />
-              security@hizivo.com
-            </a>
-          </div>
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="pt-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Report a Security Concern</h3>
+              <p className="text-muted-foreground mb-6">
+                If you believe you've discovered a security vulnerability or your account has been compromised, contact us immediately:
+              </p>
+              <a 
+                href="mailto:security@hizivo.com"
+                className="inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
+              >
+                <Mail className="w-5 h-5" />
+                security@hizivo.com
+              </a>
+            </CardContent>
+          </Card>
         </div>
       </main>
 

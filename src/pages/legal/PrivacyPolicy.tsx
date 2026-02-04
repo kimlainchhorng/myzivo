@@ -75,6 +75,52 @@ const PrivacyPolicy = () => {
 
         {/* Privacy Sections */}
         <Accordion type="single" collapsible className="space-y-4">
+          {/* Data Minimization - NEW */}
+          <AccordionItem value="data-minimization" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <Shield className="h-4 w-4 text-emerald-500" />
+                </div>
+                <span className="font-semibold">Data Minimization</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground space-y-4 pb-6">
+              <p>
+                ZIVO collects only the information necessary to provide travel services and comply with legal obligations.
+              </p>
+              <p>
+                We do not collect excessive data or information unrelated to providing our services. Our data collection practices 
+                are regularly reviewed to ensure we maintain the minimum data footprint necessary for operations.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Third-Party Data Sharing - NEW */}
+          <AccordionItem value="third-party-sharing" className="border border-border rounded-lg px-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Users className="h-4 w-4 text-amber-500" />
+                </div>
+                <span className="font-semibold">Third-Party Data Sharing</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground space-y-4 pb-6">
+              <p>
+                User data is shared only with licensed travel providers strictly for booking fulfillment.
+              </p>
+              <ul className="list-disc list-inside space-y-2 ml-4">
+                <li>Hotels receive your reservation details to confirm your booking</li>
+                <li>Airlines receive passenger information required for ticketing</li>
+                <li>Car rental companies receive driver information for rental fulfillment</li>
+                <li>Payment processors (Stripe) receive payment data for transaction processing</li>
+              </ul>
+              <p className="font-medium text-foreground">
+                We do not sell, rent, or trade your personal information to third parties for their marketing purposes.
+              </p>
+            </AccordionContent>
+          </AccordionItem>
           {/* Section 1: Information We Collect */}
           <AccordionItem value="collection" className="border border-border rounded-lg px-4">
             <AccordionTrigger className="hover:no-underline">
@@ -344,12 +390,13 @@ const PrivacyPolicy = () => {
                 Depending on your location, you may have the following rights regarding your personal information:
               </p>
 
-              <h4 className="font-semibold text-foreground mt-4">All Users</h4>
+              <h4 className="font-semibold text-foreground mt-4">All Users May Request:</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li><strong>Access:</strong> Request a copy of your personal data</li>
-                <li><strong>Correction:</strong> Update inaccurate or incomplete data</li>
-                <li><strong>Deletion:</strong> Request deletion of your data (subject to legal requirements)</li>
-                <li><strong>Portability:</strong> Receive your data in a structured, machine-readable format</li>
+                <li><strong>Access to their data:</strong> Request a copy of your personal information</li>
+                <li><strong>Data correction:</strong> Update inaccurate or incomplete information</li>
+                <li><strong>Data deletion:</strong> Request deletion of your data (subject to legal retention requirements)</li>
+                <li><strong>Opt-out of marketing:</strong> Unsubscribe from promotional communications</li>
+                <li><strong>Data portability:</strong> Receive your data in a structured, machine-readable format</li>
               </ul>
 
               <h4 className="font-semibold text-foreground mt-6">GDPR Rights (EU/EEA Users)</h4>
@@ -370,7 +417,7 @@ const PrivacyPolicy = () => {
 
               <h4 className="font-semibold text-foreground mt-6">Exercising Your Rights</h4>
               <p>
-                To exercise your rights, contact us at privacy@zivo.com or use the privacy settings in your 
+                To exercise your rights, contact us at privacy@hizivo.com or use the privacy settings in your 
                 account. We will respond within 30 days (or as required by law).
               </p>
             </AccordionContent>
