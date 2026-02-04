@@ -43,15 +43,15 @@ const Header = () => {
               <div className="hidden lg:flex items-center gap-4 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  Live bookings
+                  Secure checkout
                 </span>
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  Secure payments
+                  Instant confirmation
                 </span>
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  Licensed travel partners
+                  24/7 support
                 </span>
               </div>
             </div>

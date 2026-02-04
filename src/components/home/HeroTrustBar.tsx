@@ -7,9 +7,9 @@ import { CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const trustItems = [
-  "500+ Airlines Compared",
-  "500,000+ Hotels Worldwide", 
-  "Trusted Rental Partners",
+  "Secure Checkout",
+  "Instant Confirmation", 
+  "24/7 Customer Support",
   "No Hidden Fees",
 ];
 

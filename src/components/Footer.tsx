@@ -133,13 +133,13 @@ const Footer = () => {
                 <ZivoLogo size="md" />
               </Link>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto lg:mx-0 mb-4">
-                Book flights, hotels, and car rentals directly on ZIVO with secure checkout and licensed fulfillment.
+                ZIVO is an online travel agency. Book flights, hotels, and car rentals with secure checkout and instant confirmation.
               </p>
               
               {/* Business Info Block */}
               <div className="p-3 rounded-xl bg-muted/30 border border-border/50 mb-4">
-                <p className="text-xs font-medium text-foreground mb-1">Hizovo Travel</p>
-                <p className="text-[10px] text-muted-foreground">Travel Search & Comparison Platform</p>
+                <p className="text-xs font-medium text-foreground mb-1">Hizovo Travel LLC</p>
+                <p className="text-[10px] text-muted-foreground">Online Travel Agency</p>
               </div>
               
               {/* Contact Emails */}
@@ -276,17 +276,17 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* AFFILIATE DISCLOSURE - Required for partner compliance */}
+          {/* OTA DISCLOSURE - Required for travel agency compliance */}
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-3">
             {/* REQUIRED EXACT COPY - Do not modify */}
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-semibold">
-              ZIVO is a travel comparison platform.
+              ZIVO is an online travel agency.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              ZIVO acts as a booking facilitator and sub-agent. Travel services are fulfilled by licensed providers.
+              ZIVO sells and issues airline tickets either directly or through authorized ticketing partners.
             </p>
             <p className="text-xs text-muted-foreground max-w-3xl mx-auto font-medium p-3 rounded-lg bg-primary/5 border border-primary/10">
-              ZIVO may earn a commission when users book through partner links.
+              ZIVO is responsible for payment processing and customer support. Airline rules and fare conditions apply to all bookings.
             </p>
           </div>
           
@@ -304,14 +304,14 @@ const Footer = () => {
             </p>
           </div>
           
-          {/* PAYMENT & DATA SAFETY - Required for affiliate compliance */}
+          {/* PAYMENT & DATA SAFETY - Required for OTA compliance */}
           <div className="mt-4 pt-4 border-t border-border/30 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium">
-              🔒 Payments are processed securely by our travel partners. ZIVO does not store credit card information.
+              🔒 Payments are processed securely by ZIVO. Your payment data is encrypted and protected.
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-              For payment disputes, please{" "}
-              <a href="/support" className="text-primary hover:underline">contact support</a> before disputing with your bank.
+              For booking issues or refund requests, please{" "}
+              <a href="/support" className="text-primary hover:underline">contact ZIVO support</a>.
             </p>
           </div>
         </div>
