@@ -8185,6 +8185,39 @@ export type Database = {
           },
         ]
       }
+      loyalty_points: {
+        Row: {
+          created_at: string
+          id: string
+          lifetime_points: number
+          points_balance: number
+          tier: string
+          tier_updated_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          tier_updated_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lifetime_points?: number
+          points_balance?: number
+          tier?: string
+          tier_updated_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       loyalty_rewards: {
         Row: {
           created_at: string
@@ -8740,6 +8773,42 @@ export type Database = {
           items?: Json
           notes?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      optimization_metrics: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          segment_type: string
+          segment_value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_value: number
+          period_end: string
+          period_start: string
+          segment_type: string
+          segment_value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_value?: number
+          period_end?: string
+          period_start?: string
+          segment_type?: string
+          segment_value?: string
         }
         Relationships: []
       }
@@ -10768,6 +10837,45 @@ export type Database = {
           supplier_price?: number
           tax_amount?: number
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      price_intelligence_cache: {
+        Row: {
+          availability_level: string | null
+          currency: string
+          current_price: number
+          demand_level: string | null
+          historical_avg: number | null
+          historical_low: number | null
+          id: string
+          item_id: string
+          service_type: string
+          updated_at: string
+        }
+        Insert: {
+          availability_level?: string | null
+          currency?: string
+          current_price: number
+          demand_level?: string | null
+          historical_avg?: number | null
+          historical_low?: number | null
+          id?: string
+          item_id: string
+          service_type: string
+          updated_at?: string
+        }
+        Update: {
+          availability_level?: string | null
+          currency?: string
+          current_price?: number
+          demand_level?: string | null
+          historical_avg?: number | null
+          historical_low?: number | null
+          id?: string
+          item_id?: string
+          service_type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -13351,6 +13459,45 @@ export type Database = {
         }
         Relationships: []
       }
+      smart_sort_rules: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          rule_key: string
+          rule_name: string
+          scoring_weights: Json
+          service_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          rule_key: string
+          rule_name: string
+          scoring_weights?: Json
+          service_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          rule_key?: string
+          rule_name?: string
+          scoring_weights?: Json
+          service_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sos_alerts: {
         Row: {
           cancelled_at: string | null
@@ -15535,6 +15682,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_favorites: {
+        Row: {
+          created_at: string
+          id: string
+          item_data: Json
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_data?: Json
+          item_id: string
+          item_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_data?: Json
+          item_id?: string
+          item_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_fraud_profiles: {
         Row: {
           blocked_at: string | null
@@ -15628,6 +15802,75 @@ export type Database = {
         }
         Relationships: []
       }
+      user_personalization_settings: {
+        Row: {
+          allow_recently_viewed: boolean
+          allow_search_history: boolean
+          created_at: string
+          id: string
+          personalization_enabled: boolean
+          preferred_currency: string | null
+          preferred_language: string | null
+          show_price_badges: boolean
+          show_urgency_indicators: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_recently_viewed?: boolean
+          allow_search_history?: boolean
+          created_at?: string
+          id?: string
+          personalization_enabled?: boolean
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          show_price_badges?: boolean
+          show_urgency_indicators?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_recently_viewed?: boolean
+          allow_search_history?: boolean
+          created_at?: string
+          id?: string
+          personalization_enabled?: boolean
+          preferred_currency?: string | null
+          preferred_language?: string | null
+          show_price_badges?: boolean
+          show_urgency_indicators?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_recently_viewed: {
+        Row: {
+          id: string
+          item_data: Json
+          item_id: string
+          item_type: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          item_data?: Json
+          item_id: string
+          item_type: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          item_data?: Json
+          item_id?: string
+          item_type?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -15645,6 +15888,54 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_saved_searches: {
+        Row: {
+          created_at: string
+          current_price: number | null
+          id: string
+          last_price_check_at: string | null
+          notification_email: boolean
+          notification_push: boolean
+          price_alert_enabled: boolean
+          search_params: Json
+          service_type: string
+          target_price: number | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_price_check_at?: string | null
+          notification_email?: boolean
+          notification_push?: boolean
+          price_alert_enabled?: boolean
+          search_params?: Json
+          service_type: string
+          target_price?: number | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          last_price_check_at?: string | null
+          notification_email?: boolean
+          notification_push?: boolean
+          price_alert_enabled?: boolean
+          search_params?: Json
+          service_type?: string
+          target_price?: number | null
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
