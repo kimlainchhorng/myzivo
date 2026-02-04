@@ -34,6 +34,10 @@ export { FlightResultCard, type FlightCardData } from "./FlightResultCard";
 export { HotelResultCard, type HotelCardData } from "./HotelResultCard";
 export { CarResultCard, type CarCardData } from "./CarResultCard";
 
+// Multi-provider comparison cards
+export { FlightMultiProviderCard } from "./FlightMultiProviderCard";
+export { HotelMultiProviderCard } from "./HotelMultiProviderCard";
+
 // Ramp-style components
 export { RampCarCard, type RampCarCardData } from "./RampCarCard";
 export { RampResultsLayout, RampResultsHeader, RampGlobalDisclaimer, RampIndicativeNotice } from "./RampResultsLayout";
