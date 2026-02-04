@@ -35,6 +35,7 @@ export const premiumAirlines: Airline[] = [
   { code: 'BR', name: 'EVA Air', category: 'premium', alliance: 'Star Alliance', country: 'Taiwan', hub: 'TPE' },
   { code: 'VS', name: 'Virgin Atlantic', category: 'premium', alliance: 'SkyTeam', country: 'UK', hub: 'LHR' },
   { code: 'JX', name: 'STARLUX Airlines', category: 'premium', alliance: 'Independent', country: 'Taiwan', hub: 'TPE' },
+  { code: 'HU', name: 'Hainan Airlines', category: 'premium', alliance: 'Independent', country: 'China', hub: 'HAK' },
 ];
 
 export const fullServiceAirlines: Airline[] = [
@@ -72,6 +73,18 @@ export const fullServiceAirlines: Airline[] = [
   { code: 'AM', name: 'Aeromexico', category: 'full-service', alliance: 'SkyTeam', country: 'Mexico', hub: 'MEX' },
   { code: 'LA', name: 'LATAM Airlines', category: 'full-service', alliance: 'Independent', country: 'Chile', hub: 'SCL' },
   { code: 'CM', name: 'Copa Airlines', category: 'full-service', alliance: 'Star Alliance', country: 'Panama', hub: 'PTY' },
+  { code: 'ET', name: 'Ethiopian Airlines', category: 'full-service', alliance: 'Star Alliance', country: 'Ethiopia', hub: 'ADD' },
+  { code: 'SU', name: 'Aeroflot', category: 'full-service', alliance: 'SkyTeam', country: 'Russia', hub: 'SVO' },
+  { code: 'CA', name: 'Air China', category: 'full-service', alliance: 'Star Alliance', country: 'China', hub: 'PEK' },
+  { code: 'MU', name: 'China Eastern', category: 'full-service', alliance: 'SkyTeam', country: 'China', hub: 'PVG' },
+  { code: 'CZ', name: 'China Southern', category: 'full-service', alliance: 'SkyTeam', country: 'China', hub: 'CAN' },
+  { code: 'SA', name: 'South African Airways', category: 'full-service', alliance: 'Star Alliance', country: 'South Africa', hub: 'JNB' },
+  { code: 'MS', name: 'EgyptAir', category: 'full-service', alliance: 'Star Alliance', country: 'Egypt', hub: 'CAI' },
+  { code: 'RJ', name: 'Royal Jordanian', category: 'full-service', alliance: 'Oneworld', country: 'Jordan', hub: 'AMM' },
+  { code: 'SV', name: 'Saudia', category: 'full-service', alliance: 'SkyTeam', country: 'Saudi Arabia', hub: 'JED' },
+  { code: 'GF', name: 'Gulf Air', category: 'full-service', alliance: 'Oneworld', country: 'Bahrain', hub: 'BAH' },
+  { code: 'EI', name: 'Aer Lingus', category: 'full-service', alliance: 'Independent', country: 'Ireland', hub: 'DUB' },
+  { code: 'A3', name: 'Aegean Airlines', category: 'full-service', alliance: 'Star Alliance', country: 'Greece', hub: 'ATH' },
 ];
 
 export const lowCostAirlines: Airline[] = [
@@ -93,6 +106,11 @@ export const lowCostAirlines: Airline[] = [
   { code: 'XJ', name: 'Thai AirAsia X', category: 'low-cost', alliance: 'Independent', country: 'Thailand', hub: 'DMK' },
   { code: 'PC', name: 'Pegasus Airlines', category: 'low-cost', alliance: 'Independent', country: 'Turkey', hub: 'SAW' },
   { code: 'ZZ', name: 'Buzz', category: 'low-cost', alliance: 'Independent', country: 'Poland', hub: 'WAW' },
+  { code: 'DY', name: 'Norwegian', category: 'low-cost', alliance: 'Independent', country: 'Norway', hub: 'OSL' },
+  { code: 'EW', name: 'Eurowings', category: 'low-cost', alliance: 'Independent', country: 'Germany', hub: 'DUS' },
+  { code: 'HV', name: 'Transavia', category: 'low-cost', alliance: 'Independent', country: 'Netherlands', hub: 'AMS' },
+  { code: 'LS', name: 'Jet2', category: 'low-cost', alliance: 'Independent', country: 'UK', hub: 'LBA' },
+  { code: 'TO', name: 'Transavia France', category: 'low-cost', alliance: 'Independent', country: 'France', hub: 'ORY' },
 ];
 
 export const allAirlines = [...premiumAirlines, ...fullServiceAirlines, ...lowCostAirlines];
@@ -119,4 +137,18 @@ export const featuredAirlines = [
   fullServiceAirlines[3], // British Airways
   fullServiceAirlines[4], // Lufthansa
   fullServiceAirlines[6], // KLM
+];
+
+// Get airlines grouped by alliance
+export const getAirlinesByAllianceGroup = () => ({
+  'Star Alliance': allAirlines.filter(a => a.alliance === 'Star Alliance'),
+  'SkyTeam': allAirlines.filter(a => a.alliance === 'SkyTeam'),
+  'Oneworld': allAirlines.filter(a => a.alliance === 'Oneworld'),
+  'Independent': allAirlines.filter(a => a.alliance === 'Independent'),
+});
+
+// Top airlines for display sections
+export const topAirlines = [
+  ...premiumAirlines.slice(0, 10),
+  ...fullServiceAirlines.slice(0, 14),
 ];
