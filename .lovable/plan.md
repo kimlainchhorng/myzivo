@@ -1,578 +1,499 @@
 
-# Checkout Experience Enhancement: Trusted & Conversion-Optimized
+# ZIVO Mobile App Structure: iOS & Android Enhancement Plan
 
-## Overview
+## Executive Summary
 
-This plan creates a unified, high-conversion checkout experience with enhanced trust signals, clearer pricing, and optimized user flows. ZIVO already has strong foundations (compliance configs, payment notices, trust badges), and this enhancement will standardize the experience across all checkout pages while adding missing components.
+This plan restructures ZIVO's mobile app experience to match top travel apps (Booking, Expedia, Skyscanner) with a clean 5-tab navigation: **Home | Search | Trips | Alerts | Account**. The current architecture has a solid foundation with existing components (`ZivoSuperAppNav`, `MyTripsPage`, `PriceAlertsDashboard`, `Profile`), but requires restructuring navigation and creating dedicated mobile-first screens.
 
 ---
 
-## Current State Analysis
+## Current State vs. Target State
 
-### Already Implemented
-
-| Component | Location | Status |
-|-----------|----------|--------|
-| `FlightCheckout.tsx` | `/flights/checkout` | Full MoR flow with Stripe |
-| `FlightTravelerInfo.tsx` | `/flights/traveler-info` | Passenger collection |
-| `FlightConfirmation.tsx` | `/flights/confirmation/:id` | Post-payment confirmation |
-| `TravelConfirmationPage.tsx` | `/confirmation/:orderNumber` | Hotels/Cars confirmation |
-| `PaymentSafetyNotice.tsx` | Checkout components | PCI compliance messaging |
-| `FlightPriceBreakdown.tsx` | Checkout sidebar | Fare + taxes display |
-| `FlightSellerDisclaimer.tsx` | Multiple variants | MoR compliance text |
-| `MobileCheckoutFooter.tsx` | Mobile checkout | Sticky CTA bar |
-| Compliance configs | `flightCompliance.ts`, `flightMoRCompliance.ts` | Locked copy |
-
-### Gaps Identified
-
-| Missing Element | Impact |
-|-----------------|--------|
-| Unified `SecureCheckoutHeader` component | No consistent header across checkout pages |
-| `ImportantBookingNotice` component | Missing pre-booking warnings |
-| `AcceptedPaymentMethods` component | No Apple Pay/Google Pay badges |
-| `PassengerInfoHelper` component | No ID verification guidance |
-| Enhanced confirmation page messaging | Confirmation copy needs update |
-| Trust/support footer standardization | Inconsistent footer messaging |
+| Aspect | Current | Target |
+|--------|---------|--------|
+| Bottom nav tabs | Home, Travel, Rides, Eats, More | Home, Search, Trips, Alerts, Account |
+| Search experience | Split across multiple pages | Unified Search tab with Flights/Hotels/Cars tabs |
+| Trips view | `/my-trips` with service filters | Dedicated Trips tab with Upcoming/Past sections |
+| Price alerts | Buried in Profile page | Dedicated Alerts tab with notification management |
+| Account | Full Profile page with many sections | Streamlined Account tab with quick links |
+| Home screen | Multi-service grid | Travel-focused with search box, deals, trending |
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Create Shared Checkout Components
+### Phase 1: Create New Mobile Navigation
 
-#### 1.1 SecureCheckoutHeader
+**File:** `src/components/app/ZivoMobileNav.tsx` (NEW)
 
-**New File:** `src/components/checkout/SecureCheckoutHeader.tsx`
+New travel-focused 5-tab navigation:
 
-The header that appears at the top of all checkout pages.
+| Tab | Icon | Path | Description |
+|-----|------|------|-------------|
+| Home | `Home` | `/` | Main discovery screen |
+| Search | `Search` | `/search` | Unified search with tabs |
+| Trips | `Briefcase` | `/trips` | Upcoming & past bookings |
+| Alerts | `Bell` | `/alerts` | Price drop notifications |
+| Account | `User` | `/account` | Profile & settings |
 
-**Content:**
+**Design Notes:**
+- 64px height with safe area inset
+- 48px touch targets
+- Active state: filled icon + pill background + bold label
+- Inactive: outlined icon + muted label
+
+---
+
+### Phase 2: Create Mobile Home Screen
+
+**File:** `src/pages/mobile/MobileHome.tsx` (NEW)
+
+Content sections:
+
 ```text
-🔒 Secure Checkout
-Your booking is protected and processed securely by licensed travel partners.
+┌────────────────────────────────────────┐
+│ Good morning, John 👋                   │
+│ Where to today?                        │
+├────────────────────────────────────────┤
+│ ┌────────────────────────────────────┐ │
+│ │ 🔍 Flight Search Box               │ │
+│ │ From    │    To                    │ │
+│ │ Dates   │    Passengers            │ │
+│ │ [Search Flights]                   │ │
+│ └────────────────────────────────────┘ │
+├────────────────────────────────────────┤
+│ [✈️ Flights] [🏨 Hotels] [🚗 Cars]     │
+│ Quick tabs - highlight Flights         │
+├────────────────────────────────────────┤
+│ 🔥 Best Deals Today                    │
+│ [Deal 1] [Deal 2] [Deal 3] →          │
+├────────────────────────────────────────┤
+│ 🌎 Trending Destinations               │
+│ [City 1] [City 2] [City 3] →          │
+├────────────────────────────────────────┤
+│ 🕐 Recently Searched (if logged in)   │
+│ [Route 1] [Route 2] →                  │
+├────────────────────────────────────────┤
+│ 🛡️ Compare prices from trusted        │
+│    travel partners.                    │
+└────────────────────────────────────────┘
 ```
 
 **Features:**
-- Lock icon with emerald accent
-- Consistent across flights, hotels, cars
-- Optional progress indicator (Step 1/3, 2/3, 3/3)
-- Responsive for mobile
+- Integrated `FlightSearchFormPro` in compact mode
+- Quick service tabs (Flights highlighted by default)
+- Horizontal scroll carousels for deals/destinations
+- Recently searched routes (persisted in localStorage/Supabase)
+- Trust strip with partner logos
 
 ---
 
-#### 1.2 EnhancedPriceSummary
+### Phase 3: Create Unified Search Screen
 
-**Update:** `src/components/flight/FlightPriceBreakdown.tsx`
+**File:** `src/pages/mobile/MobileSearch.tsx` (NEW)
 
-Enhance existing component with:
+Full-screen search experience with sub-tabs:
 
 ```text
-Price Breakdown:
-- Base Fare         $XXX.XX
-- Taxes & Fees      $XX.XX
-──────────────────────────
-- Total Price       $XXX.XX
-
-"No hidden fees. Final price shown before booking."
+┌────────────────────────────────────────┐
+│ ← Search                               │
+├────────────────────────────────────────┤
+│ [✈️ Flights] [🏨 Hotels] [🚗 Cars]     │
+│ (Tabs with colored underline)          │
+├────────────────────────────────────────┤
+│                                        │
+│ FLIGHTS TAB:                           │
+│ ┌──────────────────────────────────┐  │
+│ │ From: ____________________       │  │
+│ │ To:   ____________________       │  │
+│ │ Departure: _______ Return: _____ │  │
+│ │ Passengers: 1 Adult, Economy     │  │
+│ └──────────────────────────────────┘  │
+│                                        │
+│ [🔍 Search Flights]                    │
+│                                        │
+├────────────────────────────────────────┤
+│ Popular Routes                         │
+│ NYC → LA  ·  $99                       │
+│ CHI → MIA ·  $129                      │
+└────────────────────────────────────────┘
 ```
 
-**Changes:**
-- Add "No hidden fees" copy below total
-- Add `variant="checkout"` for enhanced styling
-- Include "Final price" badge
+**Components:**
+- Reuses existing `FlightSearchFormPro`, `HotelSearchFormPro`, `CarSearchFormPro`
+- Full-screen overlays for location/date pickers
+- Skeleton loaders during search
+- Redirects to results pages on submit
 
 ---
 
-#### 1.3 PassengerInfoCard
+### Phase 4: Enhance Search Results (Mobile)
 
-**Update:** `src/pages/FlightTravelerInfo.tsx`
+**Updates to:** `src/pages/FlightResults.tsx`
 
-Add helper text to passenger section:
+Mobile-specific enhancements:
 
 ```text
-Passenger Details:
-Please enter passenger information exactly as shown on government-issued ID.
-
-Helper text:
-"Name changes may not be allowed after booking."
+┌────────────────────────────────────────┐
+│ JFK → LAX · Feb 15 · 1 Adult           │
+│ [Edit Search]                          │
+├────────────────────────────────────────┤
+│ Sort: Cheapest ▼                       │
+│ [Filters] (badge with count)           │
+├────────────────────────────────────────┤
+│ ┌────────────────────────────────────┐ │
+│ │ [Delta Logo]                       │ │
+│ │ 06:30 ────✈️──── 09:45            │ │
+│ │ JFK           LAX                  │ │
+│ │ 5h 30m · Nonstop                   │ │
+│ │                                    │ │
+│ │ ⭐ Best Deal         [$199] →     │ │
+│ └────────────────────────────────────┘ │
+│ ┌────────────────────────────────────┐ │
+│ │ [United Logo]                      │ │
+│ │ 08:15 ────✈️──── 11:30            │ │
+│ │ JFK           LAX                  │ │
+│ │ 5h 15m · Nonstop                   │ │
+│ │                        [$215] →   │ │
+│ └────────────────────────────────────┘ │
+└────────────────────────────────────────┘
+│ [Filter]  [Sort]                       │
+└────────────────────────────────────────┘
 ```
 
-**Changes:**
-- Add info alert above form
-- Add "as shown on ID" tooltip
-- Warning about name changes
+**Key Features:**
+- Airline logo from CDN (already implemented)
+- Departure/arrival times prominently displayed
+- Stops and duration visible
+- "Best deal" badge for cheapest option
+- Bottom sheet for filters and sort (existing `FlightMobileResultsBar`)
 
 ---
 
-#### 1.4 AcceptedPaymentMethods
+### Phase 5: Create Flight Details Screen (Mobile)
 
-**New File:** `src/components/checkout/AcceptedPaymentMethods.tsx`
+**Updates to:** `src/pages/FlightDetails.tsx`
 
-Display accepted payment methods visually.
+Mobile-optimized layout:
 
-**Content:**
 ```text
-Accepted methods:
-[Visa] [Mastercard] [Amex] [Apple Pay] [Google Pay]
-
-Security copy:
-"ZIVO does not store your payment information."
+┌────────────────────────────────────────┐
+│ ← Flight Details                       │
+├────────────────────────────────────────┤
+│ [Delta Logo]                           │
+│ Delta Air Lines · DL 123               │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ ITINERARY                          │ │
+│ │                                    │ │
+│ │ 06:30 ──────────────────── 09:45  │ │
+│ │ JFK                        LAX    │ │
+│ │ New York                   Los Angeles │
+│ │                                    │ │
+│ │ 5h 30m · Nonstop · Economy        │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 🧳 Baggage                         │ │
+│ │ Carry-on: 1 × 7kg                  │ │
+│ │ Checked:  1 × 23kg                 │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 📋 Fare Rules                      │ │
+│ │ ✗ Non-refundable                   │ │
+│ │ ✓ Changes allowed ($75 fee)        │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 🎫 Providers                       │ │
+│ │ ┌──────────────────────────────┐  │ │
+│ │ │ Booking.com          $199 ✓ │  │ │
+│ │ └──────────────────────────────┘  │ │
+│ │ ┌──────────────────────────────┐  │ │
+│ │ │ Expedia              $205   │  │ │
+│ │ └──────────────────────────────┘  │ │
+│ └────────────────────────────────────┘ │
+└────────────────────────────────────────┘
+│ $199                                   │
+│ [Continue to Secure Booking →]         │
+└────────────────────────────────────────┘
 ```
 
 **Features:**
-- Card brand icons
-- Apple Pay / Google Pay badges (conditional)
-- Storage disclaimer
+- Full itinerary timeline
+- Baggage and fare rules sections
+- Provider comparison (if multi-provider)
+- Sticky CTA at bottom
 
 ---
 
-#### 1.5 ImportantBookingNotice
+### Phase 6: Create Trips Screen
 
-**New File:** `src/components/checkout/ImportantBookingNotice.tsx`
+**File:** `src/pages/mobile/MobileTrips.tsx` (NEW)
 
-Pre-booking trust builder shown above the CTA button.
+Dedicated trips management:
 
-**Content:**
 ```text
-Before you book:
-• Prices may change until booking is completed
-• Ticket rules are set by the airline or provider
-• Refunds and changes follow partner policies
-
-"ZIVO acts as a booking facilitator. Tickets are issued by licensed providers."
+┌────────────────────────────────────────┐
+│ My Trips                               │
+├────────────────────────────────────────┤
+│ [Upcoming] [Past]                      │
+│ (Toggle tabs)                          │
+├────────────────────────────────────────┤
+│ UPCOMING                               │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ ✈️ New York → Los Angeles          │ │
+│ │ Feb 15, 2026 · 10:30 AM            │ │
+│ │ Delta DL 123                       │ │
+│ │                                    │ │
+│ │ Booking: ABC123XYZ                 │ │
+│ │ Status: ✅ Confirmed               │ │
+│ │                                    │ │
+│ │ [Manage Booking →]                 │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 🏨 Marriott Downtown Miami         │ │
+│ │ Feb 15-18, 2026                    │ │
+│ │                                    │ │
+│ │ Booking: HTL987654                 │ │
+│ │ Status: ✅ Confirmed               │ │
+│ │                                    │ │
+│ │ [Manage Booking →]                 │ │
+│ └────────────────────────────────────┘ │
+├────────────────────────────────────────┤
+│ PAST (when tab selected)              │
+│ [Past trip cards with "Rebook" CTA]   │
+└────────────────────────────────────────┘
 ```
 
-**Variants:**
-- `flights` - Airline-specific language
-- `hotels` - Property-specific language
-- `cars` - Rental-specific language
+**Features:**
+- Upcoming/Past toggle
+- Booking reference and ticket status
+- "Manage booking" links to partner or internal page
+- Pull-to-refresh
 
 ---
 
-#### 1.6 SecureCheckoutButton
+### Phase 7: Create Alerts Screen
 
-**New File:** `src/components/checkout/SecureCheckoutButton.tsx`
+**File:** `src/pages/mobile/MobileAlerts.tsx` (NEW)
 
-Unified CTA button with subtext.
+Price alerts management:
 
-**Button Content:**
 ```text
-[🔒] Continue to Secure Booking
+┌────────────────────────────────────────┐
+│ Price Alerts 🔔                        │
+├────────────────────────────────────────┤
+│ [Active] [History]                     │
+│ (Toggle tabs)                          │
+├────────────────────────────────────────┤
+│ ACTIVE ALERTS (3)                      │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 🔔 JFK → LAX                       │ │
+│ │ Any dates in February              │ │
+│ │ Target: $150 or less               │ │
+│ │ Current: $199                      │ │
+│ │                                    │ │
+│ │ [Remove] [View Prices]             │ │
+│ └────────────────────────────────────┘ │
+│                                        │
+│ ┌────────────────────────────────────┐ │
+│ │ 🔔 NYC → MIA                       │ │
+│ │ Mar 1-7, 2026                      │ │
+│ │ Target: $100 or less               │ │
+│ │ Current: $129                      │ │
+│ │ 📉 Dropped $20 since yesterday!    │ │
+│ │                                    │ │
+│ │ [Remove] [Book Now!]               │ │
+│ └────────────────────────────────────┘ │
+├────────────────────────────────────────┤
+│ [+ Track New Route]                    │
+└────────────────────────────────────────┘
 
-Subtext: "You will be redirected to complete your booking securely."
+HISTORY TAB:
+│ 📩 Price dropped to $89! (2 days ago) │
+│ 📩 Alert expired (1 week ago)         │
 ```
 
-**Props:**
-- `isLoading` - Shows spinner
-- `disabled` - Grayed state
-- `variant` - flights | hotels | cars
-- `showSubtext` - Toggle subtext
+**Features:**
+- Active alerts with current price vs. target
+- Price drop indicators
+- Alert history (triggered/expired)
+- "Track new route" CTA opens modal
+- Integrates with existing `usePriceAlerts` hook
 
 ---
 
-### Phase 2: Update Checkout Pages
+### Phase 8: Create Account Screen
 
-#### 2.1 FlightCheckout.tsx Updates
+**File:** `src/pages/mobile/MobileAccount.tsx` (NEW)
 
-**File:** `src/pages/FlightCheckout.tsx`
-
-Changes:
-1. Add `SecureCheckoutHeader` at top of page
-2. Add `AcceptedPaymentMethods` in payment section
-3. Add `ImportantBookingNotice` above CTA
-4. Replace CTA button with `SecureCheckoutButton`
-5. Update sidebar with enhanced price breakdown
-
-**Updated Structure:**
+Streamlined account section:
 
 ```text
-┌─────────────────────────────────────────────┐
-│ [🔒] Secure Checkout                        │
-│ Your booking is protected and processed...  │
-├─────────────────────────────────────────────┤
-│                                             │
-│ ┌─────────────────┐ ┌─────────────────────┐ │
-│ │ Flight Summary  │ │ Price Summary       │ │
-│ │                 │ │ Base Fare    $XXX   │ │
-│ │ [Airline Logo]  │ │ Taxes & Fees $XX    │ │
-│ │ SFO → JFK      │ │ ────────────────    │ │
-│ │ 5h 30m Direct  │ │ Total        $XXX   │ │
-│ │                 │ │                     │ │
-│ │ Passengers      │ │ "No hidden fees..." │ │
-│ │ John Doe        │ │                     │ │
-│ └─────────────────┘ │ Payment Methods     │ │
-│                     │ [Visa][MC][Amex]    │ │
-│ Terms & Conditions  │ [Apple Pay]         │ │
-│ [✓] I agree...      │                     │ │
-│                     │ "ZIVO does not      │ │
-│ Important Notice    │ store payment..."   │ │
-│ • Prices may change │                     │ │
-│ • Ticket rules...   │                     │ │
-│                     │                     │ │
-│ [Continue to Secure Booking]              │ │
-│ "You will be redirected..."               │ │
-│                     └─────────────────────┘ │
-└─────────────────────────────────────────────┘
+┌────────────────────────────────────────┐
+│ Account                                │
+├────────────────────────────────────────┤
+│ ┌────────────────────────────────────┐ │
+│ │ [Avatar] John Doe                  │ │
+│ │          john@email.com            │ │
+│ │          ⭐ Gold Member            │ │
+│ │ [Edit Profile →]                   │ │
+│ └────────────────────────────────────┘ │
+├────────────────────────────────────────┤
+│ 👤 Saved Travelers              →     │
+│ 📧 Email Preferences            →     │
+│ 🔔 Notification Settings        →     │
+│ 💳 Payment Methods              →     │
+│ 🎁 ZIVO Rewards                 →     │
+├────────────────────────────────────────┤
+│ 📞 Support & Help               →     │
+│ 📜 Terms of Service             →     │
+│ 🔒 Privacy Policy               →     │
+│ 📋 Partner Disclosure           →     │
+├────────────────────────────────────────┤
+│ [Log Out]                             │
+└────────────────────────────────────────┘
+```
+
+**Features:**
+- Profile summary card with avatar
+- Quick links to settings sections
+- Legal pages (Terms, Privacy, Partner Disclosure)
+- Log out button
+
+---
+
+### Phase 9: Checkout & Confirmation (Mobile)
+
+**Updates to:** Existing checkout pages
+
+Mobile-optimized checkout flow:
+
+```text
+CHECKOUT SCREEN:
+┌────────────────────────────────────────┐
+│ 🔒 Secure Checkout                     │
+│ You're being redirected to complete    │
+│ your booking securely with our partner.│
+├────────────────────────────────────────┤
+│ [Loading spinner]                      │
+│ Connecting to partner...               │
+├────────────────────────────────────────┤
+│ 🛡️ Secure payments                     │
+│ ✅ Licensed providers                  │
+│ 💰 No hidden fees                      │
+└────────────────────────────────────────┘
+
+CONFIRMATION SCREEN:
+┌────────────────────────────────────────┐
+│            ✅                          │
+│ Thank You for Your Booking ✈️          │
+│                                        │
+│ Your booking request has been received.│
+│ A confirmation email will be sent      │
+│ once your ticket is issued.            │
+├────────────────────────────────────────┤
+│ Booking: ABC123XYZ                     │
+│ Status:  Confirmed                     │
+├────────────────────────────────────────┤
+│ [View Booking]                         │
+│ [Contact Support]                      │
+│ [Back to Home]                         │
+└────────────────────────────────────────┘
 ```
 
 ---
 
-#### 2.2 FlightTravelerInfo.tsx Updates
+### Phase 10: Push Notifications Configuration
 
-**File:** `src/pages/FlightTravelerInfo.tsx`
+**File:** `src/config/pushNotifications.ts` (NEW)
 
-Changes:
-1. Add `SecureCheckoutHeader` at top
-2. Add ID verification guidance above passenger forms
-3. Add name change warning
-4. Update CTA to "Continue to Payment"
-
-**New Passenger Info Header:**
-```text
-Passenger Details
-Please enter passenger information exactly as shown on government-issued ID.
-[i] Name changes may not be allowed after booking.
-```
-
----
-
-#### 2.3 FlightConfirmation.tsx Updates
-
-**File:** `src/pages/FlightConfirmation.tsx`
-
-Update confirmation messaging to match specification:
-
-**Current → Updated:**
-```text
-Current: "Booking Confirmed!"
-Updated: "Thank You for Your Booking ✈️"
-
-Current: "You will receive your e-ticket via email."
-Updated: "Your booking request has been received.
-         A confirmation email will be sent once your ticket is issued by the provider."
-```
-
-**Updated Action Buttons:**
-```text
-[View Booking] [Contact Support] [Back to Home]
-```
-
-**Support Footer:**
-```text
-Need help?
-Contact our support team or your booking provider directly.
-
-Trust signals: Secure payments · Trusted partners · Transparent pricing
-```
-
----
-
-### Phase 3: Create Compliance Copy Configuration
-
-#### 3.1 checkoutCompliance.ts
-
-**New File:** `src/config/checkoutCompliance.ts`
-
-Centralized checkout copy for all services.
-
-**Structure:**
+Notification configuration:
 
 ```typescript
-export const CHECKOUT_HEADER = {
-  title: "Secure Checkout",
-  subtitle: "Your booking is protected and processed securely by licensed travel partners.",
-};
-
-export const CHECKOUT_PRICE = {
-  noHiddenFees: "No hidden fees. Final price shown before booking.",
-};
-
-export const CHECKOUT_PASSENGER = {
-  title: "Passenger Details:",
-  subtitle: "Please enter passenger information exactly as shown on government-issued ID.",
-  warning: "Name changes may not be allowed after booking.",
-};
-
-export const CHECKOUT_PAYMENT = {
-  title: "Payment Information:",
-  security: "Payments are processed securely by our trusted travel partners using PCI-compliant systems.",
-  noStorage: "ZIVO does not store your payment information.",
-};
-
-export const CHECKOUT_NOTICE = {
-  title: "Before you book:",
-  items: [
-    "Prices may change until booking is completed",
-    "Ticket rules are set by the airline or provider",
-    "Refunds and changes follow partner policies",
-  ],
-  disclaimer: "ZIVO acts as a booking facilitator. Tickets are issued by licensed providers.",
-};
-
-export const CHECKOUT_CTA = {
-  button: "Continue to Secure Booking",
-  subtext: "You will be redirected to complete your booking securely.",
-};
-
-export const CHECKOUT_CONFIRMATION = {
-  success: "Thank You for Your Booking",
-  received: "Your booking request has been received.",
-  email: "A confirmation email will be sent once your ticket is issued by the provider.",
-  buttons: {
-    view: "View Booking",
-    support: "Contact Support",
-    home: "Back to Home",
+export const PUSH_NOTIFICATION_TYPES = {
+  PRICE_DROP: {
+    title: "Price Drop Alert! 📉",
+    body: "Prices for {route} dropped to ${price}!",
+  },
+  BOOKING_CONFIRMED: {
+    title: "Booking Confirmed ✅",
+    body: "Your {service} booking is confirmed.",
+  },
+  TRIP_REMINDER: {
+    title: "Trip Reminder 🗓️",
+    body: "Your flight to {destination} departs in 24 hours.",
   },
 };
 
-export const CHECKOUT_FOOTER = {
-  help: "Need help?",
-  contact: "Contact our support team or your booking provider directly.",
-  trust: ["Secure payments", "Trusted partners", "Transparent pricing"],
-  final: "ZIVO helps you compare and book travel options. All travel services are fulfilled by authorized providers.",
+export const NOTIFICATION_PREFERENCES = {
+  priceAlerts: true,
+  bookingConfirmations: true,
+  tripReminders: true,
+  marketing: false, // Default off
 };
 ```
 
----
-
-### Phase 4: Update Hotels/Cars Checkout
-
-#### 4.1 TravelCheckoutPage Updates
-
-Apply the same checkout enhancements to the travel (hotels/activities) checkout flow.
-
-Changes:
-- Add `SecureCheckoutHeader`
-- Add `ImportantBookingNotice` (hotels variant)
-- Update CTA styling
-- Standardize price breakdown
+**Note:** Actual push notification implementation requires Capacitor or PWA service worker setup.
 
 ---
 
-#### 4.2 CarCheckoutPage Updates
-
-Apply checkout enhancements to car rental checkout.
-
-Changes:
-- Add `SecureCheckoutHeader`
-- Add `ImportantBookingNotice` (cars variant)
-- Update CTA styling
-
----
-
-### Phase 5: Mobile Checkout Optimization
-
-#### 5.1 MobileCheckoutFooter Enhancement
-
-**Update:** `src/components/mobile/MobileCheckoutFooter.tsx`
-
-Changes:
-- Add trust badge (lock icon)
-- Show "No hidden fees" inline
-- Ensure touch targets are 44px+
-
----
-
-#### 5.2 Mobile Confirmation Page
-
-Ensure confirmation page is mobile-optimized:
-- Large success checkmark
-- Easy-to-tap action buttons
-- Contact support prominently displayed
-
----
-
-## File Changes Summary
+## File Summary
 
 ### New Files to Create
 
 | File | Description |
 |------|-------------|
-| `src/components/checkout/SecureCheckoutHeader.tsx` | Unified checkout header |
-| `src/components/checkout/AcceptedPaymentMethods.tsx` | Payment method badges |
-| `src/components/checkout/ImportantBookingNotice.tsx` | Pre-booking warnings |
-| `src/components/checkout/SecureCheckoutButton.tsx` | Unified CTA button |
-| `src/components/checkout/CheckoutTrustFooter.tsx` | Trust/support footer |
-| `src/config/checkoutCompliance.ts` | Centralized checkout copy |
+| `src/components/app/ZivoMobileNav.tsx` | New 5-tab navigation (Home, Search, Trips, Alerts, Account) |
+| `src/pages/mobile/MobileHome.tsx` | Travel-focused home with search box and deals |
+| `src/pages/mobile/MobileSearch.tsx` | Unified search with Flights/Hotels/Cars tabs |
+| `src/pages/mobile/MobileTrips.tsx` | Upcoming & past bookings management |
+| `src/pages/mobile/MobileAlerts.tsx` | Price alerts dashboard |
+| `src/pages/mobile/MobileAccount.tsx` | Streamlined account settings |
+| `src/pages/mobile/index.ts` | Barrel export for mobile pages |
+| `src/config/pushNotifications.ts` | Push notification templates |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/FlightCheckout.tsx` | Add new components, restructure layout |
-| `src/pages/FlightTravelerInfo.tsx` | Add ID guidance, name warning |
-| `src/pages/FlightConfirmation.tsx` | Update messaging, action buttons |
-| `src/pages/TravelConfirmationPage.tsx` | Standardize confirmation messaging |
-| `src/components/flight/FlightPriceBreakdown.tsx` | Add "no hidden fees" copy |
-| `src/components/mobile/MobileCheckoutFooter.tsx` | Add trust signals |
-
----
-
-## Component API Design
-
-### SecureCheckoutHeader
-
-```typescript
-interface SecureCheckoutHeaderProps {
-  currentStep?: 1 | 2 | 3;
-  totalSteps?: number;
-  variant?: "flights" | "hotels" | "cars";
-  className?: string;
-}
-```
-
-### ImportantBookingNotice
-
-```typescript
-interface ImportantBookingNoticeProps {
-  variant: "flights" | "hotels" | "cars";
-  className?: string;
-}
-```
-
-### SecureCheckoutButton
-
-```typescript
-interface SecureCheckoutButtonProps {
-  onClick: () => void;
-  isLoading?: boolean;
-  disabled?: boolean;
-  variant?: "flights" | "hotels" | "cars";
-  showSubtext?: boolean;
-  className?: string;
-}
-```
-
-### AcceptedPaymentMethods
-
-```typescript
-interface AcceptedPaymentMethodsProps {
-  showApplePay?: boolean;
-  showGooglePay?: boolean;
-  compact?: boolean;
-  className?: string;
-}
-```
+| `src/App.tsx` | Add routes for new mobile pages |
+| `src/components/app/ZivoSuperAppLayout.tsx` | Add option for new nav variant |
+| `src/pages/FlightResults.tsx` | Mobile-specific result card enhancements |
+| `src/pages/FlightDetails.tsx` | Mobile layout optimization |
 
 ---
 
 ## Technical Considerations
 
-### Compliance
-- All copy sourced from centralized config files
-- No "indicative" or "estimated" language (MoR model)
-- Required disclaimers always visible
+### Design Rules (from spec)
 
-### Accessibility
-- All buttons 44px+ touch targets
-- Proper ARIA labels on interactive elements
-- Sufficient color contrast for trust indicators
+| Rule | Implementation |
+|------|----------------|
+| Touch-friendly buttons | 48px+ min height, 44px+ touch targets |
+| Clear typography | 16px base, bold headings, muted secondary |
+| Fast loading | Skeleton loaders on all async content |
+| Skeleton loaders | Existing `ResultCardSkeleton` reused |
+| One-hand usability | Important actions in bottom 60% of screen |
 
 ### Performance
-- Components lazy-loaded where appropriate
-- No blocking assets in checkout flow
-- Instant feedback on button clicks
+
+- Code-split mobile pages using lazy loading
+- Use existing hooks (`useDuffelFlightSearch`, `useUnifiedTrips`, `usePriceAlerts`)
+- Leverage React Query caching for search results
+- Skeleton loaders while data fetches
+
+### Navigation Detection
+
+Auto-detect mobile context using existing `useIsMobile()` hook and route accordingly.
 
 ---
 
-## Visual Layout Reference
+## Summary
 
-### Desktop Checkout Page
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│  🔒 Secure Checkout                                              │
-│  Your booking is protected and processed securely by...         │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────────────────────────┐  ┌────────────────────────┐ │
-│  │                                 │  │  Price Summary         │ │
-│  │  ✈️ Your Flight                 │  │                        │ │
-│  │  [Logo] United Airlines         │  │  Base Fare      $350   │ │
-│  │  UA 123 · Economy              │  │  Taxes & Fees    $42   │ │
-│  │                                 │  │  ──────────────────    │ │
-│  │  10:30 ──────────▶ 16:00       │  │  Total          $392   │ │
-│  │  SFO              JFK          │  │                        │ │
-│  │  5h 30m · Direct               │  │  ✓ No hidden fees.     │ │
-│  │                                 │  │    Final price shown.  │ │
-│  │  📅 Feb 15, 2026 · 1 passenger │  │                        │ │
-│  │                                 │  ├────────────────────────┤ │
-│  └─────────────────────────────────┘  │  Payment Methods       │ │
-│                                       │  [Visa][MC][Amex]      │ │
-│  ┌─────────────────────────────────┐  │  [ApplePay][GooglePay] │ │
-│  │  👤 Passengers                  │  │                        │ │
-│  │  John Doe · john@email.com     │  │  🔒 ZIVO does not store│ │
-│  └─────────────────────────────────┘  │  your payment info.    │ │
-│                                       │                        │ │
-│  ┌─────────────────────────────────┐  └────────────────────────┘ │
-│  │  ☐ I agree to the Terms and    │                             │
-│  │    Conditions and Airline Rules │                             │
-│  │                                 │                             │
-│  │  ☐ I acknowledge the Seller of │                             │
-│  │    Travel disclosure            │                             │
-│  └─────────────────────────────────┘                             │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────────┐│
-│  │  ⚠️ Before you book:                                         ││
-│  │  • Prices may change until booking is completed             ││
-│  │  • Ticket rules are set by the airline or provider          ││
-│  │  • Refunds and changes follow partner policies              ││
-│  │                                                              ││
-│  │  ZIVO acts as a booking facilitator. Tickets are issued     ││
-│  │  by licensed providers.                                      ││
-│  └──────────────────────────────────────────────────────────────┘│
-│                                                                  │
-│           ┌──────────────────────────────────────┐               │
-│           │  🔒 Continue to Secure Booking       │               │
-│           └──────────────────────────────────────┘               │
-│           You will be redirected to complete your                │
-│           booking securely.                                      │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-│  Need help? Contact support · Secure payments · Trusted partners │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-### Confirmation Page
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│                     ✅                                           │
-│          Thank You for Your Booking ✈️                          │
-│                                                                  │
-│    Your booking request has been received.                      │
-│    A confirmation email will be sent once your                  │
-│    ticket is issued by the provider.                            │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────────┐│
-│  │  Booking Reference: ABC123                      [CONFIRMED] ││
-│  └──────────────────────────────────────────────────────────────┘│
-│                                                                  │
-│  [View Booking]   [Contact Support]   [Back to Home]            │
-│                                                                  │
-│  ─────────────────────────────────────────────────────────────  │
-│                                                                  │
-│  Need help?                                                      │
-│  Contact our support team or your booking provider directly.    │
-│                                                                  │
-│  🔒 Secure payments  ·  🤝 Trusted partners  ·  💰 Transparent  │
-│                                                                  │
-│  ZIVO helps you compare and book travel options.                │
-│  All travel services are fulfilled by authorized providers.     │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Success Metrics
-
-After implementation:
-- Unified checkout experience across all services
-- Clear pricing with "no hidden fees" messaging
-- Enhanced trust signals visible throughout
-- Compliant copy locked in configuration
-- Mobile-optimized with 44px+ touch targets
-- Support contact prominently displayed
-- Reduced checkout abandonment (expected)
+This plan transforms ZIVO into a professional travel app experience matching Booking, Expedia, and Skyscanner. The new 5-tab navigation (Home | Search | Trips | Alerts | Account) provides a cleaner user journey focused on the core travel booking workflow. All new components build on existing infrastructure (search forms, trips hooks, price alerts, profile) while optimizing the mobile experience with proper touch targets, skeleton loaders, and one-hand usability.
