@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, User, Search, Sparkles, ChevronDown, X, Car, ShieldCheck } from "lucide-react";
+import { Menu, User, Search, Sparkles, ChevronDown, Car, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,6 +18,7 @@ import ZivoLogo from "./ZivoLogo";
 import CurrencySelector from "./shared/CurrencySelector";
 import BetaBadge from "./shared/BetaBadge";
 import { NotificationBell } from "./notifications/NotificationBell";
+import { PremiumSearchOverlay } from "@/components/search";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -180,23 +181,11 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Search Overlay */}
-        {isSearchOpen && (
-          <div className="absolute top-full left-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border/50 p-4 animate-in fade-in slide-in-from-top-2 duration-150">
-            <div className="container mx-auto flex items-center gap-3">
-              <Search className="w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search for rides, food, hotels, flights..."
-                className="flex-1 bg-transparent border-0 outline-none text-lg placeholder:text-muted-foreground"
-                autoFocus
-              />
-              <Button variant="ghost" size="icon" onClick={() => setIsSearchOpen(false)} className="rounded-xl">
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* Premium Search Overlay */}
+        <PremiumSearchOverlay 
+          isOpen={isSearchOpen} 
+          onClose={() => setIsSearchOpen(false)} 
+        />
       </header>
 
       {/* Mobile Navigation Menu */}
