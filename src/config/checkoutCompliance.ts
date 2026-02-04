@@ -89,3 +89,18 @@ export const CHECKOUT_TRUST_SIGNALS = {
   secure: "256-bit Encryption",
   verified: "ZIVO Secured",
 };
+
+// ============================================
+// PRICING LEGAL FOOTER
+// ============================================
+
+export const CHECKOUT_PRICING_LEGAL = {
+  /** Full legal footer for pricing/checkout */
+  full: "ZIVO is an online travel agency. Displayed prices include applicable taxes and fees. Service fees may apply and are disclosed before payment. Airline and supplier rules apply to all bookings.",
+  
+  /** Short version */
+  short: "Prices include taxes. Service fees may apply.",
+  
+  /** Transparent pricing promise */
+  transparentPricing: "No hidden fees. What you see is what you pay.",
+};

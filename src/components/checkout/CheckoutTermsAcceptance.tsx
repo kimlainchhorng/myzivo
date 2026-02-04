@@ -1,0 +1,212 @@
+/**
+ * Checkout Terms Acceptance Component
+ * Mandatory checkboxes for fare rules and ToS
+ */
+
+import { useState, useEffect } from "react";
+import { AlertCircle, ExternalLink, FileText, Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { CHECKOUT_TERMS } from "@/config/pricing";
+
+export interface TermsState {
+  fareRules: boolean;
+  termsOfService: boolean;
+  marketing: boolean;
+}
+
+interface CheckoutTermsAcceptanceProps {
+  onStateChange: (state: TermsState, isValid: boolean) => void;
+  showFareRulesLink?: boolean;
+  fareRulesUrl?: string;
+  productType?: "flights" | "hotels" | "cars";
+  className?: string;
+  disabled?: boolean;
+}
+
+export function CheckoutTermsAcceptance({
+  onStateChange,
+  showFareRulesLink = true,
+  fareRulesUrl,
+  productType = "flights",
+  className,
+  disabled = false,
+}: CheckoutTermsAcceptanceProps) {
+  const [state, setState] = useState<TermsState>({
+    fareRules: false,
+    termsOfService: false,
+    marketing: false,
+  });
+  const [showError, setShowError] = useState(false);
+
+  const isValid = state.fareRules && state.termsOfService;
+
+  useEffect(() => {
+    onStateChange(state, isValid);
+    if (isValid) setShowError(false);
+  }, [state, isValid, onStateChange]);
+
+  const handleChange = (key: keyof TermsState, checked: boolean) => {
+    setState(prev => ({ ...prev, [key]: checked }));
+  };
+
+  const getFareRulesLabel = () => {
+    switch (productType) {
+      case "hotels":
+        return "I have reviewed the cancellation policy and room conditions";
+      case "cars":
+        return "I have reviewed the rental terms and conditions";
+      default:
+        return "I have reviewed fare rules and cancellation policy";
+    }
+  };
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      <div className="flex items-center gap-2 mb-3">
+        <Shield className="w-4 h-4 text-primary" />
+        <span className="font-semibold text-sm">Review & Accept Terms</span>
+      </div>
+
+      {/* Fare Rules / Cancellation Policy */}
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+        <Checkbox
+          id="fare-rules"
+          checked={state.fareRules}
+          onCheckedChange={(checked) => handleChange("fareRules", checked === true)}
+          disabled={disabled}
+          className="mt-0.5"
+        />
+        <div className="flex-1 space-y-1">
+          <Label
+            htmlFor="fare-rules"
+            className={cn(
+              "text-sm font-medium cursor-pointer flex items-center gap-2",
+              !state.fareRules && showError && "text-destructive"
+            )}
+          >
+            <FileText className="w-4 h-4 text-muted-foreground" />
+            {getFareRulesLabel()}
+            <span className="text-destructive">*</span>
+          </Label>
+          {showFareRulesLink && fareRulesUrl && (
+            <a
+              href={fareRulesUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+            >
+              View full policy
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Terms of Service */}
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-muted/20">
+        <Checkbox
+          id="terms-of-service"
+          checked={state.termsOfService}
+          onCheckedChange={(checked) => handleChange("termsOfService", checked === true)}
+          disabled={disabled}
+          className="mt-0.5"
+        />
+        <div className="flex-1 space-y-1">
+          <Label
+            htmlFor="terms-of-service"
+            className={cn(
+              "text-sm font-medium cursor-pointer",
+              !state.termsOfService && showError && "text-destructive"
+            )}
+          >
+            I accept ZIVO's{" "}
+            <a
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Privacy Policy
+            </a>
+            <span className="text-destructive">*</span>
+          </Label>
+        </div>
+      </div>
+
+      {/* Marketing (optional) */}
+      <div className="flex items-start gap-3 p-3 rounded-lg border border-border/30 bg-transparent">
+        <Checkbox
+          id="marketing"
+          checked={state.marketing}
+          onCheckedChange={(checked) => handleChange("marketing", checked === true)}
+          disabled={disabled}
+          className="mt-0.5"
+        />
+        <Label
+          htmlFor="marketing"
+          className="text-sm text-muted-foreground cursor-pointer"
+        >
+          Send me deals and travel inspiration (optional)
+        </Label>
+      </div>
+
+      {/* Error message */}
+      {showError && !isValid && (
+        <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{CHECKOUT_TERMS.errorMessage}</span>
+        </div>
+      )}
+
+      {/* Confirmation copy */}
+      <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
+        {CHECKOUT_TERMS.confirmationCopy}
+      </p>
+    </div>
+  );
+}
+
+// Inline validation trigger
+interface ValidateTermsProps {
+  isValid: boolean;
+  onValidationFail: () => void;
+}
+
+export function useTermsValidation(): [
+  boolean,
+  (state: TermsState, isValid: boolean) => void,
+  () => boolean
+] {
+  const [termsValid, setTermsValid] = useState(false);
+  const [showError, setShowError] = useState(false);
+
+  const handleStateChange = (_state: TermsState, isValid: boolean) => {
+    setTermsValid(isValid);
+    if (isValid) setShowError(false);
+  };
+
+  const triggerValidation = (): boolean => {
+    if (!termsValid) {
+      setShowError(true);
+      return false;
+    }
+    return true;
+  };
+
+  return [termsValid, handleStateChange, triggerValidation];
+}
+
+export default CheckoutTermsAcceptance;
