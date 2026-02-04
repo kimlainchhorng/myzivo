@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { heroPhotos, serviceOverlays } from "@/config/photos";
 import ServiceDisclaimer from "@/components/shared/ServiceDisclaimer";
 import { CAR_DISCLAIMERS, CAR_TRUST_BADGES } from "@/config/carCompliance";
+import CarFeaturesGrid from "@/components/car/CarFeaturesGrid";
+import CarComplianceFooter from "@/components/car/CarComplianceFooter";
 
 const trustBadges = [
   { icon: ShieldCheck, text: CAR_TRUST_BADGES.secureCheckout },
@@ -103,6 +105,9 @@ export default function CarRentalLanding() {
         {/* Partner Logos */}
         <PartnerLogosStrip service="cars" />
 
+        {/* Car Features Grid */}
+        <CarFeaturesGrid className="border-b border-border/50 bg-muted/5" />
+
         {/* Car Types Gallery */}
         <VehicleTypeGallery 
           service="cars" 
@@ -154,6 +159,9 @@ export default function CarRentalLanding() {
 
         {/* Service Disclaimer */}
         <ServiceDisclaimer type="travel" />
+
+        {/* Car Compliance Footer */}
+        <CarComplianceFooter />
       </main>
       
       <Footer />
