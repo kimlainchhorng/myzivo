@@ -1,231 +1,322 @@
 
-# ZIVO Legal & Security Pages Enhancement
+# ZIVO Travel Platform Upgrade - Full Booking-Ready Travel Platform
 
 ## Overview
-This plan implements comprehensive updates to ZIVO's legal and security infrastructure, adding new pages and enhancing existing ones to strengthen compliance, liability protection, and user trust.
 
-## Scope of Changes
+This plan upgrades ZIVO from a single-provider comparison site to a **multi-provider travel booking platform** with enhanced booking flows, affiliate monetization, trust signals, and cross-sell capabilities across Flights, Hotels, and Cars.
 
-### Page Updates Summary
-| Page | Action | Route |
-|------|--------|-------|
-| Security Page | Update | `/security` |
-| Incident Response | Update | `/legal/security-incident` |
-| Privacy Policy | Add sections | `/privacy-policy` |
-| Terms of Service | Add clauses | `/terms` |
-| Refund Policy | Update | `/refunds` |
-| Partner Disclosure | Update | `/partner-disclosure` |
-| Seller of Travel | Update | `/legal/seller-of-travel` |
-| Acceptable Use | Update | `/legal/acceptable-use` |
-| Footer | Add security line | All pages |
+## Current State Summary
+
+The platform already has substantial infrastructure:
+- **Flights**: Full MoR booking with Duffel API, but single provider per flight
+- **Hotels**: Booking.com affiliate integration, single provider
+- **Cars**: EconomyBookings affiliate, partial multi-provider UI
+- **Homepage**: Good structure, missing embedded search
+- **Price Alerts**: Full implementation exists
 
 ---
 
-## Detailed Changes
+## Phase 1: Multi-Provider Price Comparison
 
-### 1. Security Page (`/security`)
-**File:** `src/pages/Security.tsx`
+### 1.1 Multi-Provider Flight Card
 
-Current content already covers encryption, PCI-DSS, monitoring, and disclosure. Updates needed:
+**Concept**: Show multiple booking options per flight (Airline Official, Partner A, Partner B) within a single card.
 
-**Add to `securityPractices` array:**
-- Tokenized payment data explanation
-- Role-based access control for internal systems
-- Continuous monitoring for unauthorized access
-- Regular vulnerability scans
+**New Component**: `src/components/results/FlightMultiProviderCard.tsx`
 
-**Add new "Account Protection" section card:**
-- Secure authentication
-- Session monitoring
-- Suspicious activity detection
-- Forced logout on detected risks
+```text
+Flight Card Structure:
++--------------------------------------------------+
+| ✈️ Delta | DL123 | 9:00 → 12:30 | 3h 30m | Direct |
++--------------------------------------------------+
+| BOOK WITH:                                       |
+| • Airline Official ............ $520 [Book]     |
+| • ○ Kiwi.com .................. $505 [Book]     |  ← Best deal badge
+| • ○ Partner B ................. $498 [Book]     |
++--------------------------------------------------+
+| Baggage: Carry-on ✓ | Checked ✗ | Refundable ✗  |
++--------------------------------------------------+
+```
 
-**Update hero description:**
-Change to: "At ZIVO, protecting your data and transactions is a top priority. We use industry-leading security standards to safeguard personal information, payments, and bookings."
+**Data Source**: For MVP, show Duffel price as "Airline Official" with 2-3 calculated partner estimates (±5-15% variance). In future, integrate TravelPayouts or other meta-search APIs.
 
-**Add trust statement:**
-"ZIVO does not sell or misuse personal data."
+**Files to Create/Update**:
+- `src/components/results/FlightMultiProviderCard.tsx` - New multi-provider card
+- `src/hooks/useMultiProviderPricing.ts` - Calculate/fetch alternative prices
+- `src/pages/FlightResults.tsx` - Add provider comparison toggle
 
----
+### 1.2 Multi-Provider Hotel Card
 
-### 2. Incident Response Page (`/legal/security-incident`)
-**File:** `src/pages/legal/SecurityIncident.tsx`
+**New Component**: `src/components/results/HotelMultiProviderCard.tsx`
 
-Current page is well-structured. Updates needed:
+```text
+Hotel Card Structure:
++--------------------------------------------------+
+| 🏨 Marriott Downtown | ★★★★☆ | 4.5 Rating        |
++--------------------------------------------------+
+| BOOK WITH:                                       |
+| • Booking.com ................. $159/night [View]|
+| • Hotels.com .................. $165/night [View]|
+| • Direct ....................... $162/night [View]| ← Loyalty points badge
++--------------------------------------------------+
+| Free WiFi ✓ | Pool ✓ | Free Cancellation ✓      |
++--------------------------------------------------+
+```
 
-**Add new commitment item:**
-- "Coordinate with payment providers and partners"
-- "Report incidents to authorities when applicable"
+### 1.3 Multi-Provider Car Card
 
-**Update contact email prominently:**
-Display `security@hizivo.com` with clear CTA.
-
-**Ensure title matches user requirement:**
-Current: "Security Incident Response Policy"
-Keep as is (already appropriate)
-
----
-
-### 3. Privacy Policy (`/privacy-policy`)
-**File:** `src/pages/legal/PrivacyPolicy.tsx`
-
-**Add new accordion section: "Data Minimization"**
-Content: "ZIVO collects only the information necessary to provide travel services and comply with legal obligations."
-
-**Add new accordion section: "Third-Party Data Sharing"**
-Content: "User data is shared only with licensed travel providers strictly for booking fulfillment."
-
-**Add new accordion section: "User Rights" (enhance existing):**
-- Access to their data
-- Data correction
-- Data deletion (subject to legal retention)
-- Opt-out of marketing communications
+Update existing `RampCarCard.tsx` or create `CarMultiProviderCard.tsx`:
+- Show multiple rental providers per vehicle category
+- Insurance info per provider
+- Free cancellation badge
 
 ---
 
-### 4. Terms of Service (`/terms`)
-**File:** `src/pages/Terms.tsx`
+## Phase 2: Enhanced Results Pages
 
-**Add new section: "Platform Role"**
-"ZIVO acts as a travel booking platform and sub-agent. ZIVO does not operate airlines, hotels, or transportation services."
+### 2.1 Flight Results Enhancements
 
-**Add section: "Limitation of Liability" (enhance existing):**
-"ZIVO is not responsible for delays, cancellations, overbookings, or service failures caused by third-party providers."
+**Update**: `src/pages/FlightResults.tsx`
 
-**Add section: "Force Majeure":**
-"ZIVO is not liable for disruptions caused by events beyond reasonable control, including natural disasters, strikes, system outages, or government actions."
+Add missing features:
+- **Sorting options**: Cheapest, Fastest, Best value (exists), Most booked
+- **Filters**: Baggage included toggle, Refundable only toggle
+- **Badges**: Refundable / Non-refundable on each card
+- **Best Deal** indicator for lowest price across providers
 
-**Add section: "Fraud Prevention":**
-"ZIVO reserves the right to cancel bookings, suspend accounts, or refuse service in cases of suspected fraud or abuse."
+### 2.2 Hotels Results Enhancements
 
----
+**Update**: `src/pages/HotelResultsPage.tsx`
 
-### 5. Refund Policy (`/refunds`)
-**File:** `src/pages/Refunds.tsx`
+Add:
+- Total stay price calculation (already exists)
+- Star rating and Guest rating display (exists)
+- Amenities row (exists)
+- Free cancellation badge (exists)
+- Multi-provider comparison
 
-**Add clarity section:**
-"Refund eligibility depends on the fare rules, hotel policy, or rental provider terms."
+### 2.3 Cars Results Enhancements
 
-**Add key points:**
-- "ZIVO processes refunds only when authorized by the supplier"
-- "Service fees may be non-refundable"
-- "ZIVO is not responsible for provider-imposed penalties"
+**Update**: `src/pages/CarResultsPage.tsx`
 
-Note: Current page is affiliate-focused. Since ZIVO is now MoR for hotels/cars, update language accordingly.
-
----
-
-### 6. Partner Disclosure (`/partner-disclosure`)
-**File:** `src/pages/legal/PartnerDisclosure.tsx`
-
-**Add compliance statement:**
-"ZIVO works exclusively with licensed travel providers, payment processors, and technology partners."
-
-**Add fulfillment note:**
-"All bookings are fulfilled by authorized suppliers under their own terms and conditions."
+Add:
+- Multiple providers per vehicle
+- Insurance info column
+- Pickup/Drop-off location details
 
 ---
 
-### 7. Seller of Travel Disclosure (`/legal/seller-of-travel`)
-**File:** `src/pages/legal/SellerOfTravel.tsx`
+## Phase 3: Homepage Upgrade
 
-Current page is well-structured with pending CA/FL registrations.
+### 3.1 Hero with Embedded Search
 
-**Verify text matches user requirement:**
-- "ZIVO LLC operates as a Seller of Travel where required by law"
-- "Registrations: California SOT: pending, Florida SOT: pending"
-- "Registration numbers will be displayed once issued"
+**Update**: `src/components/home/HeroSection.tsx`
 
-Already implemented. Minor verification only.
+Add tabbed search form directly in hero:
 
----
+```text
++----------------------------------------------------------+
+|  Book travel with clarity and confidence.                 |
+|                                                           |
+|  [Flights] [Hotels] [Cars]  ← Tab switcher               |
+|  +------------------------------------------------------+ |
+|  | From: [JFK] | To: [LAX] | Dates: [Feb 10-17] | [✈️]  | |
+|  +------------------------------------------------------+ |
+|                                                           |
+|  ✓ Real-time prices  ✓ Secure checkout  ✓ Instant tickets|
++----------------------------------------------------------+
+```
 
-### 8. Acceptable Use Policy (`/legal/acceptable-use`)
-**File:** `src/pages/legal/AcceptableUsePolicy.tsx`
+**New Component**: `src/components/home/HeroSearchTabs.tsx`
 
-**Ensure prohibitions include:**
-- Attempt to access systems without authorization
-- Scrape or abuse APIs
-- Perform fraudulent bookings
-- Use automated bots
+### 3.2 Why Book with ZIVO Section
 
-**Ensure enforcement section includes:**
-"Violations may result in account suspension, booking cancellation, and legal action."
+**New Component**: `src/components/home/WhyBookWithZivo.tsx`
 
-Current implementation uses config from `legalContent.ts`. May need to update config.
+```text
+Why Book with ZIVO:
++-------------+  +---------------+  +----------------+
+| 💰 Best     |  | 🔒 Secure     |  | ✓ Trusted     |
+| Prices      |  | Payments      |  | Partners      |
++-------------+  +---------------+  +----------------+
+```
 
----
+**Note**: "Best Prices" requires careful wording for compliance. Use: "Compare prices from hundreds of providers" rather than "guaranteed lowest".
 
-### 9. Footer Enhancement
-**File:** `src/components/Footer.tsx`
+### 3.3 Update Section Order
 
-**Add security trust line in bottom bar:**
-"ZIVO uses enterprise-grade security standards to protect user data and transactions."
-
-Add to the Seller of Travel disclosure section (line ~275-290).
-
----
-
-## Config Updates
-
-### Update `src/config/legalContent.ts`
-
-**Ensure `EXTENDED_LEGAL_POLICIES.acceptableUse.prohibitions` includes:**
-- Unauthorized system access attempts
-- API scraping/abuse
-- Fraudulent bookings
-- Automated bot usage
-
-**Update enforcement text:**
-"Violations may result in account suspension, booking cancellation, and legal action."
+Modify `src/pages/Index.tsx` to reflect:
+1. Hero with Search Form
+2. "Why Book with ZIVO" (3 icons)
+3. Primary Services (Flights/Hotels/Cars cards)
+4. How It Works (3 steps) - already exists
+5. Popular Flight Routes - already exists
+6. Social Proof / Trust Section - already exists
+7. ZIVO Extras - already exists
 
 ---
 
-## Implementation Sequence
+## Phase 4: Affiliate Compliance & Trust
 
-1. **Config updates** - Update `legalContent.ts` with new legal text
-2. **Security.tsx** - Add sections and update content
-3. **SecurityIncident.tsx** - Add partner coordination language
-4. **PrivacyPolicy.tsx** - Add Data Minimization and User Rights sections
-5. **Terms.tsx** - Add Platform Role, Force Majeure, Fraud Prevention sections
-6. **Refunds.tsx** - Add clarity around eligibility and fees
-7. **PartnerDisclosure.tsx** - Add licensed provider compliance text
-8. **AcceptableUsePolicy.tsx** - Verify prohibitions match requirements
-9. **Footer.tsx** - Add enterprise security statement
+### 4.1 Affiliate Disclosure Component
 
----
+**Update**: `src/components/shared/AffiliateDisclosureText.tsx`
 
-## File Changes Summary
+Standardize the locked disclosure text:
 
-| File | Action |
-|------|--------|
-| `src/config/legalContent.ts` | Update - add new legal clauses |
-| `src/pages/Security.tsx` | Update - add sections |
-| `src/pages/legal/SecurityIncident.tsx` | Update - add commitments |
-| `src/pages/legal/PrivacyPolicy.tsx` | Update - add accordion sections |
-| `src/pages/Terms.tsx` | Update - add legal clauses |
-| `src/pages/Refunds.tsx` | Update - add clarity sections |
-| `src/pages/legal/PartnerDisclosure.tsx` | Update - add compliance text |
-| `src/pages/legal/AcceptableUsePolicy.tsx` | Verify/update prohibitions |
-| `src/components/Footer.tsx` | Update - add security line |
+```text
+"ZIVO may earn a commission when you book through our travel partners.
+Prices are provided by licensed third-party providers."
+```
 
----
+Place in:
+- Footer (global)
+- Results page header
+- Booking confirmation
 
-## Security Considerations
+### 4.2 Trust Signals Enhancement
 
-- All legal text is hardcoded (not user-editable)
-- Contact emails match official ZIVO contacts (security@hizivo.com)
-- SOT registration status clearly marked as "pending"
-- No sensitive data exposed in legal pages
-- RLS not applicable (static content pages)
+**Update**: `src/components/flight/FlightTrustStrip.tsx` (and hotel/car equivalents)
+
+Add visible trust signals:
+- SSL/Secure Checkout badge
+- "Powered by Duffel" for flights
+- "Tickets issued by licensed providers"
+- Partner logos (already in AirlineTrustSection)
+
+### 4.3 Legal-Safe Copy Audit
+
+**Update**: Various components to ensure copy says:
+- "ZIVO is a travel search and booking platform"
+- "Services fulfilled by licensed providers"
+- Never: "Cheapest guaranteed" or "lowest prices"
 
 ---
 
-## Compliance Alignment
+## Phase 5: Price Alerts & Email Capture
 
-These updates align with:
-- FTC disclosure requirements
-- State Seller of Travel regulations (CA, FL)
-- PCI-DSS payment security standards
-- GDPR/CCPA data protection requirements
-- Standard legal liability protection practices
+### 5.1 Track Price Button on Results
+
+**Update**: `src/components/results/FlightResultCard.tsx`
+
+Add "Track Price" button that opens price alert modal:
+
+```text
++--------------------------------------------------+
+| $299 from | [Select Flight] | [🔔 Track Price]  |
++--------------------------------------------------+
+```
+
+### 5.2 Email Capture Modal
+
+**Update**: `src/components/flight/FlightPriceAlert.tsx` (already exists)
+
+Ensure it's triggered from results cards, not just detail pages.
+
+**New Component**: `src/components/shared/PriceAlertModal.tsx`
+- Lightweight modal version for results page
+- Email input + route info
+- "Get notified when prices drop"
+
+---
+
+## Phase 6: ZIVO Ecosystem Cross-Sell
+
+### 6.1 One Account Section
+
+**Update**: `src/components/home/OneAppSection.tsx` (if exists) or create new
+
+```text
++----------------------------------------------------------+
+| One account. Travel, rides, food, and more — powered by  |
+| ZIVO.                                                     |
+|                                                           |
+| [✈️ Flights] [🏨 Hotels] [🚗 Cars] [🚙 Rides] [🍔 Eats]   |
++----------------------------------------------------------+
+```
+
+Add to homepage below Extras section.
+
+### 6.2 Cross-Sell on Results Pages
+
+Already exists via `CrossSellSection.tsx` and `ContextualCrossSell.tsx`. Ensure visible on:
+- Flight results (hotels + cars)
+- Hotel results (flights + cars)
+- Car results (flights + hotels)
+
+---
+
+## Phase 7: UI/UX Polish
+
+### 7.1 Consistent Button Styles
+
+Audit and update buttons across all pages:
+- Primary: Gradient (from-sky-500 to-blue-600) for flights
+- Hotels: Amber gradient
+- Cars: Purple/Violet gradient
+
+### 7.2 Loading States
+
+Already have `ResultsSkeletonList` component. Ensure:
+- Skeleton matches final card layout
+- Shimmer animation
+- Loading state on all API calls
+
+### 7.3 Error Handling
+
+Already have `EmptyResults` component. Add:
+- "No results found" with suggestion to modify dates
+- Network error state with retry button
+- Rate limit error message
+
+### 7.4 Mobile Optimization
+
+- 44px+ touch targets (already enforced)
+- Mobile filters sheet (already exists)
+- Sticky bottom bar for sort/filter (already exists)
+
+---
+
+## Files Summary
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/results/FlightMultiProviderCard.tsx` | Create | Multi-provider flight comparison |
+| `src/components/results/HotelMultiProviderCard.tsx` | Create | Multi-provider hotel comparison |
+| `src/hooks/useMultiProviderPricing.ts` | Create | Calculate alternative prices |
+| `src/components/home/HeroSearchTabs.tsx` | Create | Tabbed search form for hero |
+| `src/components/home/WhyBookWithZivo.tsx` | Create | 3-icon value proposition |
+| `src/components/home/HeroSection.tsx` | Update | Add embedded search tabs |
+| `src/pages/Index.tsx` | Update | Reorder sections, add WhyZivo |
+| `src/pages/FlightResults.tsx` | Update | Add multi-provider toggle |
+| `src/pages/HotelResultsPage.tsx` | Update | Add multi-provider display |
+| `src/pages/CarResultsPage.tsx` | Update | Enhance multi-provider UI |
+| `src/components/results/FlightResultCard.tsx` | Update | Add "Track Price" button |
+| `src/components/shared/PriceAlertModal.tsx` | Create | Lightweight email capture |
+| `src/components/shared/AffiliateDisclosureText.tsx` | Update | Standardize disclosure |
+| `src/components/Footer.tsx` | Update | Add affiliate disclosure |
+
+---
+
+## Technical Notes
+
+1. **Multi-Provider Data**: For MVP, simulate multiple providers using price variance (±5-15%) from Duffel/Hotelbeds base price. Future: integrate TravelPayouts Aviasales API for real multi-provider data.
+
+2. **Compliance**: All "best price" claims must be softened. Use "Compare prices" not "Cheapest".
+
+3. **Affiliate Tracking**: Existing `/out` redirect system handles tracking. Each provider click routes through tracking.
+
+4. **Mobile-First**: All new components built mobile-first with touch targets ≥44px.
+
+---
+
+## Success Metrics
+
+After implementation:
+- Flight results show 2-3 booking options per flight
+- Hotel results show multiple OTA options
+- Homepage has embedded search with 3+ service tabs
+- Visible trust signals on all booking pages
+- Affiliate disclosure in footer and results headers
+- Price alert available from results cards
+- Ecosystem cross-sell visible on all results pages
