@@ -1,425 +1,237 @@
 
-# ZIVO Global Brand, IPO & Acquisition Readiness Implementation
+# ZIVO GO-LIVE CHECKLIST: Final Audit & Launch Readiness
 
-## Overview
+## Executive Summary
 
-This plan positions ZIVO as a world-class travel & mobility company ready for acquisition, large funding, or public markets. Building on existing corporate infrastructure (About, Company, Press, Vision, Partners pages), we'll create investor-grade documentation, unified brand system, and strategic positioning pages.
+Based on my comprehensive audit of the ZIVO codebase, the platform has **substantial launch infrastructure already in place**. This plan identifies what's complete, what needs minor updates, and creates the final launch configuration page for a safe go-live.
+
+---
 
 ## Current State Assessment
 
-### Already Implemented
+### 1) LAUNCH MODE CONFIGURATION
 
-| Feature | Status | Location |
-|---------|--------|----------|
-| **About Page** | Complete | `About.tsx` - Company overview, business model, services |
-| **Company Page** | Complete | `Company.tsx` - ZIVO LLC info, contacts |
-| **Press Page** | Complete | `Press.tsx` - Media inquiries, company facts, contact form |
-| **Vision Page** | Complete | `Vision.tsx` - Future of travel, AI, sustainability |
-| **Partners Page** | Complete | `Partners.tsx` - Partner program overview |
-| **Partner With ZIVO** | Complete | `PartnerWithZivo.tsx` - Partnership form |
-| **Roadmap Page** | Complete | `Roadmap.tsx` - Product roadmap with timeline |
-| **Corporate Travel** | Complete | `CorporateTravel.tsx` - B2B travel solutions |
-| **Data Insights** | Complete | `DataInsights.tsx` - B2B data offering |
-| **Enterprise Ready** | Complete | `EnterpriseReady.tsx` - Procurement docs |
-| **Brand Tokens** | Complete | `brandTokens.ts` - Colors, typography, spacing |
-| **How ZIVO Makes Money** | Complete | `HowZivoMakesMoney.tsx` - Revenue transparency |
+| Item | Status | Finding |
+|------|--------|---------|
+| Production mode locked | COMPLETE | `src/config/environment.ts` sets `APP_ENV = 'production'`, `STRIPE_MODE = 'live'`, `DUFFEL_MODE = 'live'` |
+| Test badges disabled | COMPLETE | `SHOW_TEST_BADGE = false`, `ALLOW_TEST_PAYMENTS = false` |
+| Announcement banner system | COMPLETE | `AnnouncementBanner.tsx` reads from `launch_settings` table |
+| Launch settings hooks | COMPLETE | `useLaunchSettings.ts` with mode toggle, emergency pause, announcement control |
 
-### Missing/Needs Enhancement
-
-| Feature | Status | Required |
-|---------|--------|----------|
-| **Brand Mission & Vision Page** | Missing | Unified brand identity page |
-| **Executive Profile Page** | Missing | Leadership & company profile |
-| **Investor Relations Page** | Missing | Investor-focused content |
-| **Strategic Positioning Page** | Missing | Acquisition/partnership value |
-| **Press Kit Assets** | Partial | Logo downloads, brand colors, screenshots |
-| **Careers Page** | Missing | Join ZIVO, job openings |
-| **Platform Ecosystem Map** | Missing | Visual ecosystem diagram |
-| **5-Year Roadmap** | Partial | Long-term strategic view |
-| **Public Trust Statement** | Missing | Transparency commitment |
+**Action Needed:** Create a "Soft Launch Banner" configuration with copy: "ZIVO is live. Compare prices from trusted travel partners."
 
 ---
 
-## Implementation Phases
+### 2) AFFILIATE LINKS & TRACKING
 
-### Phase 1: Brand Mission & Vision System
+| Item | Status | Finding |
+|------|--------|---------|
+| Affiliate tracking system | COMPLETE | `affiliateTracking.ts` with session tracking, UTM params, partner click logging |
+| Partner redirect logging | COMPLETE | `partnerRedirectLog.ts`, `partner_redirect_logs` table |
+| Outbound tracking | COMPLETE | `/out` route with tracking interstitial |
+| UTM parameters | COMPLETE | `utm_source=hizovo`, `utm_medium=affiliate`, `subid={sessionId}` |
+| Partner disclosure notice | COMPLETE | Multiple components: `ServiceDisclaimer.tsx`, `CTAAffiliateNotice.tsx` |
 
-**New Page:** `src/pages/BrandMission.tsx`
-
-Route: `/brand` or `/mission`
-
-A unified brand identity page showcasing ZIVO's mission, vision, and values.
-
-**Sections:**
-1. **Mission Statement**
-   - "ZIVO connects how the world moves."
-   - Core purpose and impact
-
-2. **Vision**
-   - "The future of travel and mobility - unified, intelligent, seamless."
-
-3. **Brand Values**
-   - Transparency
-   - Innovation
-   - User-First
-   - Trust
-
-4. **Brand Architecture**
-   - ZIVO Flights
-   - ZIVO Hotels
-   - ZIVO Cars
-   - ZIVO Rides
-   - ZIVO Eats
-   - ZIVO Move
-
-5. **Brand Tone**
-   - Trusted
-   - Modern
-   - Transparent
-   - Global
+**Status:** All affiliate tracking infrastructure is production-ready.
 
 ---
 
-### Phase 2: Executive & Company Profile
+### 3) PAYMENT SAFETY CONFIRMATION
 
-**New Page:** `src/pages/CompanyProfile.tsx`
+| Item | Status | Finding |
+|------|--------|---------|
+| Stripe integration | COMPLETE | Stripe used for MoR payments (flights), PCI-compliant |
+| No card storage | COMPLETE | `PaymentSafetyNotice.tsx`: "Card data encrypted, not stored by ZIVO" |
+| Payment disclaimers | COMPLETE | "Payments are processed by PCI-compliant providers" in footer and checkout |
+| Chargeback prevention | COMPLETE | Contact support notice before disputing with bank |
 
-Route: `/company-profile` or `/about/company`
-
-Professional company profile for banks, partners, investors, and press.
-
-**Sections:**
-1. **Company Overview**
-   - ZIVO LLC - Travel & Mobility Ecosystem
-   - Founded: 2024
-   - Headquarters: United States
-   - Website: hizivo.com
-
-2. **Business Model Summary**
-   - Commission-based travel search platform
-   - Affiliate revenue from partner bookings
-   - No direct ticket sales or payment processing
-   - Expansion into mobility and logistics
-
-3. **Global Vision**
-   - Super-app for travel and mobility
-   - AI-powered personalization
-   - Global expansion roadmap
-
-4. **Leadership (Placeholders)**
-   - Founder & CEO
-   - Chief Technology Officer
-   - Chief Operating Officer
-   - Advisory Board
-
-5. **Contact Information**
-   - Business: kimlain@hizivo.com
-   - Press: press@hizivo.com
-   - Investors: investors@hizivo.com
-   - Partnerships: partners@hizivo.com
+**Status:** Payment infrastructure is compliant and production-ready.
 
 ---
 
-### Phase 3: Investor Relations Page
+### 4) LEGAL & COMPLIANCE CHECK
 
-**New Page:** `src/pages/InvestorRelations.tsx`
+| Item | Status | Finding |
+|------|--------|---------|
+| Terms of Service | COMPLETE | `/terms` route |
+| Privacy Policy | COMPLETE | `/privacy` route |
+| Affiliate Disclosure | COMPLETE | `/partner-disclosure` route |
+| Refund Policy | COMPLETE | `/refunds` route |
+| Cookie Policy | COMPLETE | `/cookies` route |
+| Seller of Travel notice | COMPLETE | `/legal/seller-of-travel` + footer disclosure |
+| Sub-agent disclosure | COMPLETE | "ZIVO sells flight tickets as a sub-agent of licensed ticketing providers" |
+| Footer legal links | COMPLETE | All 8 required legal links present in `Footer.tsx` |
 
-Route: `/investors` or `/investor-relations`
-
-Professional investor-facing content for funding and acquisition discussions.
-
-**Sections:**
-1. **Company Overview**
-   - "ZIVO is building a global travel and mobility ecosystem."
-   - Market position and differentiation
-
-2. **Business Highlights**
-   - Global travel search platform
-   - Multi-vertical ecosystem (Flights, Hotels, Cars, Rides, Eats, Move)
-   - AI-powered personalization
-   - Mobile-first architecture
-
-3. **Revenue Streams**
-   - Affiliate commissions (travel partners)
-   - Premium subscriptions (ZIVO Plus)
-   - B2B data insights (roadmap)
-   - White-label opportunities (roadmap)
-
-4. **Market Opportunity**
-   - $1.7T global travel market
-   - Growing demand for unified travel platforms
-   - Super-app model proven in Asia
-
-5. **Growth Strategy**
-   - Geographic expansion (APAC, LATAM)
-   - Service expansion (Rides, Eats, Move)
-   - B2B partnerships
-   - Technology leadership (AI, personalization)
-
-6. **Contact**
-   - investors@hizivo.com
-   - Confidential inquiries welcome
+**Status:** All legal pages exist and are linked. 74+ legal pages total.
 
 ---
 
-### Phase 4: Strategic Partnership & Acquisition Page
+### 5) SEARCH & RESULTS VALIDATION
 
-**New Page:** `src/pages/StrategicPartnerships.tsx`
+| Item | Status | Finding |
+|------|--------|---------|
+| Duffel flight search | COMPLETE | `useDuffelFlights.ts`, `duffel-flights` edge function |
+| Real-time pricing | COMPLETE | `isRealPrice = true` for Duffel offers |
+| Error handling | COMPLETE | `flightErrors.ts` with user-friendly messages |
+| Filter system | COMPLETE | `useFlightFilters`, `useResultsFilters` hooks |
+| Empty results handling | COMPLETE | `EmptyResults.tsx` with search suggestions |
 
-Route: `/strategic-partnerships` or `/business/strategic`
-
-Positioning page for potential acquirers and strategic partners.
-
-**Sections:**
-1. **Why Partner with ZIVO**
-   - Unified travel + mobility platform
-   - Modern tech stack
-   - Growing user base
-   - AI-first architecture
-
-2. **White-Label Opportunities**
-   - Flight search as a service
-   - Hotel booking integration
-   - Complete travel stack licensing
-
-3. **Data & Distribution Value**
-   - Aggregated travel demand data
-   - User behavior insights
-   - Multi-channel distribution
-
-4. **Ecosystem Advantage**
-   - Cross-service synergies
-   - Unified loyalty program
-   - Single customer view
-
-5. **Contact for Strategic Discussions**
-   - kimlain@hizivo.com
-   - Confidential discussions available
+**Action Needed:** Create a pre-launch test script to validate search flows.
 
 ---
 
-### Phase 5: Financial Transparency Section
+### 6) USER FLOW TEST
 
-**New Page:** `src/pages/FinancialTransparency.tsx`
+| Item | Status | Finding |
+|------|--------|---------|
+| Search → Results | COMPLETE | `/flights` → `/flights/results` |
+| Results → Details | COMPLETE | `/flights/details/{offerId}` |
+| Details → Traveler Info | COMPLETE | `/flights/traveler-info` |
+| Traveler Info → Checkout | COMPLETE | `/flights/checkout` (MoR) |
+| CTA clarity | COMPLETE | `FLIGHT_CTA_TEXT` in `flightCompliance.ts` with locked copy |
+| Partner redirect (hotels/cars) | COMPLETE | `PartnerConsentModal.tsx` with consent flow |
 
-Route: `/financial-transparency` or `/about/financials`
+**Action Needed:** Create end-to-end test checklist component.
 
-Trust-building page explaining revenue model.
+---
+
+### 7) EMAIL & NOTIFICATION SAFETY
+
+| Item | Status | Finding |
+|------|--------|---------|
+| Email edge functions | COMPLETE | `send-flight-email`, `send-travel-confirmation`, `send-travel-email` |
+| Notification preferences | COMPLETE | `PushNotificationPreferences.tsx` with opt-in toggles |
+| Price alert opt-in | COMPLETE | `PriceAlertModal.tsx`, `PriceAlertTrigger.tsx` |
+| Marketing email controls | COMPLETE | Consent checkboxes in forms |
+
+**Status:** Email system is opt-in only, compliant.
+
+---
+
+### 8) TRUST SIGNALS
+
+| Item | Status | Finding |
+|------|--------|---------|
+| Secure checkout notice | COMPLETE | `FlightTrustBadgesBar.tsx`, `PaymentSafetyNotice.tsx` |
+| Trusted partners text | COMPLETE | "Trusted partners" throughout, `TrustSection.tsx` |
+| Transparent pricing | COMPLETE | "No hidden fees" badges in multiple components |
+| "No hidden fees" copy | COMPLETE | `FLIGHT_TRUST_BADGES.noHiddenFees`, footer, results pages |
+
+**Status:** Trust signals are comprehensive and production-ready.
+
+---
+
+### 9) MOBILE CHECK
+
+| Item | Status | Finding |
+|------|--------|---------|
+| Mobile detection | COMPLETE | `use-mobile.tsx` hook with 768px breakpoint |
+| Mobile homepage | COMPLETE | `AppHome.tsx` renders for mobile users |
+| Mobile results bar | COMPLETE | `FlightMobileResultsBar.tsx` |
+| Sticky mobile CTA | COMPLETE | `StickyBookingCTA.tsx` with touch-friendly sizing |
+| Mobile search forms | COMPLETE | `FlightSearchFormPro.tsx` with responsive design |
+| PWA support | COMPLETE | `vite-plugin-pwa` installed |
+
+**Action Needed:** Create mobile testing checklist.
+
+---
+
+### 10) MONITORING AFTER LAUNCH
+
+| Item | Status | Finding |
+|------|--------|---------|
+| Launch monitoring panel | COMPLETE | `PostLaunchMonitoringPanel.tsx` with alerts, metrics |
+| Health check function | COMPLETE | `check-flight-health` edge function |
+| Error logging | COMPLETE | `flightErrors.ts` with error transformation |
+| Analytics events | COMPLETE | `analytics_events` table, `useFlightFunnel` hook |
+| Price change warning | COMPLETE | `PriceChangedWarning.tsx`, "Prices may change" notices throughout |
+| Emergency pause | COMPLETE | `useEmergencyPause` hook, instant booking suspension |
+
+**Status:** Monitoring infrastructure is comprehensive.
+
+---
+
+## Implementation Plan
+
+### Phase 1: Create Go-Live Admin Page
+
+**New Page:** `src/pages/admin/GoLiveChecklist.tsx`
+
+Route: `/admin/go-live`
+
+A comprehensive admin checklist that:
+- Shows all 10 checklist categories with pass/fail status
+- Provides one-click tests for critical flows
+- Allows setting the soft launch banner
+- Provides a "GO LIVE" button that:
+  - Enables public access
+  - Enables announcement banner with launch copy
+  - Logs the go-live event
 
 **Sections:**
-1. **Revenue Sources Explained**
-   - Affiliate commissions from travel partners
-   - No hidden fees or markups
-   - User pays partner price only
+1. Environment Verification (auto-checks production mode)
+2. Legal Pages Status (links to all required pages)
+3. Payment Configuration (Stripe status)
+4. Affiliate Tracking Status (tracking verification)
+5. Search Flow Tests (one-click test buttons)
+6. Mobile Readiness (viewport test)
+7. Monitoring Setup (alert configuration)
+8. Final Launch Controls
 
-2. **Commission-Based Model**
-   - Partners pay ZIVO for referrals
-   - User price is unchanged
-   - Transparent disclosure on all pages
+---
 
-3. **No Hidden Markups Policy**
-   - ZIVO never adds fees to partner prices
-   - Final price confirmed on partner checkout
-   - Price matching transparency
+### Phase 2: Create Mobile Test Checklist
 
-4. **Compliance & Reporting**
-   - Tax-compliant revenue recognition
-   - Partner payment transparency
-   - Regular financial audits (roadmap)
+**New Component:** `src/components/launch/MobileTestChecklist.tsx`
 
-**Key Copy:**
+Interactive checklist for manual mobile testing:
+- [ ] Flight search on mobile
+- [ ] Filters usable on small screens
+- [ ] Book Now buttons easy to tap (44px+ touch targets)
+- [ ] Pages load fast (< 3s)
+- [ ] Sticky CTA visible during scroll
+- [ ] Forms submit correctly
+
+---
+
+### Phase 3: Create Search Flow Validator
+
+**New Component:** `src/components/launch/SearchFlowValidator.tsx`
+
+Automated checks for search functionality:
+- Test NYC → LAX one-way
+- Test NYC → LAX round-trip
+- Test different dates (today + 7, today + 30)
+- Verify prices load correctly
+- Verify no empty results
+- Verify error handling works
+
+---
+
+### Phase 4: Update Announcement Banner
+
+**Update:** `src/components/shared/AnnouncementBanner.tsx`
+
+Ensure default launch copy is ready:
 ```text
-"ZIVO earns through transparent partner commissions. 
-We never add hidden fees to the prices you see."
+"ZIVO is live. Compare prices from trusted travel partners."
 ```
 
----
-
-### Phase 6: Press Kit & Media Assets
-
-**Update:** `src/pages/Press.tsx`
-
-Enhance with downloadable assets.
-
-**New Component:** `src/components/press/PressKitAssets.tsx`
-
-**Press Kit Sections:**
-1. **Logo Downloads**
-   - Primary logo (PNG, SVG)
-   - White logo for dark backgrounds
-   - Icon only versions
-   - Usage guidelines
-
-2. **Brand Colors**
-   - Primary: Electric Teal (#38BDF8)
-   - Product colors (Flights, Hotels, Cars)
-   - Color codes and usage
-
-3. **Product Screenshots**
-   - Homepage screenshot
-   - Search results
-   - Mobile app preview
-   - Booking flow
-
-4. **Company Boilerplate**
-   - Short (50 words)
-   - Medium (100 words)
-   - Long (200 words)
-
-**Boilerplate Copy:**
-```text
-"ZIVO is a global travel search and comparison platform that helps 
-travelers find and compare flights, hotels, car rentals, and travel 
-services from trusted partners worldwide. Founded in 2024, ZIVO is 
-building a unified travel and mobility ecosystem powered by AI."
-```
+Add variant support for soft launch messaging.
 
 ---
 
-### Phase 7: Careers Page
+### Phase 5: Create Launch Day Runbook
 
-**New Page:** `src/pages/Careers.tsx`
+**New Page:** `src/pages/admin/LaunchDayRunbook.tsx`
 
-Route: `/careers` or `/jobs`
-
-Talent attraction page.
-
-**Sections:**
-1. **Join ZIVO**
-   - "Build the future of travel"
-   - Mission-driven culture
-
-2. **Our Culture**
-   - Global-first mindset
-   - Remote-ready structure
-   - Innovation culture
-   - Transparency
-
-3. **Open Positions** (Placeholder)
-   - Engineering
-   - Product
-   - Design
-   - Operations
-
-4. **Benefits**
-   - Competitive compensation
-   - Remote flexibility
-   - Learning & development
-   - Travel perks
-
-5. **Apply**
-   - careers@hizivo.com
-   - "No open positions at this time" (placeholder)
-
----
-
-### Phase 8: Platform Ecosystem Map
-
-**New Page:** `src/pages/EcosystemMap.tsx`
-
-Route: `/ecosystem` or `/platform`
-
-Visual ecosystem diagram page.
-
-**Diagram Sections:**
-1. **Travel Core**
-   - ZIVO Flights
-   - ZIVO Hotels
-   - ZIVO Cars
-
-2. **Mobility Services**
-   - ZIVO Rides
-   - ZIVO Eats
-   - ZIVO Move (Logistics)
-
-3. **Platform Layer**
-   - AI Intelligence
-   - ZIVO Miles (Loyalty)
-   - ZIVO Wallet
-
-4. **Infrastructure**
-   - Payment Processing
-   - Partner Integrations
-   - Data & Analytics
-
-**Visual Representation:**
-Text-based diagram showing interconnections between services, with each vertical linked to the central ZIVO platform layer.
-
----
-
-### Phase 9: 5-Year Strategic Roadmap
-
-**Update:** `src/pages/Roadmap.tsx` or **New Page:** `src/pages/StrategicRoadmap.tsx`
-
-Route: `/strategic-roadmap` or `/roadmap/long-term`
-
-Long-term vision for investors and partners.
-
-**Timeline:**
-1. **2024-2025: Foundation**
-   - Core travel platform (Flights, Hotels, Cars)
-   - ZIVO Miles launch
-   - AI Trip Planner
-   - US market focus
-
-2. **2025-2026: Expansion**
-   - Mobile apps (iOS, Android)
-   - ZIVO Rides & Eats
-   - LATAM expansion
-   - Corporate portal
-
-3. **2026-2027: Scale**
-   - Super-app consolidation
-   - APAC expansion
-   - B2B platform
-   - ZIVO Move (Logistics)
-
-4. **2027-2028: Leadership**
-   - AI-first travel
-   - Global presence
-   - Premium tier growth
-   - Data monetization
-
-5. **2028-2029: Dominance**
-   - Market leadership position
-   - Full super-app ecosystem
-   - Cross-border payments
-   - IPO readiness
-
----
-
-### Phase 10: Public Trust Statement
-
-**New Page:** `src/pages/TrustStatement.tsx`
-
-Route: `/trust` or `/trust-statement`
-
-Public commitment to transparency.
-
-**Sections:**
-1. **Transparency Promise**
-   - Clear pricing at all times
-   - No hidden fees or markups
-   - Honest affiliate disclosures
-
-2. **User-First Pricing**
-   - Partner prices shown as-is
-   - No ZIVO surcharges
-   - Best price matching
-
-3. **Partner Fairness**
-   - Honest partner representation
-   - Fair commission structures
-   - No preferential ranking for payment
-
-4. **Data Protection**
-   - GDPR/CCPA compliance
-   - No data selling
-   - User control over data
-
-5. **Our Commitment**
-   - Signed by leadership
-   - Dated and versioned
+Step-by-step launch procedure:
+1. Pre-launch final checks (all green)
+2. Enable announcement banner
+3. Monitor first 10 bookings
+4. Check error rates
+5. Verify affiliate tracking
+6. 24-hour monitoring protocol
 
 ---
 
@@ -429,25 +241,18 @@ Public commitment to transparency.
 
 | File | Description |
 |------|-------------|
-| `src/pages/BrandMission.tsx` | Brand mission, vision, values |
-| `src/pages/CompanyProfile.tsx` | Executive company profile |
-| `src/pages/InvestorRelations.tsx` | Investor-focused content |
-| `src/pages/StrategicPartnerships.tsx` | Acquisition/partnership page |
-| `src/pages/FinancialTransparency.tsx` | Revenue model transparency |
-| `src/pages/Careers.tsx` | Jobs and culture page |
-| `src/pages/EcosystemMap.tsx` | Platform ecosystem visual |
-| `src/pages/StrategicRoadmap.tsx` | 5-year strategic vision |
-| `src/pages/TrustStatement.tsx` | Public trust commitment |
-| `src/components/press/PressKitAssets.tsx` | Downloadable assets |
+| `src/pages/admin/GoLiveChecklist.tsx` | Master go-live admin page |
+| `src/components/launch/MobileTestChecklist.tsx` | Mobile testing checklist |
+| `src/components/launch/SearchFlowValidator.tsx` | Automated search tests |
+| `src/components/launch/LegalPagesAudit.tsx` | Legal page status display |
+| `src/pages/admin/LaunchDayRunbook.tsx` | Launch day procedures |
 
 ### Files to Update
 
 | File | Changes |
 |------|---------|
-| `src/pages/Press.tsx` | Add press kit assets section |
-| `src/config/brandTokens.ts` | Add Rides, Eats, Move service colors |
-| `src/components/Footer.tsx` | Add Investors, Careers links |
-| `src/App.tsx` | Add new routes |
+| `src/components/shared/AnnouncementBanner.tsx` | Add soft launch variant |
+| `src/App.tsx` | Add admin routes |
 
 ---
 
@@ -455,84 +260,55 @@ Public commitment to transparency.
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/brand` | BrandMission | Brand mission & vision |
-| `/mission` | BrandMission | Alias |
-| `/company-profile` | CompanyProfile | Executive profile |
-| `/investors` | InvestorRelations | Investor relations |
-| `/investor-relations` | InvestorRelations | Alias |
-| `/strategic-partnerships` | StrategicPartnerships | Strategic positioning |
-| `/financial-transparency` | FinancialTransparency | Revenue model |
-| `/careers` | Careers | Jobs page |
-| `/jobs` | Careers | Alias |
-| `/ecosystem` | EcosystemMap | Platform diagram |
-| `/platform` | EcosystemMap | Alias |
-| `/strategic-roadmap` | StrategicRoadmap | 5-year vision |
-| `/trust-statement` | TrustStatement | Trust commitment |
+| `/admin/go-live` | GoLiveChecklist | Master launch checklist |
+| `/admin/launch-runbook` | LaunchDayRunbook | Launch day procedures |
 
 ---
 
 ## Technical Considerations
 
-### Brand Consistency
-- Extend `brandTokens.ts` with Rides, Eats, Move colors
-- Consistent messaging across all corporate pages
-- Professional, investor-grade design
+### Launch Safety
+- All checks must pass before "GO LIVE" button enables
+- Emergency pause is always one-click accessible
+- Rollback procedure documented
 
-### Placeholder Content
-- Leadership section with "To be announced" placeholders
-- Careers with "No current openings" state
-- Financial data as descriptive text (no specific numbers)
-
-### SEO & Discoverability
-- Proper meta tags for corporate pages
-- Schema.org Organization markup
-- Canonical URLs for all pages
+### Monitoring
+- First 24 hours: 15-minute monitoring intervals
+- Alert thresholds: > 5% error rate, > 3 failed bookings
+- Slack/email notifications for critical alerts
 
 ### Compliance
-- No specific financial projections
-- Appropriate forward-looking statement disclaimers
-- Partner attribution maintained
+- All legal pages verified present
+- All disclaimers verified visible
+- Affiliate disclosure on every results page
 
 ---
 
-## Brand Architecture Extension
+## Pre-Launch Verification Summary
 
-**New Service Colors for brandTokens.ts:**
-
-```typescript
-rides: {
-  DEFAULT: "hsl(340 75% 55%)",  // Rose
-  gradient: "from-rose-500 to-pink-600",
-  text: "text-rose-500",
-  bg: "bg-rose-500",
-  border: "border-rose-500/30",
-},
-
-eats: {
-  DEFAULT: "hsl(25 95% 53%)",  // Orange
-  gradient: "from-orange-500 to-red-500",
-  text: "text-orange-500",
-  bg: "bg-orange-500",
-  border: "border-orange-500/30",
-},
-
-move: {
-  DEFAULT: "hsl(165 80% 45%)",  // Teal
-  gradient: "from-teal-500 to-emerald-600",
-  text: "text-teal-500",
-  bg: "bg-teal-500",
-  border: "border-teal-500/30",
-},
-```
+| Category | Status | Action Required |
+|----------|--------|-----------------|
+| 1. Launch Mode | READY | Update announcement text |
+| 2. Affiliate Links | READY | None |
+| 3. Payment Safety | READY | None |
+| 4. Legal Compliance | READY | None |
+| 5. Search Validation | READY | Run test suite |
+| 6. User Flow | READY | Complete E2E test |
+| 7. Email Safety | READY | None |
+| 8. Trust Signals | READY | None |
+| 9. Mobile | READY | Complete mobile test |
+| 10. Monitoring | READY | Configure alert thresholds |
 
 ---
 
-## Success Metrics
+## Final Outcome
 
 After implementation:
-- Complete corporate presence for due diligence
-- Investor-ready documentation
-- Clear brand architecture for all 6 verticals
-- Professional press kit for media coverage
-- Talent attraction infrastructure
-- Strategic positioning for M&A discussions
+- Admin can see all checklist items in one dashboard
+- One-click test buttons for critical flows
+- Soft launch banner configured
+- GO LIVE button with safety checks
+- Post-launch monitoring enabled
+- Emergency pause always accessible
+
+**ZIVO will be officially LIVE, safe, compliant, and monetized.**
