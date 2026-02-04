@@ -56,7 +56,7 @@ const corsHeaders = {
 };
 
 // Email template types
-type EmailType = 'abandoned_search' | 'redirect_confirmation' | 'booking_status' | 'support_auto_reply';
+type EmailType = 'abandoned_search' | 'redirect_confirmation' | 'booking_status' | 'support_auto_reply' | 'price_alert' | 'trip_reminder' | 'booking_confirmation';
 
 interface EmailRequest {
   type: EmailType;
@@ -238,6 +238,129 @@ function generateSupportAutoReplyEmail(data: Record<string, unknown>) {
   };
 }
 
+// PRICE ALERT EMAIL - High conversion, opt-in
+function generatePriceAlertEmail(data: Record<string, unknown>) {
+  const { origin, destination, oldPrice, newPrice, searchUrl, routeSlug } = data;
+  const savings = oldPrice && newPrice ? Math.round(Number(oldPrice) - Number(newPrice)) : null;
+  
+  return {
+    subject: `Price drop alert for your trip 👀`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0b; color: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="background: linear-gradient(135deg, #10b981, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;">ZIVO</h1>
+        </div>
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(99, 102, 241, 0.2)); border-radius: 12px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+          <h2 style="margin: 0 0 8px 0; color: #10b981;">Price Drop Alert! 📉</h2>
+          <p style="font-size: 18px; margin: 0; color: #fafafa;">${origin} → ${destination}</p>
+          ${savings ? `<p style="font-size: 14px; color: #10b981; margin-top: 12px;">Prices may have dropped</p>` : ''}
+        </div>
+        <p style="margin: 24px 0; color: #a1a1aa;">Good news! Prices for your tracked route have changed. Check the latest options from our travel partners.</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${searchUrl}" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">View Updated Prices →</a>
+        </div>
+        <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px; margin: 24px 0;">
+          <p style="margin: 0; font-size: 13px; color: #71717a;">Prices may change until booking is completed. Final price confirmed on partner site.</p>
+        </div>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #71717a; font-size: 12px;">
+          <p>ZIVO - Travel Search Platform</p>
+          <p>You received this because you set a price alert. <a href="https://hizivo.com/account/notifications" style="color: #10b981;">Manage preferences</a></p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `Price drop alert for ${origin} → ${destination}!\n\nGood news! Prices for your tracked route have changed.\n\nView updated prices: ${searchUrl}\n\nPrices may change until booking is completed.`
+  };
+}
+
+// TRIP REMINDER EMAIL - 3-5 days before departure
+function generateTripReminderEmail(data: Record<string, unknown>) {
+  const { destination, departureDate, daysUntil, bookingRef, partnerName, manageUrl } = data;
+  
+  return {
+    subject: `Your trip is coming up 🗓️`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0b; color: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="background: linear-gradient(135deg, #10b981, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;">ZIVO</h1>
+        </div>
+        <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.2)); border-radius: 12px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+          <h2 style="margin: 0 0 8px 0; color: #0ea5e9;">Trip Reminder ✈️</h2>
+          <p style="font-size: 20px; margin: 0; color: #fafafa;">Your trip to ${destination}</p>
+          <p style="font-size: 16px; color: #a1a1aa; margin-top: 8px;">Departing ${departureDate} (${daysUntil} days away)</p>
+        </div>
+        <p style="margin: 24px 0; color: #a1a1aa;">Your trip is coming up. Check your booking details with your travel provider.</p>
+        ${bookingRef ? `
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px; margin: 24px 0;">
+            <p style="font-size: 12px; color: #71717a; margin: 0;">Booking Reference</p>
+            <p style="font-size: 18px; font-weight: bold; color: #fafafa; margin: 4px 0 0 0;">${bookingRef}</p>
+            ${partnerName ? `<p style="font-size: 12px; color: #71717a; margin: 4px 0 0 0;">via ${partnerName}</p>` : ''}
+          </div>
+        ` : ''}
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 16px; margin: 24px 0;">
+          <h3 style="color: #f59e0b; margin: 0 0 8px 0; font-size: 14px;">⚠️ Need to make changes?</h3>
+          <p style="color: #a1a1aa; font-size: 13px; margin: 0;">For booking changes, cancellations, or refunds, contact ${partnerName || 'your travel partner'} directly. They processed your booking and can assist you.</p>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${manageUrl || 'https://hizivo.com/trips'}" style="background: linear-gradient(135deg, #0ea5e9, #6366f1); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">View Your Trips →</a>
+        </div>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #71717a; font-size: 12px;">
+          <p>ZIVO - Travel Search Platform</p>
+          <p>You received this because you have an upcoming trip. <a href="https://hizivo.com/account/notifications" style="color: #10b981;">Manage preferences</a></p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `Your trip to ${destination} is coming up!\n\nDeparting: ${departureDate} (${daysUntil} days away)\n${bookingRef ? `Booking Ref: ${bookingRef}\n` : ''}\nFor booking changes/cancellations, contact ${partnerName || 'your travel partner'} directly.\n\nView your trips: ${manageUrl || 'https://hizivo.com/trips'}`
+  };
+}
+
+// BOOKING CONFIRMATION EMAIL - Sent when booking is initiated
+function generateBookingConfirmationEmail(data: Record<string, unknown>) {
+  const { partnerName, tripSummary, tripsUrl } = data;
+  
+  return {
+    subject: `Your booking request has been received ✈️`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0b; color: #fafafa;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="background: linear-gradient(135deg, #10b981, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px;">ZIVO</h1>
+        </div>
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(99, 102, 241, 0.2)); border-radius: 12px; padding: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+          <h2 style="margin: 0 0 8px 0; color: #10b981;">Booking Received ✅</h2>
+          <p style="font-size: 16px; margin: 0; color: #a1a1aa;">Processing with ${partnerName}</p>
+        </div>
+        <p style="margin: 24px 0; color: #a1a1aa;">Thank you for using ZIVO.</p>
+        <p style="margin: 24px 0; color: #a1a1aa;">Your booking is being processed by our travel partner. You will receive confirmation once your ticket is issued.</p>
+        ${tripSummary ? `
+          <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 16px; margin: 24px 0;">
+            <p style="font-size: 12px; color: #71717a; margin: 0 0 8px 0;">Trip Summary</p>
+            <p style="font-size: 14px; color: #fafafa; margin: 0; white-space: pre-line;">${tripSummary}</p>
+          </div>
+        ` : ''}
+        <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 8px; padding: 16px; margin: 24px 0;">
+          <p style="color: #a1a1aa; font-size: 13px; margin: 0;"><strong>Important:</strong> ZIVO does not issue tickets. Travel services are provided by licensed partners. Check your email for confirmation from ${partnerName}.</p>
+        </div>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${tripsUrl || 'https://hizivo.com/trips'}" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600;">View Your Trips →</a>
+        </div>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #71717a; font-size: 12px;">
+          <p>ZIVO - Travel Search Platform</p>
+          <p>All bookings are completed by licensed travel partners.</p>
+        </div>
+      </body>
+      </html>
+    `,
+    text: `Your booking request has been received!\n\nThank you for using ZIVO.\n\nYour booking is being processed by our travel partner (${partnerName}). You will receive confirmation once your ticket is issued.\n\nImportant: ZIVO does not issue tickets. Travel services are provided by licensed partners.\n\nView your trips: ${tripsUrl || 'https://hizivo.com/trips'}`
+  };
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -289,6 +412,15 @@ const handler = async (req: Request): Promise<Response> => {
         break;
       case 'support_auto_reply':
         emailContent = generateSupportAutoReplyEmail(data);
+        break;
+      case 'price_alert':
+        emailContent = generatePriceAlertEmail(data);
+        break;
+      case 'trip_reminder':
+        emailContent = generateTripReminderEmail(data);
+        break;
+      case 'booking_confirmation':
+        emailContent = generateBookingConfirmationEmail(data);
         break;
       default:
         throw new Error(`Unknown email type: ${type}`);
