@@ -342,6 +342,8 @@ const DealsPage = lazy(() => import("./pages/seo/DealsPage"));
 const SeasonalDealPage = lazy(() => import("./pages/seo/SeasonalDealPage"));
 const CountryHubPage = lazy(() => import("./pages/seo/CountryHubPage"));
 const LocalizedFlightRoutePage = lazy(() => import("./pages/seo/LocalizedFlightRoutePage"));
+const CityLandingPage = lazy(() => import("./pages/seo/CityLandingPage"));
+const HotelCityLandingPage = lazy(() => import("./pages/seo/HotelCityLandingPage"));
 
 // Admin scaling dashboards
 const SEOScalingDashboard = lazy(() => import("./pages/admin/SEOScalingDashboard"));
@@ -494,6 +496,10 @@ const App = () => (
                 <Route path="/flights/cities/:citySlug" element={<FlightCityPage />} />
                 <Route path="/flights/:origin-to-:destination" element={<FlightRoutePage />} />
                 <Route path="/flights/:route" element={<FlightLanding />} />
+                
+                {/* City SEO Landing Pages */}
+                <Route path="/city/:citySlug" element={<CityLandingPage />} />
+                <Route path="/hotels/:city" element={<HotelCityLandingPage />} />
                 
                 {/* Business pages */}
                 <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />

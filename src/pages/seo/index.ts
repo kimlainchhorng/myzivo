@@ -12,3 +12,5 @@ export { default as DealsPage } from './DealsPage';
 export { default as SeasonalDealPage } from './SeasonalDealPage';
 export { default as CountryHubPage } from './CountryHubPage';
 export { default as LocalizedFlightRoutePage } from './LocalizedFlightRoutePage';
+export { default as CityLandingPage } from './CityLandingPage';
+export { default as HotelCityLandingPage } from './HotelCityLandingPage';
