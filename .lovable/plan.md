@@ -1,171 +1,236 @@
 
 
-# Immersive Premium Search Overlay Implementation
+# ZIVO Unified Hotel Property Schema Implementation
 
 ## Overview
 
-Create a premium, full-screen search overlay component using **framer-motion** for smooth animations. This overlay provides a unified search entry point that normalizes across Flights, Hotels, and Car Rentals — matching ZIVO's "Light Premium" design philosophy with glassmorphism effects.
+Implement the `ZivoProperty` unified schema to normalize hotel data from multiple suppliers (Hotelbeds, RateHawk) into a single, consistent format. This enables ZIVO to compare prices across providers, display the cheapest option, and track inventory status for each property.
 
 ---
 
-## Current State
+## Current State Analysis
 
-The project has:
-- **Existing search forms**: `FlightSearchFormPro`, `HotelSearchFormPro`, `CarSearchFormPro` in `src/components/search/`
-- **Header search overlay**: Simple inline search in `Header.tsx` (lines 183-199)
-- **Location autocomplete**: `LocationAutocomplete` with airport/city data
-- **framer-motion installed**: Version `^12.29.2` (already available)
-- **Mobile components**: Bottom sheets, date pickers in `src/components/mobile/`
+The project already has:
+- **Existing Types**: `NormalizedHotel`, `NormalizedRoom`, `NormalizedRate` in `src/types/hotels.ts`
+- **Hotelbeds Types**: `HotelbedsHotel`, `ZivoHotel` in `src/types/hotelbeds.ts`
+- **Normalizer Service**: `src/services/hotelNormalizer.ts` with functions for Hotelbeds, TripAdvisor, and legacy data
+- **Pricing Config**: Markup rules for `hotelbeds` (8%) and `ratehawk` (10%) in `src/config/pricing.ts`
+
+The provided `ZivoProperty` schema is a simplified version focused on:
+1. **Source attribution** (`HOTELBEDS` | `RATEHAWK`)
+2. **Meta information** (name, stars, coordinates)
+3. **Pricing with comparison logic** (`isCheapest` flag)
+4. **Inventory status tracking**
 
 ---
 
-## Implementation Plan
+## Implementation Approach
 
-### 1. Create PremiumSearchOverlay Component
+### Phase 1: Define the ZivoProperty Types
 
-**File**: `src/components/search/PremiumSearchOverlay.tsx`
+**File**: `src/types/zivoProperty.ts` (new file)
 
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  [X]                                                    │
-│                                                         │
-│           ✨ Where to next? ✨                          │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │  [Flights] [Hotels] [Cars]  ← Tab selector       │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌───────────────┐ ┌───────────────┐ ┌────────────┐    │
-│  │ Destination   │ │ Dates         │ │ Travelers  │    │
-│  │ City/Airport  │ │ Flexible?     │ │ 2 guests   │    │
-│  └───────────────┘ └───────────────┘ └────────────┘    │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │               🔍 Search ZIVO                     │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │  Recent: NYC → LAX  |  Miami Hotels  |  ...     │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  ZivoProperty Schema                                            │
+├────────────────────────────────────────────────────────────────┤
+│  id: string                  // ZIVO internal UUID              │
+│  source: "HOTELBEDS" | "RATEHAWK"                               │
+│  meta: {                                                        │
+│    name: string                                                 │
+│    starRating: number                                           │
+│    coordinates: { lat: number; lng: number }                    │
+│  }                                                              │
+│  pricing: {                                                     │
+│    amount: number            // Net price after markup          │
+│    currency: string                                             │
+│    type: "PREPAID" | "PAY_AT_HOTEL"                             │
+│    isCheapest: boolean       // Computed by comparison          │
+│  }                                                              │
+│  inventory: {                                                   │
+│    providerId: string        // Original supplier ID            │
+│    status: "AVAILABLE" | "ON_REQUEST" | "SOLD_OUT"              │
+│  }                                                              │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-**Key Features:**
-- Full-screen backdrop with `blur(20px)` effect
-- Animated entry/exit with scale and fade
-- Service type tabs (Flights/Hotels/Cars)
-- Unified input that adapts based on selected tab
-- Recent searches from localStorage
-- Premium glassmorphism card styling
+### Phase 2: Extended ZivoProperty for Full Display
 
-### 2. Component Props Interface
+Since UI components need more data than the minimal schema, we'll extend it:
 
 ```typescript
-interface PremiumSearchOverlayProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultTab?: "flights" | "hotels" | "cars";
-  onSearch?: (params: URLSearchParams) => void;
+interface ZivoPropertyExtended extends ZivoProperty {
+  // Display fields
+  imageUrl: string;
+  images: string[];
+  destination: string;
+  zone?: string;
+  address?: string;
+  
+  // Reviews
+  reviewScore?: number;
+  reviewCount?: number;
+  
+  // Amenities
+  facilities: string[];
+  
+  // Rooms & Rates (for detailed view)
+  rooms?: ZivoPropertyRoom[];
+  
+  // Booking flags
+  hasFreeCancellation: boolean;
+  cancellationDeadline?: string;
 }
 ```
 
-### 3. Animation Specifications
+### Phase 3: Update Normalizer Service
 
-Using framer-motion `AnimatePresence`:
-- **Backdrop**: Fade in with blur effect (0ms → 300ms)
-- **Card**: Scale from 0.9 → 1.0, slide up 50px
-- **Tabs**: Stagger children animation
-- **Exit**: Reverse animations for smooth dismissal
+**File**: `src/services/hotelNormalizer.ts`
 
-### 4. Integration Points
+Add new normalizer functions:
 
-**A. Header Integration**
-Modify `src/components/Header.tsx` to open overlay instead of inline search:
-- Replace current search overlay (lines 183-199)
-- Add overlay state and trigger
+1. `normalizeToZivoProperty(source, data)` - Convert supplier data to ZivoProperty
+2. `compareAndMarkCheapest(properties[])` - Set `isCheapest` flag by comparing prices
+3. `mergeMultiSourceProperties(hotelbeds[], ratehawk[])` - Deduplicate and merge
 
-**B. Mobile App Home**
-Add "Where to?" search trigger in `src/pages/app/AppHome.tsx`:
-- Floating search button or hero tap area
-- Opens overlay in full-screen mode
+The comparison logic:
+- Group properties by name + coordinates proximity (within 100m)
+- For each group, mark the lowest-priced property as `isCheapest: true`
+- Return unified array sorted by price
 
-**C. Hero Section Option**
-Can optionally add trigger in `HeroSection.tsx` for desktop users
+### Phase 4: RateHawk Integration Preparation
 
-### 5. Form Behavior by Tab
+**Files to create**:
+- `src/types/ratehawk.ts` - RateHawk API response types
+- `supabase/functions/ratehawk-hotels/index.ts` - Edge function for RateHawk API
+- `src/hooks/useRateHawkSearch.ts` - Frontend hook
 
-| Tab | Input Fields | Autocomplete Data |
-|-----|-------------|-------------------|
-| Flights | From, To, Dates, Passengers | IATA airports |
-| Hotels | Destination, Check-in/out, Guests | City slugs |
-| Cars | Pickup Location, Dates | IATA airports |
+RateHawk type mapping:
+| RateHawk Field | ZivoProperty Field |
+|----------------|-------------------|
+| `id` | `inventory.providerId` |
+| `name` | `meta.name` |
+| `star_rating` | `meta.starRating` |
+| `geo.lat/lon` | `meta.coordinates` |
+| `rates[0].amount` | `pricing.amount` |
+| `payment_options.payment_types` | `pricing.type` |
+| `availability` | `inventory.status` |
 
-### 6. Styling Approach
+### Phase 5: Multi-Provider Search Hook
 
-Following ZIVO's design system:
-- `bg-white/90 dark:bg-zinc-900/90` - Glassmorphism
-- `backdrop-blur-xl` - Heavy blur
-- `rounded-3xl` - Premium rounded corners
-- `shadow-2xl` - Deep shadow
-- `border border-white/20` - Subtle border
+**File**: `src/hooks/useMultiProviderHotelSearch.ts`
 
-### 7. Files to Create/Modify
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  useMultiProviderHotelSearch                                 │
+├─────────────────────────────────────────────────────────────┤
+│  1. Parallel fetch from Hotelbeds & RateHawk                │
+│  2. Normalize each response to ZivoProperty[]               │
+│  3. Merge and deduplicate by property match                 │
+│  4. Compare prices and set isCheapest flags                 │
+│  5. Apply filters and sorting                               │
+│  6. Return unified results                                   │
+└─────────────────────────────────────────────────────────────┘
+```
 
-| File | Action |
-|------|--------|
-| `src/components/search/PremiumSearchOverlay.tsx` | **Create** - Main overlay component |
-| `src/components/search/index.ts` | **Modify** - Export new component |
-| `src/components/Header.tsx` | **Modify** - Integrate overlay trigger |
-| `src/pages/app/AppHome.tsx` | **Modify** - Add mobile search trigger |
+### Phase 6: Update Result Cards
+
+Modify `HotelResultCard` to show:
+- Source badge ("Hotelbeds" | "RateHawk")
+- "Best Price" badge when `isCheapest: true`
+- Availability status indicator
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/types/zivoProperty.ts` | ZivoProperty interface + extended version |
+| `src/types/ratehawk.ts` | RateHawk API response types |
+| `supabase/functions/ratehawk-hotels/index.ts` | RateHawk API edge function |
+| `src/hooks/useRateHawkSearch.ts` | RateHawk search hook |
+| `src/hooks/useMultiProviderHotelSearch.ts` | Unified multi-source search |
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/services/hotelNormalizer.ts` | Add ZivoProperty normalizers, comparison logic |
+| `src/types/hotels.ts` | Add SupplierCode "ratehawk" if not present |
+| `src/components/results/HotelResultCard.tsx` | Add source badge, best price indicator |
+| `src/pages/HotelResultsPage.tsx` | Switch to multi-provider hook |
 
 ---
 
 ## Technical Details
 
-### Framer Motion Animation Config
+### Price Comparison Algorithm
 
 ```typescript
-const backdropVariants = {
-  hidden: { opacity: 0, backdropFilter: "blur(0px)" },
-  visible: { opacity: 1, backdropFilter: "blur(20px)" },
-};
-
-const cardVariants = {
-  hidden: { y: 50, scale: 0.9, opacity: 0 },
-  visible: { y: 0, scale: 1, opacity: 1 },
-};
-```
-
-### Recent Searches Storage
-
-Store in localStorage with structure:
-```typescript
-interface RecentSearch {
-  type: "flights" | "hotels" | "cars";
-  query: string; // Display text
-  params: Record<string, string>; // URL params
-  timestamp: number;
+function markCheapestProperties(properties: ZivoProperty[]): ZivoProperty[] {
+  // Group by property (same name + nearby coordinates)
+  const groups = groupByPropertyMatch(properties);
+  
+  return groups.flatMap(group => {
+    // Find minimum price in group
+    const minPrice = Math.min(...group.map(p => p.pricing.amount));
+    
+    // Mark cheapest
+    return group.map(p => ({
+      ...p,
+      pricing: {
+        ...p.pricing,
+        isCheapest: p.pricing.amount === minPrice
+      }
+    }));
+  });
 }
 ```
 
-### Accessibility
+### Property Matching (Deduplication)
 
-- Focus trap within overlay
-- ESC key closes overlay
-- Proper ARIA attributes (`role="dialog"`, `aria-modal="true"`)
-- Screen reader announcements
+Properties are considered the same if:
+- Names match (case-insensitive, after removing common suffixes)
+- Coordinates within 100 meters of each other
+
+### Inventory Status Mapping
+
+| Supplier Status | ZivoProperty Status |
+|-----------------|---------------------|
+| Hotelbeds `BOOKABLE` | `AVAILABLE` |
+| Hotelbeds `RECHECK` | `ON_REQUEST` |
+| RateHawk `available` | `AVAILABLE` |
+| RateHawk `on_request` | `ON_REQUEST` |
+| Any sold out | `SOLD_OUT` |
+
+---
+
+## Environment Variables Required
+
+```env
+# Existing
+HOTELBEDS_HOTEL_API_KEY
+HOTELBEDS_HOTEL_SECRET
+
+# New (for RateHawk)
+RATEHAWK_API_KEY
+RATEHAWK_AFFILIATE_ID
+```
 
 ---
 
 ## Implementation Order
 
-1. Create `PremiumSearchOverlay.tsx` with basic structure and animations
-2. Add tab switching logic and service-specific inputs
-3. Integrate existing autocomplete components (`LocationAutocomplete`)
-4. Connect to existing search form validation logic
-5. Add recent searches functionality
-6. Update Header.tsx to use overlay
-7. Add mobile trigger in AppHome.tsx
-8. Test across desktop and mobile viewports
+1. Create `src/types/zivoProperty.ts` with full schema
+2. Add RateHawk types in `src/types/ratehawk.ts`
+3. Create RateHawk edge function `supabase/functions/ratehawk-hotels/`
+4. Update `hotelNormalizer.ts` with:
+   - `normalizeHotelbedsToZivoProperty()`
+   - `normalizeRateHawkToZivoProperty()`
+   - `compareAndMarkCheapest()`
+   - `mergeMultiSourceProperties()`
+5. Create `useMultiProviderHotelSearch` hook
+6. Update result card with source/cheapest badges
+7. Integrate into HotelResultsPage
 
