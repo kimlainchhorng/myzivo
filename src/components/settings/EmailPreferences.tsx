@@ -9,8 +9,8 @@ const PREFERENCE_ITEMS = [
     key: "booking_updates" as const,
     icon: Bell,
     title: "Booking Updates",
-    description: "Confirmations, changes, and reminders",
-    required: true,
+    description: "Confirmations, changes, and status updates",
+    required: true, // Cannot disable - essential info
   },
   {
     key: "price_alerts" as const,
@@ -22,7 +22,7 @@ const PREFERENCE_ITEMS = [
     key: "marketing_emails" as const,
     icon: Megaphone,
     title: "Deals & Promotions",
-    description: "Exclusive offers and discounts",
+    description: "Exclusive offers and seasonal deals (opt-in)",
   },
   {
     key: "newsletter" as const,
