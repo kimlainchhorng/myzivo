@@ -1,291 +1,256 @@
 
-
-# Flight UI Upgrades for Duffel-Based Search
+# Enhanced Airlines Display with More Airlines and Premium UX/UI
 
 ## Overview
-Upgrade the Flights results page and related components to meet OTA standards, using Duffel API data with proper airline logos, enhanced result cards, comprehensive filters, and compliance copy.
+Upgrade all airline display sections across ZIVO with an expanded airline database (80+ airlines), modern premium card designs, smooth animations, and comprehensive fallback logo handling using the `AirlineLogo` component.
 
 ---
 
-## 1. Airline Logo Service with Fallback
+## 1. Expand Airline Database
 
-### New Utility: `src/lib/airlineLogo.ts`
-Create a robust airline logo utility with multi-source fallback:
+### File: `src/data/airlines.ts`
 
-```text
-+-------------------------------------------+
-|  getAirlineLogo(iataCode, size)           |
-+-------------------------------------------+
-         |
-         v
-+-------------------------------------------+
-| Primary: AirHex CDN                        |
-| https://content.airhex.com/content/logos/ |
-| airlines_{size}/{CODE}.png                 |
-+-------------------------------------------+
-         |
-         | (on error)
-         v
-+-------------------------------------------+
-| Fallback 1: Try lowercase code             |
-| airlines_{size}/{code}.png                 |
-+-------------------------------------------+
-         |
-         | (on error)
-         v
-+-------------------------------------------+
-| Fallback 2: Duffel SVG                     |
-| assets.duffel.com/img/airlines/.../{CODE} |
-+-------------------------------------------+
-         |
-         | (on error)
-         v
-+-------------------------------------------+
-| Fallback 3: Default Plane Icon             |
-| Render <Plane /> Lucide icon               |
-+-------------------------------------------+
-```
+Add 20+ new airlines across all categories:
 
-Features:
-- Primary: AirHex CDN at `https://content.airhex.com/content/logos/airlines_64/{IATA}.png`
-- Fallback 1: Lowercase code attempt
-- Fallback 2: Duffel SVG logos
-- Fallback 3: Generic airplane icon (Lucide `Plane`)
-- Memoized for performance
-- Size variants: 32, 64, 100, 200
+**New Premium Airlines:**
+| Code | Name | Alliance | Country |
+|------|------|----------|---------|
+| HU | Hainan Airlines | Star Alliance | China |
+| TG | Thai Airways | Star Alliance | Thailand |
+| OZ | Asiana Airlines | Star Alliance | South Korea |
+
+**New Full-Service Airlines:**
+| Code | Name | Alliance | Country |
+|------|------|----------|---------|
+| ET | Ethiopian Airlines | Star Alliance | Ethiopia |
+| SU | Aeroflot | SkyTeam | Russia |
+| CA | Air China | Star Alliance | China |
+| MU | China Eastern | SkyTeam | China |
+| CZ | China Southern | SkyTeam | China |
+| SA | South African Airways | Star Alliance | South Africa |
+| MS | EgyptAir | Star Alliance | Egypt |
+| RJ | Royal Jordanian | Oneworld | Jordan |
+| SV | Saudia | SkyTeam | Saudi Arabia |
+| GF | Gulf Air | Oneworld | Bahrain |
+| EI | Aer Lingus | Independent | Ireland |
+| A3 | Aegean Airlines | Star Alliance | Greece |
+
+**New Low-Cost Airlines:**
+| Code | Name | Country |
+|------|------|---------|
+| DY | Norwegian | Norway |
+| EW | Eurowings | Germany |
+| HV | Transavia | Netherlands |
+| LS | Jet2 | UK |
+| TO | Transavia France | France |
 
 ---
 
-## 2. Enhanced Flight Result Card
+## 2. New Premium Airline Trust Section
 
-### File: `src/components/results/FlightResultCard.tsx`
+### File: `src/components/home/AirlineTrustSection.tsx`
 
-#### Card Structure Updates:
+Redesigned layout with:
 
 ```text
 +------------------------------------------------------------------+
-| [Best Value] [Cheapest] [Fastest] badges                          |
+|               Trusted by 500+ Airlines Worldwide                  |
+|        Compare prices across major carriers and alliances         |
 +------------------------------------------------------------------+
-| +--------+ | DEP --> ARR Timeline           | From $XXX           |
-| |  LOGO  | | 08:30    5h 30m    14:00       | per person          |
-| | Airline| | JFK  ----●----→    LHR         | [Cabin Class]       |
-| +--------+ | [Nonstop] / [1 stop via DXB]   | [Refundable badge]  |
-|            |                                  |                     |
-| UA 123     | 🧳 Carry-on ✓ | 🛄 Checked ✓   | [ Select ]          |
-+------------------------------------------------------------------+
-| Fare rules, baggage, and refund policies vary by airline.         |
+|                                                                   |
+| [Alliance Pills: ⭐ Star Alliance | ⭐ SkyTeam | ⭐ Oneworld]     |
+|                                                                   |
+| +------+ +------+ +------+ +------+ +------+ +------+            |
+| | LOGO | | LOGO | | LOGO | | LOGO | | LOGO | | LOGO | ...        |
+| |  AA  | |  DL  | |  UA  | |  EK  | |  QR  | |  SQ  | scroll -->  |
+| +------+ +------+ +------+ +------+ +------+ +------+            |
+|                                                                   |
+| Infinite scroll carousel with hover glow effects                  |
 +------------------------------------------------------------------+
 ```
 
-Key Display Elements:
-- **Airline logo** using new utility with fallback chain
-- **Airline name + flight number**
-- **Value badges**: Best Value (default sort), Cheapest, Fastest
-- **Timeline**: Departure → Duration → Arrival with airport codes
-- **Stops indicator**: Nonstop (green) or "1 stop via {city}" (amber)
-- **Cabin class**: Economy, Premium Economy, Business, First
-- **Baggage summary**: Icons for carry-on and checked with checkmark/strikethrough
-- **Refundable indicator**: Green shield for refundable, gray for non-refundable
-- **Price**: Total price with currency, "per person" label
-- **Select button**: Primary CTA to expand details
+Design Features:
+- **Glass card design** with subtle backdrop blur
+- **Horizontal scroll carousel** with momentum on mobile
+- **Hover glow effect** with airline category colors (premium = amber, full-service = sky, low-cost = emerald)
+- **48px+ touch targets** for mobile accessibility
+- **Fade gradients** on edges for smooth infinite feel
+- Use `AirlineLogo` component with proper fallback chain
 
 ---
 
-## 3. Expandable Flight Details Panel
+## 3. New Airline Partners Grid Component
 
-### New Component: `src/components/flight/FlightDetailsExpanded.tsx`
+### File: `src/components/flight/AirlinePartnersGrid.tsx` (NEW)
 
-When user clicks "Select", expand inline to show:
+Modern grid layout showing airlines by alliance:
 
 ```text
 +------------------------------------------------------------------+
-| SEGMENT LIST                                                       |
-|   Segment 1: JFK → LHR                                            |
-|   - Flight: UA 123                                                 |
-|   - Depart: 08:30 Terminal 4 | Arrive: 20:00 Terminal 5           |
-|   - Duration: 7h 30m                                               |
-|   - Aircraft: Boeing 787-9 Dreamliner                              |
-|   - Operated by: United Airlines                                   |
+|  ⭐ Star Alliance            ⭐ SkyTeam           ⭐ Oneworld      |
 +------------------------------------------------------------------+
-| FARE RULES SUMMARY                                                 |
-|   ✓ Changes allowed (fee may apply)                               |
-|   ✗ Non-refundable                                                |
-|   ℹ Fare rules confirmed at checkout                              |
+| +--------+  +--------+     +--------+  +--------+  +--------+     |
+| |  LOGO  |  |  LOGO  |     |  LOGO  |  |  LOGO  |  |  LOGO  |     |
+| |   UA   |  |   LH   |     |   DL   |  |   AF   |  |   BA   |     |
+| | United |  | Lufth. |     | Delta  |  |Air Fra.|  |British |     |
+| +--------+  +--------+     +--------+  +--------+  +--------+     |
+|                                                                   |
+| +--------+  +--------+     +--------+  +--------+  +--------+     |
+| |  LOGO  |  |  LOGO  |     |  LOGO  |  |  LOGO  |  |  LOGO  |     |
+| |   SQ   |  |   NH   |     |   KL   |  |   AM   |  |   QR   |     |
+| |Singap. |  |  ANA   |     |  KLM   |  |Aeromex.|  | Qatar  |     |
+| +--------+  +--------+     +--------+  +--------+  +--------+     |
 +------------------------------------------------------------------+
-| SEAT SELECTION                                                     |
-|   [Choose seats] button (if available)                             |
-|   OR: "Seat selection available after ticketing with airline"     |
-+------------------------------------------------------------------+
-|                            [ Continue to Checkout ]               |
+| [View All 80+ Airlines]                                           |
 +------------------------------------------------------------------+
 ```
 
 Features:
-- **Segment list**: Each leg with full details
-- **Aircraft info**: Display if available, fallback text if not
-- **Fare rules summary**: Change/refund conditions from Duffel
-- **Seat selection**: CTA if Duffel provides seat map, fallback message if not
-- **Continue to Checkout**: Routes to `/flights/checkout/{offerId}`
+- **Tab navigation** by alliance (All | Star Alliance | SkyTeam | Oneworld | Independent)
+- **Responsive grid**: 3 cols mobile, 4 cols tablet, 6 cols desktop
+- **Premium badge** for 5-star airlines (crown icon)
+- **Hover scale + shadow** animation
+- **Staggered fade-in** on scroll into view
 
 ---
 
-## 4. Filters & Sorting Enhancement
+## 4. Enhanced Airline Logo Card Component
 
-### Update: `src/components/results/FlightFiltersContent.tsx`
+### File: `src/components/flight/AirlineLogoCard.tsx` (NEW)
 
-#### Sorting Options (update `SortSelect`):
+Reusable card with premium styling:
+
 ```text
-Best Value (default) - Price + duration score
-Cheapest            - Lowest price first
-Fastest             - Shortest duration first  
-Fewest Stops        - Nonstop → 1 stop → 2+ stops
++------------------------+
+|  [Crown for Premium]   |
+| +--------------------+ |
+| |                    | |
+| |    AIRLINE LOGO    | |
+| |      (48x48)       | |
+| |                    | |
+| +--------------------+ |
+|                        |
+|     Airline Name       |
+|     [SkyTeam]          |
++------------------------+
 ```
 
-#### Filter Categories:
-| Filter | Type | Notes |
-|--------|------|-------|
-| Price | Slider | $0 - $5,000 range |
-| Stops | Checkbox | Nonstop, 1 Stop, 2+ Stops |
-| Airline | Checkbox + Logo | Dynamic from results |
-| Departure Time | 4 buttons | Morning/Afternoon/Evening/Night |
-| Arrival Time | 4 buttons | Same time slots |
-| Duration | Slider | 2h - 24h max |
-| Cabin Class | Checkbox | Economy, Prem Economy, Business, First |
-| Baggage Included | Toggle | Show only flights with checked bag |
+Props:
+- `airline: Airline` - Airline data object
+- `size?: 'sm' | 'md' | 'lg'` - Card size variant
+- `showAlliance?: boolean` - Show alliance badge
+- `showCategory?: boolean` - Show premium/full-service/low-cost
+- `interactive?: boolean` - Enable hover effects
+
+Styling by category:
+- **Premium**: Amber glow, crown badge, gradient border
+- **Full-Service**: Sky blue accent, clean design
+- **Low-Cost**: Emerald accent, value badge
 
 ---
 
-## 5. Aircraft & Seat Information
+## 5. Infinite Scroll Airlines Carousel
 
-### Aircraft Display Logic:
-```typescript
-// In FlightDetailsExpanded
-const aircraftDisplay = segment.aircraft 
-  ? segment.aircraft 
-  : "Aircraft info shown at confirmation";
-```
+### File: `src/components/flight/AirlineLogosCarousel.tsx`
 
-### Seat Selection Logic:
-```typescript
-// Check if Duffel offer has seat services
-const hasSeatSelection = offer.available_services?.some(
-  s => s.type === 'seat'
-);
-
-// Render conditionally
-{hasSeatSelection ? (
-  <Button onClick={() => navigate(`/flights/seats/${offerId}`)}>
-    Choose Seats
-  </Button>
-) : (
-  <p className="text-sm text-muted-foreground">
-    Seat selection available after ticketing with the airline.
-  </p>
-)}
-```
+Upgrade existing carousel:
+- **Fix marquee animation** for smoother looping
+- **Add pause on hover** for accessibility
+- **Increase logo count** to show all 80+ airlines
+- **Add loading states** with skeleton shimmer
+- **Optimize with virtualization** for performance
 
 ---
 
-## 6. Compliance Copy Updates
+## 6. Update Components to Use New Airline Data
 
-### Update: `src/config/flightCompliance.ts`
+### Files to Modify:
 
-Add new OTA-mode copy:
+| File | Change |
+|------|--------|
+| `FlightAirlinePartners.tsx` | Use expanded airline list, add tabs for alliances |
+| `AirlinePartnersBadges.tsx` | Show 20 airlines instead of 14, use new card design |
+| `PopularRoutesSection.tsx` | Already uses `AirlineLogo` - no change needed |
+| `FlightPopularRoutes.tsx` | Already uses `AirlineLogo` - no change needed |
+| `AirlinePartnersHub.tsx` | Add real logos via `AirlineLogo` component |
 
-```typescript
-export const FLIGHT_RESULTS_COMPLIANCE = {
-  // Results page header
-  header: "Select your itinerary and complete your booking with ZIVO.",
-  
-  // Below results small text
-  fareRulesNote: "Fare rules, baggage, and refund policies vary by airline and fare.",
-  
-  // Seat selection fallback
-  seatSelectionFallback: "Seat selection available after ticketing with the airline.",
-  
-  // Aircraft fallback
-  aircraftFallback: "Aircraft info shown at confirmation.",
-} as const;
-```
+---
 
-### Update: `src/pages/FlightResults.tsx`
+## 7. CSS Animations
 
-Add header compliance copy:
-```tsx
-<section className="py-4 border-b border-border/50">
-  <div className="container mx-auto px-4">
-    <p className="text-sm text-center font-medium">
-      {FLIGHT_RESULTS_COMPLIANCE.header}
-    </p>
-    <p className="text-xs text-center text-muted-foreground mt-1">
-      {FLIGHT_RESULTS_COMPLIANCE.fareRulesNote}
-    </p>
-  </div>
-</section>
+### File: `src/index.css`
+
+Add/update keyframes:
+
+```css
+/* Smooth marquee animations */
+@keyframes marquee-left {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+/* Glow pulse for premium airlines */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.5); }
+}
+
+/* Staggered fade in */
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 ```
 
 ---
 
-## Files to Create/Modify
+## Files Summary
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `src/lib/airlineLogo.ts` | **Create** | Robust logo utility with AirHex + fallbacks |
-| `src/components/flight/FlightDetailsExpanded.tsx` | **Create** | Expandable segment/fare details panel |
-| `src/components/results/FlightResultCard.tsx` | **Modify** | Enhanced card with badges, baggage, refund indicator |
-| `src/components/results/SortSelect.tsx` | **Modify** | Add "Best Value" as default, rename options |
-| `src/components/results/FlightFiltersContent.tsx` | **Modify** | Add arrival time, cabin class, baggage filters |
-| `src/config/flightCompliance.ts` | **Modify** | Add OTA results page compliance copy |
-| `src/pages/FlightResults.tsx` | **Modify** | Add header compliance, integrate expanded details |
-| `src/hooks/useResultsFilters.ts` | **Modify** | Add new filter types for cabin, baggage |
-| `src/data/airlines.ts` | **Modify** | Update to use AirHex as primary CDN |
+| `src/data/airlines.ts` | **Modify** | Add 20+ new airlines |
+| `src/components/flight/AirlineLogoCard.tsx` | **Create** | Reusable premium airline card |
+| `src/components/flight/AirlinePartnersGrid.tsx` | **Create** | Alliance-grouped grid display |
+| `src/components/home/AirlineTrustSection.tsx` | **Modify** | Horizontal scroll carousel design |
+| `src/components/flight/FlightAirlinePartners.tsx` | **Modify** | Use new grid, add tab filtering |
+| `src/components/flight/AirlineLogosCarousel.tsx` | **Modify** | Smoother animation, more airlines |
+| `src/components/flight/AirlinePartnersBadges.tsx` | **Modify** | Use new card component |
+| `src/components/flight/AirlinePartnersHub.tsx` | **Modify** | Replace emoji with AirlineLogo |
+| `src/index.css` | **Modify** | Add animation keyframes |
 
 ---
 
 ## Technical Details
 
-### Airline Logo Component Pattern
-```tsx
-// Usage in FlightResultCard
-<AirlineLogo 
-  iataCode={flight.airlineCode}
-  size={48}
-  className="w-12 h-12"
-/>
+### Logo Fallback Chain (via AirlineLogo component):
+1. AVS CDN: `https://pics.avs.io/{size}/{size}/{CODE}.png`
+2. Duffel SVG: `https://assets.duffel.com/img/airlines/.../full-color-lockup/{CODE}.svg`
+3. UI Avatars: `https://ui-avatars.com/api/?name={CODE}&background=0ea5e9&color=fff`
+4. Plane icon: Lucide `<Plane />` component
 
-// Internal implementation with useState for error tracking
-const [logoSrc, setLogoSrc] = useState(getAirlineLogoUrl(iataCode, size));
-const [fallbackIndex, setFallbackIndex] = useState(0);
+### Touch Target Requirements:
+- Minimum 48px height/width for all interactive elements
+- Adequate spacing (12px+) between touch targets
 
-const handleError = () => {
-  const nextFallback = FALLBACK_SOURCES[fallbackIndex + 1];
-  if (nextFallback) {
-    setLogoSrc(nextFallback(iataCode, size));
-    setFallbackIndex(i => i + 1);
-  } else {
-    setLogoSrc(null); // Show Plane icon
-  }
-};
-```
-
-### Best Value Score Calculation
-```typescript
-// Already exists in FlightResults.tsx, ensure it's default sort
-const bestValueScore = (flight) => {
-  return flight.price + (flight.durationMinutes * 0.5);
-};
-```
+### Animation Performance:
+- Use CSS transforms only (no layout-triggering properties)
+- `will-change: transform` for smooth marquee
+- Lazy loading for images outside viewport
 
 ---
 
 ## Acceptance Criteria
 
-1. Airline logos load from AirHex with graceful fallbacks to Duffel then Plane icon
-2. Result cards show all required elements: logo, badges, timeline, baggage, refund status
-3. "Select" expands inline details with segments, aircraft, fare rules, and checkout CTA
-4. Filters include all specified options with working filtering logic
-5. "Best Value" is default sort option
-6. Compliance header displays on results page
-7. Seat selection shows CTA or fallback message based on Duffel data
-8. Aircraft shows real data or "Aircraft info shown at confirmation"
-
+1. 80+ airlines displayed across premium, full-service, and low-cost categories
+2. All airline logos load from AVS CDN with graceful fallbacks
+3. Alliance filtering works correctly (Star Alliance, SkyTeam, Oneworld, Independent)
+4. Premium airlines have distinct amber glow and crown badges
+5. Carousel animates smoothly with pause-on-hover
+6. Touch targets are 48px+ on mobile
+7. Animations perform at 60fps with no jank
+8. All components use the `AirlineLogo` component for consistent fallback handling
