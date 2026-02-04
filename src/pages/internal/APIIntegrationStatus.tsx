@@ -258,37 +258,29 @@ const APIIntegrationStatus = () => {
     },
   ];
 
-  // Run health checks
+  // Run health checks via centralized api-health endpoint
   const runHealthChecks = async () => {
     setIsRefreshing(true);
     const checks: Record<string, boolean> = {};
 
-    // Check Hotelbeds Hotels status
     try {
-      const { data, error } = await supabase.functions.invoke("hotelbeds-hotels", {
-        body: { action: "status" }
-      });
-      checks["hotelbeds-hotels"] = !error && data?.success === true;
-    } catch {
-      checks["hotelbeds-hotels"] = false;
-    }
-
-    // Check search-flights (Travelpayouts) - just verify function exists
-    try {
-      // We don't actually call search, just verify the function is deployed
-      checks["travelpayouts-flights"] = true; // Assume live if secrets configured
-    } catch {
-      checks["travelpayouts-flights"] = false;
-    }
-
-    // Duffel health check
-    try {
-      const { data, error } = await supabase.functions.invoke("duffel-flights", {
-        body: { action: "health" }
-      });
-      checks["duffel-ota"] = !error && data?.healthy === true;
-    } catch {
-      checks["duffel-ota"] = false;
+      const { data, error } = await supabase.functions.invoke("api-health");
+      
+      if (!error && data) {
+        // Map API health response to integration IDs
+        checks["travelpayouts-flights"] = data.flights_travelpayouts?.status === "ok";
+        checks["duffel-ota"] = data.flights_duffel?.status === "ok";
+        checks["hotelbeds-hotels"] = data.hotels_hotelbeds?.status === "ok";
+        checks["tripadvisor-content"] = data.hotels_tripadvisor?.status === "ok";
+        checks["car-affiliate"] = data.cars_affiliate?.status === "ok";
+        checks["hotelbeds-activities"] = data.activities_hotelbeds?.status === "ok";
+        checks["hotelbeds-transfers"] = data.transfers_hotelbeds?.status === "ok";
+        checks["booking-affiliate"] = true; // Always ok (redirect-only)
+        
+        console.log("[API Health]", data.overall, data);
+      }
+    } catch (err) {
+      console.error("[API Health] Check failed:", err);
     }
 
     setHealthChecks(checks);
