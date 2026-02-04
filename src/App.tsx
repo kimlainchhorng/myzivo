@@ -254,6 +254,16 @@ const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const Vision = lazy(() => import("./pages/Vision"));
 const EmailAutomationDashboard = lazy(() => import("./pages/admin/EmailAutomationDashboard"));
+// Corporate & Brand pages
+const BrandMission = lazy(() => import("./pages/BrandMission"));
+const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
+const InvestorRelations = lazy(() => import("./pages/InvestorRelations"));
+const StrategicPartnerships = lazy(() => import("./pages/StrategicPartnerships"));
+const FinancialTransparency = lazy(() => import("./pages/FinancialTransparency"));
+const Careers = lazy(() => import("./pages/Careers"));
+const EcosystemMap = lazy(() => import("./pages/EcosystemMap"));
+const StrategicRoadmap = lazy(() => import("./pages/StrategicRoadmap"));
+const TrustStatement = lazy(() => import("./pages/TrustStatement"));
 
 // Support pages
 const Help = lazy(() => import("./pages/Help"));
@@ -1111,6 +1121,20 @@ const App = () => (
                 {/* Feedback & Roadmap */}
                 <Route path="/feedback" element={<Feedback />} />
                 <Route path="/roadmap" element={<Roadmap />} />
+                {/* Corporate & Brand Pages */}
+                <Route path="/brand" element={<BrandMission />} />
+                <Route path="/mission" element={<BrandMission />} />
+                <Route path="/company-profile" element={<CompanyProfile />} />
+                <Route path="/investors" element={<InvestorRelations />} />
+                <Route path="/investor-relations" element={<InvestorRelations />} />
+                <Route path="/strategic-partnerships" element={<StrategicPartnerships />} />
+                <Route path="/financial-transparency" element={<FinancialTransparency />} />
+                <Route path="/careers" element={<Careers />} />
+                <Route path="/jobs" element={<Careers />} />
+                <Route path="/ecosystem" element={<EcosystemMap />} />
+                <Route path="/platform" element={<EcosystemMap />} />
+                <Route path="/strategic-roadmap" element={<StrategicRoadmap />} />
+                <Route path="/trust-statement" element={<TrustStatement />} />
                 {/* Admin Email Automation */}
                 <Route path="/admin/email-automation" element={<ProtectedRoute requireAdmin><EmailAutomationDashboard /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

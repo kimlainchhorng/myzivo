@@ -57,6 +57,45 @@ export const brandColors = {
     border: "border-violet-500/30",
   },
   
+  rides: {
+    DEFAULT: "hsl(340 75% 55%)",  // Rose
+    light: "hsl(340 80% 70%)",
+    dark: "hsl(340 70% 45%)",
+    muted: "hsl(340 75% 55% / 0.1)",
+    gradient: "from-rose-500 to-pink-600",
+    hoverGradient: "from-rose-600 to-pink-700",
+    shadow: "shadow-rose-500/25",
+    text: "text-rose-500",
+    bg: "bg-rose-500",
+    border: "border-rose-500/30",
+  },
+  
+  eats: {
+    DEFAULT: "hsl(25 95% 53%)",  // Orange
+    light: "hsl(25 95% 68%)",
+    dark: "hsl(25 90% 43%)",
+    muted: "hsl(25 95% 53% / 0.1)",
+    gradient: "from-orange-500 to-red-500",
+    hoverGradient: "from-orange-600 to-red-600",
+    shadow: "shadow-orange-500/25",
+    text: "text-orange-500",
+    bg: "bg-orange-500",
+    border: "border-orange-500/30",
+  },
+  
+  move: {
+    DEFAULT: "hsl(165 80% 45%)",  // Teal
+    light: "hsl(165 80% 60%)",
+    dark: "hsl(165 75% 35%)",
+    muted: "hsl(165 80% 45% / 0.1)",
+    gradient: "from-teal-500 to-emerald-600",
+    hoverGradient: "from-teal-600 to-emerald-700",
+    shadow: "shadow-teal-500/25",
+    text: "text-teal-500",
+    bg: "bg-teal-500",
+    border: "border-teal-500/30",
+  },
+  
   // Semantic Colors
   success: "hsl(142 72% 45%)",
   warning: "hsl(38 92% 50%)",
@@ -196,7 +235,7 @@ export const ctaText = {
 // HELPER FUNCTIONS
 // ============================================
 
-export type ServiceType = "flights" | "hotels" | "cars";
+export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move";
 
 export function getServiceColors(service: ServiceType) {
   return brandColors[service];
