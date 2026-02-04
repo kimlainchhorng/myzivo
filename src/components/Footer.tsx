@@ -39,8 +39,10 @@ const footerLinks = {
     { name: "How It Works", href: "/how-it-works" },
     { name: "Partners", href: "/partners" },
     { name: "Contact Us", href: "/contact" },
+    { name: "Press & Media", href: "/press" },
     { name: "FAQ", href: "/faq" },
     { name: "Security", href: "/security" },
+    { name: "Transparency", href: "/how-zivo-makes-money" },
   ],
   legal: [
     { name: "Terms & Conditions", href: "/terms" },
@@ -288,6 +290,10 @@ const Footer = () => {
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium mt-3 pt-3 border-t border-border/30">
               🔒 ZIVO uses enterprise-grade security standards to protect user data and transactions.
+            </p>
+            <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+              💳 All payments are processed by PCI-compliant providers. For payment disputes, please{" "}
+              <a href="/help" className="text-primary hover:underline">contact support</a> before disputing with your bank.
             </p>
           </div>
         </div>
