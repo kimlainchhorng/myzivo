@@ -26,12 +26,13 @@ interface SortSelectProps {
   className?: string;
 }
 
-// Flights: Best Value default, then price/speed options
+// Flights: Best Value default, then price/speed/stops options
 export const flightSortOptions: SortOption[] = [
   { value: "best", label: "Best Value" },
   { value: "price", label: "Cheapest" },
   { value: "duration", label: "Fastest" },
   { value: "stops", label: "Fewest Stops" },
+  { value: "departure", label: "Departure Time" },
 ];
 
 // Hotels: Best Value default, then price/rating options

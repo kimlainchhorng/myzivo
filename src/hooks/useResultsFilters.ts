@@ -16,7 +16,10 @@ export interface FlightFilters {
   stops: number[];
   airlines: string[];
   departureTime: string[];
+  arrivalTime: string[];
   maxDuration: number;
+  cabinClass: string[];
+  baggageIncluded: boolean;
 }
 
 export const defaultFlightFilters: FlightFilters = {
@@ -24,7 +27,10 @@ export const defaultFlightFilters: FlightFilters = {
   stops: [],
   airlines: [],
   departureTime: [],
+  arrivalTime: [],
   maxDuration: 24,
+  cabinClass: [],
+  baggageIncluded: false,
 };
 
 // ============= Hotel Filters =============
@@ -160,7 +166,10 @@ export function useResultsFilters<T>({
             if (category === "stops") f.stops = f.stops.filter((s) => String(s) !== value);
             if (category === "airline") f.airlines = f.airlines.filter((a) => a !== value);
             if (category === "time") f.departureTime = f.departureTime.filter((t) => t !== value);
+            if (category === "arrival") f.arrivalTime = f.arrivalTime.filter((t) => t !== value);
             if (category === "duration") f.maxDuration = 24;
+            if (category === "cabin") f.cabinClass = f.cabinClass.filter((c) => c !== value);
+            if (category === "baggage") f.baggageIncluded = false;
             break;
           }
           case "hotels": {
@@ -229,14 +238,20 @@ export function useFlightFilters() {
       stops: filters.stops.length > 0 ? filters.stops.join(",") : "",
       airline: filters.airlines.length > 0 ? filters.airlines.join(",") : "",
       time: filters.departureTime.length > 0 ? filters.departureTime.join(",") : "",
+      arrival: filters.arrivalTime.length > 0 ? filters.arrivalTime.join(",") : "",
       duration: filters.maxDuration < 24 ? String(filters.maxDuration) : "",
+      cabin: filters.cabinClass.length > 0 ? filters.cabinClass.join(",") : "",
+      baggage: filters.baggageIncluded ? "1" : "",
     }),
     urlToFilters: (params) => ({
       maxPrice: parseInt(params.get("price_max") || "5000", 10),
       stops: params.get("stops")?.split(",").map(Number).filter((n) => !isNaN(n)) || [],
       airlines: params.get("airline")?.split(",").filter(Boolean) || [],
       departureTime: params.get("time")?.split(",").filter(Boolean) || [],
+      arrivalTime: params.get("arrival")?.split(",").filter(Boolean) || [],
       maxDuration: parseInt(params.get("duration") || "24", 10),
+      cabinClass: params.get("cabin")?.split(",").filter(Boolean) || [],
+      baggageIncluded: params.get("baggage") === "1",
     }),
     filtersToChips: (filters) => {
       const chips: FilterChip[] = [];
@@ -264,8 +279,32 @@ export function useFlightFilters() {
         chips.push({ id: `time:${time}`, label: labels[time] || time, category: "Depart" });
       });
 
+      filters.arrivalTime.forEach((time) => {
+        const labels: Record<string, string> = {
+          morning: "Morning",
+          afternoon: "Afternoon",
+          evening: "Evening",
+          night: "Night",
+        };
+        chips.push({ id: `arrival:${time}`, label: labels[time] || time, category: "Arrive" });
+      });
+
       if (filters.maxDuration < 24) {
         chips.push({ id: "duration:max", label: `${filters.maxDuration}h max`, category: "Duration" });
+      }
+
+      filters.cabinClass.forEach((cabin) => {
+        const labels: Record<string, string> = {
+          economy: "Economy",
+          premium_economy: "Premium Econ",
+          business: "Business",
+          first: "First",
+        };
+        chips.push({ id: `cabin:${cabin}`, label: labels[cabin] || cabin, category: "Cabin" });
+      });
+
+      if (filters.baggageIncluded) {
+        chips.push({ id: "baggage:included", label: "Checked bag", category: "Baggage" });
       }
 
       return chips;

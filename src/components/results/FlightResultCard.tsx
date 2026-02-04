@@ -2,10 +2,11 @@
  * ZIVO Flight Result Card - OTA Model
  * Direct booking on ZIVO - Merchant of Record
  * Exact pricing from Duffel API
+ * Uses AirHex CDN for airline logos with fallback chain
  */
 
 import { useState } from "react";
-import { Plane, Clock, ArrowRight, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star, Info, Bell } from "lucide-react";
+import { Plane, Clock, ArrowRight, Wifi, Utensils, Monitor, Briefcase, Package, Luggage, Zap, AlertTriangle, Star, Info, Bell, Shield, ShieldX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { FLIGHT_CTA_TEXT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
 import PriceAlertModal from "@/components/shared/PriceAlertModal";
+import { AirlineLogo } from "@/components/flight/AirlineLogo";
 
 export interface FlightCardData {
   id: string;
@@ -38,6 +40,7 @@ export interface FlightCardData {
   isBestPrice?: boolean;
   isFastest?: boolean;
   isBestValue?: boolean;
+  isRefundable?: boolean;
   partnerName?: string;
   priceUpdated?: boolean; // True if price differs >10% from cached
 }
@@ -120,28 +123,37 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
 
       <CardContent className="p-0">
         <div className="flex flex-col lg:flex-row">
-          {/* LEFT: Airline Section */}
+          {/* LEFT: Airline Section - Using AirlineLogo component */}
           <div className="p-4 flex items-center gap-3 lg:w-52 border-b lg:border-b-0 lg:border-r border-border/50 bg-muted/10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
-              {flight.airlineLogo ? (
-                <img
-                  src={flight.airlineLogo}
-                  alt={flight.airline}
-                  className="w-8 h-8 object-contain"
-                  loading="lazy"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${flight.airlineCode}&background=0ea5e9&color=fff&size=32`;
-                  }}
-                />
-              ) : (
-                <span className="text-sm font-bold text-sky-500">{flight.airlineCode}</span>
-              )}
-            </div>
+            <AirlineLogo
+              iataCode={flight.airlineCode}
+              airlineName={flight.airline}
+              size={48}
+              className="shrink-0"
+            />
             <div className="min-w-0 flex-1">
               <p className="font-semibold truncate text-sm">{flight.airline}</p>
-              <p className="text-[10px] text-muted-foreground/80">via Travel Partner</p>
               <p className="text-xs text-muted-foreground">{flight.flightNumber}</p>
               <p className="text-xs text-muted-foreground capitalize mt-0.5">{flight.cabinClass}</p>
+              {/* Refundable Indicator */}
+              {flight.isRefundable !== undefined && (
+                <div className={cn(
+                  "flex items-center gap-1 mt-1.5 text-[10px]",
+                  flight.isRefundable ? "text-emerald-500" : "text-muted-foreground"
+                )}>
+                  {flight.isRefundable ? (
+                    <>
+                      <Shield className="w-3 h-3" />
+                      <span>Refundable</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShieldX className="w-3 h-3" />
+                      <span>Non-refundable</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 

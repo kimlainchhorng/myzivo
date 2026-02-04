@@ -35,7 +35,7 @@ import FlightSupportCTA from "@/components/flight/FlightSupportCTA";
 import { EnhanceYourTrip } from "@/components/travel-extras";
 import ExitIntentPrompt from "@/components/monetization/ExitIntentPrompt";
 import TrendingDealsSection from "@/components/monetization/TrendingDealsSection";
-import { FLIGHT_DISCLAIMERS, FLIGHT_HEADER_MICROCOPY } from "@/config/flightCompliance";
+import { FLIGHT_DISCLAIMERS, FLIGHT_HEADER_MICROCOPY, FLIGHT_RESULTS_COMPLIANCE } from "@/config/flightCompliance";
 import ContextualCrossSell from "@/components/monetization/ContextualCrossSell";
 import DriverCrossSell from "@/components/cross-sell/DriverCrossSell";
 import {
@@ -66,7 +66,7 @@ import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 const FlightResults = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [sortBy, setSortBy] = useState<string>("price");
+  const [sortBy, setSortBy] = useState<string>("best"); // Default to Best Value
   const [showFilters, setShowFilters] = useState(false);
   const [currency] = useState<'USD' | 'EUR' | 'GBP'>('USD');
   const { isAdmin } = useAuth();
@@ -193,6 +193,33 @@ const FlightResults = () => {
       });
     }
 
+    // Filter by arrival time
+    if (filters.arrivalTime.length > 0) {
+      filtered = filtered.filter((f: any) => {
+        const hour = parseInt(f.arrival.time.split(":")[0]);
+        if (filters.arrivalTime.includes("morning") && hour >= 5 && hour < 12) return true;
+        if (filters.arrivalTime.includes("afternoon") && hour >= 12 && hour < 17) return true;
+        if (filters.arrivalTime.includes("evening") && hour >= 17 && hour < 21) return true;
+        if (filters.arrivalTime.includes("night") && (hour >= 21 || hour < 5)) return true;
+        return false;
+      });
+    }
+
+    // Filter by cabin class
+    if (filters.cabinClass.length > 0) {
+      filtered = filtered.filter((f: any) => 
+        filters.cabinClass.includes(f.class?.toLowerCase().replace(' ', '_'))
+      );
+    }
+
+    // Filter by baggage included
+    if (filters.baggageIncluded) {
+      filtered = filtered.filter((f: any) => {
+        const baggage = f.baggageIncluded?.toLowerCase() || '';
+        return baggage.includes('check') || baggage.includes('23kg') || baggage.includes('included');
+      });
+    }
+
     // Filter by duration
     if (filters.maxDuration < 24) {
       filtered = filtered.filter((f: any) => {
@@ -287,6 +314,7 @@ const FlightResults = () => {
     isBestPrice: flight.price === lowestPrice,
     isFastest: flight === fastestFlight,
     isBestValue: flight === bestValueFlight && flight !== cheapestFlight && flight !== fastestFlight,
+    isRefundable: flight.isRefundable,
   }));
 
   // Handle flight selection - navigate to details page (MoR flow)
@@ -421,6 +449,18 @@ const FlightResults = () => {
           }
         />
         
+        {/* OTA Compliance Header */}
+        <div className="bg-sky-500/5 border-b border-sky-500/20 py-3">
+          <div className="container mx-auto px-4">
+            <p className="text-sm text-center font-medium text-sky-600 dark:text-sky-400">
+              {FLIGHT_RESULTS_COMPLIANCE.header}
+            </p>
+            <p className="text-xs text-center text-muted-foreground mt-1">
+              {FLIGHT_RESULTS_COMPLIANCE.fareRulesNote}
+            </p>
+          </div>
+        </div>
+
         {/* OTA Microcopy - Below sticky header */}
         <div className="bg-muted/30 border-b border-border/50 py-2">
           <p className="text-xs text-muted-foreground text-center hidden sm:block">
