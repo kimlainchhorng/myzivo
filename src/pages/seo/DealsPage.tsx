@@ -6,7 +6,7 @@
  * All price data comes from live API on results pages.
  */
 import { Link } from "react-router-dom";
-import { Plane, Hotel, Car, Sparkles, TrendingDown, Bell, Info, Clock, MapPin, ArrowRight, Shield, CheckCircle } from "lucide-react";
+import { Plane, Hotel, Car, Sparkles, TrendingDown, Bell, Info, Clock, MapPin, ArrowRight, Shield, CheckCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,39 +18,18 @@ import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
 import PartnerLogosStrip from "@/components/shared/PartnerLogosStrip";
 import { InternalLinkGrid } from "@/components/seo";
 import OrganizationSchema from "@/components/seo/OrganizationSchema";
+import { 
+  getActiveSeasonalDeals, 
+  SEASONAL_DEALS,
+  US_DOMESTIC_ROUTES,
+  DESTINATION_CITIES,
+  getFlightRouteUrl,
+} from "@/config/programmaticSEO";
 
-// Deal categories - NO PRICES, just routes to search
-const DEAL_CATEGORIES = [
-  {
-    title: "Flight Deals",
-    icon: Plane,
-    color: "sky",
-    description: "Compare prices from 500+ airlines",
-    searchUrl: "/flights",
-    routes: [
-      { from: "New York", to: "London" },
-      { from: "Los Angeles", to: "Tokyo" },
-      { from: "Miami", to: "Paris" },
-      { from: "Chicago", to: "Dubai" },
-    ]
-  },
-  {
-    title: "Hotel Deals",
-    icon: Hotel,
-    color: "amber",
-    description: "Search hotels from top booking sites",
-    searchUrl: "/hotels",
-    destinations: ["New York", "Paris", "London", "Tokyo"]
-  },
-  {
-    title: "Car Rental Deals",
-    icon: Car,
-    color: "emerald",
-    description: "Compare car rentals at top airports",
-    searchUrl: "/rent-car",
-    locations: ["Miami", "Los Angeles", "Las Vegas", "Orlando"]
-  },
-];
+// Get top routes from programmatic config
+const TOP_FLIGHT_ROUTES = US_DOMESTIC_ROUTES.filter(r => r.priority === 1).slice(0, 4);
+const TOP_HOTEL_CITIES = DESTINATION_CITIES.filter(c => c.services.includes('hotels') && c.priority === 1).slice(0, 4);
+const TOP_CAR_CITIES = DESTINATION_CITIES.filter(c => c.services.includes('cars') && c.priority === 1).slice(0, 4);
 
 // Tips for finding deals
 const DEAL_TIPS = [
@@ -152,8 +131,43 @@ export default function DealsPage() {
           </div>
         </div>
 
-        {/* Deal Categories */}
+        {/* Seasonal Deals */}
         <section className="py-12">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-amber-500" />
+              </div>
+              <div>
+                <h2 className="font-display text-2xl font-bold">Seasonal Deals</h2>
+                <p className="text-muted-foreground">Limited time travel offers</p>
+              </div>
+            </div>
+            
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {SEASONAL_DEALS.map((deal) => (
+                <Link key={deal.slug} to={`/deals/${deal.slug}`} className="group">
+                  <Card className="border hover:border-amber-500/50 transition-all group-hover:shadow-lg h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="text-amber-500 border-amber-500/30">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Deal
+                        </Badge>
+                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+                      </div>
+                      <p className="font-semibold mb-1">{deal.title}</p>
+                      <p className="text-sm text-muted-foreground">{deal.description}</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Deal Categories */}
+        <section className="py-12 bg-muted/20">
           <div className="container mx-auto px-4">
             {/* Flights Section */}
             <div className="mb-12">
@@ -168,13 +182,13 @@ export default function DealsPage() {
               </div>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {DEAL_CATEGORIES[0].routes?.map((route) => {
-                  const fromSlug = route.from.toLowerCase().replace(/\s+/g, "-");
-                  const toSlug = route.to.toLowerCase().replace(/\s+/g, "-");
+                {TOP_FLIGHT_ROUTES.map((route) => {
+                  const fromName = route.from.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                  const toName = route.to.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                   return (
                     <Link 
                       key={`${route.from}-${route.to}`}
-                      to={`/flights/${fromSlug}-to-${toSlug}`}
+                      to={getFlightRouteUrl(route)}
                       className="group"
                     >
                       <Card className="border hover:border-sky-500/50 transition-all group-hover:shadow-lg">
@@ -183,7 +197,7 @@ export default function DealsPage() {
                             <Badge variant="outline" className="text-sky-500 border-sky-500/30">Flight</Badge>
                             <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-sky-500 transition-colors" />
                           </div>
-                          <p className="font-semibold">{route.from} → {route.to}</p>
+                          <p className="font-semibold">{fromName} → {toName}</p>
                           <p className="text-sm text-muted-foreground">Compare prices</p>
                         </CardContent>
                       </Card>
@@ -215,27 +229,24 @@ export default function DealsPage() {
               </div>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {DEAL_CATEGORIES[1].destinations?.map((city) => {
-                  const citySlug = city.toLowerCase().replace(/\s+/g, "-");
-                  return (
-                    <Link 
-                      key={city}
-                      to={`/hotels/${citySlug}`}
-                      className="group"
-                    >
-                      <Card className="border hover:border-amber-500/50 transition-all group-hover:shadow-lg">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="outline" className="text-amber-500 border-amber-500/30">Hotels</Badge>
-                            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 transition-colors" />
-                          </div>
-                          <p className="font-semibold">Hotels in {city}</p>
-                          <p className="text-sm text-muted-foreground">Compare prices</p>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
+                {TOP_HOTEL_CITIES.map((city) => (
+                  <Link 
+                    key={city.slug}
+                    to={`/hotels/${city.slug}`}
+                    className="group"
+                  >
+                    <Card className="border hover:border-amber-500/50 transition-all group-hover:shadow-lg">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="text-amber-500 border-amber-500/30">Hotels</Badge>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+                        </div>
+                        <p className="font-semibold">Hotels in {city.name}</p>
+                        <p className="text-sm text-muted-foreground">Compare prices</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
               </div>
               
               <div className="mt-4 text-center">
@@ -261,27 +272,24 @@ export default function DealsPage() {
               </div>
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {DEAL_CATEGORIES[2].locations?.map((location) => {
-                  const locationSlug = location.toLowerCase().replace(/\s+/g, "-");
-                  return (
-                    <Link 
-                      key={location}
-                      to={`/rent-car/${locationSlug}`}
-                      className="group"
-                    >
-                      <Card className="border hover:border-emerald-500/50 transition-all group-hover:shadow-lg">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">Cars</Badge>
-                            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
-                          </div>
-                          <p className="font-semibold">Cars in {location}</p>
-                          <p className="text-sm text-muted-foreground">Compare prices</p>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                })}
+                {TOP_CAR_CITIES.map((city) => (
+                  <Link 
+                    key={city.slug}
+                    to={`/rent-car/${city.slug}`}
+                    className="group"
+                  >
+                    <Card className="border hover:border-emerald-500/50 transition-all group-hover:shadow-lg">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">Cars</Badge>
+                          <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+                        </div>
+                        <p className="font-semibold">Cars in {city.name}</p>
+                        <p className="text-sm text-muted-foreground">Compare prices</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
               </div>
               
               <div className="mt-4 text-center">
