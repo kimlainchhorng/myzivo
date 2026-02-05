@@ -54,6 +54,7 @@ const TravelRefundsPage = lazy(() => import("./pages/admin/travel/TravelRefundsP
 const SuppliersStatusPage = lazy(() => import("./pages/admin/travel/SuppliersStatusPage"));
 const AdminJobsPage = lazy(() => import("./pages/admin/JobsPage"));
 const SettingsHub = lazy(() => import("./pages/admin/settings/SettingsHub"));
+const InviteManagement = lazy(() => import("./pages/admin/settings/InviteManagement"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
@@ -779,6 +780,7 @@ const App = () => (
                 <Route path="/admin/travel/suppliers" element={<ProtectedRoute requireAdmin><SuppliersStatusPage /></ProtectedRoute>} />
                 <Route path="/admin/jobs" element={<ProtectedRoute requireAdmin><AdminJobsPage /></ProtectedRoute>} />
                 <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><SettingsHub /></ProtectedRoute>} />
+                <Route path="/admin/settings/invites" element={<ProtectedRoute requireAdmin><InviteManagement /></ProtectedRoute>} />
                 
                 {/* Rewards / Loyalty */}
                 <Route path="/rewards" element={<RewardsPage />} />
