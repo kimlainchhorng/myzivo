@@ -15,3 +15,7 @@ export { default as PopularRoutesFromAirport } from './PopularRoutesFromAirport'
  // New 2026 components
  export { default as DirectNDCBadge } from './DirectNDCBadge';
  export { default as AnimatedRouteMap } from './AnimatedRouteMap';
+// SEO Template Enhancement components
+export { default as RouteSEOHeader } from './RouteSEOHeader';
+export { default as RealTimeMicroCopy } from './RealTimeMicroCopy';
+export { default as EnhancedBreadcrumbs } from './EnhancedBreadcrumbs';
