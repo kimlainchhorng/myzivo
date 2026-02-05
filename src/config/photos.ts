@@ -17,6 +17,11 @@ import heroBeachResort from "@/assets/hero-beach-resort.jpg";
 import heroHotelRoom from "@/assets/hero-hotel-room.jpg";
 import heroRoadTrip from "@/assets/hero-road-trip.jpg";
 
+// Import premium 2026 hero assets (Minimalist Luxury)
+import heroHomepagePremium from "@/assets/hero-homepage-premium.jpg";
+import cityHeroGlassSunset from "@/assets/city-hero-glass-sunset.jpg";
+import flightHeroLuxury from "@/assets/flight-hero-luxury.jpg";
+
 // Import service card assets
 import serviceFlights from "@/assets/service-flights.jpg";
 import serviceHotels from "@/assets/service-hotels.jpg";
@@ -161,6 +166,25 @@ import cabinFirst from "@/assets/cabin-first.jpg";
 export type ServiceType = "flights" | "hotels" | "cars" | "rides" | "eats" | "move" | "extras";
 export type CarCategory = "economy" | "compact" | "midsize" | "suv" | "luxury" | "van" | "electric";
 export type DestinationCity = "new-york" | "london" | "paris" | "tokyo" | "dubai" | "los-angeles" | "miami" | "las-vegas" | "chicago" | "dallas" | "atlanta" | "san-francisco" | "orlando" | "phoenix" | "san-diego" | "cancun" | "barcelona" | "singapore" | "sydney" | "amsterdam";
+
+// ============================================
+// PREMIUM 2026 HERO PHOTOS (Minimalist Luxury)
+// High-contrast, moody visuals for premium aesthetic
+// ============================================
+export const premiumHeroPhotos = {
+  homepage: {
+    src: heroHomepagePremium,
+    alt: "Aerial view of airplane wing over illuminated city at night",
+  },
+  flightsLuxury: {
+    src: flightHeroLuxury,
+    alt: "Premium first-class cabin seat with leather finish",
+  },
+  cityGeneric: {
+    src: cityHeroGlassSunset,
+    alt: "Modern glass skyscraper reflecting golden sunset",
+  },
+};
 
 // ============================================
 // HERO PHOTOS (16:9)

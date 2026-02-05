@@ -18,6 +18,13 @@ export { default as heroHotelRoom } from "./hero-hotel-room.jpg";
 export { default as heroRoadTrip } from "./hero-road-trip.jpg";
 
 // ==========================================
+// PREMIUM 2026 HERO IMAGES (Minimalist Luxury)
+// ==========================================
+export { default as heroHomepagePremium } from "./hero-homepage-premium.jpg";
+export { default as cityHeroGlassSunset } from "./city-hero-glass-sunset.jpg";
+export { default as flightHeroLuxury } from "./flight-hero-luxury.jpg";
+
+// ==========================================
 // SERVICE CARD IMAGES (4:3 aspect ratio)
 // ==========================================
 export { default as serviceFlights } from "./service-flights.jpg";
