@@ -14,61 +14,91 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const token = searchParams.get("token");
-    
-    // If there's a cross-app token, handle that flow
+    const code = searchParams.get("code");
+    const errorParam = searchParams.get("error");
+    const errorDescription = searchParams.get("error_description");
+
+    // Cross-app auth flow (?token=...)
     if (token) {
       const handleExchange = async () => {
         const redirectUrl = await exchangeToken(token);
-        
+
         if (redirectUrl) {
           window.location.href = redirectUrl;
         } else {
           setStatus("error");
         }
       };
+
       handleExchange();
       return;
     }
 
-    // Otherwise, this is an OAuth callback - check for session
-    const handleOAuthCallback = async () => {
-      // Give Supabase a moment to process the hash fragment
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+    // Supabase OAuth PKCE flow (?code=...)
+    if (code) {
+      const handleCodeExchange = async () => {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error("OAuth code exchange error:", exchangeError);
+          setStatus("error");
+          return;
+        }
+
+        setStatus("success");
+        setTimeout(() => navigate("/", { replace: true }), 200);
+      };
+
+      handleCodeExchange();
+      return;
+    }
+
+    // Provider error returned in query params
+    if (errorParam) {
+      console.error("OAuth provider returned error:", { errorParam, errorDescription });
+      setStatus("error");
+      return;
+    }
+
+    // Fallback: if the session already exists, route home. Otherwise, wait briefly.
+    const handleOAuthFallback = async () => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
-        console.error("OAuth callback error:", sessionError);
+        console.error("OAuth callback session error:", sessionError);
         setStatus("error");
         return;
       }
 
       if (session) {
-        // Successfully authenticated via OAuth
         setStatus("success");
-        setTimeout(() => navigate("/", { replace: true }), 500);
-      } else {
-        // No session yet - wait for auth state change
-        const timeout = setTimeout(() => {
-          setStatus("error");
-        }, 5000);
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (session) {
-            clearTimeout(timeout);
-            setStatus("success");
-            setTimeout(() => navigate("/", { replace: true }), 500);
-            subscription.unsubscribe();
-          }
-        });
-
-        return () => {
-          clearTimeout(timeout);
-          subscription.unsubscribe();
-        };
+        setTimeout(() => navigate("/", { replace: true }), 200);
+        return;
       }
+
+      const timeout = setTimeout(() => setStatus("error"), 7000);
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (nextSession) {
+          clearTimeout(timeout);
+          setStatus("success");
+          setTimeout(() => navigate("/", { replace: true }), 200);
+          subscription.unsubscribe();
+        }
+      });
+
+      return () => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+      };
     };
 
-    handleOAuthCallback();
-  }, [searchParams, navigate]);
+    void handleOAuthFallback();
+  }, [searchParams, navigate, exchangeToken]);
 
   if (status === "success") {
     return (
