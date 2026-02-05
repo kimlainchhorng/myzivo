@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.ratehawk-hotels]
 verify_jwt = false
+
+[functions.check-signup-allowlist]
+verify_jwt = false

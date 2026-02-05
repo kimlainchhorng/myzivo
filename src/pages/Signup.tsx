@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,31 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
+    
+    // Check if email is on allowlist before attempting signup
+    try {
+      const { data: allowlistResponse, error: allowlistError } = await supabase.functions.invoke(
+        "check-signup-allowlist",
+        { body: { email: data.email } }
+      );
+
+      if (allowlistError) {
+        setIsLoading(false);
+        toast.error("Unable to verify email authorization. Please try again.");
+        return;
+      }
+
+      if (!allowlistResponse?.allowed) {
+        setIsLoading(false);
+        toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
+        return;
+      }
+    } catch (err) {
+      setIsLoading(false);
+      toast.error("Unable to verify email authorization. Please try again.");
+      return;
+    }
+
     const { error } = await signUp(data.email, data.password, data.fullName);
     setIsLoading(false);
 
@@ -52,7 +78,7 @@ const Signup = () => {
     }
 
     toast.success("Account created! Please check your email to verify.");
-    navigate("/login");
+    navigate("/verify-email");
   };
 
   const handleSocialLogin = async (provider: Provider) => {

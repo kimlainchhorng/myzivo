@@ -21,8 +21,16 @@ const AuthCallback = () => {
         .eq("user_id", userId)
         .maybeSingle();
 
-      // If no profile or setup not complete, go to setup page
-      if (!profile || profile.setup_complete !== true) {
+      // If no profile exists, the user was likely rejected by allowlist trigger
+      // Show error and redirect to login
+      if (!profile) {
+        console.error("No profile found - user may not be on allowlist");
+        setStatus("error");
+        return;
+      }
+
+      // If setup not complete, go to setup page
+      if (profile.setup_complete !== true) {
         setStatus("success");
         setTimeout(() => navigate("/setup", { replace: true }), 200);
       } else {
@@ -155,7 +163,7 @@ const AuthCallback = () => {
             </div>
             <h2 className="text-lg sm:text-xl font-semibold mb-2">Authentication Failed</h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              {error || "The authentication link is invalid or has expired."}
+              {error || "This email is not authorized to sign up, or the authentication link is invalid. Please request an invitation or contact support."}
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">

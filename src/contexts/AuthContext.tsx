@@ -143,6 +143,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         provider,
         options: {
           redirectTo,
+          queryParams: {
+            prompt: "select_account", // Force account chooser - never auto-sign-in
+          },
         },
       });
       return { error };
