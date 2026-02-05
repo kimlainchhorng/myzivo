@@ -11121,6 +11121,7 @@ export type Database = {
           full_name: string | null
           id: string
           phone: string | null
+          setup_complete: boolean | null
           status: string | null
           updated_at: string
           user_id: string
@@ -11132,6 +11133,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          setup_complete?: boolean | null
           status?: string | null
           updated_at?: string
           user_id: string
@@ -11143,6 +11145,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           phone?: string | null
+          setup_complete?: boolean | null
           status?: string | null
           updated_at?: string
           user_id?: string
