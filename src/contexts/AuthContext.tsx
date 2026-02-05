@@ -114,22 +114,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: Provider) => {
     try {
-      // For Capacitor apps or localhost, redirect to production domain.
-      // For web (including Lovable preview), use the current origin.
-      const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
-      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      
-      // Use Lovable preview domain for all cases until custom domain is connected
-      const PRODUCTION_CALLBACK = 'https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app/auth-callback';
-      
-      const redirectUrl = (isCapacitor || isLocalhost)
-        ? PRODUCTION_CALLBACK
-        : `${window.location.origin}/auth-callback`;
-      
+      // Always redirect OAuth back to the Lovable preview domain until a custom domain is connected.
+      // (Using window.location.origin can accidentally send users to hizivo.com if that domain is visited.)
+      const OAUTH_CALLBACK = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app/auth-callback";
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: OAUTH_CALLBACK,
         },
       });
       return { error };
