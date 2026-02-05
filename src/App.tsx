@@ -13,6 +13,7 @@ import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAInstallPrompt } from "./components/mobile";
 import { Loader2 } from "lucide-react";
+import { SpatialCursor } from "./components/ui/SpatialCursor";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -1232,6 +1233,7 @@ const App = () => (
           </CurrencyProvider>
           <CookieConsent />
           <PWAInstallPrompt />
+          <SpatialCursor />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
