@@ -317,6 +317,8 @@ const OperationsPlaybook = lazy(() => import("./pages/admin/modules/operations/O
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 const TravelOperationsCenter = lazy(() => import("./pages/admin/TravelOperationsCenter"));
  const FulfillmentHub = lazy(() => import("./pages/admin/FulfillmentHub"));
+const MissionControlLayout = lazy(() => import("./layouts/MissionControlLayout"));
+const BookingLedgerPage = lazy(() => import("./components/admin/BookingLedger"));
 const MarketingDashboard = lazy(() => import("./pages/admin/MarketingDashboard"));
 const AdminNotificationsModule = lazy(() => import("./pages/admin/modules/notifications/AdminNotificationsModule"));
 const AdminFinanceDashboard = lazy(() => import("./pages/admin/modules/finance/AdminFinanceDashboard"));
@@ -757,6 +759,12 @@ const App = () => (
                 
                 {/* Admin Login (public) */}
                 <Route path="/admin/login" element={<AdminLogin />} />
+                
+                {/* Mission Control - Power User Ops Dashboard */}
+                <Route path="/admin/ops" element={<ProtectedRoute requireAdmin><MissionControlLayout /></ProtectedRoute>}>
+                  <Route index element={<BookingLedgerPage />} />
+                  <Route path="bookings" element={<BookingLedgerPage />} />
+                </Route>
                 
                 {/* New Master Admin Routes */}
                 <Route path="/admin/travel/bookings" element={<ProtectedRoute requireAdmin><TravelBookingsPage /></ProtectedRoute>} />
