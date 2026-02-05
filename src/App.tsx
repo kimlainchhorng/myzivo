@@ -1075,39 +1075,6 @@ const App = () => (
                   }
                 />
                 <Route
-                  path="/admin/marketing"
-                <Route
-                  path="/admin/fulfillment"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FulfillmentHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/marketing"
-                <Route
-                  path="/admin/fulfillment"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FulfillmentHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/marketing"
-                <Route
-                  path="/admin/fulfillment"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <FulfillmentHub />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/marketing"
-                  element={
-                <Route
                   path="/admin/fulfillment"
                   element={
                     <ProtectedRoute requireAdmin>
