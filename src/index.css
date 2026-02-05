@@ -863,6 +863,12 @@
   animation: location-pulse 2s ease-out infinite;
 }
 
+/* Rides content visibility fallback */
+.rides-content-visible {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
 /* Sticky CTA gradient fade */
 .rides-sticky-fade {
   background: linear-gradient(

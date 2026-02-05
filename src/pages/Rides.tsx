@@ -218,7 +218,7 @@ import { motion, AnimatePresence } from "framer-motion";
  
       <main className="relative">
         {/* FIXED LAYER — Dark Map Background */}
-        <div className="fixed inset-0 z-0">
+        <div className="fixed inset-0 z-0 pointer-events-none">
           <img 
             src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000"
             alt="City background"
@@ -227,14 +227,14 @@ import { motion, AnimatePresence } from "framer-motion";
           <div className="absolute inset-0 rides-gradient-overlay" />
           
           {/* Pulsing "Current Location" Dot */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="w-4 h-4 bg-primary rounded-full animate-location-pulse absolute" />
             <div className="w-4 h-4 bg-primary rounded-full relative border-2 border-white shadow-[0_0_20px_hsl(217_91%_60%/0.5)]" />
           </div>
         </div>
  
         {/* SCROLLABLE CONTENT LAYER */}
-        <div className="relative z-10 pt-24 px-4 sm:px-6 pb-40 min-h-screen">
+        <div className="relative z-20 pt-24 px-4 sm:px-6 pb-40 min-h-screen">
            {step === "request" && (
             <div className="max-w-xl mx-auto space-y-8">
               {/* Header */}
