@@ -19,6 +19,9 @@ import { motion, AnimatePresence } from "framer-motion";
  import Header from "@/components/Header";
  import Footer from "@/components/Footer";
  import SEOHead from "@/components/SEOHead";
+ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+ import MobileCheckoutFooter from "@/components/mobile/MobileCheckoutFooter";
+ import { useIsMobile } from "@/hooks/useMobileSettings";
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
  
@@ -194,6 +197,7 @@ import { motion, AnimatePresence } from "framer-motion";
    const navigate = useNavigate();
    const [searchParams] = useSearchParams();
    const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
+  const isMobile = useIsMobile();
    const [step, setStep] = useState<RideStep>("request");
    const [pickup, setPickup] = useState("");
    const [dropoff, setDropoff] = useState("");
@@ -326,7 +330,7 @@ import { motion, AnimatePresence } from "framer-motion";
   };
 
    return (
-    <div className="min-h-screen bg-zinc-950 text-white font-sans">
+    <div className="min-h-screen bg-zinc-950 text-white font-sans pb-20 md:pb-0">
        <SEOHead
          title="ZIVO Rides — Request a Ride"
          description="Book a ride with ZIVO. Fast, reliable, and safe rides with verified drivers."
@@ -351,7 +355,7 @@ import { motion, AnimatePresence } from "framer-motion";
         </div>
  
         {/* SCROLLABLE CONTENT LAYER */}
-        <div className="relative z-20 pt-24 px-4 sm:px-6 pb-40 min-h-screen">
+      <div className="relative z-20 pt-20 md:pt-24 px-3 sm:px-6 pb-44 md:pb-40 min-h-screen">
            {step === "request" && (
             <div className="max-w-xl mx-auto space-y-8">
               {/* Header */}
@@ -360,11 +364,11 @@ import { motion, AnimatePresence } from "framer-motion";
                 animate={{ y: 0, opacity: 1 }}
                 className="text-center rides-content-visible"
               >
-                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-4">
+               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-white/10 mb-3 md:mb-4">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-widest">35 Drivers Nearby</span>
+                 <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest">35 Drivers Nearby</span>
                  </div>
-                <h1 className="text-4xl sm:text-5xl font-black tracking-tighter">Where to?</h1>
+               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter">Where to?</h1>
               </motion.div>
 
               {/* GLASS INPUT PANEL */}
@@ -372,16 +376,16 @@ import { motion, AnimatePresence } from "framer-motion";
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="rides-glass-panel rounded-[2rem] p-6 shadow-2xl rides-content-visible"
+               className="rides-glass-panel rounded-2xl md:rounded-[2rem] p-4 md:p-6 shadow-2xl rides-content-visible"
               >
                 <div className="relative">
                   {/* Visual Connector Line */}
-                  <div className="absolute left-[1.15rem] top-10 bottom-10 w-0.5 bg-gradient-to-b from-primary to-emerald-500 opacity-50" />
+                 <div className="absolute left-[0.95rem] md:left-[1.15rem] top-10 bottom-10 w-0.5 bg-gradient-to-b from-primary to-emerald-500 opacity-50" />
                   
                   {/* Pickup Input */}
-                  <div className="rides-input-glass flex items-center gap-4 mb-4 p-4 rounded-2xl">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <Navigation className="w-5 h-5" />
+                 <div className="rides-input-glass flex items-center gap-3 md:gap-4 mb-3 md:mb-4 p-3 md:p-4 rounded-xl md:rounded-2xl">
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                     <Navigation className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Pickup Location</div>
@@ -389,24 +393,25 @@ import { motion, AnimatePresence } from "framer-motion";
                         value={pickup}
                         onChange={(e) => setPickup(e.target.value)}
                         placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Enter pickup address..."}
-                        className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate" 
+                       className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-sm md:text-base" 
+                       style={{ fontSize: '16px' }}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={handleUseCurrentLocation}
                       disabled={isGettingLocation || isAutoDetecting}
-                      className="p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0"
+                     className="p-2.5 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
                       title="Use current location"
                     >
-                      <LocateFixed className={`w-5 h-5 text-primary ${isGettingLocation || isAutoDetecting ? "animate-pulse" : ""}`} />
+                     <LocateFixed className={`w-5 h-5 md:w-5 md:h-5 text-primary ${isGettingLocation || isAutoDetecting ? "animate-pulse" : ""}`} />
                     </button>
                   </div>
 
                   {/* Dropoff Input */}
-                  <div className="rides-input-glass flex items-center gap-4 p-4 rounded-2xl">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                      <MapPin className="w-5 h-5" />
+                 <div className="rides-input-glass flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl md:rounded-2xl">
+                   <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                     <MapPin className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Destination</div>
@@ -414,17 +419,18 @@ import { motion, AnimatePresence } from "framer-motion";
                         value={dropoff}
                         onChange={(e) => setDropoff(e.target.value)}
                         placeholder="Enter destination..."
-                        className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate" 
+                       className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-sm md:text-base" 
+                       style={{ fontSize: '16px' }}
                       />
                     </div>
                     <button
                       type="button"
                       onClick={handleUseCurrentLocationForDropoff}
                       disabled={isGettingLocation}
-                      className="p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0"
+                     className="p-2.5 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
                       title="Use current location"
                     >
-                      <LocateFixed className={`w-5 h-5 text-emerald-400 ${isGettingLocation ? "animate-pulse" : ""}`} />
+                     <LocateFixed className={`w-5 h-5 md:w-5 md:h-5 text-emerald-400 ${isGettingLocation ? "animate-pulse" : ""}`} />
                     </button>
                   </div>
                 </div>
@@ -438,19 +444,19 @@ import { motion, AnimatePresence } from "framer-motion";
                 className="rides-content-visible"
               >
                 {/* Header */}
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-6">
+               <div className="text-center mb-5 md:mb-8">
+                 <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight mb-4 md:mb-6">
                     Choose Your <span className="text-primary">Ride</span>
                   </h2>
                   
                   {/* Category Tab Selector */}
                   <div className="flex justify-center">
-                    <div className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-xl rounded-full border border-white/10">
+                   <div className="flex gap-1 md:gap-2 p-1 md:p-1.5 bg-white/5 backdrop-blur-xl rounded-full border border-white/10 overflow-x-auto hide-scrollbar">
                       {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => (
                         <button
                           key={cat}
                           onClick={() => setActiveTab(cat)}
-                          className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 ${
+                         className={`px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 md:py-3 rounded-full text-[10px] sm:text-xs md:text-sm font-bold uppercase tracking-wider transition-all duration-300 touch-manipulation whitespace-nowrap ${
                             activeTab === cat 
                               ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
                               : "text-muted-foreground hover:text-foreground hover:bg-white/5"
@@ -466,7 +472,7 @@ import { motion, AnimatePresence } from "framer-motion";
                 {/* Vehicle Grid */}
                 <motion.div 
                   layout
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+                 className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
                 >
                   <AnimatePresence mode="popLayout">
                     {rideCategories[activeTab].map((ride) => (
@@ -477,14 +483,14 @@ import { motion, AnimatePresence } from "framer-motion";
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         onClick={() => setSelectedOption(ride)}
-                        className={`relative overflow-hidden rounded-[2rem] border cursor-pointer group transition-all duration-300 ${
+                       className={`relative overflow-hidden rounded-xl md:rounded-[2rem] border cursor-pointer group transition-all duration-300 touch-manipulation active:scale-[0.98] ${
                           selectedOption?.id === ride.id 
                             ? "bg-primary/20 border-primary shadow-[0_0_40px_hsl(var(--primary)/0.2)]" 
                             : "bg-background/60 border-border/20 hover:border-border/50 hover:bg-background/80"
                         }`}
                       >
                         {/* Vehicle Image */}
-                        <div className="h-32 overflow-hidden relative">
+                       <div className="h-20 sm:h-24 md:h-32 overflow-hidden relative">
                           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10" />
                           <img 
                             src={ride.image} 
@@ -493,25 +499,25 @@ import { motion, AnimatePresence } from "framer-motion";
                           />
                           
                           {/* Price Badge */}
-                          <div className="absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 text-sm font-bold">
+                         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20 bg-black/50 backdrop-blur-md px-2 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg border border-white/10 text-xs md:text-sm font-bold">
                             {getFareFixed(ride)}
                           </div>
                         </div>
 
                         {/* Details */}
-                        <div className="p-5 relative z-20">
-                          <div className="flex items-center gap-2 mb-1">
-                            <ride.icon className={`w-4 h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-muted-foreground"}`} />
-                            <h3 className="text-lg font-black italic">{ride.name}</h3>
+                       <div className="p-3 md:p-5 relative z-20">
+                         <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
+                           <ride.icon className={`w-3 h-3 md:w-4 md:h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-muted-foreground"}`} />
+                           <h3 className="text-sm md:text-lg font-black italic truncate">{ride.name}</h3>
                           </div>
-                          <p className="text-xs text-muted-foreground h-8 leading-relaxed mb-4">{ride.desc}</p>
+                         <p className="text-[10px] md:text-xs text-muted-foreground h-6 md:h-8 leading-relaxed mb-2 md:mb-4 line-clamp-2">{ride.desc}</p>
                           
-                          <div className="flex items-center justify-between border-t border-border/20 pt-4">
-                            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1">
-                              <Zap className="w-3 h-3" /> {ride.time} away
+                         <div className="flex items-center justify-between border-t border-border/20 pt-2 md:pt-4">
+                           <span className="text-[9px] md:text-xs font-bold uppercase tracking-wider md:tracking-widest text-emerald-400 flex items-center gap-0.5 md:gap-1">
+                             <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {ride.time}
                             </span>
                             {selectedOption?.id === ride.id && (
-                              <div className="w-4 h-4 bg-primary rounded-full animate-ping" />
+                             <div className="w-3 h-3 md:w-4 md:h-4 bg-primary rounded-full animate-ping" />
                             )}
                           </div>
                         </div>
@@ -526,24 +532,24 @@ import { motion, AnimatePresence } from "framer-motion";
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="pt-8"
+               className="pt-6 md:pt-8"
               >
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-emerald-500 rounded-full" />
+               <h2 className="text-lg md:text-xl font-bold mb-4 md:mb-6 flex items-center gap-2">
+                 <span className="w-1 h-5 md:h-6 bg-emerald-500 rounded-full" />
                   Why ZIVO Rides
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+               <div className="grid grid-cols-3 gap-2 md:gap-4">
                   {[
                     { icon: Clock, title: "Instant Pickup", text: "AI-dispatching in under 3 minutes" },
                     { icon: Shield, title: "Verified Elite", text: "50-point security background check" },
                     { icon: Star, title: "Premium Fleet", text: "No cars older than 3 years" }
                   ].map((item, i) => (
-                    <div key={i} className="rides-glass-panel p-6 rounded-2xl hover:bg-zinc-900/80 transition-colors">
-                      <div className="w-12 h-12 bg-primary/20 text-primary rounded-xl flex items-center justify-center mb-4">
-                        <item.icon className="w-6 h-6" />
+                   <div key={i} className="rides-glass-panel p-3 md:p-6 rounded-xl md:rounded-2xl hover:bg-zinc-900/80 transition-colors">
+                     <div className="w-8 h-8 md:w-12 md:h-12 bg-primary/20 text-primary rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-4 mx-auto md:mx-0">
+                       <item.icon className="w-4 h-4 md:w-6 md:h-6" />
                       </div>
-                      <h3 className="text-base font-bold mb-1">{item.title}</h3>
-                      <p className="text-sm text-zinc-400">{item.text}</p>
+                     <h3 className="text-xs md:text-base font-bold mb-0.5 md:mb-1 text-center md:text-left">{item.title}</h3>
+                     <p className="text-[10px] md:text-sm text-zinc-400 text-center md:text-left hidden md:block">{item.text}</p>
                     </div>
                   ))}
                 </div>
@@ -552,40 +558,40 @@ import { motion, AnimatePresence } from "framer-motion";
            )}
  
            {step === "options" && (
-            <div className="max-w-xl mx-auto space-y-6 animate-in fade-in slide-in-from-right duration-300">
-              <Button variant="ghost" onClick={() => setStep("request")} className="gap-2 mb-2 text-white hover:bg-white/10">← Back</Button>
-              <div className="rides-glass-panel p-4 rounded-2xl">
+           <div className="max-w-xl mx-auto space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right duration-300">
+             <Button variant="ghost" onClick={() => setStep("request")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
+             <div className="rides-glass-panel p-3 md:p-4 rounded-xl md:rounded-2xl">
                  <div className="flex items-center gap-3 text-sm">
-                  <div className="w-3 h-3 bg-primary rounded-full" />
+                 <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-primary rounded-full" />
                    <span className="flex-1 truncate font-medium">{pickup}</span>
                  </div>
                 <div className="w-px h-4 bg-white/20 ml-1.5 my-1" />
                  <div className="flex items-center gap-3 text-sm">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                 <div className="w-2.5 h-2.5 md:w-3 md:h-3 bg-emerald-500 rounded-full" />
                    <span className="flex-1 truncate font-medium">{dropoff}</span>
                  </div>
-                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-white/10 text-sm text-zinc-400">
+               <div className="flex items-center gap-4 mt-2 md:mt-3 pt-2 md:pt-3 border-t border-white/10 text-xs md:text-sm text-zinc-400">
                    <span>~{estimatedDistance} mi</span>
                    <span>~{estimatedDuration} min</span>
                  </div>
                </div>
-               <h2 className="font-display font-bold text-2xl">Choose your ride</h2>
-               <div className="space-y-4">
+              <h2 className="font-display font-bold text-xl md:text-2xl">Choose your ride</h2>
+              <div className="space-y-3 md:space-y-4">
                  {rideCategories[activeTab].map((option) => (
-                  <button key={option.id} onClick={() => handleSelectOption(option)} className="w-full p-4 rounded-2xl rides-card-3d flex items-center gap-4 text-left transition-all hover:border-primary/50">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                 <button key={option.id} onClick={() => handleSelectOption(option)} className="w-full p-3 md:p-4 rounded-xl md:rounded-2xl rides-card-3d flex items-center gap-3 md:gap-4 text-left transition-all hover:border-primary/50 touch-manipulation active:scale-[0.98]">
+                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg md:rounded-xl overflow-hidden flex-shrink-0">
                       <img src={option.image} alt={option.name} className="w-full h-full object-cover" />
                     </div>
                      <div className="flex-1 min-w-0">
                        <div className="flex items-center gap-2">
-                         <h3 className="font-bold text-lg">{option.name}</h3>
-                         <span className="text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats || 4}</span>
+                        <h3 className="font-bold text-base md:text-lg">{option.name}</h3>
+                        <span className="text-[10px] md:text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats || 4}</span>
                        </div>
-                       <p className="text-sm text-zinc-400">{option.desc}</p>
+                      <p className="text-xs md:text-sm text-zinc-400 truncate">{option.desc}</p>
                      </div>
                      <div className="text-right">
-                       <p className="font-bold text-lg text-primary">{getFareFixed(option)}</p>
-                      <ChevronRight className="w-5 h-5 text-zinc-400 ml-auto" />
+                      <p className="font-bold text-base md:text-lg text-primary">{getFareFixed(option)}</p>
+                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-400 ml-auto" />
                      </div>
                    </button>
                  ))}
@@ -594,52 +600,52 @@ import { motion, AnimatePresence } from "framer-motion";
            )}
  
            {step === "confirm" && selectedOption && (
-            <div className="max-w-xl mx-auto space-y-6 animate-in fade-in slide-in-from-right duration-300">
-              <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10">← Back</Button>
-              <div className="rides-glass-panel p-5 rounded-2xl border-primary/20">
-                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden">
+           <div className="max-w-xl mx-auto space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right duration-300">
+             <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
+             <div className="rides-glass-panel p-4 md:p-5 rounded-xl md:rounded-2xl border-primary/20">
+               <div className="flex items-center gap-3 md:gap-4">
+                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden">
                     <img src={selectedOption.image} alt={selectedOption.name} className="w-full h-full object-cover" />
                   </div>
                    <div className="flex-1">
-                     <h3 className="font-bold text-lg">{selectedOption.name}</h3>
-                    <p className="text-sm text-zinc-400">{pickup} → {dropoff}</p>
+                    <h3 className="font-bold text-base md:text-lg">{selectedOption.name}</h3>
+                   <p className="text-xs md:text-sm text-zinc-400 truncate">{pickup} → {dropoff}</p>
                    </div>
                    <div className="text-right">
-                    <p className="font-bold text-xl text-primary">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)}</p>
-                    <p className="text-xs text-zinc-400">Est. total</p>
+                   <p className="font-bold text-lg md:text-xl text-primary">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)}</p>
+                   <p className="text-[10px] md:text-xs text-zinc-400">Est. total</p>
                    </div>
                  </div>
                </div>
-               <h2 className="font-display font-bold text-2xl">Your Information</h2>
-               <div className="space-y-4">
+              <h2 className="font-display font-bold text-xl md:text-2xl">Your Information</h2>
+              <div className="space-y-3 md:space-y-4">
                  <div>
                   <Label htmlFor="name" className="text-sm font-medium text-zinc-300">Full Name *</Label>
                    <div className="relative mt-1.5">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                    <Input id="name" placeholder="Your name" value={contactInfo.name} onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))} className="pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" />
+                   <User className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                   <Input id="name" placeholder="Your name" value={contactInfo.name} onChange={(e) => setContactInfo(prev => ({ ...prev, name: e.target.value }))} className="pl-10 md:pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" style={{ fontSize: '16px' }} />
                    </div>
                  </div>
                  <div>
                   <Label htmlFor="phone" className="text-sm font-medium text-zinc-300">Phone Number *</Label>
                    <div className="relative mt-1.5">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                    <Input id="phone" type="tel" placeholder="(555) 123-4567" value={contactInfo.phone} onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))} className="pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" />
+                   <Phone className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                   <Input id="phone" type="tel" placeholder="(555) 123-4567" value={contactInfo.phone} onChange={(e) => setContactInfo(prev => ({ ...prev, phone: e.target.value }))} className="pl-10 md:pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" style={{ fontSize: '16px' }} />
                    </div>
                  </div>
                  <div>
                   <Label htmlFor="email" className="text-sm font-medium text-zinc-300">Email (for receipt)</Label>
                    <div className="relative mt-1.5">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
-                    <Input id="email" type="email" placeholder="your@email.com" value={contactInfo.email} onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))} className="pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" />
+                   <Mail className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                   <Input id="email" type="email" placeholder="your@email.com" value={contactInfo.email} onChange={(e) => setContactInfo(prev => ({ ...prev, email: e.target.value }))} className="pl-10 md:pl-11 h-12 bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" style={{ fontSize: '16px' }} />
                    </div>
                  </div>
                  <div>
                   <Label htmlFor="notes" className="text-sm font-medium text-zinc-300">Notes (optional)</Label>
-                  <Textarea id="notes" placeholder="Any special requests..." value={contactInfo.notes} onChange={(e) => setContactInfo(prev => ({ ...prev, notes: e.target.value }))} className="mt-1.5 min-h-[100px] bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" />
+                 <Textarea id="notes" placeholder="Any special requests..." value={contactInfo.notes} onChange={(e) => setContactInfo(prev => ({ ...prev, notes: e.target.value }))} className="mt-1.5 min-h-[80px] md:min-h-[100px] bg-zinc-900/50 border-zinc-700 text-white placeholder-zinc-500" style={{ fontSize: '16px' }} />
                  </div>
                </div>
-              <Button onClick={handlePayment} disabled={!contactInfo.name || !contactInfo.phone || isSubmitting} size="lg" className="w-full h-14 rounded-xl font-bold gap-3 bg-white text-black hover:bg-zinc-200 text-lg">
+             <Button onClick={handlePayment} disabled={!contactInfo.name || !contactInfo.phone || isSubmitting} size="lg" className="w-full h-14 rounded-xl font-bold gap-3 bg-white text-black hover:bg-zinc-200 text-base md:text-lg touch-manipulation active:scale-[0.98]">
                  <CreditCard className="w-5 h-5" />
                   Pay ${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)} & Request
                </Button>
@@ -648,59 +654,62 @@ import { motion, AnimatePresence } from "framer-motion";
            )}
  
            {step === "processing" && (
-            <div className="max-w-xl mx-auto py-24 text-center space-y-6 animate-in fade-in duration-200">
-              <Loader2 className="w-14 h-14 mx-auto text-primary animate-spin" />
+           <div className="max-w-xl mx-auto py-16 md:py-24 text-center space-y-4 md:space-y-6 animate-in fade-in duration-200">
+             <Loader2 className="w-12 h-12 md:w-14 md:h-14 mx-auto text-primary animate-spin" />
                <div>
-                 <h2 className="font-display text-2xl font-bold mb-2">Redirecting to Payment...</h2>
+                <h2 className="font-display text-xl md:text-2xl font-bold mb-2">Redirecting to Payment...</h2>
                 <p className="text-zinc-400">Please wait while we set up your secure checkout.</p>
                </div>
              </div>
            )}
  
            {step === "success" && (
-            <div className="max-w-xl mx-auto py-16 text-center space-y-8 animate-in fade-in zoom-in-95 duration-300">
-              <div className="w-24 h-24 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+           <div className="max-w-xl mx-auto py-12 md:py-16 text-center space-y-6 md:space-y-8 animate-in fade-in zoom-in-95 duration-300">
+             <div className="w-20 h-20 md:w-24 md:h-24 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
+               <CheckCircle2 className="w-10 h-10 md:w-12 md:h-12 text-emerald-500" />
                </div>
                <div>
-                 <h2 className="font-display text-3xl font-bold mb-3">Payment Received!</h2>
-                <p className="text-zinc-400 text-lg max-w-md mx-auto">Your ride request has been submitted. We'll confirm shortly.</p>
+                <h2 className="font-display text-2xl md:text-3xl font-bold mb-2 md:mb-3">Payment Received!</h2>
+               <p className="text-zinc-400 text-base md:text-lg max-w-md mx-auto px-4">Your ride request has been submitted. We'll confirm shortly.</p>
                </div>
                {requestId && (
-                <div className="py-4 px-6 rounded-2xl rides-glass-panel inline-block">
-                  <p className="text-xs text-zinc-500 mb-1">Request ID</p>
+               <div className="py-3 px-5 md:py-4 md:px-6 rounded-xl md:rounded-2xl rides-glass-panel inline-block">
+                 <p className="text-[10px] md:text-xs text-zinc-500 mb-1">Request ID</p>
                    <p className="font-mono font-bold">{requestId.slice(0, 8).toUpperCase()}</p>
                  </div>
                )}
-              <div className="py-5 px-6 rounded-2xl rides-glass-panel max-w-md mx-auto text-left">
-                <p className="text-sm text-zinc-400 mb-3">Status: <span className="text-emerald-400 font-semibold">Paid / Awaiting Match</span></p>
-                 <ul className="text-sm space-y-3">
-                  <li className="flex items-center gap-3"><div className="w-2 h-2 bg-primary rounded-full" />We'll match you with a driver</li>
-                  <li className="flex items-center gap-3"><div className="w-2 h-2 bg-primary rounded-full" />You'll receive a confirmation call/text</li>
-                  <li className="flex items-center gap-3"><div className="w-2 h-2 bg-primary rounded-full" />Driver will pick you up at the scheduled time</li>
+             <div className="py-4 px-4 md:py-5 md:px-6 rounded-xl md:rounded-2xl rides-glass-panel max-w-md mx-auto text-left">
+               <p className="text-xs md:text-sm text-zinc-400 mb-2 md:mb-3">Status: <span className="text-emerald-400 font-semibold">Paid / Awaiting Match</span></p>
+                <ul className="text-xs md:text-sm space-y-2 md:space-y-3">
+                 <li className="flex items-center gap-2 md:gap-3"><div className="w-2 h-2 bg-primary rounded-full shrink-0" />We'll match you with a driver</li>
+                 <li className="flex items-center gap-2 md:gap-3"><div className="w-2 h-2 bg-primary rounded-full shrink-0" />You'll receive a confirmation call/text</li>
+                 <li className="flex items-center gap-2 md:gap-3"><div className="w-2 h-2 bg-primary rounded-full shrink-0" />Driver will pick you up at the scheduled time</li>
                  </ul>
                </div>
-              <Button variant="outline" size="lg" onClick={handleReset} className="rounded-xl border-zinc-700 text-white hover:bg-white/10">Request Another Ride</Button>
+             <Button variant="outline" size="lg" onClick={handleReset} className="rounded-xl border-zinc-700 text-white hover:bg-white/10 h-12 touch-manipulation">Request Another Ride</Button>
              </div>
            )}
  
           {/* STICKY CONFIRM BUTTON */}
           {step === "request" && (
-            <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 rides-sticky-fade z-50 pointer-events-none flex justify-center">
+           <div className="fixed bottom-16 md:bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6 rides-sticky-fade z-50 pointer-events-none flex justify-center">
               <Button 
                 onClick={handleFindRides} 
                 disabled={!pickup || !dropoff || !selectedOption}
-                className="pointer-events-auto bg-white text-black text-base sm:text-lg font-black py-5 px-8 sm:px-12 rounded-2xl shadow-xl hover:scale-105 transition-transform flex items-center gap-3 disabled:opacity-50 disabled:hover:scale-100"
+               className="pointer-events-auto bg-white text-black text-sm sm:text-base md:text-lg font-black py-4 md:py-5 px-6 sm:px-8 md:px-12 rounded-xl md:rounded-2xl shadow-xl hover:scale-105 transition-transform flex items-center gap-2 md:gap-3 disabled:opacity-50 disabled:hover:scale-100 touch-manipulation active:scale-95"
               >
-                {selectedOption ? `CONFIRM ${selectedOption.name.toUpperCase()}` : "SELECT A RIDE"} 
-                <ChevronRight className="w-5 h-5" />
+               {selectedOption ? `CONFIRM ${selectedOption.name.toUpperCase()}` : "SELECT A RIDE"}
+               <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
             </div>
           )}
         </div>
        </main>
  
-       <Footer />
+      <Footer className="hidden md:block" />
+      
+      {/* Mobile Bottom Nav */}
+      {isMobile && <ZivoMobileNav />}
      </div>
    );
  }
