@@ -1,98 +1,166 @@
 
-# Fix: ZIVO Rides Content Not Visible
 
-## Problem Identified
+# Upgrade: ZIVO Rides Premium with Category Tabs
 
-From the screenshot, the main content (header, glass input panel, vehicle cards) is invisible while:
-- The fixed map background layer (`z-0`) is visible
-- The sticky confirm button (`z-50`) is visible and shows "CONFIRM ZIVO PRIME"
-- The pulsing location dot is visible
+## Overview
 
-This indicates the **scrollable content layer** (`z-10`) is either:
-1. Not rendering properly
-2. Hidden behind an invisible overlay
-3. Has animation issues keeping it at `opacity: 0`
-
-## Root Cause Analysis
-
-The likely causes are:
-
-### Cause 1: Framer Motion Animation Issue
-The content is wrapped in `<motion.div initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>`. If Framer Motion fails to trigger the animation, content stays at `opacity: 0`.
-
-### Cause 2: Z-Index Stacking Issue
-The fixed background div has `z-0` but contains a child with `z-20` (the location dot). This creates a new stacking context that could interfere with `z-10` content.
-
-### Cause 3: Backdrop-filter Issue
-Safari and some browsers have issues with `backdrop-blur` on elements that may cause rendering problems.
+Replace the current single-tier vehicle display with the new **"ZivoRidesPremium"** design featuring:
+- **3 Category Tabs**: Economy, Premium, Elite
+- **12 Vehicle Options** across categories
+- **4-Column Grid Layout** on desktop
+- **Animated Tab Switching** with AnimatePresence
 
 ---
 
-## Solution
+## Implementation Plan
 
-### Fix 1: Ensure Content Layer Has Proper Positioning
+### Phase 1: Update Data Structure
 
-Update the scrollable content layer to ensure it's above everything in the fixed layer:
+Replace the current 3-option `rideOptions` array with a categorized `rideCategories` object:
 
-**File:** `src/pages/Rides.tsx`
-
-```tsx
-// Current (line 237):
-<div className="relative z-10 pt-24 px-4 sm:px-6 pb-40 min-h-screen">
-
-// Fix - bump to z-20 to be above the location dot (which is z-20 inside z-0):
-<div className="relative z-20 pt-24 px-4 sm:px-6 pb-40 min-h-screen">
-```
-
-### Fix 2: Add Pointer-Events-None to Fixed Background
-
-Ensure the fixed layer cannot intercept clicks or affect rendering:
-
-```tsx
-// Current (line 221):
-<div className="fixed inset-0 z-0">
-
-// Fix:
-<div className="fixed inset-0 z-0 pointer-events-none">
-```
-
-### Fix 3: Remove Nested Z-Index in Fixed Layer
-
-The location dot has `z-20` inside the `z-0` container. This should be simplified:
-
-```tsx
-// Current (line 230):
-<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-
-// Fix - remove z-20, let it be part of the z-0 layer:
-<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-```
-
-### Fix 4: Add Animation Fallback
-
-Add a CSS fallback to ensure content is visible even if Framer Motion fails:
-
-**File:** `src/index.css`
-
-```css
-/* Rides content visibility fallback */
-.rides-content-visible {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
+**New Structure:**
+```text
+rideCategories = {
+  Economy: [Wait & Save, Standard, Green, Priority]
+  Premium: [Extra Comfort, ZIVO Black, Black SUV, XXL]
+  Elite: [ZIVO Lux, Executive Sprinter, Secure Transit, Pet Premium]
 }
 ```
 
-Apply to the content container as a safety net.
+Each option includes:
+- `id`, `name`, `desc`, `price`, `time`
+- `icon` (Lucide icon component)
+- `image` (premium vehicle photo URL)
+
+### Phase 2: Add Category Tab Selector
+
+Replace the current "Choose your Ride" heading with a horizontal pill-style tab selector:
+
+```text
+┌─────────────────────────────────────────────────┐
+│  [ Economy ]  [✓ Premium ]  [ Elite ]           │
+│  (rounded-full pills with blue active state)    │
+└─────────────────────────────────────────────────┘
+```
+
+- Active tab: `bg-blue-600 text-white shadow-lg`
+- Inactive: `text-zinc-400 hover:bg-white/5`
+
+### Phase 3: Update Vehicle Grid
+
+Replace the current 1-column stacked layout with a responsive grid:
+
+| Breakpoint | Columns |
+|------------|---------|
+| Mobile | 1 column |
+| md (768px+) | 2 columns |
+| lg (1024px+) | 4 columns |
+
+### Phase 4: Enhanced Vehicle Cards
+
+New card design with:
+- **Vertical layout** (image on top, content below)
+- **Price badge** overlaid on the image
+- **Category icon** next to the vehicle name
+- **ETA indicator** with Zap icon
+- **Selection animation** with `layoutId` border outline
+
+### Phase 5: Preserve Existing Functionality
+
+All existing logic remains intact:
+- Location detection (`useCurrentLocation`)
+- Fare calculation (`calculateFare`)
+- Step state machine (request → options → confirm → processing → success)
+- Stripe checkout integration
+- Success/cancelled URL handling
+
+---
+
+## Technical Changes
+
+### File: `src/pages/Rides.tsx`
+
+**Add new imports:**
+```tsx
+import { Leaf, Zap, Briefcase, Crown, Anchor, Dog } from "lucide-react";
+```
+
+**Replace `rideOptions` with `rideCategories`:**
+```tsx
+const rideCategories = {
+  Economy: [
+    { id: "wait_save", name: "Wait & Save", desc: "Lowest price, longer wait.", ... },
+    { id: "standard", name: "Standard", ... },
+    { id: "green", name: "Green", icon: Leaf, ... },
+    { id: "priority", name: "Priority", icon: Zap, ... }
+  ],
+  Premium: [
+    { id: "comfort", name: "Extra Comfort", ... },
+    { id: "black", name: "ZIVO Black", icon: Briefcase, ... },
+    { id: "black_suv", name: "Black SUV", ... },
+    { id: "xxl", name: "XXL", icon: Anchor, ... }
+  ],
+  Elite: [
+    { id: "lux", name: "ZIVO Lux", icon: Crown, ... },
+    { id: "sprinter", name: "Executive Sprinter", ... },
+    { id: "secure", name: "Secure Transit", ... },
+    { id: "pet", name: "Pet Premium", icon: Dog, ... }
+  ]
+};
+```
+
+**Add new state:**
+```tsx
+const [activeTab, setActiveTab] = useState<keyof typeof rideCategories>("Premium");
+```
+
+**Update the vehicle selection JSX:**
+- Add horizontal tab selector with `Object.keys(rideCategories).map()`
+- Replace single-column grid with `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4`
+- Wrap cards in `<AnimatePresence mode="popLayout">` for smooth transitions
+- Use vertical card layout with image area + content area
+
+**Update fare calculation:**
+- Modify `getFareFixed()` to accept the new ride object structure (static price or calculated)
+
+---
+
+## Visual Preview
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                      LIVE STATUS: 42 Drivers                    │
+│                   Choose Your Ride                              │
+│                                                                 │
+│        [ Economy ]    [✓ Premium ]    [ Elite ]                 │
+│                                                                 │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐   │
+│  │   $38.00   │ │   $65.00   │ │   $85.00   │ │   $90.00   │   │
+│  │  [image]   │ │  [image]   │ │  [image]   │ │  [image]   │   │
+│  │────────────│ │────────────│ │────────────│ │────────────│   │
+│  │ ★ Comfort  │ │ 💼 Black   │ │ 🛡 SUV     │ │ ⚓ XXL     │   │
+│  │ More legroom│ │ Leather   │ │ Luxury 6  │ │ Max space  │   │
+│  │ ⚡ 5 min   │ │ ⚡ 8 min   │ │ ⚡ 10 min  │ │ ⚡ 12 min  │   │
+│  └────────────┘ └────────────┘ └────────────┘ └────────────┘   │
+│                                                                 │
+│           ┌────────────────────────────────────────┐            │
+│           │    REQUEST ZIVO BLACK  →               │            │
+│           └────────────────────────────────────────┘            │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Summary of Changes
 
-| File | Change | Purpose |
-|------|--------|---------|
-| `src/pages/Rides.tsx` | Bump content layer from `z-10` to `z-20` | Ensure content is above all fixed layer children |
-| `src/pages/Rides.tsx` | Add `pointer-events-none` to fixed background | Prevent event blocking |
-| `src/pages/Rides.tsx` | Remove `z-20` from location dot | Fix stacking context issues |
-| `src/index.css` (optional) | Add `.rides-content-visible` utility | Animation fallback |
+| Area | Change |
+|------|--------|
+| Data | Replace 3-option array with 12-option categorized object |
+| UI | Add horizontal tab selector for Economy/Premium/Elite |
+| Layout | Switch to responsive 4-column grid |
+| Cards | Use vertical layout with image overlay price badge |
+| Animation | Add AnimatePresence for smooth category switching |
+| Icons | Import and use Leaf, Zap, Briefcase, Crown, Anchor, Dog |
 
-These fixes will ensure the content layer properly displays above the fixed map background while maintaining the layered scroll effect.
+All existing booking flow logic (location detection, fare calculation, Stripe checkout) remains unchanged.
+
