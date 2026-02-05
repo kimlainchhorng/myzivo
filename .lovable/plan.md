@@ -1,153 +1,73 @@
 
+# Fix: Enforce Mandatory Setup for All New Users
 
-# Account Setup Flow for New Users
+## Problem Identified
 
-## Overview
+After investigating, I found these issues:
 
-This plan adds a mandatory onboarding/setup flow for new users. When a user signs up (via email or Google OAuth), they must complete their profile setup before accessing the main app. Users who haven't completed setup will be redirected to the setup page.
+1. **No profile is created** when a user signs up with Google OAuth (or email). The `auth.users` table has records, but the `profiles` table is empty.
 
----
+2. **Email/password login bypasses setup check** - The Login page redirects directly to home after successful sign-in without verifying if setup is complete.
 
-## How It Works
-
-```text
-+------------------+     +-------------------+     +------------------+
-|   Sign Up /      | --> |  Auth Callback    | --> | Setup Required?  |
-|   Google OAuth   |     |  (session created)|     |                  |
-+------------------+     +-------------------+     +--------+---------+
-                                                           |
-                              +----------------------------+----------------------------+
-                              |                                                         |
-                              v                                                         v
-                     +--------+--------+                                    +-----------+----------+
-                     |  setup_complete |                                    |   setup_complete     |
-                     |     = false     |                                    |       = true         |
-                     +--------+--------+                                    +-----------+----------+
-                              |                                                         |
-                              v                                                         v
-                     +--------+--------+                                    +-----------+----------+
-                     |  /setup Page    |                                    |    Main App / Home   |
-                     |  (Name, Phone,  |                                    |                      |
-                     |   Preferences)  |                                    +----------------------+
-                     +--------+--------+
-                              |
-                              v
-                     +--------+--------+
-                     | Complete Setup  |
-                     | setup_complete  |
-                     |     = true      |
-                     +-----------------+
-                              |
-                              v
-                     +--------+--------+
-                     |    Redirect to  |
-                     |    Main App     |
-                     +-----------------+
-```
+3. **Profile needs to be created first** before we can check `setup_complete`.
 
 ---
 
-## Changes Required
+## Solution
 
-### 1. Database: Add `setup_complete` Column
+### 1. Database: Create Profile Trigger
 
-Add a boolean column to the `profiles` table to track whether a user has completed onboarding.
+Add a database trigger that automatically creates a profile row when a new user signs up (via any method). The profile will have `setup_complete = false` by default.
 
-**SQL Migration:**
 ```sql
-ALTER TABLE profiles 
-ADD COLUMN setup_complete BOOLEAN DEFAULT false;
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, email, setup_complete)
+  VALUES (NEW.id, NEW.email, false);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 ```
 
-### 2. Create Setup Page (`/setup`)
+### 2. Create Missing Profiles for Existing Users
 
-A new page where new users complete their profile:
-- Full name (required)
-- Phone number (optional)
-- Accept Terms checkbox
-- "Complete Setup" button
+Run a one-time migration to create profile rows for users who already exist:
 
-Once submitted, `setup_complete` is set to `true` and the user is redirected to the home page.
-
-### 3. Create Setup Guard Component
-
-A wrapper component (`SetupRequiredRoute`) that:
-- Checks if the logged-in user has `setup_complete = true`
-- If not, redirects them to `/setup`
-- Used to protect all main app routes
-
-### 4. Update Auth Flow
-
-- After OAuth callback success, check if `setup_complete` is `false`
-- If so, redirect to `/setup` instead of home
-- Update `AuthCallback.tsx` to handle this logic
-
-### 5. Update Signup Flow
-
-- After email signup + email verification, the user lands on `/setup`
-- The setup page handles profile completion
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/pages/Setup.tsx` | Onboarding form for new users |
-| `src/components/auth/SetupRequiredRoute.tsx` | Route guard that ensures setup is complete |
-| `src/hooks/useSetupStatus.ts` | Hook to check if current user has completed setup |
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/App.tsx` | Add `/setup` route and wrap protected routes with `SetupRequiredRoute` |
-| `src/pages/AuthCallback.tsx` | Redirect to `/setup` if setup not complete |
-| `src/integrations/supabase/types.ts` | Add `setup_complete` to Profile type (if needed) |
-
----
-
-## User Experience
-
-1. **New User Signs Up with Google:**
-   - Clicks "Continue with Google"
-   - Google OAuth completes
-   - Redirected to `/setup` page
-   - Fills in name, optional phone
-   - Clicks "Complete Setup"
-   - Redirected to home page
-
-2. **New User Signs Up with Email:**
-   - Fills email/password form
-   - Receives verification email
-   - Clicks verification link
-   - Lands on `/setup` page
-   - Completes profile
-   - Redirected to home
-
-3. **Existing User (setup already complete):**
-   - Signs in normally
-   - Goes directly to home page
-
----
-
-## Technical Details
-
-### SetupRequiredRoute Component Logic
-```text
-1. Check if user is logged in
-2. If not logged in -> redirect to /login
-3. If logged in, fetch profile.setup_complete
-4. If setup_complete = false -> redirect to /setup
-5. If setup_complete = true -> render children
+```sql
+INSERT INTO public.profiles (user_id, email, setup_complete)
+SELECT id, email, false
+FROM auth.users
+WHERE id NOT IN (SELECT user_id FROM public.profiles);
 ```
 
-### Setup Page Fields
-- Full Name (required, min 2 characters)
-- Phone Number (optional)
-- Terms of Service checkbox (required)
-- Submit button disabled until form is valid
+### 3. Fix Login Page Redirect
 
-### Database Trigger Update
-Update the existing profile creation trigger to set `setup_complete = false` by default for new users.
+Update `src/pages/Login.tsx` to check setup status after successful email/password login, and redirect to `/setup` if not complete (same logic as AuthCallback).
 
+### 4. Strengthen Route Protection
+
+The `SetupRequiredRoute` guard is already in place, but we need to ensure it covers all entry points consistently.
+
+---
+
+## Files to Change
+
+| File | Change |
+|------|--------|
+| New SQL Migration | Create trigger for auto-profile creation + backfill existing users |
+| `src/pages/Login.tsx` | Add setup status check after successful login |
+
+---
+
+## Expected Behavior After Fix
+
+1. **New Google OAuth user**: Signs in → Profile auto-created with `setup_complete = false` → Redirected to `/setup` → Completes form → Can access app
+
+2. **New Email/Password user**: Signs up → Profile auto-created → Logs in → Redirected to `/setup` → Completes form → Can access app
+
+3. **Existing user without profile**: Profile backfilled → Next login redirects to `/setup`
