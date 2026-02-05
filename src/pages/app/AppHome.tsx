@@ -1,13 +1,13 @@
 /**
  * App Home Screen - Mobile Premium
- * Premium Bento-grid design with glass morphism
+  * Premium Bento-grid design with screen navigation
  */
-import { useState } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  Search, Plane, Car, Utensils, BedDouble, 
-  MapPin, Bell, Zap, LucideIcon
+  Search, Plane, Car, Utensils, BedDouble,
+  MapPin, Bell, Zap, LucideIcon, ChevronRight
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -28,16 +28,14 @@ interface ServiceCardProps {
   subtitle: string;
   img: string;
   icon: LucideIcon;
-  href: string;
+  onNavigate: () => void;
   className?: string;
 }
 
-const ServiceCard = ({ title, subtitle, img, icon: Icon, href, className = "" }: ServiceCardProps) => {
-  const navigate = useNavigate();
-  
+const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className = "" }: ServiceCardProps) => {
   return (
     <motion.button
-      onClick={() => navigate(href)}
+      onClick={onNavigate}
       whileTap={{ scale: 0.95 }}
       className={`relative rounded-3xl overflow-hidden group cursor-pointer border border-white/5 touch-manipulation ${className}`}
     >
@@ -62,6 +60,30 @@ const ServiceCard = ({ title, subtitle, img, icon: Icon, href, className = "" }:
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Navigation handler for service cards - routes to premium screens
+  const handleNavigate = useCallback((screen: string) => {
+    window.scrollTo(0, 0);
+    switch (screen) {
+      case "FLIGHTS":
+        navigate("/search?tab=flights");
+        break;
+      case "HOTELS":
+        navigate("/search?tab=hotels");
+        break;
+      case "RIDES":
+        navigate("/rides");
+        break;
+      case "EATS":
+        navigate("/eats");
+        break;
+      case "MOVE":
+        navigate("/move");
+        break;
+      default:
+        navigate("/search");
+    }
+  }, [navigate]);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -103,7 +125,7 @@ const AppHome = () => {
         className="fixed top-24 left-6 right-6 z-40 safe-area-top"
       >
         <button 
-          onClick={() => navigate("/rides")}
+          onClick={() => handleNavigate("RIDES")}
           className="w-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-2xl touch-manipulation active:scale-[0.98] transition-transform"
         >
           <div className="flex items-center gap-3">
@@ -153,9 +175,9 @@ const AppHome = () => {
           <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500">Services</h2>
           <button 
             onClick={() => navigate("/search")}
-            className="text-xs text-primary font-bold touch-manipulation"
+            className="text-xs text-primary font-bold touch-manipulation flex items-center gap-0.5"
           >
-            View All
+            View All <ChevronRight className="w-3 h-3" />
           </button>
         </div>
 
@@ -167,7 +189,7 @@ const AppHome = () => {
             subtitle="Global Travel" 
             img={assets.flights} 
             icon={Plane} 
-            href="/flights"
+            onNavigate={() => handleNavigate("FLIGHTS")}
             className="row-span-2"
           />
 
@@ -177,7 +199,7 @@ const AppHome = () => {
             subtitle="Premium Mobility" 
             img={assets.rides} 
             icon={Car}
-            href="/rides"
+            onNavigate={() => handleNavigate("RIDES")}
           />
 
           {/* Card 3: Eats */}
@@ -186,7 +208,7 @@ const AppHome = () => {
             subtitle="Gourmet Delivery" 
             img={assets.food} 
             icon={Utensils}
-            href="/eats"
+            onNavigate={() => handleNavigate("EATS")}
           />
         </div>
 
@@ -197,7 +219,7 @@ const AppHome = () => {
             subtitle="Luxury Stays" 
             img={assets.hotels} 
             icon={BedDouble}
-            href="/hotels"
+            onNavigate={() => handleNavigate("HOTELS")}
           />
           <button 
             onClick={() => navigate("/account")}
