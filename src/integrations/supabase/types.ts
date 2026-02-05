@@ -6483,6 +6483,7 @@ export type Database = {
           delivery_photo_url: string | null
           delivery_pin: string | null
           delivery_pin_verified: boolean | null
+          distance_miles: number | null
           driver_id: string | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
@@ -6510,6 +6511,7 @@ export type Database = {
           stripe_payment_id: string | null
           subtotal: number
           tax: number | null
+          tip_amount: number | null
           total_amount: number
           updated_at: string | null
           zone_code: string | null
@@ -6530,6 +6532,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          distance_miles?: number | null
           driver_id?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -6557,6 +6560,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal: number
           tax?: number | null
+          tip_amount?: number | null
           total_amount: number
           updated_at?: string | null
           zone_code?: string | null
@@ -6577,6 +6581,7 @@ export type Database = {
           delivery_photo_url?: string | null
           delivery_pin?: string | null
           delivery_pin_verified?: boolean | null
+          distance_miles?: number | null
           driver_id?: string | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -6604,6 +6609,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal?: number
           tax?: number | null
+          tip_amount?: number | null
           total_amount?: number
           updated_at?: string | null
           zone_code?: string | null
@@ -15369,6 +15375,11 @@ export type Database = {
       }
       trips: {
         Row: {
+          accepted_at: string | null
+          arrived_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           completed_at: string | null
           created_at: string
           customer_email: string | null
@@ -15377,13 +15388,18 @@ export type Database = {
           customer_name: string | null
           customer_phone: string | null
           distance_km: number | null
+          distance_miles: number | null
           driver_id: string | null
+          driver_lat: number | null
+          driver_lng: number | null
           dropoff_address: string
           dropoff_lat: number
           dropoff_lng: number
           duration_minutes: number | null
+          estimated_minutes: number | null
           fare_amount: number | null
           id: string
+          passenger_name: string | null
           payment_status: string | null
           pickup_address: string
           pickup_lat: number
@@ -15396,8 +15412,14 @@ export type Database = {
           status: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
+          updated_at: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          arrived_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -15406,13 +15428,18 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           distance_km?: number | null
+          distance_miles?: number | null
           driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
           dropoff_address: string
           dropoff_lat: number
           dropoff_lng: number
           duration_minutes?: number | null
+          estimated_minutes?: number | null
           fare_amount?: number | null
           id?: string
+          passenger_name?: string | null
           payment_status?: string | null
           pickup_address: string
           pickup_lat: number
@@ -15425,8 +15452,14 @@ export type Database = {
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
+          updated_at?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          arrived_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           completed_at?: string | null
           created_at?: string
           customer_email?: string | null
@@ -15435,13 +15468,18 @@ export type Database = {
           customer_name?: string | null
           customer_phone?: string | null
           distance_km?: number | null
+          distance_miles?: number | null
           driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
           dropoff_address?: string
           dropoff_lat?: number
           dropoff_lng?: number
           duration_minutes?: number | null
+          estimated_minutes?: number | null
           fare_amount?: number | null
           id?: string
+          passenger_name?: string | null
           payment_status?: string | null
           pickup_address?: string
           pickup_lat?: number
@@ -15454,6 +15492,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
