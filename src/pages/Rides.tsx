@@ -214,7 +214,30 @@
                  </div>
                  <div className="relative">
                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-eats rounded-full" />
-                   <Input placeholder="Drop-off location" value={dropoff} onChange={(e) => setDropoff(e.target.value)} className="pl-11 h-14 rounded-xl text-base" />
+                   <Input 
+                     placeholder="Drop-off location" 
+                     value={dropoff} 
+                     onChange={(e) => setDropoff(e.target.value)} 
+                     className="pl-11 pr-12 h-14 rounded-xl text-base" 
+                   />
+                   <button
+                     type="button"
+                     onClick={async () => {
+                       try {
+                         const location = await getCurrentLocation();
+                         const address = await reverseGeocode(location.lat, location.lng);
+                         setDropoff(address);
+                         toast.success("Location detected");
+                       } catch {
+                         toast.error("Could not get your location");
+                       }
+                     }}
+                     disabled={isGettingLocation}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                     title="Use current location"
+                   >
+                     <LocateFixed className={`w-5 h-5 text-eats ${isGettingLocation ? "animate-pulse" : ""}`} />
+                   </button>
                  </div>
                </div>
                <div className="h-48 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center">
