@@ -114,14 +114,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: Provider) => {
     try {
-      // Always redirect OAuth back to the Lovable preview domain until a custom domain is connected.
-      // (Using window.location.origin can accidentally send users to hizivo.com if that domain is visited.)
-      const OAUTH_CALLBACK = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app/auth-callback";
+      // IMPORTANT:
+      // - If a user triggers OAuth from an unconfigured domain (e.g., hizivo.com before DNS/custom domain),
+      //   redirecting back there will strand them on an unreachable/invalid callback.
+      // - Lovable previews may run on different hostnames (lovable.app, lovableproject.com, myzivo.lovable.app).
+      //   We should redirect back to the current safe origin whenever possible.
+
+      const SAFE_OAUTH_ORIGINS = new Set<string>([
+        // Preview
+        "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
+        // Preview (alternate host)
+        "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
+        // Published
+        "https://myzivo.lovable.app",
+        // Local dev
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://localhost:8080",
+      ]);
+
+      const currentOrigin = window.location.origin;
+      const fallbackOrigin = "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app";
+
+      const redirectOrigin = SAFE_OAUTH_ORIGINS.has(currentOrigin) ? currentOrigin : fallbackOrigin;
+      const redirectTo = `${redirectOrigin}/auth-callback`;
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: OAUTH_CALLBACK,
+          redirectTo,
         },
       });
       return { error };
