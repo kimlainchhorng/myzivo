@@ -133,3 +133,8 @@ export type { FlightLeg } from './MultiCityPlanner';
 
 // Performance & Expiry
 export { default as OfferExpiryTimer } from './OfferExpiryTimer';
+
+ // 2026 Spatial UI Components
+ export { default as SmartSearchLoader } from './SmartSearchLoader';
+ export { default as HolographicFlightCard } from './HolographicFlightCard';
+ export type { HolographicFlightData } from './HolographicFlightCard';

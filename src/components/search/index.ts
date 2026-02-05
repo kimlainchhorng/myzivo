@@ -14,3 +14,6 @@ export { default as CarSearchFormPro } from './CarSearchFormPro';
 export { default as PremiumSearchOverlay } from './PremiumSearchOverlay';
 
 export { useAirportSearch, useCitySearch } from './hooks/useLocationSearch';
+
+ // 2026 Spatial UI Components
+ export { default as GlassSearchWidget } from './GlassSearchWidget';
