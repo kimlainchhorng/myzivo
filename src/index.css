@@ -793,6 +793,87 @@
 }
 
 /* =============================================
+   ZIVO RIDES — PREMIUM 2026 DARK GLASSMORPHISM
+   ============================================= */
+
+/* Fixed map background with gradient overlay */
+.rides-gradient-overlay {
+  background: linear-gradient(
+    to top,
+    hsl(240 10% 4%) 0%,
+    hsl(240 10% 4% / 0.8) 30%,
+    hsl(240 10% 4% / 0.4) 60%,
+    transparent 100%
+  );
+}
+
+/* Dark frosted glass panel */
+.rides-glass-panel {
+  background: hsl(240 10% 8% / 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+  transform: translateZ(0);
+}
+
+/* Glass input fields with glow focus */
+.rides-input-glass {
+  background: hsl(0 0% 0% / 0.2);
+  border: 1px solid hsl(0 0% 100% / 0.05);
+  transition: all 0.2s ease;
+}
+
+.rides-input-glass:focus-within {
+  border-color: hsl(217 91% 60% / 0.5);
+  box-shadow: 0 0 20px hsl(217 91% 60% / 0.1);
+}
+
+/* 3D Vehicle cards with hover lift */
+.rides-card-3d {
+  background: hsl(240 10% 8% / 0.8);
+  border: 2px solid hsl(0 0% 100% / 0.1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+.rides-card-3d:hover {
+  transform: translateY(-10px);
+  border-color: hsl(0 0% 100% / 0.2);
+}
+
+.rides-card-3d.rides-card-selected {
+  background: hsl(217 91% 50%);
+  border-color: hsl(217 91% 70%);
+  box-shadow: 0 0 30px hsl(217 91% 50% / 0.3);
+}
+
+/* Pulsing location indicator */
+@keyframes location-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.animate-location-pulse {
+  animation: location-pulse 2s ease-out infinite;
+}
+
+/* Sticky CTA gradient fade */
+.rides-sticky-fade {
+  background: linear-gradient(
+    to top,
+    hsl(240 10% 4%) 0%,
+    hsl(240 10% 4%) 60%,
+    transparent 100%
+  );
+}
+
+/* =============================================
    SAFARI/IOS MOBILE POLISH FIXES
    ============================================= */
 
