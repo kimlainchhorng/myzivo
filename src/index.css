@@ -474,3 +474,160 @@
  .glow-primary {
    box-shadow: 0 0 60px 10px hsl(var(--primary) / 0.15);
  }
+
+/* =============================================
+   MOBILE RESPONSIVE FIXES
+   ============================================= */
+
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Hide scrollbar but allow scroll */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-first glass widget tabs */
+.glass-tabs-scroll {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.glass-tabs-scroll > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* =============================================
+   GOLDEN TICKET ANIMATIONS
+   ============================================= */
+
+/* Metallic shine sweep effect */
+.metallic-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.metallic-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    hsl(45 100% 70% / 0.15) 50%,
+    transparent 60%
+  );
+  animation: shine-sweep 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shine-sweep {
+  from { transform: translateX(-100%) rotate(45deg); }
+  to { transform: translateX(100%) rotate(45deg); }
+}
+
+/* Golden gradient backgrounds */
+.golden-gradient {
+  background: linear-gradient(
+    135deg,
+    hsl(45 80% 45%) 0%,
+    hsl(40 85% 55%) 25%,
+    hsl(50 90% 60%) 50%,
+    hsl(40 85% 55%) 75%,
+    hsl(45 80% 45%) 100%
+  );
+}
+
+.golden-border {
+  border: 2px solid hsl(45 70% 55%);
+  box-shadow: 
+    0 0 20px hsl(45 70% 50% / 0.3),
+    inset 0 1px 0 hsl(50 90% 80% / 0.3);
+}
+
+/* Ticket perforated edge effect */
+.ticket-edge {
+  --perforation-size: 10px;
+  --perforation-gap: 8px;
+  position: relative;
+}
+
+.ticket-edge::before,
+.ticket-edge::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: var(--perforation-size);
+  height: var(--perforation-size);
+  background: hsl(var(--background));
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+.ticket-edge::before {
+  top: calc(var(--perforation-size) / -2);
+}
+
+.ticket-edge::after {
+  bottom: calc(var(--perforation-size) / -2);
+}
+
+/* Confetti animation */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti-fall 3s ease-in-out forwards;
+}
+
+/* =============================================
+   SECURE VAULT CHECKOUT STYLES
+   ============================================= */
+
+.vault-checkout {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.vault-glass {
+  background: hsl(var(--card) / 0.95);
+  backdrop-filter: blur(32px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+.dark .vault-glass {
+  background: hsl(240 10% 8% / 0.95);
+  border: 1px solid hsl(0 0% 100% / 0.1);
+}
+
+/* Trust badge glow */
+.trust-badge {
+  background: hsl(142 71% 45% / 0.1);
+  border: 1px solid hsl(142 71% 45% / 0.3);
+  color: hsl(142 71% 45%);
+}
+
+.dark .trust-badge {
+  background: hsl(142 71% 45% / 0.15);
+  border: 1px solid hsl(142 71% 45% / 0.4);
+}
