@@ -1,380 +1,300 @@
 
-# 2026 Premium Checkout & Success UI Implementation
+
+# Mission Control Admin UI Implementation Plan
 
 ## Overview
 
-Implement three major UI upgrades for the booking experience:
+Transform the ZIVO admin experience with a dense, high-contrast "Mission Control" layout designed for power users and operations staff. This implementation includes:
 
-1. **Secure Vault Checkout** - Bank-level aesthetic with receipt rail, Stripe Elements, and trust anchors
-2. **Mobile Responsive Fixes** - iOS zoom prevention, scrollable tabs, and native app feel
-3. **Golden Ticket Success State** - Foil-styled boarding pass with QR code and flip animation
+1. **Mission Control Layout** - Dark-themed, power-user workspace with collapsible glass sidebar and system health widget
+2. **Booking Ledger Table** - Real-time live data stream with status indicators, hover actions, and profit visibility
+3. **Booking Detail Panel** - Slide-over panel for quick issue resolution without page navigation
 
 ---
 
-## Part 1: Secure Vault Checkout UI
+## Current State Analysis
 
-### Current State
+### Existing Admin Layout
+- Located at `src/layouts/AdminLayout.tsx` (345 lines)
+- Uses light theme with standard sidebar navigation
+- Features RBAC-based navigation filtering
+- Mobile-responsive with Sheet component for mobile sidebar
 
-Existing checkout components include:
-- `CheckoutModal.tsx`: Basic modal with card inputs
-- `FlightCheckout.tsx`: Full page checkout with Stripe integration
-- `SecureCheckoutHeader.tsx`: Trust signals header
-- `AcceptedPaymentMethods.tsx`: Payment method icons
+### Existing Admin Components
+- `FulfillmentHub.tsx`: Agentic dashboard with tabs for alerts, PNR lifecycle, supplier health
+- `TravelOperationsCenter.tsx`: Comprehensive operations dashboard
+- `SupplierHealthPulse.tsx`: API latency visualization with pulse indicators
+- `TripDetailsDialog.tsx`: Modal for trip details (pattern for BookingDetailPanel)
 
-### Proposed Enhancement: PaymentVaultCheckout
+### Design System
+- CSS variables defined in `index.css` with dark mode support
+- Glass effects via `vault-glass`, `glass-dark` classes
+- Already has product accent colors (flights, hotels, cars, rides, eats)
 
-A full-page "Secure Vault" checkout with two-column layout:
+---
 
-**Left Side (The Vault):**
+## Part 1: Mission Control Layout
+
+### Component: `MissionControlLayout.tsx`
+
+A new alternative admin layout for power users:
+
+**Visual Features:**
+- Deep black background: `bg-[#050505]`
+- Glass sidebar: `bg-zinc-900/50 backdrop-blur-xl`
+- ZIVO.OPS branding with version indicator
+- Integrated API latency widget in sidebar footer
+- Sticky header with global status indicators
+
+**Layout Structure:**
 ```text
-+-----------------------------------------------+
-|  [Lock Icon]  SECURE CHECKOUT                 |
-|  Complete your booking securely               |
-+-----------------------------------------------+
-|                                               |
-|  +---------------------------------------+    |
-|  |  [Stripe PaymentElement]             |    |
-|  |  Dark-themed card input               |    |
-|  +---------------------------------------+    |
-|                                               |
-|  [Pay Securely $4,250.00] Button              |
-|                                               |
-|  [Lock] Stripe TLS 1.3 encrypted              |
-+-----------------------------------------------+
++------------------+------------------------------------------+
+| ZIVO.OPS         |  [Breadcrumb Path] [Settings] [Avatar]  |
+| V2.4 SYSTEM ON   |                                          |
++------------------+------------------------------------------+
+| [Dashboard]      |                                          |
+| [Live Bookings]  |         MAIN CONTENT AREA                |
+| [Inventory]      |         (children rendered here)         |
+| [Travelers]      |                                          |
+| [Resolutions]  2 |                                          |
++------------------+                                          |
+| API LATENCY      |                                          |
+| Duffel   124ms   |                                          |
+| Hotelbeds 410ms  |                                          |
++------------------+------------------------------------------+
 ```
 
-**Right Side (Digital Ledger):**
-```text
-+---------------------------------------+
-|  BOOKING SUMMARY                      |
-|  +--------------------------------+   |
-|  | Flight ID      ZV-9284-NDC    |   |
-|  | Hold Expires   [Clock] 14:59  |   |
-|  +--------------------------------+   |
-|                                       |
-|  JFK - LHR (Round Trip)    $3,800.00 |
-|  Taxes & Carrier Fees        $450.00 |
-|  ZIVO Zero-Fee                 -$0.00 |
-|  ------------------------------------|
-|  TOTAL DUE                 $4,250.00 |
-+---------------------------------------+
-```
-
-### Stripe Night Mode Theming
-
-Custom appearance for Stripe Elements matching dark glass aesthetic:
-
+**Navigation Items:**
 ```typescript
-const stripeAppearance = {
-  theme: 'night' as const,
-  variables: {
-    colorPrimary: 'hsl(var(--primary))',
-    colorBackground: 'hsl(240 10% 8%)',
-    colorText: 'hsl(0 0% 100%)',
-    colorDanger: 'hsl(0 84% 60%)',
-    borderRadius: '12px',
-    fontFamily: 'var(--font-display), system-ui, sans-serif',
-  },
-  rules: {
-    '.Input': {
-      backgroundColor: 'rgba(255, 255, 255, 0.05)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-    },
-    '.Input:focus': {
-      borderColor: 'hsl(var(--primary))',
-      boxShadow: '0 0 0 2px hsla(var(--primary), 0.2)',
-    },
-  },
+const navItems = [
+  { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
+  { id: "bookings", icon: Plane, label: "Live Bookings" },
+  { id: "inventory", icon: Hotel, label: "Inventory" },
+  { id: "customers", icon: Users, label: "Travelers" },
+  { id: "issues", icon: AlertCircle, label: "Resolutions", alert: 2 },
+];
+```
+
+**System Health Widget:**
+- Compact API latency display in sidebar footer
+- Live pulse indicators from existing `useSupplierHealth` hook
+- Color-coded latency bars (green < 200ms, amber 200-400ms, red > 400ms)
+
+---
+
+## Part 2: Booking Ledger Table
+
+### Component: `BookingLedger.tsx`
+
+A premium real-time booking table for operations:
+
+**Visual Features:**
+- Dark glass container: `bg-zinc-900/40 backdrop-blur-md`
+- Status badges with color-coded backgrounds
+- Supplier indicators with colored dots
+- Net margin column in green monospace font
+- Hover effects revealing row actions
+
+**Table Columns:**
+| Column | Content |
+|--------|---------|
+| Booking Ref | PNR code + relative timestamp |
+| Passenger | Full name |
+| Service | Route description |
+| Supplier | Supplier name with colored dot |
+| Status | TICKETED / PENDING / FAILED badge |
+| Net Margin | Calculated profit in green |
+
+**Filter Bar:**
+- Search input (PNR, email, ticket number)
+- Supplier dropdown filter
+- Date range picker (optional)
+
+**Row Actions (on hover):**
+- Copy PNR to clipboard
+- Quick email resend
+- Open detail panel
+
+**Status Color Mapping:**
+```typescript
+const getStatusColor = (status: string) => {
+  switch(status) {
+    case "TICKETED": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    case "PENDING": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "FAILED": return "bg-red-500/10 text-red-400 border-red-500/20";
+    default: return "bg-zinc-800 text-zinc-400";
+  }
 };
 ```
 
-### Trust Anchors
+---
 
-Prominent security indicators:
-- "256-BIT ENCRYPTION" badge with shield icon
-- "PCI DSS COMPLIANT" badge
-- "STRIPE SECURED" with verified checkmark
-- TLS 1.3 encryption notice
+## Part 3: Booking Detail Panel
 
-### Files to Create
+### Component: `BookingDetailSlideOver.tsx`
 
-| File | Purpose |
-|------|---------|
-| `src/components/checkout/PaymentVaultCheckout.tsx` | Main vault checkout component |
-| `src/components/checkout/DigitalLedgerSummary.tsx` | Right-side receipt summary |
-| `src/components/checkout/VaultSecurityBadges.tsx` | Trust anchor badges |
-| `src/components/checkout/StripeNightElements.tsx` | Themed Stripe Elements wrapper |
+A slide-over panel using Sheet component for booking management:
+
+**Visual Features:**
+- Full-height slide-over from right: `w-[480px]`
+- Dark glass background: `bg-[#0A0A0A]`
+- Status indicator with pulse animation
+- PNR data block with copy-on-click
+
+**Panel Sections:**
+
+1. **Header**
+   - Booking reference (large)
+   - Status with animated pulse dot
+   - Download PDF button
+
+2. **PNR Data Block**
+   - Airline PNR (selectable text)
+   - Ticket Number (selectable text)
+   - Supplier reference
+
+3. **Quick Actions Grid**
+   - Resend Email (blue accent)
+   - Cancel Booking (red accent)
+   - Modify Booking (amber)
+   - Contact Passenger (gray)
+
+4. **Agent Notes**
+   - Textarea for internal notes
+   - Auto-save to database
+   - Timestamp display
+
+5. **Agentic Check**
+   - Pre-flight check before actions
+   - "Refund eligibility: Checking..." state
+   - Policy compliance indicator
 
 ---
 
-## Part 2: Mobile Responsive Fixes
+## Technical Implementation Details
 
-### Current Issues
-
-The `GlassSearchWidget` may have:
-- iOS input zoom on focus (font-size < 16px)
-- Hidden scrollbar issues on tabs
-- Grid layout squashing on small screens
-
-### Proposed CSS Additions
+### Dark Theme CSS Classes
 
 Add to `src/index.css`:
-
 ```css
-/* Prevent iOS zoom on input focus */
-@media screen and (max-width: 768px) {
-  input, select, textarea {
-    font-size: 16px !important;
-  }
+/* Mission Control Theme */
+.mission-control {
+  --mc-background: #050505;
+  --mc-sidebar: rgba(24, 24, 27, 0.5);
+  --mc-card: rgba(24, 24, 27, 0.4);
+  --mc-border: rgba(255, 255, 255, 0.05);
+  --mc-text: #ffffff;
+  --mc-text-muted: #71717a;
 }
 
-/* Hide scrollbar but allow scroll */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* Mobile-first glass widget tabs */
-.glass-tabs-scroll {
-  display: flex;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-}
-.glass-tabs-scroll > * {
-  scroll-snap-align: start;
-  flex-shrink: 0;
+.bg-grid-white\/\[0\.02\] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9H0v9h9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 ```
 
-### GlassSearchWidget Mobile Improvements
+### Data Integration
 
-Update the tab section to use horizontal scrollable list:
-
+Hook into existing data:
 ```typescript
-// Scrollable tabs on mobile
-<div className="flex gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border/50 pb-4 overflow-x-auto hide-scrollbar">
-  {tabs.map((tab) => (
-    <button
-      key={tab.id}
-      onClick={() => setActiveTab(tab.id)}
-      className={cn(
-        "text-xs sm:text-sm font-bold uppercase tracking-wider transition-all pb-4 -mb-4 whitespace-nowrap",
-        // ... existing styles
-      )}
-    >
-      {tab.label}
-    </button>
-  ))}
-</div>
+// Use existing hooks
+import { useSupplierHealth } from "@/hooks/useSupplierHealth";
+import { useFlightSystemHealth } from "@/hooks/useFlightSystemHealth";
+
+// For booking ledger - create new hook
+import { useBookingLedger } from "@/hooks/useBookingLedger";
 ```
 
-### Files to Modify
+### Slide-Over Integration
 
-| File | Changes |
-|------|---------|
-| `src/index.css` | Add iOS zoom prevention and scrollbar utilities |
-| `src/components/search/GlassSearchWidget.tsx` | Add hide-scrollbar class to tabs |
+Use existing Sheet component from Radix:
+```typescript
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+
+// Usage
+<Sheet open={selectedBooking !== null} onOpenChange={() => setSelectedBooking(null)}>
+  <SheetContent side="right" className="w-[480px] bg-[#0A0A0A] p-0">
+    <BookingDetailSlideOver booking={selectedBooking} />
+  </SheetContent>
+</Sheet>
+```
 
 ---
 
-## Part 3: Golden Ticket Success State
-
-### Current State
-
-`BookingConfirmation.tsx` uses a card-based layout with checkmark animation.
-`FlightConfirmation.tsx` has similar structure with flight-specific details.
-
-### Proposed Enhancement: GoldenTicketSuccess
-
-A premium "boarding pass" style confirmation with:
-
-**Visual Design:**
-- Gold/platinum foil gradient background
-- Metallic shimmer animation on load
-- Ticket-style cutout edges (perforated look)
-- QR code as central element
-
-**Animation:**
-- 3D flip entrance animation
-- Metallic shine sweep effect
-- Confetti particles
-
-**Structure:**
-```text
-+=========================================+
-|  ✅ BOARDING PASS ISSUED               |
-|                                         |
-|  JFK → LHR                             |
-|  New York to London                    |
-|                                         |
-|     +---------------------------+       |
-|     |     [QR CODE]            |       |
-|     |     Scan at airport      |       |
-|     +---------------------------+       |
-|                                         |
-|  Booking Ref: #8X9-22Z                 |
-|  Flight: BA115                         |
-|  Date: Feb 15, 2026                    |
-|                                         |
-|  [Add to Wallet] [Download PDF]        |
-+=========================================+
-```
-
-### Animation Details
-
-3D flip entrance:
-```typescript
-const flipVariants = {
-  hidden: { 
-    rotateY: -90,
-    opacity: 0,
-    scale: 0.8
-  },
-  visible: { 
-    rotateY: 0,
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "spring",
-      damping: 20,
-      stiffness: 100,
-      delay: 0.2
-    }
-  }
-};
-```
-
-Metallic shine sweep:
-```css
-.metallic-shine {
-  position: relative;
-  overflow: hidden;
-}
-.metallic-shine::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 40%,
-    rgba(255, 215, 0, 0.15) 50%,
-    transparent 60%
-  );
-  animation: shine-sweep 3s ease-in-out infinite;
-}
-@keyframes shine-sweep {
-  from { transform: translateX(-100%) rotate(45deg); }
-  to { transform: translateX(100%) rotate(45deg); }
-}
-```
-
-### Files to Create
+## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/components/booking/GoldenTicketSuccess.tsx` | Main golden ticket component |
-| `src/components/booking/TicketQRCode.tsx` | QR code with styling wrapper |
-| `src/components/booking/ConfettiEffect.tsx` | Confetti particle animation |
+| `src/layouts/MissionControlLayout.tsx` | Alternative dark admin layout |
+| `src/components/admin/BookingLedger.tsx` | Real-time booking table |
+| `src/components/admin/BookingDetailSlideOver.tsx` | Slide-over panel for booking management |
+| `src/components/admin/MissionControlSidebar.tsx` | Extracted sidebar with health widget |
+| `src/components/admin/LedgerFilters.tsx` | Filter bar for booking ledger |
+| `src/hooks/useBookingLedger.ts` | Hook for fetching booking ledger data |
 
-### Files to Modify
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/index.css` | Add metallic shine and golden gradient CSS |
-| `src/components/booking/index.ts` | Export new components |
-| `src/pages/FlightConfirmation.tsx` | Option to use GoldenTicketSuccess |
+| `src/index.css` | Add mission control theme classes and grid background |
+| `src/components/admin/index.ts` | Export new components |
+| `src/App.tsx` | Add optional route using MissionControlLayout |
 
 ---
 
 ## Implementation Order
 
-### Phase 1: Mobile Responsive Fixes (Quick wins)
-1. Add iOS zoom prevention CSS
-2. Add hide-scrollbar utility classes
-3. Update GlassSearchWidget tabs styling
+### Phase 1: Foundation
+1. Add Mission Control CSS theme classes
+2. Create `MissionControlLayout.tsx` shell
+3. Create `MissionControlSidebar.tsx` with nav and health widget
 
-### Phase 2: Golden Ticket Success
-4. Create metallic shine CSS animations
-5. Create GoldenTicketSuccess component
-6. Create TicketQRCode wrapper
-7. Create ConfettiEffect animation
-8. Update exports
+### Phase 2: Booking Ledger
+4. Create `useBookingLedger.ts` hook
+5. Create `LedgerFilters.tsx` component
+6. Create `BookingLedger.tsx` table component
 
-### Phase 3: Secure Vault Checkout
-9. Create VaultSecurityBadges component
-10. Create DigitalLedgerSummary component
-11. Create StripeNightElements wrapper
-12. Create PaymentVaultCheckout main component
-13. Update checkout exports
+### Phase 3: Detail Panel
+7. Create `BookingDetailSlideOver.tsx` with sections
+8. Integrate with Sheet component
+9. Add quick actions with agentic pre-checks
 
 ### Phase 4: Integration
-14. Update FlightConfirmation to use GoldenTicket
-15. Create new checkout page route or update existing
-16. Test mobile responsiveness
-17. Verify Stripe dark theme appearance
+10. Update exports and add routes
+11. Wire up real-time data subscriptions
+12. Test with existing FulfillmentHub data
 
 ---
 
-## Technical Details
+## Route Configuration
 
-### QR Code Integration
-
-Use existing `qrcode.react` dependency:
+Add optional Mission Control route:
 ```typescript
-import { QRCodeSVG } from 'qrcode.react';
-
-<QRCodeSVG 
-  value={`https://hizovo.com/booking/${bookingRef}`}
-  size={180}
-  bgColor="transparent"
-  fgColor="hsl(45, 80%, 30%)" // Dark gold
-  level="H"
-/>
-```
-
-### Stripe Elements Setup
-
-The project already has `@stripe/stripe-js` conceptually in the checkout flow. The PaymentVault will need:
-- `loadStripe` initialization
-- `Elements` provider with night appearance
-- `PaymentElement` for unified payment input
-
-### Safe Area Handling
-
-For mobile bottom sheets, ensure safe-area-inset padding:
-```css
-.vault-checkout {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-}
+// In App.tsx routing
+<Route path="/admin/ops" element={<MissionControlLayout />}>
+  <Route index element={<BookingLedger />} />
+  <Route path="inventory" element={<InventoryView />} />
+  {/* etc */}
+</Route>
 ```
 
 ---
 
 ## Files Summary
 
-### New Files (7)
+### New Files (6)
 | File | Type |
 |------|------|
-| `src/components/checkout/PaymentVaultCheckout.tsx` | Checkout Component |
-| `src/components/checkout/DigitalLedgerSummary.tsx` | Checkout Component |
-| `src/components/checkout/VaultSecurityBadges.tsx` | Checkout Component |
-| `src/components/checkout/StripeNightElements.tsx` | Checkout Component |
-| `src/components/booking/GoldenTicketSuccess.tsx` | Success Component |
-| `src/components/booking/TicketQRCode.tsx` | Success Component |
-| `src/components/booking/ConfettiEffect.tsx` | Animation Component |
+| `src/layouts/MissionControlLayout.tsx` | Layout Component |
+| `src/components/admin/BookingLedger.tsx` | Admin Component |
+| `src/components/admin/BookingDetailSlideOver.tsx` | Admin Component |
+| `src/components/admin/MissionControlSidebar.tsx` | Admin Component |
+| `src/components/admin/LedgerFilters.tsx` | Admin Component |
+| `src/hooks/useBookingLedger.ts` | Data Hook |
 
-### Modified Files (5)
+### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/index.css` | Add mobile fixes, metallic shine animations, golden gradients |
-| `src/components/search/GlassSearchWidget.tsx` | Add hide-scrollbar to tabs |
-| `src/components/booking/index.ts` | Export new success components |
-| `src/components/checkout/index.ts` | Create/update to export vault components |
-| `src/pages/FlightConfirmation.tsx` | Integrate GoldenTicketSuccess option |
+| `src/index.css` | Add mission control theme and grid background |
+| `src/components/admin/index.ts` | Export BookingLedger, BookingDetailSlideOver |
+| `src/App.tsx` | Add /admin/ops route with MissionControlLayout |
+
