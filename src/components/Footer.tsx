@@ -65,7 +65,11 @@ const contactEmails = [
   { label: "Business", email: "kimlain@hizivo.com" },
 ];
 
-const Footer = () => {
+interface FooterProps {
+  className?: string;
+}
+
+const Footer = ({ className }: FooterProps) => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -77,7 +81,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative z-30 bg-card border-t border-border">
+    <footer className={cn("relative z-30 bg-card border-t border-border", className)}>
       <div className="container mx-auto px-4">
         {/* Newsletter Section */}
         <div className="py-12 border-b border-border">
