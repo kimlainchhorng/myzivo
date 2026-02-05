@@ -8,8 +8,9 @@ import { useState, useEffect } from "react";
  import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
  import { 
-  MapPin, Navigation, Clock, Users, Shield, Star, CheckCircle2, 
-  ChevronRight, Phone, Mail, User, CreditCard, Loader2, LocateFixed
+  MapPin, Navigation, Clock, Users, Shield, Star, CheckCircle2,
+  ChevronRight, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
+  Leaf, Zap, Briefcase, Crown, Anchor, Dog
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
@@ -26,43 +27,158 @@ import { motion, AnimatePresence } from "framer-motion";
  interface RideOption {
    id: string;
    name: string;
-  image: string;
-   multiplier: number;
-   seats: number;
-   description: string;
-  eta: string;
+   image: string;
+   price: string;
+   time: string;
+   icon: React.ComponentType<{ className?: string }>;
+   desc: string;
+   multiplier?: number;
+   seats?: number;
  }
  
-// Premium vehicle imagery
- const rideOptions: RideOption[] = [
-  { 
-    id: "standard", 
-    name: "ZIVO Prime", 
-    image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000",
-    multiplier: 1.0, 
-    seats: 4, 
-    description: "Affordable luxury for everyday.",
-    eta: "4 min"
-  },
-  { 
-    id: "xl", 
-    name: "ZIVO XL", 
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000",
-    multiplier: 1.3, 
-    seats: 6, 
-    description: "Room for 6 + Luggage.",
-    eta: "8 min"
-  },
-  { 
-    id: "premium", 
-    name: "ZIVO Black", 
-    image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=1000",
-    multiplier: 1.6, 
-    seats: 4, 
-    description: "Professional chauffeur service.",
-    eta: "12 min"
-  },
- ];
+ type CategoryKey = "Economy" | "Premium" | "Elite";
+ 
+ // Premium categorized vehicle options
+ const rideCategories: Record<CategoryKey, RideOption[]> = {
+   Economy: [
+     {
+       id: "wait_save",
+       name: "Wait & Save",
+       desc: "Lowest price, longer wait.",
+       price: "$18.50",
+       time: "15 min",
+       icon: Clock,
+       image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 0.75,
+       seats: 4
+     },
+     {
+       id: "standard",
+       name: "Standard",
+       desc: "Reliable everyday rides.",
+       price: "$24.50",
+       time: "4 min",
+       icon: Navigation,
+       image: "https://images.unsplash.com/photo-1469285994282-454ceb49e63c?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 1.0,
+       seats: 4
+     },
+     {
+       id: "green",
+       name: "Green",
+       desc: "EVs & Hybrids.",
+       price: "$25.00",
+       time: "6 min",
+       icon: Leaf,
+       image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 1.02,
+       seats: 4
+     },
+     {
+       id: "priority",
+       name: "Priority",
+       desc: "Faster pickup.",
+       price: "$32.00",
+       time: "1 min",
+       icon: Zap,
+       image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 1.3,
+       seats: 4
+     }
+   ],
+   Premium: [
+     {
+       id: "comfort",
+       name: "Extra Comfort",
+       desc: "Newer cars, more legroom.",
+       price: "$38.00",
+       time: "5 min",
+       icon: Star,
+       image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 1.55,
+       seats: 4
+     },
+     {
+       id: "black",
+       name: "ZIVO Black",
+       desc: "Premium leather sedans.",
+       price: "$65.00",
+       time: "8 min",
+       icon: Briefcase,
+       image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 2.65,
+       seats: 4
+     },
+     {
+       id: "black_suv",
+       name: "Black SUV",
+       desc: "Luxury for 6.",
+       price: "$85.00",
+       time: "10 min",
+       icon: Shield,
+       image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 3.5,
+       seats: 6
+     },
+     {
+       id: "xxl",
+       name: "XXL",
+       desc: "Max luggage space.",
+       price: "$90.00",
+       time: "12 min",
+       icon: Anchor,
+       image: "https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 3.7,
+       seats: 6
+     }
+   ],
+   Elite: [
+     {
+       id: "lux",
+       name: "ZIVO Lux",
+       desc: "Rolls-Royce / Bentley.",
+       price: "$250.00",
+       time: "20 min",
+       icon: Crown,
+       image: "https://images.unsplash.com/photo-1553440637-d22ed8a02575?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 10.0,
+       seats: 4
+     },
+     {
+       id: "sprinter",
+       name: "Executive Sprinter",
+       desc: "Jet van for 12.",
+       price: "$180.00",
+       time: "45 min",
+       icon: Briefcase,
+       image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 7.3,
+       seats: 12
+     },
+     {
+       id: "secure",
+       name: "Secure Transit",
+       desc: "Armored transport.",
+       price: "$500.00",
+       time: "60 min",
+       icon: Shield,
+       image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 20.0,
+       seats: 4
+     },
+     {
+       id: "pet",
+       name: "Pet Premium",
+       desc: "Luxury with pets.",
+       price: "$75.00",
+       time: "10 min",
+       icon: Dog,
+       image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1000",
+       multiplier: 3.0,
+       seats: 4
+     }
+   ]
+ };
  
  const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
    const baseFare = 3.50;
@@ -85,6 +201,7 @@ import { motion, AnimatePresence } from "framer-motion";
    const [contactInfo, setContactInfo] = useState({ name: "", phone: "", email: "", notes: "" });
    const [isSubmitting, setIsSubmitting] = useState(false);
    const [requestId, setRequestId] = useState<string | null>(null);
+   const [activeTab, setActiveTab] = useState<CategoryKey>("Premium");
  
    const [estimatedDistance] = useState(5.2);
    const [estimatedDuration] = useState(15);
@@ -160,7 +277,7 @@ import { motion, AnimatePresence } from "framer-motion";
      setStep("processing");
      setIsSubmitting(true);
      try {
-       const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier);
+       const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0);
        const { data, error } = await supabase.functions.invoke("create-ride-checkout", {
          body: {
            customer_name: contactInfo.name,
@@ -197,14 +314,14 @@ import { motion, AnimatePresence } from "framer-motion";
    };
  
    const getFareEstimate = (option: RideOption) => {
-     const fare = calculateFare(estimatedDistance, estimatedDuration, option.multiplier);
+     const fare = calculateFare(estimatedDistance, estimatedDuration, option.multiplier || 1.0);
      const min = (fare * 0.9).toFixed(0);
      const max = (fare * 1.1).toFixed(0);
      return `$${min}-${max}`;
    };
  
   const getFareFixed = (option: RideOption) => {
-    const fare = calculateFare(estimatedDistance, estimatedDuration, option.multiplier);
+    const fare = calculateFare(estimatedDistance, estimatedDuration, option.multiplier || 1.0);
     return `$${fare.toFixed(2)}`;
   };
 
@@ -320,61 +437,88 @@ import { motion, AnimatePresence } from "framer-motion";
                 transition={{ delay: 0.2 }}
                 className="rides-content-visible"
               >
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                  <span className="w-1 h-6 bg-primary rounded-full" />
-                  Choose your Ride
-                </h2>
+                {/* Header */}
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight mb-6">
+                    Choose Your <span className="text-primary">Ride</span>
+                  </h2>
+                  
+                  {/* Category Tab Selector */}
+                  <div className="flex justify-center">
+                    <div className="flex gap-2 p-1.5 bg-white/5 backdrop-blur-xl rounded-full border border-white/10">
+                      {(Object.keys(rideCategories) as CategoryKey[]).map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveTab(cat)}
+                          className={`px-6 sm:px-8 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 ${
+                            activeTab === cat 
+                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" 
+                              : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 
-                <div className="grid grid-cols-1 gap-4">
-                  {rideOptions.map((ride) => (
-                    <motion.div 
-                      key={ride.id}
-                      onClick={() => setSelectedOption(ride)}
-                      whileHover={{ y: -5 }}
-                      className={`relative overflow-hidden rounded-[1.5rem] cursor-pointer transition-all duration-300 ${
-                        selectedOption?.id === ride.id 
-                          ? "rides-card-3d rides-card-selected" 
-                          : "rides-card-3d hover:border-white/20"
-                      }`}
-                    >
-                      <div className="flex">
-                        {/* Image Area */}
-                        <div className="w-28 sm:w-36 h-28 overflow-hidden relative shrink-0">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/60 z-10" />
+                {/* Vehicle Grid */}
+                <motion.div 
+                  layout
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+                >
+                  <AnimatePresence mode="popLayout">
+                    {rideCategories[activeTab].map((ride) => (
+                      <motion.div 
+                        key={ride.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        onClick={() => setSelectedOption(ride)}
+                        className={`relative overflow-hidden rounded-[2rem] border cursor-pointer group transition-all duration-300 ${
+                          selectedOption?.id === ride.id 
+                            ? "bg-primary/20 border-primary shadow-[0_0_40px_hsl(var(--primary)/0.2)]" 
+                            : "bg-background/60 border-border/20 hover:border-border/50 hover:bg-background/80"
+                        }`}
+                      >
+                        {/* Vehicle Image */}
+                        <div className="h-32 overflow-hidden relative">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10" />
                           <img 
                             src={ride.image} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                             alt={ride.name} 
                           />
-                        </div>
-
-                        {/* Content Area */}
-                        <div className="flex-1 p-4 flex flex-col justify-center">
-                          <div className="flex justify-between items-start mb-1">
-                            <h3 className="text-lg sm:text-xl font-black italic">{ride.name}</h3>
-                            <div className="text-lg font-bold">{getFareFixed(ride)}</div>
-                          </div>
-                          <p className={`text-sm mb-2 ${selectedOption?.id === ride.id ? "text-blue-100" : "text-zinc-400"}`}>
-                            {ride.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest opacity-80">
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {ride.eta}</span>
-                            <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {ride.seats}</span>
-                            <span className="flex items-center gap-1"><Star className="w-3 h-3" /> 4.9</span>
+                          
+                          {/* Price Badge */}
+                          <div className="absolute top-4 right-4 z-20 bg-black/50 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10 text-sm font-bold">
+                            {getFareFixed(ride)}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Selection Ring */}
-                      {selectedOption?.id === ride.id && (
-                        <motion.div 
-                          layoutId="ride-outline"
-                          className="absolute inset-0 border-2 border-primary rounded-[1.5rem] pointer-events-none"
-                        />
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
+                        {/* Details */}
+                        <div className="p-5 relative z-20">
+                          <div className="flex items-center gap-2 mb-1">
+                            <ride.icon className={`w-4 h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-muted-foreground"}`} />
+                            <h3 className="text-lg font-black italic">{ride.name}</h3>
+                          </div>
+                          <p className="text-xs text-muted-foreground h-8 leading-relaxed mb-4">{ride.desc}</p>
+                          
+                          <div className="flex items-center justify-between border-t border-border/20 pt-4">
+                            <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1">
+                              <Zap className="w-3 h-3" /> {ride.time} away
+                            </span>
+                            {selectedOption?.id === ride.id && (
+                              <div className="w-4 h-4 bg-primary rounded-full animate-ping" />
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
               </motion.div>
 
               {/* WHY ZIVO — Dark Glass Section */}
@@ -427,7 +571,7 @@ import { motion, AnimatePresence } from "framer-motion";
                </div>
                <h2 className="font-display font-bold text-2xl">Choose your ride</h2>
                <div className="space-y-4">
-                 {rideOptions.map((option) => (
+                 {rideCategories[activeTab].map((option) => (
                   <button key={option.id} onClick={() => handleSelectOption(option)} className="w-full p-4 rounded-2xl rides-card-3d flex items-center gap-4 text-left transition-all hover:border-primary/50">
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                       <img src={option.image} alt={option.name} className="w-full h-full object-cover" />
@@ -435,12 +579,12 @@ import { motion, AnimatePresence } from "framer-motion";
                      <div className="flex-1 min-w-0">
                        <div className="flex items-center gap-2">
                          <h3 className="font-bold text-lg">{option.name}</h3>
-                        <span className="text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats}</span>
+                         <span className="text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats || 4}</span>
                        </div>
-                      <p className="text-sm text-zinc-400">{option.description}</p>
+                       <p className="text-sm text-zinc-400">{option.desc}</p>
                      </div>
                      <div className="text-right">
-                      <p className="font-bold text-lg text-primary">{getFareEstimate(option)}</p>
+                       <p className="font-bold text-lg text-primary">{getFareFixed(option)}</p>
                       <ChevronRight className="w-5 h-5 text-zinc-400 ml-auto" />
                      </div>
                    </button>
@@ -462,7 +606,7 @@ import { motion, AnimatePresence } from "framer-motion";
                     <p className="text-sm text-zinc-400">{pickup} → {dropoff}</p>
                    </div>
                    <div className="text-right">
-                    <p className="font-bold text-xl text-primary">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier).toFixed(2)}</p>
+                    <p className="font-bold text-xl text-primary">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)}</p>
                     <p className="text-xs text-zinc-400">Est. total</p>
                    </div>
                  </div>
@@ -497,7 +641,7 @@ import { motion, AnimatePresence } from "framer-motion";
                </div>
               <Button onClick={handlePayment} disabled={!contactInfo.name || !contactInfo.phone || isSubmitting} size="lg" className="w-full h-14 rounded-xl font-bold gap-3 bg-white text-black hover:bg-zinc-200 text-lg">
                  <CreditCard className="w-5 h-5" />
-                 Pay ${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier).toFixed(2)} & Request
+                  Pay ${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)} & Request
                </Button>
               <p className="text-xs text-center text-zinc-500">Secure payment via Stripe. We don't store your card details.</p>
              </div>
