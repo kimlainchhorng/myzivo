@@ -62,22 +62,28 @@
  
    const [estimatedDistance] = useState(5.2);
    const [estimatedDuration] = useState(15);
+  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
  
    // Auto-detect location on mount
    useEffect(() => {
      const autoDetectLocation = async () => {
+     setIsAutoDetecting(true);
        try {
          const location = await getCurrentLocation();
          const address = await reverseGeocode(location.lat, location.lng);
          setPickup(address);
+       toast.success("Location detected");
        } catch {
-         // Silently fail - user can enter manually
+       // Fail silently - user can enter manually
+     } finally {
+       setIsAutoDetecting(false);
        }
      };
      if (!pickup) {
        autoDetectLocation();
      }
-   }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
    const handleUseCurrentLocation = async () => {
      try {
@@ -197,7 +203,7 @@
                  <div className="relative">
                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-rides rounded-full" />
                    <Input 
-                     placeholder={isGettingLocation ? "Detecting location..." : "Pickup location"} 
+                     placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Pickup location"} 
                      value={pickup} 
                      onChange={(e) => setPickup(e.target.value)} 
                      className="pl-11 pr-12 h-14 rounded-xl text-base" 
@@ -205,11 +211,11 @@
                    <button
                      type="button"
                      onClick={handleUseCurrentLocation}
-                     disabled={isGettingLocation}
+                     disabled={isGettingLocation || isAutoDetecting}
                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
                      title="Use current location"
                    >
-                     <LocateFixed className={`w-5 h-5 text-rides ${isGettingLocation ? "animate-pulse" : ""}`} />
+                     <LocateFixed className={`w-5 h-5 text-rides ${isGettingLocation || isAutoDetecting ? "animate-pulse" : ""}`} />
                    </button>
                  </div>
                  <div className="relative">
