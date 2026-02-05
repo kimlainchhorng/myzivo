@@ -459,3 +459,18 @@
      transform: none;
    }
  }
+ 
+ /* 2026 Spatial UI - Glass Effects */
+ .glass-dark {
+   background: hsl(var(--card) / 0.6);
+   backdrop-filter: blur(24px);
+   border: 1px solid hsl(var(--border) / 0.5);
+ }
+ 
+ .glow-blue {
+   box-shadow: 0 0 100px 20px hsl(var(--primary) / 0.2);
+ }
+ 
+ .glow-primary {
+   box-shadow: 0 0 60px 10px hsl(var(--primary) / 0.15);
+ }
