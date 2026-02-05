@@ -1,10 +1,10 @@
 /**
  * ZivoOnboarding Setup Page
- * Premium onboarding flow for new users
+ * Premium onboarding flow with auto-skip for completed users
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Phone, Check, Loader2 } from "lucide-react";
+import { User, Phone, Check, Loader2, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -15,23 +15,49 @@ const Setup = () => {
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start true for profile check
+  const [submitting, setSubmitting] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [agreed, setAgreed] = useState(false);
 
-  // Prefill name from user metadata if available
+  // Auto-check: if profile is complete, skip to home
   useEffect(() => {
-    if (user?.user_metadata?.full_name) {
-      setFullName(user.user_metadata.full_name);
-    }
-  }, [user]);
+    const checkProfile = async () => {
+      if (authLoading) return;
+      
+      if (!user) {
+        navigate("/login", { replace: true });
+        return;
+      }
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login", { replace: true });
-    }
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, setup_complete")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        // If setup is already complete, redirect immediately
+        if (profile?.setup_complete) {
+          navigate("/", { replace: true });
+          return;
+        }
+
+        // Prefill name from profile or user metadata
+        if (profile?.full_name) {
+          setFullName(profile.full_name);
+        } else if (user.user_metadata?.full_name) {
+          setFullName(user.user_metadata.full_name);
+        }
+      } catch (error) {
+        console.error("Error checking profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkProfile();
   }, [authLoading, user, navigate]);
 
   const handleComplete = async () => {
@@ -48,7 +74,7 @@ const Setup = () => {
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       // Check if profile exists
@@ -89,20 +115,25 @@ const Setup = () => {
       queryClient.invalidateQueries({ queryKey: ["setupStatus", user.id] });
       queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
 
-      toast.success("Welcome to ZIVO! Your account is ready.");
-      navigate("/", { replace: true });
+      toast.success("You're all set!");
+      
+      // Force reload to clear any cached states
+      window.location.href = "/";
     } catch (error: any) {
       console.error("Setup error:", error);
       toast.error(error.message || "Failed to complete setup");
-    } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (authLoading) {
+  // Loading state: verifying profile
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className="text-zinc-500 font-medium">Verifying profile...</p>
+        </div>
       </div>
     );
   }
@@ -120,7 +151,7 @@ const Setup = () => {
 
         {/* Text */}
         <h1 className="text-3xl font-black text-center text-zinc-900">Complete Your Profile</h1>
-        <p className="text-center text-zinc-500 -mt-4">Just a few details to get you started with ZIVO</p>
+        <p className="text-center text-zinc-500 -mt-4">One last step before you fly.</p>
 
         {/* Form */}
         <div className="space-y-5 pt-4">
@@ -144,7 +175,7 @@ const Setup = () => {
 
           {/* Phone Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-700">Phone Number (Optional)</label>
+            <label className="text-sm font-medium text-zinc-700">Phone Number</label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
                 <Phone className="w-5 h-5 text-zinc-400" />
@@ -163,7 +194,7 @@ const Setup = () => {
           <button
             type="button"
             onClick={() => setAgreed(!agreed)}
-            className="flex items-center gap-3 pt-2 cursor-pointer group w-full text-left"
+            className="flex items-center gap-3 pt-2 cursor-pointer group w-full text-left select-none"
           >
             <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
               agreed 
@@ -176,10 +207,6 @@ const Setup = () => {
               I agree to the{" "}
               <a href="/terms" target="_blank" className="text-blue-500 hover:underline" onClick={(e) => e.stopPropagation()}>
                 Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="/privacy" target="_blank" className="text-blue-500 hover:underline" onClick={(e) => e.stopPropagation()}>
-                Privacy Policy
               </a>
             </span>
           </button>
@@ -189,10 +216,17 @@ const Setup = () => {
         {/* Button */}
         <button
           onClick={handleComplete}
-          disabled={loading}
+          disabled={submitting}
           className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Complete Setup"}
+          {submitting ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              Complete Setup
+              <ArrowRight className="w-5 h-5" />
+            </>
+          )}
         </button>
       </div>
     </div>
