@@ -13,6 +13,7 @@ import ExtrasSection from "@/components/home/ExtrasSection";
 import SocialProofSection from "@/components/home/SocialProofSection";
 import WhyBookWithZivo from "@/components/home/WhyBookWithZivo";
 import PriceAlertPromo from "@/components/home/PriceAlertPromo";
+import BentoFeatures from "@/components/home/BentoFeatures";
 
 // Mobile app home
 import AppHome from "@/pages/app/AppHome";
@@ -31,6 +32,9 @@ const DesktopHomePage = () => {
         
         {/* 2. Why Compare with ZIVO (3 value props) */}
         <WhyBookWithZivo />
+        
+        {/* 2.5. Bento Grid Features (Technology Trust) */}
+        <BentoFeatures />
         
         {/* 3. Primary Services (Flights, Hotels, Cars) */}
         <PrimaryServicesSection />
