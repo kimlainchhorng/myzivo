@@ -114,10 +114,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithProvider = async (provider: Provider) => {
     try {
-      // Use production URL for OAuth redirect to avoid localhost issues
-      const redirectUrl = import.meta.env.PROD 
+      // Determine redirect URL - use current origin unless it's localhost
+      const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const redirectUrl = isLocalhost 
         ? 'https://hizovo.com/auth-callback'
-        : window.location.origin + '/auth-callback';
+        : `${window.location.origin}/auth-callback`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
