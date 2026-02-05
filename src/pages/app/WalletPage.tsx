@@ -1,15 +1,17 @@
 /**
- * ZIVO Wallet Page
+  * ZIVO Wallet Page — Responsive
  * Unified payment methods, transactions, and credits
+  *
+  * Mobile: Premium "Secure Vault" visual experience
+  * Desktop: Functional wallet management
  */
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { 
   ArrowLeft, CreditCard, Plus, Trash2, Star,
-  ArrowDownLeft, ArrowUpRight, Gift, Clock,
-  Wallet, Filter
+  ArrowDownLeft, ArrowUpRight, Gift, Clock, Loader2,
+  Wallet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,10 @@ import {
 } from "@/hooks/useZivoWallet";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
 import { format } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Lazy load mobile premium component
+const MobileWalletPremium = lazy(() => import("@/components/wallet/MobileWalletPremium"));
 
 function PaymentMethodCard({ method, onSetDefault, onDelete }: {
   method: PaymentMethod;
@@ -103,6 +109,7 @@ function PaymentMethodCard({ method, onSetDefault, onDelete }: {
 
 export default function WalletPage() {
   const [serviceFilter, setServiceFilter] = useState<string | undefined>();
+  const isMobile = useIsMobile();
   
   const { data: paymentMethods, isLoading: loadingMethods } = usePaymentMethods();
   const { data: transactions, isLoading: loadingTx } = useWalletTransactions(serviceFilter);
@@ -114,6 +121,20 @@ export default function WalletPage() {
 
   const services = ["flights", "cars", "p2p_cars", "rides", "eats", "move", "hotels"];
 
+  // Mobile: Premium visual experience
+  if (isMobile) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        </div>
+      }>
+        <MobileWalletPremium />
+      </Suspense>
+    );
+  }
+
+  // Desktop: Functional wallet management
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
