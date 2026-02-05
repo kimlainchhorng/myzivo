@@ -1,26 +1,27 @@
 /**
  * ZIVO Mobile Search Screen
- * Unified search with Flights/Hotels/Cars tabs
+ * Premium "Cockpit" design with unified Flights/Hotels/Cars tabs
  */
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Plane, Hotel, Car, ArrowLeft, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+import { 
+  Plane, Hotel, Car, Calendar, User, Search, 
+  ArrowRight, Globe, TrendingUp, BedDouble, MapPin
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import FlightSearchFormPro from "@/components/search/FlightSearchFormPro";
 import HotelSearchFormPro from "@/components/search/HotelSearchFormPro";
 import CarSearchFormPro from "@/components/search/CarSearchFormPro";
 
 type ServiceTab = "flights" | "hotels" | "cars";
 
-// Popular routes data
-const popularRoutes = [
-  { from: "NYC", to: "LAX", price: 99 },
-  { from: "CHI", to: "MIA", price: 129 },
-  { from: "SFO", to: "NYC", price: 149 },
-  { from: "LAX", to: "LAS", price: 49 },
+// Trending destinations
+const destinations = [
+  { city: "Tokyo", country: "Japan", price: "$840", img: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=600" },
+  { city: "Paris", country: "France", price: "$420", img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=600" },
+  { city: "Bali", country: "Indonesia", price: "$910", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=600" },
+  { city: "London", country: "UK", price: "$380", img: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80&w=600" },
 ];
 
 export default function MobileSearch() {
@@ -28,46 +29,58 @@ export default function MobileSearch() {
   const [searchParams] = useSearchParams();
   const initialTab = (searchParams.get("tab") as ServiceTab) || "flights";
   const [activeTab, setActiveTab] = useState<ServiceTab>(initialTab);
+  
+  // Flight search state
+  const [tripType, setTripType] = useState("round");
+  const [cabin, setCabin] = useState("economy");
 
   const serviceTabs = [
-    { id: "flights" as ServiceTab, label: "Flights", icon: Plane, color: "text-flights", bgColor: "bg-flights/10", borderColor: "border-flights" },
-    { id: "hotels" as ServiceTab, label: "Hotels", icon: Hotel, color: "text-hotels", bgColor: "bg-hotels/10", borderColor: "border-hotels" },
-    { id: "cars" as ServiceTab, label: "Cars", icon: Car, color: "text-cars", bgColor: "bg-cars/10", borderColor: "border-cars" },
+    { id: "flights" as ServiceTab, label: "Flights", icon: Plane },
+    { id: "hotels" as ServiceTab, label: "Hotels", icon: BedDouble },
+    { id: "cars" as ServiceTab, label: "Cars", icon: Car },
   ];
 
-  const handleFlightSearch = (params: URLSearchParams) => {
-    // Save to recent searches
-    const origin = params.get("origin") || "";
-    const destination = params.get("destination") || "";
-    if (origin && destination) {
-      const search = `${origin} → ${destination}`;
-      const stored = localStorage.getItem("zivo_recent_searches");
-      let searches: string[] = stored ? JSON.parse(stored) : [];
-      searches = [search, ...searches.filter(s => s !== search)].slice(0, 5);
-      localStorage.setItem("zivo_recent_searches", JSON.stringify(searches));
-    }
-    
-    navigate(`/flights/results?${params.toString()}`);
+  const handleFlightSearch = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 7);
+    navigate(`/flights/results?origin=JFK&destination=LHR&departDate=${tomorrow.toISOString().split('T')[0]}&passengers=2&cabinClass=${cabin}`);
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-hidden selection:bg-sky-500/30 pb-24">
+      
+      {/* Ambient Background */}
+      <div className="fixed inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1506012787146-f92b2d7d6d96?auto=format&fit=crop&q=80&w=2000"
+          className="w-full h-full object-cover opacity-30"
+          alt="Sky"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/60 to-zinc-950" />
+      </div>
+
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg font-semibold">Search</h1>
+      <div className="relative z-10 px-6 pt-14 pb-6 flex justify-between items-center">
+        <div>
+          <div className="text-sky-400 font-bold tracking-widest uppercase text-xs mb-1 flex items-center gap-2">
+            <Globe className="w-3 h-3" /> Global Network
+          </div>
+          <h1 className="text-3xl font-black tracking-tight">
+            Find Your <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-violet-400">Horizon</span>
+          </h1>
         </div>
+        <button 
+          onClick={() => navigate("/app/profile")}
+          className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-md border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all"
+        >
+          <User className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Service Tabs */}
-      <div className="px-4 py-4">
-        <div className="flex gap-2">
+      <div className="relative z-10 px-6 mb-4">
+        <div className="flex bg-black/40 rounded-full p-1 border border-white/5">
           {serviceTabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -75,10 +88,10 @@ export default function MobileSearch() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all touch-manipulation border-2",
+                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-sm font-bold transition-all touch-manipulation",
                   isActive
-                    ? cn(tab.bgColor, tab.color, tab.borderColor)
-                    : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted"
+                    ? "bg-white text-zinc-900 shadow-lg"
+                    : "text-zinc-400 hover:text-white"
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -89,70 +102,176 @@ export default function MobileSearch() {
         </div>
       </div>
 
-      {/* Search Form */}
-      <div className="px-4">
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-4">
-            {activeTab === "flights" && (
-              <FlightSearchFormPro 
-                onSearch={handleFlightSearch}
-              />
-            )}
-            
-            {activeTab === "hotels" && (
-              <HotelSearchFormPro
-                onSearch={(params) => {
-                  const urlParams = new URLSearchParams({
-                    city: params.citySlug,
-                    checkIn: params.checkIn.toISOString().split('T')[0],
-                    checkOut: params.checkOut.toISOString().split('T')[0],
-                    adults: params.adults.toString(),
-                    rooms: params.rooms.toString(),
-                  });
-                  navigate(`/hotels?${urlParams.toString()}`);
-                }}
-              />
-            )}
-            
-            {activeTab === "cars" && (
-              <CarSearchFormPro
-                onSearch={(params) => {
-                  navigate(`/rent-car/results?${params.toString()}`);
-                }}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Popular Routes (Flights only) */}
+      {/* Flight Search - Premium "Cockpit" Design */}
       {activeTab === "flights" && (
-        <div className="mt-6 px-4">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold">Popular Routes</h2>
+        <div className="relative z-10 px-6">
+          <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 shadow-2xl">
+            
+            {/* Trip Type Tabs */}
+            <div className="flex bg-black/40 rounded-full p-1 w-fit mb-5 border border-white/5">
+              {['round', 'one-way', 'multi'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setTripType(type)}
+                  className={cn(
+                    "px-4 py-2 rounded-full text-xs font-bold uppercase transition-all",
+                    tripType === type 
+                      ? 'bg-zinc-800 text-white shadow-lg' 
+                      : 'text-zinc-500 hover:text-zinc-300'
+                  )}
+                >
+                  {type.replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+
+            {/* Route Inputs */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-[1fr,auto,1fr] gap-2 items-center">
+                <button 
+                  onClick={() => {/* Open airport picker */}}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-sky-500/50 transition-colors text-left group"
+                >
+                  <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">From</div>
+                  <div className="text-xl font-black group-hover:text-sky-400 transition-colors">NYC</div>
+                  <div className="text-xs text-zinc-400 truncate">John F. Kennedy</div>
+                </button>
+
+                <button className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center shadow-lg shadow-sky-600/20 z-10 hover:bg-sky-500 transition-colors">
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <button 
+                  onClick={() => {/* Open airport picker */}}
+                  className="bg-white/5 border border-white/10 rounded-2xl p-4 hover:border-sky-500/50 transition-colors text-left group"
+                >
+                  <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1">To</div>
+                  <div className="text-xl font-black group-hover:text-sky-400 transition-colors">LHR</div>
+                  <div className="text-xs text-zinc-400 truncate">London Heathrow</div>
+                </button>
+              </div>
+
+              {/* Date & Travelers */}
+              <div className="grid grid-cols-2 gap-3">
+                <button className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left hover:border-sky-500/50 transition-colors">
+                  <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Calendar className="w-3 h-3" /> Departure
+                  </div>
+                  <div className="font-bold">Feb 24, Wed</div>
+                </button>
+                <button className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left hover:border-sky-500/50 transition-colors">
+                  <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <User className="w-3 h-3" /> Travelers
+                  </div>
+                  <div className="font-bold">2 Adults</div>
+                </button>
+              </div>
+
+              {/* Cabin Class */}
+              <div className="grid grid-cols-3 gap-2">
+                {['economy', 'business', 'first'].map((c) => (
+                  <button 
+                    key={c}
+                    onClick={() => setCabin(c)}
+                    className={cn(
+                      "p-3 rounded-xl border text-center transition-all",
+                      cabin === c 
+                        ? 'bg-sky-600/20 border-sky-500 text-sky-400' 
+                        : 'bg-transparent border-white/5 text-zinc-500 hover:bg-white/5'
+                    )}
+                  >
+                    <div className="text-[10px] font-bold uppercase">{c}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Search Button */}
+            <button 
+              onClick={handleFlightSearch}
+              className="w-full mt-5 bg-white text-zinc-900 h-14 rounded-2xl font-black text-lg shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            >
+              <Search className="w-5 h-5" /> Search Flights
+            </button>
           </div>
-          <div className="space-y-2">
-            {popularRoutes.map((route, i) => (
-              <Card 
-                key={i} 
-                className="cursor-pointer hover:bg-muted/50 transition-colors"
+        </div>
+      )}
+
+      {/* Hotels Search */}
+      {activeTab === "hotels" && (
+        <div className="relative z-10 px-6">
+          <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 shadow-2xl">
+            <HotelSearchFormPro
+              onSearch={(params) => {
+                const urlParams = new URLSearchParams({
+                  city: params.citySlug,
+                  checkIn: params.checkIn.toISOString().split('T')[0],
+                  checkOut: params.checkOut.toISOString().split('T')[0],
+                  adults: params.adults.toString(),
+                  rooms: params.rooms.toString(),
+                });
+                navigate(`/hotels?${urlParams.toString()}`);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Cars Search */}
+      {activeTab === "cars" && (
+        <div className="relative z-10 px-6">
+          <div className="bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 shadow-2xl">
+            <CarSearchFormPro
+              onSearch={(params) => {
+                navigate(`/rent-car/results?${params.toString()}`);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Trending Destinations (Flights only) */}
+      {activeTab === "flights" && (
+        <div className="relative z-10 px-6 py-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-bold flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" /> Trending Now
+            </h2>
+            <span className="text-xs text-zinc-500">From NYC</span>
+          </div>
+
+          <div className="flex gap-4 overflow-x-auto hide-scrollbar snap-x -mx-6 px-6">
+            {destinations.map((dest, i) => (
+              <motion.div 
+                key={i}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   const tomorrow = new Date();
-                  tomorrow.setDate(tomorrow.getDate() + 7);
-                  navigate(`/flights/results?origin=${route.from}&destination=${route.to}&departDate=${tomorrow.toISOString().split('T')[0]}&passengers=1&cabinClass=economy`);
+                  tomorrow.setDate(tomorrow.getDate() + 14);
+                  navigate(`/flights/results?origin=JFK&destination=${dest.city.substring(0,3).toUpperCase()}&departDate=${tomorrow.toISOString().split('T')[0]}&passengers=1&cabinClass=economy`);
                 }}
+                className="min-w-[180px] h-[240px] rounded-3xl relative overflow-hidden snap-start group cursor-pointer flex-shrink-0"
               >
-                <CardContent className="p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Plane className="w-4 h-4 text-primary" />
+                <img 
+                  src={dest.img} 
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                  alt={dest.city} 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+                
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <h3 className="text-lg font-bold">{dest.city}</h3>
+                      <p className="text-xs text-zinc-300">{dest.country}</p>
                     </div>
-                    <span className="font-medium">{route.from} → {route.to}</span>
+                    <div className="text-right">
+                      <div className="text-[10px] text-zinc-400">from</div>
+                      <div className="font-mono font-bold text-emerald-400">{dest.price}</div>
+                    </div>
                   </div>
-                  <span className="text-primary font-semibold">From ${route.price}</span>
-                </CardContent>
-              </Card>
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
