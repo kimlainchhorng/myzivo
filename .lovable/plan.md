@@ -1,226 +1,163 @@
 
 
-# Immersive Premium Visual Assets Update (2026 Edition)
+# Bento Grid Features Component Implementation
 
 ## Overview
 
-Update ZIVO's image assets to follow the "Minimalist Luxury" design trend for 2026. This involves replacing or supplementing current imagery with high-contrast, moody visuals across three key sections: Hero backgrounds, Hotel city pages, and Flight route pages.
+Create a premium "Bento Grid" feature showcase component that highlights ZIVO's core technology and trust signals using an asymmetric grid layout with large hero cards and compact feature tiles.
 
 ---
 
 ## Current State Analysis
 
-The project has a well-organized image asset system:
+The homepage already has:
+- **WhyBookWithZivo**: 3-column equal-width value props
+- **PrimaryServicesSection**: 3-column service cards with images
+- **HowItWorksSimple**: 3-step horizontal flow
+- **SocialProofSection**: 3 trust point cards
 
-| Category | Current Assets | Current Style |
-|----------|---------------|---------------|
-| **Hero Backgrounds** | 10 images (`hero-*.jpg`) | Mixed travel scenes |
-| **Flight-Specific** | 7 images (`flight-*.jpg`, `cabin-*.jpg`) | Cabin interiors, clouds |
-| **Destination Photos** | 24 city images (`dest-*.jpg`) | City skylines, landmarks |
-| **Hotel Imagery** | 10 images (`hotel-*.jpg`) | Pool, resort, room interiors |
-
-All assets are centralized through:
-- `src/assets/index.ts` - ES6 exports
-- `src/config/photos.ts` - Configuration with alt text and metadata
+The provided Bento Grid design introduces:
+1. **Asymmetric Layout**: 2×2 large hero card + 2×1 horizontal feature + 2×1 small tiles
+2. **Visual Density**: More compact, magazine-style presentation
+3. **Technology Focus**: Direct Hotel Inventory, NDC Flights, Zero-Latency, PCI Level 1
 
 ---
 
-## Proposed Image Updates
-
-### 1. Hero Background (Homepage)
-
-| Current | Proposed Replacement |
-|---------|---------------------|
-| `hero-homepage.jpg` - Airport terminal | **Aerial airplane wing over lit-up city at night** |
-| | High-contrast, moody, global tone |
-
-**Search terms for Unsplash/Pexels:**
-- "airplane wing city night aerial"
-- "plane wing lights cityscape dark"
-- "aircraft window night city view"
-
-**File to create:** `hero-homepage-premium.jpg`
-
-### 2. Hotel City Pages
-
-| Current | Proposed Replacement |
-|---------|---------------------|
-| `dest-*.jpg` - City landmarks | **Modern glass skyscraper reflecting sunset** |
-| Various city-specific imagery | Architecture-focused, clean, modern |
-
-**New asset category:** Premium City Backdrops
-
-**Search terms:**
-- "glass skyscraper sunset reflection"
-- "modern architecture golden hour"
-- "minimalist building facade dusk"
-
-**Files to create:**
-- `city-hero-glass-sunset.jpg` - Generic premium city backdrop
-- `city-hero-modern-skyline.jpg` - Alternate option
-
-### 3. Flight Route Pages
-
-| Current | Proposed Replacement |
-|---------|---------------------|
-| `flight-hero-premium.jpg` | **Close-up of first-class cabin seat** |
-| `cabin-first.jpg` | OR **Minimalist cockpit view** |
-| Various cabin interiors | Implies premium service, NDC access |
-
-**Search terms:**
-- "first class seat close up luxury"
-- "airplane cockpit minimalist"
-- "business class cabin modern"
-- "premium airline seat leather"
-
-**Files to create:**
-- `flight-hero-luxury.jpg` - First-class seat detail
-- `flight-cockpit-minimal.jpg` - Cockpit view (optional)
-
----
-
-## Technical Implementation
-
-### Phase 1: Add New Image Assets
+## Proposed Design
 
 ```text
-src/assets/
-├── hero-homepage-premium.jpg     ← NEW: Airplane wing over night city
-├── city-hero-glass-sunset.jpg    ← NEW: Glass skyscraper sunset
-├── city-hero-modern-skyline.jpg  ← NEW: Modern architecture backup
-├── flight-hero-luxury.jpg        ← NEW: First-class seat close-up
-└── flight-cockpit-minimal.jpg    ← NEW: Minimalist cockpit (optional)
++----------------------------------+----------------------------------+
+|                                  |                                  |
+|   DIRECT HOTEL INVENTORY         |        NDC FLIGHTS               |
+|   [Large 2x2 card with           |        [Wide blue card           |
+|    hotel background image]       |         with plane icon]         |
+|                                  |                                  |
+|   Hotelbeds + RateHawk           |   300+ Airlines via Duffel       |
+|   normalized in real-time        |                                  |
+|                                  +------------------+---------------+
+|                                  |       ⚡          |      🔒       |
+|                                  |  Zero-Latency    |  PCI-Level 1  |
++----------------------------------+------------------+---------------+
 ```
 
-### Phase 2: Update Asset Exports
+Grid Configuration: `grid-cols-4 grid-rows-2`
+- Hotel card: `col-span-2 row-span-2` (left side)
+- NDC Flights: `col-span-2` (top right)
+- Zero-Latency: `col-span-1` (bottom right left)
+- PCI-Level 1: `col-span-1` (bottom right right)
 
-**File:** `src/assets/index.ts`
+---
 
-Add new exports:
+## Implementation Details
+
+### File to Create
+
+**`src/components/home/BentoFeatures.tsx`**
+
 ```typescript
-// PREMIUM 2026 HERO IMAGES
-export { default as heroHomepagePremium } from "./hero-homepage-premium.jpg";
-export { default as cityHeroGlassSunset } from "./city-hero-glass-sunset.jpg";
-export { default as cityHeroModernSkyline } from "./city-hero-modern-skyline.jpg";
-export { default as flightHeroLuxury } from "./flight-hero-luxury.jpg";
-export { default as flightCockpitMinimal } from "./flight-cockpit-minimal.jpg";
+// Key features:
+// 1. Hotel card with background image and glass overlay
+// 2. NDC Flights card with brand blue gradient + hover animation
+// 3. Two compact trust badges (Zero-Latency, PCI)
 ```
 
-### Phase 3: Update Photo Configuration
+### Styling
 
-**File:** `src/config/photos.ts`
+Following existing patterns from the codebase:
+- Border radius: `rounded-[2.5rem]` (40px) for premium feel
+- Glass effect: `bg-black/40 backdrop-blur-md border border-white/10`
+- Section border: `border border-white/5`
+- Dark background: `bg-zinc-900` / `bg-zinc-800`
+- Flight brand color: `bg-blue-600` (matches ZIVO flights branding)
 
-Add premium alternatives:
+### Content Configuration
 
-```typescript
-// Premium 2026 hero variants
-export const premiumHeroPhotos = {
-  homepage: {
-    src: heroHomepagePremium,
-    alt: "Aerial view of airplane wing over illuminated city at night",
-  },
-  flightsLuxury: {
-    src: flightHeroLuxury,
-    alt: "Premium first-class cabin seat with leather finish",
-  },
-  cityGeneric: {
-    src: cityHeroGlassSunset,
-    alt: "Modern glass skyscraper reflecting golden sunset",
-  },
-};
-```
+| Card | Type | Background | Content |
+|------|------|------------|---------|
+| Hotel Inventory | Large (2×2) | Hotel image | "Direct Hotel Inventory" + "Hotelbeds + RateHawk normalized" |
+| NDC Flights | Wide (2×1) | Blue gradient | "NDC Flights" + "300+ Airlines via Duffel" |
+| Zero-Latency | Small (1×1) | Dark | ⚡ icon + label |
+| PCI Level 1 | Small (1×1) | Dark | 🔒 icon + label |
 
-### Phase 4: Update Components to Use New Assets
+### Integration Options
 
-**Files to modify:**
+The component can be placed in the homepage flow after `WhyBookWithZivo` or replace `SocialProofSection`:
 
-| Component | Current Image | New Image |
-|-----------|--------------|-----------|
-| `src/pages/Index.tsx` → `HeroSection.tsx` | `hero-homepage.jpg` | `hero-homepage-premium.jpg` |
-| `src/pages/seo/CityLandingPage.tsx` | `destinationPhotos[city]` | Fallback to `city-hero-glass-sunset.jpg` |
-| `src/pages/seo/HotelCityLandingPage.tsx` | `destinationPhotos[city]` | Fallback to `city-hero-glass-sunset.jpg` |
-| `src/components/seo/AnimatedCityHero.tsx` | City-specific photo | Premium fallback |
-| `src/pages/seo/FlightRoutePage.tsx` | No hero image | Add `flight-hero-luxury.jpg` |
-| `src/components/flight/FlightHeroSection.tsx` | `flight-hero-premium.jpg` | `flight-hero-luxury.jpg` |
+```tsx
+// Option A: Add as new section
+<WhyBookWithZivo />
+<BentoFeatures />
+<PrimaryServicesSection />
 
-### Phase 5: Create Premium Hero Variant Component
-
-**New file:** `src/components/seo/PremiumCityHero.tsx`
-
-A variant of `AnimatedCityHero` that uses the new glass-sunset imagery for cities without dedicated photos:
-
-```typescript
-// Uses premium generic backdrop when city-specific image unavailable
-const heroSrc = cityPhoto?.src || premiumHeroPhotos.cityGeneric.src;
+// Option B: Replace SocialProofSection
+<PriceAlertPromo />
+<BentoFeatures />  // Instead of SocialProofSection
+<AirlineTrustSection />
 ```
 
 ---
 
-## Image Specifications
+## Responsive Behavior
 
-Following existing project standards from `imageSizes` config:
-
-| Image Type | Dimensions | Max File Size | Aspect Ratio |
-|------------|-----------|--------------|--------------|
-| Hero backgrounds | 1920×1080 | 250KB | 16:9 |
-| City backdrops | 1920×1080 | 250KB | 16:9 |
-| Flight heroes | 1920×1080 | 250KB | 16:9 |
-
-**Image processing requirements:**
-- WebP format with JPEG fallback
-- Color grading: High contrast, deep blacks, moody tones
-- LCP optimization: `fetchPriority="high"`, preload hints
+| Viewport | Layout |
+|----------|--------|
+| Desktop (lg+) | 4-column × 2-row as designed |
+| Tablet (md) | 2-column × 4-row (cards stack) |
+| Mobile | Single column, full-width cards |
 
 ---
 
-## Visual Style Guidelines
+## Technical Details
 
-### "Minimalist Luxury" Characteristics
+### Image Assets
 
-1. **High Contrast**: Deep blacks, bright highlights
-2. **Moody Tones**: Cool color palette (slate, navy, charcoal)
-3. **Clean Lines**: Architecture-focused, geometric
-4. **Subtle Warmth**: Golden hour accents, warm light reflections
-5. **Premium Materials**: Leather, glass, polished metal
+Use existing hotel imagery from the photo system:
+```typescript
+import hotelLobbyPremium from "@/assets/hotel-lobby-premium.jpg";
+// Or generate a new asset with glass-reflection hotel aesthetic
+```
 
-### Photography Requirements
+### Icon Integration
 
-- **NO**: Busy backgrounds, cluttered scenes, stock-photo smiles
-- **YES**: Empty space, single focal points, editorial quality
+```typescript
+import { Plane, Zap, ShieldCheck } from "lucide-react";
 
----
+// For decorative Plane icon with hover scale:
+<Plane className="absolute -right-4 -bottom-4 w-32 h-32 opacity-20 
+  group-hover:scale-110 transition-transform" />
+```
 
-## Implementation Order
+### Container Sizing
 
-1. Source and download premium images from Unsplash/Pexels
-2. Process images (resize, compress, color grade)
-3. Add new files to `src/assets/`
-4. Update `src/assets/index.ts` with new exports
-5. Update `src/config/photos.ts` with premium variants
-6. Modify `HeroSection.tsx` to use new homepage hero
-7. Update `AnimatedCityHero.tsx` with fallback logic
-8. Add hero image to `FlightRoutePage.tsx`
-9. Test across all affected pages
-10. Verify LCP performance metrics
+```typescript
+// Fixed height on desktop for grid integrity
+className="h-[600px] max-w-7xl mx-auto"
+
+// Responsive: auto-height on mobile
+className="h-auto md:h-[600px]"
+```
 
 ---
 
 ## Files Summary
 
-### New Files to Create
-| File | Description |
-|------|-------------|
-| `src/assets/hero-homepage-premium.jpg` | Airplane wing over night city |
-| `src/assets/city-hero-glass-sunset.jpg` | Glass skyscraper at sunset |
-| `src/assets/flight-hero-luxury.jpg` | First-class seat close-up |
+### New File
+| File | Purpose |
+|------|---------|
+| `src/components/home/BentoFeatures.tsx` | Premium asymmetric feature grid |
 
 ### Files to Modify
 | File | Changes |
 |------|---------|
-| `src/assets/index.ts` | Add new premium image exports |
-| `src/config/photos.ts` | Add `premiumHeroPhotos` configuration |
-| `src/components/home/HeroSection.tsx` | Use new homepage hero |
-| `src/components/seo/AnimatedCityHero.tsx` | Add premium fallback logic |
-| `src/pages/seo/FlightRoutePage.tsx` | Add hero image section |
-| `src/components/flight/FlightHeroSection.tsx` | Update to luxury variant |
+| `src/pages/Index.tsx` | Import and add `<BentoFeatures />` to homepage flow |
+
+---
+
+## Implementation Order
+
+1. Create `BentoFeatures.tsx` with the asymmetric grid layout
+2. Integrate hotel background image from existing assets
+3. Add responsive breakpoints for tablet/mobile
+4. Insert into `Index.tsx` homepage after `WhyBookWithZivo`
+5. Test grid alignment and hover animations
 
