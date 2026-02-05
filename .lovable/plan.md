@@ -1,267 +1,352 @@
 
 
-# Programmatic SEO Route Layout & Admin Fulfillment Hub
+# 2026 Premium Features Implementation Plan
 
 ## Overview
 
-Implement two major 2026 feature upgrades:
-1. **Programmatic SEO Route Pages**: Enhanced `/flights/jfk-to-lhr` style pages with vertical scroll reveal animations, Ken Burns 2.0 effect, and "Direct NDC Pricing" trust badge
-2. **Admin Fulfillment Hub**: Agentic dashboard that proactively surfaces bookings needing attention with supplier health pulse, PNR lifecycle timeline, and margin tracking
+Implement four major enhancements to establish ZIVO as a premium 2026-era OTA:
+
+1. **Smart-Merge Logic** - Enhanced hotel deduplication with "Shadow Fallback" for 99.9% booking success
+2. **Programmatic SEO Template** - Dynamic route components with real-time micro-copy and breadcrumb link juice
+3. **Analytics Dashboard: Funnel Health Pulse** - API latency, abandonment tracking, supplier success rates
+4. **Motion-Blur Scroll Effect** - Premium scroll feel with velocity-based blur
 
 ---
 
-## Part 1: Programmatic SEO Destination Routes
+## Part 1: Smart-Merge Logic with Shadow Fallback
 
 ### Current State
 
-The existing `FlightRoutePage.tsx` provides a solid SEO landing page but lacks:
-- Scroll-triggered animations
-- Enhanced Ken Burns (zoom + pan) effect
-- "Direct NDC Pricing" badge to signal non-affiliate model
+The existing `normalizeHotels.ts` already has basic deduplication using name + coordinates matching, but lacks:
+- Shadow fallback for booking resilience
+- Phone/postal code matching (more reliable than name fuzzy matching)
+- ZIVO master ID generation
+- Inventory source aggregation flag
+
+### Proposed Enhancement
+
+Upgrade the merge algorithm to include:
+
+**Enhanced Matching Logic:**
+```text
+Priority 1: Phone number match (exact)
+Priority 2: Postal code + normalized address
+Priority 3: Normalized name + coordinates (current)
+```
+
+**Shadow Fallback System:**
+```text
+┌─────────────────────────────────────────────────┐
+│  ZIVO Smart-Merge Output                        │
+│  ─────────────────────────────────────────────  │
+│  zivo_master_id: ZVO-hb-12345                  │
+│  primary_rate: $195 (RateHawk)                 │
+│  fallback_rate: $200 (Hotelbeds)               │
+│  supplier_priority: RATEHAWK                   │
+│  inventory_source: AGGREGATED_ZIVO_FEED        │
+│                                                 │
+│  If RateHawk booking fails → auto-retry with   │
+│  Hotelbeds at $200 (user sees no interruption) │
+└─────────────────────────────────────────────────┘
+```
+
+### Files to Create/Modify
+
+| File | Purpose |
+|------|---------|
+| `src/lib/hotels/smartMerge.ts` | NEW: Enhanced merge logic with shadow fallback |
+| `src/lib/hotels/normalizeHotels.ts` | MODIFY: Import and use smartMerge for matching |
+| `src/types/hotels.ts` | MODIFY: Add SmartMergedHotel interface |
+
+---
+
+## Part 2: Programmatic SEO Template Enhancement
+
+### Current State
+
+`FlightRoutePage.tsx` has solid SEO structure but needs:
+- Dynamic H1 with year ("Best NDC Rates: JFK to DXB (February 2026)")
+- Real-time micro-copy ("Last booked 4 minutes ago via Duffel")
+- Enhanced breadcrumb link juice hierarchy
 
 ### Proposed Enhancements
 
-#### A. Vertical Scroll Reveal System
-
-Create a reusable scroll reveal component using Framer Motion's `whileInView`:
-
-| Element | Animation | Trigger |
-|---------|-----------|---------|
-| H1 Title | Fade up + slight scale | On mount |
-| Route Map | Slide in + draw path | When 30% visible |
-| Booking Tips | Staggered fade-in | When in viewport |
-| Price Alert CTA | Scale pop | When 50% visible |
-| Related Routes | Horizontal slide | When in viewport |
-
-#### B. Ken Burns 2.0 Effect
-
-Upgrade the existing hero image animation to include:
-- **Subtle zoom**: Scale from 1.0 → 1.05 (gentler than current 1.2)
-- **Pan movement**: Slight X/Y translate during animation
-- **Duration**: 15-20 seconds for subtle, premium feel
+**A. RouteSEOHeader Component:**
 
 ```text
-Initial: scale(1.0), translate(0, 0)
-Animate: scale(1.05), translate(-2%, -1%)
-Duration: 20s ease-in-out
+┌────────────────────────────────────────────────────────────────┐
+│  Fly from JFK to DXB                                           │
+│  Direct NDC pricing from 300+ airlines. No hidden fees.        │
+│                                        Starting from $485      │
+│                                                                 │
+│  🕐 Last booked 4 minutes ago via Duffel                       │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-#### C. "Direct NDC Pricing" Trust Badge
+**B. Dynamic H1 with Month/Year:**
+```typescript
+const dynamicH1 = `Best NDC Flight Rates: ${origin} to ${destination} (${currentMonth} ${currentYear})`;
+```
 
-Add a prominent badge signaling ZIVO is not an affiliate site:
+**C. Real-Time Micro-Copy Hook:**
+
+Query `flight_bookings` for recent bookings on this route to show social proof:
+- "Last booked 4 minutes ago via Duffel"
+- "12 people searched this route today"
+
+**D. Enhanced Breadcrumb Hierarchy:**
+```text
+Home > Flights > United States > New York > JFK to Dubai
+```
+
+Each level is a crawlable link that passes PageRank up the hierarchy.
+
+### Files to Create/Modify
+
+| File | Purpose |
+|------|---------|
+| `src/components/seo/RouteSEOHeader.tsx` | NEW: Premium route header with price display |
+| `src/components/seo/RealTimeMicroCopy.tsx` | NEW: Live "last booked" social proof |
+| `src/components/seo/EnhancedBreadcrumbs.tsx` | NEW: Multi-level breadcrumbs with country/region |
+| `src/hooks/useRouteActivity.ts` | NEW: Fetch recent bookings for route social proof |
+| `src/pages/seo/FlightRoutePage.tsx` | MODIFY: Integrate new SEO components |
+
+---
+
+## Part 3: Analytics Dashboard - Funnel Health Pulse
+
+### Current State
+
+The `FulfillmentHub` has supplier health and PNR tracking, but needs dedicated funnel analytics:
+- API Latency comparison cards
+- Checkout abandonment heatmap
+- Supplier ticketing success rate
+
+### Proposed Components
+
+**A. API Latency Comparison Card:**
 
 ```text
 ┌─────────────────────────────────────────┐
-│  ⚡ DIRECT NDC PRICING                  │
-│  Not an affiliate — real airline rates  │
+│  API Response Times (Last 1 Hour)       │
+│  ─────────────────────────────────────  │
+│  Duffel      ████████░░░░  245ms   ✓    │
+│  Hotelbeds   ██████████░░  389ms   ✓    │
+│  RateHawk    █████████░░░  312ms   ✓    │
+│                                         │
+│  Avg: 315ms   P95: 892ms   P99: 1.2s   │
 └─────────────────────────────────────────┘
 ```
 
-Placement: Below hero, above search form
-
-#### D. Animated Route Map
-
-Create an SVG-based route visualization with scroll-triggered path animation:
+**B. Checkout Abandonment Tracker:**
 
 ```text
-    ✈️ JFK ─────────────────> LHR
-         ╰─── 3,451 miles ───╯
+┌─────────────────────────────────────────┐
+│  Funnel Drop-off Points                 │
+│  ─────────────────────────────────────  │
+│  Search → Results    95%  ████████████  │
+│  Results → Details   42%  █████░░░░░░░  │
+│  Details → Checkout  28%  ███░░░░░░░░░  │
+│  Checkout → Payment  18%  ██░░░░░░░░░░  │
+│  Payment → Confirm   89%  ██████████░░  │
+│                                         │
+│  🚨 Biggest drop: Results → Details     │
+│     Recommendation: Add "Best Price"    │
+│     badge to top 3 offers               │
+└─────────────────────────────────────────┘
 ```
 
-The path line draws as user scrolls, with plane icon animating along the path.
+**C. Supplier Success Rate:**
+
+```text
+┌─────────────────────────────────────────┐
+│  Ticketing Success (First Attempt)      │
+│  ─────────────────────────────────────  │
+│  Duffel      98.2%   (892 / 908)   ✓    │
+│  Hotelbeds   96.8%   (241 / 249)   ✓    │
+│  RateHawk    94.1%   (112 / 119)   ⚠    │
+│                                         │
+│  Failed tickets auto-escalate to        │
+│  support queue after 15 minutes.        │
+└─────────────────────────────────────────┘
+```
 
 ### Files to Create/Modify
 
 | File | Purpose |
 |------|---------|
-| `src/components/ui/scroll-reveal.tsx` | NEW: Reusable scroll animation wrapper |
-| `src/components/seo/AnimatedRouteMap.tsx` | NEW: SVG route visualization |
-| `src/components/seo/DirectNDCBadge.tsx` | NEW: Trust badge component |
-| `src/pages/seo/FlightRoutePage.tsx` | MODIFY: Add scroll reveals + Ken Burns 2.0 |
-| `src/components/seo/AnimatedCityHero.tsx` | MODIFY: Upgrade Ken Burns effect |
+| `src/components/admin/FunnelHealthPulse.tsx` | NEW: Combined funnel analytics dashboard |
+| `src/components/admin/APILatencyChart.tsx` | NEW: Latency comparison visualization |
+| `src/components/admin/CheckoutFunnelDropoff.tsx` | NEW: Step-by-step abandonment tracker |
+| `src/components/admin/SupplierSuccessRate.tsx` | NEW: Ticketing success by supplier |
+| `src/hooks/useFunnelAnalytics.ts` | NEW: Aggregated funnel metrics hook |
+| `src/pages/admin/FulfillmentHub.tsx` | MODIFY: Add Funnel Health tab |
 
 ---
 
-## Part 2: Admin Fulfillment Hub
+## Part 4: Motion-Blur Scroll Effect
 
 ### Current State
 
-The admin dashboard (`TravelOperationsCenter.tsx`) has basic order management but lacks the "agentic" 2026 approach that proactively surfaces issues.
+No velocity-based scroll effects exist. The CSS has basic transitions but nothing responsive to scroll speed.
 
-### Proposed Enhancements
+### Proposed Implementation
 
-#### A. Real-Time Supplier Health Pulse
+**A. Scroll Velocity Detection:**
 
-Add animated pulse indicators showing live API latency:
+Create a hook that tracks scroll velocity and applies a CSS class:
 
-| Supplier | Indicator | Latency Thresholds |
-|----------|-----------|-------------------|
-| Duffel | 🟢 Pulse | <500ms = Green, 500-1000ms = Yellow, >1000ms = Red |
-| Hotelbeds | 🟢 Pulse | <800ms = Green, 800-1500ms = Yellow, >1500ms = Red |
-| RateHawk | 🟢 Pulse | <800ms = Green |
+```typescript
+// When scroll velocity > 800px/s
+document.body.classList.add('scrolling-fast');
 
-Features:
-- Animated pulse ring effect
-- Live latency display (e.g., "245ms")
-- Auto-refresh every 30 seconds
-- Click to view full health history
-
-#### B. PNR Life-Cycle Timeline
-
-Visual timeline showing booking progression:
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│  Payment         Supplier          PNR             Ticket      │
-│  Authorized      Notified          Received        Issued      │
-│     ✓              ✓                 ⏳              ○          │
-│   10:45 AM       10:46 AM         Pending           —          │
-│                                                                 │
-│  ━━━━━━━●━━━━━━━━━━●━━━━━━━━━━○━━━━━━━━━━○━━━━━━━               │
-└─────────────────────────────────────────────────────────────────┘
+// When velocity drops below threshold
+document.body.classList.remove('scrolling-fast');
 ```
 
-States:
-- ✓ Complete (green)
-- ⏳ In Progress (animated yellow)
-- ○ Pending (gray)
-- ✗ Failed (red with alert)
+**B. Premium Scroll CSS:**
 
-#### C. Margin Tracker
+```css
+/* 2026 Premium Scroll Feel */
+.premium-scroll-image {
+  transition: filter 0.3s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: filter, transform;
+}
 
-Per-booking profitability calculator:
+.scrolling-fast .premium-scroll-image {
+  filter: blur(4px);
+  transform: scale(0.98);
+}
 
-```text
-┌─────────────────────────────────────┐
-│  Booking #FL-12345                  │
-│  ─────────────────────────────────  │
-│  Sale Price:        $1,245.00       │
-│  Supplier Cost:     -$1,089.50      │
-│  Stripe Fee (2.9%): -$36.11         │
-│  Platform Fee:      -$12.45         │
-│  ─────────────────────────────────  │
-│  Net Margin:        $106.94 (8.6%)  │
-│                     ██████████░░░░  │
-└─────────────────────────────────────┘
+/* Opt-out for critical images */
+.no-motion-blur {
+  filter: none !important;
+}
 ```
 
-Features:
-- Real-time calculation
-- Visual margin bar
-- Alert when margin < 5%
-- Aggregate margin KPI in dashboard
+**C. Hook Integration:**
 
-#### D. Agentic Alert Cards
+```typescript
+// Usage in components
+import { usePremiumScroll } from "@/hooks/usePremiumScroll";
 
-Proactive cards that surface issues before they become problems:
-
-| Alert Type | Trigger | Priority |
-|------------|---------|----------|
-| "Pending PNR" | PNR not received within 5 min of payment | High |
-| "Ticketing Delay" | Ticket not issued within 15 min | High |
-| "Low Margin Booking" | Margin < 5% | Medium |
-| "Supplier Degraded" | Latency > threshold | Medium |
-| "Payment Mismatch" | Stripe amount ≠ order total | Critical |
-
-Display format:
-```text
-┌─ 🔴 CRITICAL ──────────────────────┐
-│  PNR Delay: Booking #FL-12345      │
-│  Payment received 8 min ago        │
-│  No PNR from Duffel yet            │
-│                                    │
-│  [View Booking] [Contact Supplier] │
-└────────────────────────────────────┘
+export function HeroImage({ src, alt }) {
+  usePremiumScroll(); // Enables velocity detection
+  return <img src={src} alt={alt} className="premium-scroll-image" />;
+}
 ```
 
 ### Files to Create/Modify
 
 | File | Purpose |
 |------|---------|
-| `src/components/admin/SupplierHealthPulse.tsx` | NEW: Live API health indicator |
-| `src/components/admin/PNRTimeline.tsx` | NEW: Booking lifecycle visualization |
-| `src/components/admin/MarginTracker.tsx` | NEW: Profitability calculator |
-| `src/components/admin/AgenticAlertCard.tsx` | NEW: Proactive issue cards |
-| `src/pages/admin/FulfillmentHub.tsx` | NEW: Combined agentic dashboard |
-| `src/hooks/useSupplierHealth.ts` | NEW: Health check hook |
-| `src/hooks/useBookingMargins.ts` | NEW: Margin calculation hook |
-| `src/pages/admin/TravelOperationsCenter.tsx` | MODIFY: Add new modules |
+| `src/hooks/usePremiumScroll.ts` | NEW: Scroll velocity detection hook |
+| `src/index.css` | MODIFY: Add motion-blur scroll classes |
+| `src/components/seo/AnimatedCityHero.tsx` | MODIFY: Apply premium-scroll-image class |
 
 ---
 
 ## Technical Implementation Details
 
-### Scroll Reveal Component
+### Smart-Merge Matching Algorithm
 
 ```typescript
-// Framer Motion wrapper for scroll-triggered animations
-<ScrollReveal 
-  animation="fade-up"   // fade-up, scale, slide-left
-  threshold={0.3}       // 30% visibility trigger
-  delay={0.1}           // stagger offset
->
-  <BookingTipCard />
-</ScrollReveal>
+interface MatchConfig {
+  phoneWeight: number;      // 1.0 - exact match required
+  postalCodeWeight: number; // 0.8 - high confidence
+  nameGeoWeight: number;    // 0.6 - fallback
+}
+
+function generateMatchScore(hotelA, hotelB): number {
+  if (hotelA.phone && hotelA.phone === hotelB.phone) return 1.0;
+  if (hotelA.postalCode === hotelB.postalCode && 
+      normalizeAddress(hotelA.address) === normalizeAddress(hotelB.address)) return 0.8;
+  if (normalizedName(hotelA.name) === normalizedName(hotelB.name) &&
+      geoDistance(hotelA.coords, hotelB.coords) < 0.1) return 0.6;
+  return 0;
+}
 ```
 
-### Ken Burns 2.0 Motion Values
+### Real-Time Micro-Copy Query
 
 ```typescript
-// Enhanced Ken Burns with pan
-const kenBurns2 = {
-  initial: { scale: 1, x: 0, y: 0 },
-  animate: { 
-    scale: [1, 1.05, 1.03],
-    x: [0, "-1%", "-2%"],
-    y: [0, "-0.5%", "-1%"],
+// Query last booking on this route
+const { data: lastBooking } = useQuery({
+  queryKey: ["route-activity", origin, destination],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from("flight_bookings")
+      .select("created_at, supplier")
+      .eq("origin", origin)
+      .eq("destination", destination)
+      .eq("payment_status", "paid")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    return data?.[0];
   },
-  transition: { 
-    duration: 20,
-    ease: "easeInOut",
-    repeat: Infinity,
-    repeatType: "reverse"
-  }
-};
+  staleTime: 60 * 1000, // 1 minute
+});
+
+// Display: "Last booked 4 minutes ago via Duffel"
 ```
 
-### Supplier Health Polling
+### Scroll Velocity Detection
 
 ```typescript
-// Auto-refresh supplier health every 30s
-const { data: health } = useQuery({
-  queryKey: ['supplier-health'],
-  queryFn: fetchSupplierStatus,
-  refetchInterval: 30000,
-});
+let lastScrollY = 0;
+let lastScrollTime = Date.now();
+let velocityTimeout: NodeJS.Timeout;
+
+function handleScroll() {
+  const now = Date.now();
+  const deltaY = Math.abs(window.scrollY - lastScrollY);
+  const deltaTime = now - lastScrollTime;
+  
+  const velocity = (deltaY / deltaTime) * 1000; // px/s
+  
+  if (velocity > 800) {
+    document.body.classList.add("scrolling-fast");
+    clearTimeout(velocityTimeout);
+    velocityTimeout = setTimeout(() => {
+      document.body.classList.remove("scrolling-fast");
+    }, 150);
+  }
+  
+  lastScrollY = window.scrollY;
+  lastScrollTime = now;
+}
 ```
 
 ---
 
 ## Implementation Order
 
-### Phase 1: Scroll Reveal Foundation
-1. Create `ScrollReveal.tsx` utility component
-2. Create `AnimatedRouteMap.tsx` SVG component
-3. Create `DirectNDCBadge.tsx` trust badge
+### Phase 1: Foundation (Smart-Merge + Scroll Effects)
+1. Create `smartMerge.ts` with enhanced matching algorithm
+2. Update `normalizeHotels.ts` to use new merge logic
+3. Create `usePremiumScroll.ts` hook
+4. Add motion-blur CSS classes to `index.css`
 
-### Phase 2: Flight Route Page Upgrade
-4. Update `FlightRoutePage.tsx` with scroll reveals
-5. Enhance `AnimatedCityHero.tsx` with Ken Burns 2.0
-6. Add route map animation
-7. Integrate NDC badge
+### Phase 2: SEO Template Enhancement
+5. Create `RouteSEOHeader.tsx` component
+6. Create `RealTimeMicroCopy.tsx` with social proof
+7. Create `EnhancedBreadcrumbs.tsx` with geo hierarchy
+8. Create `useRouteActivity.ts` hook
+9. Update `FlightRoutePage.tsx` with new components
 
-### Phase 3: Admin Fulfillment Hub
-8. Create `SupplierHealthPulse.tsx` with pulse animation
-9. Create `PNRTimeline.tsx` lifecycle component
-10. Create `MarginTracker.tsx` calculator
-11. Create `AgenticAlertCard.tsx` proactive cards
-12. Create `FulfillmentHub.tsx` combined view
-13. Add hooks for health and margin data
+### Phase 3: Funnel Analytics Dashboard
+10. Create `useFunnelAnalytics.ts` hook
+11. Create `APILatencyChart.tsx` visualization
+12. Create `CheckoutFunnelDropoff.tsx` component
+13. Create `SupplierSuccessRate.tsx` card
+14. Create `FunnelHealthPulse.tsx` combined view
+15. Add new tab to `FulfillmentHub.tsx`
 
-### Phase 4: Integration
-14. Update admin routing to include new hub
-15. Test all animations and real-time updates
-16. Verify mobile responsiveness
+### Phase 4: Integration & Testing
+16. Apply `premium-scroll-image` class to hero images
+17. Test smart-merge with real supplier data
+18. Verify breadcrumb SEO with structured data testing
+19. Test scroll blur on various devices
 
 ---
 
@@ -270,23 +355,24 @@ const { data: health } = useQuery({
 ### New Files (12)
 | File | Type |
 |------|------|
-| `src/components/ui/scroll-reveal.tsx` | UI Component |
-| `src/components/seo/AnimatedRouteMap.tsx` | SEO Component |
-| `src/components/seo/DirectNDCBadge.tsx` | SEO Component |
-| `src/components/admin/SupplierHealthPulse.tsx` | Admin Component |
-| `src/components/admin/PNRTimeline.tsx` | Admin Component |
-| `src/components/admin/MarginTracker.tsx` | Admin Component |
-| `src/components/admin/AgenticAlertCard.tsx` | Admin Component |
-| `src/pages/admin/FulfillmentHub.tsx` | Admin Page |
-| `src/hooks/useSupplierHealth.ts` | Data Hook |
-| `src/hooks/useBookingMargins.ts` | Data Hook |
-| `src/components/admin/index.ts` | Index Export |
+| `src/lib/hotels/smartMerge.ts` | Hotel Logic |
+| `src/components/seo/RouteSEOHeader.tsx` | SEO Component |
+| `src/components/seo/RealTimeMicroCopy.tsx` | SEO Component |
+| `src/components/seo/EnhancedBreadcrumbs.tsx` | SEO Component |
+| `src/hooks/useRouteActivity.ts` | Data Hook |
+| `src/hooks/usePremiumScroll.ts` | UI Hook |
+| `src/hooks/useFunnelAnalytics.ts` | Analytics Hook |
+| `src/components/admin/FunnelHealthPulse.tsx` | Admin Component |
+| `src/components/admin/APILatencyChart.tsx` | Admin Component |
+| `src/components/admin/CheckoutFunnelDropoff.tsx` | Admin Component |
+| `src/components/admin/SupplierSuccessRate.tsx` | Admin Component |
 
-### Modified Files (4)
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/pages/seo/FlightRoutePage.tsx` | Add scroll reveals, NDC badge, route map |
-| `src/components/seo/AnimatedCityHero.tsx` | Ken Burns 2.0 upgrade |
-| `src/pages/admin/TravelOperationsCenter.tsx` | Link to Fulfillment Hub |
-| `src/App.tsx` | Add admin route for Fulfillment Hub |
+| `src/lib/hotels/normalizeHotels.ts` | Integrate smartMerge matching |
+| `src/types/hotels.ts` | Add SmartMergedHotel interface |
+| `src/index.css` | Add motion-blur scroll classes |
+| `src/pages/seo/FlightRoutePage.tsx` | Add RouteSEOHeader, breadcrumbs, micro-copy |
+| `src/pages/admin/FulfillmentHub.tsx` | Add Funnel Health tab |
 
