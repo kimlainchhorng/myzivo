@@ -16,14 +16,14 @@ export default function TravelerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-black pb-24">
       {/* Main Content */}
-      <div className="pt-8 px-4 md:px-8">
+      <div className="pt-20 px-6 pb-32">
         {/* Holographic Passport Header */}
         <TravelerPassport />
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
           {/* Main Column - Trip Timeline */}
           <div className="lg:col-span-8">
             <TripTimeline />
