@@ -154,13 +154,13 @@
          transition={{ duration: 0.6 }}
        >
          {/* Tab Selection */}
-         <div className="flex gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border/50 dark:border-white/5 pb-4">
+          <div className="flex gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border/50 dark:border-white/5 pb-4 overflow-x-auto hide-scrollbar">
            {tabs.map((tab) => (
              <button
                key={tab.id}
                onClick={() => setActiveTab(tab.id)}
                className={cn(
-                 "text-xs sm:text-sm font-bold uppercase tracking-wider transition-all pb-4 -mb-4",
+                  "text-xs sm:text-sm font-bold uppercase tracking-wider transition-all pb-4 -mb-4 whitespace-nowrap",
                  activeTab === tab.id
                    ? "text-foreground border-b-2 border-primary"
                    : "text-muted-foreground hover:text-foreground/80"
