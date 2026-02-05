@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+ import { motion, type Variants } from "framer-motion";
 import { Shield, Clock, Globe, Plane, Hotel, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { destinationPhotos, DestinationCity } from "@/config/photos";
@@ -91,9 +91,18 @@ export default function AnimatedCityHero({
           src={heroSrc}
           alt={heroAlt}
           className="absolute inset-0 w-full h-full object-cover"
-          initial={{ scale: 1.2 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 10, ease: "easeOut" }}
+           initial={{ scale: 1, x: 0, y: 0 }}
+           animate={{ 
+             scale: [1, 1.05, 1.03],
+             x: [0, "-1%", "-2%"],
+             y: [0, "-0.5%", "-1%"],
+           }}
+           transition={{ 
+             duration: 20,
+             ease: "easeInOut",
+             repeat: Infinity,
+             repeatType: "reverse"
+           }}
           loading="eager"
         />
       )}

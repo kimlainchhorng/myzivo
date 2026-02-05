@@ -12,3 +12,6 @@ export { DestinationIntro, TravelTips, RelatedDestinations, DestinationFAQ, Affi
 export { default as FlightSearchSchema } from './FlightSearchSchema';
 export { default as FlightBreadcrumbs } from './FlightBreadcrumbs';
 export { default as PopularRoutesFromAirport } from './PopularRoutesFromAirport';
+ // New 2026 components
+ export { default as DirectNDCBadge } from './DirectNDCBadge';
+ export { default as AnimatedRouteMap } from './AnimatedRouteMap';
