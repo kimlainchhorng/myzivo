@@ -1,4 +1,6 @@
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
+import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
 
@@ -23,41 +25,41 @@ const DesktopHomePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <OGImageMeta pageType="homepage" />
-      
+
       <NavBar />
-      
+
       <main className="pt-16">
         {/* 1. Hero Section with Trust Bar built-in */}
         <HeroSection />
-        
+
         {/* 2. Why Compare with ZIVO (3 value props) */}
         <WhyBookWithZivo />
-        
+
         {/* 2.5. Bento Grid Features (Technology Trust) */}
         <BentoFeatures />
-        
+
         {/* 3. Primary Services (Flights, Hotels, Cars) */}
         <PrimaryServicesSection />
-        
+
         {/* 4. How ZIVO Works (3 steps) */}
         <HowItWorksSimple />
-        
+
         {/* 5. Popular Routes */}
         <PopularRoutesSection />
-        
+
         {/* 6. Price Alert Promo */}
         <PriceAlertPromo />
-        
+
         {/* 7. Social Proof / Platform Trust */}
         <SocialProofSection />
-        
+
         {/* 8. Airline Trust Section */}
         <AirlineTrustSection />
-        
+
         {/* 9. ZIVO Extras */}
         <ExtrasSection />
       </main>
-      
+
       <Footer />
     </div>
   );
@@ -65,13 +67,24 @@ const DesktopHomePage = () => {
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
 
-  // Render mobile layout for mobile devices
+  // Mobile: only enforce setup gate when a user is signed in.
+  // This prevents "new Google account" users from bypassing /setup after OAuth.
   if (isMobile) {
+    if (user) {
+      return (
+        <SetupRequiredRoute>
+          <AppHome />
+        </SetupRequiredRoute>
+      );
+    }
+
+    // Keep current public mobile experience for signed-out visitors.
     return <AppHome />;
   }
 
-  // Render desktop layout for larger screens
+  // Desktop version
   return <DesktopHomePage />;
 };
 

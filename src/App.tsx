@@ -9,6 +9,7 @@ import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAInstallPrompt } from "./components/mobile";
@@ -461,26 +462,26 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
-                
+
                 {/* App (Mobile-first) Routes */}
-                <Route path="/app" element={<UnifiedDashboard />} />
-                <Route path="/app/home" element={<AppHome />} />
-                <Route path="/my-trips" element={<MyTripsPage />} />
-                <Route path="/wallet" element={<WalletPage />} />
-                <Route path="/support" element={<SupportCenterPage />} />
-                <Route path="/travel" element={<AppTravel />} />
-                <Route path="/rides" element={<Rides />} />
-                <Route path="/ride" element={<Rides />} />
-                <Route path="/eats" element={<Eats />} />
-                <Route path="/food" element={<Eats />} />
-                <Route path="/move" element={<Move />} />
-                <Route path="/more" element={<AppMore />} />
-                
+                <Route path="/app" element={<SetupRequiredRoute><UnifiedDashboard /></SetupRequiredRoute>} />
+                <Route path="/app/home" element={<SetupRequiredRoute><AppHome /></SetupRequiredRoute>} />
+                <Route path="/my-trips" element={<SetupRequiredRoute><MyTripsPage /></SetupRequiredRoute>} />
+                <Route path="/wallet" element={<SetupRequiredRoute><WalletPage /></SetupRequiredRoute>} />
+                <Route path="/support" element={<SetupRequiredRoute><SupportCenterPage /></SetupRequiredRoute>} />
+                <Route path="/travel" element={<SetupRequiredRoute><AppTravel /></SetupRequiredRoute>} />
+                <Route path="/rides" element={<SetupRequiredRoute><Rides /></SetupRequiredRoute>} />
+                <Route path="/ride" element={<SetupRequiredRoute><Rides /></SetupRequiredRoute>} />
+                <Route path="/eats" element={<SetupRequiredRoute><Eats /></SetupRequiredRoute>} />
+                <Route path="/food" element={<SetupRequiredRoute><Eats /></SetupRequiredRoute>} />
+                <Route path="/move" element={<SetupRequiredRoute><Move /></SetupRequiredRoute>} />
+                <Route path="/more" element={<SetupRequiredRoute><AppMore /></SetupRequiredRoute>} />
+
                 {/* New Mobile App Routes (5-tab nav) */}
-                <Route path="/search" element={<MobileSearch />} />
-                <Route path="/trips" element={<MobileTrips />} />
-                <Route path="/alerts" element={<MobileAlerts />} />
-                <Route path="/account" element={<MobileAccount />} />
+                <Route path="/search" element={<SetupRequiredRoute><MobileSearch /></SetupRequiredRoute>} />
+                <Route path="/trips" element={<SetupRequiredRoute><MobileTrips /></SetupRequiredRoute>} />
+                <Route path="/alerts" element={<SetupRequiredRoute><MobileAlerts /></SetupRequiredRoute>} />
+                <Route path="/account" element={<SetupRequiredRoute><MobileAccount /></SetupRequiredRoute>} />
                 
                 {/* Legacy routes - redirect with query params preserved */}
                 <Route path="/book-flight" element={<PreserveQueryRedirect to="/flights" />} />
@@ -556,13 +557,13 @@ const App = () => (
                 <Route path="/rent-car/:city" element={<CarRentalLanding />} />
                 <Route path="/cars/search" element={<CarSearch />} />
                 
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/profile" element={<SetupRequiredRoute><Profile /></SetupRequiredRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
-                <Route path="/trips" element={<TripHistory />} />
+                <Route path="/trips" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/dashboard" element={<CustomerDashboard />} />
+                <Route path="/dashboard" element={<SetupRequiredRoute><CustomerDashboard /></SetupRequiredRoute>} />
                 <Route path="/restaurant" element={<RestaurantDashboard />} />
                 <Route path="/car-rental-dashboard" element={<CarRentalDashboard />} />
                 <Route path="/flights-dashboard" element={<FlightDashboard />} />
