@@ -19701,6 +19701,10 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: undefined
       }
+      update_notification_updated_at: {
+        Args: { notification_id: string }
+        Returns: undefined
+      }
       validate_promo_code: {
         Args: {
           p_code: string

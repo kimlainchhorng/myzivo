@@ -31,6 +31,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { format } from "date-fns";
+import flightHeroLuxury from "@/assets/flight-hero-luxury.jpg";
 import flightHeroPremium from "@/assets/flight-hero-premium.jpg";
 import flightFirstClass from "@/assets/flight-first-class.jpg";
 import flightDestinations from "@/assets/flight-destinations.jpg";

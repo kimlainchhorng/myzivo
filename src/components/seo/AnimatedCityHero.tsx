@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Shield, Clock, Globe, Plane, Hotel, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { destinationPhotos, DestinationCity } from "@/config/photos";
+import cityHeroGlassSunset from "@/assets/city-hero-glass-sunset.jpg";
 
 /**
  * Premium animated hero for SEO city landing pages
@@ -75,8 +76,9 @@ export default function AnimatedCityHero({
   
   // Get city photo from existing photo system
   const cityPhoto = destinationPhotos[citySlug as DestinationCity];
-  const heroSrc = cityPhoto?.src;
-  const heroAlt = cityPhoto?.alt || `${city} skyline`;
+  // Fallback to premium glass-sunset image if city-specific photo unavailable
+  const heroSrc = cityPhoto?.src || cityHeroGlassSunset;
+  const heroAlt = cityPhoto?.alt || `Modern ${city} cityscape at sunset`;
 
   // Default subtitle based on service type
   const defaultSubtitle = `Book the best ${config.tagline} in ${city} via ZIVO.`;

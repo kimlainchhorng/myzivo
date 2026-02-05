@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Plane, Hotel, CarFront, ShieldCheck } from "lucide-react";
-import heroImage from "@/assets/hero-homepage.jpg";
+import heroImage from "@/assets/hero-homepage-premium.jpg";
 import { useImagePreload } from "@/hooks/useImagePreload";
 import HeroTrustBar from "./HeroTrustBar";
 
@@ -17,7 +17,7 @@ export default function HeroSection() {
         <div className="relative h-[35vh] overflow-hidden">
           <img
             src={heroImage}
-            alt="Compare flights from 500+ airlines"
+            alt="Aerial view of airplane wing over illuminated city at night"
             width={1920}
             height={1080}
             loading="eager"
@@ -170,7 +170,7 @@ export default function HeroSection() {
         <div className="relative overflow-hidden">
           <img
             src={heroImage}
-            alt="Compare flights from 500+ airlines - ZIVO travel search"
+            alt="Aerial view of airplane wing over illuminated city at night - ZIVO travel"
             width={1920}
             height={1080}
             loading="eager"
