@@ -1,267 +1,219 @@
 /**
- * App Home Screen - Mobile
- * Clean, app-like mobile home with quick actions and popular items
+ * App Home Screen - Mobile Premium
+ * Premium Bento-grid design with glass morphism
  */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { 
-  Plane, Hotel, CarFront, Car, UtensilsCrossed, Sparkles,
-  ChevronRight, Shield, Star, Clock, MapPin, Bus, Smartphone, Ticket, Search
+  Search, Plane, Car, Utensils, BedDouble, 
+  MapPin, Bell, Zap, LucideIcon
 } from "lucide-react";
-import AppLayout from "@/components/app/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
-import OneAppSection from "@/components/home/OneAppSection";
-import { PremiumSearchOverlay } from "@/components/search";
+import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
-// Quick action cards (2 rows of 3)
-const quickActions = [
-  { id: "flights", label: "Flights", icon: Plane, href: "/flights", color: "bg-flights" },
-  { id: "hotels", label: "Hotels", icon: Hotel, href: "/hotels", color: "bg-hotels" },
-  { id: "cars", label: "Cars", icon: CarFront, href: "/rent-car", color: "bg-cars" },
-  { id: "rides", label: "Rides", icon: Car, href: "/rides", color: "bg-rides" },
-  { id: "eats", label: "Eats", icon: UtensilsCrossed, href: "/eats", color: "bg-eats" },
-  { id: "p2p", label: "P2P Cars", icon: CarFront, href: "/p2p/search", color: "bg-primary" },
-];
+// Premium Image Assets
+const assets = {
+  hero: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=2000",
+  flights: "https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&q=80&w=800",
+  hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
+  rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
+  food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
+  avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+};
 
-// Popular destinations
-const popularItems = [
-  { id: 1, title: "New York", subtitle: "Flights from $99", emoji: "✈️", type: "flights" },
-  { id: 2, title: "Miami", subtitle: "Hotels from $129", emoji: "🏨", type: "hotels" },
-  { id: 3, title: "Los Angeles", subtitle: "Cars from $35/day", emoji: "🚗", type: "cars" },
-  { id: 4, title: "Chicago", subtitle: "Flights from $79", emoji: "✈️", type: "flights" },
-];
+// Service Card Component
+interface ServiceCardProps {
+  title: string;
+  subtitle: string;
+  img: string;
+  icon: LucideIcon;
+  href: string;
+  className?: string;
+}
 
-// Travel extras mini row
-const travelExtras = [
-  { id: "transfers", label: "Transfers", icon: Bus, href: "/extras" },
-  { id: "activities", label: "Activities", icon: Ticket, href: "/extras" },
-  { id: "esim", label: "eSIM", icon: Smartphone, href: "/extras" },
-];
+const ServiceCard = ({ title, subtitle, img, icon: Icon, href, className = "" }: ServiceCardProps) => {
+  const navigate = useNavigate();
+  
+  return (
+    <motion.button
+      onClick={() => navigate(href)}
+      whileTap={{ scale: 0.95 }}
+      className={`relative rounded-3xl overflow-hidden group cursor-pointer border border-white/5 touch-manipulation ${className}`}
+    >
+      {/* Background Image with Gradient Overlay */}
+      <div className="absolute inset-0">
+        <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-active:scale-110" alt={title} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+      </div>
 
-// Featured restaurants
-const featuredRestaurants = [
-  { id: 1, name: "Burger Joint", cuisine: "American", rating: 4.8, eta: "15-25 min", emoji: "🍔" },
-  { id: 2, name: "Sakura Sushi", cuisine: "Japanese", rating: 4.9, eta: "25-35 min", emoji: "🍣" },
-  { id: 3, name: "Pizza Palace", cuisine: "Italian", rating: 4.7, eta: "20-30 min", emoji: "🍕" },
-];
+      {/* Content */}
+      <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mb-3 border border-white/10">
+          <Icon className="w-4 h-4 text-white" />
+        </div>
+        <h3 className="text-lg font-bold text-white leading-none mb-1">{title}</h3>
+        <p className="text-[10px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
+      </div>
+    </motion.button>
+  );
+};
 
 const AppHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [city] = useState("Current Location");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
   };
 
-  return (
-    <AppLayout hideHeader>
-      <div className="space-y-6 pb-24">
-        {/* Header with Location */}
-        <div className="px-4 pt-4 safe-area-top">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-muted-foreground text-sm">
-                {greeting()}{user ? `, ${user.email?.split('@')[0]}` : ''} 👋
-              </p>
-              <h1 className="text-2xl font-bold">Where to today?</h1>
-            </div>
-            <button 
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted border border-border text-sm font-medium touch-manipulation active:scale-95"
-            >
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="max-w-[100px] truncate">{city}</span>
-            </button>
-          </div>
+  const userName = user?.email?.split('@')[0] || "Traveler";
 
-          {/* Unified Search Button */}
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-card border border-border shadow-sm text-left touch-manipulation active:scale-[0.99] transition-transform mb-4"
+  return (
+    <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-x-hidden selection:bg-primary/30">
+      
+      {/* 1. TOP BAR: Profile & Notifications */}
+      <div className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-2 border-white/20 p-0.5">
+            <img src={assets.avatar} className="w-full h-full rounded-full object-cover" alt="Profile" />
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-bold text-zinc-400 tracking-widest">{greeting()}</div>
+            <div className="text-sm font-bold">{userName}</div>
+          </div>
+        </div>
+        <button 
+          onClick={() => navigate("/alerts")}
+          className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 active:bg-white/20 transition-colors relative touch-manipulation"
+        >
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-black" />
+        </button>
+      </div>
+
+      {/* 2. LIVE ACTIVITY "ISLAND" */}
+      <motion.div 
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="fixed top-24 left-6 right-6 z-40 safe-area-top"
+      >
+        <button 
+          onClick={() => navigate("/rides")}
+          className="w-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-2xl touch-manipulation active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <Car className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-bold text-white">Book a Ride</div>
+              <div className="text-[10px] text-zinc-400">Premium vehicles available</div>
+            </div>
+          </div>
+          <div className="pr-2">
+            <div className="w-12 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/20">
+              <span className="text-[10px] font-bold text-emerald-400">GO</span>
+            </div>
+          </div>
+        </button>
+      </motion.div>
+
+      {/* 3. HERO SEARCH SECTION */}
+      <div className="pt-48 px-6 pb-8">
+        <h1 className="text-4xl font-thin tracking-tight mb-1">
+          Explore the <span className="font-black italic">World</span>
+        </h1>
+        <p className="text-zinc-400 mb-8 text-sm">One app for every journey.</p>
+
+        {/* Glass Search Bar */}
+        <button 
+          onClick={() => navigate("/search")}
+          className="relative group w-full touch-manipulation"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary to-teal-400 rounded-2xl blur opacity-20 group-active:opacity-40 transition-opacity" />
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] transition-transform">
+            <Search className="w-5 h-5 text-zinc-400" />
+            <span className="text-zinc-500 font-medium text-left flex-1">Where to? (e.g. Tokyo, Sushi, Home)</span>
+            <div className="h-6 w-[1px] bg-white/10 mx-1" />
+            <div className="p-2 bg-white/10 rounded-lg">
+              <MapPin className="w-4 h-4 text-white" />
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* 4. BENTO GRID SERVICE NAV */}
+      <div className="px-6 pb-32 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500">Services</h2>
+          <button 
+            onClick={() => navigate("/search")}
+            className="text-xs text-primary font-bold touch-manipulation"
           >
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center">
-              <Search className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-foreground">Search flights, hotels, cars...</p>
-              <p className="text-xs text-muted-foreground">Anywhere • Any dates • Any travelers</p>
-            </div>
+            View All
           </button>
         </div>
 
-        {/* Premium Search Overlay */}
-        <PremiumSearchOverlay 
-          isOpen={isSearchOpen} 
-          onClose={() => setIsSearchOpen(false)} 
-        />
+        {/* Grid Layout */}
+        <div className="grid grid-cols-2 gap-4 h-64">
+          {/* Card 1: Flights (Large Vertical) */}
+          <ServiceCard 
+            title="Flights" 
+            subtitle="Global Travel" 
+            img={assets.flights} 
+            icon={Plane} 
+            href="/flights"
+            className="row-span-2"
+          />
 
-        {/* Quick Actions Grid */}
-        <section className="px-4">
-          <div className="grid grid-cols-3 gap-3">
-            {quickActions.map((action) => (
-              <button
-                key={action.id}
-                onClick={() => navigate(action.href)}
-                className="p-4 rounded-2xl bg-card border border-border text-center touch-manipulation active:scale-[0.97] transition-transform"
-              >
-                <div className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-2",
-                  action.color
-                )}>
-                  <action.icon className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="font-semibold text-sm">{action.label}</h3>
-              </button>
-            ))}
-          </div>
-        </section>
+          {/* Card 2: Rides */}
+          <ServiceCard 
+            title="Rides" 
+            subtitle="Premium Mobility" 
+            img={assets.rides} 
+            icon={Car}
+            href="/rides"
+          />
 
-        {/* One App. Many Services. */}
-        <OneAppSection compact />
+          {/* Card 3: Eats */}
+          <ServiceCard 
+            title="Eats" 
+            subtitle="Gourmet Delivery" 
+            img={assets.food} 
+            icon={Utensils}
+            href="/eats"
+          />
+        </div>
 
-        {/* Trust Strip */}
-        <section className="px-4">
-          <div className="py-3 px-4 rounded-2xl bg-muted border border-border">
-            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <Shield className="w-4 h-4 text-primary" />
-              <span className="font-medium">Compare & book with trusted partners</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Popular Destinations */}
-        <section className="px-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg">Popular Now</h2>
-            <button 
-              onClick={() => navigate("/flights")}
-              className="text-sm text-primary font-semibold flex items-center gap-1"
-            >
-              See all
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-            {popularItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => navigate(`/${item.type === 'flights' ? 'flights' : item.type === 'hotels' ? 'hotels' : 'rent-car'}`)}
-                className="flex-shrink-0 w-32 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.98] transition-transform"
-              >
-                <div className="w-full aspect-square bg-muted rounded-xl flex items-center justify-center text-3xl mb-2">
-                  {item.emoji}
-                </div>
-                <h4 className="font-bold text-sm truncate">{item.title}</h4>
-                <p className="text-xs text-muted-foreground truncate">{item.subtitle}</p>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Rent from Owners CTA */}
-        <section className="px-4">
-          <button
-            onClick={() => navigate("/p2p/search")}
-            className="w-full p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"
+        {/* Bottom Row */}
+        <div className="grid grid-cols-3 gap-4 h-32 mt-4">
+          <ServiceCard 
+            title="Hotels" 
+            subtitle="Luxury Stays" 
+            img={assets.hotels} 
+            icon={BedDouble}
+            href="/hotels"
+          />
+          <button 
+            onClick={() => navigate("/account")}
+            className="col-span-2 bg-gradient-to-br from-primary to-teal-600 rounded-3xl p-5 relative overflow-hidden flex flex-col justify-center touch-manipulation active:scale-[0.98] transition-transform text-left"
           >
-            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center">
-              <CarFront className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="font-bold text-primary">Rent from Local Owners</h3>
-              <p className="text-sm text-muted-foreground">Skip the counter, book unique cars</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-primary" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
+            <Zap className="w-8 h-8 text-white mb-2" />
+            <div className="font-bold text-lg leading-tight text-white">ZIVO<br/>Premium</div>
+            <div className="text-[10px] text-white/70 mt-1">Upgrade for exclusive perks</div>
           </button>
-        </section>
-
-        {/* Travel Extras Mini Row */}
-        <section className="px-4">
-          <h2 className="font-bold text-lg mb-3">Travel Extras</h2>
-          <div className="flex gap-2">
-            {travelExtras.map((extra) => (
-              <button
-                key={extra.id}
-                onClick={() => navigate(extra.href)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-muted border border-border text-sm font-medium touch-manipulation active:scale-[0.98]"
-              >
-                <extra.icon className="w-4 h-4 text-primary" />
-                {extra.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Nearby Eats */}
-        <section className="px-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-lg flex items-center gap-2">
-              <UtensilsCrossed className="w-4 h-4 text-eats" />
-              Nearby Eats
-            </h2>
-            <button 
-              onClick={() => navigate("/eats")}
-              className="text-sm text-eats font-semibold flex items-center gap-1"
-            >
-              See all
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-          
-          <div className="space-y-2">
-            {featuredRestaurants.map((restaurant) => (
-              <button
-                key={restaurant.id}
-                onClick={() => navigate("/eats")}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border text-left touch-manipulation active:scale-[0.99] transition-transform"
-              >
-                <div className="w-14 h-14 bg-muted rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                  {restaurant.emoji}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-sm truncate">{restaurant.name}</h4>
-                  <p className="text-xs text-muted-foreground">{restaurant.cuisine}</p>
-                  <div className="flex items-center gap-3 mt-1">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 fill-eats text-eats" />
-                      <span className="text-xs font-bold">{restaurant.rating}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Clock className="w-3 h-3" />
-                      <span className="text-xs">{restaurant.eta}</span>
-                    </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Need a Ride CTA */}
-        <section className="px-4">
-          <button
-            onClick={() => navigate("/rides")}
-            className="w-full p-4 rounded-2xl bg-rides-light border border-rides/20 flex items-center gap-4 touch-manipulation active:scale-[0.99] transition-transform"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-rides flex items-center justify-center">
-              <Car className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 text-left">
-              <h3 className="font-bold text-rides">Need a Ride?</h3>
-              <p className="text-sm text-muted-foreground">Request now</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-rides" />
-          </button>
-        </section>
+        </div>
       </div>
-    </AppLayout>
+
+      {/* 5. BOTTOM NAVIGATION */}
+      <ZivoMobileNav />
+    </div>
   );
 };
 
