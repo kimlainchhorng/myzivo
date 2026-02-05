@@ -4,10 +4,11 @@
   */
  
  import { useState, useEffect } from "react";
+ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
  import { useNavigate, useSearchParams } from "react-router-dom";
  import { 
    MapPin, Car, Clock, Users, Shield, Star, CheckCircle2, 
-   ChevronRight, ArrowRight, Phone, Mail, User, CreditCard, Loader2
+   ChevronRight, ArrowRight, Phone, Mail, User, CreditCard, Loader2, LocateFixed
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@
  export default function Rides() {
    const navigate = useNavigate();
    const [searchParams] = useSearchParams();
+   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
    const [step, setStep] = useState<RideStep>("request");
    const [pickup, setPickup] = useState("");
    const [dropoff, setDropoff] = useState("");
@@ -61,6 +63,33 @@
    const [estimatedDistance] = useState(5.2);
    const [estimatedDuration] = useState(15);
  
+   // Auto-detect location on mount
+   useEffect(() => {
+     const autoDetectLocation = async () => {
+       try {
+         const location = await getCurrentLocation();
+         const address = await reverseGeocode(location.lat, location.lng);
+         setPickup(address);
+       } catch {
+         // Silently fail - user can enter manually
+       }
+     };
+     if (!pickup) {
+       autoDetectLocation();
+     }
+   }, []);
+
+   const handleUseCurrentLocation = async () => {
+     try {
+       const location = await getCurrentLocation();
+       const address = await reverseGeocode(location.lat, location.lng);
+       setPickup(address);
+       toast.success("Location detected");
+     } catch (error) {
+       toast.error("Could not get your location");
+     }
+   };
+
    useEffect(() => {
      const sessionId = searchParams.get("session_id");
      const reqId = searchParams.get("request_id");
@@ -167,7 +196,21 @@
                <div className="space-y-4">
                  <div className="relative">
                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-rides rounded-full" />
-                   <Input placeholder="Pickup location" value={pickup} onChange={(e) => setPickup(e.target.value)} className="pl-11 h-14 rounded-xl text-base" />
+                   <Input 
+                     placeholder={isGettingLocation ? "Detecting location..." : "Pickup location"} 
+                     value={pickup} 
+                     onChange={(e) => setPickup(e.target.value)} 
+                     className="pl-11 pr-12 h-14 rounded-xl text-base" 
+                   />
+                   <button
+                     type="button"
+                     onClick={handleUseCurrentLocation}
+                     disabled={isGettingLocation}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+                     title="Use current location"
+                   >
+                     <LocateFixed className={`w-5 h-5 text-rides ${isGettingLocation ? "animate-pulse" : ""}`} />
+                   </button>
                  </div>
                  <div className="relative">
                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-3 h-3 bg-eats rounded-full" />
