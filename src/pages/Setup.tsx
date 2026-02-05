@@ -15,7 +15,7 @@ const Setup = () => {
   const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   
-  const [loading, setLoading] = useState(true); // Start true for profile check
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -32,6 +32,7 @@ const Setup = () => {
       }
 
       try {
+        // FIXED: Use user_id column, not id
         const { data: profile } = await supabase
           .from("profiles")
           .select("full_name, setup_complete")
@@ -40,7 +41,7 @@ const Setup = () => {
 
         // If setup is already complete, redirect immediately
         if (profile?.setup_complete) {
-          navigate("/", { replace: true });
+          window.location.href = "/";
           return;
         }
 
@@ -77,39 +78,21 @@ const Setup = () => {
     setSubmitting(true);
 
     try {
-      // Check if profile exists
-      const { data: existing } = await supabase
+      // FIXED: Use upsert with user_id, not id
+      const { error } = await supabase
         .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+        .upsert({
+          user_id: user.id,
+          email: user.email,
+          full_name: fullName,
+          phone: phone || null,
+          setup_complete: true,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id"
+        });
 
-      if (existing) {
-        // Update existing profile
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            full_name: fullName,
-            phone: phone || null,
-            setup_complete: true,
-          })
-          .eq("user_id", user.id);
-
-        if (error) throw error;
-      } else {
-        // Create new profile
-        const { error } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: user.id,
-            email: user.email,
-            full_name: fullName,
-            phone: phone || null,
-            setup_complete: true,
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       // Invalidate queries so the app reflects the new state
       queryClient.invalidateQueries({ queryKey: ["setupStatus", user.id] });
@@ -223,7 +206,7 @@ const Setup = () => {
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
             <>
-              Complete Setup
+              Save & Continue
               <ArrowRight className="w-5 h-5" />
             </>
           )}
