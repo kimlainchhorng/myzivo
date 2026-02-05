@@ -316,6 +316,7 @@ const SellerOfTravelSettings = lazy(() => import("./pages/admin/modules/SellerOf
 const OperationsPlaybook = lazy(() => import("./pages/admin/modules/operations/OperationsPlaybook"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
 const TravelOperationsCenter = lazy(() => import("./pages/admin/TravelOperationsCenter"));
+ const FulfillmentHub = lazy(() => import("./pages/admin/FulfillmentHub"));
 const MarketingDashboard = lazy(() => import("./pages/admin/MarketingDashboard"));
 const AdminNotificationsModule = lazy(() => import("./pages/admin/modules/notifications/AdminNotificationsModule"));
 const AdminFinanceDashboard = lazy(() => import("./pages/admin/modules/finance/AdminFinanceDashboard"));
@@ -1070,6 +1071,47 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <TravelOperationsCenter />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                <Route
+                  path="/admin/fulfillment"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FulfillmentHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                <Route
+                  path="/admin/fulfillment"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FulfillmentHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                <Route
+                  path="/admin/fulfillment"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FulfillmentHub />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/marketing"
+                  element={
+                <Route
+                  path="/admin/fulfillment"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <FulfillmentHub />
                     </ProtectedRoute>
                   }
                 />
