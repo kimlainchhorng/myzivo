@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { DollarSign, MapPin, Shield, Palette, Save, Loader2 } from "lucide-react";
+import { DollarSign, MapPin, Shield, Palette, Save, Loader2, UserPlus } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const SettingsHub = () => {
@@ -90,6 +91,10 @@ const SettingsHub = () => {
           <TabsTrigger value="branding">
             <Palette className="mr-2 h-4 w-4" />
             Branding
+          </TabsTrigger>
+          <TabsTrigger value="access">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Access
           </TabsTrigger>
         </TabsList>
 
@@ -374,6 +379,56 @@ const SettingsHub = () => {
                   value={branding.copyrightText}
                   onChange={(e) => setBranding({ ...branding, copyrightText: e.target.value })}
                 />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Access Control */}
+        <TabsContent value="access" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Signup Allowlist</CardTitle>
+              <CardDescription>
+                Manage which emails are permitted to create accounts (invite-only system)
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg border">
+                <div>
+                  <p className="font-medium">Invite Management</p>
+                  <p className="text-sm text-muted-foreground">
+                    Add, view, and manage invited emails
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link to="/admin/settings/invites">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Manage Invites
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>User Roles</CardTitle>
+              <CardDescription>
+                Admin role assignments and permissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 rounded-lg border">
+                <div>
+                  <p className="font-medium">Role Management</p>
+                  <p className="text-sm text-muted-foreground">
+                    Assign admin, operations, finance, and support roles
+                  </p>
+                </div>
+                <Button variant="outline" asChild>
+                  <Link to="/admin/users">View Users</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
