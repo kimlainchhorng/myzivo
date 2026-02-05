@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,15 +41,34 @@ const Login = () => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     const { error } = await signIn(data.email, data.password);
-    setIsLoading(false);
 
     if (error) {
+      setIsLoading(false);
       toast.error(error.message || "Failed to sign in");
       return;
     }
 
-    toast.success("Welcome back!");
-    navigate(from, { replace: true });
+    // Check if user has completed setup
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("setup_complete")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      setIsLoading(false);
+      toast.success("Welcome back!");
+
+      if (!profile || profile.setup_complete !== true) {
+        navigate("/setup", { replace: true });
+      } else {
+        navigate(from, { replace: true });
+      }
+    } else {
+      setIsLoading(false);
+      navigate(from, { replace: true });
+    }
   };
 
   const handleSocialLogin = async (provider: Provider) => {
