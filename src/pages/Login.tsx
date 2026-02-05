@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -7,30 +7,47 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, ArrowRight } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
-import ZivoLogo from "@/components/ZivoLogo";
+import { motion } from "framer-motion";
 
+// Login schema
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+// Signup schema (extends login with name + confirm)
+const signupSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters").max(100),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
 
 const Login = () => {
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode") === "signup" ? false : true;
+  
+  const [isLogin, setIsLogin] = useState(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
-  const { signIn, signInWithProvider } = useAuth();
+  const { signIn, signUp, signInWithProvider } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
 
-  const form = useForm<LoginFormData>({
+  // Login form
+  const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -38,7 +55,27 @@ const Login = () => {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
+  // Signup form
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Reset forms when switching modes
+  useEffect(() => {
+    if (isLogin) {
+      signupForm.reset();
+    } else {
+      loginForm.reset();
+    }
+  }, [isLogin, loginForm, signupForm]);
+
+  const onLoginSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     const { error } = await signIn(data.email, data.password);
 
@@ -78,6 +115,45 @@ const Login = () => {
     }
   };
 
+  const onSignupSubmit = async (data: SignupFormData) => {
+    setIsLoading(true);
+    
+    // Check if email is on allowlist before attempting signup
+    try {
+      const { data: allowlistResponse, error: allowlistError } = await supabase.functions.invoke(
+        "check-signup-allowlist",
+        { body: { email: data.email } }
+      );
+
+      if (allowlistError) {
+        setIsLoading(false);
+        toast.error("Unable to verify email authorization. Please try again.");
+        return;
+      }
+
+      if (!allowlistResponse?.allowed) {
+        setIsLoading(false);
+        toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
+        return;
+      }
+    } catch (err) {
+      setIsLoading(false);
+      toast.error("Unable to verify email authorization. Please try again.");
+      return;
+    }
+
+    const { error } = await signUp(data.email, data.password, data.fullName);
+    setIsLoading(false);
+
+    if (error) {
+      toast.error(error.message || "Failed to create account");
+      return;
+    }
+
+    toast.success("Account created! Please check your email to verify.");
+    navigate("/verify-email");
+  };
+
   const handleSocialLogin = async (provider: Provider) => {
     setSocialLoading(provider);
     const { error } = await signInWithProvider(provider);
@@ -87,90 +163,127 @@ const Login = () => {
     }
   };
 
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-br from-primary/20 to-teal-500/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-eats/15 to-orange-500/10 rounded-full blur-3xl" />
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
+      {/* Animated Holographic Background */}
+      <motion.div 
+        className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-cyan-500/30 to-purple-500/20 rounded-full blur-3xl"
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div 
+        className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-gradient-to-tr from-purple-500/25 to-cyan-500/15 rounded-full blur-3xl"
+        animate={{
+          x: [0, -20, 0],
+          y: [0, 30, 0],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
 
-      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <Card className="border-0 bg-card/95 shadow-2xl backdrop-blur-xl overflow-hidden rounded-3xl">
-          <CardHeader className="space-y-1 text-center pb-4 sm:pb-6 pt-6 sm:pt-8">
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <ZivoLogo size="lg" />
-            </div>
-            <CardTitle className="text-xl sm:text-2xl lg:text-3xl font-display font-bold">
-              Welcome back
-            </CardTitle>
-            <CardDescription className="text-muted-foreground text-sm mt-1">
-              Sign in to continue with ZIVO
-            </CardDescription>
-          </CardHeader>
+      <div className="w-full max-w-md relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8"
+        >
+          {/* Header */}
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
+              ZIVO.
+            </h1>
+            <motion.p 
+              key={isLogin ? "login" : "signup"}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-zinc-400 mt-2 text-sm sm:text-base"
+            >
+              {isLogin ? "Welcome back, traveler." : "Join the future of travel."}
+            </motion.p>
+          </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <CardContent className="space-y-4 px-6 sm:px-8">
+          {/* Forms */}
+          {isLogin ? (
+            <Form {...loginForm}>
+              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                 <FormField
-                  control={form.control}
+                  control={loginForm.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-foreground/90 font-medium text-sm">Email</FormLabel>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Email Address</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Mail className="w-4 h-4 text-cyan-400" />
+                          </div>
                           <Input
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-primary/50 rounded-xl"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-400" />
                     </FormItem>
                   )}
                 />
 
                 <FormField
-                  control={form.control}
+                  control={loginForm.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-foreground/90 font-medium text-sm">Password</FormLabel>
+                        <FormLabel className="text-zinc-300 text-sm font-medium">Password</FormLabel>
                         <Link
                           to="/forgot-password"
-                          className="text-xs text-primary hover:underline font-medium"
+                          className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
                         >
                           Forgot?
                         </Link>
                       </div>
                       <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Lock className="w-4 h-4 text-cyan-400" />
+                          </div>
                           <Input
                             type="password"
                             placeholder="••••••••"
                             autoComplete="current-password"
-                            className="h-12 pl-12 bg-muted/30 border-border/50 focus:border-primary/50 rounded-xl"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage />
+                      <FormMessage className="text-red-400" />
                     </FormItem>
                   )}
                 />
-              </CardContent>
 
-              <CardFooter className="flex flex-col gap-3 sm:gap-4 pt-2 pb-6 sm:pb-8 px-5 sm:px-8">
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-primary to-teal-400 text-white shadow-lg shadow-primary/30 hover:opacity-90 rounded-xl touch-manipulation active:scale-[0.98]" 
+                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 rounded-xl mt-6 touch-manipulation active:scale-[0.98]" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -182,81 +295,198 @@ const Login = () => {
                     </>
                   )}
                 </Button>
+              </form>
+            </Form>
+          ) : (
+            <Form {...signupForm}>
+              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-3">
+                <FormField
+                  control={signupForm.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Full Name</FormLabel>
+                      <FormControl>
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <User className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <Input
+                            placeholder="John Doe"
+                            autoComplete="name"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="relative w-full">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border/50" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-4 text-muted-foreground">or</span>
-                  </div>
-                </div>
+                <FormField
+                  control={signupForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Email Address</FormLabel>
+                      <FormControl>
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Mail className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <Input
+                            type="email"
+                            placeholder="you@example.com"
+                            autoComplete="email"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
 
-                {/* Social Login */}
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 w-full">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleSocialLogin('google')}
-                    disabled={socialLoading !== null}
-                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
-                  >
-                    {socialLoading === 'google' ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <svg className="h-5 w-5" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleSocialLogin('apple')}
-                    disabled={socialLoading !== null}
-                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
-                  >
-                    {socialLoading === 'apple' ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-                      </svg>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => handleSocialLogin('facebook')}
-                    disabled={socialLoading !== null}
-                    className="h-11 sm:h-12 bg-muted/30 border-border/50 rounded-xl touch-manipulation active:scale-95"
-                  >
-                    {socialLoading === 'facebook' ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#1877F2">
-                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                      </svg>
-                    )}
-                  </Button>
-                </div>
+                <FormField
+                  control={signupForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Password</FormLabel>
+                      <FormControl>
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Lock className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
 
-                <p className="text-sm text-muted-foreground text-center">
-                  Don't have an account?{" "}
-                  <Link to="/signup" className="text-primary font-semibold hover:underline">
-                    Sign up
-                  </Link>
-                </p>
-              </CardFooter>
-            </form>
-          </Form>
-        </Card>
+                <FormField
+                  control={signupForm.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Confirm Password</FormLabel>
+                      <FormControl>
+                        <div className="relative group">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                            <Shield className="w-4 h-4 text-cyan-400" />
+                          </div>
+                          <Input
+                            type="password"
+                            placeholder="••••••••"
+                            autoComplete="new-password"
+                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
 
-        <p className="mt-4 sm:mt-6 text-center text-xs text-muted-foreground/60">
-          Protected by enterprise-grade security 🔒
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 rounded-xl mt-4 touch-manipulation active:scale-[0.98]" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          )}
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-zinc-900 px-4 text-zinc-500">Or continue with</span>
+            </div>
+          </div>
+
+          {/* Social Login - 2 columns only */}
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleSocialLogin('google')}
+              disabled={socialLoading !== null}
+              className="h-12 bg-zinc-800/50 border-zinc-700 hover:bg-zinc-700/50 hover:border-zinc-600 text-white rounded-xl touch-manipulation active:scale-95"
+            >
+              {socialLoading === 'google' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                  Google
+                </>
+              )}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleSocialLogin('apple')}
+              disabled={socialLoading !== null}
+              className="h-12 bg-zinc-800/50 border-zinc-700 hover:bg-zinc-700/50 hover:border-zinc-600 text-white rounded-xl touch-manipulation active:scale-95"
+            >
+              {socialLoading === 'apple' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                  </svg>
+                  Apple
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Toggle Mode */}
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={toggleMode}
+              className="text-sm text-zinc-400 hover:text-white transition-colors"
+            >
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <span className="text-cyan-400 font-semibold">
+                {isLogin ? "Sign Up" : "Log In"}
+              </span>
+            </button>
+          </div>
+        </motion.div>
+
+        <p className="mt-4 sm:mt-6 text-center text-xs text-zinc-500">
+          {isLogin ? "Protected by enterprise-grade security 🔒" : "By signing up, you agree to our Terms of Service 📋"}
         </p>
       </div>
     </div>
