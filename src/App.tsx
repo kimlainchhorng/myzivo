@@ -150,6 +150,7 @@ const MyOrdersPage = lazy(() => import("./pages/MyOrdersPage"));
 // Enhanced Travel Trips pages
 const TravelTripsPage = lazy(() => import("./pages/TravelTripsPage"));
 const TravelOrderDetailPage = lazy(() => import("./pages/TravelOrderDetailPage"));
+const TravelerDashboard = lazy(() => import("./pages/TravelerDashboard"));
 // Business pages
 const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountPage"));
 // Renter Verification pages
@@ -555,6 +556,7 @@ const App = () => (
                 <Route path="/cars/search" element={<CarSearch />} />
                 
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/trips" element={<TripHistory />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
