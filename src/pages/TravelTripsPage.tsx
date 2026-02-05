@@ -1,8 +1,9 @@
-/**
- * Enhanced My Trips Page
- * Unified view of all travel bookings with tabs
- */
-import { useState } from "react";
+ /**
+  * Enhanced My Trips Page
+  * Unified view of all travel bookings with tabs
+  * Premium mobile experience with living timeline
+  */
+ import { useState, Suspense, lazy } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyTrips, type TripFilter } from "@/hooks/useMyTrips";
 import { TripCard } from "@/components/travel/TripCard";
-import MobileBottomNav from "@/components/shared/MobileBottomNav";
+ import MobileBottomNav from "@/components/shared/MobileBottomNav";
+ import { useIsMobile } from "@/hooks/use-mobile";
+ 
+ const MobileTripsPremium = lazy(() => import("@/components/trips/MobileTripsPremium"));
 
 export default function TravelTripsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
+   const isMobile = useIsMobile();
   
   const { data: trips, isLoading } = useMyTrips(filter);
 
@@ -23,6 +28,19 @@ export default function TravelTripsPage() {
   if (!authLoading && !user) {
     return <Navigate to="/login" replace />;
   }
+ 
+   // Mobile: Premium "Living Timeline" experience
+   if (isMobile) {
+     return (
+       <Suspense fallback={
+         <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+         </div>
+       }>
+         <MobileTripsPremium />
+       </Suspense>
+     );
+   }
 
   return (
     <div className="min-h-screen bg-background pb-20">
