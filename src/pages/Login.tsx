@@ -48,9 +48,16 @@ const Login = () => {
       return;
     }
 
-    // Check if user has completed setup
+    // Check user and email verification status
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Check email verification for email/password users
+      if (!user.email_confirmed_at) {
+        setIsLoading(false);
+        navigate("/verify-email", { replace: true });
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete")
