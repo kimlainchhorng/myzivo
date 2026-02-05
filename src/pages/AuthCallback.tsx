@@ -11,6 +11,17 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const { exchangeToken, isExchanging, error } = useExchangeAuthToken();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Parse hash fragment for OAuth errors (Supabase returns errors in hash, not query)
+  const getHashParams = () => {
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    return {
+      error: params.get("error"),
+      errorDescription: params.get("error_description"),
+    };
+  };
 
   // Helper function to check setup status and navigate accordingly
   const checkSetupAndNavigate = async (userId: string) => {
@@ -48,8 +59,32 @@ const AuthCallback = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     const code = searchParams.get("code");
-    const errorParam = searchParams.get("error");
-    const errorDescription = searchParams.get("error_description");
+    const queryError = searchParams.get("error");
+    const queryErrorDescription = searchParams.get("error_description");
+    
+    // Also check hash fragment (Supabase returns OAuth errors in hash)
+    const hashParams = getHashParams();
+    const errorParam = queryError || hashParams.error;
+    const errorDescription = queryErrorDescription || hashParams.errorDescription;
+
+    // Provider error returned in query params or hash
+    if (errorParam) {
+      console.error("OAuth provider returned error:", { errorParam, errorDescription });
+      
+      // Parse user-friendly message based on error type
+      let friendlyMessage = "Authentication failed. Please try again.";
+      if (errorDescription?.toLowerCase().includes("not on allowlist") || 
+          errorDescription?.toLowerCase().includes("saving new user") ||
+          errorDescription?.toLowerCase().includes("database error")) {
+        friendlyMessage = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
+      } else if (errorDescription) {
+        friendlyMessage = decodeURIComponent(errorDescription.replace(/\+/g, " "));
+      }
+      
+      setErrorMessage(friendlyMessage);
+      setStatus("error");
+      return;
+    }
 
     // Cross-app auth flow (?token=...)
     if (token) {
@@ -74,6 +109,13 @@ const AuthCallback = () => {
 
         if (exchangeError) {
           console.error("OAuth code exchange error:", exchangeError);
+          
+          // Check if this is an allowlist rejection
+          if (exchangeError.message?.toLowerCase().includes("not on allowlist") ||
+              exchangeError.message?.toLowerCase().includes("database error")) {
+            setErrorMessage("This email is not authorized to sign up. Please request an invitation to join ZIVO.");
+          }
+          
           setStatus("error");
           return;
         }
@@ -87,13 +129,6 @@ const AuthCallback = () => {
       };
 
       handleCodeExchange();
-      return;
-    }
-
-    // Provider error returned in query params
-    if (errorParam) {
-      console.error("OAuth provider returned error:", { errorParam, errorDescription });
-      setStatus("error");
       return;
     }
 
@@ -163,7 +198,7 @@ const AuthCallback = () => {
             </div>
             <h2 className="text-lg sm:text-xl font-semibold mb-2">Authentication Failed</h2>
             <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              {error || "This email is not authorized to sign up, or the authentication link is invalid. Please request an invitation or contact support."}
+              {errorMessage || error || "This email is not authorized to sign up, or the authentication link is invalid. Please request an invitation or contact support."}
             </p>
             <div className="flex gap-3 justify-center">
               <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
