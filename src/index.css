@@ -791,3 +791,24 @@
 .concierge-glow {
   animation: concierge-pulse 2s ease-in-out infinite;
 }
+
+/* =============================================
+   SAFARI/IOS MOBILE POLISH FIXES
+   ============================================= */
+
+/* Safari Glassmorphism Fix - GPU accelerated */
+.glass-panel {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  /* Triggers GPU acceleration to prevent flickering */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Smooth momentum scrolling for touch devices */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS input zoom prevention already at line 482-486 */
+/* hide-scrollbar already at line 490-496 */
