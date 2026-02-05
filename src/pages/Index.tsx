@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import Footer from "@/components/Footer";
 import { OGImageMeta } from "@/components/marketing";
@@ -68,6 +70,36 @@ const DesktopHomePage = () => {
 const Index = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+
+  // Detect OAuth errors that land on homepage (e.g., allowlist rejection)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+    const error = params.get("error") || hashParams.get("error");
+    const errorDesc = params.get("error_description") || hashParams.get("error_description");
+
+    if (error) {
+      // Parse user-friendly message
+      let message = "Authentication failed. Please try again.";
+      if (
+        errorDesc?.toLowerCase().includes("database error") ||
+        errorDesc?.toLowerCase().includes("saving new user") ||
+        errorDesc?.toLowerCase().includes("not on allowlist")
+      ) {
+        message = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
+      }
+
+      toast({
+        title: "Sign-up blocked",
+        description: message,
+        variant: "destructive",
+      });
+
+      // Clean URL without reloading page
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   // Mobile: only enforce setup gate when a user is signed in.
   // This prevents "new Google account" users from bypassing /setup after OAuth.
