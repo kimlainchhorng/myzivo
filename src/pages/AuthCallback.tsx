@@ -12,6 +12,31 @@ const AuthCallback = () => {
   const { exchangeToken, isExchanging, error } = useExchangeAuthToken();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
+  // Helper function to check setup status and navigate accordingly
+  const checkSetupAndNavigate = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("setup_complete")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      // If no profile or setup not complete, go to setup page
+      if (!profile || profile.setup_complete !== true) {
+        setStatus("success");
+        setTimeout(() => navigate("/setup", { replace: true }), 200);
+      } else {
+        setStatus("success");
+        setTimeout(() => navigate("/", { replace: true }), 200);
+      }
+    } catch (err) {
+      console.error("Error checking setup status:", err);
+      // Default to home on error
+      setStatus("success");
+      setTimeout(() => navigate("/", { replace: true }), 200);
+    }
+  };
+
   useEffect(() => {
     const token = searchParams.get("token");
     const code = searchParams.get("code");
@@ -37,7 +62,7 @@ const AuthCallback = () => {
     // Supabase OAuth PKCE flow (?code=...)
     if (code) {
       const handleCodeExchange = async () => {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
         if (exchangeError) {
           console.error("OAuth code exchange error:", exchangeError);
@@ -45,8 +70,12 @@ const AuthCallback = () => {
           return;
         }
 
-        setStatus("success");
-        setTimeout(() => navigate("/", { replace: true }), 200);
+        if (data.session?.user) {
+          await checkSetupAndNavigate(data.session.user.id);
+        } else {
+          setStatus("success");
+          setTimeout(() => navigate("/", { replace: true }), 200);
+        }
       };
 
       handleCodeExchange();
@@ -60,7 +89,7 @@ const AuthCallback = () => {
       return;
     }
 
-    // Fallback: if the session already exists, route home. Otherwise, wait briefly.
+    // Fallback: if the session already exists, check setup status. Otherwise, wait briefly.
     const handleOAuthFallback = async () => {
       const {
         data: { session },
@@ -73,20 +102,18 @@ const AuthCallback = () => {
         return;
       }
 
-      if (session) {
-        setStatus("success");
-        setTimeout(() => navigate("/", { replace: true }), 200);
+      if (session?.user) {
+        await checkSetupAndNavigate(session.user.id);
         return;
       }
 
       const timeout = setTimeout(() => setStatus("error"), 7000);
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-        if (nextSession) {
+      } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+        if (nextSession?.user) {
           clearTimeout(timeout);
-          setStatus("success");
-          setTimeout(() => navigate("/", { replace: true }), 200);
+          await checkSetupAndNavigate(nextSession.user.id);
           subscription.unsubscribe();
         }
       });
