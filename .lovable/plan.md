@@ -1,81 +1,153 @@
 
-# Fix Google OAuth Redirect for Lovable Preview Domain
 
-## Problem Summary
-Google OAuth is redirecting to `hizivo.com`, which doesn't exist yet (no DNS configured). The browser shows "can't reach this page" with error `DNS_PROBE_FINISHED_NXDOMAIN`.
+# Account Setup Flow for New Users
 
-## Solution
-Update the OAuth redirect logic to use the Lovable preview domain instead of `hizivo.com` until you're ready to connect a custom domain.
+## Overview
+
+This plan adds a mandatory onboarding/setup flow for new users. When a user signs up (via email or Google OAuth), they must complete their profile setup before accessing the main app. Users who haven't completed setup will be redirected to the setup page.
+
+---
+
+## How It Works
+
+```text
++------------------+     +-------------------+     +------------------+
+|   Sign Up /      | --> |  Auth Callback    | --> | Setup Required?  |
+|   Google OAuth   |     |  (session created)|     |                  |
++------------------+     +-------------------+     +--------+---------+
+                                                           |
+                              +----------------------------+----------------------------+
+                              |                                                         |
+                              v                                                         v
+                     +--------+--------+                                    +-----------+----------+
+                     |  setup_complete |                                    |   setup_complete     |
+                     |     = false     |                                    |       = true         |
+                     +--------+--------+                                    +-----------+----------+
+                              |                                                         |
+                              v                                                         v
+                     +--------+--------+                                    +-----------+----------+
+                     |  /setup Page    |                                    |    Main App / Home   |
+                     |  (Name, Phone,  |                                    |                      |
+                     |   Preferences)  |                                    +----------------------+
+                     +--------+--------+
+                              |
+                              v
+                     +--------+--------+
+                     | Complete Setup  |
+                     | setup_complete  |
+                     |     = true      |
+                     +-----------------+
+                              |
+                              v
+                     +--------+--------+
+                     |    Redirect to  |
+                     |    Main App     |
+                     +-----------------+
+```
 
 ---
 
 ## Changes Required
 
-### 1. Update `src/contexts/AuthContext.tsx`
+### 1. Database: Add `setup_complete` Column
 
-**Current code (lines 117-124):**
-```typescript
-const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+Add a boolean column to the `profiles` table to track whether a user has completed onboarding.
 
-const redirectUrl = (isCapacitor || isLocalhost)
-  ? 'https://hizivo.com/auth-callback'
-  : `${window.location.origin}/auth-callback`;
+**SQL Migration:**
+```sql
+ALTER TABLE profiles 
+ADD COLUMN setup_complete BOOLEAN DEFAULT false;
 ```
 
-**Updated code:**
-```typescript
-const isCapacitor = typeof (window as any).Capacitor !== 'undefined';
-const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+### 2. Create Setup Page (`/setup`)
 
-// Use Lovable preview domain for all cases until custom domain is connected
-const PRODUCTION_CALLBACK = 'https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app/auth-callback';
+A new page where new users complete their profile:
+- Full name (required)
+- Phone number (optional)
+- Accept Terms checkbox
+- "Complete Setup" button
 
-const redirectUrl = (isCapacitor || isLocalhost)
-  ? PRODUCTION_CALLBACK
-  : `${window.location.origin}/auth-callback`;
-```
+Once submitted, `setup_complete` is set to `true` and the user is redirected to the home page.
 
-### 2. Update `src/hooks/useCrossAppAuth.ts`
+### 3. Create Setup Guard Component
 
-Change the `main` URL in APP_URLS (line 6):
-```typescript
-const APP_URLS = {
-  main: "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
-  restaurant: "https://zivorestaurant.lovable.app",
-  driver: "https://zivo-driver-app.rork.app",
-} as const;
-```
+A wrapper component (`SetupRequiredRoute`) that:
+- Checks if the logged-in user has `setup_complete = true`
+- If not, redirects them to `/setup`
+- Used to protect all main app routes
+
+### 4. Update Auth Flow
+
+- After OAuth callback success, check if `setup_complete` is `false`
+- If so, redirect to `/setup` instead of home
+- Update `AuthCallback.tsx` to handle this logic
+
+### 5. Update Signup Flow
+
+- After email signup + email verification, the user lands on `/setup`
+- The setup page handles profile completion
 
 ---
 
-## Supabase Configuration Required
+## Files to Create
 
-After the code changes, update your [Supabase URL Configuration](https://supabase.com/dashboard/project/slirphzzwcogdbkeicff/auth/url-configuration):
+| File | Purpose |
+|------|---------|
+| `src/pages/Setup.tsx` | Onboarding form for new users |
+| `src/components/auth/SetupRequiredRoute.tsx` | Route guard that ensures setup is complete |
+| `src/hooks/useSetupStatus.ts` | Hook to check if current user has completed setup |
 
-| Setting | Value |
-|---------|-------|
-| Site URL | `https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app` |
-| Redirect URLs | Add: `https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app/auth-callback` |
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | Add `/setup` route and wrap protected routes with `SetupRequiredRoute` |
+| `src/pages/AuthCallback.tsx` | Redirect to `/setup` if setup not complete |
+| `src/integrations/supabase/types.ts` | Add `setup_complete` to Profile type (if needed) |
 
 ---
 
-## Future: When You Connect hizivo.com
+## User Experience
 
-Once you connect `hizivo.com` as a custom domain in Lovable and it becomes **Active**:
+1. **New User Signs Up with Google:**
+   - Clicks "Continue with Google"
+   - Google OAuth completes
+   - Redirected to `/setup` page
+   - Fills in name, optional phone
+   - Clicks "Complete Setup"
+   - Redirected to home page
 
-1. Update the code back to use `https://hizivo.com`
-2. Update Supabase Site URL to `https://hizivo.com`
-3. Add `https://hizivo.com/auth-callback` to Supabase Redirect URLs
-4. Add `https://hizivo.com` to Google Cloud Console's Authorized JavaScript origins
+2. **New User Signs Up with Email:**
+   - Fills email/password form
+   - Receives verification email
+   - Clicks verification link
+   - Lands on `/setup` page
+   - Completes profile
+   - Redirected to home
+
+3. **Existing User (setup already complete):**
+   - Signs in normally
+   - Goes directly to home page
 
 ---
 
 ## Technical Details
 
-**Why this happened:**
-The previous code change set `hizivo.com` as the redirect target for Capacitor/localhost, but since that domain has no DNS records pointing anywhere, the browser can't reach it.
+### SetupRequiredRoute Component Logic
+```text
+1. Check if user is logged in
+2. If not logged in -> redirect to /login
+3. If logged in, fetch profile.setup_complete
+4. If setup_complete = false -> redirect to /setup
+5. If setup_complete = true -> render children
+```
 
-**Files to modify:**
-- `src/contexts/AuthContext.tsx` (line 122-123)
-- `src/hooks/useCrossAppAuth.ts` (line 6)
+### Setup Page Fields
+- Full Name (required, min 2 characters)
+- Phone Number (optional)
+- Terms of Service checkbox (required)
+- Submit button disabled until form is valid
+
+### Database Trigger Update
+Update the existing profile creation trigger to set `setup_complete = false` by default for new users.
+
