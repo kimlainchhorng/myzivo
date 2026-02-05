@@ -1,51 +1,54 @@
-import { useState } from "react";
+/**
+ * ZivoOnboarding Setup Page
+ * Premium onboarding flow for new users
+ */
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, User, Phone, CheckCircle } from "lucide-react";
+import { User, Phone, Check, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
-const setupSchema = z.object({
-  fullName: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().optional(),
-  acceptTerms: z.boolean().refine((val) => val === true, {
-    message: "You must accept the terms of service",
-  }),
-});
-
-type SetupFormData = z.infer<typeof setupSchema>;
-
 const Setup = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [agreed, setAgreed] = useState(false);
 
-  const form = useForm<SetupFormData>({
-    resolver: zodResolver(setupSchema),
-    defaultValues: {
-      fullName: user?.user_metadata?.full_name || "",
-      phone: "",
-      acceptTerms: false,
-    },
-  });
+  // Prefill name from user metadata if available
+  useEffect(() => {
+    if (user?.user_metadata?.full_name) {
+      setFullName(user.user_metadata.full_name);
+    }
+  }, [user]);
 
-  const onSubmit = async (data: SetupFormData) => {
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/login", { replace: true });
+    }
+  }, [authLoading, user, navigate]);
+
+  const handleComplete = async () => {
+    if (!agreed) {
+      toast.error("Please agree to the Terms of Service");
+      return;
+    }
+    if (!fullName.trim()) {
+      toast.error("Full Name is required");
+      return;
+    }
     if (!user?.id) {
       toast.error("Not authenticated");
       return;
     }
 
-    setIsSubmitting(true);
+    setLoading(true);
 
     try {
       // Check if profile exists
@@ -60,8 +63,8 @@ const Setup = () => {
         const { error } = await supabase
           .from("profiles")
           .update({
-            full_name: data.fullName,
-            phone: data.phone || null,
+            full_name: fullName,
+            phone: phone || null,
             setup_complete: true,
           })
           .eq("user_id", user.id);
@@ -74,15 +77,15 @@ const Setup = () => {
           .insert({
             user_id: user.id,
             email: user.email,
-            full_name: data.fullName,
-            phone: data.phone || null,
+            full_name: fullName,
+            phone: phone || null,
             setup_complete: true,
           });
 
         if (error) throw error;
       }
 
-      // Invalidate setup status query
+      // Invalidate queries so the app reflects the new state
       queryClient.invalidateQueries({ queryKey: ["setupStatus", user.id] });
       queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
 
@@ -92,130 +95,106 @@ const Setup = () => {
       console.error("Setup error:", error);
       toast.error(error.message || "Failed to complete setup");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-top safe-area-bottom">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-60" />
-      <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/8 to-purple-500/5 rounded-full blur-3xl" />
-
-      <Card className="w-full max-w-md relative z-10 animate-in fade-in zoom-in-95 duration-300">
-        <CardHeader className="text-center space-y-2">
-          <div className="w-16 h-16 mx-auto mb-2 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30">
-            <User className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-white flex items-center justify-center px-6 py-16">
+      <div className="w-full max-w-md space-y-8">
+        
+        {/* Icon */}
+        <div className="flex justify-center">
+          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-xl shadow-blue-500/30">
+            <User className="w-10 h-10 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
-          <CardDescription>
-            Just a few details to get you started with ZIVO
-          </CardDescription>
-        </CardHeader>
+        </div>
 
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name *</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Enter your full name"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        {/* Text */}
+        <h1 className="text-3xl font-black text-center text-zinc-900">Complete Your Profile</h1>
+        <p className="text-center text-zinc-500 -mt-4">Just a few details to get you started with ZIVO</p>
+
+        {/* Form */}
+        <div className="space-y-5 pt-4">
+          
+          {/* Full Name Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-700">Full Name *</label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <User className="w-5 h-5 text-zinc-400" />
+              </div>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 font-medium text-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
+            </div>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number (Optional)</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="+1 (555) 000-0000"
-                          className="pl-10"
-                          {...field}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          {/* Phone Input */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-700">Phone Number (Optional)</label>
+            <div className="relative">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <Phone className="w-5 h-5 text-zinc-400" />
+              </div>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+                className="w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 pl-12 pr-4 font-medium text-zinc-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               />
+            </div>
+          </div>
 
-              <FormField
-                control={form.control}
-                name="acceptTerms"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm font-normal cursor-pointer">
-                        I agree to the{" "}
-                        <a
-                          href="/terms"
-                          target="_blank"
-                          className="text-primary hover:underline"
-                        >
-                          Terms of Service
-                        </a>{" "}
-                        and{" "}
-                        <a
-                          href="/privacy"
-                          target="_blank"
-                          className="text-primary hover:underline"
-                        >
-                          Privacy Policy
-                        </a>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                )}
-              />
+          {/* Terms Checkbox */}
+          <button
+            type="button"
+            onClick={() => setAgreed(!agreed)}
+            className="flex items-center gap-3 pt-2 cursor-pointer group w-full text-left"
+          >
+            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+              agreed 
+                ? "bg-blue-500 border-blue-500" 
+                : "border-zinc-300 group-hover:border-blue-400"
+            }`}>
+              {agreed && <Check className="w-4 h-4 text-white" />}
+            </div>
+            <span className="text-sm text-zinc-600">
+              I agree to the{" "}
+              <a href="/terms" target="_blank" className="text-blue-500 hover:underline" onClick={(e) => e.stopPropagation()}>
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy" target="_blank" className="text-blue-500 hover:underline" onClick={(e) => e.stopPropagation()}>
+                Privacy Policy
+              </a>
+            </span>
+          </button>
 
-              <Button
-                type="submit"
-                className="w-full rounded-xl h-12 text-base font-medium"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Complete Setup
-                  </>
-                )}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Button */}
+        <button
+          onClick={handleComplete}
+          disabled={loading}
+          className="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Complete Setup"}
+        </button>
+      </div>
     </div>
   );
 };
