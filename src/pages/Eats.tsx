@@ -1,11 +1,11 @@
 /**
- * ZIVO Eats — Marketing Landing Page
+  * ZIVO Eats — Responsive Landing Page
  * 
- * Marketing-only page that redirects to zivodriver.com
- * NO food ordering functionality on hizovo.com
+  * Desktop: Marketing landing page with ZIVO Driver redirect
+  * Mobile: Premium "Curated Dining" visual experience
  */
-
-import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, ExternalLink, Truck } from "lucide-react";
+import { lazy, Suspense } from "react";
+import { ArrowRight, UtensilsCrossed, Clock, Star, MapPin, CheckCircle, ExternalLink, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -14,6 +14,10 @@ import SEOHead from "@/components/SEOHead";
 import heroEats from "@/assets/hero-eats.jpg";
 import serviceEats from "@/assets/service-eats.jpg";
 import { MobilityFeaturesGrid, MobilityComplianceFooter } from "@/components/mobility";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Lazy load mobile premium component
+const MobileEatsPremium = lazy(() => import("@/components/eats/MobileEatsPremium"));
 
 const ZIVO_DRIVER_URL = "https://zivo-driver-app.rork.app";
 
@@ -90,10 +94,26 @@ const howItWorks = [
 ];
 
 export default function Eats() {
+  const isMobile = useIsMobile();
+
   const handleOpenZivoDriver = () => {
     window.open(ZIVO_DRIVER_URL, "_blank", "noopener,noreferrer");
   };
 
+  // Mobile: Premium visual experience
+  if (isMobile) {
+    return (
+      <Suspense fallback={
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+        </div>
+      }>
+        <MobileEatsPremium />
+      </Suspense>
+    );
+  }
+
+  // Desktop: Marketing landing page
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
