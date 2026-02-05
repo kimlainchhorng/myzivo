@@ -1,221 +1,244 @@
 
-
-# Mission Control Admin UI Implementation Plan
+# Premium Traveler Dashboard Implementation
 
 ## Overview
 
-Transform the ZIVO admin experience with a dense, high-contrast "Mission Control" layout designed for power users and operations staff. This implementation includes:
+Transform the ZIVO user profile experience with a 2026-era "Holographic Passport" design featuring:
 
-1. **Mission Control Layout** - Dark-themed, power-user workspace with collapsible glass sidebar and system health widget
-2. **Booking Ledger Table** - Real-time live data stream with status indicators, hover actions, and profit visibility
-3. **Booking Detail Panel** - Slide-over panel for quick issue resolution without page navigation
+1. **TravelerPassport** - Glassmorphic ID card with avatar, verified badge, and gamified stats
+2. **TripTimeline** - Visual journey flow connecting flight to hotel with live weather widget
+3. **AI Concierge Widget** - Context-aware floating chat trigger with alert indicators
+4. **Premium Dashboard Page** - New `/dashboard` or enhanced `/profile` view
 
 ---
 
 ## Current State Analysis
 
-### Existing Admin Layout
-- Located at `src/layouts/AdminLayout.tsx` (345 lines)
-- Uses light theme with standard sidebar navigation
-- Features RBAC-based navigation filtering
-- Mobile-responsive with Sheet component for mobile sidebar
+### Existing Profile Components
+- `src/pages/Profile.tsx` (482 lines) - Form-based profile with avatar upload, quick links, loyalty integration
+- `src/pages/TravelTripsPage.tsx` - Tab-based trips list (upcoming/past/cancelled)
+- `src/components/flight/MyTripsDashboard.tsx` (727 lines) - Rich trip management with filters, status, ticketing
 
-### Existing Admin Components
-- `FulfillmentHub.tsx`: Agentic dashboard with tabs for alerts, PNR lifecycle, supplier health
-- `TravelOperationsCenter.tsx`: Comprehensive operations dashboard
-- `SupplierHealthPulse.tsx`: API latency visualization with pulse indicators
-- `TripDetailsDialog.tsx`: Modal for trip details (pattern for BookingDetailPanel)
+### Existing Data Hooks
+- `useUserProfile` - Profile data (full_name, avatar_url, phone, status)
+- `useLoyaltyPoints` - Points balance, tier (standard/bronze/silver/gold), lifetime points
+- `useMyTrips` - Travel orders with items and payments
+- `useSavedTravelers` - Saved traveler profiles
 
-### Design System
-- CSS variables defined in `index.css` with dark mode support
-- Glass effects via `vault-glass`, `glass-dark` classes
-- Already has product accent colors (flights, hotels, cars, rides, eats)
+### Existing Chat Widget
+- `LiveChatWidget.tsx` - Floating chat with quick replies
+- Uses primary gradient button with pulsing online indicator
+
+### Design System Patterns
+- Glass effects: `backdrop-blur-xl`, `bg-card/95`
+- Dark glass: `bg-zinc-900/80 backdrop-blur-3xl`
+- Status pulses: existing `animate-pulse` with colored dots
 
 ---
 
-## Part 1: Mission Control Layout
+## Part 1: TravelerPassport Component
 
-### Component: `MissionControlLayout.tsx`
+### Component: `TravelerPassport.tsx`
 
-A new alternative admin layout for power users:
+Premium profile header styled as a holographic ID card:
 
 **Visual Features:**
-- Deep black background: `bg-[#050505]`
-- Glass sidebar: `bg-zinc-900/50 backdrop-blur-xl`
-- ZIVO.OPS branding with version indicator
-- Integrated API latency widget in sidebar footer
-- Sticky header with global status indicators
+- Ambient glow background: `from-blue-600 via-purple-600 to-emerald-600` with blur
+- Dark glass card: `bg-zinc-900/80 backdrop-blur-3xl`
+- Grainy noise texture overlay for depth
+- Status badge (Verified Traveler/Elite/etc.)
+- Avatar with verification checkmark
 
-**Layout Structure:**
+**Stats Grid (3 columns):**
+| Stat | Source |
+|------|--------|
+| Countries Visited | Calculated from travel_orders destinations |
+| Miles Flown | Calculated from flight distances (or mock data) |
+| ZIVO Rank | Based on loyalty tier + lifetime points |
+
+**Data Integration:**
+```typescript
+// Hook: useTravelerStats
+- Fetches from travel_orders to count unique destinations
+- Gets loyalty tier from useLoyaltyPoints
+- Calculates rank percentile from tier
+```
+
+**Layout:**
 ```text
-+------------------+------------------------------------------+
-| ZIVO.OPS         |  [Breadcrumb Path] [Settings] [Avatar]  |
-| V2.4 SYSTEM ON   |                                          |
-+------------------+------------------------------------------+
-| [Dashboard]      |                                          |
-| [Live Bookings]  |         MAIN CONTENT AREA                |
-| [Inventory]      |         (children rendered here)         |
-| [Travelers]      |                                          |
-| [Resolutions]  2 |                                          |
-+------------------+                                          |
-| API LATENCY      |                                          |
-| Duffel   124ms   |                                          |
-| Hotelbeds 410ms  |                                          |
-+------------------+------------------------------------------+
-```
-
-**Navigation Items:**
-```typescript
-const navItems = [
-  { id: "dashboard", icon: LayoutDashboard, label: "Overview" },
-  { id: "bookings", icon: Plane, label: "Live Bookings" },
-  { id: "inventory", icon: Hotel, label: "Inventory" },
-  { id: "customers", icon: Users, label: "Travelers" },
-  { id: "issues", icon: AlertCircle, label: "Resolutions", alert: 2 },
-];
-```
-
-**System Health Widget:**
-- Compact API latency display in sidebar footer
-- Live pulse indicators from existing `useSupplierHealth` hook
-- Color-coded latency bars (green < 200ms, amber 200-400ms, red > 400ms)
-
----
-
-## Part 2: Booking Ledger Table
-
-### Component: `BookingLedger.tsx`
-
-A premium real-time booking table for operations:
-
-**Visual Features:**
-- Dark glass container: `bg-zinc-900/40 backdrop-blur-md`
-- Status badges with color-coded backgrounds
-- Supplier indicators with colored dots
-- Net margin column in green monospace font
-- Hover effects revealing row actions
-
-**Table Columns:**
-| Column | Content |
-|--------|---------|
-| Booking Ref | PNR code + relative timestamp |
-| Passenger | Full name |
-| Service | Route description |
-| Supplier | Supplier name with colored dot |
-| Status | TICKETED / PENDING / FAILED badge |
-| Net Margin | Calculated profit in green |
-
-**Filter Bar:**
-- Search input (PNR, email, ticket number)
-- Supplier dropdown filter
-- Date range picker (optional)
-
-**Row Actions (on hover):**
-- Copy PNR to clipboard
-- Quick email resend
-- Open detail panel
-
-**Status Color Mapping:**
-```typescript
-const getStatusColor = (status: string) => {
-  switch(status) {
-    case "TICKETED": return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    case "PENDING": return "bg-amber-500/10 text-amber-400 border-amber-500/20";
-    case "FAILED": return "bg-red-500/10 text-red-400 border-red-500/20";
-    default: return "bg-zinc-800 text-zinc-400";
-  }
-};
++----------------------------------------------------------------+
+|  [AVATAR with verified badge]  |  ALEXANDER KAI                |
+|                                |  [Verified Traveler] badge    |
+|                                |  📍 Based in New York, USA    |
++--------------------------------+-------------------------------+
+|  42 Countries  |  128k Miles  |  Top 1% ZIVO Rank             |
++----------------------------------------------------------------+
+|                              [Edit Profile] button             |
++----------------------------------------------------------------+
 ```
 
 ---
 
-## Part 3: Booking Detail Panel
+## Part 2: TripTimeline Component
 
-### Component: `BookingDetailSlideOver.tsx`
+### Component: `TripTimeline.tsx`
 
-A slide-over panel using Sheet component for booking management:
+Visual journey flow with connected items:
 
 **Visual Features:**
-- Full-height slide-over from right: `w-[480px]`
-- Dark glass background: `bg-[#0A0A0A]`
-- Status indicator with pulse animation
-- PNR data block with copy-on-click
+- Vertical connecting line: gradient from primary to transparent
+- Active item: Large colored icon bubble with glow shadow
+- Inactive item: Muted icon bubble
+- Weather overlay on hotel card
 
-**Panel Sections:**
+**Timeline Items:**
+1. **Flight Card** (active/upcoming)
+   - Large blue icon bubble with glow
+   - Departure time, flight info grid (flight number, terminal, gate)
+   - "Departing Tomorrow" badge
 
-1. **Header**
-   - Booking reference (large)
-   - Status with animated pulse dot
-   - Download PDF button
+2. **Hotel Card** (connected)
+   - Gray icon bubble
+   - Weather widget overlay (temp, condition)
+   - "Get Directions" CTA button
 
-2. **PNR Data Block**
-   - Airline PNR (selectable text)
-   - Ticket Number (selectable text)
-   - Supplier reference
+**Weather Integration:**
+- Mock weather data for destination city
+- Cloud/sun icon based on condition
+- Temperature display
 
-3. **Quick Actions Grid**
-   - Resend Email (blue accent)
-   - Cancel Booking (red accent)
-   - Modify Booking (amber)
-   - Contact Passenger (gray)
+**Data Flow:**
+```typescript
+// Uses useMyTrips with filter="upcoming"
+// Groups items by trip (flight + hotel together)
+// Extracts destination for weather lookup
+```
 
-4. **Agent Notes**
-   - Textarea for internal notes
-   - Auto-save to database
-   - Timestamp display
+---
 
-5. **Agentic Check**
-   - Pre-flight check before actions
-   - "Refund eligibility: Checking..." state
-   - Policy compliance indicator
+## Part 3: AI Concierge Widget
+
+### Component: `AIConciergeTrigger.tsx`
+
+Enhanced floating chat button with context awareness:
+
+**Visual Features:**
+- White circular button with inset shadow glow
+- Notification badge (red dot with count)
+- Hover tooltip showing context ("Flight delay alert")
+- Pulse animation on alerts
+
+**Context Awareness:**
+- Reads upcoming trips to provide relevant quick actions
+- Shows alert count for flight delays, booking issues
+- Tooltip displays most urgent alert
+
+**Integration with existing LiveChatWidget:**
+- Extends or replaces LiveChatWidget trigger
+- Passes trip context to chat initialization
+
+---
+
+## Part 4: Premium Dashboard Layout
+
+### New Page: `TravelerDashboard.tsx` or Update: `Profile.tsx`
+
+Two-column layout with premium components:
+
+**Structure:**
+```text
++----------------------------------------------------+
+|                TRAVELER PASSPORT                   |
+|  (Full-width holographic ID card)                  |
++----------------------------------------------------+
+| MAIN COLUMN (lg:col-span-8)  | SIDEBAR (lg:span-4)|
++-----------------------------+----------------------+
+|  TRIP TIMELINE              | Saved for Later     |
+|  - Upcoming journey         | - Saved hotels      |
+|  - Flight → Hotel flow      | - Price alerts      |
+|                             +----------------------+
+|                             | Quick Actions       |
+|                             | - Edit profile      |
+|                             | - Saved travelers   |
+|                             | - Payment methods   |
++-----------------------------+----------------------+
+|                AI CONCIERGE TRIGGER (fixed)        |
++----------------------------------------------------+
+```
+
+**Dark Theme Handling:**
+- Use existing dark mode variables
+- Glass effects work in both themes
+- Glow effects more prominent in dark mode
 
 ---
 
 ## Technical Implementation Details
 
-### Dark Theme CSS Classes
+### CSS Additions for index.css
 
-Add to `src/index.css`:
 ```css
-/* Mission Control Theme */
-.mission-control {
-  --mc-background: #050505;
-  --mc-sidebar: rgba(24, 24, 27, 0.5);
-  --mc-card: rgba(24, 24, 27, 0.4);
-  --mc-border: rgba(255, 255, 255, 0.05);
-  --mc-text: #ffffff;
-  --mc-text-muted: #71717a;
+/* Holographic border animation */
+.holographic-border {
+  position: relative;
+}
+.holographic-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    hsl(221 83% 53%),
+    hsl(262 83% 58%),
+    hsl(142 69% 58%)
+  );
+  opacity: 0.2;
+  filter: blur(20px);
+  transition: opacity 0.5s;
+}
+.holographic-border:hover::before {
+  opacity: 0.4;
 }
 
-.bg-grid-white\/\[0\.02\] {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9H0v9h9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+/* Grainy texture overlay */
+.grainy-texture {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.15;
+}
+
+/* Timeline connector */
+.timeline-connector {
+  position: absolute;
+  left: 2.25rem;
+  top: 4rem;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--primary)),
+    hsl(var(--muted) / 0.3),
+    transparent
+  );
 }
 ```
 
-### Data Integration
+### New Data Hook: useTravelerStats
 
-Hook into existing data:
 ```typescript
-// Use existing hooks
-import { useSupplierHealth } from "@/hooks/useSupplierHealth";
-import { useFlightSystemHealth } from "@/hooks/useFlightSystemHealth";
-
-// For booking ledger - create new hook
-import { useBookingLedger } from "@/hooks/useBookingLedger";
+// Calculates:
+// - Unique destination countries from travel_orders
+// - Total miles (simplified calculation or mock)
+// - ZIVO rank percentile based on loyalty tier
 ```
 
-### Slide-Over Integration
+### Upcoming Trip Extraction
 
-Use existing Sheet component from Radix:
 ```typescript
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-
-// Usage
-<Sheet open={selectedBooking !== null} onOpenChange={() => setSelectedBooking(null)}>
-  <SheetContent side="right" className="w-[480px] bg-[#0A0A0A] p-0">
-    <BookingDetailSlideOver booking={selectedBooking} />
-  </SheetContent>
-</Sheet>
+// From useMyTrips("upcoming")
+// Get first trip with items
+// Extract flight details + hotel details
+// Group for timeline display
 ```
 
 ---
@@ -224,57 +247,58 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 
 | File | Purpose |
 |------|---------|
-| `src/layouts/MissionControlLayout.tsx` | Alternative dark admin layout |
-| `src/components/admin/BookingLedger.tsx` | Real-time booking table |
-| `src/components/admin/BookingDetailSlideOver.tsx` | Slide-over panel for booking management |
-| `src/components/admin/MissionControlSidebar.tsx` | Extracted sidebar with health widget |
-| `src/components/admin/LedgerFilters.tsx` | Filter bar for booking ledger |
-| `src/hooks/useBookingLedger.ts` | Hook for fetching booking ledger data |
+| `src/components/profile/TravelerPassport.tsx` | Holographic ID card header |
+| `src/components/profile/TripTimeline.tsx` | Visual journey flow |
+| `src/components/profile/AIConciergeTrigger.tsx` | Context-aware chat button |
+| `src/components/profile/SavedForLater.tsx` | Sidebar saved items |
+| `src/hooks/useTravelerStats.ts` | Aggregated traveler statistics |
+| `src/pages/TravelerDashboard.tsx` | Premium dashboard page |
 
 ## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/index.css` | Add mission control theme classes and grid background |
-| `src/components/admin/index.ts` | Export new components |
-| `src/App.tsx` | Add optional route using MissionControlLayout |
+| `src/index.css` | Add holographic, grainy, timeline CSS |
+| `src/components/profile/index.ts` | Export new components |
+| `src/App.tsx` | Add /dashboard route |
 
 ---
 
 ## Implementation Order
 
 ### Phase 1: Foundation
-1. Add Mission Control CSS theme classes
-2. Create `MissionControlLayout.tsx` shell
-3. Create `MissionControlSidebar.tsx` with nav and health widget
+1. Add CSS utilities (holographic, grainy, timeline)
+2. Create `useTravelerStats` hook
+3. Create `TravelerPassport` component
 
-### Phase 2: Booking Ledger
-4. Create `useBookingLedger.ts` hook
-5. Create `LedgerFilters.tsx` component
-6. Create `BookingLedger.tsx` table component
+### Phase 2: Timeline
+4. Create `TripTimeline` component
+5. Create mock weather utility
+6. Wire up to `useMyTrips` data
 
-### Phase 3: Detail Panel
-7. Create `BookingDetailSlideOver.tsx` with sections
-8. Integrate with Sheet component
-9. Add quick actions with agentic pre-checks
+### Phase 3: Concierge & Sidebar
+7. Create `AIConciergeTrigger` component
+8. Create `SavedForLater` sidebar component
+9. Export profile components
 
-### Phase 4: Integration
-10. Update exports and add routes
-11. Wire up real-time data subscriptions
-12. Test with existing FulfillmentHub data
+### Phase 4: Dashboard Integration
+10. Create `TravelerDashboard.tsx` page
+11. Add route to `App.tsx`
+12. Link from existing navigation
 
 ---
 
-## Route Configuration
+## Mock Weather Data Strategy
 
-Add optional Mission Control route:
+Since real weather API isn't integrated, use a mock system:
 ```typescript
-// In App.tsx routing
-<Route path="/admin/ops" element={<MissionControlLayout />}>
-  <Route index element={<BookingLedger />} />
-  <Route path="inventory" element={<InventoryView />} />
-  {/* etc */}
-</Route>
+const mockWeatherByCity: Record<string, Weather> = {
+  'London': { temp: '12°C', condition: 'Rainy', icon: CloudRain },
+  'New York': { temp: '18°C', condition: 'Sunny', icon: Sun },
+  'Tokyo': { temp: '22°C', condition: 'Cloudy', icon: Cloud },
+  // Default fallback
+  'default': { temp: '20°C', condition: 'Clear', icon: Sun },
+};
 ```
 
 ---
@@ -284,17 +308,16 @@ Add optional Mission Control route:
 ### New Files (6)
 | File | Type |
 |------|------|
-| `src/layouts/MissionControlLayout.tsx` | Layout Component |
-| `src/components/admin/BookingLedger.tsx` | Admin Component |
-| `src/components/admin/BookingDetailSlideOver.tsx` | Admin Component |
-| `src/components/admin/MissionControlSidebar.tsx` | Admin Component |
-| `src/components/admin/LedgerFilters.tsx` | Admin Component |
-| `src/hooks/useBookingLedger.ts` | Data Hook |
+| `src/components/profile/TravelerPassport.tsx` | Profile Component |
+| `src/components/profile/TripTimeline.tsx` | Profile Component |
+| `src/components/profile/AIConciergeTrigger.tsx` | Widget Component |
+| `src/components/profile/SavedForLater.tsx` | Sidebar Component |
+| `src/hooks/useTravelerStats.ts` | Data Hook |
+| `src/pages/TravelerDashboard.tsx` | Page Component |
 
 ### Modified Files (3)
 | File | Changes |
 |------|---------|
-| `src/index.css` | Add mission control theme and grid background |
-| `src/components/admin/index.ts` | Export BookingLedger, BookingDetailSlideOver |
-| `src/App.tsx` | Add /admin/ops route with MissionControlLayout |
-
+| `src/index.css` | Add holographic/grainy/timeline CSS |
+| `src/components/profile/index.ts` | Create exports file |
+| `src/App.tsx` | Add /dashboard route |
