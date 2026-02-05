@@ -1,270 +1,380 @@
 
-
-# 2026 Spatial UI - Glass Command Center Implementation
+# 2026 Premium Checkout & Success UI Implementation
 
 ## Overview
 
-Transform the ZIVO flight search experience with three premium 2026-era components:
+Implement three major UI upgrades for the booking experience:
 
-1. **Glass Command Center** - Translucent search widget with spatial UI effects
-2. **Holographic Ticket** - Premium flight result cards styled as digital assets
-3. **Smart Pre-Loader** - Trust-building search state with supplier messaging
-
----
-
-## Current State Analysis
-
-### Existing Components
-- `FlightSearchFormPro.tsx` (615 lines): Full-featured form with autocomplete, dates, passengers
-- `BigSearchCard.tsx`: Container wrapper with accent bars and disclosure
-- `FlightResultCard.tsx` (407 lines): Card-style results with amenities, pricing
-- `FlightResultsSkeleton.tsx`: Basic skeleton loader
-
-### Styling Patterns
-The codebase already uses:
-- `backdrop-blur-xl` for glass effects
-- `bg-card/95`, `bg-muted/30` for transparency
-- Gradient accents (`from-sky-500 to-blue-600`)
-- Framer Motion for animations
+1. **Secure Vault Checkout** - Bank-level aesthetic with receipt rail, Stripe Elements, and trust anchors
+2. **Mobile Responsive Fixes** - iOS zoom prevention, scrollable tabs, and native app feel
+3. **Golden Ticket Success State** - Foil-styled boarding pass with QR code and flip animation
 
 ---
 
-## Part 1: Glass Command Center Search Widget
+## Part 1: Secure Vault Checkout UI
 
-### Component: `GlassSearchWidget.tsx`
+### Current State
 
-A new premium alternative to `BigSearchCard` + `FlightSearchFormPro`:
+Existing checkout components include:
+- `CheckoutModal.tsx`: Basic modal with card inputs
+- `FlightCheckout.tsx`: Full page checkout with Stripe integration
+- `SecureCheckoutHeader.tsx`: Trust signals header
+- `AcceptedPaymentMethods.tsx`: Payment method icons
 
-**Visual Features:**
-- Translucent dark glass: `bg-zinc-900/60 backdrop-blur-2xl`
-- Glow effect behind the widget: `bg-blue-600/20 blur-[100px]`
-- Unified From/To input section with merged visual design
-- Active state highlighting: input backgrounds light up on focus
-- Tab selector for Round Trip / One Way / Multi-City
+### Proposed Enhancement: PaymentVaultCheckout
 
-**Layout (12-column grid on desktop):**
+A full-page "Secure Vault" checkout with two-column layout:
+
+**Left Side (The Vault):**
 ```text
-+----------------------------------------------------------------------+
-|  [Round Trip]  [One Way]  [Multi-City]                               |
-+----------------------------------------------------------------------+
-| [From ←→ To merged section]  | [Dates]  | [Travelers] | [SEARCH]    |
-|  5 cols                      | 3 cols   | 2 cols      | 2 cols      |
-+----------------------------------------------------------------------+
++-----------------------------------------------+
+|  [Lock Icon]  SECURE CHECKOUT                 |
+|  Complete your booking securely               |
++-----------------------------------------------+
+|                                               |
+|  +---------------------------------------+    |
+|  |  [Stripe PaymentElement]             |    |
+|  |  Dark-themed card input               |    |
+|  +---------------------------------------+    |
+|                                               |
+|  [Pay Securely $4,250.00] Button              |
+|                                               |
+|  [Lock] Stripe TLS 1.3 encrypted              |
++-----------------------------------------------+
 ```
 
-**Interaction States:**
-- Focused field: `bg-white/5 rounded-xl` with smooth transition
-- Hover on groups: `hover:border-white/20` for subtle feedback
-- Search button: `whileHover={{ scale: 1.02 }}` with glow shadow
-
-### Integration with Existing Logic
-
-The widget will wrap the existing autocomplete, date picker, and passenger logic from `FlightSearchFormPro`:
-- Reuses `useAirportSearch` hook for location autocomplete
-- Reuses `MobileDatePickerSheet` for mobile dates
-- Maintains all validation and navigation logic
-
----
-
-## Part 2: Holographic Ticket Result Card
-
-### Component: `HolographicFlightCard.tsx`
-
-Premium flight result presentation styled as "digital assets":
-
-**Visual Features:**
-- Dark glass: `bg-zinc-900/40 backdrop-blur-md`
-- Hover glow gradient: `via-blue-500/10` edge glow
-- 3-column layout: Airline/Route | Benefits | Price
-
-**Structure:**
+**Right Side (Digital Ledger):**
 ```text
-+-----------------------------------------------------------------------------------+
-| [AIRLINE LOGO] | JFK -------- 7h 20m · Direct -------- LHR | [WiFi][Meal][USB]   |
-|   Airline Name | 08:30 AM — 09:10 PM • British Airways    |                     |
-+-----------------------------------------------------------------------------------+
-|                                                           | Total Price          |
-|                                                           | $4,250               |
-|                                                           | [Select Button]      |
-+-----------------------------------------------------------------------------------+
++---------------------------------------+
+|  BOOKING SUMMARY                      |
+|  +--------------------------------+   |
+|  | Flight ID      ZV-9284-NDC    |   |
+|  | Hold Expires   [Clock] 14:59  |   |
+|  +--------------------------------+   |
+|                                       |
+|  JFK - LHR (Round Trip)    $3,800.00 |
+|  Taxes & Carrier Fees        $450.00 |
+|  ZIVO Zero-Fee                 -$0.00 |
+|  ------------------------------------|
+|  TOTAL DUE                 $4,250.00 |
++---------------------------------------+
 ```
 
-**Animation:**
-- `whileInView` fade-up animation
-- Hover transitions for glow effect
+### Stripe Night Mode Theming
 
-### Props Interface
+Custom appearance for Stripe Elements matching dark glass aesthetic:
 
 ```typescript
-interface HolographicFlightCardProps {
-  flight: FlightCardData; // Existing type from results system
-  onSelect: (flight: FlightCardData) => void;
-  variant?: 'default' | 'compact';
-}
+const stripeAppearance = {
+  theme: 'night' as const,
+  variables: {
+    colorPrimary: 'hsl(var(--primary))',
+    colorBackground: 'hsl(240 10% 8%)',
+    colorText: 'hsl(0 0% 100%)',
+    colorDanger: 'hsl(0 84% 60%)',
+    borderRadius: '12px',
+    fontFamily: 'var(--font-display), system-ui, sans-serif',
+  },
+  rules: {
+    '.Input': {
+      backgroundColor: 'rgba(255, 255, 255, 0.05)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    '.Input:focus': {
+      borderColor: 'hsl(var(--primary))',
+      boxShadow: '0 0 0 2px hsla(var(--primary), 0.2)',
+    },
+  },
+};
 ```
 
----
+### Trust Anchors
 
-## Part 3: Smart Pre-Loader
+Prominent security indicators:
+- "256-BIT ENCRYPTION" badge with shield icon
+- "PCI DSS COMPLIANT" badge
+- "STRIPE SECURED" with verified checkmark
+- TLS 1.3 encryption notice
 
-### Component: `SmartSearchLoader.tsx`
-
-Trust-building loading state that communicates the normalization layer:
-
-**Visual Features:**
-- Dual spinning rings (counter-rotating) with gradient borders
-- Progress message cycling through stages
-- Smooth text transitions
-
-**Message Sequence:**
-1. "Connecting to Duffel..." (0-1s)
-2. "Scanning NDC Inventory..." (1-3s)
-3. "Checking 300+ Airlines..." (3-5s)
-4. "Found X Options." (when complete)
-
-**Animation Details:**
-- Outer ring: `rotate: 360` over 1s
-- Inner ring: `rotate: -360` over 1.5s
-- Text: `animate-pulse` with smooth transitions
-
-### Integration Points
-
-Used in `FlightResults.tsx` during `isLoading` state:
-```tsx
-{isLoading && <SmartSearchLoader />}
-```
-
----
-
-## Files to Create
+### Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/components/search/GlassSearchWidget.tsx` | Premium glass search form |
-| `src/components/flight/HolographicFlightCard.tsx` | Digital asset result card |
-| `src/components/flight/SmartSearchLoader.tsx` | Trust-building loader |
+| `src/components/checkout/PaymentVaultCheckout.tsx` | Main vault checkout component |
+| `src/components/checkout/DigitalLedgerSummary.tsx` | Right-side receipt summary |
+| `src/components/checkout/VaultSecurityBadges.tsx` | Trust anchor badges |
+| `src/components/checkout/StripeNightElements.tsx` | Themed Stripe Elements wrapper |
 
-## Files to Modify
+---
+
+## Part 2: Mobile Responsive Fixes
+
+### Current Issues
+
+The `GlassSearchWidget` may have:
+- iOS input zoom on focus (font-size < 16px)
+- Hidden scrollbar issues on tabs
+- Grid layout squashing on small screens
+
+### Proposed CSS Additions
+
+Add to `src/index.css`:
+
+```css
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Hide scrollbar but allow scroll */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-first glass widget tabs */
+.glass-tabs-scroll {
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+.glass-tabs-scroll > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+```
+
+### GlassSearchWidget Mobile Improvements
+
+Update the tab section to use horizontal scrollable list:
+
+```typescript
+// Scrollable tabs on mobile
+<div className="flex gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border/50 pb-4 overflow-x-auto hide-scrollbar">
+  {tabs.map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={cn(
+        "text-xs sm:text-sm font-bold uppercase tracking-wider transition-all pb-4 -mb-4 whitespace-nowrap",
+        // ... existing styles
+      )}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
+```
+
+### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/search/index.ts` | Export new components |
-| `src/components/flight/index.ts` | Export new components |
-| `src/pages/FlightSearch.tsx` | Option to use GlassSearchWidget |
-| `src/pages/FlightResults.tsx` | Use SmartSearchLoader + HolographicFlightCard |
+| `src/index.css` | Add iOS zoom prevention and scrollbar utilities |
+| `src/components/search/GlassSearchWidget.tsx` | Add hide-scrollbar class to tabs |
 
 ---
 
-## Technical Implementation Details
+## Part 3: Golden Ticket Success State
 
-### Glass Effect CSS Variables
+### Current State
 
-New utility classes to add to `index.css`:
+`BookingConfirmation.tsx` uses a card-based layout with checkmark animation.
+`FlightConfirmation.tsx` has similar structure with flight-specific details.
+
+### Proposed Enhancement: GoldenTicketSuccess
+
+A premium "boarding pass" style confirmation with:
+
+**Visual Design:**
+- Gold/platinum foil gradient background
+- Metallic shimmer animation on load
+- Ticket-style cutout edges (perforated look)
+- QR code as central element
+
+**Animation:**
+- 3D flip entrance animation
+- Metallic shine sweep effect
+- Confetti particles
+
+**Structure:**
+```text
++=========================================+
+|  ✅ BOARDING PASS ISSUED               |
+|                                         |
+|  JFK → LHR                             |
+|  New York to London                    |
+|                                         |
+|     +---------------------------+       |
+|     |     [QR CODE]            |       |
+|     |     Scan at airport      |       |
+|     +---------------------------+       |
+|                                         |
+|  Booking Ref: #8X9-22Z                 |
+|  Flight: BA115                         |
+|  Date: Feb 15, 2026                    |
+|                                         |
+|  [Add to Wallet] [Download PDF]        |
++=========================================+
+```
+
+### Animation Details
+
+3D flip entrance:
+```typescript
+const flipVariants = {
+  hidden: { 
+    rotateY: -90,
+    opacity: 0,
+    scale: 0.8
+  },
+  visible: { 
+    rotateY: 0,
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring",
+      damping: 20,
+      stiffness: 100,
+      delay: 0.2
+    }
+  }
+};
+```
+
+Metallic shine sweep:
 ```css
-.glass-dark {
-  background: rgba(24, 24, 27, 0.6);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.metallic-shine {
+  position: relative;
+  overflow: hidden;
 }
-
-.glow-blue {
-  box-shadow: 0 0 100px 20px rgba(59, 130, 246, 0.2);
+.metallic-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 215, 0, 0.15) 50%,
+    transparent 60%
+  );
+  animation: shine-sweep 3s ease-in-out infinite;
+}
+@keyframes shine-sweep {
+  from { transform: translateX(-100%) rotate(45deg); }
+  to { transform: translateX(100%) rotate(45deg); }
 }
 ```
 
-### Tab Button Styling
+### Files to Create
 
-```typescript
-const tabClasses = cn(
-  "text-sm font-bold uppercase tracking-wider transition-all",
-  isActive
-    ? "text-white border-b-2 border-blue-500 pb-4 -mb-4"
-    : "text-zinc-500 hover:text-zinc-300"
-);
-```
+| File | Purpose |
+|------|---------|
+| `src/components/booking/GoldenTicketSuccess.tsx` | Main golden ticket component |
+| `src/components/booking/TicketQRCode.tsx` | QR code with styling wrapper |
+| `src/components/booking/ConfettiEffect.tsx` | Confetti particle animation |
 
-### Input Focus State Hook
+### Files to Modify
 
-Create custom hook for tracking focused field:
-```typescript
-const [focusedField, setFocusedField] = useState<string | null>(null);
-
-// Usage on inputs
-onFocus={() => setFocusedField('from')}
-onBlur={() => setFocusedField(null)}
-```
-
-### Loader Animation Keyframes
-
-Framer Motion config for spinning rings:
-```typescript
-<motion.span 
-  className="border-4 border-t-blue-500 border-r-transparent ..."
-  animate={{ rotate: 360 }}
-  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-/>
-```
-
----
-
-## Dark Mode Considerations
-
-The glass effect is designed for dark backgrounds. On light mode:
-- Glass cards will use `bg-card/80` instead of `bg-zinc-900/60`
-- Glow effects will be more subtle
-- Border colors will use `border-border/50` pattern
+| File | Changes |
+|------|---------|
+| `src/index.css` | Add metallic shine and golden gradient CSS |
+| `src/components/booking/index.ts` | Export new components |
+| `src/pages/FlightConfirmation.tsx` | Option to use GoldenTicketSuccess |
 
 ---
 
 ## Implementation Order
 
-### Phase 1: Core Components
-1. Create `SmartSearchLoader.tsx` (simplest, immediate impact)
-2. Create `HolographicFlightCard.tsx` (new result card design)
-3. Update exports in index files
+### Phase 1: Mobile Responsive Fixes (Quick wins)
+1. Add iOS zoom prevention CSS
+2. Add hide-scrollbar utility classes
+3. Update GlassSearchWidget tabs styling
 
-### Phase 2: Glass Widget
-4. Create `GlassSearchWidget.tsx` with tab navigation
-5. Integrate existing autocomplete and date logic
-6. Add focus state highlighting
+### Phase 2: Golden Ticket Success
+4. Create metallic shine CSS animations
+5. Create GoldenTicketSuccess component
+6. Create TicketQRCode wrapper
+7. Create ConfettiEffect animation
+8. Update exports
 
-### Phase 3: Integration
-7. Update `FlightResults.tsx` to use new loader
-8. Add option to use `HolographicFlightCard` for results
-9. Update `FlightSearch.tsx` to offer glass widget
+### Phase 3: Secure Vault Checkout
+9. Create VaultSecurityBadges component
+10. Create DigitalLedgerSummary component
+11. Create StripeNightElements wrapper
+12. Create PaymentVaultCheckout main component
+13. Update checkout exports
 
-### Phase 4: Polish
-10. Add glow CSS utilities
-11. Test dark/light mode compatibility
-12. Verify mobile responsiveness
+### Phase 4: Integration
+14. Update FlightConfirmation to use GoldenTicket
+15. Create new checkout page route or update existing
+16. Test mobile responsiveness
+17. Verify Stripe dark theme appearance
 
 ---
 
-## Mobile Responsiveness
+## Technical Details
 
-All components maintain mobile-first design:
-- **Glass Widget**: Stacks vertically on mobile, full-width inputs
-- **Holographic Card**: Single-column layout, touch-optimized buttons
-- **Loader**: Centered, scales appropriately
+### QR Code Integration
 
-Touch targets remain 44px+ per existing ZIVO standards.
+Use existing `qrcode.react` dependency:
+```typescript
+import { QRCodeSVG } from 'qrcode.react';
+
+<QRCodeSVG 
+  value={`https://hizovo.com/booking/${bookingRef}`}
+  size={180}
+  bgColor="transparent"
+  fgColor="hsl(45, 80%, 30%)" // Dark gold
+  level="H"
+/>
+```
+
+### Stripe Elements Setup
+
+The project already has `@stripe/stripe-js` conceptually in the checkout flow. The PaymentVault will need:
+- `loadStripe` initialization
+- `Elements` provider with night appearance
+- `PaymentElement` for unified payment input
+
+### Safe Area Handling
+
+For mobile bottom sheets, ensure safe-area-inset padding:
+```css
+.vault-checkout {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+```
 
 ---
 
 ## Files Summary
 
-### New Files (3)
+### New Files (7)
 | File | Type |
 |------|------|
-| `src/components/search/GlassSearchWidget.tsx` | Search Component |
-| `src/components/flight/HolographicFlightCard.tsx` | Result Card |
-| `src/components/flight/SmartSearchLoader.tsx` | Loading State |
+| `src/components/checkout/PaymentVaultCheckout.tsx` | Checkout Component |
+| `src/components/checkout/DigitalLedgerSummary.tsx` | Checkout Component |
+| `src/components/checkout/VaultSecurityBadges.tsx` | Checkout Component |
+| `src/components/checkout/StripeNightElements.tsx` | Checkout Component |
+| `src/components/booking/GoldenTicketSuccess.tsx` | Success Component |
+| `src/components/booking/TicketQRCode.tsx` | Success Component |
+| `src/components/booking/ConfettiEffect.tsx` | Animation Component |
 
-### Modified Files (4)
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/components/search/index.ts` | Add GlassSearchWidget export |
-| `src/components/flight/index.ts` | Add HolographicFlightCard, SmartSearchLoader |
-| `src/pages/FlightResults.tsx` | Integrate SmartSearchLoader |
-| `src/index.css` | Add glass utility classes |
-
+| `src/index.css` | Add mobile fixes, metallic shine animations, golden gradients |
+| `src/components/search/GlassSearchWidget.tsx` | Add hide-scrollbar to tabs |
+| `src/components/booking/index.ts` | Export new success components |
+| `src/components/checkout/index.ts` | Create/update to export vault components |
+| `src/pages/FlightConfirmation.tsx` | Integrate GoldenTicketSuccess option |
