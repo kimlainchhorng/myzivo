@@ -77,7 +77,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-background border-t border-border">
+    <footer className="relative z-30 bg-card border-t border-border">
       <div className="container mx-auto px-4">
         {/* Newsletter Section */}
         <div className="py-12 border-b border-border">
