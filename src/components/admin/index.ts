@@ -6,3 +6,9 @@
  export { default as MarginTracker } from './MarginTracker';
  export { default as AgenticAlertCard } from './AgenticAlertCard';
  export type { AgenticAlert, AlertType, AlertPriority } from './AgenticAlertCard';
+
+// Funnel Analytics
+export { default as FunnelHealthPulse } from './FunnelHealthPulse';
+export { default as APILatencyChart } from './APILatencyChart';
+export { default as CheckoutFunnelDropoff } from './CheckoutFunnelDropoff';
+export { default as SupplierSuccessRate } from './SupplierSuccessRate';

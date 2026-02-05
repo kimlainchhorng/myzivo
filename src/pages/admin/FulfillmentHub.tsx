@@ -32,6 +32,7 @@
  import AgenticAlertCard, { type AgenticAlert } from "@/components/admin/AgenticAlertCard";
  import { useSupplierHealth } from "@/hooks/useSupplierHealth";
  import { useFlightSystemHealth } from "@/hooks/useFlightSystemHealth";
+import FunnelHealthPulse from "@/components/admin/FunnelHealthPulse";
  
  export default function FulfillmentHub() {
    const [activeTab, setActiveTab] = useState("alerts");
@@ -237,6 +238,10 @@
              <DollarSign className="w-4 h-4" />
              Margins
            </TabsTrigger>
+          <TabsTrigger value="funnel" className="gap-2">
+            <Activity className="w-4 h-4" />
+            Funnel Health
+          </TabsTrigger>
          </TabsList>
  
          <TabsContent value="alerts" className="mt-6">
@@ -346,6 +351,10 @@
          <TabsContent value="margins" className="mt-6">
            <MarginTracker showBookings limit={10} />
          </TabsContent>
+
+        <TabsContent value="funnel" className="mt-6">
+          <FunnelHealthPulse />
+        </TabsContent>
        </Tabs>
      </div>
    );

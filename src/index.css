@@ -428,3 +428,34 @@
 .group:hover .animate-marquee-right {
   animation-play-state: paused;
 }
+ 
+ /* =============================================
+    2026 PREMIUM SCROLL MOTION-BLUR EFFECT
+    ============================================= */
+ 
+ .premium-scroll-image {
+   transition: filter 0.3s ease-out, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+   will-change: filter, transform;
+ }
+ 
+ .scrolling-fast .premium-scroll-image {
+   filter: blur(4px);
+   transform: scale(0.98);
+ }
+ 
+ /* Opt-out class for critical images that should never blur */
+ .no-motion-blur {
+   filter: none !important;
+   transform: none !important;
+ }
+ 
+ /* Reduced motion preference */
+ @media (prefers-reduced-motion: reduce) {
+   .premium-scroll-image {
+     transition: none;
+   }
+   .scrolling-fast .premium-scroll-image {
+     filter: none;
+     transform: none;
+   }
+ }
