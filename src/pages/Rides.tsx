@@ -241,7 +241,7 @@ import { motion, AnimatePresence } from "framer-motion";
               <motion.div 
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="text-center"
+                className="text-center rides-content-visible"
               >
                 <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-4">
                   <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -255,7 +255,7 @@ import { motion, AnimatePresence } from "framer-motion";
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="rides-glass-panel rounded-[2rem] p-6 shadow-2xl"
+                className="rides-glass-panel rounded-[2rem] p-6 shadow-2xl rides-content-visible"
               >
                 <div className="relative">
                   {/* Visual Connector Line */}
@@ -318,6 +318,7 @@ import { motion, AnimatePresence } from "framer-motion";
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
+                className="rides-content-visible"
               >
                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                   <span className="w-1 h-6 bg-primary rounded-full" />
