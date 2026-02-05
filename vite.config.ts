@@ -33,16 +33,16 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
       manifest: {
-        name: "Hizovo Travel",
-        short_name: "Hizovo",
-        description: "Compare flights, hotels, and car rentals from trusted travel partners. Best prices, no booking fees.",
+        name: "ZIVO - Travel & More",
+        short_name: "ZIVO",
+        description: "One app for every journey. Flights, hotels, cars, rides, and food delivery - all in one place.",
         theme_color: "#0D0D0F",
         background_color: "#0D0D0F",
         display: "standalone",
         orientation: "portrait",
         scope: "/",
         start_url: "/?source=pwa",
-        id: "com.hizovo.travel",
+        id: "com.zivo.app",
         icons: [
           {
             src: "/pwa-icons/icon-192x192.png",
