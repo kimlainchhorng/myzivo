@@ -1,0 +1,64 @@
+import { RideOption } from "./RideCard";
+
+export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> = {
+  economy: [
+    {
+      id: "wait-save",
+      name: "Wait & Save",
+      subtitle: "Lowest price, longer wait.",
+      price: 15.89,
+      eta: 15,
+      image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop",
+      category: "economy",
+    },
+    {
+      id: "standard",
+      name: "Standard",
+      subtitle: "Reliable everyday rides.",
+      price: 20.35,
+      eta: 4,
+      image: "https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=400&h=300&fit=crop",
+      category: "economy",
+    },
+  ],
+  premium: [
+    {
+      id: "extra-comfort",
+      name: "Extra Comfort",
+      subtitle: "Newer cars, more legroom.",
+      price: 30.17,
+      eta: 5,
+      image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop",
+      category: "premium",
+    },
+    {
+      id: "zivo-black",
+      name: "ZIVO Black",
+      subtitle: "Premium leather sedans.",
+      price: 49.80,
+      eta: 8,
+      image: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=400&h=300&fit=crop",
+      category: "premium",
+    },
+  ],
+  elite: [
+    {
+      id: "zivo-lux",
+      name: "ZIVO Lux",
+      subtitle: "Ultimate luxury experience.",
+      price: 189.00,
+      eta: 20,
+      image: "https://images.unsplash.com/photo-1553440637-d22ed8a02575?w=400&h=300&fit=crop",
+      category: "elite",
+    },
+    {
+      id: "executive",
+      name: "Executive",
+      subtitle: "Professional chauffeur service.",
+      price: 150.00,
+      eta: 15,
+      image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=400&h=300&fit=crop",
+      category: "elite",
+    },
+  ],
+};
