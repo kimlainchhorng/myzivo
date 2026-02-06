@@ -5,11 +5,14 @@ import { RideOption } from "./RideCard";
 
 interface RideStickyCTAProps {
   selectedRide: RideOption | null;
+  pickup: string;
+  destination: string;
   onConfirm: () => void;
 }
 
-const RideStickyCTA = ({ selectedRide, onConfirm }: RideStickyCTAProps) => {
-  const isDisabled = !selectedRide;
+const RideStickyCTA = ({ selectedRide, pickup, destination, onConfirm }: RideStickyCTAProps) => {
+  const isDisabled = !selectedRide || !pickup.trim() || !destination.trim();
+  const needsDestination = selectedRide && (!pickup.trim() || !destination.trim());
 
   return (
     <motion.div
@@ -29,7 +32,9 @@ const RideStickyCTA = ({ selectedRide, onConfirm }: RideStickyCTAProps) => {
             : "text-white bg-primary border-primary hover:bg-primary/90"
         )}
       >
-        {selectedRide ? (
+        {needsDestination ? (
+          "ENTER DESTINATION"
+        ) : selectedRide ? (
           <>
             SELECT {selectedRide.name.toUpperCase()} (${selectedRide.price.toFixed(2)})
             <ArrowRight className="w-4 h-4" />

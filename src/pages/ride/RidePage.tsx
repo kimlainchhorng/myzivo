@@ -112,7 +112,12 @@ const RidePage = () => {
       </div>
 
       {/* Sticky CTA */}
-      <RideStickyCTA selectedRide={selectedRide} onConfirm={handleConfirm} />
+      <RideStickyCTA 
+        selectedRide={selectedRide} 
+        pickup={pickup}
+        destination={destination}
+        onConfirm={handleConfirm} 
+      />
 
       {/* Bottom Nav */}
       <RideBottomNav />
