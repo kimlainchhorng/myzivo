@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { MapPin } from "lucide-react";
 import RideAppBar from "@/components/ride/RideAppBar";
 import RideLocationCard from "@/components/ride/RideLocationCard";
 import RideSegmentTabs, { RideCategory } from "@/components/ride/RideSegmentTabs";
@@ -9,6 +10,7 @@ import RideStickyCTA from "@/components/ride/RideStickyCTA";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { RideOption } from "@/components/ride/RideCard";
 import { rideOptions } from "@/components/ride/rideData";
+import { calculateMockTrip, type TripDetails } from "@/lib/tripCalculator";
 
 const CITY_BG = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&h=1080&fit=crop";
 
@@ -18,6 +20,17 @@ const RidePage = () => {
   const [destination, setDestination] = useState("");
   const [activeTab, setActiveTab] = useState<RideCategory>("economy");
   const [selectedRide, setSelectedRide] = useState<RideOption | null>(null);
+  const [tripDetails, setTripDetails] = useState<TripDetails | null>(null);
+
+  // Calculate trip details when both locations are filled
+  useEffect(() => {
+    if (pickup.trim() && destination.trim()) {
+      const trip = calculateMockTrip(pickup, destination);
+      setTripDetails(trip);
+    } else {
+      setTripDetails(null);
+    }
+  }, [pickup, destination]);
 
   const handleConfirm = () => {
     if (selectedRide) {
@@ -107,7 +120,24 @@ const RidePage = () => {
             rides={rideOptions[activeTab]}
             selectedRideId={selectedRide?.id || null}
             onSelectRide={setSelectedRide}
+            tripDetails={tripDetails}
           />
+
+          {/* Trip Info Pill */}
+          {tripDetails && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-center mt-4"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/10">
+                <MapPin className="w-3 h-3 text-primary" />
+                <span className="text-xs font-semibold tracking-wide text-white/80">
+                  {tripDetails.distance} miles • {tripDetails.duration} min estimated
+                </span>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </div>
 
