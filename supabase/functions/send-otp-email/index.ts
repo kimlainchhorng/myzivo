@@ -86,7 +86,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email via Resend
     const emailResponse = await resend.emails.send({
-      from: "ZIVO <noreply@hizovo.com>",
+      from: "ZIVO <info@hizivo.com>",
       to: [email],
       subject: "Your ZIVO verification code",
       html: `
