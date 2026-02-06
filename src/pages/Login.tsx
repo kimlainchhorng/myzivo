@@ -132,7 +132,12 @@ const Login = () => {
 
       if (!allowlistResponse?.allowed) {
         setIsLoading(false);
-        toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
+        if (allowlistResponse?.existingUser) {
+          toast.info("An account with this email already exists. Please sign in instead.");
+          setIsLogin(true); // Switch to login mode
+        } else {
+          toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
+        }
         return;
       }
     } catch (err) {

@@ -28,6 +28,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Check if user already exists in auth.users
+    const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
+    
+    if (usersError) {
+      console.error("Error checking existing users:", usersError);
+      // Continue with allowlist check even if user check fails
+    } else {
+      const userExists = usersData?.users?.some(
+        (u) => u.email?.toLowerCase() === normalizedEmail
+      );
+
+      if (userExists) {
+        return new Response(
+          JSON.stringify({
+            allowed: false,
+            message: "An account with this email already exists. Please sign in instead.",
+            existingUser: true,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Check allowlist
     const { data, error } = await supabaseAdmin
       .from("signup_allowlist")
       .select("id, used_at")
