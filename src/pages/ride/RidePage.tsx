@@ -39,6 +39,7 @@ const RidePage = () => {
           ride: selectedRide,
           pickup,
           destination,
+          tripDetails,
         },
       });
     }
@@ -146,6 +147,7 @@ const RidePage = () => {
         selectedRide={selectedRide} 
         pickup={pickup}
         destination={destination}
+        tripDetails={tripDetails}
         onConfirm={handleConfirm} 
       />
 

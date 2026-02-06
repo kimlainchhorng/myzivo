@@ -2,17 +2,24 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "./RideCard";
+import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
 
 interface RideStickyCTAProps {
   selectedRide: RideOption | null;
   pickup: string;
   destination: string;
+  tripDetails: TripDetails | null;
   onConfirm: () => void;
 }
 
-const RideStickyCTA = ({ selectedRide, pickup, destination, onConfirm }: RideStickyCTAProps) => {
+const RideStickyCTA = ({ selectedRide, pickup, destination, tripDetails, onConfirm }: RideStickyCTAProps) => {
   const isDisabled = !selectedRide || !pickup.trim() || !destination.trim();
   const needsDestination = selectedRide && (!pickup.trim() || !destination.trim());
+
+  // Calculate dynamic price
+  const displayPrice = tripDetails && selectedRide
+    ? calculateRidePrice(selectedRide.id, tripDetails.distance, tripDetails.duration)
+    : selectedRide?.price || 0;
 
   return (
     <motion.div
@@ -36,7 +43,7 @@ const RideStickyCTA = ({ selectedRide, pickup, destination, onConfirm }: RideSti
           "ENTER DESTINATION"
         ) : selectedRide ? (
           <>
-            SELECT {selectedRide.name.toUpperCase()} (${selectedRide.price.toFixed(2)})
+            SELECT {selectedRide.name.toUpperCase()} (${displayPrice.toFixed(2)})
             <ArrowRight className="w-4 h-4" />
           </>
         ) : (
