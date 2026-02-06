@@ -106,9 +106,10 @@ const Setup = () => {
       queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
 
       toast.success("You're all set!");
-      
-      // Force reload to clear any cached states
-      window.location.href = "/";
+
+      // Route to home (no hard reload)
+      navigate("/", { replace: true });
+      return;
     } catch (error: any) {
       console.error("Setup error:", error);
       toast.error(error.message || "Failed to complete setup");

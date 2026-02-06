@@ -11166,7 +11166,7 @@ export type Database = {
           email?: string | null
           email_verified?: boolean | null
           full_name?: string | null
-          id: string
+          id?: string
           phone?: string | null
           setup_complete?: boolean | null
           status?: string | null
