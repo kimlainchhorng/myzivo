@@ -8866,6 +8866,68 @@ export type Database = {
         }
         Relationships: []
       }
+      order_offers: {
+        Row: {
+          created_at: string | null
+          distance_miles: number | null
+          driver_id: string | null
+          expires_at: string
+          id: string
+          order_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          expires_at: string
+          id?: string
+          order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          expires_at?: string
+          id?: string
+          order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       otp_codes: {
         Row: {
           attempts: number
@@ -19702,6 +19764,19 @@ export type Database = {
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
+      }
+      find_nearest_drivers: {
+        Args: {
+          p_lat: number
+          p_limit: number
+          p_lng: number
+          p_mode?: string
+          p_radius: number
+        }
+        Returns: {
+          distance_miles: number
+          driver_id: string
+        }[]
       }
       generate_referral_code: { Args: never; Returns: string }
       get_active_countries: {
