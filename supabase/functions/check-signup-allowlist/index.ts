@@ -31,11 +31,8 @@ Deno.serve(async (req) => {
     // Check if user already exists in auth.users
     const { data: usersData, error: usersError } = await supabaseAdmin.auth.admin.listUsers();
     
-    if (usersError) {
-      console.error("Error checking existing users:", usersError);
-      // Continue with allowlist check even if user check fails
-    } else {
-      const userExists = usersData?.users?.some(
+    if (!usersError && usersData?.users) {
+      const userExists = usersData.users.some(
         (u) => u.email?.toLowerCase() === normalizedEmail
       );
 
@@ -51,41 +48,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check allowlist
-    const { data, error } = await supabaseAdmin
-      .from("signup_allowlist")
-      .select("id, used_at")
-      .eq("email", normalizedEmail)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error checking allowlist:", error);
-      return new Response(
-        JSON.stringify({ allowed: false, message: "Error checking allowlist" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (!data) {
-      return new Response(
-        JSON.stringify({
-          allowed: false,
-          message: "This email is not authorized to sign up. Please request an invitation.",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    if (data.used_at) {
-      return new Response(
-        JSON.stringify({
-          allowed: false,
-          message: "This invitation has already been used. Please sign in instead.",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Open signup - allow all emails (no allowlist restriction)
     return new Response(
       JSON.stringify({ allowed: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
