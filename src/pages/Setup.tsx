@@ -78,40 +78,26 @@ const Setup = () => {
     setSubmitting(true);
 
     try {
-      // Check if profile exists first
-      const { data: existingProfile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      // Upsert profile in one call to avoid race conditions with the profile-creation trigger
+      // (select→insert can fail if the trigger creates the row between calls).
+      //
+      // Note: the generated Supabase types for this project incorrectly require `id` for upsert.
+      // We upsert by the UNIQUE `user_id` key, so we intentionally omit `id`.
+      const payload = {
+        user_id: user.id,
+        email: user.email,
+        full_name: fullName,
+        phone: phone || null,
+        setup_complete: true,
+        updated_at: new Date().toISOString(),
+      } as any;
 
-      let error;
-      if (existingProfile) {
-        // Update existing profile
-        const result = await supabase
-          .from("profiles")
-          .update({
-            full_name: fullName,
-            phone: phone || null,
-            setup_complete: true,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
-        error = result.error;
-      } else {
-        // Insert new profile
-        const result = await supabase
-          .from("profiles")
-          .insert({
-            id: crypto.randomUUID(),
-            user_id: user.id,
-            email: user.email,
-            full_name: fullName,
-            phone: phone || null,
-            setup_complete: true,
-          });
-        error = result.error;
-      }
+      const { error } = await supabase
+        .from("profiles")
+        .upsert([payload], {
+          // profiles.user_id is expected to be UNIQUE in this project
+          onConflict: "user_id",
+        });
 
       if (error) throw error;
 
