@@ -253,8 +253,8 @@ const AppHome = () => {
           />
         </div>
 
-        {/* Bottom Row: Hotels + Premium */}
-        <div className="grid grid-cols-5 gap-2">
+        {/* Bottom Row: Hotels + Cars + Premium */}
+        <div className="grid grid-cols-6 gap-2">
           <ServiceCard 
             title="Hotels" 
             subtitle="Luxury Stays" 
@@ -264,15 +264,24 @@ const AppHome = () => {
             className="col-span-2 h-20"
             imgPosition="center 60%"
           />
+          <ServiceCard 
+            title="Cars" 
+            subtitle="Rent & Drive" 
+            img="https://images.unsplash.com/photo-1502877338535-766e1452684a?w=400&h=300&fit=crop"
+            icon={Car}
+            onNavigate={() => navigate("/rent-car")}
+            className="col-span-2 h-20"
+            imgPosition="center 50%"
+          />
           <motion.button 
             onClick={() => navigate("/account")}
             whileTap={{ scale: 0.97 }}
-            className="col-span-3 bg-primary/90 rounded-2xl p-3 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
+            className="col-span-2 bg-primary/90 rounded-2xl p-3 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
           >
             <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -mr-6 -mt-6" />
             <div className="absolute bottom-0 left-0 w-12 h-12 bg-teal-400/20 rounded-full blur-xl -ml-3 -mb-3" />
             <Zap className="w-5 h-5 text-white mb-1" />
-            <div className="font-bold text-sm leading-tight text-white">ZIVO Premium</div>
+            <div className="font-bold text-sm leading-tight text-white">Premium</div>
             <div className="text-[9px] text-white/70 mt-0.5">Exclusive perks</div>
           </motion.button>
         </div>
