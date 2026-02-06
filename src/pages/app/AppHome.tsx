@@ -1,6 +1,6 @@
 /**
  * App Home Screen - Mobile Premium
-  * Premium Bento-grid design with screen navigation
+ * Premium Bento-grid design with screen navigation
  */
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +14,6 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 // Premium Image Assets
 const assets = {
-  hero: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=2000",
   flights: "https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&q=80&w=800",
   hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
   rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
@@ -22,7 +21,7 @@ const assets = {
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
 
-// Service Card Component
+// Service Card Component - Image Background Style
 interface ServiceCardProps {
   title: string;
   subtitle: string;
@@ -36,22 +35,54 @@ const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className =
   return (
     <motion.button
       onClick={onNavigate}
-      whileTap={{ scale: 0.95 }}
-      className={`relative rounded-3xl overflow-hidden group cursor-pointer border border-white/5 touch-manipulation ${className}`}
+      whileTap={{ scale: 0.97 }}
+      className={`relative rounded-2xl overflow-hidden group cursor-pointer border border-white/10 touch-manipulation ${className}`}
     >
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0">
-        <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-active:scale-110" alt={title} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" alt={title} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+      </div>
+
+      {/* Icon Badge */}
+      <div className="absolute top-3 left-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+        <Icon className="w-4 h-4 text-white" />
       </div>
 
       {/* Content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4">
-        <div className="w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mb-3 border border-white/10">
-          <Icon className="w-4 h-4 text-white" />
-        </div>
-        <h3 className="text-lg font-bold text-white leading-none mb-1">{title}</h3>
-        <p className="text-[10px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
+        <p className="text-[9px] text-zinc-300 font-medium uppercase tracking-wider">{subtitle}</p>
+      </div>
+    </motion.button>
+  );
+};
+
+// Dark Card Component - No Image Background
+interface DarkCardProps {
+  title: string;
+  subtitle: string;
+  icon: LucideIcon;
+  onNavigate: () => void;
+  className?: string;
+}
+
+const DarkCard = ({ title, subtitle, icon: Icon, onNavigate, className = "" }: DarkCardProps) => {
+  return (
+    <motion.button
+      onClick={onNavigate}
+      whileTap={{ scale: 0.97 }}
+      className={`relative rounded-2xl overflow-hidden cursor-pointer bg-zinc-900/80 border border-white/10 touch-manipulation p-4 flex flex-col justify-end ${className}`}
+    >
+      {/* Icon Badge */}
+      <div className="absolute top-3 left-3 w-8 h-8 bg-white/5 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10">
+        <Icon className="w-4 h-4 text-zinc-400" />
+      </div>
+
+      {/* Content */}
+      <div className="mt-auto">
+        <h3 className="text-base font-bold text-white leading-none mb-0.5">{title}</h3>
+        <p className="text-[9px] text-zinc-500 font-medium uppercase tracking-wider">{subtitle}</p>
       </div>
     </motion.button>
   );
@@ -170,66 +201,76 @@ const AppHome = () => {
       </div>
 
       {/* 4. BENTO GRID SERVICE NAV */}
-      <div className="px-6 pb-32 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-500">Services</h2>
+      <div className="px-6 pb-32 space-y-3">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Services</h2>
           <button 
             onClick={() => navigate("/search")}
-            className="text-xs text-primary font-bold touch-manipulation flex items-center gap-0.5"
+            className="text-xs text-primary font-semibold touch-manipulation flex items-center gap-0.5"
           >
-            View All <ChevronRight className="w-3 h-3" />
+            View All <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Grid Layout */}
-        <div className="grid grid-cols-2 gap-4 h-64">
-          {/* Card 1: Flights (Large Vertical) */}
-          <ServiceCard 
+        {/* Main Bento Grid - 2 columns */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Row 1: Flights Dark + Rides Image */}
+          <DarkCard 
             title="Flights" 
             subtitle="Global Travel" 
-            img={assets.flights} 
             icon={Plane} 
             onNavigate={() => handleNavigate("FLIGHTS")}
-            className="row-span-2"
+            className="h-32"
           />
-
-          {/* Card 2: Rides */}
           <ServiceCard 
             title="Rides" 
             subtitle="Premium Mobility" 
             img={assets.rides} 
             icon={Car}
             onNavigate={() => handleNavigate("RIDES")}
+            className="h-32"
           />
 
-          {/* Card 3: Eats */}
+          {/* Row 2: Flights Image + Eats Image */}
+          <ServiceCard 
+            title="Flights" 
+            subtitle="Global Travel" 
+            img={assets.flights} 
+            icon={Plane}
+            onNavigate={() => handleNavigate("FLIGHTS")}
+            className="h-32"
+          />
           <ServiceCard 
             title="Eats" 
             subtitle="Gourmet Delivery" 
             img={assets.food} 
             icon={Utensils}
             onNavigate={() => handleNavigate("EATS")}
+            className="h-32"
           />
         </div>
 
-        {/* Bottom Row */}
-        <div className="grid grid-cols-3 gap-4 h-32 mt-4">
+        {/* Bottom Row: Hotels + Premium */}
+        <div className="grid grid-cols-5 gap-3">
           <ServiceCard 
             title="Hotels" 
             subtitle="Luxury Stays" 
             img={assets.hotels} 
             icon={BedDouble}
             onNavigate={() => handleNavigate("HOTELS")}
+            className="col-span-2 h-28"
           />
-          <button 
+          <motion.button 
             onClick={() => navigate("/account")}
-            className="col-span-2 bg-gradient-to-br from-primary to-teal-600 rounded-3xl p-5 relative overflow-hidden flex flex-col justify-center touch-manipulation active:scale-[0.98] transition-transform text-left"
+            whileTap={{ scale: 0.97 }}
+            className="col-span-3 bg-primary/90 rounded-2xl p-4 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10" />
-            <Zap className="w-8 h-8 text-white mb-2" />
-            <div className="font-bold text-lg leading-tight text-white">ZIVO<br/>Premium</div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-teal-400/20 rounded-full blur-xl -ml-4 -mb-4" />
+            <Zap className="w-6 h-6 text-white mb-2" />
+            <div className="font-bold text-base leading-tight text-white">ZIVO<br/>Premium</div>
             <div className="text-[10px] text-white/70 mt-1">Upgrade for exclusive perks</div>
-          </button>
+          </motion.button>
         </div>
       </div>
 
