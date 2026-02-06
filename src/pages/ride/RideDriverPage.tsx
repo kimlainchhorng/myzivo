@@ -206,6 +206,14 @@ const RideDriverPage = () => {
                 <span className="font-bold text-primary">${state.ride.price.toFixed(2)}</span>
               </div>
             </div>
+
+            {/* Start Trip Button */}
+            <Button
+              onClick={() => navigate("/ride/trip", { state })}
+              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 mt-4"
+            >
+              START TRIP
+            </Button>
           </CardContent>
         </Card>
       </motion.div>

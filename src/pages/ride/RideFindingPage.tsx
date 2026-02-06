@@ -122,6 +122,17 @@ const RideFindingPage = () => {
             ${state.ride.price.toFixed(2)}
           </p>
         </motion.div>
+
+        {/* Cancel Button */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          onClick={() => navigate("/ride")}
+          className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors"
+        >
+          Cancel
+        </motion.button>
       </motion.div>
     </div>
   );
