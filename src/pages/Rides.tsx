@@ -460,18 +460,22 @@ export default function Rides() {
                            initial={{ opacity: 0, y: -10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="absolute left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl"
+                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
+                           style={{ zIndex: 9999, backgroundColor: '#18181b' }}
                          >
-                           {pickupSuggestions.map((suggestion, index) => (
-                             <button
-                               key={index}
-                               onClick={() => handlePickupSuggestionClick(suggestion)}
-                               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
-                             >
-                               <MapPin className="w-4 h-4 text-primary shrink-0" />
-                               <span className="text-sm text-white/90 truncate">{suggestion}</span>
-                             </button>
-                           ))}
+                           <div className="border border-white/10 rounded-xl overflow-hidden">
+                             {pickupSuggestions.map((suggestion, index) => (
+                               <button
+                                 key={index}
+                                 onClick={() => handlePickupSuggestionClick(suggestion)}
+                                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                                 style={{ backgroundColor: '#18181b' }}
+                               >
+                                 <MapPin className="w-4 h-4 text-primary shrink-0" />
+                                 <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                               </button>
+                             ))}
+                           </div>
                          </motion.div>
                        )}
                      </AnimatePresence>
@@ -516,18 +520,22 @@ export default function Rides() {
                            initial={{ opacity: 0, y: -10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="absolute left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl"
+                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
+                           style={{ zIndex: 9999, backgroundColor: '#18181b' }}
                          >
-                           {dropoffSuggestions.map((suggestion, index) => (
-                             <button
-                               key={index}
-                               onClick={() => handleDropoffSuggestionClick(suggestion)}
-                               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
-                             >
-                               <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                               <span className="text-sm text-white/90 truncate">{suggestion}</span>
-                             </button>
-                           ))}
+                           <div className="border border-white/10 rounded-xl overflow-hidden">
+                             {dropoffSuggestions.map((suggestion, index) => (
+                               <button
+                                 key={index}
+                                 onClick={() => handleDropoffSuggestionClick(suggestion)}
+                                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                                 style={{ backgroundColor: '#18181b' }}
+                               >
+                                 <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                                 <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                               </button>
+                             ))}
+                           </div>
                          </motion.div>
                        )}
                      </AnimatePresence>
