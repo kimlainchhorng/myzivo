@@ -9,6 +9,7 @@ export type SetupStatus = {
     full_name: string | null;
     phone: string | null;
     setup_complete: boolean;
+    email_verified: boolean | null;
   } | null;
 };
 
@@ -24,7 +25,7 @@ export const useSetupStatus = () => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, phone, setup_complete")
+        .select("id, full_name, phone, setup_complete, email_verified")
         .eq("user_id", user.id)
         .maybeSingle();
 

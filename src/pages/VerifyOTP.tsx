@@ -16,15 +16,25 @@ const VerifyOTP = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Get email from navigation state
-  const email = (location.state as { email?: string })?.email;
-  const userId = (location.state as { userId?: string })?.userId;
+  // Get email from navigation state (preferred), otherwise fall back to current auth user
+  const navEmail = (location.state as { email?: string })?.email;
+  const navUserId = (location.state as { userId?: string })?.userId;
 
-  // Redirect if no email
+  const [email, setEmail] = useState<string | undefined>(navEmail);
+  const userId = navUserId;
+
   useEffect(() => {
-    if (!email) {
-      navigate("/login?mode=signup", { replace: true });
-    }
+    const hydrateEmail = async () => {
+      if (email) return;
+      const { data } = await supabase.auth.getUser();
+      if (data.user?.email) {
+        setEmail(data.user.email);
+      } else {
+        navigate("/login?mode=signup", { replace: true });
+      }
+    };
+
+    void hydrateEmail();
   }, [email, navigate]);
 
   // Resend cooldown timer
