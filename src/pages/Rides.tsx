@@ -469,10 +469,10 @@ import { motion, AnimatePresence } from "framer-motion";
                   </div>
                 </div>
                 
-                {/* Vehicle Grid */}
+                {/* Vehicle Grid - Premium 2x2 Layout */}
                 <motion.div 
                   layout
-                 className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
+                  className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 lg:grid-cols-4"
                 >
                   <AnimatePresence mode="popLayout">
                     {rideCategories[activeTab].map((ride) => (
@@ -483,41 +483,41 @@ import { motion, AnimatePresence } from "framer-motion";
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9 }}
                         onClick={() => setSelectedOption(ride)}
-                       className={`relative overflow-hidden rounded-xl md:rounded-[2rem] border cursor-pointer group transition-all duration-300 touch-manipulation active:scale-[0.98] ${
+                        className={`relative overflow-hidden rounded-2xl md:rounded-3xl border cursor-pointer group transition-all duration-300 touch-manipulation active:scale-[0.98] ${
                           selectedOption?.id === ride.id 
-                            ? "bg-primary/20 border-primary shadow-[0_0_40px_hsl(var(--primary)/0.2)]" 
-                            : "bg-background/60 border-border/20 hover:border-border/50 hover:bg-background/80"
+                            ? "bg-white/10 border-primary shadow-[0_0_40px_hsl(var(--primary)/0.25)] ring-2 ring-primary/50" 
+                            : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
                         }`}
                       >
-                        {/* Vehicle Image */}
-                       <div className="h-20 sm:h-24 md:h-32 overflow-hidden relative">
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10" />
+                        {/* Vehicle Image - Larger on mobile */}
+                        <div className="h-28 sm:h-32 md:h-36 overflow-hidden relative">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
                           <img 
                             src={ride.image} 
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                             alt={ride.name} 
                           />
                           
-                          {/* Price Badge */}
-                         <div className="absolute top-2 right-2 md:top-4 md:right-4 z-20 bg-black/50 backdrop-blur-md px-2 py-0.5 md:px-3 md:py-1 rounded-md md:rounded-lg border border-white/10 text-xs md:text-sm font-bold">
+                          {/* Price Badge - Top Right */}
+                          <div className="absolute top-2.5 right-2.5 md:top-3 md:right-3 z-20 bg-black/70 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg border border-white/20 font-bold text-sm md:text-base text-white">
                             {getFareFixed(ride)}
                           </div>
                         </div>
 
-                        {/* Details */}
-                       <div className="p-3 md:p-5 relative z-20">
-                         <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
-                           <ride.icon className={`w-3 h-3 md:w-4 md:h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-muted-foreground"}`} />
-                           <h3 className="text-sm md:text-lg font-black italic truncate">{ride.name}</h3>
+                        {/* Details - Clean Layout */}
+                        <div className="p-3.5 md:p-4 relative z-20 bg-gradient-to-b from-zinc-900/50 to-zinc-900/90">
+                          <div className="flex items-center gap-2 mb-1">
+                            <ride.icon className={`w-4 h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-amber-400"}`} />
+                            <h3 className="text-sm md:text-base font-bold text-white truncate">{ride.name}</h3>
                           </div>
-                         <p className="text-[10px] md:text-xs text-muted-foreground h-6 md:h-8 leading-relaxed mb-2 md:mb-4 line-clamp-2">{ride.desc}</p>
+                          <p className="text-[11px] md:text-xs text-zinc-400 line-clamp-1 mb-3">{ride.desc}</p>
                           
-                         <div className="flex items-center justify-between border-t border-border/20 pt-2 md:pt-4">
-                           <span className="text-[9px] md:text-xs font-bold uppercase tracking-wider md:tracking-widest text-emerald-400 flex items-center gap-0.5 md:gap-1">
-                             <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {ride.time}
+                          <div className="flex items-center justify-between border-t border-white/10 pt-2.5">
+                            <span className="text-xs font-bold text-primary flex items-center gap-1">
+                              <Zap className="w-3 h-3" /> {ride.time}
                             </span>
                             {selectedOption?.id === ride.id && (
-                             <div className="w-3 h-3 md:w-4 md:h-4 bg-primary rounded-full animate-ping" />
+                              <div className="w-2.5 h-2.5 bg-primary rounded-full animate-pulse" />
                             )}
                           </div>
                         </div>
