@@ -72,15 +72,30 @@ const AuthCallback = () => {
       console.error("OAuth provider returned error:", { errorParam, errorDescription });
       
       // Parse user-friendly message based on error type
+      const raw = (errorDescription || "").toLowerCase();
       let friendlyMessage = "Authentication failed. Please try again.";
-      if (errorDescription?.toLowerCase().includes("not on allowlist") || 
-          errorDescription?.toLowerCase().includes("saving new user") ||
-          errorDescription?.toLowerCase().includes("database error")) {
+
+      // Our DB trigger messages (public.handle_new_user)
+      if (raw.includes("email not authorized for signup")) {
         friendlyMessage = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
+      } else if (raw.includes("invitation already used")) {
+        friendlyMessage = "This invitation has already been used. Please sign in instead.";
+      }
+      // Supabase/Auth generic allowlist-ish failures
+      else if (
+        raw.includes("not on allowlist") ||
+        raw.includes("saving new user") ||
+        raw.includes("database error")
+      ) {
+        friendlyMessage = "This email is not authorized to sign up. Please request an invitation to join ZIVO.";
+      }
+      // Existing-account / provider mismatch cases
+      else if (raw.includes("already registered") || raw.includes("already exists")) {
+        friendlyMessage = "An account with this email already exists. Please sign in instead.";
       } else if (errorDescription) {
         friendlyMessage = decodeURIComponent(errorDescription.replace(/\+/g, " "));
       }
-      
+
       setErrorMessage(friendlyMessage);
       setStatus("error");
       return;
@@ -110,10 +125,15 @@ const AuthCallback = () => {
         if (exchangeError) {
           console.error("OAuth code exchange error:", exchangeError);
           
-          // Check if this is an allowlist rejection
-          if (exchangeError.message?.toLowerCase().includes("not on allowlist") ||
-              exchangeError.message?.toLowerCase().includes("database error")) {
+          const msg = (exchangeError.message || "").toLowerCase();
+
+          // Check if this is an allowlist / invite rejection
+          if (msg.includes("email not authorized for signup") || msg.includes("not on allowlist") || msg.includes("database error")) {
             setErrorMessage("This email is not authorized to sign up. Please request an invitation to join ZIVO.");
+          } else if (msg.includes("invitation already used")) {
+            setErrorMessage("This invitation has already been used. Please sign in instead.");
+          } else if (msg.includes("already registered") || msg.includes("already exists")) {
+            setErrorMessage("An account with this email already exists. Please sign in instead.");
           }
           
           setStatus("error");
