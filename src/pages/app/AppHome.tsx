@@ -137,9 +137,9 @@ const AppHome = () => {
     <div className="relative min-h-screen bg-zinc-950 font-sans text-white overflow-x-hidden selection:bg-primary/30">
       
       {/* 1. TOP BAR: Profile & Notifications */}
-      <div className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
+      <div className="fixed top-0 left-0 right-0 z-50 p-4 flex justify-between items-center bg-gradient-to-b from-zinc-950/80 to-transparent safe-area-top">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-white/20 p-0.5">
+          <div className="w-9 h-9 rounded-full border-2 border-white/20 p-0.5">
             <img src={assets.avatar} className="w-full h-full rounded-full object-cover" alt="Profile" />
           </div>
           <div>
@@ -149,7 +149,7 @@ const AppHome = () => {
         </div>
         <button 
           onClick={() => navigate("/alerts")}
-          className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 active:bg-white/20 transition-colors relative touch-manipulation"
+          className="w-9 h-9 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/10 active:bg-white/20 transition-colors relative touch-manipulation"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-black" />
@@ -161,23 +161,23 @@ const AppHome = () => {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="fixed top-24 left-6 right-6 z-40 safe-area-top"
+        className="fixed top-16 left-4 right-4 z-40 safe-area-top"
       >
         <button 
           onClick={() => handleNavigate("RIDES")}
-          className="w-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-2xl touch-manipulation active:scale-[0.98] transition-transform"
+          className="w-full bg-zinc-900/90 backdrop-blur-xl border border-white/10 p-2.5 rounded-2xl flex items-center justify-between shadow-2xl touch-manipulation active:scale-[0.98] transition-transform"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Car className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
+              <Car className="w-4 h-4 text-white" />
             </div>
             <div className="text-left">
               <div className="text-xs font-bold text-white">Book a Ride</div>
               <div className="text-[10px] text-zinc-400">Premium vehicles available</div>
             </div>
           </div>
-          <div className="pr-2">
-            <div className="w-12 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/20">
+          <div className="pr-1">
+            <div className="w-10 h-5 bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/20">
               <span className="text-[10px] font-bold text-emerald-400">GO</span>
             </div>
           </div>
@@ -185,11 +185,11 @@ const AppHome = () => {
       </motion.div>
 
       {/* 3. HERO SEARCH SECTION */}
-      <div className="pt-48 px-6 pb-8">
-        <h1 className="text-4xl font-thin tracking-tight mb-1">
+      <div className="pt-36 px-4 pb-4">
+        <h1 className="text-2xl font-thin tracking-tight mb-0.5">
           Explore the <span className="font-black italic">World</span>
         </h1>
-        <p className="text-zinc-400 mb-8 text-sm">One app for every journey.</p>
+        <p className="text-zinc-400 mb-4 text-sm">One app for every journey.</p>
 
         {/* Glass Search Bar */}
         <button 
@@ -197,31 +197,21 @@ const AppHome = () => {
           className="relative group w-full touch-manipulation"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-teal-400 rounded-2xl blur opacity-20 group-active:opacity-40 transition-opacity" />
-          <div className="relative bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] transition-transform">
-            <Search className="w-5 h-5 text-zinc-400" />
-            <span className="text-zinc-500 font-medium text-left flex-1">Where to? (e.g. Tokyo, Sushi, Home)</span>
-            <div className="h-6 w-[1px] bg-white/10 mx-1" />
-            <div className="p-2 bg-white/10 rounded-lg">
-              <MapPin className="w-4 h-4 text-white" />
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/10 rounded-2xl p-3 flex items-center gap-2.5 active:scale-[0.99] transition-transform">
+            <Search className="w-4 h-4 text-zinc-400" />
+            <span className="text-zinc-500 font-medium text-left flex-1 text-sm">Where to?</span>
+            <div className="h-5 w-[1px] bg-white/10" />
+            <div className="p-1.5 bg-white/10 rounded-lg">
+              <MapPin className="w-3.5 h-3.5 text-white" />
             </div>
           </div>
         </button>
       </div>
 
       {/* 4. BENTO GRID SERVICE NAV */}
-      <div className="px-6 pb-32 space-y-3">
-        <div className="flex items-center justify-between mb-1">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-zinc-500">Services</h2>
-          <button 
-            onClick={() => navigate("/search")}
-            className="text-xs text-primary font-semibold touch-manipulation flex items-center gap-0.5"
-          >
-            View All <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
+      <div className="px-4 pb-24 space-y-2">
         {/* Main Bento Grid - 2 columns */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2">
           {/* Row 1: Flights Image + Rides Image */}
           <ServiceCard 
             title="Flights" 
@@ -229,7 +219,7 @@ const AppHome = () => {
             img={assets.flights}
             icon={Plane} 
             onNavigate={() => handleNavigate("FLIGHTS")}
-            className="h-32"
+            className="h-24"
             imgPosition="center 60%"
           />
           <ServiceCard 
@@ -238,7 +228,7 @@ const AppHome = () => {
             img={assets.rides} 
             icon={Car}
             onNavigate={() => handleNavigate("RIDES")}
-            className="h-32"
+            className="h-24"
             imgPosition="center 40%"
           />
 
@@ -249,7 +239,7 @@ const AppHome = () => {
             img={assets.food} 
             icon={Utensils}
             onNavigate={() => handleNavigate("EATS")}
-            className="h-32"
+            className="h-24"
             imgPosition="center 50%"
           />
           <ServiceCard 
@@ -258,32 +248,32 @@ const AppHome = () => {
             img={assets.move} 
             icon={Package}
             onNavigate={() => handleNavigate("MOVE")}
-            className="h-32"
+            className="h-24"
             imgPosition="center 40%"
           />
         </div>
 
         {/* Bottom Row: Hotels + Premium */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-5 gap-2">
           <ServiceCard 
             title="Hotels" 
             subtitle="Luxury Stays" 
             img={assets.hotels} 
             icon={BedDouble}
             onNavigate={() => handleNavigate("HOTELS")}
-            className="col-span-2 h-28"
+            className="col-span-2 h-20"
             imgPosition="center 60%"
           />
           <motion.button 
             onClick={() => navigate("/account")}
             whileTap={{ scale: 0.97 }}
-            className="col-span-3 bg-primary/90 rounded-2xl p-4 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
+            className="col-span-3 bg-primary/90 rounded-2xl p-3 relative overflow-hidden flex flex-col justify-center touch-manipulation text-left border border-primary/20"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-8 -mt-8" />
-            <div className="absolute bottom-0 left-0 w-16 h-16 bg-teal-400/20 rounded-full blur-xl -ml-4 -mb-4" />
-            <Zap className="w-6 h-6 text-white mb-2" />
-            <div className="font-bold text-base leading-tight text-white">ZIVO<br/>Premium</div>
-            <div className="text-[10px] text-white/70 mt-1">Upgrade for exclusive perks</div>
+            <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-2xl -mr-6 -mt-6" />
+            <div className="absolute bottom-0 left-0 w-12 h-12 bg-teal-400/20 rounded-full blur-xl -ml-3 -mb-3" />
+            <Zap className="w-5 h-5 text-white mb-1" />
+            <div className="font-bold text-sm leading-tight text-white">ZIVO Premium</div>
+            <div className="text-[9px] text-white/70 mt-0.5">Exclusive perks</div>
           </motion.button>
         </div>
       </div>
