@@ -31,9 +31,10 @@ interface ServiceCardProps {
   icon: LucideIcon;
   onNavigate: () => void;
   className?: string;
+  imgPosition?: string;
 }
 
-const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className = "" }: ServiceCardProps) => {
+const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className = "", imgPosition = "center" }: ServiceCardProps) => {
   return (
     <motion.button
       onClick={onNavigate}
@@ -42,7 +43,12 @@ const ServiceCard = ({ title, subtitle, img, icon: Icon, onNavigate, className =
     >
       {/* Background Image with Gradient Overlay */}
       <div className="absolute inset-0">
-        <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" alt={title} />
+        <img 
+          src={img} 
+          className="w-full h-full object-cover transition-transform duration-500 group-active:scale-105" 
+          alt={title}
+          style={{ objectPosition: imgPosition }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
       </div>
 
@@ -224,6 +230,7 @@ const AppHome = () => {
             icon={Plane} 
             onNavigate={() => handleNavigate("FLIGHTS")}
             className="h-32"
+            imgPosition="center 60%"
           />
           <ServiceCard 
             title="Rides" 
