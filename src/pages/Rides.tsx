@@ -183,33 +183,72 @@ import { motion, AnimatePresence } from "framer-motion";
    ]
  };
  
- const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
-   const baseFare = 3.50;
-   const perMile = 1.75;
-   const perMinute = 0.35;
-   const bookingFee = 2.50;
-   const minimumFare = 7.00;
-   const fare = (baseFare + (distanceMiles * perMile) + (durationMinutes * perMinute)) * multiplier + bookingFee;
-   return Math.max(fare, minimumFare);
- };
- 
- export default function Rides() {
-   const navigate = useNavigate();
-   const [searchParams] = useSearchParams();
-   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
-  const isMobile = useIsMobile();
-   const [step, setStep] = useState<RideStep>("request");
-   const [pickup, setPickup] = useState("");
-   const [dropoff, setDropoff] = useState("");
-   const [selectedOption, setSelectedOption] = useState<RideOption | null>(null);
-   const [contactInfo, setContactInfo] = useState({ name: "", phone: "", email: "", notes: "" });
-   const [isSubmitting, setIsSubmitting] = useState(false);
-   const [requestId, setRequestId] = useState<string | null>(null);
-   const [activeTab, setActiveTab] = useState<CategoryKey>("Premium");
- 
-   const [estimatedDistance] = useState(5.2);
-   const [estimatedDuration] = useState(15);
-  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+// Louisiana mock address suggestions
+const mockAddressSuggestions = [
+  "109 Hickory Street, Denham Springs, LA",
+  "875 Florida Blvd, Baton Rouge, LA",
+  "6401 Bluebonnet Blvd, Baton Rouge, LA",
+  "660 Arlington Creek Centre, Baton Rouge, LA",
+  "1 Airport Rd, Baton Rouge, LA",
+  "3900 N I-10 Service Rd, Metairie, LA",
+  "10000 Perkins Rowe, Baton Rouge, LA",
+  "2142 O'Neal Lane, Baton Rouge, LA",
+  "7707 Bluebonnet Blvd, Baton Rouge, LA",
+  "3535 S Sherwood Forest Blvd, Baton Rouge, LA",
+];
+
+const calculateFare = (distanceMiles: number, durationMinutes: number, multiplier: number) => {
+  const baseFare = 3.50;
+  const perMile = 1.75;
+  const perMinute = 0.35;
+  const bookingFee = 2.50;
+  const minimumFare = 7.00;
+  const fare = (baseFare + (distanceMiles * perMile) + (durationMinutes * perMinute)) * multiplier + bookingFee;
+  return Math.max(fare, minimumFare);
+};
+
+export default function Rides() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
+ const isMobile = useIsMobile();
+  const [step, setStep] = useState<RideStep>("request");
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [selectedOption, setSelectedOption] = useState<RideOption | null>(null);
+  const [contactInfo, setContactInfo] = useState({ name: "", phone: "", email: "", notes: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<CategoryKey>("Premium");
+
+  const [estimatedDistance] = useState(5.2);
+  const [estimatedDuration] = useState(15);
+ const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+
+  // Address autocomplete state
+  const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
+  const [showDropoffSuggestions, setShowDropoffSuggestions] = useState(false);
+
+  // Filter suggestions based on input
+  const getFilteredSuggestions = (input: string) => {
+    if (!input.trim()) return mockAddressSuggestions.slice(0, 6);
+    return mockAddressSuggestions
+      .filter(addr => addr.toLowerCase().includes(input.toLowerCase()))
+      .slice(0, 6);
+  };
+
+  const pickupSuggestions = getFilteredSuggestions(pickup);
+  const dropoffSuggestions = getFilteredSuggestions(dropoff);
+
+  const handlePickupSuggestionClick = (suggestion: string) => {
+    setPickup(suggestion);
+    setShowPickupSuggestions(false);
+  };
+
+  const handleDropoffSuggestionClick = (suggestion: string) => {
+    setDropoff(suggestion);
+    setShowDropoffSuggestions(false);
+  };
  
    // Auto-detect location on mount
    useEffect(() => {
@@ -383,55 +422,115 @@ import { motion, AnimatePresence } from "framer-motion";
                   <div className="absolute left-[0.85rem] md:left-[1.15rem] top-8 bottom-8 w-0.5 bg-gradient-to-b from-primary to-emerald-500 opacity-50" />
                    
                    {/* Pickup Input */}
-                  <div className="rides-input-glass flex items-center gap-2 md:gap-4 mb-2 md:mb-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl">
-                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <Navigation className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                   <div className="relative">
+                     <div className="rides-input-glass flex items-center gap-2 md:gap-4 mb-2 md:mb-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl">
+                       <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                         <Navigation className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Pickup Location</div>
+                         <input 
+                           value={pickup}
+                           onChange={(e) => {
+                             setPickup(e.target.value);
+                             setShowPickupSuggestions(true);
+                           }}
+                           onFocus={() => setShowPickupSuggestions(true)}
+                           onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
+                           placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Enter pickup address..."}
+                           className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
+                           style={{ fontSize: '16px' }}
+                         />
+                       </div>
+                       <button
+                         type="button"
+                         onClick={handleUseCurrentLocation}
+                         disabled={isGettingLocation || isAutoDetecting}
+                         className="p-2 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
+                         title="Use current location"
+                       >
+                         <LocateFixed className={`w-4 h-4 md:w-5 md:h-5 text-primary ${isGettingLocation || isAutoDetecting ? "animate-pulse" : ""}`} />
+                       </button>
                      </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Pickup Location</div>
-                       <input 
-                         value={pickup}
-                         onChange={(e) => setPickup(e.target.value)}
-                         placeholder={isAutoDetecting || isGettingLocation ? "Detecting location..." : "Enter pickup address..."}
-                        className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
-                        style={{ fontSize: '16px' }}
-                       />
-                     </div>
-                     <button
-                       type="button"
-                       onClick={handleUseCurrentLocation}
-                       disabled={isGettingLocation || isAutoDetecting}
-                      className="p-2 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
-                       title="Use current location"
-                     >
-                      <LocateFixed className={`w-4 h-4 md:w-5 md:h-5 text-primary ${isGettingLocation || isAutoDetecting ? "animate-pulse" : ""}`} />
-                     </button>
+                     
+                     {/* Pickup Suggestions Dropdown */}
+                     <AnimatePresence>
+                       {showPickupSuggestions && pickupSuggestions.length > 0 && (
+                         <motion.div
+                           initial={{ opacity: 0, y: -10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           exit={{ opacity: 0, y: -10 }}
+                           className="absolute left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl"
+                         >
+                           {pickupSuggestions.map((suggestion, index) => (
+                             <button
+                               key={index}
+                               onClick={() => handlePickupSuggestionClick(suggestion)}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                             >
+                               <MapPin className="w-4 h-4 text-primary shrink-0" />
+                               <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                             </button>
+                           ))}
+                         </motion.div>
+                       )}
+                     </AnimatePresence>
                    </div>
 
                    {/* Dropoff Input */}
-                  <div className="rides-input-glass flex items-center gap-2 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl">
-                    <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                      <MapPin className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                   <div className="relative">
+                     <div className="rides-input-glass flex items-center gap-2 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl">
+                       <div className="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                         <MapPin className="w-3.5 h-3.5 md:w-5 md:h-5" />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Destination</div>
+                         <input 
+                           value={dropoff}
+                           onChange={(e) => {
+                             setDropoff(e.target.value);
+                             setShowDropoffSuggestions(true);
+                           }}
+                           onFocus={() => setShowDropoffSuggestions(true)}
+                           onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
+                           placeholder="Enter destination..."
+                           className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
+                           style={{ fontSize: '16px' }}
+                         />
+                       </div>
+                       <button
+                         type="button"
+                         onClick={handleUseCurrentLocationForDropoff}
+                         disabled={isGettingLocation}
+                         className="p-2 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
+                         title="Use current location"
+                       >
+                         <LocateFixed className={`w-4 h-4 md:w-5 md:h-5 text-emerald-400 ${isGettingLocation ? "animate-pulse" : ""}`} />
+                       </button>
                      </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="text-[9px] md:text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Destination</div>
-                       <input 
-                         value={dropoff}
-                         onChange={(e) => setDropoff(e.target.value)}
-                         placeholder="Enter destination..."
-                        className="w-full bg-transparent text-white font-medium outline-none placeholder-zinc-600 truncate text-xs md:text-base" 
-                        style={{ fontSize: '16px' }}
-                       />
-                     </div>
-                     <button
-                       type="button"
-                       onClick={handleUseCurrentLocationForDropoff}
-                       disabled={isGettingLocation}
-                      className="p-2 md:p-2 rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50 shrink-0 touch-manipulation active:scale-95"
-                       title="Use current location"
-                     >
-                      <LocateFixed className={`w-4 h-4 md:w-5 md:h-5 text-emerald-400 ${isGettingLocation ? "animate-pulse" : ""}`} />
-                     </button>
+                     
+                     {/* Dropoff Suggestions Dropdown */}
+                     <AnimatePresence>
+                       {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
+                         <motion.div
+                           initial={{ opacity: 0, y: -10 }}
+                           animate={{ opacity: 1, y: 0 }}
+                           exit={{ opacity: 0, y: -10 }}
+                           className="absolute left-0 right-0 mt-1 bg-zinc-900 border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl"
+                         >
+                           {dropoffSuggestions.map((suggestion, index) => (
+                             <button
+                               key={index}
+                               onClick={() => handleDropoffSuggestionClick(suggestion)}
+                               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
+                             >
+                               <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                               <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                             </button>
+                           ))}
+                         </motion.div>
+                       )}
+                     </AnimatePresence>
                    </div>
                  </div>
                </motion.div>
