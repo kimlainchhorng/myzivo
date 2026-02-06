@@ -12,11 +12,24 @@ interface LocationState {
   paymentMethod: string;
 }
 
+// Status messages with timing thresholds (based on progress %)
+const statusMessages = [
+  { threshold: 0, text: "Contacting nearby drivers...", subtext: "Searching in your area" },
+  { threshold: 35, text: "Driver responding...", subtext: "Found a match nearby" },
+  { threshold: 80, text: "Driver confirmed!", subtext: "Preparing your ride" },
+];
+
 const RideFindingPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
   const [progress, setProgress] = useState(0);
+
+  // Get current status message based on progress
+  const currentStatus = statusMessages.reduce((acc, msg) => {
+    if (progress >= msg.threshold) return msg;
+    return acc;
+  }, statusMessages[0]);
 
   // Handle missing state
   useEffect(() => {
@@ -93,13 +106,21 @@ const RideFindingPage = () => {
           </motion.div>
         </motion.div>
 
-        {/* Heading */}
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Finding your driver...
-        </h2>
-        <p className="text-white/60 text-sm mb-8">
-          Connecting with nearby drivers
-        </p>
+        {/* Heading with animated status */}
+        <motion.div
+          key={currentStatus.text}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+        >
+          <h2 className="text-2xl font-bold text-white mb-2">
+            {currentStatus.text}
+          </h2>
+          <p className="text-white/60 text-sm mb-8">
+            {currentStatus.subtext}
+          </p>
+        </motion.div>
 
         {/* Progress Bar */}
         <div className="space-y-3">

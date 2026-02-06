@@ -38,7 +38,7 @@ const RideDriverPage = () => {
     }
   }, [state, navigate]);
 
-  // Mock countdown timer
+  // Mock countdown timer - updates every 12 seconds for demo
   useEffect(() => {
     if (etaMinutes <= 0) return;
 
@@ -51,7 +51,7 @@ const RideDriverPage = () => {
         }
         return prev - 1;
       });
-    }, 60000); // Update every minute
+    }, 12000); // Update every 12 seconds for demo
 
     return () => clearInterval(timer);
   }, []);
@@ -162,12 +162,20 @@ const RideDriverPage = () => {
             </div>
 
             {/* ETA Display */}
-            <div className="flex items-center justify-center gap-3 py-4 bg-primary/10 rounded-xl border border-primary/20">
-              <Clock className="w-5 h-5 text-primary" />
-              <span className="text-lg font-bold text-white">
+            <motion.div
+              animate={etaMinutes === 0 ? { scale: [1, 1.02, 1] } : {}}
+              transition={{ duration: 0.5, repeat: etaMinutes === 0 ? Infinity : 0, repeatDelay: 1 }}
+              className={`flex items-center justify-center gap-3 py-4 rounded-xl border ${
+                etaMinutes === 0
+                  ? "bg-green-500/20 border-green-500/40"
+                  : "bg-primary/10 border-primary/20"
+              }`}
+            >
+              <Clock className={`w-5 h-5 ${etaMinutes === 0 ? "text-green-400" : "text-primary"}`} />
+              <span className={`text-lg font-bold ${etaMinutes === 0 ? "text-green-400" : "text-white"}`}>
                 {etaMinutes > 0 ? `Arriving in ${etaMinutes} min` : "Driver has arrived!"}
               </span>
-            </div>
+            </motion.div>
 
             {/* Action Buttons */}
             <div className="grid grid-cols-3 gap-3">
@@ -207,13 +215,21 @@ const RideDriverPage = () => {
               </div>
             </div>
 
-            {/* Start Trip Button */}
-            <Button
-              onClick={() => navigate("/ride/trip", { state })}
-              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 mt-4"
-            >
-              START TRIP
-            </Button>
+            {/* Start Trip Button - only shows when driver has arrived */}
+            {etaMinutes === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Button
+                  onClick={() => navigate("/ride/trip", { state })}
+                  className="w-full h-14 text-lg font-bold bg-green-500 hover:bg-green-600 mt-4"
+                >
+                  START TRIP
+                </Button>
+              </motion.div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
