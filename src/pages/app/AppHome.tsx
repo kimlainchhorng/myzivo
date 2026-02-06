@@ -7,17 +7,18 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, Zap, LucideIcon, ChevronRight
+  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 // Premium Image Assets
 const assets = {
-  flights: "https://images.unsplash.com/photo-1436491865332-7a61a109c0f2?auto=format&fit=crop&q=80&w=800",
+  flights: "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&q=80&w=800",
   hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
   rides: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&q=80&w=800",
   food: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800",
+  move: "https://images.unsplash.com/photo-1586880244406-556ebe35f282?auto=format&fit=crop&q=80&w=800",
   avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
 };
 
@@ -214,10 +215,11 @@ const AppHome = () => {
 
         {/* Main Bento Grid - 2 columns */}
         <div className="grid grid-cols-2 gap-3">
-          {/* Row 1: Flights Dark + Rides Image */}
-          <DarkCard 
+          {/* Row 1: Flights Image + Rides Image */}
+          <ServiceCard 
             title="Flights" 
             subtitle="Global Travel" 
+            img={assets.flights}
             icon={Plane} 
             onNavigate={() => handleNavigate("FLIGHTS")}
             className="h-32"
@@ -231,7 +233,7 @@ const AppHome = () => {
             className="h-32"
           />
 
-          {/* Row 2: Food Image + Eats Image */}
+          {/* Row 2: Food Image + Move Image */}
           <ServiceCard 
             title="Eats" 
             subtitle="Gourmet Delivery" 
@@ -243,8 +245,8 @@ const AppHome = () => {
           <ServiceCard 
             title="Move" 
             subtitle="Package Delivery" 
-            img={assets.rides} 
-            icon={Car}
+            img={assets.move} 
+            icon={Package}
             onNavigate={() => handleNavigate("MOVE")}
             className="h-32"
           />
