@@ -460,19 +460,27 @@ export default function Rides() {
                            initial={{ opacity: 0, y: -10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
-                           style={{ zIndex: 9999, backgroundColor: '#18181b' }}
+                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden isolate"
+                           style={{ 
+                             zIndex: 9999, 
+                             backgroundColor: '#09090b',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
+                           }}
                          >
-                           <div className="border border-white/10 rounded-xl overflow-hidden">
+                           <div className="border border-zinc-700 rounded-xl overflow-hidden">
                              {pickupSuggestions.map((suggestion, index) => (
                                <button
                                  key={index}
                                  onClick={() => handlePickupSuggestionClick(suggestion)}
-                                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
-                                 style={{ backgroundColor: '#18181b' }}
+                                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
+                                 style={{ 
+                                   backgroundColor: '#09090b',
+                                 }}
+                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
+                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
                                >
                                  <MapPin className="w-4 h-4 text-primary shrink-0" />
-                                 <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                                 <span className="text-sm text-white truncate">{suggestion}</span>
                                </button>
                              ))}
                            </div>
@@ -520,19 +528,27 @@ export default function Rides() {
                            initial={{ opacity: 0, y: -10 }}
                            animate={{ opacity: 1, y: 0 }}
                            exit={{ opacity: 0, y: -10 }}
-                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden shadow-2xl"
-                           style={{ zIndex: 9999, backgroundColor: '#18181b' }}
+                           className="absolute left-0 right-0 mt-1 rounded-xl overflow-hidden isolate"
+                           style={{ 
+                             zIndex: 9999, 
+                             backgroundColor: '#09090b',
+                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.9)'
+                           }}
                          >
-                           <div className="border border-white/10 rounded-xl overflow-hidden">
+                           <div className="border border-zinc-700 rounded-xl overflow-hidden">
                              {dropoffSuggestions.map((suggestion, index) => (
                                <button
                                  key={index}
                                  onClick={() => handleDropoffSuggestionClick(suggestion)}
-                                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
-                                 style={{ backgroundColor: '#18181b' }}
+                                 className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-zinc-800 last:border-b-0"
+                                 style={{ 
+                                   backgroundColor: '#09090b',
+                                 }}
+                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1a1a1f'}
+                                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#09090b'}
                                >
                                  <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
-                                 <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                                 <span className="text-sm text-white truncate">{suggestion}</span>
                                </button>
                              ))}
                            </div>
