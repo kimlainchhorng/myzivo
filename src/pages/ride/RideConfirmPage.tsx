@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
@@ -27,8 +27,6 @@ const RideConfirmPage = () => {
   const state = location.state as LocationState | null;
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Handle missing state
   if (!state?.ride) {
@@ -50,21 +48,14 @@ const RideConfirmPage = () => {
   const { ride, pickup, destination } = state;
 
   const handleConfirm = () => {
-    setIsLoading(true);
-
-    // Simulate finding driver
-    setTimeout(() => {
-      setIsLoading(false);
-      setShowSuccess(true);
-      toast.success("Driver found! Your ride is on the way.", {
-        duration: 4000,
-      });
-
-      // Navigate back after delay
-      setTimeout(() => {
-        navigate("/");
-      }, 3000);
-    }, 2500);
+    navigate("/ride/finding", {
+      state: {
+        ride,
+        pickup,
+        destination,
+        paymentMethod: selectedPayment,
+      },
+    });
   };
 
   return (
@@ -196,56 +187,11 @@ const RideConfirmPage = () => {
           transition={{ delay: 0.2 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleConfirm}
-          disabled={isLoading || showSuccess}
-          className={cn(
-            "w-full py-4 rounded-2xl font-bold text-sm transition-all",
-            isLoading || showSuccess
-              ? "bg-white/20 text-white/50"
-              : "bg-primary text-white hover:bg-primary/90"
-          )}
+          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          {isLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Finding driver...
-            </span>
-          ) : showSuccess ? (
-            <span className="flex items-center justify-center gap-2">
-              <Check className="w-5 h-5" />
-              Driver Found!
-            </span>
-          ) : (
-            "CONFIRM RIDE"
-          )}
+          CONFIRM RIDE
         </motion.button>
       </div>
-
-      {/* Loading Modal */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-zinc-900 rounded-2xl p-8 text-center max-w-xs w-full"
-            >
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-              </div>
-              <h3 className="text-lg font-bold mb-2">Finding your driver</h3>
-              <p className="text-sm text-white/60">
-                Please wait while we connect you with a nearby driver...
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Bottom Nav */}
       <RideBottomNav />
