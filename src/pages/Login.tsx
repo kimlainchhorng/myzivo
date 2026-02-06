@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield } from "lucide-react";
+import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Provider } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
@@ -479,6 +479,15 @@ const Login = () => {
         <p className="mt-4 sm:mt-6 text-center text-xs text-zinc-500">
           {isLogin ? "Protected by enterprise-grade security 🔒" : "By signing up, you agree to our Terms of Service 📋"}
         </p>
+
+        {/* Go to Home */}
+        <button
+          onClick={() => navigate("/")}
+          className="mt-4 w-full flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm"
+        >
+          <Home className="h-4 w-4" />
+          Go to Home
+        </button>
       </div>
     </div>
   );
