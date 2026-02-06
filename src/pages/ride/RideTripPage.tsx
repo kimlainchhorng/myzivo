@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, Clock } from "lucide-react";
+import { Navigation, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import RideReceiptModal from "@/components/ride/RideReceiptModal";
 import { RideOption } from "@/components/ride/RideCard";
+import { GoogleMapProvider } from "@/components/maps";
+import TripMapView from "@/components/ride/TripMapView";
 
 interface LocationState {
   ride: RideOption;
@@ -14,6 +16,10 @@ interface LocationState {
   destination: string;
   paymentMethod: string;
 }
+
+// Mock coordinates for Baton Rouge area
+const PICKUP_LOCATION = { lat: 30.4515, lng: -91.1871 };
+const DESTINATION_LOCATION = { lat: 30.4315, lng: -91.1671 };
 
 type TripStatus = "on_the_way" | "arrived";
 
@@ -24,6 +30,7 @@ const RideTripPage = () => {
   const [tripStatus, setTripStatus] = useState<TripStatus>("on_the_way");
   const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 8);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [carPosition, setCarPosition] = useState(PICKUP_LOCATION);
 
   // Handle missing state
   useEffect(() => {
@@ -38,10 +45,25 @@ const RideTripPage = () => {
       const timer = setTimeout(() => {
         setTripStatus("arrived");
         setEtaMinutes(0);
+        setCarPosition(DESTINATION_LOCATION);
       }, 8000); // 8 seconds for demo
 
       return () => clearTimeout(timer);
     }
+  }, [tripStatus]);
+
+  // Update car position during trip
+  useEffect(() => {
+    if (tripStatus === "arrived") return;
+    
+    const interval = setInterval(() => {
+      setCarPosition((prev) => ({
+        lat: prev.lat + (DESTINATION_LOCATION.lat - PICKUP_LOCATION.lat) / 8,
+        lng: prev.lng + (DESTINATION_LOCATION.lng - PICKUP_LOCATION.lng) / 8,
+      }));
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [tripStatus]);
 
   // Countdown timer for ETA
@@ -70,83 +92,15 @@ const RideTripPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
-      {/* Static Map Placeholder */}
-      <div className="relative h-[45vh] w-full">
-        <img
-          src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&h=600&fit=crop"
-          alt="Map view"
-          className="w-full h-full object-cover"
+      {/* Google Maps View */}
+      <GoogleMapProvider>
+        <TripMapView
+          pickupLocation={PICKUP_LOCATION}
+          destinationLocation={DESTINATION_LOCATION}
+          carPosition={carPosition}
+          isArrived={tripStatus === "arrived"}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950" />
-
-        {/* Animated Route Line */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          <motion.path
-            d="M 20 70 Q 40 50 50 40 Q 60 30 80 25"
-            fill="none"
-            stroke="hsl(var(--primary))"
-            strokeWidth="0.5"
-            strokeDasharray="2,2"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
-          />
-        </svg>
-
-        {/* Pickup Marker */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3 }}
-          className="absolute bottom-1/3 left-1/4"
-        >
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shadow-lg">
-              <MapPin className="w-4 h-4 text-white" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Destination Marker */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className="absolute top-1/4 right-1/4"
-        >
-          <div className="flex flex-col items-center">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <Navigation className="w-4 h-4 text-white" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Moving Car */}
-        <motion.div
-          animate={
-            tripStatus === "on_the_way"
-              ? {
-                  left: ["25%", "55%", "70%"],
-                  top: ["65%", "45%", "30%"],
-                }
-              : {}
-          }
-          transition={{
-            duration: 8,
-            ease: "easeInOut",
-          }}
-          className="absolute"
-          style={{ left: tripStatus === "arrived" ? "70%" : "25%", top: tripStatus === "arrived" ? "30%" : "65%" }}
-        >
-          <div className="w-10 h-10 rounded-full bg-primary/90 flex items-center justify-center shadow-lg shadow-primary/40">
-            <span className="text-lg">🚗</span>
-          </div>
-        </motion.div>
-      </div>
+      </GoogleMapProvider>
 
       {/* Trip Status Card */}
       <motion.div
