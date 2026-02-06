@@ -1,111 +1,119 @@
 
 
-# ZIVO Ride Trip Experience Enhancement
+# Google Maps Integration for ZIVO Ride Flow
 
-## Current State Analysis
+## Overview
 
-After reviewing the codebase, I found that **most of the requested features already exist**. Here's what's already implemented:
-
-| Feature | Status | Location |
-|---------|--------|----------|
-| `/ride/finding` with animated search | Exists | `RideFindingPage.tsx` |
-| `/ride/driver` with driver card | Exists | `RideDriverPage.tsx` |
-| `/ride/trip` with trip status | Exists | `RideTripPage.tsx` |
-| Receipt modal with fare breakdown | Exists | `RideReceiptModal.tsx` |
-| 5-star rating system | Exists | `RideReceiptModal.tsx` |
-
-## Required Updates
-
-The following enhancements are needed to match your specifications:
+Replace all static map images in the ride booking flow with interactive Google Maps. This will provide real-time route visualization and a more premium user experience.
 
 ---
 
-### 1. RideFindingPage.tsx - Dynamic Status Messages
+## Current State
 
-**Current:** Shows static "Finding your driver..." text
-**Update:** Add rotating status messages that change every 2-3 seconds
-
-```
-Messages sequence:
-1. "Contacting nearby drivers..." (0-2s)
-2. "Driver responding..." (2-5s)  
-3. "Driver confirmed!" (5-6s)
-```
+| Page | Current Implementation |
+|------|------------------------|
+| `/rides` | Static Unsplash city background |
+| `/ride/driver` | Static Unsplash map image |
+| `/ride/trip` | Static Unsplash map image |
 
 ---
 
-### 2. RideDriverPage.tsx - Improved ETA Countdown
+## Issue Identified
 
-**Current:** ETA updates every 60 seconds (too slow for demo)
-**Updates needed:**
-
-- Change timer to update every 10-15 seconds instead of 60 seconds
-- Hide "START TRIP" button until driver arrives (ETA = 0)
-- When ETA reaches 0:
-  - Show "Driver has arrived!" status banner
-  - Display "Start Trip" button (only then)
+The `GOOGLE_MAPS_API_KEY` was added as a **server-side secret**, but the frontend code requires `VITE_GOOGLE_MAPS_API_KEY` (with the `VITE_` prefix) to access it in React components.
 
 ---
 
-### 3. RideTripPage.tsx - Minor Status Text Update
+## Implementation Plan
 
-**Current:** Shows "On the way to destination"
-**Update:** Already matches spec - no changes needed
+### Step 1: Fix API Key Configuration
 
----
+Add the Google Maps API key with the correct prefix so the frontend can access it:
+- Create `VITE_GOOGLE_MAPS_API_KEY` environment variable
+- This makes the key available to `import.meta.env.VITE_GOOGLE_MAPS_API_KEY`
 
-### 4. RideReceiptModal.tsx - No Changes Needed
+### Step 2: Update Rides Page (`/rides`)
 
-Already has:
-- Base fare, Time fare, Distance fare, Service fee breakdown
-- Total amount
-- 5-star rating system
-- "Done" button that returns to home
+Replace the static city background with a Google Map:
+- Show user's current location marker (blue pulsing dot)
+- Dark mode styling to match ZIVO theme
+- Disable UI controls for clean background appearance
+- Fall back to static image if Maps fails to load
 
----
+### Step 3: Update Driver Page (`/ride/driver`)
 
-## Technical Implementation Details
+Replace static map with interactive Google Map showing:
+- Pickup location marker (primary color)
+- Animated driver marker moving toward pickup
+- Route line from driver to pickup
+- Dark mode styling
 
-### File: `src/pages/ride/RideFindingPage.tsx`
+### Step 4: Update Trip Page (`/ride/trip`)
 
-Add state for rotating messages:
-- Create array of status messages with timing thresholds
-- Use progress value to determine which message to show
-- Apply smooth fade transition between messages
-
-### File: `src/pages/ride/RideDriverPage.tsx`
-
-Modify ETA countdown behavior:
-- Change interval from 60000ms to 12000ms (12 seconds)
-- Add conditional rendering for "Start Trip" button based on `etaMinutes === 0`
-- Update status display to show arrival confirmation when ETA reaches 0
-
----
-
-## Summary of Changes
-
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `RideFindingPage.tsx` | Enhance | Add rotating status messages during search |
-| `RideDriverPage.tsx` | Enhance | Faster ETA countdown, conditional Start Trip button |
-| `RideTripPage.tsx` | No change | Already matches spec |
-| `RideReceiptModal.tsx` | No change | Already matches spec |
+Replace static map with Google Map showing:
+- Pickup marker (green)
+- Destination marker (primary color)
+- Route line between locations
+- Animated car icon following the route
+- Dark mode styling
 
 ---
 
-## User Flow After Implementation
+## Technical Details
+
+### GoogleMap Component Usage
 
 ```text
-[Confirm] → /ride/finding
-              ↓ (6 seconds, rotating messages)
-           /ride/driver
-              ↓ (ETA countdown every 12s)
-           "Driver has arrived!" 
-              ↓ (Start Trip button appears)
-           /ride/trip
-              ↓ (8 seconds demo, or End Trip button)
-           Receipt Modal
-              ↓ (Rate driver, tap Done)
-           /ride (home)
+<GoogleMap
+  center={{ lat: 30.4515, lng: -91.1871 }}  // Baton Rouge default
+  zoom={14}
+  darkMode={true}
+  showControls={false}
+  markers={[
+    { position: { lat, lng }, type: "pickup" },
+    { position: { lat, lng }, type: "driver" }
+  ]}
+  route={{ origin, destination }}
+/>
+```
+
+### Dark Mode Map Styling
+
+The GoogleMap component already includes premium dark mode styles matching ZIVO's aesthetic (dark gray roads, subtle water colors, hidden labels).
+
+### Graceful Fallback
+
+Each page will check `isLoaded` from `useGoogleMaps()` and show the existing static image during loading or if the API fails.
+
+---
+
+## Files to Modify
+
+| File | Changes |
+|------|---------|
+| Project Secrets | Add `VITE_GOOGLE_MAPS_API_KEY` |
+| `src/pages/Rides.tsx` | Replace static background with GoogleMap |
+| `src/pages/ride/RideDriverPage.tsx` | Replace static image with route-enabled map |
+| `src/pages/ride/RideTripPage.tsx` | Replace static image with animated trip map |
+
+---
+
+## User Experience After Changes
+
+```text
+[/rides]
+   Live dark map background showing current location
+              ↓
+[/ride/confirm]
+   (unchanged - uses glass overlay design)
+              ↓
+[/ride/finding]
+   (unchanged - full-screen loading animation)
+              ↓
+[/ride/driver]
+   Google Map with driver marker approaching pickup
+              ↓
+[/ride/trip]
+   Google Map with animated car following route to destination
 ```
 
