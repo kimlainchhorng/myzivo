@@ -1,96 +1,66 @@
 
-# Plan: Improve Signup Error for Existing Accounts
 
-## Problem
-When a user tries to sign up with an email that already has an account (e.g., a Gmail that was registered via Google OAuth), they see a generic "Authentication Failed" error. They should instead see a helpful message like **"Account already exists. Please sign in instead."**
+# Plan: Optimize Mobile Home for No-Scroll Experience
 
-## Current Behavior
-1. User tries to sign up with email (e.g., `support@hizivo.com`)
-2. Allowlist check passes (email is on allowlist, not yet marked as used)
-3. Supabase signup fails because the email already exists in `auth.users`
-4. User sees generic error message
+## Overview
+Adjust the AppHome layout so all content fits within the mobile viewport without requiring scrolling. This creates a native app-like experience where all services are immediately visible.
 
-## Solution Overview
-Enhance the `check-signup-allowlist` Edge Function to also check if the email already exists in `auth.users`. This provides early detection and a clear message before the actual signup attempt.
+## Current Issue
+The current layout has significant vertical spacing that pushes content below the fold:
+- Top bar with gradient (padding: `p-6`)
+- Live Activity Island (at `top-24`)
+- Hero section (starts at `pt-48`, has `mb-8` gaps)
+- Large service cards (`h-32` = 128px each)
+- Bottom nav area (`pb-32` = 128px)
+
+**Total content height exceeds typical mobile screens (667px - 812px)**
 
 ---
 
-## Implementation Steps
+## Changes
 
-### 1. Update Edge Function: `check-signup-allowlist`
-Add a check against `auth.users` to detect existing accounts:
+### 1. Reduce Top Bar & Live Activity Spacing
+- Reduce top bar padding from `p-6` to `p-4`
+- Move Live Activity Island from `top-24` to `top-16`
 
-**Logic flow:**
-1. Check if email exists in `signup_allowlist`
-2. If on allowlist, check if `used_at` is set (invitation already used)
-3. NEW: Also check if email exists in `auth.users`
-4. Return appropriate message for each case
+### 2. Compress Hero Section  
+- Reduce hero padding from `pt-48` to `pt-36`
+- Reduce title size from `text-4xl` to `text-2xl`
+- Reduce margin below subtitle from `mb-8` to `mb-4`
+- Make search bar slightly smaller (reduce padding from `p-4` to `p-3`)
 
-**New response for existing account:**
-```json
-{
-  "allowed": false,
-  "message": "An account with this email already exists. Please sign in instead.",
-  "existingUser": true
-}
-```
+### 3. Shrink Service Cards
+- Reduce main grid cards from `h-32` (128px) to `h-24` (96px)
+- Reduce Hotels row height from `h-28` to `h-20`
+- Reduce grid gap from `gap-3` to `gap-2`
 
-### 2. Update Frontend: `src/pages/Login.tsx`
-Update the signup form handler to detect the `existingUser` flag and offer a helpful action:
-- Show a toast message directing user to sign in
-- Optionally auto-switch to login mode
+### 4. Reduce Bottom Padding
+- Change bento grid section padding from `pb-32` to `pb-24`
 
-### 3. Update AuthCallback Error Handling (Optional)
-Improve the error detection in `AuthCallback.tsx` to handle "user already exists" errors from OAuth flows more gracefully.
+### 5. Hide Services Header Row
+- Remove "Services" label and "View All" button to save vertical space
 
 ---
 
 ## Technical Details
 
-### Edge Function Changes
-```typescript
-// After allowlist check, add this:
-const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-// Filter to check if email exists
-const userExists = existingUser?.users?.some(
-  u => u.email?.toLowerCase() === normalizedEmail
-);
+**File: `src/pages/app/AppHome.tsx`**
 
-if (userExists) {
-  return new Response(
-    JSON.stringify({
-      allowed: false,
-      message: "An account with this email already exists. Please sign in instead.",
-      existingUser: true,
-    }),
-    { status: 200, headers: {...} }
-  );
-}
-```
-
-### Frontend Changes
-In `Login.tsx`, after the allowlist check:
-```typescript
-if (!allowlistResponse?.allowed) {
-  setIsLoading(false);
-  if (allowlistResponse?.existingUser) {
-    toast.info("An account with this email already exists. Please sign in.");
-    setIsLogin(true); // Switch to login mode
-  } else {
-    toast.error(allowlistResponse?.message || "...");
-  }
-  return;
-}
-```
+| Section | Current | New |
+|---------|---------|-----|
+| Top bar | `p-6` | `p-4` |
+| Live Island | `top-24` | `top-16` |
+| Hero section | `pt-48` | `pt-36` |
+| Title | `text-4xl` | `text-2xl` |
+| Subtitle margin | `mb-8` | `mb-4` |
+| Search bar | `p-4` | `p-3` |
+| Grid gap | `gap-3` | `gap-2` |
+| Service cards | `h-32` | `h-24` |
+| Hotels card | `h-28` | `h-20` |
+| Section padding | `pb-32` | `pb-24` |
 
 ---
 
-## Files to Modify
-| File | Change |
-|------|--------|
-| `supabase/functions/check-signup-allowlist/index.ts` | Add `auth.users` existence check |
-| `src/pages/Login.tsx` | Handle `existingUser` response gracefully |
+## Expected Result
+All home screen content (greeting, Live Activity, search bar, 6 service cards, and bottom nav) will be visible on a single screen without scrolling on most mobile devices (iPhone SE to iPhone 15 Pro Max).
 
-## User Experience
-- **Before**: Generic error, user confused
-- **After**: Clear message + automatic switch to login form
