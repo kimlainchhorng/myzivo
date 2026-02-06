@@ -127,6 +127,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
         // Published
         "https://myzivo.lovable.app",
+        // Production custom domain
+        "https://hizivo.com",
+        "https://www.hizivo.com",
         // Local dev
         "http://localhost:5173",
         "http://localhost:3000",
