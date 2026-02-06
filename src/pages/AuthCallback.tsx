@@ -24,11 +24,11 @@ const AuthCallback = () => {
   };
 
   // Helper function to check setup status and navigate accordingly
-  const checkSetupAndNavigate = async (userId: string) => {
+  const checkSetupAndNavigate = async (userId: string, user: { email?: string; email_confirmed_at?: string | null }) => {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("setup_complete")
+        .select("setup_complete, email_verified")
         .eq("user_id", userId)
         .maybeSingle();
 
@@ -37,6 +37,35 @@ const AuthCallback = () => {
       if (!profile) {
         console.error("No profile found - user may not be on allowlist");
         setStatus("error");
+        return;
+      }
+
+      // Check if email verification is required
+      // User needs verification if: no email_confirmed_at in auth AND profile.email_verified is not true
+      const needsVerification = !user.email_confirmed_at && profile.email_verified !== true;
+
+      if (needsVerification && user.email) {
+        // Send OTP for verification
+        try {
+          const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
+            "send-otp-email",
+            { body: { email: user.email, userId } }
+          );
+
+          if (!otpError && otpResponse?.success) {
+            setStatus("success");
+            setTimeout(() => {
+              navigate("/verify-otp", { state: { email: user.email, userId }, replace: true });
+            }, 200);
+            return;
+          }
+        } catch (err) {
+          console.error("Failed to send OTP:", err);
+        }
+        
+        // Fallback to old verification page if OTP fails
+        setStatus("success");
+        setTimeout(() => navigate("/verify-email", { replace: true }), 200);
         return;
       }
 
@@ -141,7 +170,11 @@ const AuthCallback = () => {
         }
 
         if (data.session?.user) {
-          await checkSetupAndNavigate(data.session.user.id);
+          const user = data.session.user;
+          await checkSetupAndNavigate(user.id, {
+            email: user.email,
+            email_confirmed_at: user.email_confirmed_at,
+          });
         } else {
           setStatus("success");
           setTimeout(() => navigate("/", { replace: true }), 200);
@@ -166,7 +199,11 @@ const AuthCallback = () => {
       }
 
       if (session?.user) {
-        await checkSetupAndNavigate(session.user.id);
+        const user = session.user;
+        await checkSetupAndNavigate(user.id, {
+          email: user.email,
+          email_confirmed_at: user.email_confirmed_at,
+        });
         return;
       }
 
@@ -176,7 +213,11 @@ const AuthCallback = () => {
       } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
         if (nextSession?.user) {
           clearTimeout(timeout);
-          await checkSetupAndNavigate(nextSession.user.id);
+          const user = nextSession.user;
+          await checkSetupAndNavigate(user.id, {
+            email: user.email,
+            email_confirmed_at: user.email_confirmed_at,
+          });
           subscription.unsubscribe();
         }
       });

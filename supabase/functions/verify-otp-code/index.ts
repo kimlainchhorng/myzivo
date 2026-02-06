@@ -100,16 +100,28 @@ const handler = async (req: Request): Promise<Response> => {
 
     // If we have a user_id, update their email confirmation status
     if (otpRecord.user_id) {
+      // Update auth.users email_confirmed_at
       const { error: updateError } = await supabase.auth.admin.updateUserById(
         otpRecord.user_id,
         { email_confirm: true }
       );
 
       if (updateError) {
-        console.error("Failed to confirm email:", updateError);
-        // Still return success - the OTP was valid
+        console.error("Failed to confirm email in auth:", updateError);
       } else {
-        console.log("Email confirmed for user:", otpRecord.user_id);
+        console.log("Email confirmed in auth for user:", otpRecord.user_id);
+      }
+
+      // Also update profiles.email_verified flag
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ email_verified: true })
+        .eq("user_id", otpRecord.user_id);
+
+      if (profileError) {
+        console.error("Failed to update profile email_verified:", profileError);
+      } else {
+        console.log("Profile email_verified updated for user:", otpRecord.user_id);
       }
     }
 
