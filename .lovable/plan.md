@@ -1,160 +1,150 @@
 
-# ZIVO Ride Dynamic Pricing Enhancement
+# ZIVO Ride Enhanced UX Update
 
 ## Overview
 
-This update adds dynamic ride pricing based on pickup and destination. When both locations are filled, the system calculates a mock distance and updates all ride prices automatically.
+This update enhances the location input UX with better suggestions and clear buttons, and ensures dynamic pricing is consistently shown across all screens including the CTA and confirm page.
 
 ---
 
-## Current State
+## Current State Analysis
 
-The location card already has dropdown suggestions working:
-- `RideLocationCard.tsx` has `mockSuggestions` array
-- Focus shows suggestions, typing filters them
-- Clicking a suggestion fills the input
+Most of the requested functionality already exists:
+- Trip calculation is stable (uses deterministic hash)
+- Dynamic pricing formula is implemented
+- CTA validation for pickup/destination/ride is working
+- RideGrid shows dynamic prices
 
-What needs to be added:
-1. Calculate mock trip details when both locations are filled
-2. Update ride prices dynamically based on distance
-3. Display trip distance and estimated time below the ride grid
+**What's Missing:**
+1. Louisiana mock addresses (currently NY addresses)
+2. Clear button (X) in inputs
+3. CTA shows static `ride.price` instead of calculated price
+4. Confirm page missing trip estimate line and calculated price
 
 ---
 
 ## Implementation Plan
 
-### 1. Create Trip Calculation Utility
+### A) Update Mock Suggestions + Add Clear Button
 
-**New File**: `src/lib/tripCalculator.ts`
+**File**: `src/components/ride/RideLocationCard.tsx`
 
-Add mock trip calculation logic:
-
+1. Replace mock suggestions with Louisiana addresses:
 ```text
-+------------------------------------------+
-| calculateMockTrip(pickup, destination)   |
-+------------------------------------------+
-| Inputs: pickup string, destination string|
-| Output: { distance, duration, prices }   |
-+------------------------------------------+
+- 109 Hickory Street, Denham Springs, LA
+- 875 Florida Blvd, Baton Rouge, LA
+- 6401 Bluebonnet Blvd, Baton Rouge, LA
+- 660 Arlington Creek Centre, Baton Rouge, LA
+- 1 Airport Rd, Baton Rouge, LA
+- 3900 N I-10 Service Rd, Metairie, LA
+- 10000 Perkins Rowe, Baton Rouge, LA
+- 2142 O'Neal Lane, Baton Rouge, LA
 ```
 
-Functions:
-- `calculateMockTrip(pickup, destination)` - Returns mock distance (2-12 mi) and duration
-- `calculateRidePrices(distance, duration)` - Returns prices for each ride type using the formula:
-  - Base fare: $2.00
-  - Per mile: $1.25
-  - Economy multiplier: 1.0
-  - Premium multiplier: 1.4
-  - Elite multiplier: 1.8
+2. Show 6 suggestions instead of 4
 
-The mock distance is deterministically generated from a hash of the pickup+destination strings so it remains consistent for the same addresses.
+3. Add X clear button inside each input (when value exists):
+```text
++--------------------------------------+
+| [icon] 109 Hickory Street...   [X]  |
++--------------------------------------+
+```
+
+The clear button appears only when the input has content and clears the field on click.
 
 ---
 
-### 2. Update RidePage State Management
+### B) CTA With Dynamic Pricing
 
-**File**: `src/pages/ride/RidePage.tsx`
+**File**: `src/components/ride/RideStickyCTA.tsx`
 
-Add trip details state:
-
-```typescript
-const [tripDetails, setTripDetails] = useState<{
-  distance: number;  // miles
-  duration: number;  // minutes
-} | null>(null);
-```
-
-Add `useEffect` to recalculate when pickup/destination change:
+Add props for `tripDetails` and calculate the display price:
 
 ```typescript
-useEffect(() => {
-  if (pickup.trim() && destination.trim()) {
-    const trip = calculateMockTrip(pickup, destination);
-    setTripDetails(trip);
-  } else {
-    setTripDetails(null);
-  }
-}, [pickup, destination]);
-```
-
-Pass `tripDetails` to `RideGrid` component.
-
----
-
-### 3. Update Ride Data Structure
-
-**File**: `src/components/ride/rideData.ts`
-
-Add multipliers to the static data:
-
-```typescript
-economy: [
-  { id: "wait-save", ..., multiplier: 0.85 },  // Discount for waiting
-  { id: "standard", ..., multiplier: 1.0 },
-],
-premium: [
-  { id: "extra-comfort", ..., multiplier: 1.2 },
-  { id: "zivo-black", ..., multiplier: 1.4 },
-],
-elite: [
-  { id: "zivo-lux", ..., multiplier: 2.0 },
-  { id: "executive", ..., multiplier: 1.8 },
-],
-```
-
----
-
-### 4. Update RideGrid to Accept Trip Details
-
-**File**: `src/components/ride/RideGrid.tsx`
-
-Add props for trip details:
-
-```typescript
-interface RideGridProps {
-  rides: RideOption[];
-  selectedRideId: string | null;
-  onSelectRide: (ride: RideOption) => void;
-  tripDetails: { distance: number; duration: number } | null;  // NEW
+interface RideStickyCTAProps {
+  selectedRide: RideOption | null;
+  pickup: string;
+  destination: string;
+  tripDetails: TripDetails | null;  // NEW
+  onConfirm: () => void;
 }
 ```
 
-Pass calculated prices to each `RideCard`.
+Calculate and display the dynamic price:
+```typescript
+const displayPrice = tripDetails && selectedRide
+  ? calculateRidePrice(selectedRide.id, tripDetails.distance, tripDetails.duration)
+  : selectedRide?.price || 0;
+
+// Button text:
+`SELECT ${name} ($${displayPrice.toFixed(2)}) →`
+```
 
 ---
 
-### 5. Update RideCard to Show Dynamic Pricing
+### C) Update RidePage to Pass Trip Details to CTA
 
-**File**: `src/components/ride/RideCard.tsx`
+**File**: `src/pages/ride/RidePage.tsx`
 
-Update interface to accept optional calculated price:
+Pass `tripDetails` to `RideStickyCTA`:
 
+```tsx
+<RideStickyCTA 
+  selectedRide={selectedRide} 
+  pickup={pickup}
+  destination={destination}
+  tripDetails={tripDetails}  // NEW
+  onConfirm={handleConfirm} 
+/>
+```
+
+Also pass `tripDetails` in navigation state to confirm page:
+
+```tsx
+navigate("/ride/confirm", {
+  state: {
+    ride: selectedRide,
+    pickup,
+    destination,
+    tripDetails,  // NEW
+  },
+});
+```
+
+---
+
+### D) Update Confirm Page with Trip Estimate
+
+**File**: `src/pages/ride/RideConfirmPage.tsx`
+
+1. Add `tripDetails` to LocationState interface:
 ```typescript
-interface RideCardProps {
+interface LocationState {
   ride: RideOption;
-  isSelected: boolean;
-  onSelect: () => void;
-  calculatedPrice?: number;  // NEW - overrides ride.price when provided
+  pickup: string;
+  destination: string;
+  tripDetails?: TripDetails;  // NEW
 }
 ```
 
-Display `calculatedPrice` if provided, otherwise show static `ride.price`.
-
----
-
-### 6. Add Trip Info Display
-
-**File**: `src/pages/ride/RidePage.tsx`
-
-Add a trip summary pill below the ride grid (only when tripDetails exists):
-
+2. Add trip estimate line below location details:
 ```text
-+---------------------------------------+
-|     6.2 miles  •  14 min estimated    |
-+---------------------------------------+
++-------------------------------------+
+|  📍 Pickup: 109 Hickory Street...   |
+|  📍 Destination: 875 Florida...     |
+|  ---------------------------------- |
+|     5.4 miles • 14 min              | <-- NEW
+|  ---------------------------------- |
+|  ⏱ 4 min away        $12.50        |
++-------------------------------------+
 ```
 
-Style: Same glassmorphic pill style as "35 DRIVERS NEARBY"
+3. Calculate and display dynamic price instead of `ride.price`:
+```typescript
+const displayPrice = tripDetails
+  ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
+  : ride.price;
+```
 
 ---
 
@@ -162,64 +152,41 @@ Style: Same glassmorphic pill style as "35 DRIVERS NEARBY"
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/lib/tripCalculator.ts` | Create | Mock trip calculation utilities |
-| `src/pages/ride/RidePage.tsx` | Modify | Add tripDetails state, useEffect, pass to components |
-| `src/components/ride/rideData.ts` | Modify | Add multiplier field to each ride option |
-| `src/components/ride/RideCard.tsx` | Modify | Accept optional calculatedPrice prop |
-| `src/components/ride/RideGrid.tsx` | Modify | Accept tripDetails, calculate and pass prices |
+| `src/components/ride/RideLocationCard.tsx` | Modify | Update to LA addresses, show 6 suggestions, add X clear button |
+| `src/components/ride/RideStickyCTA.tsx` | Modify | Accept tripDetails, show calculated price |
+| `src/pages/ride/RidePage.tsx` | Modify | Pass tripDetails to CTA and navigation state |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Show trip estimate line, use calculated price |
 
 ---
 
-## Pricing Formula
+## Technical Details
 
-```text
-Base Price Calculation:
-  baseFare = $2.00
-  distanceCost = distance × $1.25
-  timeCost = duration × $0.20
-  basePrice = baseFare + distanceCost + timeCost
+### Clear Button Behavior
+- Appears only when input has content
+- Clicking clears the input value
+- Uses `X` icon from lucide-react
+- Positioned inside the input container (right side)
+- Does not interfere with suggestion dropdown
 
-Per Ride Type:
-  Wait & Save:    basePrice × 0.85  (15% discount)
-  Standard:       basePrice × 1.0
-  Extra Comfort:  basePrice × 1.2
-  ZIVO Black:     basePrice × 1.4
-  Executive:      basePrice × 1.8
-  ZIVO Lux:       basePrice × 2.0
-```
+### Suggestion Dropdown
+- Shows 6 suggestions on focus (increased from 4)
+- Filters as user types
+- Solid background with `bg-zinc-900/95` (not transparent)
+- High z-index (z-50) to appear above other elements
 
-**Example** (6 miles, 14 min):
-- Base: $2 + (6 × $1.25) + (14 × $0.20) = $2 + $7.50 + $2.80 = $12.30
-- Standard: $12.30
-- ZIVO Black: $12.30 × 1.4 = $17.22
-- ZIVO Lux: $12.30 × 2.0 = $24.60
+### Price Consistency
+The same price calculation is used everywhere:
+- Ride cards in grid
+- CTA button
+- Confirm page
 
----
-
-## Mock Distance Generation
-
-To keep the mock consistent for the same addresses, use a simple hash:
-
-```typescript
-function generateMockDistance(pickup: string, destination: string): number {
-  const combined = (pickup + destination).toLowerCase();
-  let hash = 0;
-  for (let i = 0; i < combined.length; i++) {
-    hash = ((hash << 5) - hash) + combined.charCodeAt(i);
-    hash |= 0;
-  }
-  // Map to range 2-12 miles
-  return 2 + (Math.abs(hash) % 100) / 10;
-}
-```
-
-Duration calculated as: `distance × 2.3 minutes` (mock average speed)
+Formula: `(2.00 + distance*1.25 + duration*0.20) * multiplier`
 
 ---
 
 ## No Breaking Changes
 
-- Existing UI layout preserved
-- Static prices shown when no destination entered
-- Dropdown suggestions already working
-- CTA validation already in place from previous update
+- Existing UI layout preserved exactly
+- Same glassmorphic styling throughout
+- Trip calculation already stable (hash-based)
+- CTA validation logic unchanged
