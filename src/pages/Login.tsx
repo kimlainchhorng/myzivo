@@ -142,15 +142,44 @@ const Login = () => {
     }
 
     const { error } = await signUp(data.email, data.password, data.fullName);
-    setIsLoading(false);
 
     if (error) {
+      setIsLoading(false);
       toast.error(error.message || "Failed to create account");
       return;
     }
 
-    toast.success("Account created! Please check your email to verify.");
-    navigate("/verify-email");
+    // Get the user ID for OTP tracking
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
+    // Send OTP email
+    try {
+      const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
+        "send-otp-email",
+        { body: { email: data.email, userId } }
+      );
+
+      if (otpError || !otpResponse?.success) {
+        console.error("Failed to send OTP:", otpError || otpResponse?.error);
+        // Fall back to old verification email flow
+        setIsLoading(false);
+        toast.success("Account created! Please check your email to verify.");
+        navigate("/verify-email");
+        return;
+      }
+    } catch (err) {
+      console.error("OTP send error:", err);
+      // Fall back to old verification email flow
+      setIsLoading(false);
+      toast.success("Account created! Please check your email to verify.");
+      navigate("/verify-email");
+      return;
+    }
+
+    setIsLoading(false);
+    toast.success("Verification code sent to your email!");
+    navigate("/verify-otp", { state: { email: data.email, userId } });
   };
 
   const handleSocialLogin = async (provider: Provider) => {

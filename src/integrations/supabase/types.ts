@@ -8818,6 +8818,39 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          attempts: number
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          user_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       p2p_bookings: {
         Row: {
           actual_return_date: string | null
@@ -11116,39 +11149,27 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          created_at: string
           email: string | null
           full_name: string | null
           id: string
           phone: string | null
-          setup_complete: boolean | null
-          status: string | null
-          updated_at: string
-          user_id: string
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
-          created_at?: string
           email?: string | null
           full_name?: string | null
-          id?: string
+          id: string
           phone?: string | null
-          setup_complete?: boolean | null
-          status?: string | null
-          updated_at?: string
-          user_id: string
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
-          created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
-          setup_complete?: boolean | null
-          status?: string | null
-          updated_at?: string
-          user_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -19063,33 +19084,6 @@ export type Database = {
           },
         ]
       }
-      profiles_public: {
-        Row: {
-          avatar_url: string | null
-          created_at: string | null
-          full_name: string | null
-          id: string | null
-          status: string | null
-          user_id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string | null
-          full_name?: string | null
-          id?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       rental_cars_public: {
         Row: {
           category: string | null
@@ -19623,6 +19617,7 @@ export type Database = {
         Returns: Json
       }
       clean_expired_flight_cache: { Args: never; Returns: undefined }
+      cleanup_expired_otp_codes: { Args: never; Returns: undefined }
       cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }

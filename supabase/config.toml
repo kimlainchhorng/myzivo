@@ -131,3 +131,9 @@ verify_jwt = false
 
 [functions.check-signup-allowlist]
 verify_jwt = false
+
+[functions.send-otp-email]
+verify_jwt = false
+
+[functions.verify-otp-code]
+verify_jwt = false
