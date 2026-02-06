@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { RideOption } from "@/components/ride/RideCard";
 import { toast } from "sonner";
+import { GoogleMapProvider } from "@/components/maps";
+import DriverMapView from "@/components/ride/DriverMapView";
 
 interface LocationState {
   ride: RideOption;
@@ -25,11 +27,16 @@ const mockDriver = {
   avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
 };
 
+// Mock coordinates for Baton Rouge area
+const PICKUP_LOCATION = { lat: 30.4515, lng: -91.1871 };
+const INITIAL_DRIVER_LOCATION = { lat: 30.4615, lng: -91.1971 };
+
 const RideDriverPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
   const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 4);
+  const [driverLocation, setDriverLocation] = useState(INITIAL_DRIVER_LOCATION);
 
   // Handle missing state
   useEffect(() => {
@@ -47,10 +54,17 @@ const RideDriverPage = () => {
         if (prev <= 1) {
           clearInterval(timer);
           toast.success("Your driver has arrived!");
+          setDriverLocation(PICKUP_LOCATION);
           return 0;
         }
         return prev - 1;
       });
+      
+      // Move driver closer to pickup
+      setDriverLocation((prev) => ({
+        lat: prev.lat + (PICKUP_LOCATION.lat - INITIAL_DRIVER_LOCATION.lat) / 4,
+        lng: prev.lng + (PICKUP_LOCATION.lng - INITIAL_DRIVER_LOCATION.lng) / 4,
+      }));
     }, 12000); // Update every 12 seconds for demo
 
     return () => clearInterval(timer);
@@ -75,48 +89,14 @@ const RideDriverPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
-      {/* Static Map Placeholder */}
-      <div className="relative h-[40vh] w-full">
-        <img
-          src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&h=600&fit=crop"
-          alt="Map view"
-          className="w-full h-full object-cover"
+      {/* Google Maps Background */}
+      <GoogleMapProvider>
+        <DriverMapView 
+          pickupLocation={PICKUP_LOCATION} 
+          driverLocation={driverLocation}
+          hasArrived={etaMinutes === 0}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950" />
-        
-        {/* Pickup Pin */}
-        <motion.div
-          initial={{ scale: 0, y: 20 }}
-          animate={{ scale: 1, y: 0 }}
-          transition={{ delay: 0.3, type: "spring" }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full"
-        >
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <MapPin className="w-5 h-5 text-white" />
-            </div>
-            <div className="w-1 h-4 bg-primary" />
-            <div className="w-3 h-3 rounded-full bg-primary/50" />
-          </div>
-        </motion.div>
-
-        {/* Driver en-route indicator */}
-        <motion.div
-          animate={{
-            x: ["-20%", "10%", "-20%"],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute top-1/3 left-1/4"
-        >
-          <div className="w-8 h-8 rounded-full bg-primary/80 flex items-center justify-center shadow-lg">
-            <span className="text-xs">🚗</span>
-          </div>
-        </motion.div>
-      </div>
+      </GoogleMapProvider>
 
       {/* Driver Card Bottom Sheet */}
       <motion.div

@@ -24,6 +24,8 @@ import { motion, AnimatePresence } from "framer-motion";
  import { useIsMobile } from "@/hooks/useMobileSettings";
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
+ import { GoogleMapProvider } from "@/components/maps";
+ import RidesMapBackground from "@/components/ride/RidesMapBackground";
  
  type RideStep = "request" | "options" | "confirm" | "processing" | "success";
  
@@ -224,6 +226,7 @@ export default function Rides() {
   const [estimatedDistance] = useState(5.2);
   const [estimatedDuration] = useState(15);
  const [isAutoDetecting, setIsAutoDetecting] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Address autocomplete state
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
@@ -256,11 +259,14 @@ export default function Rides() {
      setIsAutoDetecting(true);
        try {
          const location = await getCurrentLocation();
+         setUserLocation({ lat: location.lat, lng: location.lng });
          const address = await reverseGeocode(location.lat, location.lng);
          setPickup(address);
        toast.success("Location detected");
        } catch {
        // Fail silently - user can enter manually
+       // Set default location (Baton Rouge)
+       setUserLocation({ lat: 30.4515, lng: -91.1871 });
      } finally {
        setIsAutoDetecting(false);
        }
@@ -377,20 +383,12 @@ export default function Rides() {
        <Header />
  
       <main className="relative">
-        {/* FIXED LAYER — Dark Map Background */}
+        {/* FIXED LAYER — Dark Map Background with Google Maps */}
         <div className="fixed inset-0 z-0 pointer-events-none">
-          <img 
-            src="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=2000"
-            alt="City background"
-            className="w-full h-full object-cover opacity-60"
-          />
+          <GoogleMapProvider>
+            <RidesMapBackground userLocation={userLocation} />
+          </GoogleMapProvider>
           <div className="absolute inset-0 rides-gradient-overlay" />
-          
-          {/* Pulsing "Current Location" Dot */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 bg-primary rounded-full animate-location-pulse absolute" />
-            <div className="w-4 h-4 bg-primary rounded-full relative border-2 border-white shadow-[0_0_20px_hsl(217_91%_60%/0.5)]" />
-          </div>
         </div>
  
        {/* SCROLLABLE CONTENT LAYER — Optimized for no-scroll mobile */}
