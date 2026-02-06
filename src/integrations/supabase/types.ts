@@ -4576,6 +4576,7 @@ export type Database = {
           allowed_regions: string[] | null
           apns_token: string | null
           avatar_url: string | null
+          bank_connected: boolean | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -4598,7 +4599,11 @@ export type Database = {
           rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
           stripe_account_id: string | null
+          stripe_charges_enabled: boolean | null
+          stripe_details_submitted: boolean | null
+          stripe_last_sync: string | null
           stripe_onboarding_complete: boolean | null
+          stripe_payouts_enabled: boolean | null
           total_trips: number | null
           updated_at: string
           user_id: string
@@ -4610,6 +4615,7 @@ export type Database = {
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
+          bank_connected?: boolean | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -4632,7 +4638,11 @@ export type Database = {
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_details_submitted?: boolean | null
+          stripe_last_sync?: string | null
           stripe_onboarding_complete?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           total_trips?: number | null
           updated_at?: string
           user_id: string
@@ -4644,6 +4654,7 @@ export type Database = {
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
+          bank_connected?: boolean | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -4666,7 +4677,11 @@ export type Database = {
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
           stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean | null
+          stripe_details_submitted?: boolean | null
+          stripe_last_sync?: string | null
           stripe_onboarding_complete?: boolean | null
+          stripe_payouts_enabled?: boolean | null
           total_trips?: number | null
           updated_at?: string
           user_id?: string
