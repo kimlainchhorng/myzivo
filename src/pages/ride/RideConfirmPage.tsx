@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
-import { toast } from "sonner";
+import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
 
 interface LocationState {
   ride: RideOption;
   pickup: string;
   destination: string;
+  tripDetails?: TripDetails;
 }
 
 type PaymentMethod = "card" | "apple" | "cash";
@@ -45,7 +46,12 @@ const RideConfirmPage = () => {
     );
   }
 
-  const { ride, pickup, destination } = state;
+  const { ride, pickup, destination, tripDetails } = state;
+
+  // Calculate dynamic price
+  const displayPrice = tripDetails
+    ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
+    : ride.price;
 
   const handleConfirm = () => {
     navigate("/ride/finding", {
@@ -117,6 +123,19 @@ const RideConfirmPage = () => {
               </div>
             </div>
 
+            {/* Trip Estimate */}
+            {tripDetails && (
+              <>
+                <div className="h-px bg-white/10 my-3" />
+                <div className="flex items-center justify-center gap-2 py-2">
+                  <Navigation className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-white/80">
+                    {tripDetails.distance} miles • {tripDetails.duration} min
+                  </span>
+                </div>
+              </>
+            )}
+
             {/* Divider */}
             <div className="h-px bg-white/10 my-3" />
 
@@ -127,7 +146,7 @@ const RideConfirmPage = () => {
                 <span className="text-sm">{ride.eta} min away</span>
               </div>
               <div className="text-2xl font-bold text-primary">
-                ${ride.price.toFixed(2)}
+                ${displayPrice.toFixed(2)}
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Send, MapPin, Crosshair } from "lucide-react";
+import { useState, useRef } from "react";
+import { Send, MapPin, Crosshair, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +11,14 @@ interface RideLocationCardProps {
 }
 
 const mockSuggestions = [
-  "123 Main Street, New York, NY 10001",
-  "456 Broadway, New York, NY 10012",
-  "789 Park Avenue, New York, NY 10021",
-  "321 Fifth Avenue, New York, NY 10016",
-  "555 Madison Avenue, New York, NY 10022",
-  "JFK International Airport, Queens, NY",
-  "LaGuardia Airport, Queens, NY",
-  "Times Square, Manhattan, NY",
+  "109 Hickory Street, Denham Springs, LA",
+  "875 Florida Blvd, Baton Rouge, LA",
+  "6401 Bluebonnet Blvd, Baton Rouge, LA",
+  "660 Arlington Creek Centre, Baton Rouge, LA",
+  "1 Airport Rd, Baton Rouge, LA",
+  "3900 N I-10 Service Rd, Metairie, LA",
+  "10000 Perkins Rowe, Baton Rouge, LA",
+  "2142 O'Neal Lane, Baton Rouge, LA",
 ];
 
 const RideLocationCard = ({
@@ -43,9 +43,9 @@ const RideLocationCard = ({
       const filtered = mockSuggestions.filter((s) =>
         s.toLowerCase().includes(value.toLowerCase())
       );
-      setFilteredSuggestions(filtered.slice(0, 4));
+      setFilteredSuggestions(filtered.slice(0, 6));
     } else {
-      setFilteredSuggestions(mockSuggestions.slice(0, 4));
+      setFilteredSuggestions(mockSuggestions.slice(0, 6));
     }
   };
 
@@ -61,7 +61,15 @@ const RideLocationCard = ({
 
   const handleFocus = (field: "pickup" | "destination") => {
     setActiveField(field);
-    setFilteredSuggestions(mockSuggestions.slice(0, 4));
+    setFilteredSuggestions(mockSuggestions.slice(0, 6));
+  };
+
+  const handleClear = (field: "pickup" | "destination") => {
+    if (field === "pickup") {
+      onPickupChange("");
+    } else {
+      onDestinationChange("");
+    }
   };
 
   const handleBlur = () => {
@@ -112,6 +120,15 @@ const RideLocationCard = ({
                   className="flex-1 bg-transparent text-white text-sm placeholder-white/40 outline-none"
                   style={{ fontSize: "16px" }}
                 />
+                {pickup && (
+                  <button
+                    onClick={() => handleClear("pickup")}
+                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                    aria-label="Clear pickup"
+                  >
+                    <X className="w-3.5 h-3.5 text-white/60" />
+                  </button>
+                )}
                 <button
                   className="p-2 rounded-full hover:bg-white/10 transition-colors"
                   aria-label="Use current location"
@@ -141,6 +158,15 @@ const RideLocationCard = ({
                   className="flex-1 bg-transparent text-white text-sm placeholder-white/40 outline-none"
                   style={{ fontSize: "16px" }}
                 />
+                {destination && (
+                  <button
+                    onClick={() => handleClear("destination")}
+                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                    aria-label="Clear destination"
+                  >
+                    <X className="w-3.5 h-3.5 text-white/60" />
+                  </button>
+                )}
                 <button
                   className="p-2 rounded-full hover:bg-white/10 transition-colors"
                   aria-label="Use current location"
