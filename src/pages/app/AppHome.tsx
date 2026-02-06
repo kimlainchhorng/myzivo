@@ -231,21 +231,21 @@ const AppHome = () => {
             className="h-32"
           />
 
-          {/* Row 2: Flights Image + Eats Image */}
-          <ServiceCard 
-            title="Flights" 
-            subtitle="Global Travel" 
-            img={assets.flights} 
-            icon={Plane}
-            onNavigate={() => handleNavigate("FLIGHTS")}
-            className="h-32"
-          />
+          {/* Row 2: Food Image + Eats Image */}
           <ServiceCard 
             title="Eats" 
             subtitle="Gourmet Delivery" 
             img={assets.food} 
             icon={Utensils}
             onNavigate={() => handleNavigate("EATS")}
+            className="h-32"
+          />
+          <ServiceCard 
+            title="Move" 
+            subtitle="Package Delivery" 
+            img={assets.rides} 
+            icon={Car}
+            onNavigate={() => handleNavigate("MOVE")}
             className="h-32"
           />
         </div>
