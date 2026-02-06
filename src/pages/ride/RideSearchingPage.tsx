@@ -19,24 +19,34 @@ const statusMessages = [
   { threshold: 80, text: "Driver confirmed!", subtext: "Preparing your ride" },
 ];
 
-const RideFindingPage = () => {
+const RideSearchingPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as LocationState | null;
+  const routeState = location.state as LocationState | null;
   const [progress, setProgress] = useState(0);
+
+  // Try to get state from route or localStorage
+  const [state, setState] = useState<LocationState | null>(routeState);
+
+  useEffect(() => {
+    if (!routeState?.ride) {
+      try {
+        const stored = localStorage.getItem("zivo_active_ride");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setState(parsed);
+          return;
+        }
+      } catch {}
+      navigate("/ride");
+    }
+  }, [routeState, navigate]);
 
   // Get current status message based on progress
   const currentStatus = statusMessages.reduce((acc, msg) => {
     if (progress >= msg.threshold) return msg;
     return acc;
   }, statusMessages[0]);
-
-  // Handle missing state
-  useEffect(() => {
-    if (!state?.ride) {
-      navigate("/ride");
-    }
-  }, [state, navigate]);
 
   // Progress animation - 0 to 100 over 6 seconds
   useEffect(() => {
@@ -159,4 +169,4 @@ const RideFindingPage = () => {
   );
 };
 
-export default RideFindingPage;
+export default RideSearchingPage;

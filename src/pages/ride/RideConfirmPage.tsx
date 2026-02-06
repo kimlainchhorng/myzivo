@@ -54,13 +54,20 @@ const RideConfirmPage = () => {
     : ride.price;
 
   const handleConfirm = () => {
-    navigate("/ride/finding", {
-      state: {
-        ride,
-        pickup,
-        destination,
-        paymentMethod: selectedPayment,
-      },
+    // Save trip to localStorage for persistence
+    const tripState = {
+      ride: { ...ride, price: displayPrice },
+      pickup,
+      destination,
+      paymentMethod: selectedPayment,
+      tripDetails,
+    };
+    try {
+      localStorage.setItem("zivo_active_ride", JSON.stringify({ ...tripState, startedAt: Date.now() }));
+    } catch {}
+    
+    navigate("/ride/searching", {
+      state: tripState,
     });
   };
 
@@ -208,7 +215,7 @@ const RideConfirmPage = () => {
           onClick={handleConfirm}
           className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90"
         >
-          CONFIRM RIDE
+          PAY ${displayPrice.toFixed(2)} & REQUEST
         </motion.button>
       </div>
 
