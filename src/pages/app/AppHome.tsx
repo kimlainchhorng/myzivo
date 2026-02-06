@@ -239,6 +239,7 @@ const AppHome = () => {
             icon={Car}
             onNavigate={() => handleNavigate("RIDES")}
             className="h-32"
+            imgPosition="center 40%"
           />
 
           {/* Row 2: Food Image + Move Image */}
@@ -249,6 +250,7 @@ const AppHome = () => {
             icon={Utensils}
             onNavigate={() => handleNavigate("EATS")}
             className="h-32"
+            imgPosition="center 50%"
           />
           <ServiceCard 
             title="Move" 
@@ -257,6 +259,7 @@ const AppHome = () => {
             icon={Package}
             onNavigate={() => handleNavigate("MOVE")}
             className="h-32"
+            imgPosition="center 40%"
           />
         </div>
 
@@ -269,6 +272,7 @@ const AppHome = () => {
             icon={BedDouble}
             onNavigate={() => handleNavigate("HOTELS")}
             className="col-span-2 h-28"
+            imgPosition="center 60%"
           />
           <motion.button 
             onClick={() => navigate("/account")}
