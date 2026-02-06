@@ -41,7 +41,7 @@ const Setup = () => {
 
         // If setup is already complete, redirect immediately
         if (profile?.setup_complete) {
-          window.location.href = "/";
+          navigate("/", { replace: true });
           return;
         }
 
