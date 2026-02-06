@@ -41,8 +41,9 @@ const AuthCallback = () => {
       }
 
       // Check if email verification is required
-      // User needs verification if: no email_confirmed_at in auth AND profile.email_verified is not true
-      const needsVerification = !user.email_confirmed_at && profile.email_verified !== true;
+      // ALL users (including Google OAuth) must verify via our OTP flow
+      // We only check our custom email_verified flag, ignoring Supabase's email_confirmed_at
+      const needsVerification = profile.email_verified !== true;
 
       if (needsVerification && user.email) {
         // Send OTP for verification
