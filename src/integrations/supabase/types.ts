@@ -19771,6 +19771,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      haversine_miles: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
       is_admin: { Args: { user_uuid: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_chat_participant: {
