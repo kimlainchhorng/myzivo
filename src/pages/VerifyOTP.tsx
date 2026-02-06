@@ -4,7 +4,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/comp
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, ArrowRight, RefreshCw, Mail, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowRight, RefreshCw, Mail, ArrowLeft, Home } from "lucide-react";
 import { motion } from "framer-motion";
 
 const VerifyOTP = () => {
@@ -134,6 +134,11 @@ const VerifyOTP = () => {
     navigate("/login?mode=signup");
   };
 
+  const handleGoHome = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
   if (!email) {
     return null;
   }
@@ -252,13 +257,20 @@ const VerifyOTP = () => {
           </div>
 
           {/* Back to signup */}
-          <div className="mt-6 pt-4 border-t border-zinc-800">
+          <div className="mt-6 pt-4 border-t border-zinc-800 space-y-3">
             <button
               onClick={handleBack}
               className="w-full flex items-center justify-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Sign Up
+            </button>
+            <button
+              onClick={handleGoHome}
+              className="w-full flex items-center justify-center gap-2 text-zinc-500 hover:text-zinc-300 transition-colors text-sm"
+            >
+              <Home className="h-4 w-4" />
+              Go to Home
             </button>
           </div>
         </motion.div>
