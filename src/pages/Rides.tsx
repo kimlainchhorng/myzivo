@@ -412,11 +412,11 @@ export default function Rides() {
 
                {/* GLASS INPUT PANEL */}
                <motion.div 
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: 0.1 }}
-                className="rides-glass-panel rounded-2xl md:rounded-[2rem] p-3 md:p-6 shadow-2xl rides-content-visible"
-               >
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="rides-glass-panel rounded-2xl md:rounded-[2rem] p-3 md:p-6 shadow-2xl rides-content-visible relative z-50"
+                >
                  <div className="relative">
                    {/* Visual Connector Line */}
                   <div className="absolute left-[0.85rem] md:left-[1.15rem] top-8 bottom-8 w-0.5 bg-gradient-to-b from-primary to-emerald-500 opacity-50" />
@@ -561,11 +561,11 @@ export default function Rides() {
 
                {/* VEHICLE FLEET SELECTOR */}
                <motion.div
-                 initial={{ y: 20, opacity: 0 }}
-                 animate={{ y: 0, opacity: 1 }}
-                 transition={{ delay: 0.2 }}
-                 className="rides-content-visible"
-               >
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="rides-content-visible relative z-10"
+                >
                  {/* Header */}
                 <div className="text-center mb-3 md:mb-8">
                   <h2 className="text-lg sm:text-xl md:text-3xl font-black tracking-tight mb-2 md:mb-6">
