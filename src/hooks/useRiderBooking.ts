@@ -21,7 +21,8 @@ export type FareEstimate = {
   estimatedDistance: number;
 };
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
+// Google Maps API Key (loaded via provider in App.tsx)
+const getGoogleMapsApiKey = () => import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
 
 export const useLocationSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
@@ -29,18 +30,46 @@ export const useLocationSearch = () => {
   const searchLocations = useCallback(async (query: string): Promise<Location[]> => {
     if (!query || query.length < 3) return [];
     
+    const apiKey = getGoogleMapsApiKey();
+    if (!apiKey) {
+      console.error("Google Maps API key not configured");
+      return [];
+    }
+
     setIsSearching(true);
     try {
+      // Use Google Places Autocomplete API
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=5`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${apiKey}&types=address`
       );
       const data = await response.json();
       
-      return data.features?.map((feature: any) => ({
-        address: feature.place_name,
-        lat: feature.center[1],
-        lng: feature.center[0],
-      })) || [];
+      if (data.status !== "OK" || !data.predictions) {
+        return [];
+      }
+
+      // Get place details for each prediction to get coordinates
+      const locations: Location[] = [];
+      for (const prediction of data.predictions.slice(0, 5)) {
+        try {
+          const detailsResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address&key=${apiKey}`
+          );
+          const details = await detailsResponse.json();
+          
+          if (details.status === "OK" && details.result) {
+            locations.push({
+              address: details.result.formatted_address || prediction.description,
+              lat: details.result.geometry.location.lat,
+              lng: details.result.geometry.location.lng,
+            });
+          }
+        } catch (e) {
+          console.error("Error fetching place details:", e);
+        }
+      }
+      
+      return locations;
     } catch (error) {
       console.error("Location search error:", error);
       return [];
@@ -73,19 +102,27 @@ export const useRouteCalculation = () => {
       return cached;
     }
 
+    const apiKey = getGoogleMapsApiKey();
+    if (!apiKey) {
+      console.error("Google Maps API key not configured");
+      return null;
+    }
+
     setIsCalculating(true);
     try {
+      // Use Google Directions API
       const response = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?geometries=geojson&overview=simplified&access_token=${MAPBOX_TOKEN}`
+        `https://maps.googleapis.com/maps/api/directions/json?origin=${pickup.lat},${pickup.lng}&destination=${dropoff.lat},${dropoff.lng}&key=${apiKey}`
       );
       const data = await response.json();
       
-      if (data.routes && data.routes.length > 0) {
+      if (data.status === "OK" && data.routes && data.routes.length > 0) {
         const route = data.routes[0];
+        const leg = route.legs[0];
         const result = {
-          distance: route.distance / 1000, // Convert to km
-          duration: route.duration / 60, // Convert to minutes
-          geometry: route.geometry,
+          distance: leg.distance.value / 1000, // Convert meters to km
+          duration: leg.duration.value / 60, // Convert seconds to minutes
+          geometry: route.overview_polyline, // Encoded polyline
         };
         // Cache for future lookups
         routeCache.set(cacheKey, result);

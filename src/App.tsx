@@ -15,6 +15,7 @@ import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
 import { PWAInstallPrompt } from "./components/mobile";
 import { Loader2 } from "lucide-react";
 import { SpatialCursor } from "./components/ui/SpatialCursor";
+import { GoogleMapProvider } from "./components/maps";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -456,6 +457,7 @@ const PageLoader = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <GoogleMapProvider>
     <TooltipProvider>
       <Toaster />
       <Sonner />
@@ -1277,6 +1279,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </GoogleMapProvider>
   </QueryClientProvider>
 );
 

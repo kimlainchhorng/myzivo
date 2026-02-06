@@ -1,58 +1,74 @@
-import { useEffect, useRef, useState } from "react";
-import mapboxgl from "mapbox-gl";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, MapPin, Car, Navigation, Maximize2, Layers, Activity, AlertCircle } from "lucide-react";
+import { RefreshCw, MapPin, Car, Maximize2, Layers, Activity, AlertCircle } from "lucide-react";
 import { useOnlineDrivers, useActiveTripsWithLocations } from "@/hooks/useOnlineDrivers";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useGoogleMaps } from "@/components/maps";
 
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
+// Dark map styles for Google Maps
+const darkMapStyles: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#212121" }] },
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+  { featureType: "administrative.country", elementType: "labels.text.fill", stylers: [{ color: "#9e9e9e" }] },
+  { featureType: "administrative.locality", elementType: "labels.text.fill", stylers: [{ color: "#bdbdbd" }] },
+  { featureType: "poi", elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+  { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#181818" }] },
+  { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#8a8a8a" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#373737" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#3c3c3c" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] },
+];
 
 const TripMap = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+  
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeLayer, setActiveLayer] = useState<"all" | "drivers" | "trips">("all");
 
+  const { isLoaded: googleLoaded, loadError: googleError } = useGoogleMaps();
   const { data: drivers, isLoading: driversLoading, refetch: refetchDrivers } = useOnlineDrivers();
   const { data: activeTrips, isLoading: tripsLoading, refetch: refetchTrips } = useActiveTripsWithLocations();
 
-  // Initialize map
+  // Initialize Google Map
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!googleLoaded || !mapContainer.current || mapRef.current) return;
 
-    if (!MAPBOX_TOKEN) {
-      setMapError("Mapbox token not configured");
+    if (googleError) {
+      setMapError(googleError);
       return;
     }
 
     try {
-      mapboxgl.accessToken = MAPBOX_TOKEN;
-
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: "mapbox://styles/mapbox/dark-v11",
-        center: [-74.006, 40.7128], // Default to NYC
+      mapRef.current = new window.google.maps.Map(mapContainer.current, {
+        center: { lat: 40.7128, lng: -74.006 }, // NYC default
         zoom: 11,
+        styles: darkMapStyles,
+        disableDefaultUI: false,
+        zoomControl: true,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        gestureHandling: "greedy",
       });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+      infoWindowRef.current = new window.google.maps.InfoWindow();
 
-      map.current.on("load", () => {
+      mapRef.current.addListener("tilesloaded", () => {
         setMapLoaded(true);
         setMapError(null);
-      });
-
-      map.current.on("error", (e) => {
-        console.error("Mapbox error:", e);
-        setMapError("Failed to load map");
       });
     } catch (error) {
       console.error("Map initialization error:", error);
@@ -60,20 +76,24 @@ const TripMap = () => {
     }
 
     return () => {
-      map.current?.remove();
-      map.current = null;
+      markersRef.current.forEach((marker) => marker.setMap(null));
+      markersRef.current = [];
     };
+  }, [googleLoaded, googleError]);
+
+  // Clear all markers
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach((marker) => marker.setMap(null));
+    markersRef.current = [];
   }, []);
 
   // Update markers when data changes
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!mapRef.current || !mapLoaded || !window.google) return;
 
-    // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
+    clearMarkers();
 
-    const bounds = new mapboxgl.LngLatBounds();
+    const bounds = new window.google.maps.LatLngBounds();
     let hasPoints = false;
 
     // Add driver markers
@@ -81,54 +101,38 @@ const TripMap = () => {
       drivers?.forEach((driver) => {
         if (driver.current_lat && driver.current_lng) {
           hasPoints = true;
-          
-          const el = document.createElement("div");
-          el.className = "driver-marker";
-          el.innerHTML = `
-            <div class="relative group cursor-pointer">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/30 border-2 border-white/20 transition-transform group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/>
-                  <circle cx="7" cy="17" r="2"/>
-                  <circle cx="17" cy="17" r="2"/>
-                </svg>
-              </div>
-              <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
-            </div>
-          `;
 
-          const popup = new mapboxgl.Popup({ 
-            offset: 25,
-            className: "premium-popup"
-          }).setHTML(`
-            <div class="p-4 min-w-[200px]">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
-                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"/>
-                    <circle cx="7" cy="17" r="2"/>
-                    <circle cx="17" cy="17" r="2"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-base">${driver.full_name}</p>
-                  <p class="text-xs text-gray-400 capitalize">${driver.vehicle_type}${driver.vehicle_model ? ` • ${driver.vehicle_model}` : ""}</p>
+          const marker = new window.google.maps.Marker({
+            position: { lat: driver.current_lat, lng: driver.current_lng },
+            map: mapRef.current!,
+            title: driver.full_name,
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#3b82f6",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 3,
+              scale: 12,
+            },
+            animation: window.google.maps.Animation.DROP,
+          });
+
+          marker.addListener("click", () => {
+            infoWindowRef.current?.setContent(`
+              <div style="padding: 12px; min-width: 180px; background: #1a1a1a; color: white; border-radius: 8px;">
+                <p style="font-weight: bold; font-size: 14px; margin-bottom: 4px;">${driver.full_name}</p>
+                <p style="font-size: 12px; color: #9ca3af; text-transform: capitalize;">${driver.vehicle_type}${driver.vehicle_model ? ` • ${driver.vehicle_model}` : ""}</p>
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
+                  <div style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></div>
+                  <span style="font-size: 11px; color: #10b981;">Online & Available</span>
                 </div>
               </div>
-              <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span class="text-xs font-medium text-emerald-400">Online & Available</span>
-              </div>
-            </div>
-          `);
-
-          const marker = new mapboxgl.Marker(el)
-            .setLngLat([driver.current_lng, driver.current_lat])
-            .setPopup(popup)
-            .addTo(map.current!);
+            `);
+            infoWindowRef.current?.open(mapRef.current, marker);
+          });
 
           markersRef.current.push(marker);
-          bounds.extend([driver.current_lng, driver.current_lat]);
+          bounds.extend({ lat: driver.current_lat, lng: driver.current_lng });
         }
       });
     }
@@ -139,97 +143,83 @@ const TripMap = () => {
         // Pickup marker
         if (trip.pickup_lat && trip.pickup_lng) {
           hasPoints = true;
-          
-          const pickupEl = document.createElement("div");
-          pickupEl.innerHTML = `
-            <div class="relative group cursor-pointer">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-green-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 border-2 border-white/20 transition-transform group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-                </svg>
-              </div>
-            </div>
-          `;
 
-          const pickupPopup = new mapboxgl.Popup({ 
-            offset: 15,
-            className: "premium-popup"
-          }).setHTML(`
-            <div class="p-3">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-                  </svg>
-                </div>
-                <p class="font-bold text-emerald-400 text-sm">Pickup</p>
-              </div>
-              <p class="text-xs text-gray-300">${trip.pickup_address}</p>
-              <div class="mt-2 px-2 py-1 rounded bg-muted/50 inline-block">
-                <p class="text-[10px] text-gray-400 capitalize">Status: ${trip.status?.replace("_", " ")}</p>
-              </div>
-            </div>
-          `);
+          const pickupMarker = new window.google.maps.Marker({
+            position: { lat: trip.pickup_lat, lng: trip.pickup_lng },
+            map: mapRef.current!,
+            title: "Pickup",
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#10b981",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 8,
+            },
+          });
 
-          const pickupMarker = new mapboxgl.Marker(pickupEl)
-            .setLngLat([trip.pickup_lng, trip.pickup_lat])
-            .setPopup(pickupPopup)
-            .addTo(map.current!);
+          pickupMarker.addListener("click", () => {
+            infoWindowRef.current?.setContent(`
+              <div style="padding: 10px; background: #1a1a1a; color: white; border-radius: 8px;">
+                <p style="font-weight: bold; color: #10b981; margin-bottom: 4px;">Pickup</p>
+                <p style="font-size: 12px; color: #d1d5db;">${trip.pickup_address}</p>
+                <p style="font-size: 10px; color: #6b7280; margin-top: 6px; text-transform: capitalize;">Status: ${trip.status?.replace("_", " ")}</p>
+              </div>
+            `);
+            infoWindowRef.current?.open(mapRef.current, pickupMarker);
+          });
 
           markersRef.current.push(pickupMarker);
-          bounds.extend([trip.pickup_lng, trip.pickup_lat]);
+          bounds.extend({ lat: trip.pickup_lat, lng: trip.pickup_lng });
         }
 
         // Dropoff marker
         if (trip.dropoff_lat && trip.dropoff_lng) {
           hasPoints = true;
-          
-          const dropoffEl = document.createElement("div");
-          dropoffEl.innerHTML = `
-            <div class="relative group cursor-pointer">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-rose-500 flex items-center justify-center shadow-lg shadow-red-500/30 border-2 border-white/20 transition-transform group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </div>
-            </div>
-          `;
 
-          const dropoffPopup = new mapboxgl.Popup({ 
-            offset: 15,
-            className: "premium-popup"
-          }).setHTML(`
-            <div class="p-3">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-400">
-                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
-                </div>
-                <p class="font-bold text-red-400 text-sm">Dropoff</p>
-              </div>
-              <p class="text-xs text-gray-300">${trip.dropoff_address}</p>
-            </div>
-          `);
+          const dropoffMarker = new window.google.maps.Marker({
+            position: { lat: trip.dropoff_lat, lng: trip.dropoff_lng },
+            map: mapRef.current!,
+            title: "Dropoff",
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              fillColor: "#ef4444",
+              fillOpacity: 1,
+              strokeColor: "#ffffff",
+              strokeWeight: 2,
+              scale: 8,
+            },
+          });
 
-          const dropoffMarker = new mapboxgl.Marker(dropoffEl)
-            .setLngLat([trip.dropoff_lng, trip.dropoff_lat])
-            .setPopup(dropoffPopup)
-            .addTo(map.current!);
+          dropoffMarker.addListener("click", () => {
+            infoWindowRef.current?.setContent(`
+              <div style="padding: 10px; background: #1a1a1a; color: white; border-radius: 8px;">
+                <p style="font-weight: bold; color: #ef4444; margin-bottom: 4px;">Dropoff</p>
+                <p style="font-size: 12px; color: #d1d5db;">${trip.dropoff_address}</p>
+              </div>
+            `);
+            infoWindowRef.current?.open(mapRef.current, dropoffMarker);
+          });
 
           markersRef.current.push(dropoffMarker);
-          bounds.extend([trip.dropoff_lng, trip.dropoff_lat]);
+          bounds.extend({ lat: trip.dropoff_lat, lng: trip.dropoff_lng });
         }
       });
     }
 
     // Fit bounds if we have points
     if (hasPoints && !bounds.isEmpty()) {
-      map.current.fitBounds(bounds, { padding: 50, maxZoom: 14 });
+      mapRef.current.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+      
+      // Limit max zoom
+      const listener = mapRef.current.addListener("idle", () => {
+        if (mapRef.current && mapRef.current.getZoom()! > 14) {
+          mapRef.current.setZoom(14);
+        }
+        window.google.maps.event.removeListener(listener);
+      });
     }
-  }, [drivers, activeTrips, mapLoaded, activeLayer]);
+  }, [drivers, activeTrips, mapLoaded, activeLayer, clearMarkers]);
 
   const handleRefresh = () => {
     refetchDrivers();
@@ -320,14 +310,14 @@ const TripMap = () => {
       </CardHeader>
       
       <CardContent className="p-0">
-        {mapError ? (
+        {mapError || googleError ? (
           <div className="h-[450px] flex items-center justify-center bg-muted/20">
             <div className="text-center p-8">
               <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="h-8 w-8 text-destructive" />
               </div>
               <p className="font-bold text-lg mb-1">Map Unavailable</p>
-              <p className="text-sm text-muted-foreground">{mapError}</p>
+              <p className="text-sm text-muted-foreground">{mapError || googleError}</p>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -341,6 +331,10 @@ const TripMap = () => {
           </div>
         ) : (driversLoading || tripsLoading) && !mapLoaded ? (
           <Skeleton className="h-[450px] w-full" />
+        ) : !googleLoaded ? (
+          <div className="h-[450px] flex items-center justify-center bg-muted/20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
         ) : (
           <div className="relative">
             <div 
@@ -380,7 +374,7 @@ const TripMap = () => {
               </div>
             </motion.div>
 
-            {/* Empty state overlay - only show when no data AND map is loaded */}
+            {/* Empty state overlay */}
             <AnimatePresence>
               {onlineCount === 0 && activeTripsCount === 0 && mapLoaded && (
                 <motion.div 
@@ -397,8 +391,17 @@ const TripMap = () => {
                     >
                       <MapPin className="h-10 w-10 text-muted-foreground" />
                     </motion.div>
-                    <p className="font-bold text-lg">No active drivers or trips</p>
-                    <p className="text-sm text-muted-foreground mt-1">Markers will appear when drivers come online</p>
+                    <p className="font-bold text-lg mb-1">No Active Activity</p>
+                    <p className="text-sm text-muted-foreground">Drivers and trips will appear here when online</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleRefresh}
+                      className="mt-4"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Check Again
+                    </Button>
                   </div>
                 </motion.div>
               )}
