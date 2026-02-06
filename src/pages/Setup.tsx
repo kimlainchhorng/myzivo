@@ -78,19 +78,40 @@ const Setup = () => {
     setSubmitting(true);
 
     try {
-      // FIXED: Use upsert with user_id, not id
-      const { error } = await supabase
+      // Check if profile exists first
+      const { data: existingProfile } = await supabase
         .from("profiles")
-        .upsert({
-          user_id: user.id,
-          email: user.email,
-          full_name: fullName,
-          phone: phone || null,
-          setup_complete: true,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: "user_id"
-        });
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let error;
+      if (existingProfile) {
+        // Update existing profile
+        const result = await supabase
+          .from("profiles")
+          .update({
+            full_name: fullName,
+            phone: phone || null,
+            setup_complete: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id);
+        error = result.error;
+      } else {
+        // Insert new profile
+        const result = await supabase
+          .from("profiles")
+          .insert({
+            id: crypto.randomUUID(),
+            user_id: user.id,
+            email: user.email,
+            full_name: fullName,
+            phone: phone || null,
+            setup_complete: true,
+          });
+        error = result.error;
+      }
 
       if (error) throw error;
 
