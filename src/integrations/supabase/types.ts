@@ -3821,6 +3821,27 @@ export type Database = {
           },
         ]
       }
+      driver_commission_rates: {
+        Row: {
+          commission_pct: number
+          created_at: string | null
+          level: string
+          trips_required: number
+        }
+        Insert: {
+          commission_pct: number
+          created_at?: string | null
+          level: string
+          trips_required: number
+        }
+        Update: {
+          commission_pct?: number
+          created_at?: string | null
+          level?: string
+          trips_required?: number
+        }
+        Relationships: []
+      }
       driver_documents: {
         Row: {
           document_type: string
@@ -4558,6 +4579,7 @@ export type Database = {
           created_at: string
           current_lat: number | null
           current_lng: number | null
+          daily_goal: number | null
           device_platform: string | null
           documents_verified: boolean | null
           eats_enabled: boolean | null
@@ -4567,6 +4589,7 @@ export type Database = {
           home_city: string | null
           id: string
           is_online: boolean | null
+          level: string | null
           license_number: string
           move_enabled: boolean | null
           phone: string
@@ -4574,6 +4597,8 @@ export type Database = {
           region_id: string | null
           rides_enabled: boolean | null
           status: Database["public"]["Enums"]["driver_status"] | null
+          stripe_account_id: string | null
+          stripe_onboarding_complete: boolean | null
           total_trips: number | null
           updated_at: string
           user_id: string
@@ -4588,6 +4613,7 @@ export type Database = {
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
+          daily_goal?: number | null
           device_platform?: string | null
           documents_verified?: boolean | null
           eats_enabled?: boolean | null
@@ -4597,6 +4623,7 @@ export type Database = {
           home_city?: string | null
           id?: string
           is_online?: boolean | null
+          level?: string | null
           license_number: string
           move_enabled?: boolean | null
           phone: string
@@ -4604,6 +4631,8 @@ export type Database = {
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean | null
           total_trips?: number | null
           updated_at?: string
           user_id: string
@@ -4618,6 +4647,7 @@ export type Database = {
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
+          daily_goal?: number | null
           device_platform?: string | null
           documents_verified?: boolean | null
           eats_enabled?: boolean | null
@@ -4627,6 +4657,7 @@ export type Database = {
           home_city?: string | null
           id?: string
           is_online?: boolean | null
+          level?: string | null
           license_number?: string
           move_enabled?: boolean | null
           phone?: string
@@ -4634,6 +4665,8 @@ export type Database = {
           region_id?: string | null
           rides_enabled?: boolean | null
           status?: Database["public"]["Enums"]["driver_status"] | null
+          stripe_account_id?: string | null
+          stripe_onboarding_complete?: boolean | null
           total_trips?: number | null
           updated_at?: string
           user_id?: string
