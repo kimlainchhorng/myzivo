@@ -476,7 +476,7 @@ const App = () => (
                 <Route path="/support" element={<SetupRequiredRoute><SupportCenterPage /></SetupRequiredRoute>} />
                 <Route path="/travel" element={<SetupRequiredRoute><AppTravel /></SetupRequiredRoute>} />
                 <Route path="/rides" element={<SetupRequiredRoute><Rides /></SetupRequiredRoute>} />
-                <Route path="/ride" element={<SetupRequiredRoute><Rides /></SetupRequiredRoute>} />
+                
                 <Route path="/eats" element={<SetupRequiredRoute><Eats /></SetupRequiredRoute>} />
                 <Route path="/food" element={<SetupRequiredRoute><Eats /></SetupRequiredRoute>} />
                 <Route path="/move" element={<SetupRequiredRoute><Move /></SetupRequiredRoute>} />
