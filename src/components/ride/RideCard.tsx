@@ -10,15 +10,19 @@ export interface RideOption {
   eta: number;
   image: string;
   category: "economy" | "premium" | "elite";
+  multiplier: number;
 }
 
 interface RideCardProps {
   ride: RideOption;
   isSelected: boolean;
   onSelect: () => void;
+  calculatedPrice?: number;
 }
 
-const RideCard = ({ ride, isSelected, onSelect }: RideCardProps) => {
+const RideCard = ({ ride, isSelected, onSelect, calculatedPrice }: RideCardProps) => {
+  const displayPrice = calculatedPrice ?? ride.price;
+  
   return (
     <motion.button
       whileTap={{ scale: 0.98 }}
@@ -42,7 +46,7 @@ const RideCard = ({ ride, isSelected, onSelect }: RideCardProps) => {
         
         {/* Price Badge */}
         <div className="absolute top-2 right-2 bg-primary/90 backdrop-blur-sm px-2 py-1 rounded-full">
-          <span className="text-xs font-bold text-white">${ride.price.toFixed(2)}</span>
+          <span className="text-xs font-bold text-white">${displayPrice.toFixed(2)}</span>
         </div>
       </div>
 

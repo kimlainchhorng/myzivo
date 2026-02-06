@@ -10,6 +10,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 15,
       image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400&h=300&fit=crop",
       category: "economy",
+      multiplier: 0.85,
     },
     {
       id: "standard",
@@ -19,6 +20,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 4,
       image: "https://images.unsplash.com/photo-1469285994282-454ceb49e63c?w=400&h=300&fit=crop",
       category: "economy",
+      multiplier: 1.0,
     },
   ],
   premium: [
@@ -30,6 +32,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 5,
       image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&h=300&fit=crop",
       category: "premium",
+      multiplier: 1.2,
     },
     {
       id: "zivo-black",
@@ -39,6 +42,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 8,
       image: "https://images.unsplash.com/photo-1563720223185-11003d516935?w=400&h=300&fit=crop",
       category: "premium",
+      multiplier: 1.4,
     },
   ],
   elite: [
@@ -50,6 +54,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 20,
       image: "https://images.unsplash.com/photo-1553440637-d22ed8a02575?w=400&h=300&fit=crop",
       category: "elite",
+      multiplier: 2.0,
     },
     {
       id: "executive",
@@ -59,6 +64,7 @@ export const rideOptions: Record<"economy" | "premium" | "elite", RideOption[]> 
       eta: 15,
       image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=400&h=300&fit=crop",
       category: "elite",
+      multiplier: 1.8,
     },
   ],
 };
