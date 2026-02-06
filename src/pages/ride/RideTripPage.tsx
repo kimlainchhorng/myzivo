@@ -26,18 +26,30 @@ type TripStatus = "on_the_way" | "arrived";
 const RideTripPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as LocationState | null;
+  const routeState = location.state as LocationState | null;
+  
+  // Try to get state from route or localStorage
+  const [state, setState] = useState<LocationState | null>(routeState);
   const [tripStatus, setTripStatus] = useState<TripStatus>("on_the_way");
   const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 8);
   const [showReceipt, setShowReceipt] = useState(false);
   const [carPosition, setCarPosition] = useState(PICKUP_LOCATION);
 
-  // Handle missing state
+  // Load from localStorage if route state is missing
   useEffect(() => {
-    if (!state?.ride) {
+    if (!routeState?.ride) {
+      try {
+        const stored = localStorage.getItem("zivo_active_ride");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setState(parsed);
+          setEtaMinutes(parsed.ride?.eta || 8);
+          return;
+        }
+      } catch {}
       navigate("/ride");
     }
-  }, [state, navigate]);
+  }, [routeState, navigate]);
 
   // Auto-progress to "arrived" after delay
   useEffect(() => {

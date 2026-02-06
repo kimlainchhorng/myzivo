@@ -34,16 +34,28 @@ const INITIAL_DRIVER_LOCATION = { lat: 30.4615, lng: -91.1971 };
 const RideDriverPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as LocationState | null;
+  const routeState = location.state as LocationState | null;
+  
+  // Try to get state from route or localStorage
+  const [state, setState] = useState<LocationState | null>(routeState);
   const [etaMinutes, setEtaMinutes] = useState(state?.ride?.eta || 4);
   const [driverLocation, setDriverLocation] = useState(INITIAL_DRIVER_LOCATION);
 
-  // Handle missing state
+  // Load from localStorage if route state is missing
   useEffect(() => {
-    if (!state?.ride) {
+    if (!routeState?.ride) {
+      try {
+        const stored = localStorage.getItem("zivo_active_ride");
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setState(parsed);
+          setEtaMinutes(parsed.ride?.eta || 4);
+          return;
+        }
+      } catch {}
       navigate("/ride");
     }
-  }, [state, navigate]);
+  }, [routeState, navigate]);
 
   // Mock countdown timer - updates every 12 seconds for demo
   useEffect(() => {

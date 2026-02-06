@@ -22,12 +22,16 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [hasRated, setHasRated] = useState(false);
+  const [selectedTip, setSelectedTip] = useState<number | null>(null);
 
   // Calculate mock fare breakdown that sums to ride.price
   const baseFare = 2.50;
   const serviceFee = 1.50;
   const timeCost = ride.eta * 0.30;
   const distanceCost = Math.max(0, ride.price - baseFare - serviceFee - timeCost);
+  
+  // Total with tip
+  const totalWithTip = ride.price + (selectedTip || 0);
 
   const handleRate = (stars: number) => {
     setRating(stars);
@@ -35,10 +39,16 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
   };
 
   const handleDone = () => {
+    // Clear localStorage trip state
+    try {
+      localStorage.removeItem("zivo_active_ride");
+    } catch {}
+    
     onDone();
     // Reset state for next use
     setRating(0);
     setHasRated(false);
+    setSelectedTip(null);
   };
 
   return (
@@ -82,10 +92,16 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-3">
+          <div className="border-t border-white/10 pt-3 space-y-2">
+            {selectedTip && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-white/60">Tip</span>
+                <span className="text-white">${selectedTip.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="font-semibold text-white">Total</span>
-              <span className="text-2xl font-bold text-primary">${ride.price.toFixed(2)}</span>
+              <span className="text-2xl font-bold text-primary">${totalWithTip.toFixed(2)}</span>
             </div>
           </div>
         </motion.div>
@@ -134,6 +150,43 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
               </motion.p>
             )}
           </AnimatePresence>
+        </motion.div>
+
+        {/* Tip Selection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="py-4 border-t border-white/10"
+        >
+          <p className="text-center text-white/60 mb-3">Add a tip</p>
+          <div className="flex justify-center gap-2">
+            {[1, 3, 5].map((amount) => (
+              <motion.button
+                key={amount}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedTip(selectedTip === amount ? null : amount)}
+                className={cn(
+                  "px-5 py-2 rounded-full text-sm font-semibold transition-all border",
+                  selectedTip === amount
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10"
+                )}
+              >
+                ${amount}
+              </motion.button>
+            ))}
+          </div>
+          {selectedTip && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => setSelectedTip(null)}
+              className="block mx-auto mt-2 text-xs text-white/40 hover:text-white/60"
+            >
+              No tip
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Done Button */}

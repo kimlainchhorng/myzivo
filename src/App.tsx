@@ -61,7 +61,7 @@ const InviteManagement = lazy(() => import("./pages/admin/settings/InviteManagem
 const Rides = lazy(() => import("./pages/Rides"));
 const RidePage = lazy(() => import("./pages/ride/RidePage"));
 const RideConfirmPage = lazy(() => import("./pages/ride/RideConfirmPage"));
-const RideFindingPage = lazy(() => import("./pages/ride/RideFindingPage"));
+const RideSearchingPage = lazy(() => import("./pages/ride/RideSearchingPage"));
 const RideDriverPage = lazy(() => import("./pages/ride/RideDriverPage"));
 const RideTripPage = lazy(() => import("./pages/ride/RideTripPage"));
 const Move = lazy(() => import("./pages/Move"));
@@ -570,7 +570,7 @@ const App = () => (
                 {/* ZIVO Ride - Premium Rider Flow */}
                 <Route path="/ride" element={<RidePage />} />
                 <Route path="/ride/confirm" element={<RideConfirmPage />} />
-                <Route path="/ride/finding" element={<RideFindingPage />} />
+                <Route path="/ride/searching" element={<RideSearchingPage />} />
                 <Route path="/ride/driver" element={<RideDriverPage />} />
                 <Route path="/ride/trip" element={<RideTripPage />} />
                 
