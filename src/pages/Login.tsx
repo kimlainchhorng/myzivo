@@ -6,7 +6,6 @@ import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Loader2, Mail, Lock, User, ArrowRight, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -168,46 +167,18 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
-      {/* Animated Holographic Background */}
-      <motion.div 
-        className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-gradient-to-br from-cyan-500/30 to-purple-500/20 rounded-full blur-3xl"
-        animate={{
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-          scale: [1, 1.1, 1],
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div 
-        className="absolute bottom-[-20%] right-[-10%] w-[400px] h-[400px] bg-gradient-to-tr from-purple-500/25 to-cyan-500/15 rounded-full blur-3xl"
-        animate={{
-          x: [0, -20, 0],
-          y: [0, 30, 0],
-          scale: [1, 1.05, 1],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 to-black px-4 py-6 sm:py-8 safe-area-top safe-area-bottom relative overflow-hidden">
       <div className="w-full max-w-md relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-zinc-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-8"
+          className="bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800 rounded-3xl shadow-2xl p-6 sm:p-8"
         >
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-              ZIVO.
+              ZIVO ID
             </h1>
             <motion.p 
               key={isLogin ? "login" : "signup"}
@@ -215,7 +186,7 @@ const Login = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-zinc-400 mt-2 text-sm sm:text-base"
             >
-              {isLogin ? "Welcome back, traveler." : "Join the future of travel."}
+              {isLogin ? "Welcome back, Traveler" : "Create your secure account"}
             </motion.p>
           </div>
 
@@ -228,17 +199,15 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-zinc-300 text-sm font-medium">Email Address</FormLabel>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Email</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <Mail className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -257,21 +226,19 @@ const Login = () => {
                         <FormLabel className="text-zinc-300 text-sm font-medium">Password</FormLabel>
                         <Link
                           to="/forgot-password"
-                          className="text-xs text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                          className="text-xs text-blue-500 hover:text-blue-400 font-medium transition-colors"
                         >
                           Forgot?
                         </Link>
                       </div>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <Lock className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             type="password"
                             placeholder="••••••••"
                             autoComplete="current-password"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -283,7 +250,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 rounded-xl mt-6 touch-manipulation active:scale-[0.98]" 
+                  className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl mt-6 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -307,14 +274,12 @@ const Login = () => {
                     <FormItem>
                       <FormLabel className="text-zinc-300 text-sm font-medium">Full Name</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <User className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             placeholder="John Doe"
                             autoComplete="name"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -329,17 +294,15 @@ const Login = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-zinc-300 text-sm font-medium">Email Address</FormLabel>
+                      <FormLabel className="text-zinc-300 text-sm font-medium">Email</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <Mail className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -356,15 +319,13 @@ const Login = () => {
                     <FormItem>
                       <FormLabel className="text-zinc-300 text-sm font-medium">Password</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <Lock className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -381,15 +342,13 @@ const Login = () => {
                     <FormItem>
                       <FormLabel className="text-zinc-300 text-sm font-medium">Confirm Password</FormLabel>
                       <FormControl>
-                        <div className="relative group">
-                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-cyan-400" />
-                          </div>
-                          <Input
+                        <div className="relative">
+                          <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                          <input
                             type="password"
                             placeholder="••••••••"
                             autoComplete="new-password"
-                            className="h-12 pl-14 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-800/70 rounded-xl text-base"
+                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all text-base"
                             {...field}
                           />
                         </div>
@@ -401,7 +360,7 @@ const Login = () => {
 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 text-base font-bold bg-gradient-to-r from-sky-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/30 hover:opacity-90 rounded-xl mt-4 touch-manipulation active:scale-[0.98]" 
+                  className="w-full h-12 text-base font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl mt-4 touch-manipulation active:scale-[0.98] transition-all" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -420,7 +379,7 @@ const Login = () => {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-zinc-700" />
+              <span className="w-full border-t border-zinc-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-zinc-900 px-4 text-zinc-500">Or continue with</span>
@@ -429,12 +388,11 @@ const Login = () => {
 
           {/* Social Login - 2 columns only */}
           <div className="grid grid-cols-2 gap-3">
-            <Button
+            <button
               type="button"
-              variant="outline"
               onClick={() => handleSocialLogin('google')}
               disabled={socialLoading !== null}
-              className="h-12 bg-zinc-800/50 border-zinc-700 hover:bg-zinc-700/50 hover:border-zinc-600 text-white rounded-xl touch-manipulation active:scale-95"
+              className="h-12 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-white rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
             >
               {socialLoading === 'google' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -449,13 +407,12 @@ const Login = () => {
                   Google
                 </>
               )}
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
-              variant="outline"
               onClick={() => handleSocialLogin('apple')}
               disabled={socialLoading !== null}
-              className="h-12 bg-zinc-800/50 border-zinc-700 hover:bg-zinc-700/50 hover:border-zinc-600 text-white rounded-xl touch-manipulation active:scale-95"
+              className="h-12 flex items-center justify-center bg-zinc-950 border border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700 text-white rounded-xl touch-manipulation active:scale-95 transition-all disabled:opacity-50"
             >
               {socialLoading === 'apple' ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -467,7 +424,7 @@ const Login = () => {
                   Apple
                 </>
               )}
-            </Button>
+            </button>
           </div>
 
           {/* Toggle Mode */}
@@ -478,7 +435,7 @@ const Login = () => {
               className="text-sm text-zinc-400 hover:text-white transition-colors"
             >
               {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <span className="text-cyan-400 font-semibold">
+              <span className="text-blue-500 font-semibold">
                 {isLogin ? "Sign Up" : "Log In"}
               </span>
             </button>
