@@ -1,96 +1,88 @@
 
-# Plan: Improve Signup Error for Existing Accounts
+# Plan: Implement ZivoHome Component Design
 
-## Problem
-When a user tries to sign up with an email that already has an account (e.g., a Gmail that was registered via Google OAuth), they see a generic "Authentication Failed" error. They should instead see a helpful message like **"Account already exists. Please sign in instead."**
+## Overview
+Replace the current AppHome.tsx mobile home page with the new ZivoHome design you've shared. The new design features a cleaner layout with personalized greetings, profile avatar integration from the database, and an updated service grid.
 
-## Current Behavior
-1. User tries to sign up with email (e.g., `support@hizivo.com`)
-2. Allowlist check passes (email is on allowlist, not yet marked as used)
-3. Supabase signup fails because the email already exists in `auth.users`
-4. User sees generic error message
+## Key Changes
 
-## Solution Overview
-Enhance the `check-signup-allowlist` Edge Function to also check if the email already exists in `auth.users`. This provides early detection and a clear message before the actual signup attempt.
+### 1. Profile Data Integration
+- Use the existing `useUserProfile` hook instead of manual Supabase queries
+- **Fix the bug in your code**: Change `.eq('id', user.id)` to `.eq('user_id', user.id)` - this matches the database schema
+- Display the user's `avatar_url` and `full_name` from their profile
 
----
-
-## Implementation Steps
-
-### 1. Update Edge Function: `check-signup-allowlist`
-Add a check against `auth.users` to detect existing accounts:
-
-**Logic flow:**
-1. Check if email exists in `signup_allowlist`
-2. If on allowlist, check if `used_at` is set (invitation already used)
-3. NEW: Also check if email exists in `auth.users`
-4. Return appropriate message for each case
-
-**New response for existing account:**
-```json
-{
-  "allowed": false,
-  "message": "An account with this email already exists. Please sign in instead.",
-  "existingUser": true
-}
+### 2. Updated Layout Structure
+```text
+┌─────────────────────────────┐
+│  Header (Avatar + Name)     │
+│  + Notification Bell        │
+├─────────────────────────────┤
+│  Promo Banner (Rides CTA)   │
+├─────────────────────────────┤
+│  Hero: "Explore the World"  │
+│  + Search Bar               │
+├─────────────────────────────┤
+│  Services Grid (2x2)        │
+│  Flights | Rides            │
+│  Eats    | Move             │
+├─────────────────────────────┤
+│  Bottom Navigation          │
+└─────────────────────────────┘
 ```
 
-### 2. Update Frontend: `src/pages/Login.tsx`
-Update the signup form handler to detect the `existingUser` flag and offer a helpful action:
-- Show a toast message directing user to sign in
-- Optionally auto-switch to login mode
+### 3. Components to Add/Update
+- **ServiceCard** - Image background cards with gradient overlay
+- **NavIcon** - Simple bottom navigation icons
+- **Dynamic Greeting** - Based on time of day (already exists)
 
-### 3. Update AuthCallback Error Handling (Optional)
-Improve the error detection in `AuthCallback.tsx` to handle "user already exists" errors from OAuth flows more gracefully.
+### 4. Styling Alignment
+- Premium dark theme with `bg-[#0D0D0D]`
+- Glassmorphic search bar with gradient glow
+- Rounded corners and subtle borders
+- Touch-optimized tap states
 
 ---
 
-## Technical Details
+## Technical Implementation Details
 
-### Edge Function Changes
+### File Changes
+
+**1. Update `src/pages/app/AppHome.tsx`**
+- Replace content with the new ZivoHome layout
+- Use `useUserProfile()` hook for profile data (already exists)
+- Use `useAuth()` for authentication state
+- Keep the existing `ZivoMobileNav` bottom navigation
+
+### Key Code Fixes
+
+**Profile Query Fix:**
 ```typescript
-// After allowlist check, add this:
-const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
-// Filter to check if email exists
-const userExists = existingUser?.users?.some(
-  u => u.email?.toLowerCase() === normalizedEmail
-);
+// WRONG (in your code)
+.eq('id', user.id)
 
-if (userExists) {
-  return new Response(
-    JSON.stringify({
-      allowed: false,
-      message: "An account with this email already exists. Please sign in instead.",
-      existingUser: true,
-    }),
-    { status: 200, headers: {...} }
-  );
-}
+// CORRECT (matches database schema)
+.eq('user_id', user.id)
 ```
 
-### Frontend Changes
-In `Login.tsx`, after the allowlist check:
+**Recommended Approach - Use Existing Hook:**
 ```typescript
-if (!allowlistResponse?.allowed) {
-  setIsLoading(false);
-  if (allowlistResponse?.existingUser) {
-    toast.info("An account with this email already exists. Please sign in.");
-    setIsLogin(true); // Switch to login mode
-  } else {
-    toast.error(allowlistResponse?.message || "...");
-  }
-  return;
-}
+import { useUserProfile } from "@/hooks/useUserProfile";
+
+const { data: profile, isLoading } = useUserProfile();
 ```
+
+### Navigation Routes
+- `/flights` → Flight search
+- `/rides` → Ride booking
+- `/eats` → Food delivery  
+- `/move` → Package delivery
+- `/profile` → Account settings
 
 ---
 
-## Files to Modify
-| File | Change |
-|------|--------|
-| `supabase/functions/check-signup-allowlist/index.ts` | Add `auth.users` existence check |
-| `src/pages/Login.tsx` | Handle `existingUser` response gracefully |
-
-## User Experience
-- **Before**: Generic error, user confused
-- **After**: Clear message + automatic switch to login form
+## What You'll See After Implementation
+1. Personalized header with your profile avatar and name from the database
+2. "Good Morning/Afternoon/Evening" greeting based on time
+3. Prominent search bar with location picker
+4. Clean 2x2 service grid with image backgrounds
+5. Smooth transitions and premium visual styling
