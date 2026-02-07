@@ -1,19 +1,9 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Car } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { RideOption } from "@/components/ride/RideCard";
-import { useTripById } from "@/hooks/useRiderTrip";
-import { useTripRealtime } from "@/hooks/useTripRealtime";
-
-interface LocationState {
-  ride: RideOption;
-  pickup: string;
-  destination: string;
-  paymentMethod: string;
-  tripId?: string;
-}
+import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 
 // Status messages with timing thresholds (based on progress %)
 const statusMessages = [
@@ -23,61 +13,16 @@ const statusMessages = [
 ];
 
 const RideSearchingPage = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const routeState = location.state as LocationState | null;
+  const { state, assignDriver, cancelRide, setStatus } = useRideStore();
   const [progress, setProgress] = useState(0);
 
-  // Get tripId from URL or state
-  const tripIdFromUrl = searchParams.get("tripId");
-  const tripId = tripIdFromUrl || routeState?.tripId;
-
-  // Try to get state from route or localStorage
-  const [state, setState] = useState<LocationState | null>(routeState);
-
-  // Subscribe to trip updates via realtime
-  useTripRealtime(tripId || undefined, !!tripId);
-  
-  // Fetch trip data to check for driver assignment
-  const { data: tripData } = useTripById(tripId);
-
-  // Validate localStorage data structure
-  const validateRideState = (data: unknown): data is LocationState => {
-    if (!data || typeof data !== 'object') return false;
-    const d = data as Record<string, unknown>;
-    if (!d.ride || typeof d.ride !== 'object') return false;
-    const ride = d.ride as Record<string, unknown>;
-    return (
-      typeof ride.id === 'string' &&
-      typeof ride.name === 'string' &&
-      typeof ride.price === 'number' &&
-      !isNaN(ride.price)
-    );
-  };
-
+  // Redirect if no active ride
   useEffect(() => {
-    if (!routeState?.ride) {
-      try {
-        const stored = localStorage.getItem("zivo_active_ride");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (validateRideState(parsed)) {
-            setState(parsed);
-            return;
-          }
-        }
-      } catch {}
+    if (state.status === 'idle' || !state.rideId) {
       navigate("/ride");
     }
-  }, [routeState, navigate]);
-
-  // Watch for trip status changes - navigate when driver accepts
-  useEffect(() => {
-    if (tripData?.status === "accepted" && tripData.driver_id) {
-      navigate(`/ride/driver?tripId=${tripId}`, { state });
-    }
-  }, [tripData?.status, tripData?.driver_id, tripId, state, navigate]);
+  }, [state.status, state.rideId, navigate]);
 
   // Get current status message based on progress
   const currentStatus = statusMessages.reduce((acc, msg) => {
@@ -85,10 +30,10 @@ const RideSearchingPage = () => {
     return acc;
   }, statusMessages[0]);
 
-  // Progress animation - 0 to 100 over 6 seconds (simulated until driver accepts)
+  // Progress animation - 0 to 100 over 3 seconds
   useEffect(() => {
-    const duration = 6000;
-    const interval = 60;
+    const duration = 3000; // 3 seconds
+    const interval = 50;
     const increment = (100 * interval) / duration;
 
     const timer = setInterval(() => {
@@ -105,17 +50,28 @@ const RideSearchingPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-navigate when progress completes (fallback for demo without driver)
+  // When progress completes, assign driver and navigate
   useEffect(() => {
-    if (progress >= 100 && state && !tripData?.driver_id) {
+    if (progress >= 100 && state.status === 'searching') {
+      // Assign the mock driver
+      assignDriver(DEFAULT_MOCK_DRIVER);
+      
+      // Brief delay then navigate
       const timeout = setTimeout(() => {
-        navigate("/ride/driver", { state });
-      }, 300);
+        setStatus('driver_en_route');
+        navigate("/ride/driver");
+      }, 500);
+
       return () => clearTimeout(timeout);
     }
-  }, [progress, navigate, state, tripData?.driver_id]);
+  }, [progress, state.status, assignDriver, setStatus, navigate]);
 
-  if (!state?.ride) {
+  const handleCancel = () => {
+    cancelRide();
+    navigate("/ride");
+  };
+
+  if (state.status === 'idle' || !state.rideId) {
     return null;
   }
 
@@ -185,9 +141,9 @@ const RideSearchingPage = () => {
           className="mt-8 p-4 bg-white/5 rounded-xl border border-white/10"
         >
           <p className="text-sm text-white/60">Looking for</p>
-          <p className="font-semibold text-white">{state.ride.name}</p>
+          <p className="font-semibold text-white">{state.rideName}</p>
           <p className="text-primary font-bold text-lg mt-1">
-            ${state.ride.price.toFixed(2)}
+            ${state.price.toFixed(2)}
           </p>
         </motion.div>
 
@@ -196,7 +152,7 @@ const RideSearchingPage = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          onClick={() => navigate("/ride")}
+          onClick={handleCancel}
           className="mt-6 text-white/50 hover:text-white/80 text-sm font-medium transition-colors"
         >
           Cancel
