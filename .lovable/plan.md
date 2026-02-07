@@ -1,22 +1,56 @@
 
-# Rider Help & Support Center
+# Payment + Request Flow Update
 
 ## Summary
 
-Add a rider-focused Help & Support center with FAQ viewing, issue reporting with ride selection, and ticket tracking. This leverages the existing `support_tickets` table infrastructure with a new `ride_id` column for ride-specific tickets.
+Modify the ride payment flow to use a two-stage status system:
+1. When user taps "Pay & Request" → Create ride with `status='requested_unpaid'`
+2. Redirect to payments app for checkout
+3. When returning from payments app → Update status to `status='requested'`
+4. Continue normal searching/dispatch flow
+
+This ensures rides are only dispatched to drivers AFTER payment is confirmed.
 
 ---
 
-## Database Change Required
+## Current Flow
 
-Add a `ride_id` column to the existing `support_tickets` table to link tickets to specific rides.
+```text
+User taps "Pay & Request"
+        │
+        ▼
+Create ride (status='requested') ──► Auto-dispatch triggers immediately
+        │
+        ▼
+Redirect to payments app
+        │
+        ▼
+Return to /ride/searching
+```
 
-```sql
-ALTER TABLE public.support_tickets 
-ADD COLUMN IF NOT EXISTS ride_id uuid REFERENCES public.trips(id);
+**Problem**: Auto-dispatch triggers BEFORE payment is completed.
 
--- Add index for performance
-CREATE INDEX IF NOT EXISTS idx_support_tickets_ride_id ON public.support_tickets(ride_id);
+---
+
+## New Flow
+
+```text
+User taps "Pay & Request"
+        │
+        ▼
+Create ride (status='requested_unpaid') ──► No auto-dispatch yet
+        │
+        ▼
+Redirect to payments app
+        │
+        ▼
+Payment succeeds, return to /ride/searching?rideId=xxx
+        │
+        ▼
+Update ride (status='requested') ──► Auto-dispatch triggers NOW
+        │
+        ▼
+Continue normal realtime flow
 ```
 
 ---
@@ -25,287 +59,245 @@ CREATE INDEX IF NOT EXISTS idx_support_tickets_ride_id ON public.support_tickets
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/help/RiderHelpPage.tsx` | Create | Main help page with FAQs and Report Issue button |
-| `src/pages/help/NewTicketPage.tsx` | Create | Form to create support ticket with ride selection |
-| `src/pages/help/MyTicketsPage.tsx` | Create | List of user's support tickets |
-| `src/hooks/useRiderSupport.ts` | Create | Hook for rider-specific support operations |
-| `src/App.tsx` | Modify | Add new /help routes |
+| `src/lib/supabaseRide.ts` | Modify | Add status parameter to `createRideInDb`, add `updateRideStatusAndDispatch` function, update status mappings |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Pass `status='requested_unpaid'` when creating ride, skip auto-dispatch on creation |
+| `src/pages/ride/RideSearchingPage.tsx` | Modify | Update ride status to `'requested'` and trigger dispatch on return from payments |
 
 ---
 
-## Page Details
+## Technical Details
 
-### 1. RiderHelpPage (`/help`)
+### 1. Update supabaseRide.ts
 
-Features:
-- Rider-focused FAQ accordion with mock data
-- Categories: Payment, Driver, Rider, Safety, Lost Item
-- "Report an Issue" button linking to `/help/new`
-- Link to view existing tickets
-
-```text
-+------------------------------------------+
-|  < Back                    Help Center   |
-+------------------------------------------+
-|                                          |
-|  [Search FAQs...]                        |
-|                                          |
-|  FREQUENTLY ASKED QUESTIONS              |
-|  +------------------------------------+  |
-|  | How are fares calculated?       v  |  |
-|  +------------------------------------+  |
-|  | Why was I charged extra?        v  |  |
-|  +------------------------------------+  |
-|  | How do I report a lost item?    v  |  |
-|  +------------------------------------+  |
-|                                          |
-|  +------------------------------------+  |
-|  |  [!] Report an Issue              |  |
-|  +------------------------------------+  |
-|                                          |
-|  View My Tickets (3)                     |
-+------------------------------------------+
-```
-
-Mock FAQ data:
-```typescript
-const riderFAQs = [
-  { category: "Payment", q: "How are ride fares calculated?", a: "..." },
-  { category: "Payment", q: "Why was I charged a cancellation fee?", a: "..." },
-  { category: "Driver", q: "My driver cancelled, what do I do?", a: "..." },
-  { category: "Driver", q: "How do I rate my driver?", a: "..." },
-  { category: "Safety", q: "How do I report a safety concern?", a: "..." },
-  { category: "Lost Item", q: "I left something in the car", a: "..." },
-  { category: "Rider", q: "How do I update my phone number?", a: "..." },
-];
-```
-
-### 2. NewTicketPage (`/help/new`)
-
-Form with fields:
-- Category dropdown (payment, driver, rider, safety, lost_item, other)
-- Subject (text input)
-- Message (textarea)
-- Optional ride selection (dropdown of recent rides)
-
-```text
-+------------------------------------------+
-|  < Back               Report an Issue    |
-+------------------------------------------+
-|                                          |
-|  Category *                              |
-|  [ Select category...            v ]     |
-|                                          |
-|  Subject *                               |
-|  [ Brief description of issue    ]       |
-|                                          |
-|  Message *                               |
-|  +------------------------------------+  |
-|  | Please describe your issue...     |  |
-|  |                                    |  |
-|  +------------------------------------+  |
-|                                          |
-|  Related Ride (optional)                 |
-|  [ Select a recent ride...       v ]     |
-|    - Today 2:30 PM - 123 Main St         |
-|    - Yesterday - 456 Oak Ave             |
-|                                          |
-|  +------------------------------------+  |
-|  |        Submit Request             |  |
-|  +------------------------------------+  |
-+------------------------------------------+
-```
+Add `requested_unpaid` to status mappings:
 
 ```typescript
-// Form submission
-const handleSubmit = async (data) => {
-  const ticketNumber = `ZR-${Date.now().toString().slice(-6)}`;
-  
-  await supabase.from('support_tickets').insert({
-    ticket_number: ticketNumber,
-    user_id: user.id,
-    category: data.category,
-    subject: data.subject,
-    description: data.message,
-    ride_id: data.rideId || null,
-    status: 'open',
-    priority: data.category === 'safety' ? 'urgent' : 'normal',
-  });
-  
-  toast.success('Ticket submitted successfully');
-  navigate('/help/tickets');
+export const mapDbStatusToFrontend = (dbStatus: string): RideStatus => {
+  const statusMap: Record<string, RideStatus> = {
+    requested_unpaid: "searching",  // NEW - treat as searching but not dispatched
+    requested: "searching",
+    accepted: "assigned",
+    // ... rest unchanged
+  };
+  return statusMap[dbStatus] || "idle";
 };
 ```
 
-### 3. MyTicketsPage (`/help/tickets`)
+Modify `createRideInDb` to accept initial status and skip auto-dispatch for unpaid:
 
-List of user's support tickets:
-- Subject and ticket number
-- Status badge (open, in_progress, resolved)
-- Created date
-- Link to ride if associated
+```typescript
+export interface CreateRideDbPayload {
+  // ... existing fields ...
+  initialStatus?: 'requested' | 'requested_unpaid';
+}
+
+export const createRideInDb = async (
+  payload: CreateRideDbPayload,
+  options: CreateRideOptions = {}
+): Promise<CreateRideResult> => {
+  // ... existing code ...
+  
+  const { data, error } = await supabase
+    .from("trips")
+    .insert({
+      // ... existing fields ...
+      status: payload.initialStatus || "requested",  // Use provided status
+    })
+    .select("id")
+    .single();
+
+  // Only trigger auto-dispatch if status is 'requested' (paid)
+  if (payload.initialStatus !== 'requested_unpaid') {
+    // Existing auto-dispatch logic
+  }
+  
+  return data.id;
+};
+```
+
+Add new function to update status and trigger dispatch:
+
+```typescript
+export const updateRideStatusAndDispatch = async (
+  tripId: string
+): Promise<UpdateRideResult> => {
+  // Update status to 'requested'
+  const { error } = await supabase
+    .from("trips")
+    .update({ status: "requested", updated_at: new Date().toISOString() })
+    .eq("id", tripId);
+
+  if (error) {
+    return { success: false, error: categorizeError(error), attempts: 1 };
+  }
+
+  // Trigger auto-dispatch
+  try {
+    const dispatchResponse = await fetch(
+      `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ trip_id: tripId }),
+      }
+    );
+    const dispatchResult = await dispatchResponse.json();
+    console.log("[supabaseRide] Auto-dispatch result:", dispatchResult);
+  } catch (dispatchError) {
+    console.warn("[supabaseRide] Auto-dispatch failed:", dispatchError);
+  }
+
+  return { success: true, error: null, attempts: 1 };
+};
+```
+
+### 2. Update RideConfirmPage.tsx
+
+When calling `createRideInDb`, pass `requested_unpaid` as initial status:
+
+```typescript
+const result = await createRideInDb(
+  {
+    pickup,
+    destination,
+    pickupCoords,
+    dropoffCoords,
+    rideType: ride.id,
+    price: finalPrice,
+    distance: tripDetails?.distance || 0,
+    duration: tripDetails?.duration || 0,
+    initialStatus: PAYMENTS_APP_URL ? 'requested_unpaid' : 'requested',  // NEW
+  },
+  {
+    enableRetry: true,
+    maxAttempts: 3,
+    onRetry: (attempt, retryError) => {
+      console.log(`[RideConfirm] Retry attempt ${attempt}:`, retryError.message);
+    },
+  }
+);
+```
+
+Key change: If payments app is configured, create with `requested_unpaid`. If not (demo/fallback mode), create with `requested` so dispatch works immediately.
+
+### 3. Update RideSearchingPage.tsx
+
+When returning from payments app, update status to trigger dispatch:
+
+```typescript
+import { fetchTripById, updateRideStatusAndDispatch } from "@/lib/supabaseRide";
+
+// In the restore effect:
+useEffect(() => {
+  const rideIdFromUrl = searchParams.get("rideId");
+  
+  if (rideIdFromUrl && (!state.tripId || state.tripId !== rideIdFromUrl)) {
+    setIsRestoring(true);
+    
+    // ... existing localStorage restore logic ...
+    
+    // After restoring state, update ride status to 'requested' and trigger dispatch
+    const activateRide = async () => {
+      const trip = await fetchTripById(rideIdFromUrl);
+      
+      if (trip) {
+        // Restore UI state
+        createRide({
+          pickup: trip.pickup_address,
+          destination: trip.dropoff_address,
+          // ... rest unchanged
+        });
+        setTripId(rideIdFromUrl);
+        
+        // If ride was unpaid, now mark as paid and dispatch
+        if (trip.status === 'requested_unpaid') {
+          console.log("[RideSearching] Updating ride status after payment...");
+          const result = await updateRideStatusAndDispatch(rideIdFromUrl);
+          if (result.success) {
+            console.log("[RideSearching] Ride activated and dispatch triggered");
+          } else {
+            toast.error("Failed to activate ride. Please try again.");
+          }
+        }
+        
+        localStorage.removeItem('zivo_pending_ride');
+      } else {
+        toast.error("Could not find ride details");
+        navigate("/ride");
+      }
+      setIsRestoring(false);
+    };
+    
+    activateRide();
+  }
+}, [searchParams, state.tripId]);
+```
+
+---
+
+## Status Flow Diagram
 
 ```text
-+------------------------------------------+
-|  < Back                  My Tickets      |
-+------------------------------------------+
-|                                          |
-|  [Active] [Resolved] [All]               |
-|                                          |
-|  +------------------------------------+  |
-|  | #ZR-123456                  OPEN  |  |
-|  | Driver was rude                    |  |
-|  | Category: Driver                   |  |
-|  | 2 hours ago                        |  |
-|  +------------------------------------+  |
-|                                          |
-|  +------------------------------------+  |
-|  | #ZR-123455             RESOLVED   |  |
-|  | Overcharged for ride               |  |
-|  | Category: Payment                  |  |
-|  | 2 days ago                         |  |
-|  +------------------------------------+  |
-|                                          |
-|  --- Empty State ---                     |
-|  No tickets yet. Need help?              |
-|  [Report an Issue]                       |
-+------------------------------------------+
+┌─────────────────────────────────────────────────────────┐
+│                    RIDE LIFECYCLE                       │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  [User taps Pay & Request]                              │
+│           │                                             │
+│           ▼                                             │
+│  ┌─────────────────────┐                                │
+│  │  requested_unpaid   │  ← Ride created, no dispatch   │
+│  └──────────┬──────────┘                                │
+│             │ (redirect to payments)                    │
+│             ▼                                           │
+│  ┌─────────────────────┐                                │
+│  │   PAYMENTS APP      │  ← External checkout           │
+│  └──────────┬──────────┘                                │
+│             │ (return with rideId)                      │
+│             ▼                                           │
+│  ┌─────────────────────┐                                │
+│  │     requested       │  ← Status updated, dispatch!   │
+│  └──────────┬──────────┘                                │
+│             │ (auto-dispatch finds driver)              │
+│             ▼                                           │
+│  ┌─────────────────────┐                                │
+│  │     accepted        │  ← Driver assigned             │
+│  └──────────┬──────────┘                                │
+│             │                                           │
+│             ▼                                           │
+│  ┌─────────────────────┐                                │
+│  │    in_progress      │  ← Trip in progress            │
+│  └──────────┬──────────┘                                │
+│             │                                           │
+│             ▼                                           │
+│  ┌─────────────────────┐                                │
+│  │     completed       │  ← Trip finished               │
+│  └─────────────────────┘                                │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Hook: useRiderSupport.ts
+## Edge Cases
 
-```typescript
-// Fetch user's recent rides for selection
-export function useRecentRides(limit = 10) {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['recent-rides', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('trips')
-        .select('id, pickup_address, dropoff_address, fare_amount, created_at, status')
-        .eq('rider_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      return data || [];
-    },
-    enabled: !!user,
-  });
-}
-
-// Fetch user's support tickets (filtered for ride-related)
-export function useRiderTickets() {
-  const { user } = useAuth();
-  
-  return useQuery({
-    queryKey: ['rider-tickets', user?.id],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false });
-      return data || [];
-    },
-    enabled: !!user,
-  });
-}
-
-// Create a rider support ticket
-export function useCreateRiderTicket() {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-
-  return useMutation({
-    mutationFn: async (data: {
-      category: string;
-      subject: string;
-      message: string;
-      rideId?: string;
-    }) => {
-      const ticketNumber = `ZR-${Date.now().toString().slice(-6)}`;
-      
-      const { error } = await supabase
-        .from('support_tickets')
-        .insert({
-          ticket_number: ticketNumber,
-          user_id: user?.id,
-          category: data.category,
-          subject: data.subject,
-          description: data.message,
-          ride_id: data.rideId || null,
-          status: 'open',
-          priority: data.category === 'safety' ? 'urgent' : 'normal',
-        });
-
-      if (error) throw error;
-      return { ticketNumber };
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rider-tickets'] });
-      toast.success('Support ticket submitted');
-    },
-  });
-}
-```
+| Scenario | Handling |
+|----------|----------|
+| User abandons payment | Ride stays `requested_unpaid` - can be cleaned up by cron |
+| User closes browser before returning | Ride stays `requested_unpaid` - no driver dispatched |
+| Payments app URL not configured | Falls back to `requested` status, dispatch immediately (demo mode) |
+| Network error updating status | Show error toast, user can retry by refreshing page |
+| Auto-dispatch fails | Ride remains in `requested` - polling can retry later |
 
 ---
 
-## Route Updates in App.tsx
+## No Changes To
 
-```typescript
-// Lazy imports
-const RiderHelpPage = lazy(() => import("./pages/help/RiderHelpPage"));
-const NewTicketPage = lazy(() => import("./pages/help/NewTicketPage"));
-const MyTicketsPage = lazy(() => import("./pages/help/MyTicketsPage"));
-
-// Routes (protected, require authentication)
-<Route path="/help" element={<SetupRequiredRoute><RiderHelpPage /></SetupRequiredRoute>} />
-<Route path="/help/new" element={<SetupRequiredRoute><NewTicketPage /></SetupRequiredRoute>} />
-<Route path="/help/tickets" element={<SetupRequiredRoute><MyTicketsPage /></SetupRequiredRoute>} />
-```
-
----
-
-## Categories
-
-| Value | Label | Priority |
-|-------|-------|----------|
-| `payment` | Payment Issue | normal |
-| `driver` | Driver Issue | normal |
-| `rider` | Rider Account | normal |
-| `safety` | Safety Concern | urgent |
-| `lost_item` | Lost Item | high |
-| `other` | Other | normal |
-
----
-
-## UI Components Used
-
-- `Card`, `CardContent`, `CardHeader`
-- `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`
-- `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`
-- `Input`, `Textarea`, `Label`
-- `Button`, `Badge`
-- `toast` from sonner
-
----
-
-## Loading & Empty States
-
-Each page includes:
-- Loading skeleton while fetching data
-- Empty state with helpful message and CTA
-- Error handling with toast notifications
-
----
-
-## Mobile Responsive
-
-All pages follow existing mobile-first patterns:
-- Full-width cards on mobile
-- Touch-friendly tap targets (min 44px)
-- Bottom navigation integration via `MobileBottomNav`
+- Database schema (using existing status column)
+- UI design or button text
+- Realtime subscription logic
+- Driver assignment flow
+- Trip completion/rating flow
