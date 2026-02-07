@@ -6,7 +6,6 @@ import { SupabaseErrorInfo } from "@/lib/supabaseErrors";
 import {
   acceptTripWithRetry,
   updateTripStatusWithRetry,
-  updateLocationWithRetry,
   updateDriverStatusWithRetry,
 } from "@/lib/supabaseDriverOperations";
 
@@ -103,15 +102,26 @@ export const useUpdateDriverStatus = () => {
   });
 };
 
-// Hook to update driver location with silent retry
+// Hook to update driver location via edge function (with GPS spoof detection)
 export const useUpdateDriverLocation = () => {
   const locationFailuresRef = useRef(0);
+  const [isSuspended, setIsSuspended] = useState(false);
 
-  return useMutation({
-    mutationFn: async ({ driverId, lat, lng }: { driverId: string; lat: number; lng: number }) => {
-      const success = await updateLocationWithRetry(driverId, lat, lng);
-      
-      if (!success) {
+  const mutation = useMutation({
+    mutationFn: async ({ driverId, lat, lng, heading, speed, accuracy }: { 
+      driverId: string; 
+      lat: number; 
+      lng: number;
+      heading?: number | null;
+      speed?: number | null;
+      accuracy?: number | null;
+    }) => {
+      // Call edge function for GPS spoof detection
+      const { data, error } = await supabase.functions.invoke("update-driver-location", {
+        body: { lat, lng, heading, speed, accuracy },
+      });
+
+      if (error) {
         locationFailuresRef.current++;
         
         // Only warn after 3 consecutive failures
@@ -121,20 +131,39 @@ export const useUpdateDriverLocation = () => {
         
         throw new Error("Location update failed");
       }
-      
+
+      // Check for suspension
+      if (data?.suspended) {
+        setIsSuspended(true);
+        throw new Error("Account suspended");
+      }
+
       // Reset on success
       locationFailuresRef.current = 0;
-      return { lat, lng };
+      
+      return { 
+        lat, 
+        lng, 
+        suspicious: data?.suspicious ?? false,
+        speed_mph: data?.speed_mph ?? null,
+      };
     },
-    onError: () => {
-      // Silent failure - no toast for location updates
+    onError: (error: Error) => {
+      if (error.message === "Account suspended") {
+        toast.error("Account Suspended", {
+          description: "Your account has been suspended due to GPS anomalies. Contact support.",
+        });
+      }
+      // Silent failure for other location update errors
     },
   });
+
+  return { ...mutation, isSuspended };
 };
 
-// Hook for location tracking with retry
+// Hook for location tracking with GPS spoof detection
 export const useDriverLocationTracking = (driverId: string | undefined, isOnline: boolean) => {
-  const updateLocation = useUpdateDriverLocation();
+  const { mutate: updateLocation, isSuspended } = useUpdateDriverLocation();
   const [watchId, setWatchId] = useState<number | null>(null);
 
   // Simulated location for fallback
@@ -144,11 +173,11 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
     const lat = baseLat + (Math.random() - 0.5) * 0.001;
     const lng = baseLng + (Math.random() - 0.5) * 0.001;
     
-    updateLocation.mutate({ driverId, lat, lng });
+    updateLocation({ driverId, lat, lng, heading: null, speed: null, accuracy: null });
   }, [driverId, updateLocation]);
 
   useEffect(() => {
-    if (!driverId || !isOnline) {
+    if (!driverId || !isOnline || isSuspended) {
       if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
         setWatchId(null);
@@ -160,10 +189,13 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
     if (navigator.geolocation) {
       const id = navigator.geolocation.watchPosition(
         (position) => {
-          updateLocation.mutate({
+          updateLocation({
             driverId,
             lat: position.coords.latitude,
             lng: position.coords.longitude,
+            heading: position.coords.heading,
+            speed: position.coords.speed,
+            accuracy: position.coords.accuracy,
           });
         },
         (error) => {
@@ -194,7 +226,9 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [driverId, isOnline, updateLocation, simulateLocation, watchId]);
+  }, [driverId, isOnline, isSuspended, updateLocation, simulateLocation, watchId]);
+
+  return { isSuspended };
 };
 
 // Hook to get available trip requests

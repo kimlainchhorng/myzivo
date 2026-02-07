@@ -137,3 +137,9 @@ verify_jwt = false
 
 [functions.verify-otp-code]
 verify_jwt = false
+
+[functions.check-driver-rate-limit]
+verify_jwt = false
+
+[functions.update-driver-location]
+verify_jwt = false

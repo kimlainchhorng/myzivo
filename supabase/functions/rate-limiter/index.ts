@@ -30,8 +30,13 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   'contact_form': { windowMs: 60000, maxRequests: 5 },
   'admin_action': { windowMs: 60000, maxRequests: 20 },
   'login_attempt': { windowMs: 900000, maxRequests: 10, blockDurationMs: 900000 }, // 15 min window
+  'create_order': { windowMs: 86400000, maxRequests: 30, blockDurationMs: 21600000 }, // 30/day, 6hr block
+  'cancel_order': { windowMs: 86400000, maxRequests: 8, blockDurationMs: 21600000 }, // 8/day, 6hr block
   'default': { windowMs: 60000, maxRequests: 100 },
 };
+
+// Actions that use DB-backed persistent limits
+const DB_BACKED_ACTIONS = ['create_order', 'cancel_order'];
 
 // In-memory cache for rate limits (per edge instance)
 const rateLimitCache = new Map<string, { count: number; resetAt: number; blocked?: boolean }>();
@@ -70,6 +75,11 @@ Deno.serve(async (req) => {
     // Get config for this action
     const config = RATE_LIMITS[action] || RATE_LIMITS['default'];
     const now = Date.now();
+
+    // For DB-backed actions (create_order, cancel_order), use persistent limits
+    if (DB_BACKED_ACTIONS.includes(action) && userId) {
+      return await handleDbBackedRateLimit(supabase, userId, action, config, clientIP, sessionId, userAgent);
+    }
 
     // Check cache first
     let cacheEntry = rateLimitCache.get(rateLimitKey);
@@ -271,4 +281,175 @@ async function logRateLimitEvent(
   } catch (e) {
     console.error('[RateLimiter] Failed to log event:', e);
   }
+}
+
+/**
+ * Handle DB-backed rate limiting for order/cancel actions
+ */
+async function handleDbBackedRateLimit(
+  supabase: any,
+  userId: string,
+  action: string,
+  config: RateLimitConfig,
+  clientIP: string,
+  sessionId: string,
+  userAgent: string
+): Promise<Response> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Load or initialize user limits
+  let { data: limits } = await supabase
+    .from('user_limits')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!limits) {
+    const { data: created } = await supabase
+      .from('user_limits')
+      .insert({ user_id: userId, last_reset: today })
+      .select()
+      .single();
+    limits = created;
+  }
+
+  // Reset daily counters if new day
+  if (limits?.last_reset !== today) {
+    const { data: reset } = await supabase
+      .from('user_limits')
+      .update({
+        orders_created_today: 0,
+        cancels_today: 0,
+        last_reset: today,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .select()
+      .single();
+    limits = reset;
+  }
+
+  // Check if currently blocked
+  if (limits?.is_blocked && limits?.blocked_until) {
+    const blockedUntil = new Date(limits.blocked_until).getTime();
+    if (blockedUntil > Date.now()) {
+      const retryAfterSeconds = Math.ceil((blockedUntil - Date.now()) / 1000);
+      return new Response(
+        JSON.stringify({
+          allowed: false,
+          blocked: true,
+          blocked_until: limits.blocked_until,
+          retryAfter: retryAfterSeconds,
+          message: `Account temporarily blocked. Try again in ${Math.ceil(retryAfterSeconds / 60)} minutes.`,
+        }),
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    } else {
+      // Unblock if expired
+      await supabase
+        .from('user_limits')
+        .update({ is_blocked: false, blocked_until: null, block_reason: null })
+        .eq('user_id', userId);
+    }
+  }
+
+  // Increment based on action
+  let orders = limits?.orders_created_today ?? 0;
+  let cancels = limits?.cancels_today ?? 0;
+
+  if (action === 'create_order') orders += 1;
+  if (action === 'cancel_order') cancels += 1;
+
+  // Check thresholds
+  const maxOrders = 30;
+  const maxCancels = 8;
+  let shouldBlock = false;
+  let blockReason = '';
+
+  if (action === 'create_order' && orders > maxOrders) {
+    shouldBlock = true;
+    blockReason = `Exceeded daily order limit (${maxOrders})`;
+  } else if (action === 'cancel_order' && cancels > maxCancels) {
+    shouldBlock = true;
+    blockReason = `Exceeded daily cancellation limit (${maxCancels})`;
+  }
+
+  if (shouldBlock) {
+    const blockedUntil = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(); // 6 hours
+
+    await supabase
+      .from('user_limits')
+      .update({
+        is_blocked: true,
+        blocked_until: blockedUntil,
+        block_reason: blockReason,
+        orders_created_today: orders,
+        cancels_today: cancels,
+        total_blocks: (limits?.total_blocks ?? 0) + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', userId);
+
+    // Log risk event
+    await supabase.from('risk_events').insert({
+      user_id: userId,
+      event_type: 'user_rate_limit_block',
+      severity: 4,
+      details: { action, orders, cancels, blockedUntil, blockReason },
+      ip_address: clientIP,
+      user_agent: userAgent,
+    });
+
+    await logRateLimitEvent(supabase, {
+      action,
+      clientIP,
+      sessionId,
+      userId,
+      userAgent,
+      blocked: true,
+      requestCount: action === 'create_order' ? orders : cancels,
+    });
+
+    return new Response(
+      JSON.stringify({
+        allowed: false,
+        blocked: true,
+        blocked_until: blockedUntil,
+        message: blockReason,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
+  // Update counters
+  await supabase
+    .from('user_limits')
+    .update({
+      orders_created_today: orders,
+      cancels_today: cancels,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId);
+
+  return new Response(
+    JSON.stringify({
+      allowed: true,
+      remaining: action === 'create_order' ? maxOrders - orders : maxCancels - cancels,
+      orders_today: orders,
+      cancels_today: cancels,
+    }),
+    {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    }
+  );
 }
