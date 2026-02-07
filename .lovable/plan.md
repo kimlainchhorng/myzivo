@@ -1,421 +1,225 @@
 
-# Server-Side Google Maps + Pricing + Arrival Detection
+
+# Rider Trip Progress Bar + Auto-Completion
 
 ## Summary
 
-Migrate Google Maps API calls from client-side to server-side edge functions for security and billing control. Add automatic driver arrival detection based on GPS proximity to pickup/dropoff locations.
+Add real-time trip progress calculation based on driver location to the `/ride/trip` page. Calculate progress as the ratio of distance traveled vs total trip distance, update as driver moves, and auto-complete the ride when driver is within 100 meters of the destination.
 
 ---
 
-## Current State Analysis
+## Current Behavior
 
-| Component | Current | Issue |
-|-----------|---------|-------|
-| Autocomplete | Client-side via `getAddressSuggestions()` | API key exposed in browser |
-| Place Details | Client-side via `geocodeAddress()` | API key exposed |
-| Route/Directions | Client-side via `getRoute()` | API key exposed |
-| Pricing | Uses mock distance via `calculateMockTrip()` | Not using real route data |
-| Driver Arrival | Manual button tap only | No automatic detection |
-| API Key | `GOOGLE_MAPS_API_KEY` secret exists ✅ | Ready to use server-side |
+| Feature | Current | Issue |
+|---------|---------|-------|
+| Trip progress | Based on elapsed time (120s simulation) | Not using real driver location |
+| Driver location tracking | Not subscribed on trip page | Missing real-time updates |
+| Auto-completion | Manual "END TRIP" button only | No proximity-based detection |
+| Progress display | Shows percentage from timer | Inaccurate to actual position |
 
 ---
 
-## New Edge Functions
+## Implementation Approach
 
-### 1. `maps-autocomplete` - Address Autocomplete
+### 1. Subscribe to Driver Location on Trip Page
 
-Places API autocomplete for pickup/dropoff search.
+Use existing `useDriverLocationRealtime` hook to track driver's `current_lat`/`current_lng` during the trip.
 
-```text
-POST /maps-autocomplete
-Body: { input: "123 Main St", proximity?: { lat, lng } }
-Response: { ok: true, suggestions: [{ description, place_id }] }
-```
+### 2. Calculate Real Trip Progress
 
-### 2. `maps-place-details` - Geocode Place ID to Coordinates
+When driver location updates:
+- Calculate `totalDistance` = haversine(pickup, destination)
+- Calculate `remainingDistance` = haversine(driver, destination)
+- Progress = `(1 - remainingDistance / totalDistance) * 100`
 
-Get lat/lng from a selected place_id.
+### 3. Auto-Complete Trip at Arrival
 
-```text
-POST /maps-place-details
-Body: { place_id: "ChIJN1t_tDeuEmsRUsoyG83frY4" }
-Response: { ok: true, address, lat, lng }
-```
+If `remainingDistance < 0.0621 miles` (100 meters):
+- Automatically trigger `handleEndTrip()`
+- Show receipt screen
 
-### 3. `maps-route` - Route with Distance, Duration, Polyline
+### 4. Keep Existing UI
 
-Get driving route between two coordinates.
-
-```text
-POST /maps-route
-Body: { origin_lat, origin_lng, dest_lat, dest_lng }
-Response: { ok: true, distance_miles, duration_minutes, polyline }
-```
+Only modify the progress calculation logic - keep the existing progress bar, ETA display, and layout unchanged.
 
 ---
 
-## File Changes Summary
+## File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/functions/maps-autocomplete/index.ts` | Create | Places Autocomplete edge function |
-| `supabase/functions/maps-place-details/index.ts` | Create | Place Details (geocode) edge function |
-| `supabase/functions/maps-route/index.ts` | Create | Directions API edge function |
-| `supabase/config.toml` | Modify | Add new function configs |
-| `src/services/mapsApi.ts` | Create | Client wrapper for edge functions |
-| `src/hooks/useServerGeocode.ts` | Create | Hook using server-side autocomplete |
-| `src/hooks/useServerRoute.ts` | Create | Hook using server-side routing |
-| `src/components/ride/RideLocationCard.tsx` | Modify | Use server-side autocomplete |
-| `src/pages/ride/RidePage.tsx` | Modify | Use server-side route + pricing |
-| `src/hooks/useDriverApp.ts` | Modify | Add arrival detection logic |
-| `src/components/driver/ActiveTripCard.tsx` | Modify | Show proximity-based arrival prompt |
+| `src/pages/ride/RideTripPage.tsx` | Modify | Add driver location subscription, real progress calc, auto-complete |
 
 ---
 
 ## Technical Details
 
-### Edge Function: maps-autocomplete
+### Distance Calculation
+
+Uses the existing `haversineMiles` function from `src/services/mapsApi.ts`:
 
 ```typescript
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { haversineMiles } from "@/services/mapsApi";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+// Total trip distance (pickup → destination)
+const totalDistance = haversineMiles(
+  pickupLocation.lat, pickupLocation.lng,
+  destinationLocation.lat, destinationLocation.lng
+);
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+// Remaining distance (driver → destination)  
+const remainingDistance = haversineMiles(
+  driverLat, driverLng,
+  destinationLocation.lat, destinationLocation.lng
+);
 
-  try {
-    const { input, proximity } = await req.json();
-    if (!input) {
-      return new Response(JSON.stringify({ error: "Missing input" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    if (!key) {
-      return new Response(JSON.stringify({ error: "Missing API key" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let url = `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
-      `?input=${encodeURIComponent(input)}` +
-      `&types=geocode` +
-      `&key=${encodeURIComponent(key)}`;
-
-    if (proximity?.lat && proximity?.lng) {
-      url += `&location=${proximity.lat},${proximity.lng}&radius=50000`;
-    }
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    const suggestions = (data.predictions ?? []).slice(0, 6).map((p: any) => ({
-      description: p.description,
-      place_id: p.place_id,
-      main_text: p.structured_formatting?.main_text,
-    }));
-
-    return new Response(JSON.stringify({ ok: true, suggestions }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+// Progress percentage (0 to 1)
+const progress = Math.max(0, Math.min(1, 1 - (remainingDistance / totalDistance)));
 ```
 
-### Edge Function: maps-place-details
+### Auto-Complete Threshold
 
 ```typescript
-Deno.serve(async (req) => {
-  // CORS handling...
+// 100 meters = 0.0621 miles
+const ARRIVAL_THRESHOLD_MILES = 0.0621;
+
+if (remainingDistance <= ARRIVAL_THRESHOLD_MILES && !hasAutoCompleted) {
+  setHasAutoCompleted(true);
+  handleEndTrip();
+}
+```
+
+### Driver Location Handler
+
+```typescript
+const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
+const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
+
+const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
+  setDriverLocation({ lat, lng });
   
-  const { place_id } = await req.json();
-  const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
-
-  const url = `https://maps.googleapis.com/maps/api/place/details/json` +
-    `?place_id=${encodeURIComponent(place_id)}` +
-    `&fields=formatted_address,geometry/location` +
-    `&key=${encodeURIComponent(key)}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-  const r = data.result;
-
-  return Response.json({
-    ok: true,
-    address: r?.formatted_address,
-    lat: r?.geometry?.location?.lat,
-    lng: r?.geometry?.location?.lng,
-  });
-});
-```
-
-### Edge Function: maps-route
-
-```typescript
-Deno.serve(async (req) => {
-  // CORS handling...
+  // Calculate progress
+  const total = haversineMiles(
+    pickupLocation.lat, pickupLocation.lng,
+    destinationLocation.lat, destinationLocation.lng
+  );
   
-  const { origin_lat, origin_lng, dest_lat, dest_lng } = await req.json();
-  const key = Deno.env.get("GOOGLE_MAPS_API_KEY");
-
-  const url = `https://maps.googleapis.com/maps/api/directions/json` +
-    `?origin=${origin_lat},${origin_lng}` +
-    `&destination=${dest_lat},${dest_lng}` +
-    `&mode=driving` +
-    `&key=${encodeURIComponent(key)}`;
-
-  const res = await fetch(url);
-  const data = await res.json();
-
-  const route = data.routes?.[0];
-  const leg = route?.legs?.[0];
-
-  if (!route || !leg) {
-    return Response.json({ ok: false, error: "No route found" }, { status: 404 });
+  const remaining = haversineMiles(
+    lat, lng,
+    destinationLocation.lat, destinationLocation.lng
+  );
+  
+  const newProgress = Math.max(0, Math.min(1, 1 - (remaining / total)));
+  setTripProgress(newProgress);
+  
+  // Update car position for map
+  // (existing interpolation logic remains for smooth animation)
+  
+  // Auto-complete check
+  if (remaining <= ARRIVAL_THRESHOLD_MILES && !hasAutoCompleted) {
+    setHasAutoCompleted(true);
+    toast.success("You've arrived at your destination!");
+    handleEndTrip();
   }
+}, [pickupLocation, destinationLocation, hasAutoCompleted, handleEndTrip]);
 
-  return Response.json({
-    ok: true,
-    distance_miles: Number((leg.distance.value / 1609.344).toFixed(2)),
-    duration_minutes: Math.max(1, Math.round(leg.duration.value / 60)),
-    polyline: route.overview_polyline?.points ?? null,
-  });
-});
-```
-
-### Client Wrapper: src/services/mapsApi.ts
-
-```typescript
-import { supabase } from "@/integrations/supabase/client";
-
-export interface PlaceSuggestion {
-  description: string;
-  place_id: string;
-  main_text?: string;
-}
-
-export interface PlaceDetails {
-  address: string;
-  lat: number;
-  lng: number;
-}
-
-export interface RouteResult {
-  distance_miles: number;
-  duration_minutes: number;
-  polyline: string | null;
-}
-
-export async function getAutocompleteSuggestions(
-  input: string,
-  proximity?: { lat: number; lng: number }
-): Promise<PlaceSuggestion[]> {
-  const { data, error } = await supabase.functions.invoke("maps-autocomplete", {
-    body: { input, proximity },
-  });
-
-  if (error || !data?.ok) {
-    console.error("Autocomplete error:", error || data?.error);
-    return [];
-  }
-
-  return data.suggestions;
-}
-
-export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-  const { data, error } = await supabase.functions.invoke("maps-place-details", {
-    body: { place_id: placeId },
-  });
-
-  if (error || !data?.ok) {
-    console.error("Place details error:", error || data?.error);
-    return null;
-  }
-
-  return {
-    address: data.address,
-    lat: data.lat,
-    lng: data.lng,
-  };
-}
-
-export async function getRoute(
-  origin: { lat: number; lng: number },
-  destination: { lat: number; lng: number }
-): Promise<RouteResult | null> {
-  const { data, error } = await supabase.functions.invoke("maps-route", {
-    body: {
-      origin_lat: origin.lat,
-      origin_lng: origin.lng,
-      dest_lat: destination.lat,
-      dest_lng: destination.lng,
-    },
-  });
-
-  if (error || !data?.ok) {
-    console.error("Route error:", error || data?.error);
-    return null;
-  }
-
-  return {
-    distance_miles: data.distance_miles,
-    duration_minutes: data.duration_minutes,
-    polyline: data.polyline,
-  };
-}
+// Subscribe to driver location
+useDriverLocationRealtime(
+  isDemoMode ? undefined : state.driver?.id,
+  handleDriverLocationUpdate
+);
 ```
 
 ---
 
-## Maps → Pricing Integration
-
-### Updated Ride Flow
+## Data Flow
 
 ```text
-1. User enters pickup → calls maps-autocomplete
-2. User selects suggestion → calls maps-place-details → get pickupCoords
-3. User enters dropoff → calls maps-autocomplete  
-4. User selects suggestion → calls maps-place-details → get dropoffCoords
-5. App calls maps-route → get distance_miles, duration_minutes, polyline
-6. App calculates prices using real data:
-   calculateRidePrice(rideId, distance_miles, duration_minutes)
-7. User confirms → create ride with real route data
+Driver updates location
+        │
+        ▼
+Supabase `drivers` table updated
+        │
+        ▼
+useDriverLocationRealtime fires callback
+        │
+        ▼
+handleDriverLocationUpdate called with new lat/lng
+        │
+        ├───────────────────────────────────────┐
+        ▼                                       ▼
+Calculate remaining distance            Update car position
+to destination (Haversine)              on map (existing logic)
+        │
+        ▼
+Progress = 1 - (remaining / total)
+        │
+        ├─────────────────────────────┐
+        ▼                             ▼
+Update progress bar UI        Check if remaining < 100m
+                                      │
+                                      ▼
+                              Auto-complete trip
+                              + Show receipt
 ```
 
-### RidePage.tsx Integration
+---
+
+## Demo Mode Fallback
+
+When in demo mode (no real driver tracking):
+- Keep existing timer-based progress simulation
+- The 120-second simulated trip continues to work
 
 ```typescript
-// When both pickup and dropoff have coordinates:
+// Only use realtime if not in demo mode and driver ID exists
+useDriverLocationRealtime(
+  isDemoMode ? undefined : state.driver?.id,
+  handleDriverLocationUpdate
+);
+
+// Fallback to timer-based progress in demo mode
 useEffect(() => {
-  if (pickupCoords && dropoffCoords) {
-    getRoute(pickupCoords, dropoffCoords).then(route => {
-      if (route) {
-        setTripDetails({
-          distance: route.distance_miles,
-          duration: route.duration_minutes,
-        });
-        setRoutePolyline(route.polyline);
-      }
-    });
+  if (isDemoMode || !state.driver?.id) {
+    // Existing timer simulation
+    const simulatedDuration = 120;
+    const newProgress = Math.min(1, elapsed / simulatedDuration);
+    setTripProgress(newProgress);
   }
-}, [pickupCoords, dropoffCoords]);
+}, [isDemoMode, state.driver?.id, elapsed]);
 ```
 
 ---
 
-## Driver Arrival Detection
+## Edge Cases
 
-### Logic (0.10 mile threshold)
-
-```typescript
-const ARRIVAL_THRESHOLD_MILES = 0.10; // ~528 feet
-
-function checkArrival(
-  driverLat: number,
-  driverLng: number,
-  targetLat: number,
-  targetLng: number
-): boolean {
-  const distance = haversineMiles(driverLat, driverLng, targetLat, targetLng);
-  return distance <= ARRIVAL_THRESHOLD_MILES;
-}
-```
-
-### Integration Points
-
-**In `useDriverApp.ts` location tracking:**
-```typescript
-// After updating location, check proximity
-if (activeTrip?.status === 'accepted' || activeTrip?.status === 'en_route') {
-  const nearPickup = checkArrival(lat, lng, trip.pickup_lat, trip.pickup_lng);
-  if (nearPickup) {
-    // Show "Arrived" prompt or auto-update status
-    onArrivalDetected?.('pickup');
-  }
-}
-
-if (activeTrip?.status === 'in_progress') {
-  const nearDropoff = checkArrival(lat, lng, trip.dropoff_lat, trip.dropoff_lng);
-  if (nearDropoff) {
-    // Show "Complete Trip" prompt
-    onArrivalDetected?.('dropoff');
-  }
-}
-```
-
-**In `ActiveTripCard.tsx`:**
-```typescript
-// Show prominent arrival prompt
-{isNearPickup && trip.status !== 'arrived' && (
-  <motion.div className="bg-green-500 text-white text-center py-2">
-    📍 You're at the pickup location
-  </motion.div>
-)}
-
-{isNearDropoff && trip.status === 'in_progress' && (
-  <motion.div className="bg-green-500 text-white text-center py-2">
-    🏁 You've reached the destination
-  </motion.div>
-)}
-```
+| Scenario | Handling |
+|----------|----------|
+| Driver ID not available | Fall back to timer-based progress |
+| Demo mode | Continue using elapsed time simulation |
+| totalDistance = 0 | Set progress to 0 (prevent division by zero) |
+| Driver overshoots destination | Cap progress at 100% |
+| Already auto-completed | Prevent duplicate completion via `hasAutoCompleted` flag |
+| Page reload during trip | Recalculate progress from current positions |
 
 ---
 
-## UI Flow Diagram
+## UI Changes (None)
 
-```text
-Customer Flow:
-┌──────────────┐     ┌─────────────────────┐     ┌─────────────────┐
-│ Type Pickup  │ ──► │ maps-autocomplete   │ ──► │ Show Suggestions│
-└──────────────┘     └─────────────────────┘     └─────────────────┘
-       │                                                │
-       ▼                                                ▼
-┌──────────────┐     ┌─────────────────────┐     ┌─────────────────┐
-│ Select Place │ ──► │ maps-place-details  │ ──► │ Store Coords    │
-└──────────────┘     └─────────────────────┘     └─────────────────┘
-       │                                                │
-       ▼                                                ▼
-┌──────────────┐     ┌─────────────────────┐     ┌─────────────────┐
-│ Both Selected│ ──► │ maps-route          │ ──► │ Calculate Fares │
-└──────────────┘     └─────────────────────┘     └─────────────────┘
+The existing progress bar and layout remain unchanged. Only the data source changes:
 
-Driver Flow:
-┌──────────────┐     ┌─────────────────────┐     ┌─────────────────┐
-│ GPS Update   │ ──► │ Check Distance to   │ ──► │ Auto-detect     │
-│ (every 5s)   │     │ Pickup/Dropoff      │     │ Arrival         │
-└──────────────┘     └─────────────────────┘     └─────────────────┘
-```
-
----
-
-## Benefits
-
-1. **API Key Security** - No client-side exposure
-2. **Billing Control** - Server-side rate limiting possible
-3. **Real Pricing** - Uses actual distance/duration instead of mocks
-4. **Route Preview** - Can decode polyline for map display
-5. **Auto Arrival** - Better driver UX with proximity detection
-6. **Consistent Data** - Same route data for pricing and navigation
+**Before:** `progress = elapsed / 120` (time-based)  
+**After:** `progress = 1 - (remaining / total)` (distance-based)
 
 ---
 
 ## No Changes To
 
-- Existing client-side `src/services/googleMaps.ts` (kept for backwards compatibility/map rendering)
-- Driver location update edge function (already exists)
-- Rate limiter edge function (already exists)
-- Pricing formula constants (same multipliers)
+- Progress bar styling
+- Trip status banner
+- ETA display logic
+- End trip button behavior
+- Receipt modal
+- Map visualization
+- Bottom navigation
+
