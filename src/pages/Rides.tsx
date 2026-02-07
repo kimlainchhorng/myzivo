@@ -695,14 +695,8 @@ export default function Rides() {
                              : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                          }`}
                        >
-                         {/* Left - Car Image (Uber style) */}
-                         <div className="w-16 h-10 md:w-20 md:h-12 flex-shrink-0 flex items-center justify-center">
-                           <img 
-                             src={ride.image} 
-                             className="w-full h-full object-contain" 
-                             alt={ride.name} 
-                           />
-                         </div>
+                          {/* Left - Car Emoji */}
+                          <div className="text-3xl md:text-4xl mr-1">🚗</div>
 
                          {/* Middle - Info section */}
                          <div className="flex-1 min-w-0 text-left">
@@ -793,10 +787,8 @@ export default function Rides() {
                        : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                    }`}
                  >
-                   {/* Left - Car Image (Uber style) */}
-                   <div className="w-16 h-10 md:w-20 md:h-12 flex-shrink-0 flex items-center justify-center">
-                     <img src={option.image} alt={option.name} className="w-full h-full object-contain" />
-                   </div>
+                    {/* Left - Car Emoji */}
+                    <div className="text-3xl md:text-4xl mr-1">🚗</div>
                    
                    {/* Info section */}
                    <div className="flex-1 min-w-0 text-left">
@@ -828,9 +820,7 @@ export default function Rides() {
              <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
              <div className="rides-glass-panel p-4 md:p-5 rounded-xl md:rounded-2xl border-primary/20">
                <div className="flex items-center gap-3 md:gap-4">
-                 <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg md:rounded-xl overflow-hidden">
-                    <img src={selectedOption.image} alt={selectedOption.name} className="w-full h-full object-cover" />
-                  </div>
+                  <div className="text-4xl md:text-5xl">🚗</div>
                    <div className="flex-1">
                     <h3 className="font-bold text-base md:text-lg">{selectedOption.name}</h3>
                    <p className="text-xs md:text-sm text-zinc-400 truncate">{pickup} → {dropoff}</p>
