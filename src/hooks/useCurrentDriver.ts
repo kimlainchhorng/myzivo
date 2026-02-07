@@ -14,7 +14,6 @@ export interface CurrentDriver {
   phone: string | null;
   email: string | null;
   is_online: boolean;
-  is_verified: boolean;
   current_lat: number | null;
   current_lng: number | null;
   region_id: string | null;
@@ -30,9 +29,9 @@ export function useCurrentDriver() {
 
       const { data, error } = await supabase
         .from("drivers")
-        .select("id, user_id, full_name, phone, email, is_online, is_verified, current_lat, current_lng, region_id")
+        .select("id, user_id, full_name, phone, email, is_online, current_lat, current_lng, region_id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         if (error.code === "PGRST116") return null; // Not found
