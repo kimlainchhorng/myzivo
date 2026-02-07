@@ -4803,41 +4803,62 @@ export type Database = {
         Row: {
           bonus_earned: number | null
           completed_at: string | null
+          completed_orders: number | null
           created_at: string
+          credited_at: string | null
           id: string
           referee_email: string | null
           referee_name: string
+          referral_code: string | null
           referred_driver_id: string | null
+          referrer_driver_id: string | null
           referrer_id: string
+          required_orders: number | null
+          reward_amount: number | null
           signed_up_at: string
           status: string
           trips_completed: number | null
+          updated_at: string | null
         }
         Insert: {
           bonus_earned?: number | null
           completed_at?: string | null
+          completed_orders?: number | null
           created_at?: string
+          credited_at?: string | null
           id?: string
           referee_email?: string | null
           referee_name: string
+          referral_code?: string | null
           referred_driver_id?: string | null
+          referrer_driver_id?: string | null
           referrer_id: string
+          required_orders?: number | null
+          reward_amount?: number | null
           signed_up_at?: string
           status?: string
           trips_completed?: number | null
+          updated_at?: string | null
         }
         Update: {
           bonus_earned?: number | null
           completed_at?: string | null
+          completed_orders?: number | null
           created_at?: string
+          credited_at?: string | null
           id?: string
           referee_email?: string | null
           referee_name?: string
+          referral_code?: string | null
           referred_driver_id?: string | null
+          referrer_driver_id?: string | null
           referrer_id?: string
+          required_orders?: number | null
+          reward_amount?: number | null
           signed_up_at?: string
           status?: string
           trips_completed?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -4850,6 +4871,20 @@ export type Database = {
           {
             foreignKeyName: "driver_referrals_referred_driver_id_fkey"
             columns: ["referred_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_referrals_referrer_driver_id_fkey"
+            columns: ["referrer_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_referrals_referrer_driver_id_fkey"
+            columns: ["referrer_driver_id"]
             isOneToOne: false
             referencedRelation: "drivers_public"
             referencedColumns: ["id"]
@@ -5163,6 +5198,54 @@ export type Database = {
             foreignKeyName: "driver_training_progress_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_wallets: {
+        Row: {
+          balance_cents: number
+          created_at: string | null
+          driver_id: string
+          last_payout_at: string | null
+          pending_cents: number
+          total_earnings_cents: number
+          total_payouts_cents: number
+          updated_at: string | null
+        }
+        Insert: {
+          balance_cents?: number
+          created_at?: string | null
+          driver_id: string
+          last_payout_at?: string | null
+          pending_cents?: number
+          total_earnings_cents?: number
+          total_payouts_cents?: number
+          updated_at?: string | null
+        }
+        Update: {
+          balance_cents?: number
+          created_at?: string | null
+          driver_id?: string
+          last_payout_at?: string | null
+          pending_cents?: number
+          total_earnings_cents?: number
+          total_payouts_cents?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
             referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },
@@ -13491,10 +13574,12 @@ export type Database = {
           id: string
           is_active: boolean | null
           max_discount: number | null
+          merchant_id: string | null
           min_order_amount: number | null
           name: string
           per_user_limit: number | null
           starts_at: string | null
+          tenant_id: string | null
           updated_at: string | null
           usage_count: number | null
           usage_limit: number | null
@@ -13511,10 +13596,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           max_discount?: number | null
+          merchant_id?: string | null
           min_order_amount?: number | null
           name: string
           per_user_limit?: number | null
           starts_at?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           usage_count?: number | null
           usage_limit?: number | null
@@ -13531,10 +13618,12 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           max_discount?: number | null
+          merchant_id?: string | null
           min_order_amount?: number | null
           name?: string
           per_user_limit?: number | null
           starts_at?: string | null
+          tenant_id?: string | null
           updated_at?: string | null
           usage_count?: number | null
           usage_limit?: number | null
@@ -20827,6 +20916,77 @@ export type Database = {
           },
         ]
       }
+      wallet_transactions: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string | null
+          description: string | null
+          driver_id: string
+          id: string
+          idempotency_key: string | null
+          metadata: Json | null
+          order_id: string | null
+          stripe_transfer_id: string | null
+          type: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at?: string | null
+          description?: string | null
+          driver_id: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json | null
+          order_id?: string | null
+          stripe_transfer_id?: string | null
+          type: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string | null
+          description?: string | null
+          driver_id?: string
+          id?: string
+          idempotency_key?: string | null
+          metadata?: Json | null
+          order_id?: string | null
+          stripe_transfer_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallets: {
         Row: {
           balance: number | null
@@ -23892,6 +24052,15 @@ export type Database = {
       create_sample_trips_for_driver: {
         Args: { p_driver_id: string }
         Returns: number
+      }
+      credit_driver_earnings: {
+        Args: {
+          p_amount_cents: number
+          p_description?: string
+          p_driver_id: string
+          p_order_id: string
+        }
+        Returns: Json
       }
       find_nearest_branch: {
         Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
