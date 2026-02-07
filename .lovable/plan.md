@@ -1,183 +1,166 @@
 
-# Fraud Prevention, Risk Scoring, and Safety Controls Implementation Plan
+# AI Dispatch Optimization + Demand Prediction Implementation Plan
 
 ## Current State Analysis
 
-The project already has a **significant security foundation** that we will build upon:
-
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `security_events` table | Exists | Has event_type, severity, device_fingerprint, ip_address, user_agent, is_blocked |
-| `admin_security_alerts` table | Exists | Linked to security_events, has resolution workflow |
-| `trusted_devices` table | Exists | Device trust tracking per user |
-| `login_sessions` table | Exists | Session tracking with IP, device fingerprint |
-| `src/lib/security/botDetection.ts` | Exists | Device fingerprinting, bot detection, interaction tracking |
-| `src/config/fraudPrevention.ts` | Exists | Full risk scoring config: thresholds, signals, velocity limits |
-| `src/hooks/useRiskAssessment.ts` | Exists | Client-side risk scoring hook |
-| `AdminFraudDetection.tsx` | Exists | Admin panel for fraud alerts |
-| `log_security_event` RPC | Exists | Logs security events with auto-alert on critical |
-| `check_login_anomaly` RPC | Exists | Login security checks |
-| `validate_withdrawal` RPC | Exists | Withdrawal fraud checks |
-| `detect_suspicious_activity` trigger | Exists | Auto-detects brute force, rapid withdrawals |
-| Multi-tenant framework | Exists | tenants, has_tenant_permission() ready |
-| Order risk fields | Missing | Need risk_level, risk_score on food_orders |
-| Tenant-scoped risk tables | Missing | Need risk_events, risk_scores, blocked_entities |
-| Velocity check RPC | Missing | Unified velocity checking |
-| Safety dashboard in Dispatch | Missing | No /dispatch/safety route |
+| `eats_zones` table | Exists | Has zone_code, SLA config fields |
+| `drivers` table | Exists | Has acceptance_count, decline_count, cancel_count, current_lat/lng, is_online |
+| `auto_assign_order_v2` RPC | Exists | Basic scoring: distance, rating, fairness, freshness |
+| `sla-evaluator` edge function | Exists | Runs via pg_cron, can serve as template |
+| `useSLAMetrics` hooks | Exist | Analytics pattern to follow |
+| `useSurgePricing` hook | Exists | Real-time surge monitoring |
+| `useDriverQueue` hook | Exists | Driver scoring logic already implemented |
+| `sla_metrics` table | Exists | Historical performance data |
+| Demand snapshots | Missing | Need new table for historical demand data |
+| Demand forecasts | Missing | Need prediction infrastructure |
+| Driver positioning | Missing | Need reposition recommendations |
 
 ---
 
 ## Architecture Overview
 
 ```text
-Fraud Prevention Flow:
+Demand Prediction & Optimization Flow:
 
-User Action (Login / Order / Payment)
-    │
-    ├── Client: Device fingerprint + bot detection
-    │   └── src/lib/security/botDetection.ts (exists)
-    │
-    ├── Client: Risk assessment
-    │   └── useRiskAssessment hook (exists)
-    │
-    ▼
-┌─────────────────────────────────────────────────────────┐
-│  Backend: check_velocity() RPC                          │
-│  - Checks action frequency limits                       │
-│  - Records risk_events if exceeded                      │
-└─────────────────────────────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────────┐
-│  Backend: compute_risk_score() RPC                      │
-│  - Sums recent risk_events scores                       │
-│  - Updates risk_scores table                            │
-│  - Auto-blocks if score > 80                            │
-└─────────────────────────────────────────────────────────┘
-    │
-    ├── If blocked → Deny action + show message
-    │
-    ├── If high risk → Flag for review
-    │
-    ▼
-┌─────────────────────────────────────────────────────────┐
-│  Dispatch Safety Dashboard                              │
-│  - /dispatch/safety (overview)                          │
-│  - High-risk orders, blocked entities, risk events      │
-│  - Actions: approve, block, reset score                 │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  Scheduled Job: aggregate_demand_snapshots (every 15 min)           │
+│  - For each zone: count orders, drivers, avg times                  │
+│  - Insert into demand_snapshots                                     │
+└─────────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Scheduled Job: generate_zone_forecasts (every hour)                │
+│  - For each zone + hour: look at last 4 weeks same day/hour         │
+│  - Calculate predicted_orders, predicted_drivers_needed             │
+│  - Store in demand_forecasts                                        │
+└─────────────────────────────────────────────────────────────────────┘
+                               │
+          ┌────────────────────┼────────────────────┐
+          ▼                    ▼                    ▼
+┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+│ Surge Pre-Warning│ │ Driver Reposition│ │ Auto-Assign v3   │
+│ - Forecast surge │ │ - Find shortages │ │ - Add acceptance │
+│ - Show indicator │ │ - Suggest moves  │ │ - Add completion │
+│ - Gradual ramp   │ │ - Driver app msg │ │ - Add avg delay  │
+└──────────────────┘ └──────────────────┘ └──────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  Dispatch Demand Dashboard (/dispatch/demand)                       │
+│  - Heatmap: Orders by zone/hour                                     │
+│  - Forecast panel: Next hour predictions                            │
+│  - At-risk zones table                                              │
+│  - Driver reposition recommendations                                │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Database Changes
 
-### 1. Create `risk_events` Table (Tenant-scoped)
+### 1. Create `demand_snapshots` Table
+
+Historical demand data collected every 15 minutes:
 
 ```sql
-CREATE TABLE public.risk_events (
+CREATE TABLE public.demand_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT now(),
   tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  order_id UUID REFERENCES food_orders(id) ON DELETE SET NULL,
-  event_type TEXT NOT NULL,
-  severity TEXT NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
-  score INT NOT NULL DEFAULT 0,
-  details JSONB DEFAULT '{}',
-  device_fingerprint TEXT,
-  ip_address TEXT,
-  user_agent TEXT
+  zone_code TEXT NOT NULL,
+  hour_of_day INT NOT NULL CHECK (hour_of_day >= 0 AND hour_of_day <= 23),
+  day_of_week INT NOT NULL CHECK (day_of_week >= 0 AND day_of_week <= 6),
+  snapshot_time TIMESTAMPTZ NOT NULL,
+  orders_count INT DEFAULT 0,
+  drivers_online INT DEFAULT 0,
+  avg_delivery_minutes NUMERIC,
+  avg_assign_seconds NUMERIC,
+  avg_wait_minutes NUMERIC,
+  surge_multiplier NUMERIC DEFAULT 1.0
 );
 
-CREATE INDEX idx_risk_events_tenant_time ON risk_events(tenant_id, created_at DESC);
-CREATE INDEX idx_risk_events_user ON risk_events(user_id, created_at DESC);
-CREATE INDEX idx_risk_events_type ON risk_events(tenant_id, event_type);
-```
-
-### 2. Create `risk_scores` Table (User/Order Scoring)
-
-```sql
-CREATE TABLE public.risk_scores (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  total_score INT DEFAULT 0,
-  risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high', 'blocked')),
-  last_evaluated TIMESTAMPTZ DEFAULT now(),
-  score_breakdown JSONB DEFAULT '{}',
-  CONSTRAINT unique_risk_score_user UNIQUE (user_id)
+CREATE INDEX idx_demand_snapshots_lookup ON demand_snapshots(
+  tenant_id, zone_code, hour_of_day, day_of_week
 );
-
-CREATE INDEX idx_risk_scores_tenant ON risk_scores(tenant_id, risk_level);
-CREATE INDEX idx_risk_scores_level ON risk_scores(risk_level) WHERE risk_level IN ('high', 'blocked');
+CREATE INDEX idx_demand_snapshots_time ON demand_snapshots(tenant_id, snapshot_time DESC);
+CREATE INDEX idx_demand_snapshots_zone ON demand_snapshots(zone_code, created_at DESC);
 ```
 
-### 3. Create `blocked_entities` Table
+### 2. Create `demand_forecasts` Table
+
+Predicted demand for upcoming hours:
 
 ```sql
-CREATE TABLE public.blocked_entities (
+CREATE TABLE public.demand_forecasts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT now(),
   tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  entity_type TEXT NOT NULL CHECK (entity_type IN ('user', 'driver', 'merchant', 'device', 'ip', 'card')),
-  entity_value TEXT NOT NULL,
-  reason TEXT,
-  blocked_by UUID REFERENCES auth.users(id),
-  expires_at TIMESTAMPTZ,
-  is_active BOOLEAN DEFAULT true,
+  zone_code TEXT NOT NULL,
+  forecast_for TIMESTAMPTZ NOT NULL,
+  predicted_orders INT NOT NULL,
+  predicted_drivers_needed INT NOT NULL,
+  current_drivers_online INT DEFAULT 0,
+  confidence NUMERIC DEFAULT 0.5 CHECK (confidence >= 0 AND confidence <= 1),
+  forecast_type TEXT DEFAULT 'heuristic',
+  surge_predicted BOOLEAN DEFAULT false,
   metadata JSONB DEFAULT '{}',
-  CONSTRAINT unique_blocked_entity UNIQUE (tenant_id, entity_type, entity_value)
+  CONSTRAINT unique_forecast UNIQUE (tenant_id, zone_code, forecast_for)
 );
 
-CREATE INDEX idx_blocked_active ON blocked_entities(tenant_id, entity_type, entity_value) WHERE is_active = true;
-CREATE INDEX idx_blocked_expires ON blocked_entities(expires_at) WHERE expires_at IS NOT NULL AND is_active = true;
+CREATE INDEX idx_demand_forecasts_lookup ON demand_forecasts(tenant_id, zone_code, forecast_for);
+CREATE INDEX idx_demand_forecasts_upcoming ON demand_forecasts(forecast_for) 
+  WHERE forecast_for > now();
 ```
 
-### 4. Create `device_sessions` Table
+### 3. Create `driver_reposition_recommendations` Table
+
+Suggestions for driver positioning:
 
 ```sql
-CREATE TABLE public.device_sessions (
+CREATE TABLE public.driver_reposition_recommendations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT now(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  device_fingerprint TEXT NOT NULL,
-  ip_address TEXT,
-  user_agent TEXT,
-  last_seen TIMESTAMPTZ DEFAULT now(),
-  is_trusted BOOLEAN DEFAULT false,
-  trust_expires_at TIMESTAMPTZ,
-  CONSTRAINT unique_device_session UNIQUE (user_id, device_fingerprint)
+  driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
+  current_zone_code TEXT,
+  suggested_zone_code TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  priority INT DEFAULT 1,
+  expires_at TIMESTAMPTZ NOT NULL,
+  acknowledged_at TIMESTAMPTZ,
+  accepted BOOLEAN,
+  metadata JSONB DEFAULT '{}'
 );
 
-CREATE INDEX idx_device_sessions_user ON device_sessions(user_id, last_seen DESC);
-CREATE INDEX idx_device_sessions_fingerprint ON device_sessions(device_fingerprint);
+CREATE INDEX idx_reposition_driver ON driver_reposition_recommendations(driver_id, expires_at DESC);
+CREATE INDEX idx_reposition_active ON driver_reposition_recommendations(tenant_id, expires_at) 
+  WHERE expires_at > now() AND acknowledged_at IS NULL;
 ```
 
-### 5. Add Risk Fields to `food_orders`
+### 4. Add Driver Performance Fields
+
+Enhance drivers table for improved scoring:
 
 ```sql
-ALTER TABLE food_orders
-  ADD COLUMN IF NOT EXISTS risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high')),
-  ADD COLUMN IF NOT EXISTS risk_score INT DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS risk_signals TEXT[] DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS requires_review BOOLEAN DEFAULT false,
-  ADD COLUMN IF NOT EXISTS review_status TEXT CHECK (review_status IN ('pending', 'approved', 'rejected')),
-  ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES auth.users(id),
-  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+ALTER TABLE drivers 
+  ADD COLUMN IF NOT EXISTS acceptance_rate NUMERIC DEFAULT 1.0,
+  ADD COLUMN IF NOT EXISTS completion_rate NUMERIC DEFAULT 1.0,
+  ADD COLUMN IF NOT EXISTS avg_delay_minutes NUMERIC DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS performance_score NUMERIC DEFAULT 100,
+  ADD COLUMN IF NOT EXISTS last_performance_calc TIMESTAMPTZ;
 
-CREATE INDEX idx_food_orders_risk ON food_orders(risk_level) WHERE risk_level IN ('medium', 'high');
-CREATE INDEX idx_food_orders_review ON food_orders(requires_review, review_status);
+CREATE INDEX IF NOT EXISTS idx_drivers_performance ON drivers(performance_score DESC) 
+  WHERE is_online = true AND status = 'verified';
 ```
 
-### 6. Add `safety.manage` Permission
+### 5. Add Permission
 
 ```sql
 INSERT INTO permissions (key, description, category) VALUES
-  ('safety.manage', 'View and manage fraud prevention and risk controls', 'security')
+  ('demand.view', 'View demand forecasts and driver positioning', 'analytics')
 ON CONFLICT (key) DO NOTHING;
 ```
 
@@ -185,370 +168,291 @@ ON CONFLICT (key) DO NOTHING;
 
 ## RPC Functions
 
-### 1. `check_velocity` - Unified Velocity Checking
+### 1. `aggregate_demand_snapshot` - Collect Current Demand Data
 
 ```sql
-CREATE OR REPLACE FUNCTION public.check_velocity(
-  p_user_id UUID,
-  p_action TEXT,
-  p_scope TEXT DEFAULT 'user',
-  p_scope_value TEXT DEFAULT NULL,
-  p_tenant_id UUID DEFAULT NULL
+CREATE OR REPLACE FUNCTION public.aggregate_demand_snapshot()
+RETURNS INT AS $$
+DECLARE
+  v_zone RECORD;
+  v_snapshot_count INT := 0;
+  v_now TIMESTAMPTZ := now();
+  v_hour INT := EXTRACT(HOUR FROM v_now);
+  v_dow INT := EXTRACT(DOW FROM v_now);
+  v_window_start TIMESTAMPTZ := v_now - INTERVAL '15 minutes';
+BEGIN
+  -- For each active zone
+  FOR v_zone IN 
+    SELECT DISTINCT zone_code, tenant_id FROM eats_zones WHERE is_active = true
+  LOOP
+    INSERT INTO demand_snapshots (
+      tenant_id, zone_code, hour_of_day, day_of_week, snapshot_time,
+      orders_count, drivers_online, avg_delivery_minutes, avg_assign_seconds
+    )
+    SELECT
+      v_zone.tenant_id,
+      v_zone.zone_code,
+      v_hour,
+      v_dow,
+      v_now,
+      COUNT(DISTINCT fo.id),
+      (SELECT COUNT(*) FROM drivers d 
+       WHERE d.is_online = true AND d.status = 'verified' 
+       AND d.updated_at > v_now - INTERVAL '5 minutes'),
+      AVG(EXTRACT(EPOCH FROM (fo.delivered_at - fo.created_at)) / 60),
+      AVG(EXTRACT(EPOCH FROM (fo.assigned_at - fo.created_at)))
+    FROM food_orders fo
+    WHERE fo.zone_code = v_zone.zone_code
+      AND fo.created_at BETWEEN v_window_start AND v_now;
+
+    v_snapshot_count := v_snapshot_count + 1;
+  END LOOP;
+
+  RETURN v_snapshot_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### 2. `generate_zone_forecast` - Predict Demand for a Zone
+
+```sql
+CREATE OR REPLACE FUNCTION public.generate_zone_forecast(
+  p_zone_code TEXT,
+  p_tenant_id UUID DEFAULT NULL,
+  p_hours_ahead INT DEFAULT 1
 )
 RETURNS JSONB AS $$
 DECLARE
-  v_limit INT;
-  v_window_ms INT;
-  v_count INT;
-  v_exceeded BOOLEAN := false;
-  v_score INT := 0;
+  v_target_time TIMESTAMPTZ;
+  v_target_hour INT;
+  v_target_dow INT;
+  v_predicted_orders INT;
+  v_predicted_drivers INT;
+  v_sample_count INT;
+  v_confidence NUMERIC;
+  v_driver_per_order NUMERIC := 0.5; -- Configurable ratio
+  v_current_drivers INT;
 BEGIN
-  -- Get limit config based on action
+  v_target_time := now() + (p_hours_ahead || ' hours')::INTERVAL;
+  v_target_hour := EXTRACT(HOUR FROM v_target_time);
+  v_target_dow := EXTRACT(DOW FROM v_target_time);
+
+  -- Get average from last 4 weeks for same day/hour
   SELECT 
-    CASE p_action
-      WHEN 'order_create' THEN 5
-      WHEN 'payment_attempt' THEN 5
-      WHEN 'payment_failed' THEN 3
-      WHEN 'login_attempt' THEN 10
-      ELSE 20
-    END,
-    CASE p_action
-      WHEN 'order_create' THEN 300000 -- 5 minutes
-      WHEN 'payment_attempt' THEN 3600000 -- 1 hour
-      WHEN 'payment_failed' THEN 600000 -- 10 minutes
-      WHEN 'login_attempt' THEN 300000 -- 5 minutes
-      ELSE 3600000
-    END
-  INTO v_limit, v_window_ms;
+    AVG(orders_count)::INT,
+    COUNT(*)
+  INTO v_predicted_orders, v_sample_count
+  FROM demand_snapshots
+  WHERE zone_code = p_zone_code
+    AND (p_tenant_id IS NULL OR tenant_id = p_tenant_id)
+    AND hour_of_day = v_target_hour
+    AND day_of_week = v_target_dow
+    AND created_at > now() - INTERVAL '4 weeks';
 
-  -- Count recent actions
-  SELECT COUNT(*) INTO v_count
-  FROM risk_events
-  WHERE 
-    CASE 
-      WHEN p_scope = 'user' THEN user_id = p_user_id
-      WHEN p_scope = 'ip' THEN ip_address = p_scope_value
-      WHEN p_scope = 'device' THEN device_fingerprint = p_scope_value
-      ELSE user_id = p_user_id
-    END
-    AND event_type = p_action
-    AND created_at > now() - (v_window_ms || ' milliseconds')::INTERVAL;
-
-  v_exceeded := v_count >= v_limit;
+  v_predicted_orders := COALESCE(v_predicted_orders, 5); -- Default minimum
+  v_predicted_drivers := GREATEST(1, CEIL(v_predicted_orders * v_driver_per_order));
   
-  IF v_exceeded THEN
-    v_score := CASE 
-      WHEN p_action = 'payment_failed' THEN 35
-      WHEN p_action = 'login_attempt' THEN 30
-      ELSE 25
-    END;
-    
-    -- Record velocity breach event
-    INSERT INTO risk_events (tenant_id, user_id, event_type, severity, score, details)
-    VALUES (
-      p_tenant_id, 
-      p_user_id, 
-      'velocity_limit',
-      CASE WHEN v_count >= v_limit * 2 THEN 'critical' ELSE 'warning' END,
-      v_score,
-      jsonb_build_object('action', p_action, 'count', v_count, 'limit', v_limit)
-    );
-  END IF;
+  -- Confidence based on sample size
+  v_confidence := LEAST(1.0, v_sample_count::NUMERIC / 8); -- 8 samples = 4 weeks
+
+  -- Get current drivers online
+  SELECT COUNT(*) INTO v_current_drivers
+  FROM drivers 
+  WHERE is_online = true AND status = 'verified' 
+  AND updated_at > now() - INTERVAL '5 minutes';
+
+  -- Upsert forecast
+  INSERT INTO demand_forecasts (
+    tenant_id, zone_code, forecast_for, predicted_orders, 
+    predicted_drivers_needed, current_drivers_online, confidence,
+    surge_predicted
+  ) VALUES (
+    p_tenant_id, p_zone_code, date_trunc('hour', v_target_time),
+    v_predicted_orders, v_predicted_drivers, v_current_drivers, v_confidence,
+    v_predicted_drivers > v_current_drivers * 1.3
+  )
+  ON CONFLICT (tenant_id, zone_code, forecast_for) DO UPDATE SET
+    predicted_orders = EXCLUDED.predicted_orders,
+    predicted_drivers_needed = EXCLUDED.predicted_drivers_needed,
+    current_drivers_online = EXCLUDED.current_drivers_online,
+    confidence = EXCLUDED.confidence,
+    surge_predicted = EXCLUDED.surge_predicted,
+    created_at = now();
 
   RETURN jsonb_build_object(
-    'exceeded', v_exceeded,
-    'count', v_count,
-    'limit', v_limit,
-    'score_added', CASE WHEN v_exceeded THEN v_score ELSE 0 END
+    'zone_code', p_zone_code,
+    'forecast_for', v_target_time,
+    'predicted_orders', v_predicted_orders,
+    'predicted_drivers_needed', v_predicted_drivers,
+    'current_drivers', v_current_drivers,
+    'confidence', v_confidence,
+    'surge_predicted', v_predicted_drivers > v_current_drivers * 1.3
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-### 2. `compute_risk_score` - Recompute User Risk Score
+### 3. `generate_all_forecasts` - Generate Forecasts for All Zones
 
 ```sql
-CREATE OR REPLACE FUNCTION public.compute_risk_score(p_user_id UUID, p_tenant_id UUID DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.generate_all_forecasts()
+RETURNS INT AS $$
+DECLARE
+  v_zone RECORD;
+  v_count INT := 0;
+BEGIN
+  FOR v_zone IN 
+    SELECT DISTINCT zone_code, tenant_id FROM eats_zones WHERE is_active = true
+  LOOP
+    -- Generate forecasts for next 3 hours
+    PERFORM generate_zone_forecast(v_zone.zone_code, v_zone.tenant_id, 1);
+    PERFORM generate_zone_forecast(v_zone.zone_code, v_zone.tenant_id, 2);
+    PERFORM generate_zone_forecast(v_zone.zone_code, v_zone.tenant_id, 3);
+    v_count := v_count + 1;
+  END LOOP;
+  
+  RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### 4. `recommend_driver_positions` - Generate Reposition Recommendations
+
+```sql
+CREATE OR REPLACE FUNCTION public.recommend_driver_positions(p_tenant_id UUID DEFAULT NULL)
+RETURNS INT AS $$
+DECLARE
+  v_shortage RECORD;
+  v_driver RECORD;
+  v_count INT := 0;
+BEGIN
+  -- Find zones with predicted shortage (need more drivers than available)
+  FOR v_shortage IN
+    SELECT 
+      zone_code,
+      predicted_orders,
+      predicted_drivers_needed,
+      current_drivers_online,
+      (predicted_drivers_needed - current_drivers_online) as shortage
+    FROM demand_forecasts
+    WHERE forecast_for BETWEEN now() AND now() + INTERVAL '1 hour'
+      AND (p_tenant_id IS NULL OR tenant_id = p_tenant_id)
+      AND predicted_drivers_needed > current_drivers_online * 1.2
+    ORDER BY (predicted_drivers_needed - current_drivers_online) DESC
+    LIMIT 5
+  LOOP
+    -- Find available drivers in low-demand zones
+    FOR v_driver IN
+      SELECT 
+        d.id as driver_id,
+        d.home_city as current_zone
+      FROM drivers d
+      WHERE d.is_online = true 
+        AND d.status = 'verified'
+        AND d.updated_at > now() - INTERVAL '5 minutes'
+        -- Not already recommended
+        AND NOT EXISTS (
+          SELECT 1 FROM driver_reposition_recommendations r
+          WHERE r.driver_id = d.id 
+            AND r.expires_at > now() 
+            AND r.acknowledged_at IS NULL
+        )
+      LIMIT v_shortage.shortage
+    LOOP
+      INSERT INTO driver_reposition_recommendations (
+        tenant_id, driver_id, current_zone_code, suggested_zone_code,
+        reason, priority, expires_at
+      ) VALUES (
+        p_tenant_id,
+        v_driver.driver_id,
+        v_driver.current_zone,
+        v_shortage.zone_code,
+        format('High demand expected: %s orders predicted in next hour', v_shortage.predicted_orders),
+        CASE WHEN v_shortage.shortage > 5 THEN 1 ELSE 2 END,
+        now() + INTERVAL '30 minutes'
+      );
+      v_count := v_count + 1;
+    END LOOP;
+  END LOOP;
+
+  RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### 5. `update_driver_performance_stats` - Calculate Driver Performance
+
+```sql
+CREATE OR REPLACE FUNCTION public.update_driver_performance_stats(p_driver_id UUID)
 RETURNS JSONB AS $$
 DECLARE
-  v_total_score INT := 0;
-  v_risk_level TEXT := 'low';
-  v_breakdown JSONB;
+  v_stats RECORD;
+  v_acceptance_rate NUMERIC;
+  v_completion_rate NUMERIC;
+  v_avg_delay NUMERIC;
+  v_performance_score NUMERIC;
 BEGIN
-  -- Sum scores from last 24h risk events
+  -- Calculate rates from last 30 days
   SELECT 
-    COALESCE(SUM(score), 0),
-    jsonb_object_agg(event_type, COALESCE(type_score, 0))
-  INTO v_total_score, v_breakdown
-  FROM (
-    SELECT event_type, SUM(score) as type_score
-    FROM risk_events
-    WHERE user_id = p_user_id
-      AND created_at > now() - INTERVAL '24 hours'
-    GROUP BY event_type
-  ) subq;
+    CASE WHEN (d.acceptance_count + d.decline_count) > 0 
+      THEN d.acceptance_count::NUMERIC / (d.acceptance_count + d.decline_count)
+      ELSE 1.0 END,
+    CASE WHEN d.acceptance_count > 0
+      THEN (d.acceptance_count - COALESCE(d.cancel_count, 0))::NUMERIC / d.acceptance_count
+      ELSE 1.0 END
+  INTO v_acceptance_rate, v_completion_rate
+  FROM drivers d
+  WHERE d.id = p_driver_id;
 
-  -- Determine risk level
-  v_risk_level := CASE
-    WHEN v_total_score > 80 THEN 'blocked'
-    WHEN v_total_score > 50 THEN 'high'
-    WHEN v_total_score > 20 THEN 'medium'
-    ELSE 'low'
-  END;
+  -- Calculate average delay from SLA metrics
+  SELECT COALESCE(AVG(
+    CASE WHEN late_by_seconds > 0 THEN late_by_seconds / 60.0 ELSE 0 END
+  ), 0)
+  INTO v_avg_delay
+  FROM sla_metrics
+  WHERE driver_id = p_driver_id
+    AND created_at > now() - INTERVAL '30 days';
 
-  -- Upsert risk score
-  INSERT INTO risk_scores (tenant_id, user_id, total_score, risk_level, score_breakdown, last_evaluated)
-  VALUES (p_tenant_id, p_user_id, v_total_score, v_risk_level, COALESCE(v_breakdown, '{}'), now())
-  ON CONFLICT (user_id) DO UPDATE SET
-    total_score = EXCLUDED.total_score,
-    risk_level = EXCLUDED.risk_level,
-    score_breakdown = EXCLUDED.score_breakdown,
-    last_evaluated = now();
+  -- Composite performance score (0-100)
+  v_performance_score := (
+    (v_acceptance_rate * 40) +
+    (v_completion_rate * 40) +
+    (GREATEST(0, 20 - v_avg_delay)) -- Deduct for delays
+  );
 
-  -- Auto-block if score exceeds threshold
-  IF v_risk_level = 'blocked' AND p_tenant_id IS NOT NULL THEN
-    INSERT INTO blocked_entities (tenant_id, entity_type, entity_value, reason)
-    VALUES (p_tenant_id, 'user', p_user_id::TEXT, 'Auto-blocked: Risk score exceeded threshold')
-    ON CONFLICT DO NOTHING;
-  END IF;
+  -- Update driver
+  UPDATE drivers SET
+    acceptance_rate = v_acceptance_rate,
+    completion_rate = v_completion_rate,
+    avg_delay_minutes = v_avg_delay,
+    performance_score = v_performance_score,
+    last_performance_calc = now()
+  WHERE id = p_driver_id;
 
   RETURN jsonb_build_object(
-    'user_id', p_user_id,
-    'total_score', v_total_score,
-    'risk_level', v_risk_level,
-    'breakdown', v_breakdown
+    'driver_id', p_driver_id,
+    'acceptance_rate', v_acceptance_rate,
+    'completion_rate', v_completion_rate,
+    'avg_delay_minutes', v_avg_delay,
+    'performance_score', v_performance_score
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
-```
-
-### 3. `check_blocked` - Check if Entity is Blocked
-
-```sql
-CREATE OR REPLACE FUNCTION public.check_blocked(
-  p_tenant_id UUID,
-  p_entity_type TEXT,
-  p_entity_value TEXT
-)
-RETURNS JSONB AS $$
-DECLARE
-  v_blocked RECORD;
-BEGIN
-  SELECT * INTO v_blocked
-  FROM blocked_entities
-  WHERE tenant_id = p_tenant_id
-    AND entity_type = p_entity_type
-    AND entity_value = p_entity_value
-    AND is_active = true
-    AND (expires_at IS NULL OR expires_at > now());
-
-  IF v_blocked IS NOT NULL THEN
-    RETURN jsonb_build_object(
-      'is_blocked', true,
-      'reason', v_blocked.reason,
-      'blocked_at', v_blocked.created_at
-    );
-  END IF;
-
-  RETURN jsonb_build_object('is_blocked', false);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
-```
-
-### 4. `assess_order_risk` - Score Order at Creation
-
-```sql
-CREATE OR REPLACE FUNCTION public.assess_order_risk(p_order_id UUID)
-RETURNS JSONB AS $$
-DECLARE
-  v_order RECORD;
-  v_user_score RECORD;
-  v_signals TEXT[] := '{}';
-  v_score INT := 0;
-  v_risk_level TEXT := 'low';
-  v_requires_review BOOLEAN := false;
-  v_account_age INTERVAL;
-  v_prev_order_count INT;
-BEGIN
-  SELECT * INTO v_order FROM food_orders WHERE id = p_order_id;
-  IF v_order IS NULL THEN RETURN jsonb_build_object('error', 'Order not found'); END IF;
-
-  -- Get user's risk score
-  SELECT * INTO v_user_score FROM risk_scores WHERE user_id = v_order.customer_id;
-
-  -- Check account age
-  SELECT now() - created_at INTO v_account_age
-  FROM auth.users WHERE id = v_order.customer_id;
-
-  IF v_account_age < INTERVAL '1 day' THEN
-    v_signals := array_append(v_signals, 'new_account');
-    v_score := v_score + 10;
-  END IF;
-
-  -- Check order history
-  SELECT COUNT(*) INTO v_prev_order_count
-  FROM food_orders
-  WHERE customer_id = v_order.customer_id
-    AND status = 'completed'
-    AND id != p_order_id;
-
-  IF v_prev_order_count = 0 AND v_order.total_amount_cents > 5000 THEN
-    v_signals := array_append(v_signals, 'high_value_first_order');
-    v_score := v_score + 20;
-  END IF;
-
-  -- Add user's existing risk score
-  IF v_user_score IS NOT NULL THEN
-    v_score := v_score + LEAST(v_user_score.total_score / 2, 30);
-    IF v_user_score.risk_level IN ('high', 'blocked') THEN
-      v_signals := array_append(v_signals, 'high_risk_user');
-    END IF;
-  END IF;
-
-  -- Determine final risk level
-  v_risk_level := CASE
-    WHEN v_score >= 50 THEN 'high'
-    WHEN v_score >= 25 THEN 'medium'
-    ELSE 'low'
-  END;
-
-  v_requires_review := v_risk_level IN ('high', 'medium');
-
-  -- Update order
-  UPDATE food_orders SET
-    risk_score = v_score,
-    risk_level = v_risk_level,
-    risk_signals = v_signals,
-    requires_review = v_requires_review,
-    review_status = CASE WHEN v_requires_review THEN 'pending' ELSE NULL END
-  WHERE id = p_order_id;
-
-  RETURN jsonb_build_object(
-    'order_id', p_order_id,
-    'risk_score', v_score,
-    'risk_level', v_risk_level,
-    'signals', v_signals,
-    'requires_review', v_requires_review
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
-```
-
-### 5. `record_device_session` - Track Device Fingerprints
-
-```sql
-CREATE OR REPLACE FUNCTION public.record_device_session(
-  p_user_id UUID,
-  p_tenant_id UUID,
-  p_device_fingerprint TEXT,
-  p_ip_address TEXT DEFAULT NULL,
-  p_user_agent TEXT DEFAULT NULL
-)
-RETURNS JSONB AS $$
-DECLARE
-  v_existing RECORD;
-  v_recent_devices INT;
-  v_is_new_device BOOLEAN := false;
-BEGIN
-  -- Check if device exists for user
-  SELECT * INTO v_existing
-  FROM device_sessions
-  WHERE user_id = p_user_id AND device_fingerprint = p_device_fingerprint;
-
-  IF v_existing IS NULL THEN
-    v_is_new_device := true;
-    
-    -- Count recent different devices
-    SELECT COUNT(DISTINCT device_fingerprint) INTO v_recent_devices
-    FROM device_sessions
-    WHERE user_id = p_user_id
-      AND last_seen > now() - INTERVAL '24 hours';
-
-    IF v_recent_devices >= 3 THEN
-      -- Multiple devices in short time - risk event
-      INSERT INTO risk_events (tenant_id, user_id, event_type, severity, score, device_fingerprint, ip_address, details)
-      VALUES (p_tenant_id, p_user_id, 'device_change', 'warning', 20, p_device_fingerprint, p_ip_address,
-        jsonb_build_object('recent_device_count', v_recent_devices + 1));
-    END IF;
-
-    -- Insert new device
-    INSERT INTO device_sessions (user_id, tenant_id, device_fingerprint, ip_address, user_agent)
-    VALUES (p_user_id, p_tenant_id, p_device_fingerprint, p_ip_address, p_user_agent);
-  ELSE
-    -- Update existing device last_seen
-    UPDATE device_sessions SET last_seen = now(), ip_address = COALESCE(p_ip_address, ip_address)
-    WHERE id = v_existing.id;
-  END IF;
-
-  RETURN jsonb_build_object(
-    'is_new_device', v_is_new_device,
-    'device_fingerprint', p_device_fingerprint
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ---
 
-## RLS Policies
+## Edge Function: `demand-optimizer`
 
-### risk_events
+Scheduled edge function for demand aggregation and forecasting:
 
-```sql
-ALTER TABLE risk_events ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can read risk events" ON risk_events
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
-  );
-
-CREATE POLICY "System can insert risk events" ON risk_events
-  FOR INSERT TO authenticated WITH CHECK (true);
-```
-
-### risk_scores
-
-```sql
-ALTER TABLE risk_scores ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can read risk scores" ON risk_scores
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
-  );
-```
-
-### blocked_entities
-
-```sql
-ALTER TABLE blocked_entities ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage blocked entities" ON blocked_entities
-  FOR ALL TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
-  );
-```
-
-### device_sessions
-
-```sql
-ALTER TABLE device_sessions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own devices" ON device_sessions
-  FOR SELECT TO authenticated
-  USING (user_id = auth.uid());
-
-CREATE POLICY "Admins can view all devices" ON device_sessions
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
-  );
+```typescript
+// supabase/functions/demand-optimizer/index.ts
+// Runs every 15 minutes via pg_cron
+// 1. Calls aggregate_demand_snapshot()
+// 2. Every hour: Calls generate_all_forecasts()
+// 3. Calls recommend_driver_positions()
+// 4. Checks for surge predictions and logs alerts
 ```
 
 ---
@@ -559,146 +463,162 @@ CREATE POLICY "Admins can view all devices" ON device_sessions
 
 | File | Description |
 |------|-------------|
-| `src/hooks/useFraudPrevention.ts` | Risk events, scores, blocked entities management |
-| `src/hooks/useDeviceSecurity.ts` | Device fingerprint + session tracking |
-| `src/pages/dispatch/DispatchSafety.tsx` | Main safety dashboard |
-| `src/components/safety/SafetyKPICards.tsx` | High-risk counts, blocked entities widgets |
-| `src/components/safety/RiskyOrdersList.tsx` | Orders requiring review |
-| `src/components/safety/RiskEventsTable.tsx` | Recent risk events |
-| `src/components/safety/BlockedEntitiesPanel.tsx` | Blocked users/devices/IPs |
-| `src/components/safety/RiskyUsersTable.tsx` | High-risk user list |
-| `src/components/safety/OrderReviewDialog.tsx` | Approve/reject risky orders |
+| `src/hooks/useDemandForecast.ts` | Fetch forecasts, snapshots, recommendations |
+| `src/pages/dispatch/DispatchDemand.tsx` | Main demand dashboard |
+| `src/components/demand/DemandHeatmap.tsx` | Orders by zone/hour heatmap |
+| `src/components/demand/ForecastPanel.tsx` | Next-hour predictions per zone |
+| `src/components/demand/AtRiskZonesTable.tsx` | Zones with predicted shortage |
+| `src/components/demand/RepositionRecommendations.tsx` | Driver move suggestions |
+| `src/components/demand/DemandKPICards.tsx` | Summary stats widgets |
 
-### Hook: `useFraudPrevention.ts`
+### Hook: `useDemandForecast.ts`
 
 ```typescript
-export function useFraudPrevention(tenantId: string | null) {
-  // Risk events
-  const riskEvents = useQuery({ ... });
-  
-  // Risk scores (high/blocked users)
-  const riskyUsers = useQuery({ ... });
-  
-  // Blocked entities
-  const blockedEntities = useQuery({ ... });
-  
-  // Orders requiring review
-  const ordersForReview = useQuery({ ... });
-  
-  // Mutations
-  const blockEntity = useMutation({ ... });
-  const unblockEntity = useMutation({ ... });
-  const approveOrder = useMutation({ ... });
-  const rejectOrder = useMutation({ ... });
-  const resetUserScore = useMutation({ ... });
-  
-  return { ... };
+export interface ZoneForecast {
+  zone_code: string;
+  forecast_for: string;
+  predicted_orders: number;
+  predicted_drivers_needed: number;
+  current_drivers_online: number;
+  confidence: number;
+  surge_predicted: boolean;
 }
+
+export interface DemandSnapshot {
+  zone_code: string;
+  hour_of_day: number;
+  day_of_week: number;
+  orders_count: number;
+  drivers_online: number;
+  avg_delivery_minutes: number;
+}
+
+export interface RepositionRecommendation {
+  id: string;
+  driver_id: string;
+  driver_name?: string;
+  current_zone_code: string;
+  suggested_zone_code: string;
+  reason: string;
+  priority: number;
+  expires_at: string;
+}
+
+export function useDemandForecasts(tenantId: string | null);
+export function useDemandSnapshots(tenantId: string | null, hoursBack: number);
+export function useRepositionRecommendations(tenantId: string | null);
+export function useAtRiskZones(tenantId: string | null);
 ```
 
-### Hook: `useDeviceSecurity.ts`
-
-Integrates with existing botDetection.ts to:
-- Generate device fingerprint on mount
-- Record device session on login/order
-- Check velocity before sensitive actions
-
-```typescript
-export function useDeviceSecurity() {
-  const fingerprint = useMemo(() => getDeviceFingerprint(), []);
-  
-  const recordSession = async (userId: string, tenantId: string) => {
-    return supabase.rpc('record_device_session', {
-      p_user_id: userId,
-      p_tenant_id: tenantId,
-      p_device_fingerprint: fingerprint,
-      p_ip_address: null, // Captured server-side
-      p_user_agent: navigator.userAgent
-    });
-  };
-  
-  const checkVelocity = async (action: string, userId: string) => {
-    return supabase.rpc('check_velocity', {
-      p_user_id: userId,
-      p_action: action
-    });
-  };
-  
-  return { fingerprint, recordSession, checkVelocity };
-}
-```
-
-### Page: `DispatchSafety.tsx`
+### Page: `DispatchDemand.tsx`
 
 Layout:
 
 ```text
 +------------------------------------------------------------------+
-|  Safety & Fraud Prevention            [Date Range] [Export]      |
+|  Demand & Forecasting                  [Refresh] [Time Range]    |
 +------------------------------------------------------------------+
 |  KPI Cards:                                                       |
-|  [High-Risk Orders] [Blocked Users] [Risk Events Today] [Flags]  |
+|  [Zones At Risk] [Surge Predicted] [Reposition Pending] [Score]  |
 +------------------------------------------------------------------+
-|  ORDERS REQUIRING REVIEW                                          |
+|  DEMAND HEATMAP (Orders by Zone x Hour)                          |
 |  +-------------------------------------------------------------+ |
-|  | #1234 | John D. | $85.50 | High (52) | [Approve] [Reject]   | |
-|  | #1235 | New User | $120 | Medium (35) | [Approve] [Reject]   | |
+|  |     | 6AM | 7AM | 8AM | 9AM | ... | 8PM | 9PM |             | |
+|  | DFW |  2  |  5  |  12 |  18 | ... |  15 |  8  |             | |
+|  | HOU |  1  |  3  |  8  |  14 | ... |  12 |  6  |             | |
 |  +-------------------------------------------------------------+ |
 +------------------------------------------------------------------+
-|  RECENT RISK EVENTS              |  BLOCKED ENTITIES             |
-|  +----------------------------+  | +----------------------------+|
-|  | Time | User | Type | Score|  | | Type | Value | Reason      ||
-|  | 2m ago | User A | velocity | | | user | abc123 | Auto-block ||
-|  +----------------------------+  | +----------------------------+|
+|  NEXT HOUR FORECAST            |  AT-RISK ZONES                  |
+|  +---------------------------+ | +------------------------------+|
+|  | Zone | Pred | Need | Now | | | Zone | Shortage | Surge      ||
+|  | DFW  | 25   | 13   | 8   | | | DFW  | -5 drivers | Yes       ||
+|  +---------------------------+ | +------------------------------+|
 +------------------------------------------------------------------+
-|  HIGH-RISK USERS                                                  |
+|  DRIVER REPOSITION RECOMMENDATIONS                                |
 |  +-------------------------------------------------------------+ |
-|  | User | Score | Level | Last Event | [Block] [Reset Score]   | |
+|  | Driver | Current | Suggested | Reason | [Notify] [Dismiss]  | |
 |  +-------------------------------------------------------------+ |
 +------------------------------------------------------------------+
 ```
 
 ---
 
-## Integration Points
+## Enhanced Auto-Assign Scoring
 
-### 1. Order Creation Flow
+Update the existing auto-assign scoring to include performance factors:
 
-Update order creation to:
-1. Call `record_device_session` with fingerprint
-2. Call `check_velocity('order_create', userId)`
-3. Call `check_blocked` for user/device/IP
-4. After insert, call `assess_order_risk(orderId)`
+```sql
+-- In auto_assign_order_v2, add to driver scoring:
+score := score + (driver.acceptance_rate * 15);  -- Up to 15 points
+score := score + (driver.completion_rate * 15);  -- Up to 15 points
+score := score - (driver.avg_delay_minutes * 2); -- Deduct for delays
+```
 
-### 2. Payment Flow
+---
 
-Before payment attempt:
-1. Call `check_velocity('payment_attempt', userId)`
-2. Call `check_blocked('card', cardFingerprint)`
-3. Record risk event on failure
+## Surge Pre-Warning Integration
 
-### 3. Login Flow
-
-On login:
-1. Call `record_device_session`
-2. Call `check_velocity('login_attempt', userId)`
-3. Existing `check_login_anomaly` already handles anomaly detection
-
-### 4. Dispatch UI
-
-Update order cards to show risk badges:
+Enhance existing surge logic to use forecasts:
 
 ```typescript
-{order.risk_level === 'high' && (
-  <Badge variant="destructive" className="gap-1">
-    <ShieldAlert className="h-3 w-3" /> High Risk
-  </Badge>
-)}
-{order.requires_review && order.review_status === 'pending' && (
-  <Badge variant="outline" className="bg-amber-500/10">
-    Needs Review
-  </Badge>
-)}
+// In useSurgePricing.ts, add forecast check:
+const forecastedSurge = forecasts?.some(
+  f => f.zone_code === currentZone && f.surge_predicted
+);
+
+// Show pre-warning indicator in UI
+```
+
+---
+
+## RLS Policies
+
+### demand_snapshots
+
+```sql
+ALTER TABLE demand_snapshots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can read demand snapshots" ON demand_snapshots
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'demand.view'))
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'analytics.view'))
+  );
+
+CREATE POLICY "System can insert snapshots" ON demand_snapshots
+  FOR INSERT TO authenticated WITH CHECK (true);
+```
+
+### demand_forecasts
+
+```sql
+ALTER TABLE demand_forecasts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can read forecasts" ON demand_forecasts
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'demand.view'))
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'analytics.view'))
+  );
+```
+
+### driver_reposition_recommendations
+
+```sql
+ALTER TABLE driver_reposition_recommendations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Drivers can view own recommendations" ON driver_reposition_recommendations
+  FOR SELECT TO authenticated
+  USING (driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid()));
+
+CREATE POLICY "Admins can manage recommendations" ON driver_reposition_recommendations
+  FOR ALL TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'demand.view'))
+  );
 ```
 
 ---
@@ -707,14 +627,14 @@ Update order cards to show risk badges:
 
 ### Update `DispatchSidebar.tsx`
 
-Add Safety nav item:
+Add Demand nav item (after Analytics):
 
 ```typescript
 {
-  label: "Safety",
-  path: "/dispatch/safety",
-  icon: ShieldAlert,
-  permission: "safety.manage",
+  label: "Demand",
+  path: "/dispatch/demand",
+  icon: TrendingUp, // or BarChart2
+  permission: "demand.view",
 },
 ```
 
@@ -723,57 +643,67 @@ Add Safety nav item:
 Add route:
 
 ```typescript
-<Route path="safety" element={<DispatchSafety />} />
+<Route path="demand" element={<DispatchDemand />} />
+```
+
+---
+
+## Scheduled Jobs Setup
+
+Using pg_cron for scheduled execution:
+
+```sql
+-- Aggregate demand every 15 minutes
+SELECT cron.schedule(
+  'aggregate-demand-snapshots',
+  '*/15 * * * *',
+  $$SELECT aggregate_demand_snapshot();$$
+);
+
+-- Generate forecasts every hour
+SELECT cron.schedule(
+  'generate-demand-forecasts',
+  '0 * * * *',
+  $$SELECT generate_all_forecasts();$$
+);
+
+-- Recommend driver positions every 30 minutes
+SELECT cron.schedule(
+  'recommend-driver-positions',
+  '*/30 * * * *',
+  $$SELECT recommend_driver_positions(NULL);$$
+);
 ```
 
 ---
 
 ## Implementation Order
 
-1. **Database migration** - Create risk_events, risk_scores, blocked_entities, device_sessions tables
-2. **Add order risk fields** - risk_level, risk_score, requires_review to food_orders
-3. **RPC functions** - check_velocity, compute_risk_score, check_blocked, assess_order_risk, record_device_session
-4. **RLS policies** - Tenant-scoped access control
-5. **useFraudPrevention hook** - Core data fetching and mutations
-6. **useDeviceSecurity hook** - Device fingerprint integration
-7. **Safety dashboard components** - KPI cards, risk events, blocked entities
-8. **DispatchSafety page** - Main dashboard
-9. **Order review dialog** - Approve/reject workflow
-10. **Update order creation** - Integrate risk assessment
-11. **Update dispatch UI** - Add risk badges to order cards
-12. **Update sidebar and routes**
+1. **Database migration** - Create tables, add driver performance columns
+2. **RPC functions** - aggregate_demand_snapshot, generate_zone_forecast, etc.
+3. **RLS policies** - Tenant-scoped access control
+4. **demand-optimizer edge function** - Scheduled data collection
+5. **useDemandForecast hook** - Data fetching
+6. **Demand dashboard components** - Heatmap, forecast panel, recommendations
+7. **DispatchDemand page** - Main dashboard
+8. **Update auto-assign scoring** - Add performance factors
+9. **Integrate surge pre-warning** - Show forecast indicators
+10. **Update sidebar and routes**
+11. **Schedule cron jobs** - pg_cron setup
 
 ---
 
 ## Testing Checklist
 
-- [ ] Device fingerprint generated correctly
-- [ ] Device session recorded on login/order
-- [ ] Velocity limits trigger risk events
-- [ ] Risk score computed correctly from events
-- [ ] Auto-block when score > 80
-- [ ] check_blocked prevents actions for blocked entities
-- [ ] Order risk assessment runs on creation
-- [ ] High-risk orders flagged for review
-- [ ] Review approval updates order status
-- [ ] Block/unblock entity works correctly
-- [ ] Reset user score clears risk_scores
-- [ ] Safety dashboard loads all data
-- [ ] Risk badges show on order cards
+- [ ] Demand snapshots collected every 15 minutes
+- [ ] Forecasts generated correctly based on historical data
+- [ ] Confidence scores reflect sample size
+- [ ] Surge predictions trigger when drivers < needed
+- [ ] Reposition recommendations target correct zones
+- [ ] Driver performance stats calculate correctly
+- [ ] Auto-assign uses new performance factors
+- [ ] Heatmap displays orders by zone/hour
+- [ ] Forecast panel shows next-hour predictions
+- [ ] At-risk zones highlighted correctly
 - [ ] RLS prevents cross-tenant access
-- [ ] Export functionality works
-
----
-
-## Risk Event Types
-
-| Event Type | Severity | Score | Trigger |
-|------------|----------|-------|---------|
-| `velocity_limit` | warning/critical | 25-35 | Action frequency exceeded |
-| `payment_failed` | warning | 35 | Payment declined |
-| `chargeback` | critical | 50 | Chargeback received |
-| `suspicious_location` | warning | 20 | IP/delivery mismatch |
-| `device_change` | warning | 20 | Multiple devices in 24h |
-| `blocked_ip` | critical | 40 | Known bad IP |
-| `manual_flag` | varies | varies | Admin flagged |
-| `bot_detected` | critical | 50 | Automation detected |
+- [ ] Cron jobs run on schedule
