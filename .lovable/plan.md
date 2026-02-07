@@ -1,111 +1,101 @@
 
-# Ride Selection UI Refinement Plan
+# Uber-Style Ride Cards Update
 
 ## Overview
-Update the Rides page UI to better match the reference designs, focusing on improved visual hierarchy, card layouts, and the booking flow aesthetics.
+Transform the ride selection UI from the current grid with scenic photos to clean, Uber-style horizontal list cards featuring 3D rendered white car images.
 
 ---
 
-## Changes Summary
+## What Changes
 
-### 1. Step "request" — Location + Ride Selection Screen
-This screen already has most elements but needs refinement:
+### Visual Style
+- **Current**: Grid cards with full scenic car photos and dark overlays
+- **New**: Horizontal list cards with clean white/3D car images on transparent background (matching reference)
 
-**A. Location Input Panel Updates**
-- Add clearer labels: "PICKUP LOCATION" and "DESTINATION" above each input (matching reference design 2)
-- Ensure the connector line is visible between inputs
-- Add edit icons (⊙) on the right side of each input row
-
-**B. Distance/Duration Display**
-- Move the "~9.1 mi ~21 min" info to appear **below** the location panel (currently it's in options step)
-- Display format: `~9.1 mi  ~21 min`
-
-**C. Category Tabs**
-- Already present ✓
-- Ensure proper styling matches reference (ECONOMY / PREMIUM / ELITE pills)
-
-**D. Ride Cards Grid**
-- Currently shows 2 cards per row ✓
-- Update card layout to match reference:
-  - Price badge on top-right of image (currently present ✓)
-  - Vehicle name + star icon below image
-  - Subtitle text
-  - ETA with lightning icon at bottom-left
-
-### 2. Step "options" — Ride List View  
-This is the secondary selection view shown in reference image 1:
-
-**A. Route Summary Header**
-- Compact glassmorphic panel showing pickup and destination
-- Blue dot for pickup, green dot for destination
-- Display `~9.1 mi  ~21 min` below the addresses
-
-**B. "Choose your ride" Heading**
-- Keep the current styling
-
-**C. List-Style Ride Cards** (matching reference image 1)
-- Horizontal layout with image thumbnail on left
-- Name + passenger count (👤 4) 
-- Subtitle in muted gray
-- Price in **green/primary color** on the right
-- Chevron arrow on the right
-
-### 3. Sticky Confirm Button
-- Already present ✓
-- Text: "CONFIRM ZIVO BLACK ›" (dynamic based on selection)
-- White button with black text
+### Card Layout (Per Reference Image)
+Each ride card will have:
+1. **Left**: Clean 3D car image (white car, minimal/transparent background)
+2. **Middle**: 
+   - Ride name + passenger count icon (e.g., "Standard :4")
+   - Pickup time and ETA (e.g., "4:51 PM · 11 min")
+   - Description subtitle in gray
+3. **Right**: Price in bold black (e.g., "$25.94")
+4. **Selection indicator**: Border highlight for selected card
 
 ---
 
 ## Technical Implementation
 
-### File: `src/pages/Rides.tsx`
+### 1. Add Clean Car Image URLs
+Update each ride option in `rideCategories` to use transparent/white background car images:
 
-**Location Panel Labels (Step "request")**
 ```text
-Lines ~478-567: Update the pickup/dropoff input containers
-- Add small label: "PICKUP LOCATION" and "DESTINATION" 
-- Labels: text-[9px] uppercase font-bold tracking-wider text-zinc-500
+Economy rides:
+- Wait & Save: Simple white sedan
+- Standard: White Toyota/Honda style
+- Green: White electric vehicle (Tesla-like)
+- Priority: Same as Standard
+
+Premium rides:
+- Extra Comfort: White luxury sedan
+- ZIVO Black: Black/dark luxury sedan
+- Black SUV: White/black SUV
+- XXL: Large SUV/Van
+
+Elite rides:
+- ZIVO Lux: Luxury vehicle (Bentley-style)
+- Executive Sprinter: White Mercedes Sprinter
+- Secure Transit: Black SUV
+- Pet Premium: White sedan
 ```
 
-**Distance/Duration in Request Step**
-```text
-Lines ~617 area: Add distance/time display below location panel
-- Show: ~{estimatedDistance} mi  ~{estimatedDuration} min
-- Only when both pickup and dropoff are filled
-```
+### 2. Update Card Component Structure
 
-**Ride Card Refinements (Grid Cards)**
-```text
-Lines ~650-704: Update card structure
-- Add star/diamond icon next to vehicle name
-- Improve spacing and typography
-```
+**Step "request" - Grid view updates:**
+- Keep 2-column grid but change card internals
+- White/light background for image area
+- Horizontal layout within each card
+- Remove dark gradient overlay
 
-**Options Step List Cards**
-```text
-Lines ~738-777: Refine list card styling
-- Price color: text-primary (or emerald-400 for green)
-- Add passenger icon with count
-- Ensure consistent spacing
-```
+**Step "options" - List view updates:**
+- Already horizontal, refine to match reference
+- Add time display (e.g., "4:51 PM · 11 min")
+- Passenger count next to name
 
-### No New Files Required
-All changes are refinements to existing components in `src/pages/Rides.tsx`.
+### 3. Styling Changes
+
+```text
+Card container:
+- bg-white (light mode look) or bg-zinc-900/80
+- rounded-xl border border-zinc-200/20
+- Horizontal flex layout
+
+Image section:
+- Fixed width: w-24 or w-28
+- bg-zinc-100 or transparent
+- object-contain (not cover) for clean car display
+
+Text section:
+- Dark text on cards (if light bg) or white (if dark bg)
+- Maintain dark theme consistency with app
+```
 
 ---
 
-## Visual Comparison
+## Files to Modify
 
-| Element | Current | After Update |
-|---------|---------|--------------|
-| Location labels | None | "PICKUP LOCATION" / "DESTINATION" |
-| Distance display | Only in options step | Shown in request step too |
-| Grid card icons | Custom icons per ride | Star/diamond badge for vehicle type |
-| List card price | Primary color | Green/emerald for price emphasis |
-| Passenger count | In options only | Consistent across both views |
+### `src/pages/Rides.tsx`
+1. Update `rideCategories` image URLs to use clean car images
+2. Modify grid card structure (lines ~664-714) for horizontal layout
+3. Update list card structure (lines ~767-784)
+4. Add ETA time calculation (current time + wait time)
 
 ---
 
-## Summary
-This update brings the Rides UI closer to the reference designs while maintaining the existing 2026 Spatial UI aesthetic. The changes are primarily styling refinements rather than structural changes, ensuring a smooth implementation.
+## Image Strategy
+Use high-quality PNG/WebP images of white cars on transparent or white backgrounds. Options:
+- Find royalty-free 3D car renders
+- Use existing car assets that have clean backgrounds
+- Source from Unsplash/Pexels with transparent car images
+
+The key visual change is moving from scenic photos to clean isolated car images, giving a professional rideshare app appearance.
