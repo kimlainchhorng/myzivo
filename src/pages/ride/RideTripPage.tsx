@@ -9,6 +9,9 @@ import RideReceiptModal from "@/components/ride/RideReceiptModal";
 import TripMapView from "@/components/ride/TripMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore } from "@/stores/rideStore";
+import { useRideRealtime } from "@/hooks/useRideRealtime";
+import DemoModeBanner from "@/components/ride/DemoModeBanner";
+import { updateRideStatusInDb } from "@/lib/supabaseRide";
 
 // Default coordinates for Baton Rouge
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
@@ -19,6 +22,11 @@ const RideTripPage = () => {
   const { state, updateElapsed, completeRide, clearRide } = useRideStore();
   const [showReceipt, setShowReceipt] = useState(false);
   const [tripProgress, setTripProgress] = useState(0);
+
+  // Subscribe to realtime updates
+  const { isDemoMode } = useRideRealtime({
+    tripId: state.tripId,
+  });
 
   // Redirect if no active ride
   useEffect(() => {
@@ -79,7 +87,10 @@ const RideTripPage = () => {
   const etaMinutes = Math.max(0, Math.ceil(tripDuration * (1 - tripProgress)));
   const isArrived = tripProgress >= 1;
 
-  const handleEndTrip = () => {
+  const handleEndTrip = async () => {
+    if (state.tripId) {
+      await updateRideStatusInDb(state.tripId, "completed");
+    }
     completeRide();
     setShowReceipt(true);
   };
@@ -96,6 +107,8 @@ const RideTripPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
+      {/* Demo Mode Banner */}
+      {isDemoMode && <DemoModeBanner />}
       {/* Mapbox Map View */}
       <TripMapView
         pickupLocation={pickupLocation}

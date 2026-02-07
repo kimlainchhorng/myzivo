@@ -2,9 +2,11 @@ import React, { createContext, useContext, useReducer, useEffect, ReactNode } fr
 import { RideState, RideAction, RideStatus, DriverInfo, CreateRidePayload } from '@/types/rideTypes';
 
 const STORAGE_KEY = 'zivo_ride_store';
+const TRIP_ID_KEY = 'zivo_active_trip_id';
 
 const initialState: RideState = {
   rideId: null,
+  tripId: null,
   pickup: '',
   destination: '',
   rideType: '',
@@ -45,6 +47,12 @@ function rideReducer(state: RideState, action: RideAction): RideState {
         routeCoordinates: action.payload.routeCoordinates,
         status: 'searching',
         createdAt: Date.now(),
+      };
+
+    case 'SET_TRIP_ID':
+      return {
+        ...state,
+        tripId: action.tripId,
       };
 
     case 'SET_STATUS':
@@ -108,6 +116,7 @@ interface RideContextValue {
   state: RideState;
   dispatch: React.Dispatch<RideAction>;
   createRide: (payload: CreateRidePayload) => void;
+  setTripId: (tripId: string) => void;
   assignDriver: (driver: DriverInfo) => void;
   updateEta: (eta: number) => void;
   startTrip: () => void;
@@ -157,6 +166,14 @@ export function RideStoreProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CREATE_RIDE', payload });
   };
 
+  const setTripId = (tripId: string) => {
+    dispatch({ type: 'SET_TRIP_ID', tripId });
+    // Also save tripId separately for quick access
+    try {
+      localStorage.setItem(TRIP_ID_KEY, tripId);
+    } catch {}
+  };
+
   const assignDriver = (driver: DriverInfo) => {
     dispatch({ type: 'ASSIGN_DRIVER', driver });
   };
@@ -183,9 +200,10 @@ export function RideStoreProvider({ children }: { children: ReactNode }) {
 
   const clearRide = () => {
     dispatch({ type: 'CLEAR_RIDE' });
-    // Also clear legacy localStorage key
+    // Also clear legacy localStorage keys
     try {
       localStorage.removeItem('zivo_active_ride');
+      localStorage.removeItem(TRIP_ID_KEY);
     } catch {}
   };
 
@@ -199,6 +217,7 @@ export function RideStoreProvider({ children }: { children: ReactNode }) {
         state,
         dispatch,
         createRide,
+        setTripId,
         assignDriver,
         updateEta,
         startTrip,
