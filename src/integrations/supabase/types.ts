@@ -15579,6 +15579,7 @@ export type Database = {
           pickup_lng: number
           rating: number | null
           region_id: string | null
+          ride_type: string | null
           rider_id: string | null
           service_type: string | null
           started_at: string | null
@@ -15619,6 +15620,7 @@ export type Database = {
           pickup_lng: number
           rating?: number | null
           region_id?: string | null
+          ride_type?: string | null
           rider_id?: string | null
           service_type?: string | null
           started_at?: string | null
@@ -15659,6 +15661,7 @@ export type Database = {
           pickup_lng?: number
           rating?: number | null
           region_id?: string | null
+          ride_type?: string | null
           rider_id?: string | null
           service_type?: string | null
           started_at?: string | null

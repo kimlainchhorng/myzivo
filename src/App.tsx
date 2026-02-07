@@ -64,6 +64,12 @@ const RideConfirmPage = lazy(() => import("./pages/ride/RideConfirmPage"));
 const RideSearchingPage = lazy(() => import("./pages/ride/RideSearchingPage"));
 const RideDriverPage = lazy(() => import("./pages/ride/RideDriverPage"));
 const RideTripPage = lazy(() => import("./pages/ride/RideTripPage"));
+
+// Driver App pages
+const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
+const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage"));
+const DriverTripsPage = lazy(() => import("./pages/driver/DriverTripsPage"));
+
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
 const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
@@ -573,6 +579,11 @@ const App = () => (
                 <Route path="/ride/searching" element={<RideSearchingPage />} />
                 <Route path="/ride/driver" element={<RideDriverPage />} />
                 <Route path="/ride/trip" element={<RideTripPage />} />
+                
+                {/* ZIVO Driver App Routes */}
+                <Route path="/driver" element={<DriverHomePage />} />
+                <Route path="/driver/login" element={<DriverLoginPage />} />
+                <Route path="/driver/trips" element={<DriverTripsPage />} />
                 
                 <Route path="/profile" element={<SetupRequiredRoute><Profile /></SetupRequiredRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
