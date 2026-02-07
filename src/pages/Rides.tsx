@@ -577,16 +577,18 @@ function RidesInner() {
         </button>
       )}
       
-      {/* Full-height Map */}
-      <div className="flex-1 relative">
-        <RidesMapView
-          userLocation={userLocation}
-          pickupCoords={pickupCoords}
-          dropoffCoords={dropoffCoords}
-          pickup={pickup}
-          dropoff={dropoff}
-          onLocateMe={handleUseCurrentLocation}
-        />
+      {/* Full-height Map - extends behind bottom sheet to hide Google attribution */}
+      <div className="absolute inset-0 pb-[45vh]">
+        <div className="w-full h-[calc(100%+80px)]">
+          <RidesMapView
+            userLocation={userLocation}
+            pickupCoords={pickupCoords}
+            dropoffCoords={dropoffCoords}
+            pickup={pickup}
+            dropoff={dropoff}
+            onLocateMe={handleUseCurrentLocation}
+          />
+        </div>
       </div>
       
       {/* Bottom Sheet */}
