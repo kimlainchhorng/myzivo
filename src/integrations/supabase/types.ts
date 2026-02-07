@@ -6672,6 +6672,7 @@ export type Database = {
       }
       food_orders: {
         Row: {
+          accepted_at: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
           cancellation_fee: number | null
@@ -6699,8 +6700,10 @@ export type Database = {
           items: Json
           payment_status: string | null
           picked_up_at: string | null
+          pickup_by: string | null
           placed_at: string | null
           platform_fee: number | null
+          prep_minutes: number | null
           prepared_at: string | null
           quoted_delivery_fee: number | null
           quoted_service_fee: number | null
@@ -6710,6 +6713,7 @@ export type Database = {
           quoted_tip: number | null
           quoted_total: number | null
           rating: number | null
+          ready_at: string | null
           refund_amount: number | null
           refund_status: string | null
           refunded_at: string | null
@@ -6728,6 +6732,7 @@ export type Database = {
           zone_code: string | null
         }
         Insert: {
+          accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
           cancellation_fee?: number | null
@@ -6755,8 +6760,10 @@ export type Database = {
           items: Json
           payment_status?: string | null
           picked_up_at?: string | null
+          pickup_by?: string | null
           placed_at?: string | null
           platform_fee?: number | null
+          prep_minutes?: number | null
           prepared_at?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
@@ -6766,6 +6773,7 @@ export type Database = {
           quoted_tip?: number | null
           quoted_total?: number | null
           rating?: number | null
+          ready_at?: string | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -6784,6 +6792,7 @@ export type Database = {
           zone_code?: string | null
         }
         Update: {
+          accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
           cancellation_fee?: number | null
@@ -6811,8 +6820,10 @@ export type Database = {
           items?: Json
           payment_status?: string | null
           picked_up_at?: string | null
+          pickup_by?: string | null
           placed_at?: string | null
           platform_fee?: number | null
+          prep_minutes?: number | null
           prepared_at?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
@@ -6822,6 +6833,7 @@ export type Database = {
           quoted_tip?: number | null
           quoted_total?: number | null
           rating?: number | null
+          ready_at?: string | null
           refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
@@ -8733,6 +8745,8 @@ export type Database = {
           preparation_time: number | null
           price: number
           restaurant_id: string
+          stock_mode: string | null
+          stock_qty: number | null
           updated_at: string | null
         }
         Insert: {
@@ -8748,6 +8762,8 @@ export type Database = {
           preparation_time?: number | null
           price: number
           restaurant_id: string
+          stock_mode?: string | null
+          stock_qty?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -8763,6 +8779,8 @@ export type Database = {
           preparation_time?: number | null
           price?: number
           restaurant_id?: string
+          stock_mode?: string | null
+          stock_qty?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -9285,6 +9303,48 @@ export type Database = {
           },
           {
             foreignKeyName: "order_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_timers: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          order_id: string | null
+          run_at: string
+          status: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          run_at: string
+          status?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          run_at?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_timers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_timers_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"
@@ -16257,6 +16317,7 @@ export type Database = {
           duration_minutes: number | null
           estimated_minutes: number | null
           fare_amount: number | null
+          feedback: string | null
           id: string
           passenger_name: string | null
           payment_status: string | null
@@ -16304,6 +16365,7 @@ export type Database = {
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
+          feedback?: string | null
           id?: string
           passenger_name?: string | null
           payment_status?: string | null
@@ -16351,6 +16413,7 @@ export type Database = {
           duration_minutes?: number | null
           estimated_minutes?: number | null
           fare_amount?: number | null
+          feedback?: string | null
           id?: string
           passenger_name?: string | null
           payment_status?: string | null

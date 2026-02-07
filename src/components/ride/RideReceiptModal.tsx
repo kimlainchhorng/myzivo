@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, CheckCircle2 } from "lucide-react";
+import { Star, CheckCircle2, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,7 +8,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { saveRideRating } from "@/lib/supabaseRide";
 
 interface RideReceiptModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ interface RideReceiptModalProps {
   price: number;
   rideName: string;
   onDone: () => void;
+  tripId?: string;
 }
 
 const RideReceiptModal = ({ 
@@ -27,12 +30,16 @@ const RideReceiptModal = ({
   distance,
   price,
   rideName,
-  onDone 
+  onDone,
+  tripId,
 }: RideReceiptModalProps) => {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [hasRated, setHasRated] = useState(false);
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [ratingError, setRatingError] = useState<string | null>(null);
 
   // Format elapsed time for display
   const formatTime = (seconds: number) => {
@@ -51,8 +58,32 @@ const RideReceiptModal = ({
   // Total with tip
   const totalWithTip = price + (selectedTip || 0);
 
-  const handleRate = (stars: number) => {
+  const handleStarClick = (stars: number) => {
     setRating(stars);
+    setRatingError(null);
+  };
+
+  const handleSubmitRating = async () => {
+    if (rating === 0) return;
+    
+    if (tripId) {
+      setIsSaving(true);
+      setRatingError(null);
+      
+      const result = await saveRideRating({
+        tripId,
+        rating,
+        feedback: feedback.trim() || undefined,
+      });
+      
+      setIsSaving(false);
+      
+      if (!result.success) {
+        setRatingError("Failed to save rating. Please try again.");
+        return;
+      }
+    }
+    
     setHasRated(true);
   };
 
@@ -62,11 +93,13 @@ const RideReceiptModal = ({
     setRating(0);
     setHasRated(false);
     setSelectedTip(null);
+    setFeedback("");
+    setRatingError(null);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-zinc-900/98 backdrop-blur-xl border-white/10 text-white max-w-sm mx-auto">
+      <DialogContent className="bg-zinc-900/98 backdrop-blur-xl border-white/10 text-white max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center pb-2">
           <motion.div
             initial={{ scale: 0 }}
@@ -136,8 +169,9 @@ const RideReceiptModal = ({
                 whileTap={{ scale: 0.9 }}
                 onMouseEnter={() => setHoveredStar(star)}
                 onMouseLeave={() => setHoveredStar(0)}
-                onClick={() => handleRate(star)}
-                className="p-1 transition-colors"
+                onClick={() => handleStarClick(star)}
+                disabled={isSaving || hasRated}
+                className="p-1 transition-colors disabled:opacity-50"
               >
                 <Star
                   className={cn(
@@ -151,16 +185,71 @@ const RideReceiptModal = ({
             ))}
           </div>
 
+          {/* Feedback Textarea */}
+          {!hasRated && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-4"
+            >
+              <Textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Tell us about your experience (optional)..."
+                className="min-h-[80px] bg-white/5 border-white/10 text-white placeholder:text-white/40 resize-none"
+                maxLength={500}
+                disabled={isSaving || hasRated}
+              />
+              <p className="text-xs text-white/30 mt-1 text-right">
+                {feedback.length}/500
+              </p>
+            </motion.div>
+          )}
+
+          {/* Submit Rating Button */}
+          {!hasRated && (
+            <Button
+              onClick={handleSubmitRating}
+              disabled={isSaving || rating === 0}
+              className="w-full mt-3 h-11 bg-primary hover:bg-primary/90"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Submit Rating'
+              )}
+            </Button>
+          )}
+
+          {/* Error Message */}
           <AnimatePresence>
-            {hasRated && (
+            {ratingError && (
               <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="text-center text-sm text-green-400 mt-2"
+                className="text-center text-sm text-red-400 mt-2"
               >
-                Thanks for your feedback!
+                {ratingError}
               </motion.p>
+            )}
+          </AnimatePresence>
+
+          {/* Success Message */}
+          <AnimatePresence>
+            {hasRated && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center justify-center gap-2 text-green-400 mt-3"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-sm">Thanks for your feedback!</span>
+              </motion.div>
             )}
           </AnimatePresence>
         </motion.div>

@@ -338,6 +338,7 @@ const RideTripPage = () => {
         price={state.price}
         rideName={state.rideName}
         onDone={handleReceiptDone}
+        tripId={state.tripId || undefined}
       />
 
       {/* Bottom Nav */}
