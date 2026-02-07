@@ -4872,6 +4872,7 @@ export type Database = {
           prev_lng: number | null
           prev_location_at: string | null
           rating: number | null
+          rating_count: number | null
           referral_code: string
           region_id: string | null
           rides_enabled: boolean | null
@@ -4924,6 +4925,7 @@ export type Database = {
           prev_lng?: number | null
           prev_location_at?: string | null
           rating?: number | null
+          rating_count?: number | null
           referral_code?: string
           region_id?: string | null
           rides_enabled?: boolean | null
@@ -4976,6 +4978,7 @@ export type Database = {
           prev_lng?: number | null
           prev_location_at?: string | null
           rating?: number | null
+          rating_count?: number | null
           referral_code?: string
           region_id?: string | null
           rides_enabled?: boolean | null
@@ -9385,6 +9388,7 @@ export type Database = {
           order_id: string | null
           provider_message_id: string | null
           read_at: string | null
+          role: string | null
           sent_at: string | null
           status: Database["public"]["Enums"]["notification_status"]
           template: string
@@ -9407,6 +9411,7 @@ export type Database = {
           order_id?: string | null
           provider_message_id?: string | null
           read_at?: string | null
+          role?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
           template: string
@@ -9429,6 +9434,7 @@ export type Database = {
           order_id?: string | null
           provider_message_id?: string | null
           read_at?: string | null
+          role?: string | null
           sent_at?: string | null
           status?: Database["public"]["Enums"]["notification_status"]
           template?: string
@@ -9780,6 +9786,98 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_ratings: {
+        Row: {
+          comment: string | null
+          contact_back: boolean | null
+          created_at: string
+          customer_id: string | null
+          driver_id: string | null
+          driver_rating: number | null
+          id: string
+          merchant_rating: number | null
+          order_id: string
+          restaurant_id: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          comment?: string | null
+          contact_back?: boolean | null
+          created_at?: string
+          customer_id?: string | null
+          driver_id?: string | null
+          driver_rating?: number | null
+          id?: string
+          merchant_rating?: number | null
+          order_id: string
+          restaurant_id?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          comment?: string | null
+          contact_back?: boolean | null
+          created_at?: string
+          customer_id?: string | null
+          driver_id?: string | null
+          driver_rating?: number | null
+          id?: string
+          merchant_rating?: number | null
+          order_id?: string
+          restaurant_id?: string | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_ratings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -16359,6 +16457,36 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_history: {
+        Row: {
+          available_drivers: number | null
+          created_at: string | null
+          id: string
+          level: string | null
+          multiplier: number | null
+          requested_count: number | null
+          zone: string | null
+        }
+        Insert: {
+          available_drivers?: number | null
+          created_at?: string | null
+          id?: string
+          level?: string | null
+          multiplier?: number | null
+          requested_count?: number | null
+          zone?: string | null
+        }
+        Update: {
+          available_drivers?: number | null
+          created_at?: string | null
+          id?: string
+          level?: string | null
+          multiplier?: number | null
+          requested_count?: number | null
+          zone?: string | null
+        }
+        Relationships: []
+      }
       surge_zones: {
         Row: {
           base_multiplier: number
@@ -18025,6 +18153,36 @@ export type Database = {
           policy_type?: string
           policy_version?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_devices: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          onesignal_player_id: string
+          role: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          onesignal_player_id: string
+          role: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          onesignal_player_id?: string
+          role?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -22182,6 +22340,18 @@ export type Database = {
         Args: { p_policy_type: string }
         Returns: string
       }
+      get_delivered_order_for_rating: {
+        Args: { p_tracking_code: string }
+        Returns: {
+          already_rated: boolean
+          delivered_at: string
+          driver_id: string
+          driver_name: string
+          order_id: string
+          restaurant_id: string
+          restaurant_name: string
+        }[]
+      }
       get_experiment_variant: {
         Args: {
           p_experiment_id: string
@@ -22312,6 +22482,17 @@ export type Database = {
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
+      }
+      submit_order_rating: {
+        Args: {
+          p_comment?: string
+          p_contact_back?: boolean
+          p_driver_rating: number
+          p_merchant_rating: number
+          p_tags?: string[]
+          p_tracking_code: string
+        }
+        Returns: Json
       }
       update_notification_updated_at: {
         Args: { notification_id: string }

@@ -373,6 +373,10 @@ const DispatchMerchants = lazy(() => import("./pages/dispatch/DispatchMerchants"
 const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
 const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
 const DispatchAnalytics = lazy(() => import("./pages/dispatch/DispatchAnalytics"));
+const DispatchQuality = lazy(() => import("./pages/dispatch/DispatchQuality"));
+
+// Public Rating Page
+const RateOrderPage = lazy(() => import("./pages/rate/RateOrderPage"));
 
 // Order Tracking
 const OrderTrackingPage = lazy(() => import("./pages/track/OrderTrackingPage"));
@@ -1367,8 +1371,11 @@ const App = () => (
                   <Route path="merchants" element={<DispatchMerchants />} />
                   <Route path="payouts" element={<DispatchPayouts />} />
                   <Route path="analytics" element={<DispatchAnalytics />} />
+                  <Route path="quality" element={<DispatchQuality />} />
                   <Route path="settings" element={<DispatchSettings />} />
                 </Route>
+                {/* Public Rating Page - no auth required */}
+                <Route path="/rate/:code" element={<RateOrderPage />} />
                 {/* Order Tracking - Customer */}
                 <Route path="/track/:orderId" element={<OrderTrackingPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
