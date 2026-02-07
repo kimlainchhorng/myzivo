@@ -1,87 +1,127 @@
 
 
-# Apply ZIVO Dark Map Theme
+# ZIVO Premium Map Styling Update
 
 ## Overview
-This update applies the custom ZIVO dark map styling you provided to the GoogleMap component, giving the maps a cohesive branded look that removes the "Google look" and matches the ZIVO design system.
+This update applies the exact Uber/Lyft-style map configuration you provided, enhancing the current implementation with refined colors, removing all Google visual elements, and adding a premium gradient overlay.
 
 ---
 
 ## Changes
 
-### 1. Install @react-google-maps/api Library
+### 1. Update Map Styles to Match Your Specification
 
-Add the React wrapper library for cleaner Google Maps integration:
+**File: `src/components/maps/GoogleMap.tsx`** (lines 52-64)
 
-```bash
-npm install @react-google-maps/api
-```
-
-This provides `GoogleMap`, `MarkerF`, `useJsApiLoader` components that work well with React.
-
-### 2. Update Dark Map Styles
-
-**File: `src/components/maps/GoogleMap.tsx`** (lines 52-73)
-
-Replace the current `darkMapStyles` with your ZIVO-branded dark theme:
+Replace `zivoMapStyles` with your exact color values:
 
 ```typescript
-// ZIVO Dark map theme - removes the "Google look"
+// ZIVO Dark map theme - premium Uber-style, removes "Google look"
 const zivoMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "geometry", stylers: [{ color: "#0f172a" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0f172a" }] },
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1b3d" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#020617" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
 ];
 ```
 
+**Color Changes:**
+| Element | Current | New (Uber-style) |
+|---------|---------|------------------|
+| Background | `#0b1220` | `#0f172a` (slate-900) |
+| Roads | `#1f2a44` | `#1e293b` (slate-800) |
+| Water | `#0a1b3d` | `#020617` (slate-950) |
+
+### 2. Ensure All Google UI is Disabled
+
+**File: `src/components/maps/GoogleMap.tsx`** (lines 108-120)
+
+The current options already include most settings, but confirm:
+
+```typescript
+mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+  center,
+  zoom,
+  mapId: resolvedMapId || undefined,
+  styles: resolvedMapId ? undefined : (darkMode ? zivoMapStyles : undefined),
+  disableDefaultUI: true,           // ✓ Already set based on showControls
+  zoomControl: false,               // Update: always false for premium look
+  mapTypeControl: false,            // ✓ Already set
+  streetViewControl: false,         // ✓ Already set  
+  fullscreenControl: false,         // ✓ Already set
+  gestureHandling: "greedy",        // ✓ Already set
+  clickableIcons: false,            // ✓ Already set
+});
+```
+
+### 3. Add Premium Gradient Overlay
+
+**File: `src/pages/Rides.tsx`** (line ~234)
+
+Add a soft gradient over the map for premium readability:
+
+```tsx
+// Inside RidesMapView, after the GoogleMap component
+<GoogleMap
+  className="w-full h-full"
+  center={center}
+  zoom={markers.length > 1 ? 12 : 15}
+  markers={markers}
+  route={route}
+  fitBounds={markers.length > 1}
+  showControls={false}
+  darkMode={true}  // Enable ZIVO dark theme
+/>
+
+{/* Premium gradient overlay */}
+<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+```
+
+### 4. Enable Dark Mode on RidesMapView
+
+**File: `src/pages/Rides.tsx`** (line ~242)
+
+Change from `darkMode={false}` to `darkMode={true}`:
+
+```tsx
+<GoogleMap
+  className="w-full h-full"
+  center={center}
+  zoom={markers.length > 1 ? 12 : 15}
+  markers={markers}
+  route={route}
+  fitBounds={markers.length > 1}
+  showControls={false}
+  darkMode={true}  // Changed from false to true
+/>
+```
+
 ---
 
-## Theme Comparison
+## Summary of All Changes
 
-| Element | Current Style | ZIVO Theme |
-|---------|---------------|------------|
-| Background | `#212121` (gray) | `#0b1220` (deep navy) |
-| Roads | `#2c2c2c` (dark gray) | `#1f2a44` (navy-blue) |
-| Water | `#000000` (black) | `#0a1b3d` (dark blue) |
-| Labels | `#757575` (gray) | `#cbd5e1` (light slate) |
-| POIs | Visible (dimmed) | Hidden |
-| Transit | Visible (dimmed) | Hidden |
-
----
-
-## Optional: Switch to @react-google-maps/api
-
-If you want to use the library syntax you showed (`<GoogleMap>`, `<MarkerF>`), we can refactor the component to use `@react-google-maps/api`. This provides:
-
-- Declarative React components (`<GoogleMap>`, `<MarkerF>`, `<Polyline>`)
-- Built-in `useJsApiLoader` hook
-- Easier marker management via props
-
-However, the current custom component already works well and just needs the style update.
-
----
-
-## Files to Modify
-
-| File | Changes |
-|------|---------|
-| `src/components/maps/GoogleMap.tsx` | Replace `darkMapStyles` with `zivoMapStyles` |
-| `src/pages/Rides.tsx` | Set `darkMode={true}` on GoogleMap to apply ZIVO theme |
+| File | Change |
+|------|--------|
+| `src/components/maps/GoogleMap.tsx` | Update `zivoMapStyles` with exact Uber colors |
+| `src/components/maps/GoogleMap.tsx` | Ensure `zoomControl: false` always |
+| `src/pages/Rides.tsx` | Set `darkMode={true}` on GoogleMap |
+| `src/pages/Rides.tsx` | Add gradient overlay div after GoogleMap |
 
 ---
 
 ## Result
 
 The map will display with:
-- Deep navy background instead of gray
-- Blue-tinted roads and water
-- Cleaner look with POIs and transit hidden
-- ZIVO-branded color palette matching your design system
+- Deep slate background (`#0f172a`) - matches Tailwind slate-900
+- Darker water (`#020617`) - almost black
+- Cleaner roads with better contrast
+- No Google branding, POIs, or transit
+- Soft gradient overlay for premium readability
+- Custom ZIVO markers (already implemented)
 
