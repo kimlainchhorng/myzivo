@@ -58,24 +58,32 @@ function CarIcon() {
   );
 }
 
-// Tag pill component
+// Tag pill component with colored dot badges
 function TagPill({ tag }: { tag?: RideTag }) {
   if (!tag) return null;
   
-  const tagMap: Record<RideTag, { icon: string; label: string; color: string }> = {
-    wait_save: { icon: "⏱️", label: "Save", color: "bg-blue-100 text-blue-700" },
-    priority: { icon: "⚡", label: "Faster", color: "bg-green-100 text-green-700" },
-    green: { icon: "🌿", label: "Green", color: "bg-emerald-100 text-emerald-700" },
-    standard: { icon: "⭐", label: "", color: "" },
-    lux: { icon: "💎", label: "Elite", color: "bg-purple-100 text-purple-700" },
+  const tagMap: Record<RideTag, { dotClass: string; label: string; bgClass: string }> = {
+    wait_save: { dotClass: "bg-blue-400", label: "Save", bgClass: "bg-blue-100 text-blue-700" },
+    standard: { dotClass: "bg-yellow-400", label: "", bgClass: "" },
+    green: { dotClass: "bg-emerald-400", label: "Eco", bgClass: "bg-emerald-100 text-emerald-700" },
+    priority: { dotClass: "bg-orange-400", label: "Fast", bgClass: "bg-orange-100 text-orange-700" },
+    lux: { dotClass: "bg-purple-400", label: "Elite", bgClass: "bg-purple-100 text-purple-700" },
   };
   
   const item = tagMap[tag];
-  if (!item.label) return null;
+  
+  // Standard shows only the dot indicator, no label pill
+  if (!item.label) {
+    return (
+      <span className="inline-flex items-center">
+        <span className={`w-2 h-2 rounded-full ${item.dotClass}`} />
+      </span>
+    );
+  }
   
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.color}`}>
-      <span aria-hidden className="text-[10px]">{item.icon}</span>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${item.bgClass}`}>
+      <span className={`w-2 h-2 rounded-full ${item.dotClass}`} />
       {item.label}
     </span>
   );
