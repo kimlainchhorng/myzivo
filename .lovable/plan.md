@@ -1,108 +1,70 @@
 
 
-# Add Custom SVG Marker Support
+# Apply ZIVO Dark Map Theme
 
 ## Overview
-This update enhances the GoogleMap component to support custom SVG icon markers, allowing ZIVO-branded markers to be displayed on the map.
+This update applies the custom ZIVO dark map styling you provided to the GoogleMap component, giving the maps a cohesive branded look that removes the "Google look" and matches the ZIVO design system.
 
 ---
 
 ## Changes
 
-### 1. Update MapMarker Interface
+### 1. Install @react-google-maps/api Library
 
-**File: `src/components/maps/GoogleMap.tsx`** (lines 15-22)
+Add the React wrapper library for cleaner Google Maps integration:
 
-Extend the `MapMarker` interface to better support custom icons:
-
-```typescript
-export interface MapMarker {
-  id: string;
-  position: { lat: number; lng: number };
-  type?: "pickup" | "dropoff" | "driver" | "custom";
-  title?: string;
-  icon?: string;           // URL to custom SVG/PNG icon
-  iconSize?: number;       // Size in pixels (default: 36)
-  label?: string;
-}
+```bash
+npm install @react-google-maps/api
 ```
 
-### 2. Update Marker Creation Logic
+This provides `GoogleMap`, `MarkerF`, `useJsApiLoader` components that work well with React.
 
-**File: `src/components/maps/GoogleMap.tsx`** (lines 158-204)
+### 2. Update Dark Map Styles
 
-Update the marker creation to prioritize custom icons:
+**File: `src/components/maps/GoogleMap.tsx`** (lines 52-73)
+
+Replace the current `darkMapStyles` with your ZIVO-branded dark theme:
 
 ```typescript
-markers.forEach(marker => {
-  let icon: google.maps.Symbol | google.maps.Icon | undefined;
-  
-  // Use custom icon if provided
-  if (marker.icon) {
-    icon = {
-      url: marker.icon,
-      scaledSize: new window.google.maps.Size(
-        marker.iconSize || 36, 
-        marker.iconSize || 36
-      ),
-      anchor: new window.google.maps.Point(
-        (marker.iconSize || 36) / 2, 
-        (marker.iconSize || 36) / 2
-      ),
-    };
-  } else if (marker.type === "pickup") {
-    // ... existing pickup icon
-  } else if (marker.type === "dropoff") {
-    // ... existing dropoff icon
-  } else if (marker.type === "driver") {
-    // ... existing driver icon
-  }
-  
-  // ... rest of marker creation
-});
-```
-
-### 3. Create ZIVO Marker SVG
-
-**File: `public/zivo-marker.svg`**
-
-Create a branded marker icon (blue circle with ZIVO branding or custom design):
-
-```svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
-  <circle cx="18" cy="18" r="16" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
-  <circle cx="18" cy="18" r="6" fill="#ffffff"/>
-</svg>
+// ZIVO Dark map theme - removes the "Google look"
+const zivoMapStyles: google.maps.MapTypeStyle[] = [
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1b3d" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
+];
 ```
 
 ---
 
-## Usage Examples
+## Theme Comparison
 
-After implementation, you can use custom markers like this:
+| Element | Current Style | ZIVO Theme |
+|---------|---------------|------------|
+| Background | `#212121` (gray) | `#0b1220` (deep navy) |
+| Roads | `#2c2c2c` (dark gray) | `#1f2a44` (navy-blue) |
+| Water | `#000000` (black) | `#0a1b3d` (dark blue) |
+| Labels | `#757575` (gray) | `#cbd5e1` (light slate) |
+| POIs | Visible (dimmed) | Hidden |
+| Transit | Visible (dimmed) | Hidden |
 
-```typescript
-// Custom ZIVO marker
-const markers: MapMarker[] = [
-  {
-    id: "user-location",
-    position: { lat: 30.4515, lng: -91.1871 },
-    icon: "/zivo-marker.svg",
-    iconSize: 36,
-    title: "Your Location",
-  },
-];
+---
 
-// Or continue using type-based markers
-const markers: MapMarker[] = [
-  {
-    id: "pickup",
-    position: pickupCoords,
-    type: "pickup",  // Uses default blue circle
-    title: "Pickup",
-  },
-];
-```
+## Optional: Switch to @react-google-maps/api
+
+If you want to use the library syntax you showed (`<GoogleMap>`, `<MarkerF>`), we can refactor the component to use `@react-google-maps/api`. This provides:
+
+- Declarative React components (`<GoogleMap>`, `<MarkerF>`, `<Polyline>`)
+- Built-in `useJsApiLoader` hook
+- Easier marker management via props
+
+However, the current custom component already works well and just needs the style update.
 
 ---
 
@@ -110,18 +72,16 @@ const markers: MapMarker[] = [
 
 | File | Changes |
 |------|---------|
-| `src/components/maps/GoogleMap.tsx` | Add `iconSize` prop to interface, update marker creation to handle custom SVG URLs |
-| `public/zivo-marker.svg` | Create new branded marker icon |
+| `src/components/maps/GoogleMap.tsx` | Replace `darkMapStyles` with `zivoMapStyles` |
+| `src/pages/Rides.tsx` | Set `darkMode={true}` on GoogleMap to apply ZIVO theme |
 
 ---
 
-## Marker Priority Logic
+## Result
 
-| Scenario | Icon Used |
-|----------|-----------|
-| `marker.icon` provided | Custom SVG/PNG at specified URL |
-| `type: "pickup"` | Blue circle |
-| `type: "dropoff"` | Green circle |
-| `type: "driver"` | Amber pin with drop animation |
-| `type: "custom"` | Default Google marker |
+The map will display with:
+- Deep navy background instead of gray
+- Blue-tinted roads and water
+- Cleaner look with POIs and transit hidden
+- ZIVO-branded color palette matching your design system
 
