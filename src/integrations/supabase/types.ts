@@ -2084,6 +2084,39 @@ export type Database = {
         }
         Relationships: []
       }
+      cancellation_rules: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          driver_comp_if_arrived: number
+          fee_after_free: number
+          fee_if_driver_arrived: number
+          free_cancel_seconds: number
+          id: string
+          service_type: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          driver_comp_if_arrived?: number
+          fee_after_free?: number
+          fee_if_driver_arrived?: number
+          free_cancel_seconds?: number
+          id?: string
+          service_type: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          driver_comp_if_arrived?: number
+          fee_after_free?: number
+          fee_if_driver_arrived?: number
+          free_cancel_seconds?: number
+          id?: string
+          service_type?: string
+        }
+        Relationships: []
+      }
       car_inventory: {
         Row: {
           created_at: string
@@ -6554,6 +6587,10 @@ export type Database = {
         Row: {
           admin_override_reason: string | null
           admin_price_override: number | null
+          cancellation_fee: number | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string | null
           customer_email: string | null
           customer_id: string
@@ -6586,6 +6623,7 @@ export type Database = {
           quoted_tip: number | null
           quoted_total: number | null
           rating: number | null
+          refund_amount: number | null
           refund_status: string | null
           refunded_at: string | null
           region_id: string | null
@@ -6605,6 +6643,10 @@ export type Database = {
         Insert: {
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          cancellation_fee?: number | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_id: string
@@ -6637,6 +6679,7 @@ export type Database = {
           quoted_tip?: number | null
           quoted_total?: number | null
           rating?: number | null
+          refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
           region_id?: string | null
@@ -6656,6 +6699,10 @@ export type Database = {
         Update: {
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          cancellation_fee?: number | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
           customer_email?: string | null
           customer_id?: string
@@ -6688,6 +6735,7 @@ export type Database = {
           quoted_tip?: number | null
           quoted_total?: number | null
           rating?: number | null
+          refund_amount?: number | null
           refund_status?: string | null
           refunded_at?: string | null
           region_id?: string | null
@@ -15742,6 +15790,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           arrived_at: string | null
+          cancellation_fee: number | null
           cancellation_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -15772,6 +15821,8 @@ export type Database = {
           pickup_lng: number
           platform_fee: number | null
           rating: number | null
+          refund_amount: number | null
+          refund_status: string | null
           region_id: string | null
           ride_type: string | null
           rider_id: string | null
@@ -15786,6 +15837,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           arrived_at?: string | null
+          cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -15816,6 +15868,8 @@ export type Database = {
           pickup_lng: number
           platform_fee?: number | null
           rating?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
           region_id?: string | null
           ride_type?: string | null
           rider_id?: string | null
@@ -15830,6 +15884,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           arrived_at?: string | null
+          cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -15860,6 +15915,8 @@ export type Database = {
           pickup_lng?: number
           platform_fee?: number | null
           rating?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
           region_id?: string | null
           ride_type?: string | null
           rider_id?: string | null
