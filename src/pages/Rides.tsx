@@ -50,7 +50,7 @@ interface RideOption {
 
 type CategoryKey = "Economy" | "Premium" | "Elite";
  
- // Premium categorized vehicle options with clean 3D car images
+ // Premium categorized vehicle options with clean car images
  const rideCategories: Record<CategoryKey, RideOption[]> = {
    Economy: [
      {
@@ -61,7 +61,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "15 min",
        eta: 15,
        icon: Clock,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
+       image: "https://img.icons8.com/isometric/200/car.png",
        multiplier: 0.75,
        seats: 4
      },
@@ -73,7 +73,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "4 min",
        eta: 4,
        icon: Navigation,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367349/assets/d7/3d4b80-1a5f-4a8b-ac2b-bf6c0f048942/original/Uber_Pool.png",
+       image: "https://img.icons8.com/isometric/200/sedan.png",
        multiplier: 1.0,
        seats: 4
      },
@@ -85,7 +85,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "6 min",
        eta: 6,
        icon: Leaf,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568070443/assets/82/6bf372-e1a3-424e-9834-c3fb1b13a0f5/original/Green.png",
+       image: "https://img.icons8.com/isometric/200/electric-car.png",
        multiplier: 1.02,
        seats: 4
      },
@@ -97,7 +97,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "1 min",
        eta: 1,
        icon: Zap,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367349/assets/d7/3d4b80-1a5f-4a8b-ac2b-bf6c0f048942/original/Uber_Pool.png",
+       image: "https://img.icons8.com/isometric/200/sedan.png",
        multiplier: 1.3,
        seats: 4
      }
@@ -111,7 +111,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "5 min",
        eta: 5,
        icon: Star,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367538/assets/31/ad21b7-595c-42e8-ac53-53966b4a5fee/original/Comfort.png",
+       image: "https://img.icons8.com/isometric/200/hatchback.png",
        multiplier: 1.55,
        seats: 4
      },
@@ -123,7 +123,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "8 min",
        eta: 8,
        icon: Briefcase,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367310/assets/30/51e602-10bb-4e65-b122-e394ad1a9f5e/original/Black.png",
+       image: "https://img.icons8.com/isometric/200/limousine.png",
        multiplier: 2.65,
        seats: 4
      },
@@ -135,7 +135,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "10 min",
        eta: 10,
        icon: Shield,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367424/assets/7c/a22afb-c7e5-4a7a-8b00-4c3ffb51b3b0/original/Black-SUV.png",
+       image: "https://img.icons8.com/isometric/200/suv.png",
        multiplier: 3.5,
        seats: 6
      },
@@ -147,7 +147,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "12 min",
        eta: 12,
        icon: Anchor,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
+       image: "https://img.icons8.com/isometric/200/suv.png",
        multiplier: 3.7,
        seats: 6
      }
@@ -161,7 +161,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "20 min",
        eta: 20,
        icon: Crown,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1569012915/assets/4f/599c47-7f5c-4544-a5d2-926babc8e113/original/Lux.png",
+       image: "https://img.icons8.com/isometric/200/limousine.png",
        multiplier: 10.0,
        seats: 4
      },
@@ -173,7 +173,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "45 min",
        eta: 45,
        icon: Briefcase,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
+       image: "https://img.icons8.com/isometric/200/minibus.png",
        multiplier: 7.3,
        seats: 12
      },
@@ -185,7 +185,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "60 min",
        eta: 60,
        icon: Shield,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367424/assets/7c/a22afb-c7e5-4a7a-8b00-4c3ffb51b3b0/original/Black-SUV.png",
+       image: "https://img.icons8.com/isometric/200/suv.png",
        multiplier: 20.0,
        seats: 4
      },
@@ -197,7 +197,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        time: "10 min",
        eta: 10,
        icon: Dog,
-       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367538/assets/31/ad21b7-595c-42e8-ac53-53966b4a5fee/original/Comfort.png",
+       image: "https://img.icons8.com/isometric/200/hatchback.png",
        multiplier: 3.0,
        seats: 4
      }
