@@ -87,7 +87,7 @@ const RidesMapBackgroundInner = ({
       route={route}
       fitBounds={markers.length > 1}
       showControls={false}
-      darkMode={false}
+      darkMode={true}
     />
   );
 };
