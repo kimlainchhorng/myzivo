@@ -11,7 +11,7 @@ import { motion, AnimatePresence, useDragControls, useMotionValue, animate } fro
 import { 
   MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, ChevronLeft, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
-  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search
+  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound, Search, Plus, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -311,6 +311,12 @@ function RidesInner() {
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDropoffSuggestions, setShowDropoffSuggestions] = useState(false);
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // Intermediate stops state (max 3 stops)
+  const [stops, setStops] = useState<{ address: string; coords: { lat: number; lng: number } | null }[]>([]);
+  const [activeStopIndex, setActiveStopIndex] = useState<number | null>(null);
+  const [showStopSuggestions, setShowStopSuggestions] = useState(false);
+  const { suggestions: stopSuggestions, fetchSuggestions: fetchStopSuggestions, clearSuggestions: clearStopSuggestions } = useGoogleMapsGeocode();
   const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Bottom sheet state
@@ -357,6 +363,42 @@ function RidesInner() {
       }
     }
   }, [clearDropoffSuggestions]);
+
+  // Handle stop suggestion click
+  const handleStopSuggestionClick = useCallback(async (suggestion: Suggestion, index: number) => {
+    const newStops = [...stops];
+    newStops[index] = { ...newStops[index], address: suggestion.placeName };
+    setStops(newStops);
+    setShowStopSuggestions(false);
+    setActiveStopIndex(null);
+    clearStopSuggestions();
+    
+    if (suggestion.placeId) {
+      const details = await getPlaceDetails(suggestion.placeId);
+      if (details) {
+        const updatedStops = [...newStops];
+        updatedStops[index] = { address: suggestion.placeName, coords: { lat: details.lat, lng: details.lng } };
+        setStops(updatedStops);
+      }
+    }
+  }, [stops, clearStopSuggestions]);
+
+  // Add a new stop
+  const handleAddStop = () => {
+    if (stops.length < 3) {
+      setStops([...stops, { address: "", coords: null }]);
+    }
+  };
+
+  // Remove a stop
+  const handleRemoveStop = (index: number) => {
+    const newStops = stops.filter((_, i) => i !== index);
+    setStops(newStops);
+    if (activeStopIndex === index) {
+      setActiveStopIndex(null);
+      setShowStopSuggestions(false);
+    }
+  };
 
   useEffect(() => {
     const autoDetectLocation = async () => {
@@ -481,6 +523,7 @@ function RidesInner() {
     setDropoff("");
     setPickupCoords(null);
     setDropoffCoords(null);
+    setStops([]);
     setSelectedOption(null);
     setContactInfo({ name: "", phone: "", email: "", notes: "" });
     setRequestId(null);
@@ -639,6 +682,74 @@ function RidesInner() {
                 {/* Divider */}
                 <div className="mx-3 border-t border-zinc-200" />
                 
+                {/* Intermediate Stops */}
+                {stops.map((stop, index) => (
+                  <div key={index}>
+                    <div className="relative">
+                      <div className="flex items-center gap-3 px-3 py-3">
+                        <div className="w-6 h-6 bg-zinc-400 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-[10px] font-bold text-white">{index + 1}</span>
+                        </div>
+                        <input
+                          value={stop.address}
+                          onChange={(e) => {
+                            const newStops = [...stops];
+                            newStops[index] = { ...newStops[index], address: e.target.value };
+                            setStops(newStops);
+                            setActiveStopIndex(index);
+                            setShowStopSuggestions(true);
+                            fetchStopSuggestions(e.target.value, userLocation || undefined);
+                          }}
+                          onFocus={() => {
+                            setActiveStopIndex(index);
+                            setShowStopSuggestions(true);
+                            setShowPickupSuggestions(false);
+                            setShowDropoffSuggestions(false);
+                            fetchStopSuggestions(stop.address, userLocation || undefined);
+                          }}
+                          onBlur={() => setTimeout(() => {
+                            setShowStopSuggestions(false);
+                            setActiveStopIndex(null);
+                          }, 200)}
+                          placeholder={`Stop ${index + 1}`}
+                          className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
+                          style={{ fontSize: '16px' }}
+                        />
+                        <button
+                          onClick={() => handleRemoveStop(index)}
+                          className="p-1 hover:bg-zinc-200 rounded-full transition-colors"
+                        >
+                          <X className="w-4 h-4 text-zinc-500" />
+                        </button>
+                      </div>
+                      
+                      {/* Stop Dropdown */}
+                      <AnimatePresence>
+                        {showStopSuggestions && activeStopIndex === index && stopSuggestions.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                          >
+                            {stopSuggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                onClick={() => handleStopSuggestionClick(suggestion, index)}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50 transition-colors border-b border-zinc-100 last:border-b-0"
+                              >
+                                <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
+                                <span className="text-sm text-zinc-900 truncate">{suggestion.placeName}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                    <div className="mx-3 border-t border-zinc-200" />
+                  </div>
+                ))}
+                
                 {/* Dropoff Input */}
                 <div className="relative">
                   <div className="flex items-center gap-3 px-3 py-3">
@@ -655,6 +766,7 @@ function RidesInner() {
                       onFocus={() => {
                         setShowDropoffSuggestions(true);
                         setShowPickupSuggestions(false);
+                        setShowStopSuggestions(false);
                         // Trigger suggestions even if empty
                         fetchDropoffSuggestions(dropoff, userLocation || undefined);
                       }}
@@ -690,6 +802,17 @@ function RidesInner() {
                   </AnimatePresence>
                 </div>
               </div>
+              
+              {/* Add Stop Button */}
+              {stops.length < 3 && (
+                <button
+                  onClick={handleAddStop}
+                  className="flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add stop
+                </button>
+              )}
 
               {/* Category Tabs */}
               <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
@@ -761,11 +884,17 @@ function RidesInner() {
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-zinc-900">Confirm your ride</h2>
               
-              <div className="bg-zinc-100 rounded-xl p-4">
-                <div className="flex items-center gap-3 mb-3">
+              <div className="bg-zinc-100 rounded-xl p-4 space-y-2">
+                <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full" />
                   <span className="text-sm text-zinc-900 truncate">{pickup}</span>
                 </div>
+                {stops.map((stop, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-zinc-400 rounded-full" />
+                    <span className="text-sm text-zinc-600 truncate">{stop.address}</span>
+                  </div>
+                ))}
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 bg-zinc-900 rounded-full" />
                   <span className="text-sm text-zinc-900 truncate">{dropoff}</span>
@@ -773,6 +902,7 @@ function RidesInner() {
                 <div className="flex gap-4 mt-3 pt-3 border-t border-zinc-200 text-sm text-zinc-500">
                   <span>~{estimatedDistance.toFixed(1)} mi</span>
                   <span>~{estimatedDuration} min</span>
+                  {stops.length > 0 && <span>{stops.length} stop{stops.length > 1 ? 's' : ''}</span>}
                 </div>
               </div>
 
