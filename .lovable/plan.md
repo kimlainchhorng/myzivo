@@ -1,49 +1,98 @@
 
 
-# Rider Payment Methods Screen (Mock)
+# ZIVO Admin Panel Enhancements
 
 ## Summary
 
-Create a dedicated `/payment-methods` page for riders to manage their saved cards. This is a mock implementation storing payment methods in localStorage, preparing the UI and data structure for future real payment integration.
+Enhance the existing admin panel at `/admin` with improved realtime dashboard statistics, better rides management, driver detail pages, and streamlined payouts workflow. All changes build on top of existing infrastructure.
 
 ---
 
-## Current State
+## Current State Analysis
 
-| Component | Status |
-|-----------|--------|
-| `zivo_payment_methods` table | Exists in Supabase (for real integration later) |
-| `usePaymentMethods()` hook | Exists but queries Supabase |
-| `/payment-methods` route | Does not exist |
-| Add card form | Does not exist |
-| Mock localStorage storage | Does not exist |
+| Feature | Current Status | Gap |
+|---------|----------------|-----|
+| Dashboard stats | Uses `useAdminStats` - shows counts only | Missing: rides today, realtime subscription, revenue with 15% commission |
+| Rides table | `AdminRidesManagement` has ride requests + live rides | Actions exist but could be more prominent |
+| Driver details | No individual driver page | Missing: total rides, earnings, commission generated |
+| Payouts | `AdminPayouts` has full table + Mark Paid | Works but needs refinement |
 
 ---
 
-## Implementation Approach
+## Implementation Plan
 
-### 1. Create Mock Payment Methods Hook
+### 1. Enhanced Dashboard Stats Component
 
-New hook `useLocalPaymentMethods` that:
-- Stores cards in localStorage under `zivo_local_payment_methods`
-- Provides add, delete, and set default functions
-- Syncs with localStorage on changes
+Create a new `AdminRidesDashboard.tsx` component that shows:
 
-### 2. Create `/payment-methods` Page
+| Stat | Description | Source |
+|------|-------------|--------|
+| Total Rides Today | Count of trips created today | `trips` where `created_at >= today` |
+| Active Rides | In-progress rides | `trips` where status in (requested, accepted, en_route, arrived, in_progress) |
+| Completed Rides | Completed today | `trips` where status = completed AND `completed_at >= today` |
+| Online Drivers | Currently available | `drivers` where `is_online = true` |
+| Total Revenue | Sum of fare_amount today | `trips` where payment_status = paid |
+| Platform Commission (15%) | Revenue * 0.15 | Calculated |
 
-Full-screen mobile-first page with:
-- List of saved payment methods
-- Add card form (mock fields: card number, expiry, CVV, name)
-- Set default functionality
-- Delete card functionality
+**Realtime:** Subscribe to `trips` and `drivers` tables for live updates.
 
-### 3. Update Ride Confirm Page
+### 2. Improved Rides Management Table
 
-Show the selected default payment method from localStorage with a link to manage cards.
+Enhance the existing rides table in `AdminRidesManagement.tsx`:
 
-### 4. Add Navigation Button
+**Visible columns:**
+- Pickup (pickup_address)
+- Destination (dropoff_address) 
+- Ride Type (vehicle_type or fare tier)
+- Price (fare_amount)
+- Status (with color badges)
+- Driver (linked to driver detail)
 
-Add "Manage Cards" link on ride confirmation screen.
+**Row Actions (visible on each row):**
+- Assign Driver (dropdown of available drivers)
+- Cancel Ride (with confirmation)
+- Mark Completed (for in_progress rides)
+
+**Implementation:**
+- Use existing `useAdminTrips` hook
+- Add inline action buttons
+- Driver assignment uses `useOnlineDrivers` for available list
+
+### 3. Driver Detail Page
+
+Create new route `/admin/drivers/:id` with:
+
+**Driver Info Card:**
+- Name, rating, car model, plate, online status
+- Last location update timestamp
+
+**Stats Grid:**
+| Stat | Query |
+|------|-------|
+| Total Rides | COUNT from trips where driver_id = X |
+| Total Earnings | SUM(fare_amount) from trips where driver_id = X AND payment_status = 'paid' |
+| Platform Commission | Total Earnings * 0.15 |
+| Completion Rate | Completed / (Completed + Cancelled) |
+
+**Recent Trips Table:**
+- Last 20 trips for this driver
+- Status, fare, date
+
+**Files to create:**
+- `src/pages/admin/drivers/DriverDetail.tsx`
+- `src/hooks/useDriverStats.ts` (or extend existing hooks)
+
+### 4. Payouts Workflow Improvements
+
+Enhance `AdminPayouts.tsx`:
+
+**Current:** Has Mark Paid functionality
+**Additions:**
+- More prominent "Mark Paid" button
+- Batch selection improvements
+- Add filtering by date range
+- Show driver name prominently
+- Add payout amount formatting
 
 ---
 
@@ -51,256 +100,203 @@ Add "Manage Cards" link on ride confirmation screen.
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useLocalPaymentMethods.ts` | Create | Mock hook for localStorage-based payment methods |
-| `src/pages/PaymentMethodsPage.tsx` | Create | Payment methods management page |
-| `src/App.tsx` | Modify | Add `/payment-methods` route |
-| `src/pages/ride/RideConfirmPage.tsx` | Modify | Show selected payment method from local storage |
-| `src/pages/app/AppHome.tsx` | Modify | Add "Payment Methods" quick action |
+| `src/components/admin/AdminRidesDashboard.tsx` | Create | New realtime stats dashboard component |
+| `src/hooks/useRealtimeRidesStats.ts` | Create | Realtime subscription for rides stats |
+| `src/components/admin/AdminRidesManagement.tsx` | Modify | Add inline actions, improve table |
+| `src/pages/admin/drivers/DriverDetail.tsx` | Create | Individual driver stats page |
+| `src/hooks/useDriverDetailStats.ts` | Create | Fetch driver-specific stats |
+| `src/App.tsx` | Modify | Add route for `/admin/drivers/:id` |
+| `src/components/admin/AdminPayouts.tsx` | Modify | Improve Mark Paid workflow |
+| `src/layouts/AdminLayout.tsx` | Modify | Update nav if needed |
 
 ---
 
 ## Technical Details
 
-### New Hook: `useLocalPaymentMethods`
+### Realtime Stats Hook
 
 ```typescript
-const STORAGE_KEY = "zivo_local_payment_methods";
-
-interface LocalPaymentMethod {
-  id: string;
-  type: "card" | "wallet";
-  brand: string;        // "Visa", "Mastercard", etc.
-  last4: string;
-  expMonth: number;
-  expYear: number;
-  cardholderName: string;
-  isDefault: boolean;
-  createdAt: number;
-}
-
-export function useLocalPaymentMethods() {
-  const [methods, setMethods] = useState<LocalPaymentMethod[]>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+// src/hooks/useRealtimeRidesStats.ts
+export function useRealtimeRidesStats() {
+  const [stats, setStats] = useState({
+    totalRidesToday: 0,
+    activeRides: 0,
+    completedRides: 0,
+    onlineDrivers: 0,
+    totalRevenue: 0,
+    platformCommission: 0, // 15%
   });
 
-  // Persist to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(methods));
-  }, [methods]);
+    // Initial fetch
+    fetchStats();
 
-  const addCard = (card: Omit<LocalPaymentMethod, "id" | "createdAt">) => {
-    // ...
-  };
+    // Subscribe to trips changes
+    const tripsChannel = supabase
+      .channel("realtime-trips")
+      .on("postgres_changes", { 
+        event: "*", 
+        schema: "public", 
+        table: "trips" 
+      }, () => fetchStats())
+      .subscribe();
 
-  const deleteCard = (id: string) => {
-    // ...
-  };
+    // Subscribe to drivers changes
+    const driversChannel = supabase
+      .channel("realtime-drivers")
+      .on("postgres_changes", { 
+        event: "*", 
+        schema: "public", 
+        table: "drivers",
+        filter: "is_online=eq.true"
+      }, () => fetchStats())
+      .subscribe();
 
-  const setDefault = (id: string) => {
-    // ...
-  };
+    return () => {
+      supabase.removeChannel(tripsChannel);
+      supabase.removeChannel(driversChannel);
+    };
+  }, []);
 
-  const getDefault = () => methods.find(m => m.isDefault) || methods[0];
+  async function fetchStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
 
-  return { methods, addCard, deleteCard, setDefault, getDefault };
-}
-```
+    const [trips, drivers] = await Promise.all([
+      supabase.from("trips").select("*")
+        .gte("created_at", todayISO),
+      supabase.from("drivers").select("*", { count: "exact", head: true })
+        .eq("is_online", true),
+    ]);
 
-### New Page: `PaymentMethodsPage.tsx`
+    const todayTrips = trips.data || [];
+    const activeStatuses = ["requested", "accepted", "en_route", "arrived", "in_progress"];
+    
+    const totalRevenue = todayTrips
+      .filter(t => t.payment_status === "paid")
+      .reduce((sum, t) => sum + (t.fare_amount || 0), 0);
 
-Mobile-first design matching ZIVO's dark glassmorphic aesthetic:
-
-```text
-┌────────────────────────────────────────┐
-│  ← Payment Methods                      │
-├────────────────────────────────────────┤
-│                                        │
-│  ┌────────────────────────────────┐    │
-│  │ 💳 Visa •••• 4242    [Default] │    │
-│  │    Expires 12/25       ★  🗑   │    │
-│  └────────────────────────────────┘    │
-│                                        │
-│  ┌────────────────────────────────┐    │
-│  │ 💳 Mastercard •••• 8888        │    │
-│  │    Expires 06/26       ★  🗑   │    │
-│  └────────────────────────────────┘    │
-│                                        │
-│  ┌────────────────────────────────┐    │
-│  │     + Add New Card             │    │
-│  └────────────────────────────────┘    │
-│                                        │
-├────────────────────────────────────────┤
-│           ADD CARD FORM               │
-│  (Expandable when "Add" is tapped)    │
-│                                        │
-│  Card Number: [________________]       │
-│  Expiry:      [MM/YY]  CVV: [___]     │
-│  Name:        [________________]       │
-│                                        │
-│  [       ADD CARD       ]              │
-└────────────────────────────────────────┘
-```
-
-### Add Card Form Validation
-
-Mock validation (no real processing):
-- Card number: 16 digits with formatting (XXXX XXXX XXXX XXXX)
-- Expiry: MM/YY format, future date
-- CVV: 3-4 digits
-- Name: Required, non-empty
-
-Card brand detection:
-- Starts with 4 → Visa
-- Starts with 5 → Mastercard
-- Starts with 3 → Amex
-- Default → Unknown
-
-### Integration with Ride Confirm Page
-
-Update `RideConfirmPage.tsx` to:
-1. Import and use `useLocalPaymentMethods`
-2. Show default card from localStorage instead of hardcoded options
-3. Add "Manage" link to `/payment-methods`
-
-```typescript
-// In RideConfirmPage
-const { getDefault, methods } = useLocalPaymentMethods();
-const defaultCard = getDefault();
-
-// Display:
-{defaultCard ? (
-  <div className="flex items-center gap-3">
-    <CreditCard />
-    <span>{defaultCard.brand} •••• {defaultCard.last4}</span>
-    <Link to="/payment-methods">Manage</Link>
-  </div>
-) : (
-  <Link to="/payment-methods">Add payment method</Link>
-)}
-```
-
----
-
-## Data Structure
-
-```typescript
-interface LocalPaymentMethod {
-  id: string;           // UUID
-  type: "card";         // For now, only cards
-  brand: string;        // Visa, Mastercard, Amex, Discover
-  last4: string;        // Last 4 digits
-  expMonth: number;     // 1-12
-  expYear: number;      // Full year (2025)
-  cardholderName: string;
-  isDefault: boolean;
-  createdAt: number;    // Timestamp
-}
-```
-
-### localStorage Key
-
-```
-zivo_local_payment_methods
-```
-
-### Example Stored Data
-
-```json
-[
-  {
-    "id": "pm_abc123",
-    "type": "card",
-    "brand": "Visa",
-    "last4": "4242",
-    "expMonth": 12,
-    "expYear": 2025,
-    "cardholderName": "John Doe",
-    "isDefault": true,
-    "createdAt": 1707350400000
+    setStats({
+      totalRidesToday: todayTrips.length,
+      activeRides: todayTrips.filter(t => activeStatuses.includes(t.status)).length,
+      completedRides: todayTrips.filter(t => t.status === "completed").length,
+      onlineDrivers: drivers.count || 0,
+      totalRevenue,
+      platformCommission: totalRevenue * 0.15,
+    });
   }
-]
+
+  return stats;
+}
 ```
 
----
-
-## UI Components
-
-### Card Form Fields
-
-| Field | Format | Validation |
-|-------|--------|------------|
-| Card Number | XXXX XXXX XXXX XXXX | 16 digits |
-| Expiry | MM/YY | Future date |
-| CVV | XXX or XXXX | 3-4 digits |
-| Name | Text | Required |
-
-### Card Display
-
-- Card icon based on brand
-- Masked number (•••• last4)
-- Expiry date
-- Default badge (if applicable)
-- Star button to set default
-- Trash button to delete
-
----
-
-## Navigation Flow
+### Driver Detail Page Structure
 
 ```text
-AppHome
-    │
-    └─→ "Payment Methods" button
-              │
-              ▼
-        /payment-methods
-              │
-    ┌─────────┴─────────┐
-    │                   │
-    ▼                   ▼
-View Cards        Add Card Form
-    │                   │
-    ▼                   ▼
-Set Default      Submit → Save
-Delete Card      to localStorage
+/admin/drivers/:id
+
++--------------------------------------------------+
+| ← Back to Drivers                                |
++--------------------------------------------------+
+| [Avatar] John Smith         ★ 4.8                |
+| Toyota Camry · ABC 1234                          |
+| 🟢 Online · Last update: 2 min ago               |
++--------------------------------------------------+
+| +----------+ +----------+ +----------+ +--------+|
+| |   156    | |  $4,520  | |   $678   | |  94%   ||
+| |Total Rides| |Earnings | |Commission| |Complete||
+| +----------+ +----------+ +----------+ +--------+|
++--------------------------------------------------+
+| Recent Trips                                     |
+| +----------------------------------------------+ |
+| | Date       | Pickup   | Dropoff | Fare | Sts | |
+| |------------|----------|---------|------|-----| |
+| | Feb 7 9:30 | 123 Main | 456 Oak | $24  |  ✓  | |
+| | Feb 7 8:15 | ...      | ...     | $18  |  ✓  | |
+| +----------------------------------------------+ |
++--------------------------------------------------+
 ```
 
-From Ride Flow:
+### Rides Table Actions
+
+Each row in the rides table will have an actions dropdown:
+
+```typescript
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="ghost" size="sm">
+      <MoreHorizontal className="h-4 w-4" />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    {ride.status === "requested" && !ride.driver_id && (
+      <DropdownMenuItem onClick={() => openAssignDialog(ride)}>
+        <UserPlus className="mr-2 h-4 w-4" />
+        Assign Driver
+      </DropdownMenuItem>
+    )}
+    {ride.status !== "completed" && ride.status !== "cancelled" && (
+      <DropdownMenuItem onClick={() => cancelRide(ride.id)}>
+        <XCircle className="mr-2 h-4 w-4 text-red-500" />
+        Cancel Ride
+      </DropdownMenuItem>
+    )}
+    {ride.status === "in_progress" && (
+      <DropdownMenuItem onClick={() => completeRide(ride.id)}>
+        <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+        Mark Completed
+      </DropdownMenuItem>
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+### Driver Assignment Dialog
+
+When "Assign Driver" is clicked:
+1. Fetch online drivers using `useOnlineDrivers`
+2. Show dialog with driver list
+3. On selection, update trip with `driver_id` and set status to "accepted"
+
+---
+
+## Routes Structure
 
 ```text
-/ride/confirm
-    │
-    └─→ "Manage" link
-              │
-              ▼
-        /payment-methods
-              │
-              ▼
-        Manage cards
-              │
-              ▼
-        Back to /ride/confirm
-              (shows updated default)
+/admin                    → AdminDashboard (existing) + new stats component
+/admin/rides              → Enhanced AdminRidesManagement
+/admin/drivers            → Driver list (existing)
+/admin/drivers/:id        → NEW: DriverDetail page
+/admin/payouts            → Enhanced AdminPayouts
 ```
 
 ---
 
-## Security Notes
+## UI/UX Consistency
 
-This is a **mock implementation** - no real card data is processed:
-- Card numbers are stored in localStorage (not secure for real use)
-- No Stripe or payment gateway integration
-- UI only - prepares structure for future real implementation
-- Add clear "Demo Mode" indicator on the page
+- Use existing Card, Badge, Button, Table components from shadcn/ui
+- Match glassmorphic style: `bg-card/50 backdrop-blur-xl`
+- Use status badges with consistent colors (emerald for active, amber for pending, etc.)
+- Keep animations: `animate-in fade-in slide-in-from-bottom-4`
 
 ---
 
-## Future Migration Path
+## Realtime Updates
 
-When ready for real payments:
-1. Replace `useLocalPaymentMethods` with `usePaymentMethods` from `useZivoWallet.ts`
-2. Add Stripe Elements for secure card entry
-3. Call edge function to create Stripe payment method
-4. Remove localStorage fallback
+| Table | Events | Action |
+|-------|--------|--------|
+| trips | INSERT, UPDATE, DELETE | Refresh dashboard stats |
+| drivers | UPDATE (is_online, current_lat/lng) | Refresh online count, map |
+
+Using Supabase Realtime channels for live updates without polling.
+
+---
+
+## No Changes To
+
+- Rider app routes/components
+- Driver app routes/components  
+- Database schema (existing tables sufficient)
+- Authentication flow
 
