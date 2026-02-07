@@ -60,8 +60,14 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
 
     // Debounce API calls
     debounceRef.current = setTimeout(async () => {
+      // Show popular suggestions immediately when query is empty/short
       if (!query.trim() || query.length < 2) {
-        setSuggestions([]);
+        const popularSuggestions = MOCK_SUGGESTIONS.slice(0, 5).map((s, i) => ({
+          id: `popular-${i}`,
+          placeName: s,
+          text: s.split(",")[0],
+        }));
+        setSuggestions(popularSuggestions);
         return;
       }
 

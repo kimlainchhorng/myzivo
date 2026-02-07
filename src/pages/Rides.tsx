@@ -538,8 +538,8 @@ function RidesInner() {
       <div className="flex-1 relative">
         <RidesMapView
           userLocation={userLocation}
-          pickupCoords={routeData?.pickupCoords}
-          dropoffCoords={routeData?.dropoffCoords}
+          pickupCoords={pickupCoords}
+          dropoffCoords={dropoffCoords}
           pickup={pickup}
           dropoff={dropoff}
           onLocateMe={handleUseCurrentLocation}
@@ -575,50 +575,120 @@ function RidesInner() {
               {/* Title */}
               <h1 className="text-xl font-bold text-zinc-900">Where to?</h1>
               
-              {/* Destination Input */}
-              <div className="relative">
-                <div className="flex items-center gap-3 bg-zinc-100 rounded-lg px-4 py-3">
-                  <div className="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0">
-                    <div className="w-2 h-2 bg-white rounded-sm" />
+              {/* Pickup & Dropoff Inputs */}
+              <div className="relative bg-zinc-100 rounded-xl p-1">
+                {/* Pickup Input */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <div className="w-2 h-2 bg-white rounded-full" />
+                    </div>
+                    <input
+                      value={pickup}
+                      onChange={(e) => {
+                        setPickup(e.target.value);
+                        setShowPickupSuggestions(true);
+                        fetchPickupSuggestions(e.target.value, userLocation || undefined);
+                      }}
+                      onFocus={() => {
+                        setShowPickupSuggestions(true);
+                        setShowDropoffSuggestions(false);
+                        // Trigger suggestions even if empty
+                        fetchPickupSuggestions(pickup, userLocation || undefined);
+                      }}
+                      onBlur={() => setTimeout(() => setShowPickupSuggestions(false), 200)}
+                      placeholder="Enter pickup location"
+                      className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
+                      style={{ fontSize: '16px' }}
+                    />
+                    {isAutoDetecting && <Loader2 className="w-4 h-4 animate-spin text-zinc-400" />}
                   </div>
-                  <input
-                    value={dropoff}
-                    onChange={(e) => {
-                      setDropoff(e.target.value);
-                      setShowDropoffSuggestions(true);
-                      fetchDropoffSuggestions(e.target.value, userLocation || undefined);
-                    }}
-                    onFocus={() => setShowDropoffSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
-                    placeholder="Enter destination"
-                    className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
-                    style={{ fontSize: '16px' }}
-                  />
-                  <Search className="w-5 h-5 text-zinc-400" />
+                  
+                  {/* Pickup Dropdown */}
+                  <AnimatePresence>
+                    {showPickupSuggestions && pickupSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                      >
+                        {/* Current location option */}
+                        <button
+                          onClick={handleUseCurrentLocation}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50 transition-colors border-b border-zinc-100"
+                        >
+                          <LocateFixed className="w-4 h-4 text-blue-500 shrink-0" />
+                          <span className="text-sm font-medium text-blue-600">Use current location</span>
+                        </button>
+                        {pickupSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            onClick={() => handlePickupSuggestionClick(suggestion)}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50 transition-colors border-b border-zinc-100 last:border-b-0"
+                          >
+                            <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <span className="text-sm text-zinc-900 truncate">{suggestion.placeName}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
                 
-                {/* Dropdown */}
-                <AnimatePresence>
-                  {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
-                    >
-                      {dropoffSuggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.id}
-                          onClick={() => handleDropoffSuggestionClick(suggestion)}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50 transition-colors border-b border-zinc-100 last:border-b-0"
-                        >
-                          <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
-                          <span className="text-sm text-zinc-900 truncate">{suggestion.placeName}</span>
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Divider */}
+                <div className="mx-3 border-t border-zinc-200" />
+                
+                {/* Dropoff Input */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 px-3 py-3">
+                    <div className="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0">
+                      <div className="w-2 h-2 bg-white rounded-sm" />
+                    </div>
+                    <input
+                      value={dropoff}
+                      onChange={(e) => {
+                        setDropoff(e.target.value);
+                        setShowDropoffSuggestions(true);
+                        fetchDropoffSuggestions(e.target.value, userLocation || undefined);
+                      }}
+                      onFocus={() => {
+                        setShowDropoffSuggestions(true);
+                        setShowPickupSuggestions(false);
+                        // Trigger suggestions even if empty
+                        fetchDropoffSuggestions(dropoff, userLocation || undefined);
+                      }}
+                      onBlur={() => setTimeout(() => setShowDropoffSuggestions(false), 200)}
+                      placeholder="Enter destination"
+                      className="flex-1 bg-transparent text-zinc-900 placeholder-zinc-500 outline-none text-base"
+                      style={{ fontSize: '16px' }}
+                    />
+                    <Search className="w-5 h-5 text-zinc-400" />
+                  </div>
+                  
+                  {/* Dropoff Dropdown */}
+                  <AnimatePresence>
+                    {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-zinc-200 overflow-hidden z-50"
+                      >
+                        {dropoffSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            onClick={() => handleDropoffSuggestionClick(suggestion)}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-zinc-50 transition-colors border-b border-zinc-100 last:border-b-0"
+                          >
+                            <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <span className="text-sm text-zinc-900 truncate">{suggestion.placeName}</span>
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Category Tabs */}

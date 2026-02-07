@@ -80,13 +80,14 @@ const RidesMapBackgroundInner = ({
 
   return (
     <GoogleMap
-      className="w-full h-full opacity-70"
+      className="w-full h-full"
       center={pickupCoords || center}
       zoom={markers.length > 1 ? 12 : 15}
       markers={markers}
       route={route}
       fitBounds={markers.length > 1}
       showControls={false}
+      darkMode={false}
     />
   );
 };
