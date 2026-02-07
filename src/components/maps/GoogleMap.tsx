@@ -49,19 +49,72 @@ export interface GoogleMapRef {
   fitMarkerBounds: () => void;
 }
 
-// ZIVO Dark map theme - premium Uber-style, removes "Google look"
+// ZIVO Dark map theme - premium, removes "Google look"
 const zivoMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0f172a" }] },
+  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0f172a" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#020617" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#061226" }] },
   { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
 ];
+
+// Create pulsing pickup overlay with CSS animations
+function createPulsingOverlay(
+  position: { lat: number; lng: number },
+  map: google.maps.Map
+): google.maps.OverlayView {
+  class PulsingOverlay extends google.maps.OverlayView {
+    private position: google.maps.LatLng;
+    private div: HTMLDivElement | null = null;
+
+    constructor(pos: { lat: number; lng: number }) {
+      super();
+      this.position = new google.maps.LatLng(pos.lat, pos.lng);
+    }
+
+    onAdd() {
+      this.div = document.createElement("div");
+      this.div.style.position = "absolute";
+      this.div.style.transform = "translate(-50%, -50%)";
+      this.div.innerHTML = `
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 64px; height: 64px;">
+          <div style="position: absolute; width: 64px; height: 64px; border-radius: 50%; background: rgba(59, 130, 246, 0.3);" class="animate-ping-slow"></div>
+          <div style="position: absolute; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.4);" class="animate-ping-medium"></div>
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); position: relative; z-index: 10;"></div>
+        </div>
+      `;
+
+      const panes = this.getPanes();
+      panes?.overlayMouseTarget.appendChild(this.div);
+    }
+
+    draw() {
+      if (!this.div) return;
+      const overlayProjection = this.getProjection();
+      const pos = overlayProjection.fromLatLngToDivPixel(this.position);
+      if (pos) {
+        this.div.style.left = `${pos.x}px`;
+        this.div.style.top = `${pos.y}px`;
+      }
+    }
+
+    onRemove() {
+      if (this.div?.parentNode) {
+        this.div.parentNode.removeChild(this.div);
+        this.div = null;
+      }
+    }
+  }
+
+  const overlay = new PulsingOverlay(position);
+  overlay.setMap(map);
+  return overlay;
+}
 
 const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   className,
@@ -80,6 +133,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersInstanceRef = useRef<google.maps.Marker[]>([]);
+  const overlaysInstanceRef = useRef<google.maps.OverlayView[]>([]);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
@@ -117,6 +171,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       fullscreenControl: false,
       gestureHandling: "greedy",
       clickableIcons: false,
+      keyboardShortcuts: false,
     });
 
     if (onMapClick) {
@@ -133,6 +188,8 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       // Cleanup
       markersInstanceRef.current.forEach(m => m.setMap(null));
       markersInstanceRef.current = [];
+      overlaysInstanceRef.current.forEach(o => o.setMap(null));
+      overlaysInstanceRef.current = [];
       directionsRendererRef.current?.setMap(null);
     };
   }, [isLoaded, darkMode, showControls]);
@@ -141,13 +198,24 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   useEffect(() => {
     if (!mapReady || !mapInstanceRef.current || !window.google) return;
 
-    // Clear existing markers
+    // Clear existing markers and overlays
     markersInstanceRef.current.forEach(m => m.setMap(null));
     markersInstanceRef.current = [];
+    overlaysInstanceRef.current.forEach(o => o.setMap(null));
+    overlaysInstanceRef.current = [];
 
     const bounds = new window.google.maps.LatLngBounds();
 
     markers.forEach(marker => {
+      bounds.extend(marker.position);
+      
+      // Use pulsing overlay for pickup markers
+      if (marker.type === "pickup" && !marker.icon) {
+        const overlay = createPulsingOverlay(marker.position, mapInstanceRef.current!);
+        overlaysInstanceRef.current.push(overlay);
+        return; // Skip creating regular marker
+      }
+
       // Create marker icon based on type
       let icon: google.maps.Symbol | google.maps.Icon | undefined;
       
@@ -158,16 +226,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
           url: marker.icon,
           scaledSize: new window.google.maps.Size(size, size),
           anchor: new window.google.maps.Point(size / 2, size / 2),
-        };
-      } else if (marker.type === "pickup") {
-        // Blue circle with pulsing effect for pickup
-        icon = {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          fillColor: "#3b82f6",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-          scale: 12,
         };
       } else if (marker.type === "dropoff") {
         // Black square pin for destination (more visible contrast)
@@ -210,7 +268,6 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       }
 
       markersInstanceRef.current.push(gMarker);
-      bounds.extend(marker.position);
     });
 
     // Fit bounds if we have markers
