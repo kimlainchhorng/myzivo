@@ -4731,8 +4731,12 @@ export type Database = {
           is_suspended: boolean | null
           level: string | null
           license_number: string
+          location_suspicious: boolean | null
           move_enabled: boolean | null
           phone: string
+          prev_lat: number | null
+          prev_lng: number | null
+          prev_location_at: string | null
           rating: number | null
           region_id: string | null
           rides_enabled: boolean | null
@@ -4743,6 +4747,7 @@ export type Database = {
           stripe_last_sync: string | null
           stripe_onboarding_complete: boolean | null
           stripe_payouts_enabled: boolean | null
+          suspicious_count: number | null
           total_trips: number | null
           updated_at: string
           user_id: string
@@ -4771,8 +4776,12 @@ export type Database = {
           is_suspended?: boolean | null
           level?: string | null
           license_number: string
+          location_suspicious?: boolean | null
           move_enabled?: boolean | null
           phone: string
+          prev_lat?: number | null
+          prev_lng?: number | null
+          prev_location_at?: string | null
           rating?: number | null
           region_id?: string | null
           rides_enabled?: boolean | null
@@ -4783,6 +4792,7 @@ export type Database = {
           stripe_last_sync?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_payouts_enabled?: boolean | null
+          suspicious_count?: number | null
           total_trips?: number | null
           updated_at?: string
           user_id: string
@@ -4811,8 +4821,12 @@ export type Database = {
           is_suspended?: boolean | null
           level?: string | null
           license_number?: string
+          location_suspicious?: boolean | null
           move_enabled?: boolean | null
           phone?: string
+          prev_lat?: number | null
+          prev_lng?: number | null
+          prev_location_at?: string | null
           rating?: number | null
           region_id?: string | null
           rides_enabled?: boolean | null
@@ -4823,6 +4837,7 @@ export type Database = {
           stripe_last_sync?: string | null
           stripe_onboarding_complete?: boolean | null
           stripe_payouts_enabled?: boolean | null
+          suspicious_count?: number | null
           total_trips?: number | null
           updated_at?: string
           user_id?: string

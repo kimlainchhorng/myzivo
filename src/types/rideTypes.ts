@@ -9,6 +9,7 @@ export type RideStatus =
   | 'cancelled';
 
 export interface DriverInfo {
+  id?: string;  // Driver ID for location tracking
   name: string;
   car: string;
   plate: string;
