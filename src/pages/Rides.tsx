@@ -10,9 +10,9 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  MapPin, Navigation, Clock, Users, Shield, Star, CheckCircle2,
+  MapPin, Navigation, Clock, Shield, Star, CheckCircle2,
   ChevronRight, Phone, Mail, User, CreditCard, Loader2, LocateFixed,
-  Leaf, Zap, Briefcase, Crown, Anchor, Dog
+  Leaf, Zap, Briefcase, Crown, Anchor, Dog, CarFront, UserRound
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,8 @@ import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
  
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
 
+type RideTag = "wait_save" | "priority" | "green" | "standard" | "lux";
+
 interface RideOption {
   id: string;
   name: string;
@@ -46,34 +48,35 @@ interface RideOption {
   seats?: number;
   subtitle?: string;
   eta?: number;
-  pill?: { icon: string; label: string };
+  tag?: RideTag;
 }
 
-// CSS-based Car Icon component (Uber-style)
-function CarIcon({ selected }: { selected?: boolean }) {
+// Glassmorphism Car Icon component with Lucide icon
+function CarIcon() {
   return (
-    <div className="relative flex h-12 w-12 items-center justify-center">
-      {/* Car body - rounded shape */}
-      <div className={`h-8 w-10 rounded-full border ${
-        selected ? "border-primary bg-zinc-800" : "border-zinc-600 bg-zinc-900"
-      }`} />
-      {/* Wheels */}
-      <div className="absolute -left-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
-      <div className="absolute -right-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
-      {/* Selected indicator dot */}
-      {selected && (
-        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary ring-2 ring-zinc-900" />
-      )}
+    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10">
+      <CarFront className="h-6 w-6 text-white/90" />
     </div>
   );
 }
 
-// Pill badge component for ride features
-function RidePill({ icon, label }: { icon: string; label: string }) {
+// Tag pill component for ride features (glassmorphism style)
+function TagPill({ tag }: { tag?: RideTag }) {
+  if (!tag) return null;
+  
+  const tagMap: Record<RideTag, { icon: string; label: string }> = {
+    wait_save: { icon: "⏱️", label: "Wait & Save" },
+    priority: { icon: "⚡", label: "Priority" },
+    green: { icon: "🌿", label: "Green" },
+    standard: { icon: "⭐", label: "Standard" },
+    lux: { icon: "💎", label: "Elite" },
+  };
+  
+  const item = tagMap[tag];
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
-      <span aria-hidden>{icon}</span>
-      {label}
+    <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur">
+      <span aria-hidden>{item.icon}</span>
+      {item.label}
     </span>
   );
 }
@@ -94,7 +97,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
       image: "https://img.icons8.com/isometric/200/car.png",
       multiplier: 0.75,
       seats: 4,
-      pill: { icon: "⏱️", label: "Wait & Save" }
+      tag: "wait_save"
     },
     {
       id: "standard",
@@ -106,7 +109,8 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
       icon: Navigation,
       image: "https://img.icons8.com/isometric/200/sedan.png",
       multiplier: 1.0,
-      seats: 4
+      seats: 4,
+      tag: "standard"
     },
     {
       id: "green",
@@ -119,7 +123,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
       image: "https://img.icons8.com/isometric/200/electric-car.png",
       multiplier: 1.02,
       seats: 4,
-      pill: { icon: "🌿", label: "Eco" }
+      tag: "green"
     },
     {
       id: "priority",
@@ -132,7 +136,7 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
       image: "https://img.icons8.com/isometric/200/sedan.png",
       multiplier: 1.3,
       seats: 4,
-      pill: { icon: "⚡", label: "Priority" }
+      tag: "priority"
     }
   ],
    Premium: [
@@ -196,7 +200,8 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        icon: Crown,
        image: "https://img.icons8.com/isometric/200/limousine.png",
        multiplier: 10.0,
-       seats: 4
+       seats: 4,
+       tag: "lux"
      },
      {
        id: "sprinter",
@@ -713,56 +718,70 @@ export default function Rides() {
                    layout
                    className="space-y-2 md:space-y-3"
                  >
-                   <AnimatePresence mode="popLayout">
-                     {rideCategories[activeTab].map((ride) => (
-                       <motion.button 
-                         key={ride.id}
-                         layout
-                         initial={{ opacity: 0, y: 10 }}
-                         animate={{ opacity: 1, y: 0 }}
-                         exit={{ opacity: 0, y: -10 }}
-                         onClick={() => setSelectedOption(ride)}
-                         className={`w-full flex items-center gap-3 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl border cursor-pointer transition-all duration-200 touch-manipulation active:scale-[0.98] ${
-                           selectedOption?.id === ride.id 
-                             ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
-                             : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
-                         }`}
-                        >
-                          {/* Left - Car Icon */}
-                          <CarIcon selected={selectedOption?.id === ride.id} />
+                    <AnimatePresence mode="popLayout">
+                      {rideCategories[activeTab].map((ride) => {
+                        const isSelected = selectedOption?.id === ride.id;
+                        return (
+                        <motion.button 
+                          key={ride.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          onClick={() => setSelectedOption(ride)}
+                          className={[
+                            "w-full text-left",
+                            "rounded-[18px] p-[14px]",
+                            "bg-black/35 backdrop-blur-[14px]",
+                            "border border-white/10",
+                            "shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+                            "transition active:scale-[0.99]",
+                            isSelected
+                              ? "border-blue-500/90 shadow-[0_0_0_1px_rgba(59,130,246,0.65),0_12px_30px_rgba(0,0,0,0.35)]"
+                              : "hover:bg-black/40",
+                          ].join(" ")}
+                         >
+                          <div className="flex items-center gap-3">
+                            {/* Left - Car Icon */}
+                            <CarIcon />
 
-                         {/* Middle - Info section */}
-                         <div className="flex-1 min-w-0 text-left">
-                           {/* Optional pill badge */}
-                           {ride.pill && (
-                             <div className="mb-1">
-                               <RidePill icon={ride.pill.icon} label={ride.pill.label} />
-                             </div>
-                           )}
-                           <div className="flex items-center gap-1.5 mb-0.5">
-                             <h3 className="text-sm md:text-base font-bold text-white">{ride.name}</h3>
-                             <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
-                               <Users className="w-3 h-3" />{ride.seats || 4}
-                             </span>
-                           </div>
-                           <p className="text-[10px] md:text-xs text-zinc-500 mb-0.5">
-                             {getPickupTime(ride.eta || 5)} · {ride.eta || 5} min
-                           </p>
-                           <p className="text-[10px] md:text-xs text-zinc-500 truncate">{ride.desc}</p>
-                         </div>
+                            {/* Middle - Info section */}
+                            <div className="flex-1 min-w-0">
+                              {/* Optional tag badge */}
+                              <div className="mb-1">
+                                <TagPill tag={ride.tag} />
+                              </div>
+                              <div className="flex items-center gap-2 min-w-0 mb-0.5">
+                                <h3 className="text-[15px] font-semibold text-white truncate">{ride.name}</h3>
+                                <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-medium text-white/80">
+                                  <UserRound className="h-3.5 w-3.5" />
+                                  {ride.seats || 4}
+                                </span>
+                              </div>
+                              <p className="text-[12px] text-white/75 mb-0.5">
+                                {getPickupTime(ride.eta || 5)} · {ride.eta || 5} min
+                              </p>
+                              <p className="text-[12px] text-white/55 truncate">{ride.desc}</p>
+                            </div>
 
-                         {/* Right - Price */}
-                         <div className="flex items-center gap-1 flex-shrink-0">
-                           <span className="text-base md:text-lg font-bold text-white">
-                             {getFareFixed(ride)}
-                           </span>
-                           {selectedOption?.id === ride.id && (
-                             <div className="w-2 h-2 bg-primary rounded-full" />
-                           )}
-                         </div>
-                       </motion.button>
-                     ))}
-                   </AnimatePresence>
+                            {/* Right - Price + selection dot */}
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <span className="text-[16px] font-bold text-white tabular-nums">
+                                {getFareFixed(ride)}
+                              </span>
+                              <div
+                                className={[
+                                  "h-2 w-2 rounded-full",
+                                  isSelected ? "bg-blue-500 ring-2 ring-white/90" : "bg-white/20",
+                                ].join(" ")}
+                                aria-hidden
+                              />
+                            </div>
+                          </div>
+                        </motion.button>
+                        );
+                      })}
+                    </AnimatePresence>
                  </motion.div>
                </motion.div>
 
@@ -816,68 +835,87 @@ export default function Rides() {
                </div>
               <h2 className="font-display font-bold text-xl md:text-2xl">Choose your ride</h2>
               <div className="space-y-2 md:space-y-3">
-                 {rideCategories[activeTab].map((option) => (
-                 <button 
-                   key={option.id} 
-                   onClick={() => handleSelectOption(option)} 
-                   className={`w-full flex items-center gap-3 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl border transition-all duration-200 touch-manipulation active:scale-[0.98] ${
-                     selectedOption?.id === option.id 
-                       ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
-                       : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
-                   }`}
-                  >
-                    {/* Left - Car Icon */}
-                    <CarIcon selected={selectedOption?.id === option.id} />
-                   
-                   {/* Info section */}
-                   <div className="flex-1 min-w-0 text-left">
-                     {/* Optional pill badge */}
-                     {option.pill && (
-                       <div className="mb-1">
-                         <RidePill icon={option.pill.icon} label={option.pill.label} />
-                       </div>
-                     )}
-                     <div className="flex items-center gap-1.5">
-                       <h3 className="font-bold text-sm md:text-base text-white">{option.name}</h3>
-                       <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
-                         <Users className="w-3 h-3" />{option.seats || 4}
-                       </span>
-                     </div>
-                     <p className="text-[10px] md:text-xs text-zinc-500 mb-0.5">
-                       {getPickupTime(option.eta || 5)} · {option.eta || 5} min
-                     </p>
-                     <p className="text-[10px] md:text-xs text-zinc-500 truncate">{option.desc}</p>
-                   </div>
-                   
-                   {/* Price */}
-                   <div className="flex items-center gap-2 flex-shrink-0">
-                     <span className="font-bold text-base md:text-lg text-white">{getFareFixed(option)}</span>
-                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
-                   </div>
-                 </button>
-                 ))}
-               </div>
+                  {rideCategories[activeTab].map((option) => {
+                    const isSelected = selectedOption?.id === option.id;
+                    return (
+                  <button 
+                    key={option.id} 
+                    onClick={() => handleSelectOption(option)} 
+                    className={[
+                      "w-full text-left",
+                      "rounded-[18px] p-[14px]",
+                      "bg-black/35 backdrop-blur-[14px]",
+                      "border border-white/10",
+                      "shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+                      "transition active:scale-[0.99]",
+                      isSelected
+                        ? "border-blue-500/90 shadow-[0_0_0_1px_rgba(59,130,246,0.65),0_12px_30px_rgba(0,0,0,0.35)]"
+                        : "hover:bg-black/40",
+                    ].join(" ")}
+                   >
+                    <div className="flex items-center gap-3">
+                      {/* Left - Car Icon */}
+                      <CarIcon />
+                      
+                      {/* Info section */}
+                      <div className="flex-1 min-w-0">
+                        {/* Optional tag badge */}
+                        <div className="mb-1">
+                          <TagPill tag={option.tag} />
+                        </div>
+                        <div className="flex items-center gap-2 min-w-0 mb-0.5">
+                          <h3 className="text-[15px] font-semibold text-white truncate">{option.name}</h3>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-medium text-white/80">
+                            <UserRound className="h-3.5 w-3.5" />
+                            {option.seats || 4}
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-white/75 mb-0.5">
+                          {getPickupTime(option.eta || 5)} · {option.eta || 5} min
+                        </p>
+                        <p className="text-[12px] text-white/55 truncate">{option.desc}</p>
+                      </div>
+                      
+                      {/* Right - Price + selection dot */}
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-[16px] font-bold text-white tabular-nums">{getFareFixed(option)}</span>
+                        <div
+                          className={[
+                            "h-2 w-2 rounded-full",
+                            isSelected ? "bg-blue-500 ring-2 ring-white/90" : "bg-white/20",
+                          ].join(" ")}
+                          aria-hidden
+                        />
+                      </div>
+                    </div>
+                  </button>
+                    );
+                  })}
+                </div>
              </div>
            )}
  
            {step === "confirm" && selectedOption && (
-           <div className="max-w-xl mx-auto space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right duration-300">
-             <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
-             <div className="rides-glass-panel p-4 md:p-5 rounded-xl md:rounded-2xl border-primary/20">
-               <div className="flex items-center gap-3 md:gap-4">
-                  <CarIcon selected />
-                   <div className="flex-1">
-                    {selectedOption.pill && (
-                      <div className="mb-1">
-                        <RidePill icon={selectedOption.pill.icon} label={selectedOption.pill.label} />
-                      </div>
-                    )}
-                    <h3 className="font-bold text-base md:text-lg">{selectedOption.name}</h3>
-                   <p className="text-xs md:text-sm text-zinc-400 truncate">{pickup} → {dropoff}</p>
-                   </div>
-                   <div className="text-right">
-                   <p className="font-bold text-lg md:text-xl text-primary">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)}</p>
-                   <p className="text-[10px] md:text-xs text-zinc-400">Est. total</p>
+            <div className="max-w-xl mx-auto space-y-4 md:space-y-6 animate-in fade-in slide-in-from-right duration-300">
+              <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
+              <div className={[
+                "rounded-[18px] p-[14px]",
+                "bg-black/35 backdrop-blur-[14px]",
+                "border border-white/10",
+                "shadow-[0_12px_30px_rgba(0,0,0,0.35)]",
+              ].join(" ")}>
+                <div className="flex items-center gap-3">
+                   <CarIcon />
+                    <div className="flex-1 min-w-0">
+                     <div className="mb-1">
+                       <TagPill tag={selectedOption.tag} />
+                     </div>
+                     <h3 className="text-[15px] font-semibold text-white">{selectedOption.name}</h3>
+                    <p className="text-[12px] text-white/55 truncate">{pickup} → {dropoff}</p>
+                    </div>
+                    <div className="text-right">
+                    <p className="text-[16px] font-bold text-blue-400 tabular-nums">${calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0).toFixed(2)}</p>
+                    <p className="text-[11px] text-white/55">Est. total</p>
                    </div>
                  </div>
                </div>
