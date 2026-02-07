@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Clock, DollarSign, User, Loader2 } from "lucide-react";
+import { MapPin, Navigation, Clock, DollarSign, User, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TripRequest } from "@/hooks/useDriverApp";
@@ -9,9 +9,11 @@ interface TripRequestCardProps {
   trip: TripRequest;
   onAccept: (tripId: string) => void;
   isAccepting?: boolean;
+  acceptError?: string | null;
+  onRetry?: (tripId: string) => void;
 }
 
-const TripRequestCard = ({ trip, onAccept, isAccepting }: TripRequestCardProps) => {
+const TripRequestCard = ({ trip, onAccept, isAccepting, acceptError, onRetry }: TripRequestCardProps) => {
   const formattedFare = trip.fare_amount ? `$${trip.fare_amount.toFixed(2)}` : "—";
   const formattedDistance = trip.distance_km ? `${(trip.distance_km * 0.621371).toFixed(1)} mi` : "—";
   const formattedDuration = trip.duration_minutes ? `${Math.round(trip.duration_minutes)} min` : "—";
@@ -98,21 +100,49 @@ const TripRequestCard = ({ trip, onAccept, isAccepting }: TripRequestCardProps) 
             </div>
           )}
 
-          {/* Accept button */}
-          <Button
-            onClick={() => onAccept(trip.id)}
-            disabled={isAccepting}
-            className="w-full h-12 text-lg font-bold bg-green-500 hover:bg-green-600 text-white"
-          >
-            {isAccepting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Accepting...
-              </>
-            ) : (
-              "ACCEPT RIDE"
-            )}
-          </Button>
+          {/* Error message with retry */}
+          {acceptError && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">{acceptError}</p>
+            </div>
+          )}
+
+          {/* Accept button or Retry button */}
+          {acceptError && onRetry ? (
+            <Button
+              onClick={() => onRetry(trip.id)}
+              disabled={isAccepting}
+              variant="outline"
+              className="w-full h-12 text-lg font-bold border-primary bg-primary/10 hover:bg-primary/20 text-primary"
+            >
+              {isAccepting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2" />
+                  TAP TO RETRY
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => onAccept(trip.id)}
+              disabled={isAccepting}
+              className="w-full h-12 text-lg font-bold bg-green-500 hover:bg-green-600 text-white"
+            >
+              {isAccepting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Accepting...
+                </>
+              ) : (
+                "ACCEPT RIDE"
+              )}
+            </Button>
+          )}
         </CardContent>
       </Card>
     </motion.div>

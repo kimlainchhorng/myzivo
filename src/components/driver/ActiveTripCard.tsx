@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, Phone, MessageCircle, X, Loader2, CheckCircle2 } from "lucide-react";
+import { MapPin, Navigation, Phone, MessageCircle, X, Loader2, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TripRequest } from "@/hooks/useDriverApp";
@@ -9,6 +9,8 @@ interface ActiveTripCardProps {
   trip: TripRequest;
   onUpdateStatus: (tripId: string, status: string) => void;
   isUpdating?: boolean;
+  updateError?: string | null;
+  onRetryUpdate?: (tripId: string, status: string) => void;
 }
 
 const statusConfig: Record<string, { 
@@ -43,7 +45,7 @@ const statusConfig: Record<string, {
   },
 };
 
-const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating }: ActiveTripCardProps) => {
+const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetryUpdate }: ActiveTripCardProps) => {
   const config = statusConfig[trip.status] || statusConfig.accepted;
   const formattedFare = trip.fare_amount ? `$${trip.fare_amount.toFixed(2)}` : "—";
 
@@ -141,30 +143,58 @@ const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating }: ActiveTripCardProp
             </div>
           </div>
 
+          {/* Error message with retry */}
+          {updateError && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <p className="text-sm text-destructive">{updateError}</p>
+            </div>
+          )}
+
           {/* Action buttons */}
           <div className="space-y-3 pt-2">
-            {/* Main action button */}
-            <Button
-              onClick={() => onUpdateStatus(trip.id, config.nextStatus)}
-              disabled={isUpdating}
-              className={`w-full h-14 text-lg font-bold ${
-                config.nextStatus === "completed" 
-                  ? "bg-green-500 hover:bg-green-600" 
-                  : "bg-primary hover:bg-primary/90"
-              }`}
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                <>
-                  {config.nextStatus === "completed" && <CheckCircle2 className="w-5 h-5 mr-2" />}
-                  {config.nextLabel}
-                </>
-              )}
-            </Button>
+            {/* Main action button or Retry button */}
+            {updateError && onRetryUpdate ? (
+              <Button
+                onClick={() => onRetryUpdate(trip.id, config.nextStatus)}
+                disabled={isUpdating}
+                variant="outline"
+                className="w-full h-14 text-lg font-bold border-primary bg-primary/10 hover:bg-primary/20 text-primary"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-5 h-5 mr-2" />
+                    TAP TO RETRY
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => onUpdateStatus(trip.id, config.nextStatus)}
+                disabled={isUpdating}
+                className={`w-full h-14 text-lg font-bold ${
+                  config.nextStatus === "completed" 
+                    ? "bg-green-500 hover:bg-green-600" 
+                    : "bg-primary hover:bg-primary/90"
+                }`}
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    {config.nextStatus === "completed" && <CheckCircle2 className="w-5 h-5 mr-2" />}
+                    {config.nextLabel}
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Cancel button - only show before trip starts */}
             {trip.status !== "in_progress" && (
