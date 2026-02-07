@@ -6821,11 +6821,17 @@ export type Database = {
           delivery_pin_verified: boolean | null
           distance_miles: number | null
           driver_id: string | null
+          driver_payout_cents: number | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
           id: string
           items: Json
           payment_status: string | null
+          payout_at: string | null
+          payout_error: string | null
+          payout_idempotency_key: string | null
+          payout_status: string | null
+          payout_transfer_id: string | null
           picked_up_at: string | null
           pickup_by: string | null
           placed_at: string | null
@@ -6882,11 +6888,17 @@ export type Database = {
           delivery_pin_verified?: boolean | null
           distance_miles?: number | null
           driver_id?: string | null
+          driver_payout_cents?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           id?: string
           items: Json
           payment_status?: string | null
+          payout_at?: string | null
+          payout_error?: string | null
+          payout_idempotency_key?: string | null
+          payout_status?: string | null
+          payout_transfer_id?: string | null
           picked_up_at?: string | null
           pickup_by?: string | null
           placed_at?: string | null
@@ -6943,11 +6955,17 @@ export type Database = {
           delivery_pin_verified?: boolean | null
           distance_miles?: number | null
           driver_id?: string | null
+          driver_payout_cents?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
           id?: string
           items?: Json
           payment_status?: string | null
+          payout_at?: string | null
+          payout_error?: string | null
+          payout_idempotency_key?: string | null
+          payout_status?: string | null
+          payout_transfer_id?: string | null
           picked_up_at?: string | null
           pickup_by?: string | null
           placed_at?: string | null
@@ -11595,6 +11613,33 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_settings: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       policy_consents: {
         Row: {
           accepted_at: string
@@ -14062,11 +14107,13 @@ export type Database = {
           cancellation_fee: number | null
           cancelled_at: string | null
           cancelled_by: string | null
+          commission_amount: number | null
           created_at: string | null
           dest_lat: number | null
           dest_lng: number | null
           dest_text: string | null
           distance_miles: number | null
+          driver_earning_amount: number | null
           driver_id: string | null
           duration_min: number | null
           id: string
@@ -14087,11 +14134,13 @@ export type Database = {
           cancellation_fee?: number | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount?: number | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
           dest_text?: string | null
           distance_miles?: number | null
+          driver_earning_amount?: number | null
           driver_id?: string | null
           duration_min?: number | null
           id?: string
@@ -14112,11 +14161,13 @@ export type Database = {
           cancellation_fee?: number | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          commission_amount?: number | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
           dest_text?: string | null
           distance_miles?: number | null
+          driver_earning_amount?: number | null
           driver_id?: string | null
           duration_min?: number | null
           id?: string
@@ -15041,8 +15092,10 @@ export type Database = {
       square_catalog_categories: {
         Row: {
           id: string
+          is_visible: boolean | null
           name: string
           raw: Json
+          sort_order: number | null
           square_category_id: string
           square_merchant_id: string
           updated_at: string | null
@@ -15050,8 +15103,10 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_visible?: boolean | null
           name: string
           raw: Json
+          sort_order?: number | null
           square_category_id: string
           square_merchant_id: string
           updated_at?: string | null
@@ -15059,8 +15114,10 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_visible?: boolean | null
           name?: string
           raw?: Json
+          sort_order?: number | null
           square_category_id?: string
           square_merchant_id?: string
           updated_at?: string | null
@@ -15167,11 +15224,42 @@ export type Database = {
         }
         Relationships: []
       }
+      square_item_modifier_lists: {
+        Row: {
+          created_at: string | null
+          id: string
+          sort_order: number | null
+          square_item_id: string
+          square_merchant_id: string
+          square_modifier_list_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          sort_order?: number | null
+          square_item_id: string
+          square_merchant_id: string
+          square_modifier_list_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          sort_order?: number | null
+          square_item_id?: string
+          square_merchant_id?: string
+          square_modifier_list_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       square_item_variations: {
         Row: {
           currency: string | null
           id: string
           inventory_tracking: boolean | null
+          is_available: boolean | null
           name: string | null
           price_cents: number | null
           raw: Json
@@ -15186,6 +15274,7 @@ export type Database = {
           currency?: string | null
           id?: string
           inventory_tracking?: boolean | null
+          is_available?: boolean | null
           name?: string | null
           price_cents?: number | null
           raw: Json
@@ -15200,6 +15289,7 @@ export type Database = {
           currency?: string | null
           id?: string
           inventory_tracking?: boolean | null
+          is_available?: boolean | null
           name?: string | null
           price_cents?: number | null
           raw?: Json
@@ -15217,7 +15307,10 @@ export type Database = {
           category_ids: string[] | null
           description: string | null
           id: string
+          image_url: string | null
           is_archived: boolean | null
+          is_available: boolean | null
+          is_visible: boolean | null
           name: string
           raw: Json
           square_item_id: string
@@ -15229,7 +15322,10 @@ export type Database = {
           category_ids?: string[] | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_archived?: boolean | null
+          is_available?: boolean | null
+          is_visible?: boolean | null
           name: string
           raw: Json
           square_item_id: string
@@ -15241,7 +15337,10 @@ export type Database = {
           category_ids?: string[] | null
           description?: string | null
           id?: string
+          image_url?: string | null
           is_archived?: boolean | null
+          is_available?: boolean | null
+          is_visible?: boolean | null
           name?: string
           raw?: Json
           square_item_id?: string
@@ -15254,6 +15353,7 @@ export type Database = {
       square_modifiers: {
         Row: {
           id: string
+          is_enabled: boolean | null
           name: string
           raw: Json
           square_merchant_id: string
@@ -15263,6 +15363,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_enabled?: boolean | null
           name: string
           raw: Json
           square_merchant_id: string
@@ -15272,6 +15373,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_enabled?: boolean | null
           name?: string
           raw?: Json
           square_merchant_id?: string
@@ -17256,6 +17358,7 @@ export type Database = {
           driver_id: string | null
           driver_lat: number | null
           driver_lng: number | null
+          driver_payout_cents: number | null
           dropoff_address: string
           dropoff_lat: number
           dropoff_lng: number
@@ -17266,6 +17369,11 @@ export type Database = {
           id: string
           passenger_name: string | null
           payment_status: string | null
+          payout_at: string | null
+          payout_error: string | null
+          payout_idempotency_key: string | null
+          payout_status: string | null
+          payout_transfer_id: string | null
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
@@ -17304,6 +17412,7 @@ export type Database = {
           driver_id?: string | null
           driver_lat?: number | null
           driver_lng?: number | null
+          driver_payout_cents?: number | null
           dropoff_address: string
           dropoff_lat: number
           dropoff_lng: number
@@ -17314,6 +17423,11 @@ export type Database = {
           id?: string
           passenger_name?: string | null
           payment_status?: string | null
+          payout_at?: string | null
+          payout_error?: string | null
+          payout_idempotency_key?: string | null
+          payout_status?: string | null
+          payout_transfer_id?: string | null
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
@@ -17352,6 +17466,7 @@ export type Database = {
           driver_id?: string | null
           driver_lat?: number | null
           driver_lng?: number | null
+          driver_payout_cents?: number | null
           dropoff_address?: string
           dropoff_lat?: number
           dropoff_lng?: number
@@ -17362,6 +17477,11 @@ export type Database = {
           id?: string
           passenger_name?: string | null
           payment_status?: string | null
+          payout_at?: string | null
+          payout_error?: string | null
+          payout_idempotency_key?: string | null
+          payout_status?: string | null
+          payout_transfer_id?: string | null
           pickup_address?: string
           pickup_lat?: number
           pickup_lng?: number
@@ -18824,6 +18944,42 @@ export type Database = {
             foreignKeyName: "wallet_ledger_driver_id_fkey"
             columns: ["driver_id"]
             isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number | null
+          driver_id: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          balance?: number | null
+          driver_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          balance?: number | null
+          driver_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallets_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
             referencedRelation: "drivers_public"
             referencedColumns: ["id"]
           },

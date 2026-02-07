@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { saveRideRating } from "@/lib/supabaseRide";
+import { PLATFORM_COMMISSION_RATE, DRIVER_SHARE_RATE } from "@/config/adminConfig";
 
 interface RideReceiptModalProps {
   isOpen: boolean;
@@ -148,6 +149,18 @@ const RideReceiptModal = ({
             <div className="flex justify-between items-center">
               <span className="font-semibold text-white">Total</span>
               <span className="text-2xl font-bold text-primary">${totalWithTip.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Commission Breakdown - read-only display */}
+          <div className="pt-3 mt-3 border-t border-white/10 space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-white/60">Driver earned</span>
+              <span className="text-green-400">${(price * DRIVER_SHARE_RATE).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-white/60">Platform fee</span>
+              <span className="text-white/40">${(price * PLATFORM_COMMISSION_RATE).toFixed(2)}</span>
             </div>
           </div>
         </motion.div>
