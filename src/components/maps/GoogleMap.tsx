@@ -169,22 +169,24 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
           anchor: new window.google.maps.Point(size / 2, size / 2),
         };
       } else if (marker.type === "pickup") {
+        // Blue circle with pulsing effect for pickup
         icon = {
           path: window.google.maps.SymbolPath.CIRCLE,
           fillColor: "#3b82f6",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
-          scale: 10,
+          scale: 12,
         };
       } else if (marker.type === "dropoff") {
+        // Black square pin for destination (more visible contrast)
         icon = {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          fillColor: "#10b981",
+          path: "M-6,-6 L6,-6 L6,6 L-6,6 Z", // Square path
+          fillColor: "#000000",
           fillOpacity: 1,
           strokeColor: "#ffffff",
           strokeWeight: 3,
-          scale: 10,
+          scale: 1,
         };
       } else if (marker.type === "driver") {
         icon = {
