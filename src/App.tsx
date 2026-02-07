@@ -383,8 +383,11 @@ const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
 const DispatchBatches = lazy(() => import("./pages/dispatch/DispatchBatches"));
 const DispatchBatchNew = lazy(() => import("./pages/dispatch/DispatchBatchNew"));
 const DispatchBatchDetail = lazy(() => import("./pages/dispatch/DispatchBatchDetail"));
+const DispatchTeam = lazy(() => import("./pages/dispatch/DispatchTeam"));
 // Driver batch page
 const DriverBatchPage = lazy(() => import("./pages/driver/DriverBatchPage"));
+// Accept Invitation
+const AcceptInvite = lazy(() => import("./pages/AcceptInvite"));
 
 // Public Rating Page
 const RateOrderPage = lazy(() => import("./pages/rate/RateOrderPage"));
@@ -1391,7 +1394,10 @@ const App = () => (
                   <Route path="disputes" element={<DispatchDisputes />} />
                   <Route path="disputes/:id" element={<DispatchDisputeDetail />} />
                   <Route path="settings" element={<DispatchSettings />} />
+                  <Route path="team" element={<DispatchTeam />} />
                 </Route>
+                {/* Accept Team Invitation */}
+                <Route path="/accept-invite" element={<AcceptInvite />} />
                 {/* User Ticket Detail Page */}
                 <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
                 {/* Public Rating Page - no auth required */}
