@@ -136,6 +136,9 @@ const RideConfirmPage = () => {
         routeCoordinates,
       });
 
+      // Determine initial status: use 'requested_unpaid' if redirecting to payments app
+      const useUnpaidStatus = !!PAYMENTS_APP_URL;
+
       // Try to insert into database with retry logic
       const result = await createRideInDb(
         {
@@ -147,6 +150,7 @@ const RideConfirmPage = () => {
           price: finalPrice,
           distance: tripDetails?.distance || 0,
           duration: tripDetails?.duration || 0,
+          initialStatus: useUnpaidStatus ? "requested_unpaid" : "requested",
         },
         {
           enableRetry: true,

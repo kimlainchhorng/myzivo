@@ -10,7 +10,7 @@ import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
 import RideStatusBanner from "@/components/ride/RideStatusBanner";
-import { cancelRideInDb, fetchTripById } from "@/lib/supabaseRide";
+import { cancelRideInDb, fetchTripById, updateRideStatusAndDispatch } from "@/lib/supabaseRide";
 import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 
 const SEARCH_TIMEOUT = 60000; // 60 seconds
@@ -39,39 +39,49 @@ const RideSearchingPage = () => {
     if (rideIdFromUrl && (!state.tripId || state.tripId !== rideIdFromUrl)) {
       setIsRestoring(true);
       
-      // Try to restore from localStorage first (faster)
-      const pendingRide = localStorage.getItem('zivo_pending_ride');
-      if (pendingRide) {
-        try {
-          const parsed = JSON.parse(pendingRide);
-          if (parsed.tripId === rideIdFromUrl) {
-            // Restore state from localStorage
-            createRide({
-              pickup: parsed.pickup,
-              destination: parsed.destination,
-              rideType: parsed.rideType || 'standard',
-              rideName: parsed.rideName,
-              rideImage: parsed.rideImage || '',
-              price: parsed.price,
-              distance: parsed.distance || 0,
-              duration: parsed.duration || 0,
-              paymentMethod: parsed.paymentMethod || 'card',
-            });
-            setTripId(rideIdFromUrl);
-            localStorage.removeItem('zivo_pending_ride');
-            setIsRestoring(false);
-            console.log("[RideSearching] Restored ride from localStorage:", rideIdFromUrl);
-            return;
+      const activateRide = async () => {
+        // Try to restore from localStorage first (faster)
+        const pendingRide = localStorage.getItem('zivo_pending_ride');
+        let tripData: { pickup: string; destination: string; rideType: string; rideName: string; rideImage: string; price: number; distance: number; duration: number; paymentMethod: string } | null = null;
+        let dbStatus: string | null = null;
+        
+        if (pendingRide) {
+          try {
+            const parsed = JSON.parse(pendingRide);
+            if (parsed.tripId === rideIdFromUrl) {
+              tripData = {
+                pickup: parsed.pickup,
+                destination: parsed.destination,
+                rideType: parsed.rideType || 'standard',
+                rideName: parsed.rideName,
+                rideImage: parsed.rideImage || '',
+                price: parsed.price,
+                distance: parsed.distance || 0,
+                duration: parsed.duration || 0,
+                paymentMethod: parsed.paymentMethod || 'card',
+              };
+              console.log("[RideSearching] Restored ride from localStorage:", rideIdFromUrl);
+            }
+          } catch (e) {
+            console.warn("[RideSearching] Failed to parse pending ride:", e);
           }
-        } catch (e) {
-          console.warn("[RideSearching] Failed to parse pending ride:", e);
         }
-      }
-      
-      // Fallback: fetch from database
-      fetchTripById(rideIdFromUrl).then((trip) => {
-        if (trip) {
-          createRide({
+        
+        // Always fetch from DB to get current status
+        const trip = await fetchTripById(rideIdFromUrl);
+        
+        if (!trip) {
+          toast.error("Could not find ride details");
+          navigate("/ride");
+          setIsRestoring(false);
+          return;
+        }
+        
+        dbStatus = trip.status;
+        
+        // If we didn't get data from localStorage, use DB data
+        if (!tripData) {
+          tripData = {
             pickup: trip.pickup_address,
             destination: trip.dropoff_address,
             rideType: trip.ride_type || 'standard',
@@ -81,15 +91,42 @@ const RideSearchingPage = () => {
             distance: (trip.distance_km || 0) / 1.60934, // km to miles
             duration: trip.duration_minutes || 0,
             paymentMethod: 'card',
-          });
-          setTripId(rideIdFromUrl);
+          };
           console.log("[RideSearching] Restored ride from database:", rideIdFromUrl);
-        } else {
-          toast.error("Could not find ride details");
-          navigate("/ride");
         }
+        
+        // Restore UI state
+        createRide({
+          pickup: tripData.pickup,
+          destination: tripData.destination,
+          rideType: tripData.rideType,
+          rideName: tripData.rideName,
+          rideImage: tripData.rideImage,
+          price: tripData.price,
+          distance: tripData.distance,
+          duration: tripData.duration,
+          paymentMethod: tripData.paymentMethod,
+        });
+        setTripId(rideIdFromUrl);
+        
+        // If ride was 'requested_unpaid', now mark as paid and trigger dispatch
+        if (dbStatus === 'requested_unpaid') {
+          console.log("[RideSearching] Activating ride after payment...");
+          const result = await updateRideStatusAndDispatch(rideIdFromUrl);
+          if (result.success) {
+            console.log("[RideSearching] Ride activated and dispatch triggered");
+          } else {
+            console.error("[RideSearching] Failed to activate ride:", result.error?.message);
+            toast.error("Failed to activate ride. Please try again.");
+          }
+        }
+        
+        // Clean up localStorage
+        localStorage.removeItem('zivo_pending_ride');
         setIsRestoring(false);
-      });
+      };
+      
+      activateRide();
     }
   }, [searchParams, state.tripId, createRide, setTripId, navigate]);
 

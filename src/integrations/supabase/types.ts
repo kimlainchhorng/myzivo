@@ -1866,6 +1866,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bill_splits_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       booking_audit_logs: {
@@ -3289,6 +3296,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customer_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_order_items: {
@@ -3428,6 +3442,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -5209,6 +5230,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "equipment_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       exchange_rates: {
@@ -5279,6 +5307,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -5372,6 +5407,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -6745,6 +6787,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "floor_plans_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       food_orders: {
@@ -6972,6 +7021,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -7486,6 +7542,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "gift_cards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       goal_completions: {
@@ -7977,6 +8040,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -8549,6 +8619,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "loyalty_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       loyalty_points: {
@@ -8636,6 +8713,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "loyalty_rewards_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       loyalty_transactions: {
@@ -8699,6 +8783,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loyalty_transactions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -8768,6 +8859,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "maintenance_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       menu_categories: {
@@ -8814,6 +8912,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -8868,6 +8973,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_import_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -8946,6 +9058,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       merchant_earnings: {
@@ -9009,6 +9128,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_earnings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -9380,6 +9506,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "option_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -11363,6 +11496,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payouts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       pending_profile_changes: {
@@ -11580,6 +11720,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_integrations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -12324,6 +12471,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "purchase_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "purchase_orders_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
@@ -12646,6 +12800,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipes_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -13208,6 +13369,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reorder_rules_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reservations: {
@@ -13281,6 +13449,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reservations_table_id_fkey"
             columns: ["table_id"]
             isOneToOne: false
@@ -13350,6 +13525,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "restaurant_branches_parent_restaurant_id_fkey"
+            columns: ["parent_restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       restaurant_ledger: {
@@ -13413,6 +13595,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -13481,6 +13670,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       restaurants: {
@@ -13488,6 +13684,7 @@ export type Database = {
           address: string
           avg_prep_time: number | null
           bank_connected: boolean | null
+          cancel_rate: number | null
           commission_rate: number | null
           cover_image_url: string | null
           created_at: string | null
@@ -13507,6 +13704,7 @@ export type Database = {
           plan_code: string | null
           plan_updated_at: string | null
           rating: number | null
+          rating_count: number | null
           status: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id: string | null
           stripe_customer_id: string | null
@@ -13522,6 +13720,7 @@ export type Database = {
           address: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          cancel_rate?: number | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -13541,6 +13740,7 @@ export type Database = {
           plan_code?: string | null
           plan_updated_at?: string | null
           rating?: number | null
+          rating_count?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -13556,6 +13756,7 @@ export type Database = {
           address?: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          cancel_rate?: number | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -13575,6 +13776,7 @@ export type Database = {
           plan_code?: string | null
           plan_updated_at?: string | null
           rating?: number | null
+          rating_count?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -14351,6 +14553,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_reports_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -15265,6 +15474,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "staff_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       staff_performance: {
@@ -15329,6 +15545,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_performance_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -15400,6 +15623,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_schedules_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -15534,6 +15764,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suppliers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -15717,6 +15954,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_tickets_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -16100,6 +16344,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "time_entries_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "time_entries_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
@@ -16225,6 +16476,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tip_distributions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -16417,6 +16675,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -18462,6 +18727,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       wallet_balances: {
@@ -18600,6 +18872,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "waste_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       waste_logs: {
@@ -18679,6 +18958,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waste_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -20303,6 +20589,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "customer_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       customer_feedback_public: {
@@ -20358,6 +20651,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -20421,6 +20721,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
           {
@@ -20571,6 +20878,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -20787,6 +21101,13 @@ export type Database = {
             referencedRelation: "restaurants_public"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "loyalty_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
         ]
       }
       public_profiles: {
@@ -20923,6 +21244,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reservations_table_id_fkey"
             columns: ["table_id"]
             isOneToOne: false
@@ -21014,6 +21342,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_members_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]
@@ -21122,6 +21457,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_restaurant_rank: {
+        Row: {
+          address: string | null
+          avg_prep_time: number | null
+          cancel_rate: number | null
+          cover_image_url: string | null
+          cuisine_type: string | null
+          description: string | null
+          id: string | null
+          is_open: boolean | null
+          lat: number | null
+          lng: number | null
+          logo_url: string | null
+          name: string | null
+          opening_hours: Json | null
+          phone: string | null
+          placement_boost: number | null
+          plan_code: string | null
+          rating: number | null
+          rating_count: number | null
+          status: Database["public"]["Enums"]["partner_status"] | null
+        }
+        Relationships: []
       }
       vehicles_public: {
         Row: {
@@ -21297,6 +21656,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
             referencedColumns: ["id"]
           },
         ]

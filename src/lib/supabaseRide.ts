@@ -25,6 +25,7 @@ export { categorizeError } from "./supabaseErrors";
 // Map database trip_status to frontend RideStatus
 export const mapDbStatusToFrontend = (dbStatus: string): RideStatus => {
   const statusMap: Record<string, RideStatus> = {
+    requested_unpaid: "searching", // NEW - treat as searching but not dispatched yet
     requested: "searching",
     accepted: "assigned",
     en_route: "assigned",
@@ -62,6 +63,7 @@ export interface CreateRideDbPayload {
   duration: number;
   customerName?: string;
   customerPhone?: string;
+  initialStatus?: "requested" | "requested_unpaid"; // NEW - allows creating unpaid rides
 }
 
 // Result type for createRideInDb with full error info
@@ -102,24 +104,32 @@ export const createRideInDb = async (
     // Get current authenticated user if available
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Use provided status or default to 'requested'
+    const initialStatus = payload.initialStatus || "requested";
+
+    // Note: We cast the insert object to allow 'requested_unpaid' status
+    // which may not be in generated types until DB types are regenerated
+    const insertData = {
+      rider_id: user?.id ?? null,
+      pickup_address: payload.pickup,
+      dropoff_address: payload.destination,
+      pickup_lat: payload.pickupCoords?.lat,
+      pickup_lng: payload.pickupCoords?.lng,
+      dropoff_lat: payload.dropoffCoords?.lat,
+      dropoff_lng: payload.dropoffCoords?.lng,
+      ride_type: payload.rideType,
+      fare_amount: payload.price,
+      distance_km: payload.distance * 1.60934, // miles to km
+      duration_minutes: payload.duration,
+      status: initialStatus,
+      customer_name: payload.customerName,
+      customer_phone: payload.customerPhone,
+    };
+
     const { data, error } = await supabase
       .from("trips")
-      .insert({
-        rider_id: user?.id ?? null,
-        pickup_address: payload.pickup,
-        dropoff_address: payload.destination,
-        pickup_lat: payload.pickupCoords?.lat,
-        pickup_lng: payload.pickupCoords?.lng,
-        dropoff_lat: payload.dropoffCoords?.lat,
-        dropoff_lng: payload.dropoffCoords?.lng,
-        ride_type: payload.rideType,
-        fare_amount: payload.price,
-        distance_km: payload.distance * 1.60934, // miles to km
-        duration_minutes: payload.duration,
-        status: "requested",
-        customer_name: payload.customerName,
-        customer_phone: payload.customerPhone,
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert([insertData as any])
       .select("id")
       .single();
 
@@ -131,26 +141,31 @@ export const createRideInDb = async (
       throw new Error("No trip ID returned");
     }
 
-    console.log("[supabaseRide] Trip created with ID:", data.id, "rider_id:", user?.id ?? "anonymous");
+    console.log("[supabaseRide] Trip created with ID:", data.id, "status:", initialStatus, "rider_id:", user?.id ?? "anonymous");
 
-    // Trigger auto-dispatch to find and assign nearest driver
-    try {
-      const dispatchResponse = await fetch(
-        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI`,
-          },
-          body: JSON.stringify({ trip_id: data.id }),
-        }
-      );
-      const dispatchResult = await dispatchResponse.json();
-      console.log("[supabaseRide] Auto-dispatch result:", dispatchResult);
-    } catch (dispatchError) {
-      // Don't fail the trip creation if dispatch fails - it will stay in 'requested' status
-      console.warn("[supabaseRide] Auto-dispatch failed, trip remains in requested status:", dispatchError);
+    // Only trigger auto-dispatch if status is 'requested' (already paid/ready)
+    // Skip dispatch for 'requested_unpaid' - will be triggered after payment
+    if (initialStatus === "requested") {
+      try {
+        const dispatchResponse = await fetch(
+          `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI`,
+            },
+            body: JSON.stringify({ trip_id: data.id }),
+          }
+        );
+        const dispatchResult = await dispatchResponse.json();
+        console.log("[supabaseRide] Auto-dispatch result:", dispatchResult);
+      } catch (dispatchError) {
+        // Don't fail the trip creation if dispatch fails - it will stay in 'requested' status
+        console.warn("[supabaseRide] Auto-dispatch failed, trip remains in requested status:", dispatchError);
+      }
+    } else {
+      console.log("[supabaseRide] Skipping auto-dispatch for unpaid ride, waiting for payment completion");
     }
 
     return data.id;
@@ -441,5 +456,65 @@ export const fetchTripById = async (tripId: string) => {
   } catch (err) {
     console.error("[fetchTripById] Exception:", err);
     return null;
+  }
+};
+
+// Update ride status to 'requested' and trigger auto-dispatch
+// Used when returning from payments app to activate the ride
+export const updateRideStatusAndDispatch = async (
+  tripId: string
+): Promise<UpdateRideResult> => {
+  // Check if we're online first
+  if (!isOnline()) {
+    return {
+      success: false,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  try {
+    // Update status to 'requested' (payment confirmed)
+    const { error } = await supabase
+      .from("trips")
+      .update({ status: "requested", updated_at: new Date().toISOString() })
+      .eq("id", tripId);
+
+    if (error) {
+      console.error("[updateRideStatusAndDispatch] Update error:", error);
+      return { success: false, error: categorizeError(error), attempts: 1 };
+    }
+
+    console.log("[updateRideStatusAndDispatch] Status updated to 'requested' for trip:", tripId);
+
+    // Trigger auto-dispatch to find and assign nearest driver
+    try {
+      const dispatchResponse = await fetch(
+        `https://slirphzzwcogdbkeicff.supabase.co/functions/v1/auto-dispatch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsaXJwaHp6d2NvZ2Ria2VpY2ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0NDUzMzgsImV4cCI6MjA4NTAyMTMzOH0.44uwdZZxQZYmmHr9yUALGO4Vr6mJVaVfSQW_pzJ0uoI`,
+          },
+          body: JSON.stringify({ trip_id: tripId }),
+        }
+      );
+      const dispatchResult = await dispatchResponse.json();
+      console.log("[updateRideStatusAndDispatch] Auto-dispatch result:", dispatchResult);
+    } catch (dispatchError) {
+      // Don't fail if dispatch fails - ride is in 'requested' status and can be retried
+      console.warn("[updateRideStatusAndDispatch] Auto-dispatch failed:", dispatchError);
+    }
+
+    return { success: true, error: null, attempts: 1 };
+  } catch (err) {
+    console.error("[updateRideStatusAndDispatch] Exception:", err);
+    return { success: false, error: categorizeError(err), attempts: 1 };
   }
 };
