@@ -15189,17 +15189,23 @@ export type Database = {
       }
       restaurants: {
         Row: {
+          accepts_delivery: boolean | null
+          accepts_pickup: boolean | null
           address: string
+          auto_accept_orders: boolean | null
           avg_prep_time: number | null
           bank_connected: boolean | null
           busy_mode: boolean | null
           cancel_at_period_end: boolean | null
           cancel_rate: number | null
+          city: string | null
           commission_rate: number | null
           cover_image_url: string | null
           created_at: string | null
           cuisine_type: string
           current_period_end: string | null
+          delivery_fee_cents: number | null
+          delivery_radius_miles: number | null
           description: string | null
           email: string
           hours: Json | null
@@ -15208,15 +15214,21 @@ export type Database = {
           lat: number | null
           lng: number | null
           logo_url: string | null
+          min_order_cents: number | null
           name: string
+          onboarding_completed_at: string | null
+          onboarding_step: number | null
           opening_hours: Json | null
           owner_id: string | null
           phone: string
           plan_code: string | null
           plan_updated_at: string | null
+          prep_time_minutes: number | null
           rating: number | null
           rating_count: number | null
           region_id: string | null
+          service_fee_percent: number | null
+          state: string | null
           status: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id: string | null
           stripe_customer_id: string | null
@@ -15228,19 +15240,26 @@ export type Database = {
           tenant_id: string | null
           total_orders: number | null
           updated_at: string | null
+          zip: string | null
         }
         Insert: {
+          accepts_delivery?: boolean | null
+          accepts_pickup?: boolean | null
           address: string
+          auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
+          city?: string | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type: string
           current_period_end?: string | null
+          delivery_fee_cents?: number | null
+          delivery_radius_miles?: number | null
           description?: string | null
           email: string
           hours?: Json | null
@@ -15249,15 +15268,21 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          min_order_cents?: number | null
           name: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
           phone: string
           plan_code?: string | null
           plan_updated_at?: string | null
+          prep_time_minutes?: number | null
           rating?: number | null
           rating_count?: number | null
           region_id?: string | null
+          service_fee_percent?: number | null
+          state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -15269,19 +15294,26 @@ export type Database = {
           tenant_id?: string | null
           total_orders?: number | null
           updated_at?: string | null
+          zip?: string | null
         }
         Update: {
+          accepts_delivery?: boolean | null
+          accepts_pickup?: boolean | null
           address?: string
+          auto_accept_orders?: boolean | null
           avg_prep_time?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
+          city?: string | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type?: string
           current_period_end?: string | null
+          delivery_fee_cents?: number | null
+          delivery_radius_miles?: number | null
           description?: string | null
           email?: string
           hours?: Json | null
@@ -15290,15 +15322,21 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          min_order_cents?: number | null
           name?: string
+          onboarding_completed_at?: string | null
+          onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
           phone?: string
           plan_code?: string | null
           plan_updated_at?: string | null
+          prep_time_minutes?: number | null
           rating?: number | null
           rating_count?: number | null
           region_id?: string | null
+          service_fee_percent?: number | null
+          state?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -15310,6 +15348,7 @@ export type Database = {
           tenant_id?: string | null
           total_orders?: number | null
           updated_at?: string | null
+          zip?: string | null
         }
         Relationships: [
           {
@@ -18002,6 +18041,122 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      tenant_admin_alerts: {
+        Row: {
+          audit_log_id: string | null
+          body: string | null
+          created_at: string | null
+          id: string
+          resolve_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          tenant_id: string
+          title: string
+        }
+        Insert: {
+          audit_log_id?: string | null
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          resolve_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity: string
+          tenant_id: string
+          title: string
+        }
+        Update: {
+          audit_log_id?: string | null
+          body?: string | null
+          created_at?: string | null
+          id?: string
+          resolve_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          tenant_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_admin_alerts_audit_log_id_fkey"
+            columns: ["audit_log_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_audit_log"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_admin_alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_role: string | null
+          after_values: Json | null
+          before_values: Json | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          severity: string
+          summary: string
+          tenant_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_values?: Json | null
+          before_values?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          severity?: string
+          summary: string
+          tenant_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_role?: string | null
+          after_values?: Json | null
+          before_values?: Json | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          severity?: string
+          summary?: string
+          tenant_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenant_invitations: {
         Row: {
@@ -23958,6 +24113,36 @@ export type Database = {
     }
     Functions: {
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
+      admin_assign_driver: {
+        Args: { p_driver_id: string; p_order_id: string; p_tenant_id: string }
+        Returns: Json
+      }
+      admin_issue_order_refund: {
+        Args: {
+          p_amount: number
+          p_order_id: string
+          p_reason: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      admin_override_order_status: {
+        Args: {
+          p_new_status: string
+          p_order_id: string
+          p_reason?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
+      admin_update_member_role: {
+        Args: {
+          p_membership_id: string
+          p_new_role: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       assign_batch_to_driver: {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
@@ -24259,6 +24444,20 @@ export type Database = {
         }
         Returns: string
       }
+      log_tenant_audit: {
+        Args: {
+          p_action: string
+          p_after_values?: Json
+          p_before_values?: Json
+          p_entity_id?: string
+          p_entity_type: string
+          p_metadata?: Json
+          p_severity?: string
+          p_summary?: string
+          p_tenant_id: string
+        }
+        Returns: string
+      }
       merchant_fee_percent: {
         Args: { p_restaurant_id: string }
         Returns: number
@@ -24278,6 +24477,10 @@ export type Database = {
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
+      }
+      resolve_admin_alert: {
+        Args: { p_alert_id: string; p_notes?: string }
+        Returns: Json
       }
       score_driver_for_assignment: {
         Args: {
