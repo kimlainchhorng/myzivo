@@ -1,37 +1,50 @@
 
 
-# ZIVO Admin Dashboard - Rides Operations
+# Redirect to ZIVO Payments for Checkout
 
 ## Summary
 
-Add a focused admin dashboard module for managing ZIVO Ride operations (rides, drivers, payouts, commissions) to the existing project. The module uses the same Supabase backend and leverages existing hooks and components where possible.
+Modify the ride confirmation flow to redirect users to an external ZIVO Payments app for checkout instead of processing payment inline. The ride is created in Supabase first, then the user is redirected to the payments app with the ride ID. After payment, the user returns to the searching page to continue the normal realtime flow.
 
 ---
 
-## Current State
+## Current Flow
 
-| Component | Status |
-|-----------|--------|
-| Admin authentication | Exists (`AdminLogin.tsx`, `useAdminRole`) |
-| Admin route protection | Exists (`AdminProtectedRoute`, `ProtectedRoute requireAdmin`) |
-| Admin stats hook | Exists (`useAdminStats.ts`) |
-| Realtime rides stats | Exists (`useRealtimeRidesStats.ts`) |
-| Driver detail page | Exists (`/admin/drivers/:id`) |
-| Commissions page | Exists (`/admin/commissions`) |
-| Payouts table | Already exists in database with full schema |
-| Rides dashboard | Exists as component (`AdminRidesDashboard.tsx`) |
+```text
+User taps "Pay & Request"
+        │
+        ▼
+Create ride in Supabase (status='requested')
+        │
+        ▼
+Navigate to /ride/searching
+        │
+        ▼
+Realtime updates → Driver assigned → Navigate to /ride/driver
+```
 
 ---
 
-## Implementation Approach
+## New Flow
 
-Since most infrastructure exists, focus on creating dedicated pages that consolidate and enhance ride operations functionality:
-
-1. **New Rides Hub Page** (`/admin/rides`) - Full ride management with table, filters, drawer
-2. **New Drivers Hub Page** (`/admin/drivers`) - Driver list with online status, earnings summary
-3. **New Payouts Hub Page** (`/admin/payouts`) - Payout management with balance calculation
-4. **New Setup Page** (`/admin/setup`) - Environment check and SQL reference
-5. **Update Dashboard** - Enhance KPIs with 7-day metrics and driver earnings breakdown
+```text
+User taps "Pay & Request"
+        │
+        ▼
+Create ride in Supabase (status='requested')
+        │
+        ▼
+Redirect to: ${VITE_PAYMENTS_APP_URL}/handoff?rideId=${tripId}
+        │
+        ▼
+(User completes payment on external payments app)
+        │
+        ▼
+Payments app redirects back to: /ride/searching?rideId=${tripId}
+        │
+        ▼
+RideSearchingPage reads rideId from URL, restores state, continues realtime flow
+```
 
 ---
 
@@ -39,287 +52,266 @@ Since most infrastructure exists, focus on creating dedicated pages that consoli
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/admin/rides/RidesHubPage.tsx` | Create | Full ride management page with table, filters, detail drawer |
-| `src/pages/admin/rides/RideDetailDrawer.tsx` | Create | Slide-over drawer for ride details and actions |
-| `src/pages/admin/drivers/DriversHubPage.tsx` | Create | Driver list with earnings summary |
-| `src/pages/admin/payouts/PayoutsHubPage.tsx` | Create | Payout management with balance calc |
-| `src/pages/admin/SetupPage.tsx` | Create | Environment variables and SQL reference |
-| `src/hooks/useRideManagement.ts` | Create | Hook for ride CRUD operations with realtime |
-| `src/hooks/useDriverPayouts.ts` | Create | Hook for driver payout calculations |
-| `src/App.tsx` | Modify | Add new admin routes |
-| `src/components/admin/MissionControlSidebar.tsx` | Modify | Add Rides section if not present |
+| `.env` | Modify | Add VITE_PAYMENTS_APP_URL |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Redirect to payments app after ride creation |
+| `src/pages/ride/RideSearchingPage.tsx` | Modify | Accept rideId from URL params and restore state |
+| `src/stores/rideStore.tsx` | Modify | Add method to restore state from tripId |
+| `src/lib/supabaseRide.ts` | Modify | Add function to fetch trip details by ID |
 
 ---
 
 ## Technical Details
 
-### 1. RidesHubPage (`/admin/rides`)
+### 1. Environment Variable
 
-Features:
-- Table showing all rides with sortable columns
-- Filters: status (all, requested, accepted, in_progress, completed, cancelled), date range, ride_type
-- Search by pickup/dropoff address
-- Detail drawer on row click
-- Actions: assign driver, cancel ride, mark completed
-- Realtime updates via Supabase subscriptions
+Add to `.env`:
 
-```typescript
-// Key state and filtering
-const [statusFilter, setStatusFilter] = useState<string>("all");
-const [dateRange, setDateRange] = useState<DateRange>({ from: null, to: null });
-const [selectedRide, setSelectedRide] = useState<Trip | null>(null);
-
-// Realtime subscription
-useEffect(() => {
-  const channel = supabase
-    .channel("admin-rides")
-    .on("postgres_changes", { event: "*", schema: "public", table: "trips" }, 
-      () => refetch()
-    )
-    .subscribe();
-  return () => supabase.removeChannel(channel);
-}, []);
+```env
+VITE_PAYMENTS_APP_URL="https://payments.zivo.com"
 ```
 
-### 2. RideDetailDrawer
+### 2. RideConfirmPage Changes
 
-Slide-over component with:
-- Ride info (pickup, dropoff, fare, status)
-- Driver assignment dropdown (list of online drivers)
-- Action buttons: Cancel, Mark Completed, Assign Driver
-- Trip timeline (created → accepted → started → completed)
+Update `handleConfirm` to redirect instead of navigate:
 
 ```typescript
-interface RideDetailDrawerProps {
-  ride: Trip | null;
-  open: boolean;
-  onClose: () => void;
-  onUpdate: (tripId: string, updates: Partial<Trip>) => Promise<void>;
-}
+// Add at top of file
+const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
 
-// Assign driver action
-const handleAssignDriver = async (driverId: string) => {
-  await supabase
-    .from("trips")
-    .update({ driver_id: driverId, status: "accepted" })
-    .eq("id", ride.id);
-  toast.success("Driver assigned");
+// In handleConfirm, after successful ride creation:
+const handleConfirm = async () => {
+  // ... existing availability check code ...
+  
+  setIsSubmitting(true);
+
+  try {
+    // Increment promo code usage if applied
+    if (promoCode) {
+      await incrementPromoCodeUse(promoCode.id);
+    }
+
+    // Create ride in the central store first
+    createRide({
+      pickup,
+      destination,
+      rideType: ride.id,
+      rideName: ride.name,
+      rideImage: ride.image,
+      price: finalPrice,
+      distance: tripDetails?.distance || 0,
+      duration: tripDetails?.duration || 0,
+      paymentMethod: selectedPayment,
+      pickupCoords,
+      dropoffCoords,
+      routeCoordinates,
+    });
+
+    // Create ride in database
+    const result = await createRideInDb(/* existing params */);
+
+    if (result.tripId) {
+      setTripId(result.tripId);
+      
+      // Check if payments app URL is configured
+      if (PAYMENTS_APP_URL) {
+        // Redirect to external payments app
+        const returnUrl = `${window.location.origin}/ride/searching?rideId=${result.tripId}`;
+        const handoffUrl = `${PAYMENTS_APP_URL}/handoff?rideId=${result.tripId}&returnUrl=${encodeURIComponent(returnUrl)}`;
+        
+        // Store minimal state for restoration after redirect
+        localStorage.setItem('zivo_pending_ride', JSON.stringify({
+          tripId: result.tripId,
+          rideName: ride.name,
+          price: finalPrice,
+          pickup,
+          destination,
+        }));
+        
+        window.location.href = handoffUrl;
+        return;
+      }
+      
+      // Fallback: navigate directly (for testing without payments app)
+      navigate("/ride/searching");
+    } else if (result.error) {
+      // ... existing error handling ...
+    }
+  } catch (err) {
+    // ... existing error handling ...
+  }
 };
 ```
 
-### 3. DriversHubPage (`/admin/drivers`)
+### 3. RideSearchingPage Changes
 
-Features:
-- Table with all drivers
-- Online status indicator with last update time
-- Link to existing detail page (`/admin/drivers/:id`)
-- Summary stats: total earnings, platform commission, pending payout
+Handle `rideId` query parameter for return from payments app:
 
 ```typescript
-// Fetch drivers with stats
-const { data: drivers } = useQuery({
-  queryKey: ["admin-drivers-list"],
-  queryFn: async () => {
-    const { data } = await supabase
-      .from("drivers")
-      .select("id, full_name, phone, is_online, updated_at, rating, total_trips, vehicle_model, vehicle_plate")
-      .order("updated_at", { ascending: false });
-    return data;
-  },
-});
-```
+import { useSearchParams } from "react-router-dom";
+import { fetchTripById } from "@/lib/supabaseRide";
 
-### 4. PayoutsHubPage (`/admin/payouts`)
-
-Features:
-- List all payouts with status filter
-- Create new payout for a driver
-- Mark payout as paid/failed
-- Balance calculation: (85% of completed rides) - (sum of paid payouts)
-
-```typescript
-// Balance calculation query
-const calculateDriverBalance = async (driverId: string) => {
-  // Get total earnings from completed rides (85% driver share)
-  const { data: trips } = await supabase
-    .from("trips")
-    .select("fare_amount")
-    .eq("driver_id", driverId)
-    .eq("status", "completed")
-    .eq("payment_status", "paid");
+const RideSearchingPage = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { state, setTripId, createRide } = useRideStore();
+  const [isRestoring, setIsRestoring] = useState(false);
   
-  const totalEarnings = trips?.reduce((sum, t) => sum + (t.fare_amount || 0), 0) || 0;
-  const driverShare = totalEarnings * 0.85;
-  
-  // Get paid payouts
-  const { data: payouts } = await supabase
-    .from("payouts")
-    .select("amount")
-    .eq("driver_id", driverId)
-    .eq("status", "paid");
-  
-  const totalPaid = payouts?.reduce((sum, p) => sum + p.amount, 0) || 0;
-  
-  return {
-    totalEarnings,
-    driverShare,
-    totalPaid,
-    balance: driverShare - totalPaid,
-  };
-};
-```
+  // ... existing state ...
 
-### 5. SetupPage (`/admin/setup`)
-
-Features:
-- Display required environment variables
-- Check if Supabase is connected
-- Show SQL for payouts table (for reference)
-
-```typescript
-const ENV_VARS = [
-  { key: "VITE_SUPABASE_URL", description: "Supabase project URL" },
-  { key: "VITE_SUPABASE_ANON_KEY", description: "Supabase anonymous key" },
-];
-
-// Check connection
-const checkConnection = async () => {
-  const { error } = await supabase.from("drivers").select("id").limit(1);
-  return !error;
-};
-```
-
-### 6. Route Updates in App.tsx
-
-```typescript
-// New imports
-const RidesHubPage = lazy(() => import("./pages/admin/rides/RidesHubPage"));
-const DriversHubPage = lazy(() => import("./pages/admin/drivers/DriversHubPage"));
-const PayoutsHubPage = lazy(() => import("./pages/admin/payouts/PayoutsHubPage"));
-const SetupPage = lazy(() => import("./pages/admin/SetupPage"));
-
-// Routes to add
-<Route path="/admin/rides" element={<ProtectedRoute requireAdmin><RidesHubPage /></ProtectedRoute>} />
-<Route path="/admin/drivers" element={<ProtectedRoute requireAdmin><DriversHubPage /></ProtectedRoute>} />
-<Route path="/admin/payouts" element={<ProtectedRoute requireAdmin><PayoutsHubPage /></ProtectedRoute>} />
-<Route path="/admin/setup" element={<ProtectedRoute requireAdmin><SetupPage /></ProtectedRoute>} />
-```
-
----
-
-## Admin Email Authorization
-
-The existing system uses `useAdminRole` hook which checks the `user_roles` table. The request mentions an `ADMIN_EMAILS` constant - this can be added as an additional check:
-
-```typescript
-// src/config/adminConfig.ts
-export const ADMIN_EMAILS = [
-  "admin@zivo.com",
-  "ops@zivo.com",
-  // Add authorized admin emails here
-];
-
-// Enhanced check in AdminProtectedRoute or AdminLogin
-const isAuthorizedAdmin = ADMIN_EMAILS.includes(user.email || "") || hasAnyAdminRole;
-```
-
----
-
-## Dashboard KPI Enhancements
-
-Update the existing dashboard with:
-- Rides today (existing)
-- Active rides (existing)
-- Completed rides (7 days) - NEW
-- Online drivers (existing)
-- Gross revenue (7 days) - NEW
-- Platform commission (15%) - ENHANCED
-- Driver earnings (85%) - NEW
-
-```typescript
-// Enhanced stats hook
-const { data: weeklyStats } = useQuery({
-  queryKey: ["admin-weekly-stats"],
-  queryFn: async () => {
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
+  // Restore state from URL param (returning from payments app)
+  useEffect(() => {
+    const rideIdFromUrl = searchParams.get("rideId");
     
-    const { data: trips } = await supabase
+    if (rideIdFromUrl && (!state.tripId || state.tripId !== rideIdFromUrl)) {
+      setIsRestoring(true);
+      
+      // Try to restore from localStorage first (faster)
+      const pendingRide = localStorage.getItem('zivo_pending_ride');
+      if (pendingRide) {
+        try {
+          const parsed = JSON.parse(pendingRide);
+          if (parsed.tripId === rideIdFromUrl) {
+            // Restore state from localStorage
+            createRide({
+              pickup: parsed.pickup,
+              destination: parsed.destination,
+              rideType: parsed.rideType || 'standard',
+              rideName: parsed.rideName,
+              rideImage: parsed.rideImage || '',
+              price: parsed.price,
+              distance: parsed.distance || 0,
+              duration: parsed.duration || 0,
+              paymentMethod: parsed.paymentMethod || 'card',
+            });
+            setTripId(rideIdFromUrl);
+            localStorage.removeItem('zivo_pending_ride');
+            setIsRestoring(false);
+            return;
+          }
+        } catch (e) {
+          console.warn("[RideSearching] Failed to parse pending ride:", e);
+        }
+      }
+      
+      // Fallback: fetch from database
+      fetchTripById(rideIdFromUrl).then((trip) => {
+        if (trip) {
+          createRide({
+            pickup: trip.pickup_address,
+            destination: trip.dropoff_address,
+            rideType: trip.ride_type || 'standard',
+            rideName: trip.ride_type || 'Standard',
+            rideImage: '',
+            price: trip.fare_amount || 0,
+            distance: (trip.distance_km || 0) / 1.60934,
+            duration: trip.duration_minutes || 0,
+            paymentMethod: 'card',
+          });
+          setTripId(rideIdFromUrl);
+        } else {
+          toast.error("Could not find ride details");
+          navigate("/ride");
+        }
+        setIsRestoring(false);
+      });
+    }
+  }, [searchParams, state.tripId]);
+
+  // ... rest of component ...
+  
+  // Show loading while restoring
+  if (isRestoring) {
+    return (
+      <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-white/60">Resuming your ride...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // ... existing render ...
+};
+```
+
+### 4. New Function in supabaseRide.ts
+
+Add function to fetch trip by ID:
+
+```typescript
+// Fetch a trip by ID (for restoring state after redirect)
+export const fetchTripById = async (tripId: string) => {
+  try {
+    const { data, error } = await supabase
       .from("trips")
-      .select("fare_amount, status, payment_status")
-      .gte("created_at", weekAgo.toISOString())
-      .eq("status", "completed");
-    
-    const grossRevenue = trips?.reduce((sum, t) => sum + (t.fare_amount || 0), 0) || 0;
-    
-    return {
-      completedLast7Days: trips?.length || 0,
-      grossRevenue,
-      platformCommission: grossRevenue * 0.15,
-      driverEarnings: grossRevenue * 0.85,
-    };
-  },
-});
+      .select("*")
+      .eq("id", tripId)
+      .single();
+
+    if (error) {
+      console.error("[fetchTripById] Error:", error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("[fetchTripById] Exception:", err);
+    return null;
+  }
+};
 ```
 
 ---
 
-## UI Components Used
+## localStorage Keys Used
 
-All from existing shadcn/ui library:
-- `Card`, `CardContent`, `CardHeader`, `CardTitle`
-- `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`
-- `Badge`, `Button`, `Input`, `Label`
-- `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`
-- `Sheet`, `SheetContent`, `SheetHeader`, `SheetTitle` (for drawer)
-- `Skeleton` for loading states
-- `toast` from sonner for notifications
+| Key | Purpose |
+|-----|---------|
+| `zivo_pending_ride` | Temporarily stores ride details during redirect to payments app |
+| `zivo_ride_store` | Existing - full ride state persistence |
 
 ---
 
-## Database Notes
+## Edge Cases
 
-The `payouts` table already exists with this schema:
-- `id` (uuid, PK)
-- `driver_id` (uuid, FK to drivers)
-- `restaurant_id` (uuid, optional)
-- `amount` (numeric)
-- `currency` (text, default 'USD')
-- `status` (text, default 'pending')
-- `payout_method` (text)
-- `reference_id` (text)
-- `notes` (text)
-- `processed_by` (uuid)
-- `processed_at` (timestamptz)
-- `created_at`, `updated_at`
-
-No database migration needed - table already exists.
+| Scenario | Handling |
+|----------|----------|
+| User cancels on payments page | Payments app redirects with error param; show message |
+| Payments app URL not configured | Falls back to existing direct navigation flow |
+| localStorage cleared during redirect | Fetches trip from database as fallback |
+| User refreshes searching page | tripId in URL allows state restoration |
+| Payment already completed | Normal realtime flow continues; driver may already be assigned |
 
 ---
 
-## Responsive Design
+## Security Considerations
 
-All pages will be responsive (desktop + mobile):
-- Desktop: Full table view with sidebar
-- Mobile: Card-based view with collapsible filters
-- Use existing Tailwind responsive classes (`md:`, `lg:`)
-
----
-
-## Empty and Loading States
-
-Each page includes:
-- Loading skeleton while data fetches
-- Empty state with icon and message when no data
-- Error boundary with retry button
+- The `rideId` in URL is a UUID (not guessable)
+- State restoration validates trip exists in database
+- Payments app should verify the ride belongs to the authenticated user
+- `returnUrl` is included so payments app knows where to redirect back
 
 ---
 
 ## No Changes To
 
-- Authentication system (uses existing)
-- Database schema (payouts table exists)
-- Supabase client configuration (uses existing)
-- Existing driver detail page (linked from new pages)
-- Existing commission settings (linked from dashboard)
+- Database schema (no new tables or columns)
+- Auto-dispatch logic (still triggers after ride creation)
+- Realtime subscription logic
+- Driver assignment flow
+- UI design (only behavior change)
+
+---
+
+## Testing Notes
+
+To test without the payments app configured:
+1. Leave `VITE_PAYMENTS_APP_URL` empty or unset
+2. Flow will work as before (direct navigation to searching page)
+
+To simulate payments redirect:
+1. Set `VITE_PAYMENTS_APP_URL` to a test URL
+2. Complete ride creation
+3. Manually navigate to `/ride/searching?rideId={tripId}` to test restoration
 
