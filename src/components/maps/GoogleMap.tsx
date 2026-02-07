@@ -36,6 +36,7 @@ export interface GoogleMapProps {
   route?: MapRoute;
   showControls?: boolean;
   darkMode?: boolean;
+  mapId?: string;
   onMapClick?: (position: { lat: number; lng: number }) => void;
   onMarkerClick?: (markerId: string) => void;
   fitBounds?: boolean;
@@ -78,6 +79,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   route,
   showControls = true,
   darkMode = true,
+  mapId,
   onMapClick,
   onMarkerClick,
   fitBounds = true,
@@ -109,16 +111,20 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
   useEffect(() => {
     if (!isLoaded || !mapRef.current || mapInstanceRef.current || !window.google) return;
 
+    const resolvedMapId = mapId || import.meta.env.VITE_GOOGLE_MAP_ID;
+    
     mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
       center,
       zoom,
-      styles: darkMode ? darkMapStyles : undefined,
+      mapId: resolvedMapId || undefined,
+      styles: resolvedMapId ? undefined : (darkMode ? darkMapStyles : undefined),
       disableDefaultUI: !showControls,
       zoomControl: showControls,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
       gestureHandling: "greedy",
+      clickableIcons: false,
     });
 
     if (onMapClick) {
