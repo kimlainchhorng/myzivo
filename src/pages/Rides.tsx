@@ -323,15 +323,32 @@ export default function Rides() {
      setStep("confirm");
    };
  
+   // State for manual checkout URL fallback
+   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+
    const handlePayment = async () => {
      if (!contactInfo.name || !contactInfo.phone || !selectedOption) return;
+     
+     // Pre-open popup tab synchronously (beats popup blockers)
+     console.log("[Rides] Pre-opening popup tab...");
+     const popup = window.open("about:blank", "_blank");
+     
      setStep("processing");
      setIsSubmitting(true);
+     setCheckoutUrl(null);
+     
      try {
        const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0);
        console.log("[Rides] Starting checkout...", { estimatedFare, selectedOption: selectedOption.id });
+       console.log("[Rides] Invoking edge function create-ride-checkout...");
        
-       const { data, error } = await supabase.functions.invoke("create-ride-checkout", {
+       // Create a timeout promise (15 seconds)
+       const timeoutPromise = new Promise<never>((_, reject) => {
+         setTimeout(() => reject(new Error("Request timed out")), 15000);
+       });
+       
+       // Race between the actual request and the timeout
+       const invokePromise = supabase.functions.invoke("create-ride-checkout", {
          body: {
            customer_name: contactInfo.name,
            customer_phone: contactInfo.phone,
@@ -346,29 +363,54 @@ export default function Rides() {
          },
        });
        
+       const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
+       
        console.log("[Rides] Checkout response:", { data, error });
        
        if (error) throw error;
        if (!data?.url) throw new Error("No checkout URL returned");
        
        console.log("[Rides] Redirecting to:", data.url);
+       setCheckoutUrl(data.url);
        
-       // Try redirect - if it fails after 3 seconds, fall back to new tab
-       window.location.href = data.url;
-       
-       setTimeout(() => {
-         // If still on this page after 3 seconds, try new tab
-         if (document.visibilityState === 'visible') {
-           console.log("[Rides] Redirect may have failed, trying new tab");
-           window.open(data.url, '_blank');
-         }
-       }, 3000);
+       // Navigate using the pre-opened popup or fallback to same-tab
+       if (popup && !popup.closed) {
+         console.log("[Rides] Navigating popup to checkout URL");
+         popup.location.href = data.url;
+       } else {
+         console.log("[Rides] Popup blocked or closed, using same-tab navigation");
+         window.location.assign(data.url);
+       }
        
      } catch (error) {
+       // Close popup if it was opened but we errored
+       if (popup && !popup.closed) {
+         popup.close();
+       }
+       
        console.error("[Rides] Payment error:", error);
-       toast.error("Failed to start payment. Please try again.");
+       const errorMessage = error instanceof Error ? error.message : "Unknown error";
+       
+       if (errorMessage === "Request timed out") {
+         toast.error("Payment setup is taking too long. Please disable ad blockers and try again.");
+       } else {
+         toast.error("Failed to start payment. Please try again.");
+       }
+       
        setStep("confirm");
        setIsSubmitting(false);
+     }
+   };
+   
+   const handleCancelProcessing = () => {
+     setStep("confirm");
+     setIsSubmitting(false);
+     setCheckoutUrl(null);
+   };
+   
+   const handleOpenCheckoutManually = () => {
+     if (checkoutUrl) {
+       window.location.assign(checkoutUrl);
      }
    };
  
@@ -806,6 +848,31 @@ export default function Rides() {
                 <h2 className="font-display text-xl md:text-2xl font-bold mb-2">Redirecting to Payment...</h2>
                 <p className="text-zinc-400">Please wait while we set up your secure checkout.</p>
                </div>
+               
+               {/* Help text for ad blockers */}
+               <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                 If you use an ad blocker, please allow <span className="text-zinc-400">supabase.co</span> and <span className="text-zinc-400">stripe.com</span>.
+               </p>
+               
+               {/* Manual checkout button if URL was received */}
+               {checkoutUrl && (
+                 <Button 
+                   onClick={handleOpenCheckoutManually}
+                   className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 px-6 gap-2"
+                 >
+                   <CreditCard className="w-4 h-4" />
+                   Open Secure Checkout
+                 </Button>
+               )}
+               
+               {/* Cancel button */}
+               <Button 
+                 variant="ghost" 
+                 onClick={handleCancelProcessing}
+                 className="text-zinc-400 hover:text-white hover:bg-white/10"
+               >
+                 ← Cancel and go back
+               </Button>
              </div>
            )}
  
