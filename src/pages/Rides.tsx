@@ -46,62 +46,95 @@ interface RideOption {
   seats?: number;
   subtitle?: string;
   eta?: number;
+  pill?: { icon: string; label: string };
+}
+
+// CSS-based Car Icon component (Uber-style)
+function CarIcon({ selected }: { selected?: boolean }) {
+  return (
+    <div className="relative flex h-12 w-12 items-center justify-center">
+      {/* Car body - rounded shape */}
+      <div className={`h-8 w-10 rounded-full border ${
+        selected ? "border-primary bg-zinc-800" : "border-zinc-600 bg-zinc-900"
+      }`} />
+      {/* Wheels */}
+      <div className="absolute -left-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
+      <div className="absolute -right-0.5 -bottom-1 h-3 w-3 rounded-full border border-zinc-500 bg-zinc-800" />
+      {/* Selected indicator dot */}
+      {selected && (
+        <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary ring-2 ring-zinc-900" />
+      )}
+    </div>
+  );
+}
+
+// Pill badge component for ride features
+function RidePill({ icon, label }: { icon: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-300">
+      <span aria-hidden>{icon}</span>
+      {label}
+    </span>
+  );
 }
 
 type CategoryKey = "Economy" | "Premium" | "Elite";
  
  // Premium categorized vehicle options with clean car images
  const rideCategories: Record<CategoryKey, RideOption[]> = {
-   Economy: [
-     {
-       id: "wait_save",
-       name: "Wait & Save",
-       desc: "Lowest price, longer wait.",
-       price: "$18.50",
-       time: "15 min",
-       eta: 15,
-       icon: Clock,
-       image: "https://img.icons8.com/isometric/200/car.png",
-       multiplier: 0.75,
-       seats: 4
-     },
-     {
-       id: "standard",
-       name: "Standard",
-       desc: "Reliable everyday rides.",
-       price: "$24.50",
-       time: "4 min",
-       eta: 4,
-       icon: Navigation,
-       image: "https://img.icons8.com/isometric/200/sedan.png",
-       multiplier: 1.0,
-       seats: 4
-     },
-     {
-       id: "green",
-       name: "Green",
-       desc: "EVs & Hybrids.",
-       price: "$25.00",
-       time: "6 min",
-       eta: 6,
-       icon: Leaf,
-       image: "https://img.icons8.com/isometric/200/electric-car.png",
-       multiplier: 1.02,
-       seats: 4
-     },
-     {
-       id: "priority",
-       name: "Priority",
-       desc: "Faster pickup.",
-       price: "$32.00",
-       time: "1 min",
-       eta: 1,
-       icon: Zap,
-       image: "https://img.icons8.com/isometric/200/sedan.png",
-       multiplier: 1.3,
-       seats: 4
-     }
-   ],
+  Economy: [
+    {
+      id: "wait_save",
+      name: "Wait & Save",
+      desc: "Lowest price, longer wait.",
+      price: "$18.50",
+      time: "15 min",
+      eta: 15,
+      icon: Clock,
+      image: "https://img.icons8.com/isometric/200/car.png",
+      multiplier: 0.75,
+      seats: 4,
+      pill: { icon: "⏱️", label: "Wait & Save" }
+    },
+    {
+      id: "standard",
+      name: "Standard",
+      desc: "Reliable everyday rides.",
+      price: "$24.50",
+      time: "4 min",
+      eta: 4,
+      icon: Navigation,
+      image: "https://img.icons8.com/isometric/200/sedan.png",
+      multiplier: 1.0,
+      seats: 4
+    },
+    {
+      id: "green",
+      name: "Green",
+      desc: "EVs & Hybrids.",
+      price: "$25.00",
+      time: "6 min",
+      eta: 6,
+      icon: Leaf,
+      image: "https://img.icons8.com/isometric/200/electric-car.png",
+      multiplier: 1.02,
+      seats: 4,
+      pill: { icon: "🌿", label: "Eco" }
+    },
+    {
+      id: "priority",
+      name: "Priority",
+      desc: "Faster pickup.",
+      price: "$32.00",
+      time: "1 min",
+      eta: 1,
+      icon: Zap,
+      image: "https://img.icons8.com/isometric/200/sedan.png",
+      multiplier: 1.3,
+      seats: 4,
+      pill: { icon: "⚡", label: "Priority" }
+    }
+  ],
    Premium: [
      {
        id: "comfort",
@@ -694,12 +727,18 @@ export default function Rides() {
                              ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
                              : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                          }`}
-                       >
-                          {/* Left - Car Emoji */}
-                          <div className="text-3xl md:text-4xl mr-1">🚗</div>
+                        >
+                          {/* Left - Car Icon */}
+                          <CarIcon selected={selectedOption?.id === ride.id} />
 
                          {/* Middle - Info section */}
                          <div className="flex-1 min-w-0 text-left">
+                           {/* Optional pill badge */}
+                           {ride.pill && (
+                             <div className="mb-1">
+                               <RidePill icon={ride.pill.icon} label={ride.pill.label} />
+                             </div>
+                           )}
                            <div className="flex items-center gap-1.5 mb-0.5">
                              <h3 className="text-sm md:text-base font-bold text-white">{ride.name}</h3>
                              <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
@@ -786,12 +825,18 @@ export default function Rides() {
                        ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
                        : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                    }`}
-                 >
-                    {/* Left - Car Emoji */}
-                    <div className="text-3xl md:text-4xl mr-1">🚗</div>
+                  >
+                    {/* Left - Car Icon */}
+                    <CarIcon selected={selectedOption?.id === option.id} />
                    
                    {/* Info section */}
                    <div className="flex-1 min-w-0 text-left">
+                     {/* Optional pill badge */}
+                     {option.pill && (
+                       <div className="mb-1">
+                         <RidePill icon={option.pill.icon} label={option.pill.label} />
+                       </div>
+                     )}
                      <div className="flex items-center gap-1.5">
                        <h3 className="font-bold text-sm md:text-base text-white">{option.name}</h3>
                        <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
@@ -820,8 +865,13 @@ export default function Rides() {
              <Button variant="ghost" onClick={() => setStep("options")} className="gap-2 mb-2 text-white hover:bg-white/10 h-12 touch-manipulation">← Back</Button>
              <div className="rides-glass-panel p-4 md:p-5 rounded-xl md:rounded-2xl border-primary/20">
                <div className="flex items-center gap-3 md:gap-4">
-                  <div className="text-4xl md:text-5xl">🚗</div>
+                  <CarIcon selected />
                    <div className="flex-1">
+                    {selectedOption.pill && (
+                      <div className="mb-1">
+                        <RidePill icon={selectedOption.pill.icon} label={selectedOption.pill.label} />
+                      </div>
+                    )}
                     <h3 className="font-bold text-base md:text-lg">{selectedOption.name}</h3>
                    <p className="text-xs md:text-sm text-zinc-400 truncate">{pickup} → {dropoff}</p>
                    </div>
