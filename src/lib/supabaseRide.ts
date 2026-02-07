@@ -422,3 +422,24 @@ export const cancelRideInDb = async (
     return { success: false, error: categorizeError(err), attempts: 1 };
   }
 };
+
+// Fetch a trip by ID (for restoring state after redirect from payments app)
+export const fetchTripById = async (tripId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("trips")
+      .select("*")
+      .eq("id", tripId)
+      .single();
+
+    if (error) {
+      console.error("[fetchTripById] Error:", error);
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.error("[fetchTripById] Exception:", err);
+    return null;
+  }
+};

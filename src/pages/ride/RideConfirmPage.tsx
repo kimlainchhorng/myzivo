@@ -15,6 +15,9 @@ import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
 import { usePromoCode } from "@/hooks/usePromoCode";
 import { incrementPromoCodeUse } from "@/lib/promoCodeService";
 
+// Payments app URL for checkout redirect
+const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
+
 interface LocationState {
   ride: RideOption;
   pickup: string;
@@ -155,9 +158,35 @@ const RideConfirmPage = () => {
       );
 
       if (result.tripId) {
-        // Success - store tripId and navigate
+        // Success - store tripId
         setTripId(result.tripId);
         console.log("[RideConfirm] Trip created in database:", result.tripId, "attempts:", result.attempts);
+        
+        // Check if payments app URL is configured
+        if (PAYMENTS_APP_URL) {
+          // Redirect to external payments app for checkout
+          const returnUrl = `${window.location.origin}/ride/searching?rideId=${result.tripId}`;
+          const handoffUrl = `${PAYMENTS_APP_URL}/handoff?rideId=${result.tripId}&returnUrl=${encodeURIComponent(returnUrl)}`;
+          
+          // Store minimal state for restoration after redirect
+          localStorage.setItem('zivo_pending_ride', JSON.stringify({
+            tripId: result.tripId,
+            rideType: ride.id,
+            rideName: ride.name,
+            rideImage: ride.image,
+            price: finalPrice,
+            pickup,
+            destination,
+            distance: tripDetails?.distance || 0,
+            duration: tripDetails?.duration || 0,
+            paymentMethod: selectedPayment,
+          }));
+          
+          window.location.href = handoffUrl;
+          return;
+        }
+        
+        // Fallback: navigate directly (for testing without payments app)
         navigate("/ride/searching");
       } else if (result.error) {
         // Failed after retries - show error UI
