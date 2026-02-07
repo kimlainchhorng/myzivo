@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navigation, Clock } from "lucide-react";
@@ -10,13 +10,18 @@ import TripMapView from "@/components/ride/TripMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { updateRideStatusInDb } from "@/lib/supabaseRide";
+import { haversineMiles } from "@/services/mapsApi";
 import { toast } from "sonner";
 
 // Default coordinates for Baton Rouge
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
 const DEFAULT_DESTINATION = { lat: 30.4315, lng: -91.1671 };
+
+// 100 meters = 0.0621 miles
+const ARRIVAL_THRESHOLD_MILES = 0.0621;
 
 const RideTripPage = () => {
   const navigate = useNavigate();
@@ -24,6 +29,8 @@ const RideTripPage = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [tripProgress, setTripProgress] = useState(0);
   const [isEndingTrip, setIsEndingTrip] = useState(false);
+  const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
+  const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Subscribe to realtime updates
   const { isDemoMode } = useRideRealtime({
@@ -43,13 +50,81 @@ const RideTripPage = () => {
   const routeCoordinates = state.routeCoordinates || [];
   const tripDuration = state.duration || 8;
 
-  // Calculate car position based on progress
-  const carPosition = routeCoordinates.length > 0
-    ? interpolateRoutePosition(routeCoordinates, tripProgress)
-    : {
-        lat: pickupLocation.lat + (destinationLocation.lat - pickupLocation.lat) * tripProgress,
-        lng: pickupLocation.lng + (destinationLocation.lng - pickupLocation.lng) * tripProgress,
-      };
+  // Ref to track auto-complete to prevent duplicate calls
+  const autoCompleteTriggeredRef = useRef(false);
+
+  // Handle end trip - wrapped in useCallback for dependency tracking
+  const handleEndTrip = useCallback(async () => {
+    if (isEndingTrip || autoCompleteTriggeredRef.current) return;
+    setIsEndingTrip(true);
+    autoCompleteTriggeredRef.current = true;
+    
+    if (state.tripId) {
+      const result = await updateRideStatusInDb(state.tripId, "completed");
+      
+      if (!result.success && result.error) {
+        setIsEndingTrip(false);
+        autoCompleteTriggeredRef.current = false;
+        toast.error("Failed to complete trip", {
+          description: result.error.userMessage,
+        });
+        return;
+      }
+    }
+    
+    completeRide();
+    setShowReceipt(true);
+  }, [isEndingTrip, state.tripId, completeRide]);
+
+  // Driver location update handler - calculates real progress
+  const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
+    setDriverLocation({ lat, lng });
+    
+    // Calculate total trip distance
+    const totalDistance = haversineMiles(
+      pickupLocation.lat, pickupLocation.lng,
+      destinationLocation.lat, destinationLocation.lng
+    );
+    
+    // Prevent division by zero
+    if (totalDistance <= 0) {
+      setTripProgress(0);
+      return;
+    }
+    
+    // Calculate remaining distance to destination
+    const remainingDistance = haversineMiles(
+      lat, lng,
+      destinationLocation.lat, destinationLocation.lng
+    );
+    
+    // Calculate progress (0 to 1)
+    const newProgress = Math.max(0, Math.min(1, 1 - (remainingDistance / totalDistance)));
+    setTripProgress(newProgress);
+    
+    // Auto-complete check - driver within 100m of destination
+    if (remainingDistance <= ARRIVAL_THRESHOLD_MILES && !hasAutoCompleted && !autoCompleteTriggeredRef.current) {
+      setHasAutoCompleted(true);
+      toast.success("You've arrived at your destination!");
+      handleEndTrip();
+    }
+  }, [pickupLocation, destinationLocation, hasAutoCompleted, handleEndTrip]);
+
+  // Subscribe to driver location updates (only if not demo mode and driver ID exists)
+  useDriverLocationRealtime(
+    isDemoMode ? undefined : state.driver?.id,
+    handleDriverLocationUpdate
+  );
+
+  // Calculate car position based on progress (use driver location if available, otherwise interpolate)
+  const carPosition = driverLocation
+    ? driverLocation
+    : routeCoordinates.length > 0
+      ? interpolateRoutePosition(routeCoordinates, tripProgress)
+      : {
+          lat: pickupLocation.lat + (destinationLocation.lat - pickupLocation.lat) * tripProgress,
+          lng: pickupLocation.lng + (destinationLocation.lng - pickupLocation.lng) * tripProgress,
+        };
 
   // Elapsed time counting up
   const [elapsed, setElapsed] = useState(state.tripElapsed || 0);
@@ -70,13 +145,15 @@ const RideTripPage = () => {
     return () => clearInterval(interval);
   }, [state.status, updateElapsed]);
 
-  // Animate trip progress based on elapsed time
+  // Fallback: Animate trip progress based on elapsed time (demo mode or no driver tracking)
   useEffect(() => {
-    // Simulate trip taking ~2 minutes (120 seconds)
-    const simulatedDuration = 120;
-    const newProgress = Math.min(1, elapsed / simulatedDuration);
-    setTripProgress(newProgress);
-  }, [elapsed]);
+    if (isDemoMode || !state.driver?.id) {
+      // Simulate trip taking ~2 minutes (120 seconds)
+      const simulatedDuration = 120;
+      const newProgress = Math.min(1, elapsed / simulatedDuration);
+      setTripProgress(newProgress);
+    }
+  }, [isDemoMode, state.driver?.id, elapsed]);
 
   // Format elapsed time
   const formatTime = (seconds: number) => {
@@ -89,25 +166,7 @@ const RideTripPage = () => {
   const etaMinutes = Math.max(0, Math.ceil(tripDuration * (1 - tripProgress)));
   const isArrived = tripProgress >= 1;
 
-  const handleEndTrip = async () => {
-    if (isEndingTrip) return;
-    setIsEndingTrip(true);
-    
-    if (state.tripId) {
-      const result = await updateRideStatusInDb(state.tripId, "completed");
-      
-      if (!result.success && result.error) {
-        setIsEndingTrip(false);
-        toast.error("Failed to complete trip", {
-          description: result.error.userMessage,
-        });
-        return;
-      }
-    }
-    
-    completeRide();
-    setShowReceipt(true);
-  };
+  // handleEndTrip is defined above via useCallback
 
   const handleReceiptDone = () => {
     setShowReceipt(false);
