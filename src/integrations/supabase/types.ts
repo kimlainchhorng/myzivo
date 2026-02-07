@@ -3698,6 +3698,9 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string
+          is_redeemed: boolean | null
+          order_id: string | null
+          redeemed_at: string | null
           reference_id: string | null
           type: string
           user_id: string
@@ -3708,6 +3711,9 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_redeemed?: boolean | null
+          order_id?: string | null
+          redeemed_at?: string | null
           reference_id?: string | null
           type: string
           user_id: string
@@ -3718,11 +3724,29 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string
+          is_redeemed?: boolean | null
+          order_id?: string | null
+          redeemed_at?: string | null
           reference_id?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customer_wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_wallet_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_wallets: {
         Row: {
@@ -7744,6 +7768,7 @@ export type Database = {
           cancelled_at: string | null
           cancelled_by: string | null
           created_at: string | null
+          credit_applied_cents: number | null
           customer_email: string | null
           customer_id: string
           customer_name: string | null
@@ -7850,6 +7875,7 @@ export type Database = {
           total_amount: number
           tracking_code: string | null
           updated_at: string | null
+          wallet_transaction_id: string | null
           zone_code: string | null
         }
         Insert: {
@@ -7867,6 +7893,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string | null
+          credit_applied_cents?: number | null
           customer_email?: string | null
           customer_id: string
           customer_name?: string | null
@@ -7973,6 +8000,7 @@ export type Database = {
           total_amount: number
           tracking_code?: string | null
           updated_at?: string | null
+          wallet_transaction_id?: string | null
           zone_code?: string | null
         }
         Update: {
@@ -7990,6 +8018,7 @@ export type Database = {
           cancelled_at?: string | null
           cancelled_by?: string | null
           created_at?: string | null
+          credit_applied_cents?: number | null
           customer_email?: string | null
           customer_id?: string
           customer_name?: string | null
@@ -8096,6 +8125,7 @@ export type Database = {
           total_amount?: number
           tracking_code?: string | null
           updated_at?: string | null
+          wallet_transaction_id?: string | null
           zone_code?: string | null
         }
         Relationships: [
@@ -14762,6 +14792,45 @@ export type Database = {
           test_name?: string
           test_results?: Json | null
           test_type?: string
+        }
+        Relationships: []
+      }
+      referral_settings: {
+        Row: {
+          credit_expiry_days: number | null
+          customer_referee_credit_cents: number | null
+          customer_referrer_credit_cents: number | null
+          driver_referee_credit_cents: number | null
+          driver_referrer_credit_cents: number | null
+          enabled: boolean | null
+          id: string
+          max_credit_apply_percent: number | null
+          min_order_total_cents: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          credit_expiry_days?: number | null
+          customer_referee_credit_cents?: number | null
+          customer_referrer_credit_cents?: number | null
+          driver_referee_credit_cents?: number | null
+          driver_referrer_credit_cents?: number | null
+          enabled?: boolean | null
+          id?: string
+          max_credit_apply_percent?: number | null
+          min_order_total_cents?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          credit_expiry_days?: number | null
+          customer_referee_credit_cents?: number | null
+          customer_referrer_credit_cents?: number | null
+          driver_referee_credit_cents?: number | null
+          driver_referrer_credit_cents?: number | null
+          enabled?: boolean | null
+          id?: string
+          max_credit_apply_percent?: number | null
+          min_order_total_cents?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -24993,6 +25062,10 @@ export type Database = {
         Returns: Json
       }
       aggregate_demand_snapshot: { Args: never; Returns: number }
+      apply_wallet_credit: {
+        Args: { p_amount_cents: number; p_order_id: string; p_user_id: string }
+        Returns: Json
+      }
       approve_performance_adjustment: {
         Args: { p_adjustment_id: string; p_approve: boolean; p_notes?: string }
         Returns: Json
@@ -25226,6 +25299,7 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_referral_settings: { Args: never; Returns: Json }
       get_restaurant_reviews: {
         Args: {
           p_limit?: number
