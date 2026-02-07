@@ -213,9 +213,30 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
     }
   }, [markers, mapReady, fitBounds, onMarkerClick]);
 
+  // Update center when prop changes
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return;
+    mapInstanceRef.current.panTo(center);
+  }, [center.lat, center.lng, mapReady]);
+
+  // Update zoom when prop changes
+  useEffect(() => {
+    if (!mapReady || !mapInstanceRef.current) return;
+    mapInstanceRef.current.setZoom(zoom);
+  }, [zoom, mapReady]);
+
   // Update route
   useEffect(() => {
-    if (!mapReady || !route || !mapInstanceRef.current || !window.google) return;
+    if (!mapReady || !mapInstanceRef.current || !window.google) return;
+
+    // If no route, clear the directions renderer
+    if (!route) {
+      if (directionsRendererRef.current) {
+        directionsRendererRef.current.setMap(null);
+        directionsRendererRef.current = null;
+      }
+      return;
+    }
 
     // Initialize directions renderer if needed
     if (!directionsRendererRef.current) {

@@ -1,11 +1,11 @@
 /**
  * useGoogleMapsGeocode Hook
  * 
- * Provides address autocomplete suggestions using Google Places API
+ * Provides address autocomplete suggestions using Google Places API via edge functions
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { getAddressSuggestions, hasGoogleMapsKey } from "@/services/googleMaps";
+import { getAutocompleteSuggestions } from "@/services/mapsApi";
 
 // Louisiana mock address suggestions as fallback
 const MOCK_SUGGESTIONS = [
@@ -25,7 +25,7 @@ export interface Suggestion {
   id: string;
   placeName: string;
   text: string;
-  coords?: { lat: number; lng: number };
+  placeId?: string;
 }
 
 interface UseGoogleMapsGeocodeReturn {
@@ -33,14 +33,12 @@ interface UseGoogleMapsGeocodeReturn {
   isLoading: boolean;
   fetchSuggestions: (query: string, proximity?: { lat: number; lng: number }) => void;
   clearSuggestions: () => void;
-  hasRealGeocode: boolean;
 }
 
 export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasToken = hasGoogleMapsKey();
 
   // Clean up debounce on unmount
   useEffect(() => {
@@ -60,36 +58,9 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
       clearTimeout(debounceRef.current);
     }
 
-    // If no token, use mock suggestions
-    if (!hasToken) {
-      if (!query.trim()) {
-        setSuggestions(
-          MOCK_SUGGESTIONS.slice(0, 6).map((s, i) => ({
-            id: `mock-${i}`,
-            placeName: s,
-            text: s.split(",")[0],
-          }))
-        );
-        return;
-      }
-      
-      const filtered = MOCK_SUGGESTIONS.filter((s) =>
-        s.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6);
-      
-      setSuggestions(
-        filtered.map((s, i) => ({
-          id: `mock-${i}`,
-          placeName: s,
-          text: s.split(",")[0],
-        }))
-      );
-      return;
-    }
-
     // Debounce API calls
     debounceRef.current = setTimeout(async () => {
-      if (!query.trim() || query.length < 3) {
+      if (!query.trim() || query.length < 2) {
         setSuggestions([]);
         return;
       }
@@ -97,18 +68,31 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
       setIsLoading(true);
 
       try {
-        const results = await getAddressSuggestions(query, proximity);
+        const results = await getAutocompleteSuggestions(query, proximity);
         
-        setSuggestions(
-          results.map((r) => ({
-            id: r.id,
-            placeName: r.placeName,
-            text: r.text,
-            coords: r.center[0] !== 0 
-              ? { lat: r.center[1], lng: r.center[0] } 
-              : undefined,
-          }))
-        );
+        if (results.length > 0) {
+          setSuggestions(
+            results.map((r) => ({
+              id: r.place_id,
+              placeName: r.description,
+              text: r.main_text,
+              placeId: r.place_id,
+            }))
+          );
+        } else {
+          // Fall back to mock suggestions if no results
+          const filtered = MOCK_SUGGESTIONS.filter((s) =>
+            s.toLowerCase().includes(query.toLowerCase())
+          ).slice(0, 6);
+          
+          setSuggestions(
+            filtered.map((s, i) => ({
+              id: `mock-${i}`,
+              placeName: s,
+              text: s.split(",")[0],
+            }))
+          );
+        }
       } catch (error) {
         console.error("Autocomplete error:", error);
         // Fall back to mock suggestions
@@ -127,7 +111,7 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
         setIsLoading(false);
       }
     }, 300); // 300ms debounce
-  }, [hasToken]);
+  }, []);
 
   const clearSuggestions = useCallback(() => {
     setSuggestions([]);
@@ -138,6 +122,5 @@ export function useGoogleMapsGeocode(): UseGoogleMapsGeocodeReturn {
     isLoading,
     fetchSuggestions,
     clearSuggestions,
-    hasRealGeocode: hasToken,
   };
 }

@@ -26,8 +26,9 @@ import { toast } from "sonner";
 import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
 
-import { useGoogleMapsRoute } from "@/hooks/useGoogleMapsRoute";
-import { useGoogleMapsGeocode } from "@/hooks/useGoogleMapsGeocode";
+import { useServerRoute } from "@/hooks/useServerRoute";
+import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
+import { getPlaceDetails } from "@/services/mapsApi";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
 
 type RideStep = "request" | "options" | "confirm" | "checkout" | "processing" | "success";
@@ -291,7 +292,7 @@ function RidesInner() {
   const [searchParams] = useSearchParams();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const isMobile = useIsMobile();
-  const { routeData, fetchRoute } = useGoogleMapsRoute();
+  const { routeData, fetchRoute, clearRoute } = useServerRoute();
   const { suggestions: pickupSuggestions, fetchSuggestions: fetchPickupSuggestions, clearSuggestions: clearPickupSuggestions } = useGoogleMapsGeocode();
   const { suggestions: dropoffSuggestions, fetchSuggestions: fetchDropoffSuggestions, clearSuggestions: clearDropoffSuggestions } = useGoogleMapsGeocode();
   
@@ -309,6 +310,8 @@ function RidesInner() {
   const [checkoutAmount, setCheckoutAmount] = useState<number>(0);
   const [showPickupSuggestions, setShowPickupSuggestions] = useState(false);
   const [showDropoffSuggestions, setShowDropoffSuggestions] = useState(false);
+  const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffCoords, setDropoffCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   // Bottom sheet state
   const y = useMotionValue(0);
@@ -318,22 +321,41 @@ function RidesInner() {
   const estimatedDistance = routeData?.distance || 5.2;
   const estimatedDuration = routeData?.duration || 15;
 
+  // Fetch route when both coordinates are available
   useEffect(() => {
-    if (pickup.trim() && dropoff.trim()) {
-      fetchRoute(pickup, dropoff);
+    if (pickupCoords && dropoffCoords) {
+      fetchRoute(pickupCoords, dropoffCoords, pickup, dropoff);
+    } else {
+      clearRoute();
     }
-  }, [pickup, dropoff, fetchRoute]);
+  }, [pickupCoords, dropoffCoords, pickup, dropoff, fetchRoute, clearRoute]);
 
-  const handlePickupSuggestionClick = useCallback((suggestion: { placeName: string }) => {
+  const handlePickupSuggestionClick = useCallback(async (suggestion: Suggestion) => {
     setPickup(suggestion.placeName);
     setShowPickupSuggestions(false);
     clearPickupSuggestions();
+    
+    // Fetch coordinates via place details
+    if (suggestion.placeId) {
+      const details = await getPlaceDetails(suggestion.placeId);
+      if (details) {
+        setPickupCoords({ lat: details.lat, lng: details.lng });
+      }
+    }
   }, [clearPickupSuggestions]);
 
-  const handleDropoffSuggestionClick = useCallback((suggestion: { placeName: string }) => {
+  const handleDropoffSuggestionClick = useCallback(async (suggestion: Suggestion) => {
     setDropoff(suggestion.placeName);
     setShowDropoffSuggestions(false);
     clearDropoffSuggestions();
+    
+    // Fetch coordinates via place details
+    if (suggestion.placeId) {
+      const details = await getPlaceDetails(suggestion.placeId);
+      if (details) {
+        setDropoffCoords({ lat: details.lat, lng: details.lng });
+      }
+    }
   }, [clearDropoffSuggestions]);
 
   useEffect(() => {
@@ -342,6 +364,7 @@ function RidesInner() {
       try {
         const location = await getCurrentLocation();
         setUserLocation({ lat: location.lat, lng: location.lng });
+        setPickupCoords({ lat: location.lat, lng: location.lng });
         const address = await reverseGeocode(location.lat, location.lng);
         setPickup(address);
         toast.success("Location detected");
@@ -360,6 +383,7 @@ function RidesInner() {
   const handleUseCurrentLocation = async () => {
     try {
       const location = await getCurrentLocation();
+      setPickupCoords({ lat: location.lat, lng: location.lng });
       const address = await reverseGeocode(location.lat, location.lng);
       setPickup(address);
       toast.success("Location detected");
@@ -455,9 +479,12 @@ function RidesInner() {
     setStep("request");
     setPickup("");
     setDropoff("");
+    setPickupCoords(null);
+    setDropoffCoords(null);
     setSelectedOption(null);
     setContactInfo({ name: "", phone: "", email: "", notes: "" });
     setRequestId(null);
+    clearRoute();
     navigate("/rides", { replace: true });
   };
 
