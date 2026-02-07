@@ -12891,6 +12891,71 @@ export type Database = {
           },
         ]
       }
+      restaurant_ledger: {
+        Row: {
+          amount: number
+          available_at: string | null
+          created_at: string | null
+          id: string
+          note: string | null
+          order_id: string | null
+          restaurant_id: string | null
+          status: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          available_at?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          restaurant_id?: string | null
+          status?: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          available_at?: string | null
+          created_at?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string | null
+          restaurant_id?: string | null
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_ledger_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           capacity: number
@@ -12961,6 +13026,7 @@ export type Database = {
         Row: {
           address: string
           avg_prep_time: number | null
+          bank_connected: boolean | null
           commission_rate: number | null
           cover_image_url: string | null
           created_at: string | null
@@ -12979,12 +13045,17 @@ export type Database = {
           phone: string
           rating: number | null
           status: Database["public"]["Enums"]["partner_status"] | null
+          stripe_account_id: string | null
+          stripe_details_submitted: boolean | null
+          stripe_last_sync: string | null
+          stripe_payouts_enabled: boolean | null
           total_orders: number | null
           updated_at: string | null
         }
         Insert: {
           address: string
           avg_prep_time?: number | null
+          bank_connected?: boolean | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -13003,12 +13074,17 @@ export type Database = {
           phone: string
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
+          stripe_account_id?: string | null
+          stripe_details_submitted?: boolean | null
+          stripe_last_sync?: string | null
+          stripe_payouts_enabled?: boolean | null
           total_orders?: number | null
           updated_at?: string | null
         }
         Update: {
           address?: string
           avg_prep_time?: number | null
+          bank_connected?: boolean | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -13027,6 +13103,10 @@ export type Database = {
           phone?: string
           rating?: number | null
           status?: Database["public"]["Enums"]["partner_status"] | null
+          stripe_account_id?: string | null
+          stripe_details_submitted?: boolean | null
+          stripe_last_sync?: string | null
+          stripe_payouts_enabled?: boolean | null
           total_orders?: number | null
           updated_at?: string | null
         }
