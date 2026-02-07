@@ -374,6 +374,9 @@ const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
 const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
 const DispatchAnalytics = lazy(() => import("./pages/dispatch/DispatchAnalytics"));
 const DispatchQuality = lazy(() => import("./pages/dispatch/DispatchQuality"));
+const DispatchSupport = lazy(() => import("./pages/dispatch/DispatchSupport"));
+const DispatchSupportTicket = lazy(() => import("./pages/dispatch/DispatchSupportTicket"));
+const TicketDetailPage = lazy(() => import("./pages/support/TicketDetailPage"));
 
 // Public Rating Page
 const RateOrderPage = lazy(() => import("./pages/rate/RateOrderPage"));
@@ -1372,8 +1375,12 @@ const App = () => (
                   <Route path="payouts" element={<DispatchPayouts />} />
                   <Route path="analytics" element={<DispatchAnalytics />} />
                   <Route path="quality" element={<DispatchQuality />} />
+                  <Route path="support" element={<DispatchSupport />} />
+                  <Route path="support/:id" element={<DispatchSupportTicket />} />
                   <Route path="settings" element={<DispatchSettings />} />
                 </Route>
+                {/* User Ticket Detail Page */}
+                <Route path="/support/tickets/:id" element={<ProtectedRoute><TicketDetailPage /></ProtectedRoute>} />
                 {/* Public Rating Page - no auth required */}
                 <Route path="/rate/:code" element={<RateOrderPage />} />
                 {/* Order Tracking - Customer */}

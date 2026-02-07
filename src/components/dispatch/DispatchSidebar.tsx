@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   X,
+  Headphones,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,11 @@ const navItems = [
     label: "Quality",
     path: "/dispatch/quality",
     icon: Star,
+  },
+  {
+    label: "Support",
+    path: "/dispatch/support",
+    icon: Headphones,
   },
   {
     label: "Settings",
