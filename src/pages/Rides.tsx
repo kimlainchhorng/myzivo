@@ -26,8 +26,8 @@ import { useIsMobile } from "@/hooks/useMobileSettings";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import RidesMapBackground from "@/components/ride/RidesMapBackground";
-import { useMapboxRoute, RouteData } from "@/hooks/useMapboxRoute";
-import { useMapboxGeocode } from "@/hooks/useMapboxGeocode";
+import { useGoogleMapsRoute, RouteData } from "@/hooks/useGoogleMapsRoute";
+import { useGoogleMapsGeocode } from "@/hooks/useGoogleMapsGeocode";
 import { calculateRidePrice, TripDetails } from "@/lib/tripCalculator";
  
 type RideStep = "request" | "options" | "confirm" | "processing" | "success";
@@ -204,17 +204,17 @@ export default function Rides() {
   const [searchParams] = useSearchParams();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const isMobile = useIsMobile();
-  const { routeData, isLoading: isRouteLoading, fetchRoute } = useMapboxRoute();
+  const { routeData, isLoading: isRouteLoading, fetchRoute } = useGoogleMapsRoute();
   const { 
     suggestions: pickupSuggestions, 
     fetchSuggestions: fetchPickupSuggestions,
     clearSuggestions: clearPickupSuggestions 
-  } = useMapboxGeocode();
+  } = useGoogleMapsGeocode();
   const { 
     suggestions: dropoffSuggestions, 
     fetchSuggestions: fetchDropoffSuggestions,
     clearSuggestions: clearDropoffSuggestions 
-  } = useMapboxGeocode();
+  } = useGoogleMapsGeocode();
   
   const [step, setStep] = useState<RideStep>("request");
   const [pickup, setPickup] = useState("");

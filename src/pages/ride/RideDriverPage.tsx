@@ -9,7 +9,7 @@ import RideBottomNav from "@/components/ride/RideBottomNav";
 import { RideOption } from "@/components/ride/RideCard";
 import { toast } from "sonner";
 import DriverMapView from "@/components/ride/DriverMapView";
-import { interpolateRoutePosition } from "@/services/mapbox";
+import { interpolateRoutePosition } from "@/services/googleMaps";
 import { TripDetails } from "@/lib/tripCalculator";
 
 interface LocationState {

@@ -8,7 +8,7 @@ import RideBottomNav from "@/components/ride/RideBottomNav";
 import RideReceiptModal from "@/components/ride/RideReceiptModal";
 import { RideOption } from "@/components/ride/RideCard";
 import TripMapView from "@/components/ride/TripMapView";
-import { interpolateRoutePosition } from "@/services/mapbox";
+import { interpolateRoutePosition } from "@/services/googleMaps";
 import { TripDetails } from "@/lib/tripCalculator";
 
 interface LocationState {
