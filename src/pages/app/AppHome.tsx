@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package
+  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package, Clock
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -285,6 +285,22 @@ const AppHome = () => {
             <div className="text-[9px] text-white/70 mt-0.5">Exclusive perks</div>
           </motion.button>
         </div>
+
+        {/* Quick Actions Row */}
+        <motion.button
+          onClick={() => navigate("/rides/history")}
+          whileTap={{ scale: 0.97 }}
+          className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
+        >
+          <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
+            <Clock className="w-4 h-4 text-primary" />
+          </div>
+          <div className="text-left">
+            <div className="text-sm font-semibold">Past Trips</div>
+            <div className="text-[10px] text-zinc-400">View ride history</div>
+          </div>
+          <ChevronRight className="w-4 h-4 text-zinc-400 ml-auto" />
+        </motion.button>
       </div>
 
       {/* 5. BOTTOM NAVIGATION */}

@@ -584,6 +584,7 @@ const App = () => (
                 <Route path="/ride/searching" element={<RideSearchingPage />} />
                 <Route path="/ride/driver" element={<RideDriverPage />} />
                 <Route path="/ride/trip" element={<RideTripPage />} />
+                <Route path="/rides/history" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
                 
                 {/* ZIVO Driver App Routes */}
                 <Route path="/driver" element={<DriverHomePage />} />
