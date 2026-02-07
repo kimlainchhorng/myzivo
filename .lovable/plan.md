@@ -1,367 +1,363 @@
 
-# Audit Log + Compliance + Admin Action History Implementation Plan
+# SLA & Performance Monitoring + Automation Implementation Plan
 
 ## Current State Analysis
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `audit_logs` table | Exists | Lacks tenant_id, severity, summary, actor_role |
-| `src/lib/security/auditLog.ts` | Exists | Basic logging functions without tenant context |
-| `TenantContext` | Exists | Provides currentTenant and hasPermission |
-| Permissions table | Exists | Has analytics.view, tenant.manage_settings |
-| Dispatch sidebar | Exists | Can be extended with Audit nav item |
-| Critical actions | Not logged | useRideManagement, useTenantMembers, etc. lack audit logging |
+| `food_orders.assigned_at` | Exists | Already tracks assignment timestamp |
+| `food_orders.picked_up_at` | Exists | Already tracks pickup timestamp |
+| `food_orders.delivered_at` | Exists | Already tracks delivery timestamp |
+| `food_orders.deliver_by` | Exists | SLA delivery target field |
+| `food_orders.pickup_by` | Exists | SLA pickup target field |
+| `food_orders.prepared_at` | Exists | Merchant ready timestamp |
+| `food_orders.ready_at` | Exists | Alternative merchant ready timestamp |
+| `food_orders.estimated_prep_time` | Exists | Prep time estimate |
+| `food_orders.duration_minutes` | Exists | Estimated delivery duration |
+| `order_events` table | Exists | Event log with type, actor_id, data |
+| `driver_wallets` table | Exists | Balance tracking for drivers |
+| `wallet_transactions` table | Exists | Transaction ledger for wallet operations |
+| `eats_zones` table | Exists | Zone configuration with pricing |
+| `auto_assign_order_v2` RPC | Exists | Auto-assignment function |
+| `tenants` table | Exists | Multi-tenant support |
+| `useDispatchAnalytics` hook | Exists | Analytics foundation to extend |
+| SLA status tracking | Missing | Need sla_status, at_risk_reason fields |
+| SLA metrics table | Missing | Historical SLA data for analytics |
+| Performance adjustments | Missing | Bonus/penalty tracking |
+| SLA evaluator | Missing | Scheduled SLA monitoring |
+| SLA dashboard | Missing | No `/dispatch/sla` route |
+
+---
 
 ## Architecture Overview
 
 ```text
-Audit System Architecture:
+SLA Monitoring System:
 
-Client Action (Dispatch UI)
+Order Created
+    │
+    ├── set_order_sla_targets() RPC
+    │   └── Calculate prep_by, pickup_by, deliver_by based on:
+    │       - estimated_prep_time
+    │       - duration_minutes
+    │       - zone-specific config
     │
     ▼
-┌─────────────────────────────────────────────┐
-│  log_audit RPC (SECURITY DEFINER)           │
-│  - Auto-captures actor_id, tenant_id        │
-│  - Captures before/after snapshots          │
-│  - Assigns severity level                   │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  Scheduled SLA Evaluator (runs every 2-5 min)       │
+│  - Checks active orders against SLA targets         │
+│  - Marks sla_status: on_time → at_risk → breached   │
+│  - Records reasons (no_driver, merchant_delay, etc) │
+│  - Triggers notifications + automation actions       │
+└─────────────────────────────────────────────────────┘
+    │
+    ├── At-Risk Actions:
+    │   ├── Notify dispatch (in-app)
+    │   ├── Highlight order in UI (yellow/red)
+    │   └── Log to tenant_audit_log
+    │
+    ├── Breached Actions:
+    │   ├── Boost priority + re-trigger auto_assign_v2
+    │   ├── Notify driver/merchant
+    │   ├── Suggest reassignment to dispatcher
+    │   └── Record sla_metrics for analytics
     │
     ▼
-┌─────────────────────────────────────────────┐
-│  tenant_audit_log table                     │
-│  - Immutable (no update/delete policies)   │
-│  - Tenant-scoped RLS                        │
-│  - Indexed for fast filtering               │
-└─────────────────────────────────────────────┘
+Order Delivered
     │
-    ├── Critical severity → Create admin_alert
-    │
-    ▼
-┌─────────────────────────────────────────────┐
-│  Dispatch UI                                │
-│  - /dispatch/audit (list + filters)         │
-│  - /dispatch/audit/:id (detail + diff)      │
-│  - /dispatch/alerts (optional alerts panel) │
-│  - CSV export                               │
-└─────────────────────────────────────────────┘
+    └── Record to sla_metrics table
+        - Calculate actual times (assign, prep, pickup, delivery)
+        - Determine on_time or late
+        - Optional: Queue bonus/penalty if applicable
 ```
 
 ---
 
 ## Database Changes
 
-### 1. Create `tenant_audit_log` Table (New Multi-tenant Table)
-
-Keeping the existing `audit_logs` table for platform-level logs, creating a new tenant-scoped table:
+### 1. Add SLA Status Fields to `food_orders`
 
 ```sql
-CREATE TABLE public.tenant_audit_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  actor_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  actor_role TEXT,
-  ip_address TEXT,
-  user_agent TEXT,
-  action TEXT NOT NULL,
-  entity_type TEXT NOT NULL,
-  entity_id UUID,
-  severity TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'critical')),
-  summary TEXT NOT NULL,
-  before_values JSONB,
-  after_values JSONB,
-  metadata JSONB DEFAULT '{}'
-);
+ALTER TABLE food_orders
+  ADD COLUMN IF NOT EXISTS sla_status TEXT DEFAULT 'on_time' 
+    CHECK (sla_status IN ('on_time', 'at_risk', 'breached')),
+  ADD COLUMN IF NOT EXISTS sla_at_risk_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS sla_breached_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS at_risk_reason TEXT,
+  ADD COLUMN IF NOT EXISTS breached_reason TEXT,
+  ADD COLUMN IF NOT EXISTS sla_prep_by TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS sla_pickup_by TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS sla_deliver_by TIMESTAMPTZ;
 
--- Performance indexes
-CREATE INDEX idx_tenant_audit_log_tenant_time ON tenant_audit_log(tenant_id, created_at DESC);
-CREATE INDEX idx_tenant_audit_log_entity ON tenant_audit_log(tenant_id, entity_type, entity_id);
-CREATE INDEX idx_tenant_audit_log_action ON tenant_audit_log(tenant_id, action);
-CREATE INDEX idx_tenant_audit_log_severity ON tenant_audit_log(tenant_id, severity);
-CREATE INDEX idx_tenant_audit_log_actor ON tenant_audit_log(tenant_id, actor_id);
+CREATE INDEX IF NOT EXISTS idx_food_orders_sla_status ON food_orders(sla_status) 
+  WHERE status NOT IN ('completed', 'cancelled');
 ```
 
-### 2. Create `admin_alerts` Table
+### 2. Create `sla_metrics` Table (Historical Analytics)
 
 ```sql
-CREATE TABLE public.admin_alerts (
+CREATE TABLE IF NOT EXISTS public.sla_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ DEFAULT now(),
-  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-  severity TEXT NOT NULL CHECK (severity IN ('warning', 'critical')),
-  title TEXT NOT NULL,
-  body TEXT,
-  audit_log_id UUID REFERENCES tenant_audit_log(id) ON DELETE SET NULL,
-  resolved_at TIMESTAMPTZ,
-  resolved_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  resolve_notes TEXT
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  zone_code TEXT,
+  order_id UUID REFERENCES food_orders(id) ON DELETE CASCADE,
+  merchant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
+  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
+  -- Time metrics (in seconds)
+  assign_seconds INT, -- time from created_at to assigned_at
+  prep_seconds INT,   -- time from created_at to prepared_at/ready_at
+  pickup_seconds INT, -- time from assigned_at to picked_up_at
+  delivery_seconds INT, -- time from picked_up_at to delivered_at
+  total_seconds INT,  -- time from created_at to delivered_at
+  -- SLA result
+  sla_result TEXT NOT NULL CHECK (sla_result IN ('on_time', 'late')),
+  late_by_seconds INT DEFAULT 0,
+  late_stage TEXT, -- prep, pickup, delivery
+  -- Context
+  distance_miles NUMERIC,
+  notes TEXT,
+  CONSTRAINT unique_sla_metric_order UNIQUE (order_id)
 );
 
-CREATE INDEX idx_admin_alerts_tenant ON admin_alerts(tenant_id, created_at DESC);
-CREATE INDEX idx_admin_alerts_unresolved ON admin_alerts(tenant_id) WHERE resolved_at IS NULL;
+CREATE INDEX idx_sla_metrics_tenant_date ON sla_metrics(tenant_id, created_at DESC);
+CREATE INDEX idx_sla_metrics_merchant ON sla_metrics(merchant_id, created_at DESC);
+CREATE INDEX idx_sla_metrics_driver ON sla_metrics(driver_id, created_at DESC);
+CREATE INDEX idx_sla_metrics_zone ON sla_metrics(zone_code, created_at DESC);
+CREATE INDEX idx_sla_metrics_result ON sla_metrics(tenant_id, sla_result);
 ```
 
-### 3. Add `audit.view` Permission
+### 3. Create `performance_adjustments` Table (Bonus/Penalty)
 
 ```sql
-INSERT INTO permissions (key, description, category) VALUES
-  ('audit.view', 'View audit logs and compliance history', 'compliance'),
-  ('alerts.manage', 'View and resolve admin alerts', 'compliance')
-ON CONFLICT (key) DO NOTHING;
+CREATE TABLE IF NOT EXISTS public.performance_adjustments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES food_orders(id) ON DELETE SET NULL,
+  type TEXT NOT NULL CHECK (type IN ('bonus', 'penalty')),
+  amount_cents INT NOT NULL,
+  reason TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'applied', 'rejected')),
+  approved_by UUID REFERENCES auth.users(id),
+  approved_at TIMESTAMPTZ,
+  applied_at TIMESTAMPTZ,
+  wallet_transaction_id UUID REFERENCES wallet_transactions(id)
+);
 
--- Add to admin/owner roles by default
-INSERT INTO role_permissions (tenant_id, role, permission_key)
-SELECT NULL, 'admin', 'audit.view'
-WHERE NOT EXISTS (SELECT 1 FROM role_permissions WHERE role = 'admin' AND permission_key = 'audit.view');
+CREATE INDEX idx_perf_adj_tenant ON performance_adjustments(tenant_id, created_at DESC);
+CREATE INDEX idx_perf_adj_driver ON performance_adjustments(driver_id, status);
+CREATE INDEX idx_perf_adj_pending ON performance_adjustments(tenant_id) WHERE status = 'pending';
+```
 
-INSERT INTO role_permissions (tenant_id, role, permission_key)
-SELECT NULL, 'admin', 'alerts.manage'
-WHERE NOT EXISTS (SELECT 1 FROM role_permissions WHERE role = 'admin' AND permission_key = 'alerts.manage');
+### 4. Add SLA Configuration to `eats_zones` or Tenant Settings
+
+```sql
+-- Add SLA config to zones (optional, can also be tenant-level)
+ALTER TABLE eats_zones
+  ADD COLUMN IF NOT EXISTS sla_prep_minutes INT DEFAULT 15,
+  ADD COLUMN IF NOT EXISTS sla_pickup_buffer_minutes INT DEFAULT 10,
+  ADD COLUMN IF NOT EXISTS sla_delivery_buffer_minutes INT DEFAULT 15,
+  ADD COLUMN IF NOT EXISTS at_risk_threshold_minutes INT DEFAULT 5;
 ```
 
 ---
 
 ## RPC Functions
 
-### 1. `log_audit` - Main Logging RPC
+### 1. `set_order_sla_targets(p_order_id UUID)`
+
+Sets SLA target timestamps when order is created or route changes:
 
 ```sql
-CREATE OR REPLACE FUNCTION public.log_audit(
-  p_tenant_id UUID,
-  p_action TEXT,
-  p_entity_type TEXT,
-  p_entity_id UUID DEFAULT NULL,
-  p_summary TEXT DEFAULT '',
-  p_before_values JSONB DEFAULT NULL,
-  p_after_values JSONB DEFAULT NULL,
-  p_severity TEXT DEFAULT 'info',
-  p_metadata JSONB DEFAULT '{}'
-)
-RETURNS UUID AS $$
+CREATE OR REPLACE FUNCTION public.set_order_sla_targets(p_order_id UUID)
+RETURNS JSONB AS $$
 DECLARE
-  v_log_id UUID;
-  v_actor_role TEXT;
+  v_order RECORD;
+  v_zone RECORD;
+  v_prep_minutes INT;
+  v_pickup_buffer INT;
+  v_delivery_buffer INT;
 BEGIN
-  -- Get actor's role in tenant
-  SELECT role::TEXT INTO v_actor_role
-  FROM tenant_memberships
-  WHERE tenant_id = p_tenant_id AND user_id = auth.uid() AND is_active = true
-  LIMIT 1;
-
-  -- Insert audit log
-  INSERT INTO tenant_audit_log (
-    tenant_id, actor_id, actor_role, action, entity_type, entity_id,
-    severity, summary, before_values, after_values, metadata,
-    user_agent, ip_address
-  ) VALUES (
-    p_tenant_id, auth.uid(), v_actor_role, p_action, p_entity_type, p_entity_id,
-    p_severity, p_summary, p_before_values, p_after_values, p_metadata,
-    current_setting('request.headers', true)::jsonb->>'user-agent',
-    current_setting('request.headers', true)::jsonb->>'x-forwarded-for'
-  )
-  RETURNING id INTO v_log_id;
-
-  -- Auto-create alert for critical actions
-  IF p_severity = 'critical' THEN
-    INSERT INTO admin_alerts (tenant_id, severity, title, body, audit_log_id)
-    VALUES (
-      p_tenant_id,
-      'critical',
-      p_action || ' on ' || p_entity_type,
-      p_summary,
-      v_log_id
-    );
+  SELECT * INTO v_order FROM food_orders WHERE id = p_order_id;
+  IF v_order IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Order not found');
   END IF;
 
-  RETURN v_log_id;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
-```
+  -- Get zone config (or use defaults)
+  SELECT sla_prep_minutes, sla_pickup_buffer_minutes, sla_delivery_buffer_minutes
+  INTO v_prep_minutes, v_pickup_buffer, v_delivery_buffer
+  FROM eats_zones WHERE zone_code = v_order.zone_code;
 
-### 2. Action-Specific RPCs (with built-in logging)
+  v_prep_minutes := COALESCE(v_prep_minutes, COALESCE(v_order.estimated_prep_time, 15));
+  v_pickup_buffer := COALESCE(v_pickup_buffer, 10);
+  v_delivery_buffer := COALESCE(v_delivery_buffer, 15);
 
-#### `admin_assign_driver`
-```sql
-CREATE OR REPLACE FUNCTION public.admin_assign_driver(
-  p_tenant_id UUID,
-  p_order_id UUID,
-  p_driver_id UUID
-)
-RETURNS JSONB AS $$
-DECLARE
-  v_before JSONB;
-  v_after JSONB;
-  v_driver_name TEXT;
-BEGIN
-  -- Capture before state
-  SELECT jsonb_build_object('driver_id', driver_id, 'status', status)
-  INTO v_before FROM food_orders WHERE id = p_order_id;
-
-  -- Get driver name for summary
-  SELECT full_name INTO v_driver_name FROM drivers WHERE id = p_driver_id;
-
-  -- Perform update
-  UPDATE food_orders
-  SET driver_id = p_driver_id, status = 'assigned', updated_at = now()
+  UPDATE food_orders SET
+    sla_prep_by = v_order.created_at + (v_prep_minutes || ' minutes')::INTERVAL,
+    sla_pickup_by = v_order.created_at + ((v_prep_minutes + v_pickup_buffer) || ' minutes')::INTERVAL,
+    sla_deliver_by = v_order.created_at + 
+      ((v_prep_minutes + v_pickup_buffer + COALESCE(v_order.duration_minutes, 20) + v_delivery_buffer) || ' minutes')::INTERVAL
   WHERE id = p_order_id;
 
-  -- Capture after state
-  SELECT jsonb_build_object('driver_id', driver_id, 'status', status)
-  INTO v_after FROM food_orders WHERE id = p_order_id;
-
-  -- Log audit
-  PERFORM log_audit(
-    p_tenant_id, 'assign_driver', 'order', p_order_id,
-    format('Assigned driver %s to order', COALESCE(v_driver_name, p_driver_id::text)),
-    v_before, v_after, 'info'
-  );
-
-  RETURN jsonb_build_object('success', true);
+  RETURN jsonb_build_object('success', true, 'sla_deliver_by', 
+    v_order.created_at + ((v_prep_minutes + v_pickup_buffer + COALESCE(v_order.duration_minutes, 20) + v_delivery_buffer) || ' minutes')::INTERVAL);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-#### `admin_override_order_status`
+### 2. `evaluate_sla_status()` - Scheduled Evaluator
+
 ```sql
-CREATE OR REPLACE FUNCTION public.admin_override_order_status(
-  p_tenant_id UUID,
-  p_order_id UUID,
-  p_new_status TEXT,
-  p_reason TEXT DEFAULT NULL
-)
-RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION public.evaluate_sla_status()
+RETURNS TABLE(order_id UUID, new_status TEXT, reason TEXT) AS $$
 DECLARE
-  v_before JSONB;
-  v_after JSONB;
+  v_order RECORD;
+  v_at_risk_threshold INTERVAL := '5 minutes';
+  v_new_status TEXT;
+  v_reason TEXT;
 BEGIN
-  SELECT jsonb_build_object('status', status) INTO v_before FROM food_orders WHERE id = p_order_id;
+  -- Find active orders with SLA targets
+  FOR v_order IN 
+    SELECT fo.*, ez.at_risk_threshold_minutes
+    FROM food_orders fo
+    LEFT JOIN eats_zones ez ON ez.zone_code = fo.zone_code
+    WHERE fo.status IN ('pending', 'confirmed', 'ready_for_pickup', 'in_progress')
+      AND fo.sla_deliver_by IS NOT NULL
+  LOOP
+    v_at_risk_threshold := (COALESCE(v_order.at_risk_threshold_minutes, 5) || ' minutes')::INTERVAL;
+    v_new_status := v_order.sla_status;
+    v_reason := NULL;
 
-  UPDATE food_orders SET status = p_new_status, updated_at = now() WHERE id = p_order_id;
+    -- Determine SLA status
+    IF v_order.sla_status != 'breached' THEN
+      -- Check for breach
+      IF v_order.status = 'pending' AND v_order.driver_id IS NULL AND now() > v_order.sla_pickup_by THEN
+        v_new_status := 'breached';
+        v_reason := 'no_driver_assigned';
+      ELSIF v_order.status IN ('pending', 'confirmed') AND v_order.prepared_at IS NULL 
+            AND now() > v_order.sla_prep_by THEN
+        v_new_status := 'breached';
+        v_reason := 'merchant_prep_delay';
+      ELSIF v_order.status IN ('confirmed', 'ready_for_pickup') AND now() > v_order.sla_pickup_by THEN
+        v_new_status := 'breached';
+        v_reason := 'pickup_delay';
+      ELSIF v_order.status = 'in_progress' AND now() > v_order.sla_deliver_by THEN
+        v_new_status := 'breached';
+        v_reason := 'delivery_delay';
+      -- Check for at-risk
+      ELSIF v_order.sla_status = 'on_time' THEN
+        IF v_order.status = 'pending' AND v_order.driver_id IS NULL 
+           AND now() > (v_order.sla_pickup_by - v_at_risk_threshold) THEN
+          v_new_status := 'at_risk';
+          v_reason := 'no_driver_approaching_deadline';
+        ELSIF v_order.status IN ('confirmed', 'ready_for_pickup') 
+              AND now() > (v_order.sla_pickup_by - v_at_risk_threshold) THEN
+          v_new_status := 'at_risk';
+          v_reason := 'pickup_approaching_deadline';
+        ELSIF v_order.status = 'in_progress' 
+              AND now() > (v_order.sla_deliver_by - v_at_risk_threshold) THEN
+          v_new_status := 'at_risk';
+          v_reason := 'delivery_approaching_deadline';
+        END IF;
+      END IF;
+    END IF;
 
-  SELECT jsonb_build_object('status', status) INTO v_after FROM food_orders WHERE id = p_order_id;
+    -- Update if status changed
+    IF v_new_status != v_order.sla_status THEN
+      UPDATE food_orders SET 
+        sla_status = v_new_status,
+        at_risk_reason = CASE WHEN v_new_status = 'at_risk' THEN v_reason ELSE at_risk_reason END,
+        breached_reason = CASE WHEN v_new_status = 'breached' THEN v_reason ELSE breached_reason END,
+        sla_at_risk_at = CASE WHEN v_new_status = 'at_risk' AND sla_at_risk_at IS NULL THEN now() ELSE sla_at_risk_at END,
+        sla_breached_at = CASE WHEN v_new_status = 'breached' THEN now() ELSE sla_breached_at END
+      WHERE id = v_order.id;
 
-  PERFORM log_audit(
-    p_tenant_id, 'override_status', 'order', p_order_id,
-    format('Status changed from %s to %s. Reason: %s', v_before->>'status', p_new_status, COALESCE(p_reason, 'N/A')),
-    v_before, v_after, 'warning',
-    jsonb_build_object('reason', p_reason)
-  );
-
-  RETURN jsonb_build_object('success', true);
+      order_id := v_order.id;
+      new_status := v_new_status;
+      reason := v_reason;
+      RETURN NEXT;
+    END IF;
+  END LOOP;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-#### `admin_issue_refund`
+### 3. `record_sla_metrics(p_order_id UUID)` - On Delivery Complete
+
 ```sql
-CREATE OR REPLACE FUNCTION public.admin_issue_refund(
-  p_tenant_id UUID,
-  p_order_id UUID,
-  p_amount NUMERIC,
-  p_reason TEXT
-)
-RETURNS JSONB AS $$
+CREATE OR REPLACE FUNCTION public.record_sla_metrics(p_order_id UUID)
+RETURNS UUID AS $$
 DECLARE
-  v_before JSONB;
-  v_after JSONB;
+  v_order RECORD;
+  v_metric_id UUID;
+  v_sla_result TEXT;
+  v_late_seconds INT := 0;
+  v_late_stage TEXT;
 BEGIN
-  SELECT jsonb_build_object('payment_status', payment_status, 'total', total_amount)
-  INTO v_before FROM food_orders WHERE id = p_order_id;
+  SELECT * INTO v_order FROM food_orders WHERE id = p_order_id AND status = 'completed';
+  IF v_order IS NULL THEN RETURN NULL; END IF;
 
-  UPDATE food_orders
-  SET payment_status = 'refunded', refund_amount = p_amount, updated_at = now()
-  WHERE id = p_order_id;
+  -- Determine SLA result
+  IF v_order.delivered_at <= v_order.sla_deliver_by THEN
+    v_sla_result := 'on_time';
+  ELSE
+    v_sla_result := 'late';
+    v_late_seconds := EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.sla_deliver_by))::INT;
+    -- Determine which stage caused lateness
+    IF v_order.prepared_at IS NOT NULL AND v_order.prepared_at > v_order.sla_prep_by THEN
+      v_late_stage := 'prep';
+    ELSIF v_order.picked_up_at IS NOT NULL AND v_order.picked_up_at > v_order.sla_pickup_by THEN
+      v_late_stage := 'pickup';
+    ELSE
+      v_late_stage := 'delivery';
+    END IF;
+  END IF;
 
-  SELECT jsonb_build_object('payment_status', payment_status, 'refund_amount', refund_amount)
-  INTO v_after FROM food_orders WHERE id = p_order_id;
+  INSERT INTO sla_metrics (
+    tenant_id, zone_code, order_id, merchant_id, driver_id,
+    assign_seconds, prep_seconds, pickup_seconds, delivery_seconds, total_seconds,
+    sla_result, late_by_seconds, late_stage, distance_miles
+  ) VALUES (
+    v_order.tenant_id,
+    v_order.zone_code,
+    v_order.id,
+    v_order.restaurant_id,
+    v_order.driver_id,
+    EXTRACT(EPOCH FROM (v_order.assigned_at - v_order.created_at))::INT,
+    EXTRACT(EPOCH FROM (COALESCE(v_order.prepared_at, v_order.ready_at) - v_order.created_at))::INT,
+    EXTRACT(EPOCH FROM (v_order.picked_up_at - v_order.assigned_at))::INT,
+    EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.picked_up_at))::INT,
+    EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.created_at))::INT,
+    v_sla_result,
+    v_late_seconds,
+    v_late_stage,
+    v_order.distance_miles
+  )
+  ON CONFLICT (order_id) DO UPDATE SET
+    sla_result = EXCLUDED.sla_result,
+    late_by_seconds = EXCLUDED.late_by_seconds,
+    total_seconds = EXCLUDED.total_seconds
+  RETURNING id INTO v_metric_id;
 
-  PERFORM log_audit(
-    p_tenant_id, 'issue_refund', 'order', p_order_id,
-    format('Refund of $%.2f issued. Reason: %s', p_amount, p_reason),
-    v_before, v_after, 'critical',
-    jsonb_build_object('amount', p_amount, 'reason', p_reason)
-  );
-
-  RETURN jsonb_build_object('success', true, 'refund_amount', p_amount);
+  RETURN v_metric_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
-```
-
-#### `admin_update_member_role`
-```sql
-CREATE OR REPLACE FUNCTION public.admin_update_member_role(
-  p_tenant_id UUID,
-  p_membership_id UUID,
-  p_new_role TEXT
-)
-RETURNS JSONB AS $$
-DECLARE
-  v_before JSONB;
-  v_after JSONB;
-  v_user_email TEXT;
-BEGIN
-  SELECT jsonb_build_object('role', role), user_id INTO v_before, v_user_email
-  FROM tenant_memberships WHERE id = p_membership_id;
-
-  UPDATE tenant_memberships SET role = p_new_role::tenant_role, updated_at = now()
-  WHERE id = p_membership_id;
-
-  SELECT jsonb_build_object('role', role) INTO v_after FROM tenant_memberships WHERE id = p_membership_id;
-
-  PERFORM log_audit(
-    p_tenant_id, 'change_member_role', 'role', p_membership_id,
-    format('Role changed from %s to %s', v_before->>'role', p_new_role),
-    v_before, v_after, 'critical'
-  );
-
-  RETURN jsonb_build_object('success', true);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ---
 
-## RLS Policies
+## Edge Function: `sla-evaluator`
 
-### Tenant Audit Log (Immutable)
-```sql
-ALTER TABLE tenant_audit_log ENABLE ROW LEVEL SECURITY;
+Scheduled edge function to run every 2-5 minutes:
 
--- Read access for users with audit.view permission
-CREATE POLICY "Users with audit.view can read logs" ON tenant_audit_log
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR public.has_tenant_permission(tenant_id, 'audit.view')
-    OR public.has_tenant_permission(tenant_id, 'tenant.manage_settings')
-  );
-
--- Insert only via RPC (SECURITY DEFINER functions)
-CREATE POLICY "System can insert logs" ON tenant_audit_log
-  FOR INSERT TO authenticated
-  WITH CHECK (true);
-
--- NO UPDATE or DELETE policies - logs are immutable
-```
-
-### Admin Alerts
-```sql
-ALTER TABLE admin_alerts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users with alerts.manage can read alerts" ON admin_alerts
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR public.has_tenant_permission(tenant_id, 'alerts.manage')
-  );
-
-CREATE POLICY "Users with alerts.manage can resolve alerts" ON admin_alerts
-  FOR UPDATE TO authenticated
-  USING (public.has_tenant_permission(tenant_id, 'alerts.manage'))
-  WITH CHECK (resolved_at IS NOT NULL); -- Only allow setting resolved fields
-
--- NO DELETE policy - alerts are kept for history
+```typescript
+// supabase/functions/sla-evaluator/index.ts
+// Calls evaluate_sla_status() RPC
+// For breached orders: calls auto_assign_order_v2 for unassigned
+// Sends notifications via send-notification edge function
+// Logs to tenant_audit_log for critical SLA breaches
 ```
 
 ---
@@ -372,96 +368,118 @@ CREATE POLICY "Users with alerts.manage can resolve alerts" ON admin_alerts
 
 | File | Description |
 |------|-------------|
-| `src/hooks/useAuditLog.ts` | Fetch/filter audit logs with pagination |
-| `src/hooks/useAdminAlerts.ts` | Fetch/resolve alerts |
-| `src/lib/auditHelpers.ts` | Client-side audit helper for calling log_audit RPC |
-| `src/pages/dispatch/DispatchAudit.tsx` | Audit log list with filters |
-| `src/pages/dispatch/DispatchAuditDetail.tsx` | Single log detail with JSON diff |
-| `src/pages/dispatch/DispatchAlerts.tsx` | Alerts panel (optional) |
-| `src/components/audit/AuditLogTable.tsx` | Reusable audit table |
-| `src/components/audit/JsonDiffViewer.tsx` | Before/after JSON diff display |
-| `src/components/audit/AuditFilters.tsx` | Filter controls |
-| `src/components/audit/AuditExportButton.tsx` | CSV export functionality |
+| `src/hooks/useSLAMetrics.ts` | Fetch SLA KPIs, at-risk orders, performance data |
+| `src/hooks/usePerformanceAdjustments.ts` | Bonus/penalty CRUD |
+| `src/pages/dispatch/DispatchSLA.tsx` | Main SLA dashboard page |
+| `src/components/sla/SLAKPICards.tsx` | On-time rate, avg times widgets |
+| `src/components/sla/AtRiskOrdersList.tsx` | Live at-risk/breached orders |
+| `src/components/sla/SLAByZoneTable.tsx` | Zone performance breakdown |
+| `src/components/sla/SLAByMerchantTable.tsx` | Worst merchants by prep time |
+| `src/components/sla/SLAByDriverTable.tsx` | Driver late rate ranking |
+| `src/components/sla/PerformanceAdjustmentsPanel.tsx` | Pending bonus/penalty approvals |
+| `src/components/sla/SLAExport.tsx` | CSV export functionality |
 
-### Hook: `useAuditLog.ts`
-
-```typescript
-export interface AuditLogFilters {
-  dateFrom?: Date;
-  dateTo?: Date;
-  severity?: 'info' | 'warning' | 'critical' | 'all';
-  entityType?: string;
-  action?: string;
-  actorId?: string;
-  search?: string;
-}
-
-export function useAuditLog(tenantId: string | null, filters: AuditLogFilters) {
-  return useQuery({
-    queryKey: ['audit-log', tenantId, filters],
-    queryFn: async () => {
-      let query = supabase
-        .from('tenant_audit_log')
-        .select('*', { count: 'exact' })
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      // Apply filters...
-      return query;
-    },
-    enabled: !!tenantId,
-  });
-}
-```
-
-### Helper: `auditHelpers.ts`
+### Hook: `useSLAMetrics.ts`
 
 ```typescript
-export async function logAuditAction(params: {
-  tenantId: string;
-  action: string;
-  entityType: string;
-  entityId?: string;
-  summary: string;
-  before?: Record<string, unknown>;
-  after?: Record<string, unknown>;
-  severity?: 'info' | 'warning' | 'critical';
-  metadata?: Record<string, unknown>;
-}) {
-  return supabase.rpc('log_audit', {
-    p_tenant_id: params.tenantId,
-    p_action: params.action,
-    p_entity_type: params.entityType,
-    p_entity_id: params.entityId || null,
-    p_summary: params.summary,
-    p_before_values: params.before || null,
-    p_after_values: params.after || null,
-    p_severity: params.severity || 'info',
-    p_metadata: params.metadata || {}
-  });
+export interface SLAKPIs {
+  onTimeRate: number;
+  avgAssignSeconds: number;
+  avgPrepSeconds: number;
+  avgPickupSeconds: number;
+  avgDeliverySeconds: number;
+  atRiskCount: number;
+  breachedCount: number;
+  totalDelivered: number;
 }
+
+export function useSLAKPIs(tenantId: string, dateRange: DateRange);
+export function useAtRiskOrders(tenantId: string);
+export function useSLAByZone(tenantId: string, dateRange: DateRange);
+export function useSLAByMerchant(tenantId: string, dateRange: DateRange, limit?: number);
+export function useSLAByDriver(tenantId: string, dateRange: DateRange, limit?: number);
 ```
 
-### Page: `DispatchAudit.tsx`
+### Page: `DispatchSLA.tsx`
 
-Features:
-- Date range picker
-- Severity filter (info/warning/critical)
-- Entity type dropdown (order, driver, merchant, etc.)
-- Actor filter (team member dropdown)
-- Search by summary/action
-- Paginated table with columns: Time, Severity badge, Actor, Action, Entity, Summary
-- Click row to view detail
-- Export CSV button
+Layout:
+```text
++------------------------------------------------------------------+
+|  SLA & Performance                     [Date Range] [Export CSV] |
++------------------------------------------------------------------+
+|  KPI Cards Row:                                                   |
+|  [On-Time Rate] [Avg Assign] [Avg Prep] [Avg Pickup] [Avg Delivery]|
++------------------------------------------------------------------+
+|  AT RISK / BREACHED ORDERS (Live)                                |
+|  +-------------------------------------------------------------+ |
+|  | #1234 | Pizza Palace | No driver | At Risk | [Assign] [View]| |
+|  | #1235 | Burger Hub   | Pickup delay | Breached | [Reassign] | |
+|  +-------------------------------------------------------------+ |
++------------------------------------------------------------------+
+|  PERFORMANCE BY ZONE            |  WORST MERCHANTS (Prep Time)   |
+|  +----------------------------+ | +----------------------------+ |
+|  | Zone | On-Time | Avg Time  | | | Restaurant | Avg Prep | Late%| |
+|  | DFW  | 94.2%   | 32 min    | | | Slow Diner | 22 min   | 18% | |
+|  +----------------------------+ | +----------------------------+ |
++------------------------------------------------------------------+
+|  PENDING ADJUSTMENTS                                              |
+|  [Driver A] Bonus $5 - Fast delivery | [Approve] [Reject]        |
++------------------------------------------------------------------+
+```
 
-### Page: `DispatchAuditDetail.tsx`
+### Update Dispatch Orders UI
 
-Features:
-- Full metadata display
-- JSON diff viewer (before/after side-by-side)
-- Link to related entity (order, driver, etc.)
-- Export single log button
-- Back to list navigation
+Add SLA status indicator to order cards/rows:
+
+```typescript
+// In KanbanColumn or order list:
+{order.sla_status === 'breached' && (
+  <Badge variant="destructive">SLA Breached</Badge>
+)}
+{order.sla_status === 'at_risk' && (
+  <Badge className="bg-amber-500">At Risk</Badge>
+)}
+```
+
+---
+
+## RLS Policies
+
+### sla_metrics
+
+```sql
+ALTER TABLE sla_metrics ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can read SLA metrics" ON sla_metrics
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR public.has_tenant_permission(tenant_id, 'analytics.view')
+  );
+
+CREATE POLICY "System can insert SLA metrics" ON sla_metrics
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+```
+
+### performance_adjustments
+
+```sql
+ALTER TABLE performance_adjustments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can manage adjustments" ON performance_adjustments
+  FOR ALL TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR public.has_tenant_permission(tenant_id, 'payouts.manage')
+  );
+
+CREATE POLICY "Drivers can view own adjustments" ON performance_adjustments
+  FOR SELECT TO authenticated
+  USING (
+    driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid())
+  );
+```
 
 ---
 
@@ -469,134 +487,80 @@ Features:
 
 ### Update `DispatchSidebar.tsx`
 
-Add new nav items:
+Add SLA nav item:
+
 ```typescript
 {
-  label: "Audit Log",
-  path: "/dispatch/audit",
-  icon: FileText,
-  permission: "audit.view",
-},
-{
-  label: "Alerts",
-  path: "/dispatch/alerts",
-  icon: AlertCircle,
-  permission: "alerts.manage",
+  label: "SLA",
+  path: "/dispatch/sla",
+  icon: Timer,
+  permission: "analytics.view",
 },
 ```
 
 ### Update `App.tsx`
 
-Add routes:
+Add route:
+
 ```typescript
-<Route path="audit" element={<DispatchAudit />} />
-<Route path="audit/:id" element={<DispatchAuditDetail />} />
-<Route path="alerts" element={<DispatchAlerts />} />
+<Route path="sla" element={<DispatchSLA />} />
 ```
 
 ---
 
-## CSV Export Implementation
+## Scheduled Job Setup
 
-```typescript
-function exportAuditToCSV(logs: AuditLog[]) {
-  const headers = ['Timestamp', 'Severity', 'Actor', 'Action', 'Entity Type', 'Entity ID', 'Summary'];
-  const rows = logs.map(log => [
-    log.created_at,
-    log.severity,
-    log.actor_role || 'Unknown',
-    log.action,
-    log.entity_type,
-    log.entity_id || '',
-    log.summary
-  ]);
-  
-  const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  downloadFile(csv, `audit-log-${Date.now()}.csv`, 'text/csv');
-}
+Using pg_cron to run SLA evaluator:
+
+```sql
+SELECT cron.schedule(
+  'evaluate-sla-status',
+  '*/3 * * * *', -- every 3 minutes
+  $$
+  SELECT net.http_post(
+    url:='https://slirphzzwcogdbkeicff.supabase.co/functions/v1/sla-evaluator',
+    headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
+    body:='{}'::jsonb
+  );
+  $$
+);
 ```
-
----
-
-## Integration with Existing Hooks
-
-Update existing hooks to call audit logging:
-
-### `useTenantMembers.ts` - Add audit on role change
-```typescript
-const updateRole = useMutation({
-  mutationFn: async ({ memberId, role }) => {
-    // Use RPC instead of direct update for audit logging
-    const { error } = await supabase.rpc('admin_update_member_role', {
-      p_tenant_id: tenantId,
-      p_membership_id: memberId,
-      p_new_role: role
-    });
-    if (error) throw error;
-  },
-  // ...
-});
-```
-
-### `usePaymentAdmin.ts` - Add audit on refund
-```typescript
-// Update to call admin_issue_refund RPC
-```
-
-### `usePricing.ts` - Add audit on pricing change
-```typescript
-// Call logAuditAction after successful pricing update
-```
-
----
-
-## Severity Classification
-
-| Action | Entity Type | Severity | Auto-Alert |
-|--------|-------------|----------|------------|
-| Assign driver | order | info | No |
-| Override status | order | warning | No |
-| Issue refund | order | critical | Yes |
-| Create payout | payout | critical | Yes |
-| Change member role | role | critical | Yes |
-| Update permissions | permission | critical | Yes |
-| Update tenant settings | tenant | warning | No |
-| Change pricing | pricing | warning | No |
-| Update zone | zone | warning | No |
-| Resolve dispute | dispute | warning | No |
 
 ---
 
 ## Implementation Order
 
-1. **Database migration** - Create tenant_audit_log, admin_alerts tables, add permissions
-2. **RPC functions** - log_audit + action-specific RPCs
-3. **RLS policies** - Immutable audit logs, alert access
-4. **useAuditLog hook** - Fetch with filters and pagination
-5. **auditHelpers.ts** - Client helper for logging
-6. **DispatchAudit page** - List with filters
-7. **AuditLogTable component** - Reusable table
-8. **DispatchAuditDetail page** - Detail with diff viewer
-9. **JsonDiffViewer component** - Before/after display
-10. **CSV export** - Download functionality
-11. **DispatchAlerts page** (optional) - Alert management
-12. **Update DispatchSidebar** - Add Audit/Alerts nav
-13. **Update App.tsx** - Add routes
-14. **Integrate existing hooks** - Add audit calls to critical actions
+1. **Database migration** - Add columns to food_orders, create sla_metrics, performance_adjustments tables
+2. **RPC functions** - set_order_sla_targets, evaluate_sla_status, record_sla_metrics
+3. **Trigger on order creation** - Call set_order_sla_targets when order created
+4. **Trigger on delivery complete** - Call record_sla_metrics when status = completed
+5. **sla-evaluator edge function** - Scheduled SLA monitoring
+6. **useSLAMetrics hook** - Analytics data fetching
+7. **SLA dashboard components** - KPIs, at-risk list, zone/merchant/driver tables
+8. **DispatchSLA page** - Main SLA dashboard
+9. **Update order cards** - Add SLA status badges
+10. **Performance adjustments panel** - Bonus/penalty management
+11. **CSV export** - Export SLA metrics
+12. **Update sidebar and routes**
+13. **Schedule cron job** - pg_cron setup
 
 ---
 
 ## Testing Checklist
 
-- [ ] Audit logs are created for all critical actions
-- [ ] Logs capture correct before/after snapshots
-- [ ] Severity levels are assigned correctly
-- [ ] Critical actions auto-create alerts
-- [ ] Filters work correctly (date, severity, entity, actor)
-- [ ] Pagination works for large log sets
-- [ ] JSON diff viewer displays changes clearly
-- [ ] CSV export includes all visible columns
-- [ ] RLS prevents access to other tenants' logs
-- [ ] Logs cannot be updated or deleted
-- [ ] Alerts can be resolved with notes
-- [ ] Navigation shows only to users with audit.view permission
+- [ ] SLA targets set correctly on order creation
+- [ ] SLA recalculates when duration_minutes changes
+- [ ] Evaluator marks at_risk correctly (within threshold of deadline)
+- [ ] Evaluator marks breached correctly (past deadline)
+- [ ] Correct reason recorded for each status
+- [ ] Notifications sent for at-risk orders
+- [ ] auto_assign_v2 re-triggered for breached unassigned orders
+- [ ] sla_metrics recorded on delivery completion
+- [ ] On-time rate calculates correctly
+- [ ] Zone breakdown shows correct data
+- [ ] Merchant prep time rankings accurate
+- [ ] Driver late rate rankings accurate
+- [ ] Pending adjustments show in panel
+- [ ] Approve adjustment creates wallet transaction
+- [ ] CSV export includes all metrics
+- [ ] RLS prevents cross-tenant data access
