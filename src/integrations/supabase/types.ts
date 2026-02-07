@@ -3830,6 +3830,115 @@ export type Database = {
           },
         ]
       }
+      demand_forecasts: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          current_drivers_online: number | null
+          forecast_for: string
+          forecast_type: string | null
+          id: string
+          metadata: Json | null
+          predicted_drivers_needed: number
+          predicted_orders: number
+          surge_predicted: boolean | null
+          tenant_id: string | null
+          zone_code: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          current_drivers_online?: number | null
+          forecast_for: string
+          forecast_type?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_drivers_needed: number
+          predicted_orders: number
+          surge_predicted?: boolean | null
+          tenant_id?: string | null
+          zone_code: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          current_drivers_online?: number | null
+          forecast_for?: string
+          forecast_type?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_drivers_needed?: number
+          predicted_orders?: number
+          surge_predicted?: boolean | null
+          tenant_id?: string | null
+          zone_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_forecasts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demand_snapshots: {
+        Row: {
+          avg_assign_seconds: number | null
+          avg_delivery_minutes: number | null
+          avg_wait_minutes: number | null
+          created_at: string | null
+          day_of_week: number
+          drivers_online: number | null
+          hour_of_day: number
+          id: string
+          orders_count: number | null
+          snapshot_time: string
+          surge_multiplier: number | null
+          tenant_id: string | null
+          zone_code: string
+        }
+        Insert: {
+          avg_assign_seconds?: number | null
+          avg_delivery_minutes?: number | null
+          avg_wait_minutes?: number | null
+          created_at?: string | null
+          day_of_week: number
+          drivers_online?: number | null
+          hour_of_day: number
+          id?: string
+          orders_count?: number | null
+          snapshot_time: string
+          surge_multiplier?: number | null
+          tenant_id?: string | null
+          zone_code: string
+        }
+        Update: {
+          avg_assign_seconds?: number | null
+          avg_delivery_minutes?: number | null
+          avg_wait_minutes?: number | null
+          created_at?: string | null
+          day_of_week?: number
+          drivers_online?: number | null
+          hour_of_day?: number
+          id?: string
+          orders_count?: number | null
+          snapshot_time?: string
+          surge_multiplier?: number | null
+          tenant_id?: string | null
+          zone_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_snapshots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_sessions: {
         Row: {
           created_at: string | null
@@ -4996,6 +5105,73 @@ export type Database = {
           },
         ]
       }
+      driver_reposition_recommendations: {
+        Row: {
+          accepted: boolean | null
+          acknowledged_at: string | null
+          created_at: string | null
+          current_zone_code: string | null
+          driver_id: string | null
+          expires_at: string
+          id: string
+          metadata: Json | null
+          priority: number | null
+          reason: string
+          suggested_zone_code: string
+          tenant_id: string | null
+        }
+        Insert: {
+          accepted?: boolean | null
+          acknowledged_at?: string | null
+          created_at?: string | null
+          current_zone_code?: string | null
+          driver_id?: string | null
+          expires_at: string
+          id?: string
+          metadata?: Json | null
+          priority?: number | null
+          reason: string
+          suggested_zone_code: string
+          tenant_id?: string | null
+        }
+        Update: {
+          accepted?: boolean | null
+          acknowledged_at?: string | null
+          created_at?: string | null
+          current_zone_code?: string | null
+          driver_id?: string | null
+          expires_at?: string
+          id?: string
+          metadata?: Json | null
+          priority?: number | null
+          reason?: string
+          suggested_zone_code?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_reposition_recommendations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_reposition_recommendations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_reposition_recommendations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_schedule: {
         Row: {
           created_at: string
@@ -5408,11 +5584,14 @@ export type Database = {
       drivers: {
         Row: {
           acceptance_count: number
+          acceptance_rate: number | null
           allowed_regions: string[] | null
           apns_token: string | null
           avatar_url: string | null
+          avg_delay_minutes: number | null
           bank_connected: boolean | null
           cancel_count: number
+          completion_rate: number | null
           created_at: string
           current_lat: number | null
           current_lng: number | null
@@ -5431,11 +5610,13 @@ export type Database = {
           is_verified: boolean | null
           last_active_at: string | null
           last_heading: number | null
+          last_performance_calc: string | null
           last_speed: number | null
           level: string | null
           license_number: string
           location_suspicious: boolean | null
           move_enabled: boolean | null
+          performance_score: number | null
           phone: string
           prev_lat: number | null
           prev_lng: number | null
@@ -5463,11 +5644,14 @@ export type Database = {
         }
         Insert: {
           acceptance_count?: number
+          acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
+          avg_delay_minutes?: number | null
           bank_connected?: boolean | null
           cancel_count?: number
+          completion_rate?: number | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -5486,11 +5670,13 @@ export type Database = {
           is_verified?: boolean | null
           last_active_at?: string | null
           last_heading?: number | null
+          last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
           license_number: string
           location_suspicious?: boolean | null
           move_enabled?: boolean | null
+          performance_score?: number | null
           phone: string
           prev_lat?: number | null
           prev_lng?: number | null
@@ -5518,11 +5704,14 @@ export type Database = {
         }
         Update: {
           acceptance_count?: number
+          acceptance_rate?: number | null
           allowed_regions?: string[] | null
           apns_token?: string | null
           avatar_url?: string | null
+          avg_delay_minutes?: number | null
           bank_connected?: boolean | null
           cancel_count?: number
+          completion_rate?: number | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -5541,11 +5730,13 @@ export type Database = {
           is_verified?: boolean | null
           last_active_at?: string | null
           last_heading?: number | null
+          last_performance_calc?: string | null
           last_speed?: number | null
           level?: string | null
           license_number?: string
           location_suspicious?: boolean | null
           move_enabled?: boolean | null
+          performance_score?: number | null
           phone?: string
           prev_lat?: number | null
           prev_lng?: number | null
@@ -24654,6 +24845,10 @@ export type Database = {
     }
     Functions: {
       accept_tenant_invitation: { Args: { p_token: string }; Returns: Json }
+      acknowledge_reposition: {
+        Args: { p_accepted: boolean; p_recommendation_id: string }
+        Returns: Json
+      }
       admin_assign_driver: {
         Args: { p_driver_id: string; p_order_id: string; p_tenant_id: string }
         Returns: Json
@@ -24684,6 +24879,7 @@ export type Database = {
         }
         Returns: Json
       }
+      aggregate_demand_snapshot: { Args: never; Returns: number }
       approve_performance_adjustment: {
         Args: { p_adjustment_id: string; p_approve: boolean; p_notes?: string }
         Returns: Json
@@ -24817,7 +25013,16 @@ export type Database = {
           driver_id: string
         }[]
       }
+      generate_all_forecasts: { Args: never; Returns: number }
       generate_referral_code: { Args: never; Returns: string }
+      generate_zone_forecast: {
+        Args: {
+          p_hours_ahead?: number
+          p_tenant_id?: string
+          p_zone_code: string
+        }
+        Returns: Json
+      }
       get_active_countries: {
         Args: never
         Returns: {
@@ -25072,6 +25277,10 @@ export type Database = {
         Args: { p_referee_id: string; p_referral_code: string }
         Returns: Json
       }
+      recommend_driver_positions: {
+        Args: { p_tenant_id?: string }
+        Returns: number
+      }
       record_sla_metrics: { Args: { p_order_id: string }; Returns: string }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
@@ -25109,8 +25318,13 @@ export type Database = {
         }
         Returns: Json
       }
+      update_all_driver_performance: { Args: never; Returns: number }
       update_batch_stop_status: {
         Args: { p_driver_id: string; p_status: string; p_stop_id: string }
+        Returns: Json
+      }
+      update_driver_performance_stats: {
+        Args: { p_driver_id: string }
         Returns: Json
       }
       update_notification_updated_at: {
