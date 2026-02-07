@@ -102,6 +102,9 @@ serve(async (req) => {
     // Initialize Stripe
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    // Get origin with fallback
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "https://myzivo.lovable.app";
+
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -127,8 +130,8 @@ serve(async (req) => {
         customer_phone,
         ride_type,
       },
-      success_url: `${req.headers.get("origin")}/rides/success?session_id={CHECKOUT_SESSION_ID}&request_id=${rideRequest.id}`,
-      cancel_url: `${req.headers.get("origin")}/rides?cancelled=true`,
+      success_url: `${origin}/rides/success?session_id={CHECKOUT_SESSION_ID}&request_id=${rideRequest.id}`,
+      cancel_url: `${origin}/rides?cancelled=true`,
     });
 
     // Update ride request with session ID
