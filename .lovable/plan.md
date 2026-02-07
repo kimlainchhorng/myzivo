@@ -1,114 +1,161 @@
 
+# Real Mapbox Integration for ZIVO Ride Flow
 
-# ZIVO Ride Flow Enhancement Plan
+## Overview
 
-## Current State Analysis
-
-After reviewing the codebase, **the complete ride flow already exists and is fully functional**. The current implementation closely matches your requirements with a few naming and feature gaps:
-
-| Your Request | Current Implementation | Status |
-|--------------|------------------------|--------|
-| `/ride/searching` | `/ride/finding` | Route name difference |
-| "Pay $X & Request" button | "CONFIRM RIDE" button | Text update needed |
-| Rotating status messages | Already implemented (3 stages) | ✓ Working |
-| 6-8 second auto-navigate | 6 seconds currently | ✓ Working |
-| `/ride/driver` with driver card | Fully implemented | ✓ Working |
-| ETA countdown | Updates every 12 seconds | ✓ Working |
-| "Driver has arrived" status | ✓ Implemented | ✓ Working |
-| START TRIP button | ✓ Shows when ETA = 0 | ✓ Working |
-| `/ride/trip` with progress | Fully implemented | ✓ Working |
-| Receipt modal | Has fare breakdown + rating | Missing tips |
-| localStorage persistence | Uses route state only | Needs adding |
+This plan adds **real Mapbox maps** with **real geocoding**, **real routing (distance/duration)**, and **real dynamic pricing** throughout the ride booking flow. All changes maintain the existing UI design.
 
 ---
 
-## Required Changes
+## Current State
 
-### 1. Rename Route: `/ride/finding` → `/ride/searching`
+| Feature | Current Implementation |
+|---------|------------------------|
+| Maps | Google Maps (requires `VITE_GOOGLE_MAPS_API_KEY`) |
+| Geocoding | Mapbox reverse geocoding only (for current location) |
+| Address Search | Mock Louisiana suggestions (hardcoded list) |
+| Route/Distance | Mock hash-based calculation (2-12 miles) |
+| Pricing | Formula-based but using mock distance/duration |
+| Driver Movement | Time-based intervals, not route-based |
 
-Update the route path and all navigation calls for consistency with your naming convention.
-
-**Files affected:**
-- `src/App.tsx` - Route definition
-- `src/pages/ride/RideConfirmPage.tsx` - Navigation target
-- Rename file: `RideFindingPage.tsx` → `RideSearchingPage.tsx`
-
----
-
-### 2. Update Confirm Button Text
-
-Change from "CONFIRM RIDE" to "PAY $X & REQUEST" to match the payment-focused action.
-
-**File:** `src/pages/ride/RideConfirmPage.tsx`
-
-```
-Before: CONFIRM RIDE
-After:  PAY ${displayPrice.toFixed(2)} & REQUEST
-```
+**Mapbox Token**: Already configured as `VITE_MAPBOX_ACCESS_TOKEN` (verified in secrets)
 
 ---
 
-### 3. Add Tip Buttons to Receipt Modal
+## Implementation Plan
 
-Add $1, $3, $5 tip selection buttons before the DONE action.
+### Phase 1: Mapbox Service Layer
 
-**File:** `src/components/ride/RideReceiptModal.tsx`
+Create `src/services/mapbox.ts` - a centralized service for all Mapbox API calls:
 
-Add tip selection UI after the star rating section:
-- Three buttons: $1, $3, $5
-- Optional "No Tip" toggle
-- Update total display to include selected tip
+| Function | Purpose |
+|----------|---------|
+| `geocodeAddress(query)` | Convert address string → lat/lng |
+| `reverseGeocode(lat, lng)` | Convert coordinates → address |
+| `getRoute(origin, dest)` | Get distance (meters), duration (seconds), geometry |
+| `getAddressSuggestions(query)` | Autocomplete suggestions via Places API |
 
----
-
-### 4. Add localStorage Persistence for Trip State
-
-Create a centralized trip state manager to persist ride details across route navigations and page refreshes.
-
-**New file:** `src/hooks/useRideTripState.ts`
-
-This hook will:
-- Save trip details to localStorage when ride is confirmed
-- Load trip state on page mount if route state is missing
-- Clear state when trip is completed (DONE button)
-- Provide consistent state across all ride flow pages
-
-**Updates to existing pages:**
-- `RideConfirmPage.tsx` - Save state when confirming
-- `RideSearchingPage.tsx` - Read from localStorage if route state missing
-- `RideDriverPage.tsx` - Read from localStorage if route state missing
-- `RideTripPage.tsx` - Read from localStorage if route state missing
-- `RideReceiptModal.tsx` - Clear localStorage on DONE
+All functions will:
+- Check for `VITE_MAPBOX_ACCESS_TOKEN` availability
+- Return graceful fallbacks if token missing
+- Cache results to prevent duplicate API calls
 
 ---
 
-## Technical Implementation Details
+### Phase 2: Mapbox Map Components
 
-### Trip State Structure (localStorage)
+Create reusable Mapbox-powered map components:
+
+**New File**: `src/components/maps/MapboxMap.tsx`
+- Wrapper around mapbox-gl
+- Dark mode styling matching ZIVO theme
+- Marker support (pickup, dropoff, driver types)
+- Route polyline rendering
+- Graceful fallback message: "Map key not set"
+
+**New File**: `src/components/maps/MapboxMapProvider.tsx`
+- Context provider for shared map state
+- Token availability check
+
+---
+
+### Phase 3: Real Geocoding & Routing on Rides Page
+
+Update `src/pages/Rides.tsx`:
+
+1. **Replace mock address suggestions** with Mapbox Places API
+   - Debounced search (300ms) to reduce API calls
+   - Cache recent searches
+
+2. **Add geocoding when addresses are selected**
+   - Store lat/lng for pickup and destination
+   - New state: `pickupCoords`, `dropoffCoords`
+
+3. **Fetch real route when both locations set**
+   - Call Mapbox Directions API
+   - Extract: `distance` (meters → miles), `duration` (seconds → minutes)
+   - Store route geometry for map display
+   - Update `estimatedDistance` and `estimatedDuration` with real values
+
+4. **Update pricing with real distance/duration**
+   - Use existing `calculateFare()` function
+   - Feed in real values instead of mock values
+   - All ride card prices update dynamically
+
+---
+
+### Phase 4: Real Pricing Formula
+
+Update `src/lib/tripCalculator.ts` to add new multipliers matching your spec:
 
 ```text
-Key: "zivo_active_ride"
+Pricing Formula:
+fare = (baseFare + miles × perMile + minutes × perMin) × multiplier
 
-Value: {
-  ride: RideOption,
-  pickup: string,
-  destination: string,
-  paymentMethod: string,
-  tripDetails: { distance: number, duration: number },
-  startedAt: timestamp
-}
+Constants:
+- baseFare = $2.00
+- perMile = $1.25
+- perMin = $0.20
+
+Multipliers:
+- Economy (wait_save, standard, green, priority): 0.75 - 1.30
+- Premium (comfort, black, black_suv, xxl): 1.55 - 3.70
+- Elite (lux, sprinter, secure, pet): 3.0 - 20.0
 ```
 
-### New Hook: useRideTripState
+The existing `calculateFare()` function in `Rides.tsx` already uses a compatible formula - we'll ensure it matches your spec exactly.
 
-```text
-function useRideTripState() {
-  - getActiveTrip(): returns stored trip or null
-  - saveTrip(tripData): persists to localStorage
-  - clearTrip(): removes from localStorage
-  - hasActiveTrip: boolean
-}
-```
+---
+
+### Phase 5: Driver Movement on Real Route
+
+**Update `/ride/driver` (RideDriverPage.tsx)**:
+
+1. Receive route geometry from previous page via state
+2. Create driver marker that follows the actual route polyline
+3. Interpolate driver position every 1 second along route coordinates
+4. When driver reaches pickup point (within threshold):
+   - Show "Driver has arrived!"
+   - Enable "START TRIP" button
+
+**Update `/ride/trip` (RideTripPage.tsx)**:
+
+1. Receive full route geometry
+2. Move driver marker from pickup → destination along polyline
+3. Calculate progress percentage based on route completion
+4. Update ETA dynamically based on remaining route distance
+5. When complete, enable "END TRIP"
+
+---
+
+### Phase 6: Map Components Integration
+
+**Update `src/components/ride/DriverMapView.tsx`**:
+- Replace Google Maps with Mapbox
+- Accept route geometry prop
+- Animate driver along actual route
+
+**Update `src/components/ride/TripMapView.tsx`**:
+- Replace Google Maps with Mapbox
+- Show full pickup → destination route
+- Animate car marker along route
+
+**Update `src/components/ride/RidesMapBackground.tsx`**:
+- Switch to Mapbox for background
+- Show pickup/dropoff markers when set
+- Display route preview
+
+---
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/services/mapbox.ts` | Centralized Mapbox API service |
+| `src/components/maps/MapboxMap.tsx` | Reusable Mapbox component |
+| `src/components/maps/MapboxMapProvider.tsx` | Context for map state |
+| `src/hooks/useMapboxRoute.ts` | Hook for fetching routes with caching |
+| `src/hooks/useMapboxGeocode.ts` | Hook for geocoding with caching |
 
 ---
 
@@ -116,56 +163,101 @@ function useRideTripState() {
 
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Update route path from `/ride/finding` to `/ride/searching` |
-| `src/pages/ride/RideFindingPage.tsx` | Rename to `RideSearchingPage.tsx`, add localStorage read |
-| `src/pages/ride/RideConfirmPage.tsx` | Update button text, add localStorage save |
-| `src/pages/ride/RideDriverPage.tsx` | Add localStorage fallback read |
-| `src/pages/ride/RideTripPage.tsx` | Add localStorage fallback read |
-| `src/components/ride/RideReceiptModal.tsx` | Add tip buttons, clear localStorage on done |
-| `src/hooks/useRideTripState.ts` | **New file** - Trip state management hook |
+| `src/pages/Rides.tsx` | Add geocoding, routing, real pricing display |
+| `src/pages/ride/RideDriverPage.tsx` | Receive route data, animate driver on real path |
+| `src/pages/ride/RideTripPage.tsx` | Animate trip progress on real route |
+| `src/components/ride/DriverMapView.tsx` | Switch to Mapbox, add route animation |
+| `src/components/ride/TripMapView.tsx` | Switch to Mapbox, add route animation |
+| `src/components/ride/RidesMapBackground.tsx` | Switch to Mapbox background |
+| `src/lib/tripCalculator.ts` | Ensure pricing formula matches spec |
+| `src/components/maps/index.ts` | Export new Mapbox components |
 
 ---
 
-## User Flow After Changes
+## Graceful Fallbacks
+
+If Mapbox API fails or token is missing:
+
+| Feature | Fallback Behavior |
+|---------|-------------------|
+| Map display | Static placeholder image with message "Map key not set" |
+| Address suggestions | Existing mock Louisiana addresses |
+| Geocoding | Use mock Baton Rouge coordinates |
+| Route/Distance | Use mock hash-based calculation |
+| Driver movement | Time-based animation (current behavior) |
+
+---
+
+## State Flow
 
 ```text
-[/ride] - Select pickup, destination, vehicle
+[/ride]
+   User enters pickup → Geocode → pickupCoords
+   User enters destination → Geocode → dropoffCoords
+   Both set → Fetch route → { distance, duration, geometry }
+   Update all ride card prices with real fare
               ↓
-[/ride/confirm] - Review trip, select payment
-              ↓ Tap "PAY $12.50 & REQUEST"
-              ↓ → localStorage saves trip state
+[/ride/confirm]
+   Display real distance/duration/price
+   Save route geometry to localStorage
               ↓
-[/ride/searching] - Animated search screen
-              ↓ Rotating: "Contacting..." → "Waiting..." → "Confirmed..."
-              ↓ 6-8 seconds auto-navigate
+[/ride/searching]
+   (unchanged - animated search)
               ↓
-[/ride/driver] - Driver card with:
-              ↓ • Avatar, name, rating (4.8★)
-              ↓ • Vehicle model + plate
-              ↓ • ETA countdown (every 10-15s)
-              ↓ • Call / Message / Cancel buttons
-              ↓ When ETA = 0: "Driver has arrived!" + START TRIP
+[/ride/driver]
+   Load route geometry
+   Driver marker follows route polyline → pickup
+   Arrival triggers "Driver has arrived!"
               ↓
-[/ride/trip] - "On the way to destination"
-              ↓ Progress indicator + END TRIP button
-              ↓
-[Receipt Modal] - Fare breakdown + Rating + Tips ($1/$3/$5)
-              ↓ Tap DONE
-              ↓ → localStorage cleared
-              ↓
-[/ride] - Back to home
+[/ride/trip]
+   Driver marker follows route polyline → destination
+   Progress % = (traveled distance / total distance)
+   Arrival enables "END TRIP"
 ```
+
+---
+
+## API Usage Estimates
+
+Per ride booking session:
+- 2 geocode requests (pickup + destination)
+- 1 directions request
+- ~5-10 autocomplete requests
+
+All within Mapbox free tier (100,000 requests/month).
+
+---
+
+## Technical Details
+
+### Route Geometry Interpolation
+
+Driver position will be calculated by:
+1. Storing route as array of coordinates from Mapbox
+2. Using elapsed time to calculate expected progress
+3. Finding the coordinate at that progress point
+4. Smoothly animating marker between points (requestAnimationFrame)
+
+### Caching Strategy
+
+```text
+Cache key: `zivo_geo_${address_hash}`
+Cache key: `zivo_route_${origin_hash}_${dest_hash}`
+TTL: 30 minutes (localStorage)
+```
+
+This prevents redundant API calls when user navigates back/forward.
 
 ---
 
 ## Summary
 
-Most of the flow is already complete and working. The changes are:
-
-1. **Route rename**: `/ride/finding` → `/ride/searching`
-2. **Button text**: "CONFIRM RIDE" → "PAY $X & REQUEST"
-3. **Tip buttons**: Add $1/$3/$5 options to receipt
-4. **State persistence**: Add localStorage backup for trip data
-
-All changes maintain the existing ZIVO branding, glassmorphism styling, and bottom navigation.
-
+| Enhancement | Implementation |
+|-------------|----------------|
+| Real maps | Mapbox GL JS with dark styling |
+| Real geocoding | Mapbox Geocoding API (forward + reverse) |
+| Real autocomplete | Mapbox Places API |
+| Real routes | Mapbox Directions API |
+| Real pricing | Distance × $1.25 + Duration × $0.20 + $2 base |
+| Driver animation | Follow actual route polyline |
+| Token missing | Graceful fallback to mock/static content |
