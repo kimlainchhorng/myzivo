@@ -19,6 +19,7 @@ import {
   X,
   Headphones,
   AlertTriangle,
+  Package,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,11 @@ const navItems = [
     label: "Orders",
     path: "/dispatch/orders",
     icon: ClipboardList,
+  },
+  {
+    label: "Batches",
+    path: "/dispatch/batches",
+    icon: Package,
   },
   {
     label: "Drivers",
