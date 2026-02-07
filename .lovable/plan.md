@@ -1,363 +1,554 @@
 
-# SLA & Performance Monitoring + Automation Implementation Plan
+# Fraud Prevention, Risk Scoring, and Safety Controls Implementation Plan
 
 ## Current State Analysis
 
+The project already has a **significant security foundation** that we will build upon:
+
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `food_orders.assigned_at` | Exists | Already tracks assignment timestamp |
-| `food_orders.picked_up_at` | Exists | Already tracks pickup timestamp |
-| `food_orders.delivered_at` | Exists | Already tracks delivery timestamp |
-| `food_orders.deliver_by` | Exists | SLA delivery target field |
-| `food_orders.pickup_by` | Exists | SLA pickup target field |
-| `food_orders.prepared_at` | Exists | Merchant ready timestamp |
-| `food_orders.ready_at` | Exists | Alternative merchant ready timestamp |
-| `food_orders.estimated_prep_time` | Exists | Prep time estimate |
-| `food_orders.duration_minutes` | Exists | Estimated delivery duration |
-| `order_events` table | Exists | Event log with type, actor_id, data |
-| `driver_wallets` table | Exists | Balance tracking for drivers |
-| `wallet_transactions` table | Exists | Transaction ledger for wallet operations |
-| `eats_zones` table | Exists | Zone configuration with pricing |
-| `auto_assign_order_v2` RPC | Exists | Auto-assignment function |
-| `tenants` table | Exists | Multi-tenant support |
-| `useDispatchAnalytics` hook | Exists | Analytics foundation to extend |
-| SLA status tracking | Missing | Need sla_status, at_risk_reason fields |
-| SLA metrics table | Missing | Historical SLA data for analytics |
-| Performance adjustments | Missing | Bonus/penalty tracking |
-| SLA evaluator | Missing | Scheduled SLA monitoring |
-| SLA dashboard | Missing | No `/dispatch/sla` route |
+| `security_events` table | Exists | Has event_type, severity, device_fingerprint, ip_address, user_agent, is_blocked |
+| `admin_security_alerts` table | Exists | Linked to security_events, has resolution workflow |
+| `trusted_devices` table | Exists | Device trust tracking per user |
+| `login_sessions` table | Exists | Session tracking with IP, device fingerprint |
+| `src/lib/security/botDetection.ts` | Exists | Device fingerprinting, bot detection, interaction tracking |
+| `src/config/fraudPrevention.ts` | Exists | Full risk scoring config: thresholds, signals, velocity limits |
+| `src/hooks/useRiskAssessment.ts` | Exists | Client-side risk scoring hook |
+| `AdminFraudDetection.tsx` | Exists | Admin panel for fraud alerts |
+| `log_security_event` RPC | Exists | Logs security events with auto-alert on critical |
+| `check_login_anomaly` RPC | Exists | Login security checks |
+| `validate_withdrawal` RPC | Exists | Withdrawal fraud checks |
+| `detect_suspicious_activity` trigger | Exists | Auto-detects brute force, rapid withdrawals |
+| Multi-tenant framework | Exists | tenants, has_tenant_permission() ready |
+| Order risk fields | Missing | Need risk_level, risk_score on food_orders |
+| Tenant-scoped risk tables | Missing | Need risk_events, risk_scores, blocked_entities |
+| Velocity check RPC | Missing | Unified velocity checking |
+| Safety dashboard in Dispatch | Missing | No /dispatch/safety route |
 
 ---
 
 ## Architecture Overview
 
 ```text
-SLA Monitoring System:
+Fraud Prevention Flow:
 
-Order Created
+User Action (Login / Order / Payment)
     │
-    ├── set_order_sla_targets() RPC
-    │   └── Calculate prep_by, pickup_by, deliver_by based on:
-    │       - estimated_prep_time
-    │       - duration_minutes
-    │       - zone-specific config
+    ├── Client: Device fingerprint + bot detection
+    │   └── src/lib/security/botDetection.ts (exists)
     │
-    ▼
-┌─────────────────────────────────────────────────────┐
-│  Scheduled SLA Evaluator (runs every 2-5 min)       │
-│  - Checks active orders against SLA targets         │
-│  - Marks sla_status: on_time → at_risk → breached   │
-│  - Records reasons (no_driver, merchant_delay, etc) │
-│  - Triggers notifications + automation actions       │
-└─────────────────────────────────────────────────────┘
-    │
-    ├── At-Risk Actions:
-    │   ├── Notify dispatch (in-app)
-    │   ├── Highlight order in UI (yellow/red)
-    │   └── Log to tenant_audit_log
-    │
-    ├── Breached Actions:
-    │   ├── Boost priority + re-trigger auto_assign_v2
-    │   ├── Notify driver/merchant
-    │   ├── Suggest reassignment to dispatcher
-    │   └── Record sla_metrics for analytics
+    ├── Client: Risk assessment
+    │   └── useRiskAssessment hook (exists)
     │
     ▼
-Order Delivered
+┌─────────────────────────────────────────────────────────┐
+│  Backend: check_velocity() RPC                          │
+│  - Checks action frequency limits                       │
+│  - Records risk_events if exceeded                      │
+└─────────────────────────────────────────────────────────┘
     │
-    └── Record to sla_metrics table
-        - Calculate actual times (assign, prep, pickup, delivery)
-        - Determine on_time or late
-        - Optional: Queue bonus/penalty if applicable
+    ▼
+┌─────────────────────────────────────────────────────────┐
+│  Backend: compute_risk_score() RPC                      │
+│  - Sums recent risk_events scores                       │
+│  - Updates risk_scores table                            │
+│  - Auto-blocks if score > 80                            │
+└─────────────────────────────────────────────────────────┘
+    │
+    ├── If blocked → Deny action + show message
+    │
+    ├── If high risk → Flag for review
+    │
+    ▼
+┌─────────────────────────────────────────────────────────┐
+│  Dispatch Safety Dashboard                              │
+│  - /dispatch/safety (overview)                          │
+│  - High-risk orders, blocked entities, risk events      │
+│  - Actions: approve, block, reset score                 │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Database Changes
 
-### 1. Add SLA Status Fields to `food_orders`
+### 1. Create `risk_events` Table (Tenant-scoped)
+
+```sql
+CREATE TABLE public.risk_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
+  order_id UUID REFERENCES food_orders(id) ON DELETE SET NULL,
+  event_type TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'warning' CHECK (severity IN ('info', 'warning', 'critical')),
+  score INT NOT NULL DEFAULT 0,
+  details JSONB DEFAULT '{}',
+  device_fingerprint TEXT,
+  ip_address TEXT,
+  user_agent TEXT
+);
+
+CREATE INDEX idx_risk_events_tenant_time ON risk_events(tenant_id, created_at DESC);
+CREATE INDEX idx_risk_events_user ON risk_events(user_id, created_at DESC);
+CREATE INDEX idx_risk_events_type ON risk_events(tenant_id, event_type);
+```
+
+### 2. Create `risk_scores` Table (User/Order Scoring)
+
+```sql
+CREATE TABLE public.risk_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  total_score INT DEFAULT 0,
+  risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high', 'blocked')),
+  last_evaluated TIMESTAMPTZ DEFAULT now(),
+  score_breakdown JSONB DEFAULT '{}',
+  CONSTRAINT unique_risk_score_user UNIQUE (user_id)
+);
+
+CREATE INDEX idx_risk_scores_tenant ON risk_scores(tenant_id, risk_level);
+CREATE INDEX idx_risk_scores_level ON risk_scores(risk_level) WHERE risk_level IN ('high', 'blocked');
+```
+
+### 3. Create `blocked_entities` Table
+
+```sql
+CREATE TABLE public.blocked_entities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  entity_type TEXT NOT NULL CHECK (entity_type IN ('user', 'driver', 'merchant', 'device', 'ip', 'card')),
+  entity_value TEXT NOT NULL,
+  reason TEXT,
+  blocked_by UUID REFERENCES auth.users(id),
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,
+  metadata JSONB DEFAULT '{}',
+  CONSTRAINT unique_blocked_entity UNIQUE (tenant_id, entity_type, entity_value)
+);
+
+CREATE INDEX idx_blocked_active ON blocked_entities(tenant_id, entity_type, entity_value) WHERE is_active = true;
+CREATE INDEX idx_blocked_expires ON blocked_entities(expires_at) WHERE expires_at IS NOT NULL AND is_active = true;
+```
+
+### 4. Create `device_sessions` Table
+
+```sql
+CREATE TABLE public.device_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  device_fingerprint TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  last_seen TIMESTAMPTZ DEFAULT now(),
+  is_trusted BOOLEAN DEFAULT false,
+  trust_expires_at TIMESTAMPTZ,
+  CONSTRAINT unique_device_session UNIQUE (user_id, device_fingerprint)
+);
+
+CREATE INDEX idx_device_sessions_user ON device_sessions(user_id, last_seen DESC);
+CREATE INDEX idx_device_sessions_fingerprint ON device_sessions(device_fingerprint);
+```
+
+### 5. Add Risk Fields to `food_orders`
 
 ```sql
 ALTER TABLE food_orders
-  ADD COLUMN IF NOT EXISTS sla_status TEXT DEFAULT 'on_time' 
-    CHECK (sla_status IN ('on_time', 'at_risk', 'breached')),
-  ADD COLUMN IF NOT EXISTS sla_at_risk_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS sla_breached_at TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS at_risk_reason TEXT,
-  ADD COLUMN IF NOT EXISTS breached_reason TEXT,
-  ADD COLUMN IF NOT EXISTS sla_prep_by TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS sla_pickup_by TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS sla_deliver_by TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS risk_level TEXT DEFAULT 'low' CHECK (risk_level IN ('low', 'medium', 'high')),
+  ADD COLUMN IF NOT EXISTS risk_score INT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS risk_signals TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS requires_review BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS review_status TEXT CHECK (review_status IN ('pending', 'approved', 'rejected')),
+  ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES auth.users(id),
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
 
-CREATE INDEX IF NOT EXISTS idx_food_orders_sla_status ON food_orders(sla_status) 
-  WHERE status NOT IN ('completed', 'cancelled');
+CREATE INDEX idx_food_orders_risk ON food_orders(risk_level) WHERE risk_level IN ('medium', 'high');
+CREATE INDEX idx_food_orders_review ON food_orders(requires_review, review_status);
 ```
 
-### 2. Create `sla_metrics` Table (Historical Analytics)
+### 6. Add `safety.manage` Permission
 
 ```sql
-CREATE TABLE IF NOT EXISTS public.sla_metrics (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  zone_code TEXT,
-  order_id UUID REFERENCES food_orders(id) ON DELETE CASCADE,
-  merchant_id UUID REFERENCES restaurants(id) ON DELETE SET NULL,
-  driver_id UUID REFERENCES drivers(id) ON DELETE SET NULL,
-  -- Time metrics (in seconds)
-  assign_seconds INT, -- time from created_at to assigned_at
-  prep_seconds INT,   -- time from created_at to prepared_at/ready_at
-  pickup_seconds INT, -- time from assigned_at to picked_up_at
-  delivery_seconds INT, -- time from picked_up_at to delivered_at
-  total_seconds INT,  -- time from created_at to delivered_at
-  -- SLA result
-  sla_result TEXT NOT NULL CHECK (sla_result IN ('on_time', 'late')),
-  late_by_seconds INT DEFAULT 0,
-  late_stage TEXT, -- prep, pickup, delivery
-  -- Context
-  distance_miles NUMERIC,
-  notes TEXT,
-  CONSTRAINT unique_sla_metric_order UNIQUE (order_id)
-);
-
-CREATE INDEX idx_sla_metrics_tenant_date ON sla_metrics(tenant_id, created_at DESC);
-CREATE INDEX idx_sla_metrics_merchant ON sla_metrics(merchant_id, created_at DESC);
-CREATE INDEX idx_sla_metrics_driver ON sla_metrics(driver_id, created_at DESC);
-CREATE INDEX idx_sla_metrics_zone ON sla_metrics(zone_code, created_at DESC);
-CREATE INDEX idx_sla_metrics_result ON sla_metrics(tenant_id, sla_result);
-```
-
-### 3. Create `performance_adjustments` Table (Bonus/Penalty)
-
-```sql
-CREATE TABLE IF NOT EXISTS public.performance_adjustments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
-  driver_id UUID REFERENCES drivers(id) ON DELETE CASCADE,
-  order_id UUID REFERENCES food_orders(id) ON DELETE SET NULL,
-  type TEXT NOT NULL CHECK (type IN ('bonus', 'penalty')),
-  amount_cents INT NOT NULL,
-  reason TEXT NOT NULL,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'applied', 'rejected')),
-  approved_by UUID REFERENCES auth.users(id),
-  approved_at TIMESTAMPTZ,
-  applied_at TIMESTAMPTZ,
-  wallet_transaction_id UUID REFERENCES wallet_transactions(id)
-);
-
-CREATE INDEX idx_perf_adj_tenant ON performance_adjustments(tenant_id, created_at DESC);
-CREATE INDEX idx_perf_adj_driver ON performance_adjustments(driver_id, status);
-CREATE INDEX idx_perf_adj_pending ON performance_adjustments(tenant_id) WHERE status = 'pending';
-```
-
-### 4. Add SLA Configuration to `eats_zones` or Tenant Settings
-
-```sql
--- Add SLA config to zones (optional, can also be tenant-level)
-ALTER TABLE eats_zones
-  ADD COLUMN IF NOT EXISTS sla_prep_minutes INT DEFAULT 15,
-  ADD COLUMN IF NOT EXISTS sla_pickup_buffer_minutes INT DEFAULT 10,
-  ADD COLUMN IF NOT EXISTS sla_delivery_buffer_minutes INT DEFAULT 15,
-  ADD COLUMN IF NOT EXISTS at_risk_threshold_minutes INT DEFAULT 5;
+INSERT INTO permissions (key, description, category) VALUES
+  ('safety.manage', 'View and manage fraud prevention and risk controls', 'security')
+ON CONFLICT (key) DO NOTHING;
 ```
 
 ---
 
 ## RPC Functions
 
-### 1. `set_order_sla_targets(p_order_id UUID)`
-
-Sets SLA target timestamps when order is created or route changes:
+### 1. `check_velocity` - Unified Velocity Checking
 
 ```sql
-CREATE OR REPLACE FUNCTION public.set_order_sla_targets(p_order_id UUID)
+CREATE OR REPLACE FUNCTION public.check_velocity(
+  p_user_id UUID,
+  p_action TEXT,
+  p_scope TEXT DEFAULT 'user',
+  p_scope_value TEXT DEFAULT NULL,
+  p_tenant_id UUID DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_limit INT;
+  v_window_ms INT;
+  v_count INT;
+  v_exceeded BOOLEAN := false;
+  v_score INT := 0;
+BEGIN
+  -- Get limit config based on action
+  SELECT 
+    CASE p_action
+      WHEN 'order_create' THEN 5
+      WHEN 'payment_attempt' THEN 5
+      WHEN 'payment_failed' THEN 3
+      WHEN 'login_attempt' THEN 10
+      ELSE 20
+    END,
+    CASE p_action
+      WHEN 'order_create' THEN 300000 -- 5 minutes
+      WHEN 'payment_attempt' THEN 3600000 -- 1 hour
+      WHEN 'payment_failed' THEN 600000 -- 10 minutes
+      WHEN 'login_attempt' THEN 300000 -- 5 minutes
+      ELSE 3600000
+    END
+  INTO v_limit, v_window_ms;
+
+  -- Count recent actions
+  SELECT COUNT(*) INTO v_count
+  FROM risk_events
+  WHERE 
+    CASE 
+      WHEN p_scope = 'user' THEN user_id = p_user_id
+      WHEN p_scope = 'ip' THEN ip_address = p_scope_value
+      WHEN p_scope = 'device' THEN device_fingerprint = p_scope_value
+      ELSE user_id = p_user_id
+    END
+    AND event_type = p_action
+    AND created_at > now() - (v_window_ms || ' milliseconds')::INTERVAL;
+
+  v_exceeded := v_count >= v_limit;
+  
+  IF v_exceeded THEN
+    v_score := CASE 
+      WHEN p_action = 'payment_failed' THEN 35
+      WHEN p_action = 'login_attempt' THEN 30
+      ELSE 25
+    END;
+    
+    -- Record velocity breach event
+    INSERT INTO risk_events (tenant_id, user_id, event_type, severity, score, details)
+    VALUES (
+      p_tenant_id, 
+      p_user_id, 
+      'velocity_limit',
+      CASE WHEN v_count >= v_limit * 2 THEN 'critical' ELSE 'warning' END,
+      v_score,
+      jsonb_build_object('action', p_action, 'count', v_count, 'limit', v_limit)
+    );
+  END IF;
+
+  RETURN jsonb_build_object(
+    'exceeded', v_exceeded,
+    'count', v_count,
+    'limit', v_limit,
+    'score_added', CASE WHEN v_exceeded THEN v_score ELSE 0 END
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+```
+
+### 2. `compute_risk_score` - Recompute User Risk Score
+
+```sql
+CREATE OR REPLACE FUNCTION public.compute_risk_score(p_user_id UUID, p_tenant_id UUID DEFAULT NULL)
+RETURNS JSONB AS $$
+DECLARE
+  v_total_score INT := 0;
+  v_risk_level TEXT := 'low';
+  v_breakdown JSONB;
+BEGIN
+  -- Sum scores from last 24h risk events
+  SELECT 
+    COALESCE(SUM(score), 0),
+    jsonb_object_agg(event_type, COALESCE(type_score, 0))
+  INTO v_total_score, v_breakdown
+  FROM (
+    SELECT event_type, SUM(score) as type_score
+    FROM risk_events
+    WHERE user_id = p_user_id
+      AND created_at > now() - INTERVAL '24 hours'
+    GROUP BY event_type
+  ) subq;
+
+  -- Determine risk level
+  v_risk_level := CASE
+    WHEN v_total_score > 80 THEN 'blocked'
+    WHEN v_total_score > 50 THEN 'high'
+    WHEN v_total_score > 20 THEN 'medium'
+    ELSE 'low'
+  END;
+
+  -- Upsert risk score
+  INSERT INTO risk_scores (tenant_id, user_id, total_score, risk_level, score_breakdown, last_evaluated)
+  VALUES (p_tenant_id, p_user_id, v_total_score, v_risk_level, COALESCE(v_breakdown, '{}'), now())
+  ON CONFLICT (user_id) DO UPDATE SET
+    total_score = EXCLUDED.total_score,
+    risk_level = EXCLUDED.risk_level,
+    score_breakdown = EXCLUDED.score_breakdown,
+    last_evaluated = now();
+
+  -- Auto-block if score exceeds threshold
+  IF v_risk_level = 'blocked' AND p_tenant_id IS NOT NULL THEN
+    INSERT INTO blocked_entities (tenant_id, entity_type, entity_value, reason)
+    VALUES (p_tenant_id, 'user', p_user_id::TEXT, 'Auto-blocked: Risk score exceeded threshold')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'user_id', p_user_id,
+    'total_score', v_total_score,
+    'risk_level', v_risk_level,
+    'breakdown', v_breakdown
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+```
+
+### 3. `check_blocked` - Check if Entity is Blocked
+
+```sql
+CREATE OR REPLACE FUNCTION public.check_blocked(
+  p_tenant_id UUID,
+  p_entity_type TEXT,
+  p_entity_value TEXT
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_blocked RECORD;
+BEGIN
+  SELECT * INTO v_blocked
+  FROM blocked_entities
+  WHERE tenant_id = p_tenant_id
+    AND entity_type = p_entity_type
+    AND entity_value = p_entity_value
+    AND is_active = true
+    AND (expires_at IS NULL OR expires_at > now());
+
+  IF v_blocked IS NOT NULL THEN
+    RETURN jsonb_build_object(
+      'is_blocked', true,
+      'reason', v_blocked.reason,
+      'blocked_at', v_blocked.created_at
+    );
+  END IF;
+
+  RETURN jsonb_build_object('is_blocked', false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
+```
+
+### 4. `assess_order_risk` - Score Order at Creation
+
+```sql
+CREATE OR REPLACE FUNCTION public.assess_order_risk(p_order_id UUID)
 RETURNS JSONB AS $$
 DECLARE
   v_order RECORD;
-  v_zone RECORD;
-  v_prep_minutes INT;
-  v_pickup_buffer INT;
-  v_delivery_buffer INT;
+  v_user_score RECORD;
+  v_signals TEXT[] := '{}';
+  v_score INT := 0;
+  v_risk_level TEXT := 'low';
+  v_requires_review BOOLEAN := false;
+  v_account_age INTERVAL;
+  v_prev_order_count INT;
 BEGIN
   SELECT * INTO v_order FROM food_orders WHERE id = p_order_id;
-  IF v_order IS NULL THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Order not found');
+  IF v_order IS NULL THEN RETURN jsonb_build_object('error', 'Order not found'); END IF;
+
+  -- Get user's risk score
+  SELECT * INTO v_user_score FROM risk_scores WHERE user_id = v_order.customer_id;
+
+  -- Check account age
+  SELECT now() - created_at INTO v_account_age
+  FROM auth.users WHERE id = v_order.customer_id;
+
+  IF v_account_age < INTERVAL '1 day' THEN
+    v_signals := array_append(v_signals, 'new_account');
+    v_score := v_score + 10;
   END IF;
 
-  -- Get zone config (or use defaults)
-  SELECT sla_prep_minutes, sla_pickup_buffer_minutes, sla_delivery_buffer_minutes
-  INTO v_prep_minutes, v_pickup_buffer, v_delivery_buffer
-  FROM eats_zones WHERE zone_code = v_order.zone_code;
+  -- Check order history
+  SELECT COUNT(*) INTO v_prev_order_count
+  FROM food_orders
+  WHERE customer_id = v_order.customer_id
+    AND status = 'completed'
+    AND id != p_order_id;
 
-  v_prep_minutes := COALESCE(v_prep_minutes, COALESCE(v_order.estimated_prep_time, 15));
-  v_pickup_buffer := COALESCE(v_pickup_buffer, 10);
-  v_delivery_buffer := COALESCE(v_delivery_buffer, 15);
+  IF v_prev_order_count = 0 AND v_order.total_amount_cents > 5000 THEN
+    v_signals := array_append(v_signals, 'high_value_first_order');
+    v_score := v_score + 20;
+  END IF;
 
+  -- Add user's existing risk score
+  IF v_user_score IS NOT NULL THEN
+    v_score := v_score + LEAST(v_user_score.total_score / 2, 30);
+    IF v_user_score.risk_level IN ('high', 'blocked') THEN
+      v_signals := array_append(v_signals, 'high_risk_user');
+    END IF;
+  END IF;
+
+  -- Determine final risk level
+  v_risk_level := CASE
+    WHEN v_score >= 50 THEN 'high'
+    WHEN v_score >= 25 THEN 'medium'
+    ELSE 'low'
+  END;
+
+  v_requires_review := v_risk_level IN ('high', 'medium');
+
+  -- Update order
   UPDATE food_orders SET
-    sla_prep_by = v_order.created_at + (v_prep_minutes || ' minutes')::INTERVAL,
-    sla_pickup_by = v_order.created_at + ((v_prep_minutes + v_pickup_buffer) || ' minutes')::INTERVAL,
-    sla_deliver_by = v_order.created_at + 
-      ((v_prep_minutes + v_pickup_buffer + COALESCE(v_order.duration_minutes, 20) + v_delivery_buffer) || ' minutes')::INTERVAL
+    risk_score = v_score,
+    risk_level = v_risk_level,
+    risk_signals = v_signals,
+    requires_review = v_requires_review,
+    review_status = CASE WHEN v_requires_review THEN 'pending' ELSE NULL END
   WHERE id = p_order_id;
 
-  RETURN jsonb_build_object('success', true, 'sla_deliver_by', 
-    v_order.created_at + ((v_prep_minutes + v_pickup_buffer + COALESCE(v_order.duration_minutes, 20) + v_delivery_buffer) || ' minutes')::INTERVAL);
+  RETURN jsonb_build_object(
+    'order_id', p_order_id,
+    'risk_score', v_score,
+    'risk_level', v_risk_level,
+    'signals', v_signals,
+    'requires_review', v_requires_review
+  );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
 ```
 
-### 2. `evaluate_sla_status()` - Scheduled Evaluator
+### 5. `record_device_session` - Track Device Fingerprints
 
 ```sql
-CREATE OR REPLACE FUNCTION public.evaluate_sla_status()
-RETURNS TABLE(order_id UUID, new_status TEXT, reason TEXT) AS $$
+CREATE OR REPLACE FUNCTION public.record_device_session(
+  p_user_id UUID,
+  p_tenant_id UUID,
+  p_device_fingerprint TEXT,
+  p_ip_address TEXT DEFAULT NULL,
+  p_user_agent TEXT DEFAULT NULL
+)
+RETURNS JSONB AS $$
 DECLARE
-  v_order RECORD;
-  v_at_risk_threshold INTERVAL := '5 minutes';
-  v_new_status TEXT;
-  v_reason TEXT;
+  v_existing RECORD;
+  v_recent_devices INT;
+  v_is_new_device BOOLEAN := false;
 BEGIN
-  -- Find active orders with SLA targets
-  FOR v_order IN 
-    SELECT fo.*, ez.at_risk_threshold_minutes
-    FROM food_orders fo
-    LEFT JOIN eats_zones ez ON ez.zone_code = fo.zone_code
-    WHERE fo.status IN ('pending', 'confirmed', 'ready_for_pickup', 'in_progress')
-      AND fo.sla_deliver_by IS NOT NULL
-  LOOP
-    v_at_risk_threshold := (COALESCE(v_order.at_risk_threshold_minutes, 5) || ' minutes')::INTERVAL;
-    v_new_status := v_order.sla_status;
-    v_reason := NULL;
+  -- Check if device exists for user
+  SELECT * INTO v_existing
+  FROM device_sessions
+  WHERE user_id = p_user_id AND device_fingerprint = p_device_fingerprint;
 
-    -- Determine SLA status
-    IF v_order.sla_status != 'breached' THEN
-      -- Check for breach
-      IF v_order.status = 'pending' AND v_order.driver_id IS NULL AND now() > v_order.sla_pickup_by THEN
-        v_new_status := 'breached';
-        v_reason := 'no_driver_assigned';
-      ELSIF v_order.status IN ('pending', 'confirmed') AND v_order.prepared_at IS NULL 
-            AND now() > v_order.sla_prep_by THEN
-        v_new_status := 'breached';
-        v_reason := 'merchant_prep_delay';
-      ELSIF v_order.status IN ('confirmed', 'ready_for_pickup') AND now() > v_order.sla_pickup_by THEN
-        v_new_status := 'breached';
-        v_reason := 'pickup_delay';
-      ELSIF v_order.status = 'in_progress' AND now() > v_order.sla_deliver_by THEN
-        v_new_status := 'breached';
-        v_reason := 'delivery_delay';
-      -- Check for at-risk
-      ELSIF v_order.sla_status = 'on_time' THEN
-        IF v_order.status = 'pending' AND v_order.driver_id IS NULL 
-           AND now() > (v_order.sla_pickup_by - v_at_risk_threshold) THEN
-          v_new_status := 'at_risk';
-          v_reason := 'no_driver_approaching_deadline';
-        ELSIF v_order.status IN ('confirmed', 'ready_for_pickup') 
-              AND now() > (v_order.sla_pickup_by - v_at_risk_threshold) THEN
-          v_new_status := 'at_risk';
-          v_reason := 'pickup_approaching_deadline';
-        ELSIF v_order.status = 'in_progress' 
-              AND now() > (v_order.sla_deliver_by - v_at_risk_threshold) THEN
-          v_new_status := 'at_risk';
-          v_reason := 'delivery_approaching_deadline';
-        END IF;
-      END IF;
+  IF v_existing IS NULL THEN
+    v_is_new_device := true;
+    
+    -- Count recent different devices
+    SELECT COUNT(DISTINCT device_fingerprint) INTO v_recent_devices
+    FROM device_sessions
+    WHERE user_id = p_user_id
+      AND last_seen > now() - INTERVAL '24 hours';
+
+    IF v_recent_devices >= 3 THEN
+      -- Multiple devices in short time - risk event
+      INSERT INTO risk_events (tenant_id, user_id, event_type, severity, score, device_fingerprint, ip_address, details)
+      VALUES (p_tenant_id, p_user_id, 'device_change', 'warning', 20, p_device_fingerprint, p_ip_address,
+        jsonb_build_object('recent_device_count', v_recent_devices + 1));
     END IF;
 
-    -- Update if status changed
-    IF v_new_status != v_order.sla_status THEN
-      UPDATE food_orders SET 
-        sla_status = v_new_status,
-        at_risk_reason = CASE WHEN v_new_status = 'at_risk' THEN v_reason ELSE at_risk_reason END,
-        breached_reason = CASE WHEN v_new_status = 'breached' THEN v_reason ELSE breached_reason END,
-        sla_at_risk_at = CASE WHEN v_new_status = 'at_risk' AND sla_at_risk_at IS NULL THEN now() ELSE sla_at_risk_at END,
-        sla_breached_at = CASE WHEN v_new_status = 'breached' THEN now() ELSE sla_breached_at END
-      WHERE id = v_order.id;
-
-      order_id := v_order.id;
-      new_status := v_new_status;
-      reason := v_reason;
-      RETURN NEXT;
-    END IF;
-  END LOOP;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
-### 3. `record_sla_metrics(p_order_id UUID)` - On Delivery Complete
-
-```sql
-CREATE OR REPLACE FUNCTION public.record_sla_metrics(p_order_id UUID)
-RETURNS UUID AS $$
-DECLARE
-  v_order RECORD;
-  v_metric_id UUID;
-  v_sla_result TEXT;
-  v_late_seconds INT := 0;
-  v_late_stage TEXT;
-BEGIN
-  SELECT * INTO v_order FROM food_orders WHERE id = p_order_id AND status = 'completed';
-  IF v_order IS NULL THEN RETURN NULL; END IF;
-
-  -- Determine SLA result
-  IF v_order.delivered_at <= v_order.sla_deliver_by THEN
-    v_sla_result := 'on_time';
+    -- Insert new device
+    INSERT INTO device_sessions (user_id, tenant_id, device_fingerprint, ip_address, user_agent)
+    VALUES (p_user_id, p_tenant_id, p_device_fingerprint, p_ip_address, p_user_agent);
   ELSE
-    v_sla_result := 'late';
-    v_late_seconds := EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.sla_deliver_by))::INT;
-    -- Determine which stage caused lateness
-    IF v_order.prepared_at IS NOT NULL AND v_order.prepared_at > v_order.sla_prep_by THEN
-      v_late_stage := 'prep';
-    ELSIF v_order.picked_up_at IS NOT NULL AND v_order.picked_up_at > v_order.sla_pickup_by THEN
-      v_late_stage := 'pickup';
-    ELSE
-      v_late_stage := 'delivery';
-    END IF;
+    -- Update existing device last_seen
+    UPDATE device_sessions SET last_seen = now(), ip_address = COALESCE(p_ip_address, ip_address)
+    WHERE id = v_existing.id;
   END IF;
 
-  INSERT INTO sla_metrics (
-    tenant_id, zone_code, order_id, merchant_id, driver_id,
-    assign_seconds, prep_seconds, pickup_seconds, delivery_seconds, total_seconds,
-    sla_result, late_by_seconds, late_stage, distance_miles
-  ) VALUES (
-    v_order.tenant_id,
-    v_order.zone_code,
-    v_order.id,
-    v_order.restaurant_id,
-    v_order.driver_id,
-    EXTRACT(EPOCH FROM (v_order.assigned_at - v_order.created_at))::INT,
-    EXTRACT(EPOCH FROM (COALESCE(v_order.prepared_at, v_order.ready_at) - v_order.created_at))::INT,
-    EXTRACT(EPOCH FROM (v_order.picked_up_at - v_order.assigned_at))::INT,
-    EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.picked_up_at))::INT,
-    EXTRACT(EPOCH FROM (v_order.delivered_at - v_order.created_at))::INT,
-    v_sla_result,
-    v_late_seconds,
-    v_late_stage,
-    v_order.distance_miles
-  )
-  ON CONFLICT (order_id) DO UPDATE SET
-    sla_result = EXCLUDED.sla_result,
-    late_by_seconds = EXCLUDED.late_by_seconds,
-    total_seconds = EXCLUDED.total_seconds
-  RETURNING id INTO v_metric_id;
-
-  RETURN v_metric_id;
+  RETURN jsonb_build_object(
+    'is_new_device', v_is_new_device,
+    'device_fingerprint', p_device_fingerprint
+  );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
 ```
 
 ---
 
-## Edge Function: `sla-evaluator`
+## RLS Policies
 
-Scheduled edge function to run every 2-5 minutes:
+### risk_events
 
-```typescript
-// supabase/functions/sla-evaluator/index.ts
-// Calls evaluate_sla_status() RPC
-// For breached orders: calls auto_assign_order_v2 for unassigned
-// Sends notifications via send-notification edge function
-// Logs to tenant_audit_log for critical SLA breaches
+```sql
+ALTER TABLE risk_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can read risk events" ON risk_events
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
+  );
+
+CREATE POLICY "System can insert risk events" ON risk_events
+  FOR INSERT TO authenticated WITH CHECK (true);
+```
+
+### risk_scores
+
+```sql
+ALTER TABLE risk_scores ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can read risk scores" ON risk_scores
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
+  );
+```
+
+### blocked_entities
+
+```sql
+ALTER TABLE blocked_entities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can manage blocked entities" ON blocked_entities
+  FOR ALL TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
+  );
+```
+
+### device_sessions
+
+```sql
+ALTER TABLE device_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own devices" ON device_sessions
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Admins can view all devices" ON device_sessions
+  FOR SELECT TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'safety.manage'))
+  );
 ```
 
 ---
@@ -368,133 +559,162 @@ Scheduled edge function to run every 2-5 minutes:
 
 | File | Description |
 |------|-------------|
-| `src/hooks/useSLAMetrics.ts` | Fetch SLA KPIs, at-risk orders, performance data |
-| `src/hooks/usePerformanceAdjustments.ts` | Bonus/penalty CRUD |
-| `src/pages/dispatch/DispatchSLA.tsx` | Main SLA dashboard page |
-| `src/components/sla/SLAKPICards.tsx` | On-time rate, avg times widgets |
-| `src/components/sla/AtRiskOrdersList.tsx` | Live at-risk/breached orders |
-| `src/components/sla/SLAByZoneTable.tsx` | Zone performance breakdown |
-| `src/components/sla/SLAByMerchantTable.tsx` | Worst merchants by prep time |
-| `src/components/sla/SLAByDriverTable.tsx` | Driver late rate ranking |
-| `src/components/sla/PerformanceAdjustmentsPanel.tsx` | Pending bonus/penalty approvals |
-| `src/components/sla/SLAExport.tsx` | CSV export functionality |
+| `src/hooks/useFraudPrevention.ts` | Risk events, scores, blocked entities management |
+| `src/hooks/useDeviceSecurity.ts` | Device fingerprint + session tracking |
+| `src/pages/dispatch/DispatchSafety.tsx` | Main safety dashboard |
+| `src/components/safety/SafetyKPICards.tsx` | High-risk counts, blocked entities widgets |
+| `src/components/safety/RiskyOrdersList.tsx` | Orders requiring review |
+| `src/components/safety/RiskEventsTable.tsx` | Recent risk events |
+| `src/components/safety/BlockedEntitiesPanel.tsx` | Blocked users/devices/IPs |
+| `src/components/safety/RiskyUsersTable.tsx` | High-risk user list |
+| `src/components/safety/OrderReviewDialog.tsx` | Approve/reject risky orders |
 
-### Hook: `useSLAMetrics.ts`
+### Hook: `useFraudPrevention.ts`
 
 ```typescript
-export interface SLAKPIs {
-  onTimeRate: number;
-  avgAssignSeconds: number;
-  avgPrepSeconds: number;
-  avgPickupSeconds: number;
-  avgDeliverySeconds: number;
-  atRiskCount: number;
-  breachedCount: number;
-  totalDelivered: number;
+export function useFraudPrevention(tenantId: string | null) {
+  // Risk events
+  const riskEvents = useQuery({ ... });
+  
+  // Risk scores (high/blocked users)
+  const riskyUsers = useQuery({ ... });
+  
+  // Blocked entities
+  const blockedEntities = useQuery({ ... });
+  
+  // Orders requiring review
+  const ordersForReview = useQuery({ ... });
+  
+  // Mutations
+  const blockEntity = useMutation({ ... });
+  const unblockEntity = useMutation({ ... });
+  const approveOrder = useMutation({ ... });
+  const rejectOrder = useMutation({ ... });
+  const resetUserScore = useMutation({ ... });
+  
+  return { ... };
 }
-
-export function useSLAKPIs(tenantId: string, dateRange: DateRange);
-export function useAtRiskOrders(tenantId: string);
-export function useSLAByZone(tenantId: string, dateRange: DateRange);
-export function useSLAByMerchant(tenantId: string, dateRange: DateRange, limit?: number);
-export function useSLAByDriver(tenantId: string, dateRange: DateRange, limit?: number);
 ```
 
-### Page: `DispatchSLA.tsx`
+### Hook: `useDeviceSecurity.ts`
+
+Integrates with existing botDetection.ts to:
+- Generate device fingerprint on mount
+- Record device session on login/order
+- Check velocity before sensitive actions
+
+```typescript
+export function useDeviceSecurity() {
+  const fingerprint = useMemo(() => getDeviceFingerprint(), []);
+  
+  const recordSession = async (userId: string, tenantId: string) => {
+    return supabase.rpc('record_device_session', {
+      p_user_id: userId,
+      p_tenant_id: tenantId,
+      p_device_fingerprint: fingerprint,
+      p_ip_address: null, // Captured server-side
+      p_user_agent: navigator.userAgent
+    });
+  };
+  
+  const checkVelocity = async (action: string, userId: string) => {
+    return supabase.rpc('check_velocity', {
+      p_user_id: userId,
+      p_action: action
+    });
+  };
+  
+  return { fingerprint, recordSession, checkVelocity };
+}
+```
+
+### Page: `DispatchSafety.tsx`
 
 Layout:
+
 ```text
 +------------------------------------------------------------------+
-|  SLA & Performance                     [Date Range] [Export CSV] |
+|  Safety & Fraud Prevention            [Date Range] [Export]      |
 +------------------------------------------------------------------+
-|  KPI Cards Row:                                                   |
-|  [On-Time Rate] [Avg Assign] [Avg Prep] [Avg Pickup] [Avg Delivery]|
+|  KPI Cards:                                                       |
+|  [High-Risk Orders] [Blocked Users] [Risk Events Today] [Flags]  |
 +------------------------------------------------------------------+
-|  AT RISK / BREACHED ORDERS (Live)                                |
+|  ORDERS REQUIRING REVIEW                                          |
 |  +-------------------------------------------------------------+ |
-|  | #1234 | Pizza Palace | No driver | At Risk | [Assign] [View]| |
-|  | #1235 | Burger Hub   | Pickup delay | Breached | [Reassign] | |
+|  | #1234 | John D. | $85.50 | High (52) | [Approve] [Reject]   | |
+|  | #1235 | New User | $120 | Medium (35) | [Approve] [Reject]   | |
 |  +-------------------------------------------------------------+ |
 +------------------------------------------------------------------+
-|  PERFORMANCE BY ZONE            |  WORST MERCHANTS (Prep Time)   |
-|  +----------------------------+ | +----------------------------+ |
-|  | Zone | On-Time | Avg Time  | | | Restaurant | Avg Prep | Late%| |
-|  | DFW  | 94.2%   | 32 min    | | | Slow Diner | 22 min   | 18% | |
-|  +----------------------------+ | +----------------------------+ |
+|  RECENT RISK EVENTS              |  BLOCKED ENTITIES             |
+|  +----------------------------+  | +----------------------------+|
+|  | Time | User | Type | Score|  | | Type | Value | Reason      ||
+|  | 2m ago | User A | velocity | | | user | abc123 | Auto-block ||
+|  +----------------------------+  | +----------------------------+|
 +------------------------------------------------------------------+
-|  PENDING ADJUSTMENTS                                              |
-|  [Driver A] Bonus $5 - Fast delivery | [Approve] [Reject]        |
+|  HIGH-RISK USERS                                                  |
+|  +-------------------------------------------------------------+ |
+|  | User | Score | Level | Last Event | [Block] [Reset Score]   | |
+|  +-------------------------------------------------------------+ |
 +------------------------------------------------------------------+
 ```
 
-### Update Dispatch Orders UI
+---
 
-Add SLA status indicator to order cards/rows:
+## Integration Points
+
+### 1. Order Creation Flow
+
+Update order creation to:
+1. Call `record_device_session` with fingerprint
+2. Call `check_velocity('order_create', userId)`
+3. Call `check_blocked` for user/device/IP
+4. After insert, call `assess_order_risk(orderId)`
+
+### 2. Payment Flow
+
+Before payment attempt:
+1. Call `check_velocity('payment_attempt', userId)`
+2. Call `check_blocked('card', cardFingerprint)`
+3. Record risk event on failure
+
+### 3. Login Flow
+
+On login:
+1. Call `record_device_session`
+2. Call `check_velocity('login_attempt', userId)`
+3. Existing `check_login_anomaly` already handles anomaly detection
+
+### 4. Dispatch UI
+
+Update order cards to show risk badges:
 
 ```typescript
-// In KanbanColumn or order list:
-{order.sla_status === 'breached' && (
-  <Badge variant="destructive">SLA Breached</Badge>
+{order.risk_level === 'high' && (
+  <Badge variant="destructive" className="gap-1">
+    <ShieldAlert className="h-3 w-3" /> High Risk
+  </Badge>
 )}
-{order.sla_status === 'at_risk' && (
-  <Badge className="bg-amber-500">At Risk</Badge>
+{order.requires_review && order.review_status === 'pending' && (
+  <Badge variant="outline" className="bg-amber-500/10">
+    Needs Review
+  </Badge>
 )}
 ```
 
 ---
 
-## RLS Policies
-
-### sla_metrics
-
-```sql
-ALTER TABLE sla_metrics ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can read SLA metrics" ON sla_metrics
-  FOR SELECT TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR public.has_tenant_permission(tenant_id, 'analytics.view')
-  );
-
-CREATE POLICY "System can insert SLA metrics" ON sla_metrics
-  FOR INSERT TO authenticated
-  WITH CHECK (true);
-```
-
-### performance_adjustments
-
-```sql
-ALTER TABLE performance_adjustments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admins can manage adjustments" ON performance_adjustments
-  FOR ALL TO authenticated
-  USING (
-    public.is_admin(auth.uid())
-    OR public.has_tenant_permission(tenant_id, 'payouts.manage')
-  );
-
-CREATE POLICY "Drivers can view own adjustments" ON performance_adjustments
-  FOR SELECT TO authenticated
-  USING (
-    driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid())
-  );
-```
-
----
-
-## Sidebar & Routes Update
+## Sidebar & Routes
 
 ### Update `DispatchSidebar.tsx`
 
-Add SLA nav item:
+Add Safety nav item:
 
 ```typescript
 {
-  label: "SLA",
-  path: "/dispatch/sla",
-  icon: Timer,
-  permission: "analytics.view",
+  label: "Safety",
+  path: "/dispatch/safety",
+  icon: ShieldAlert,
+  permission: "safety.manage",
 },
 ```
 
@@ -503,64 +723,57 @@ Add SLA nav item:
 Add route:
 
 ```typescript
-<Route path="sla" element={<DispatchSLA />} />
-```
-
----
-
-## Scheduled Job Setup
-
-Using pg_cron to run SLA evaluator:
-
-```sql
-SELECT cron.schedule(
-  'evaluate-sla-status',
-  '*/3 * * * *', -- every 3 minutes
-  $$
-  SELECT net.http_post(
-    url:='https://slirphzzwcogdbkeicff.supabase.co/functions/v1/sla-evaluator',
-    headers:='{"Content-Type": "application/json", "Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
-    body:='{}'::jsonb
-  );
-  $$
-);
+<Route path="safety" element={<DispatchSafety />} />
 ```
 
 ---
 
 ## Implementation Order
 
-1. **Database migration** - Add columns to food_orders, create sla_metrics, performance_adjustments tables
-2. **RPC functions** - set_order_sla_targets, evaluate_sla_status, record_sla_metrics
-3. **Trigger on order creation** - Call set_order_sla_targets when order created
-4. **Trigger on delivery complete** - Call record_sla_metrics when status = completed
-5. **sla-evaluator edge function** - Scheduled SLA monitoring
-6. **useSLAMetrics hook** - Analytics data fetching
-7. **SLA dashboard components** - KPIs, at-risk list, zone/merchant/driver tables
-8. **DispatchSLA page** - Main SLA dashboard
-9. **Update order cards** - Add SLA status badges
-10. **Performance adjustments panel** - Bonus/penalty management
-11. **CSV export** - Export SLA metrics
+1. **Database migration** - Create risk_events, risk_scores, blocked_entities, device_sessions tables
+2. **Add order risk fields** - risk_level, risk_score, requires_review to food_orders
+3. **RPC functions** - check_velocity, compute_risk_score, check_blocked, assess_order_risk, record_device_session
+4. **RLS policies** - Tenant-scoped access control
+5. **useFraudPrevention hook** - Core data fetching and mutations
+6. **useDeviceSecurity hook** - Device fingerprint integration
+7. **Safety dashboard components** - KPI cards, risk events, blocked entities
+8. **DispatchSafety page** - Main dashboard
+9. **Order review dialog** - Approve/reject workflow
+10. **Update order creation** - Integrate risk assessment
+11. **Update dispatch UI** - Add risk badges to order cards
 12. **Update sidebar and routes**
-13. **Schedule cron job** - pg_cron setup
 
 ---
 
 ## Testing Checklist
 
-- [ ] SLA targets set correctly on order creation
-- [ ] SLA recalculates when duration_minutes changes
-- [ ] Evaluator marks at_risk correctly (within threshold of deadline)
-- [ ] Evaluator marks breached correctly (past deadline)
-- [ ] Correct reason recorded for each status
-- [ ] Notifications sent for at-risk orders
-- [ ] auto_assign_v2 re-triggered for breached unassigned orders
-- [ ] sla_metrics recorded on delivery completion
-- [ ] On-time rate calculates correctly
-- [ ] Zone breakdown shows correct data
-- [ ] Merchant prep time rankings accurate
-- [ ] Driver late rate rankings accurate
-- [ ] Pending adjustments show in panel
-- [ ] Approve adjustment creates wallet transaction
-- [ ] CSV export includes all metrics
-- [ ] RLS prevents cross-tenant data access
+- [ ] Device fingerprint generated correctly
+- [ ] Device session recorded on login/order
+- [ ] Velocity limits trigger risk events
+- [ ] Risk score computed correctly from events
+- [ ] Auto-block when score > 80
+- [ ] check_blocked prevents actions for blocked entities
+- [ ] Order risk assessment runs on creation
+- [ ] High-risk orders flagged for review
+- [ ] Review approval updates order status
+- [ ] Block/unblock entity works correctly
+- [ ] Reset user score clears risk_scores
+- [ ] Safety dashboard loads all data
+- [ ] Risk badges show on order cards
+- [ ] RLS prevents cross-tenant access
+- [ ] Export functionality works
+
+---
+
+## Risk Event Types
+
+| Event Type | Severity | Score | Trigger |
+|------------|----------|-------|---------|
+| `velocity_limit` | warning/critical | 25-35 | Action frequency exceeded |
+| `payment_failed` | warning | 35 | Payment declined |
+| `chargeback` | critical | 50 | Chargeback received |
+| `suspicious_location` | warning | 20 | IP/delivery mismatch |
+| `device_change` | warning | 20 | Multiple devices in 24h |
+| `blocked_ip` | critical | 40 | Known bad IP |
+| `manual_flag` | varies | varies | Admin flagged |
+| `bot_detected` | critical | 50 | Automation detected |
