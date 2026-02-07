@@ -610,9 +610,18 @@ export default function Rides() {
                          </motion.div>
                        )}
                      </AnimatePresence>
-                   </div>
-                 </div>
-               </motion.div>
+                    </div>
+                  </div>
+                  
+                  {/* Distance & Duration Display */}
+                  {pickup.trim() && dropoff.trim() && (
+                    <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-white/10">
+                      <span className="text-xs md:text-sm text-zinc-400 font-medium">~{estimatedDistance.toFixed(1)} mi</span>
+                      <span className="w-1 h-1 bg-zinc-600 rounded-full" />
+                      <span className="text-xs md:text-sm text-zinc-400 font-medium">~{estimatedDuration} min</span>
+                    </div>
+                  )}
+                </motion.div>
 
                {/* VEHICLE FLEET SELECTOR */}
                <motion.div
@@ -682,23 +691,23 @@ export default function Rides() {
                            </div>
                          </div>
 
-                         {/* Details - Compact Layout */}
-                         <div className="p-2.5 md:p-4 relative z-20 bg-gradient-to-b from-zinc-900/50 to-zinc-900/90">
-                           <div className="flex items-center gap-1.5 mb-0.5">
-                             <ride.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 ${selectedOption?.id === ride.id ? "text-primary" : "text-amber-400"}`} />
-                             <h3 className="text-xs md:text-base font-bold text-white truncate">{ride.name}</h3>
-                           </div>
-                           <p className="text-[10px] md:text-xs text-zinc-400 line-clamp-1 mb-1.5 md:mb-3">{ride.desc}</p>
-                           
-                           <div className="flex items-center justify-between border-t border-white/10 pt-1.5 md:pt-2.5">
-                             <span className="text-[10px] md:text-xs font-bold text-primary flex items-center gap-1">
-                               <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {ride.time}
-                             </span>
-                             {selectedOption?.id === ride.id && (
-                               <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-primary rounded-full animate-pulse" />
-                             )}
-                           </div>
-                         </div>
+                          {/* Details - Compact Layout */}
+                          <div className="p-2.5 md:p-4 relative z-20 bg-gradient-to-b from-zinc-900/50 to-zinc-900/90">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <Star className={`w-3 h-3 md:w-3.5 md:h-3.5 ${selectedOption?.id === ride.id ? "text-primary fill-primary" : "text-amber-400 fill-amber-400"}`} />
+                              <h3 className="text-xs md:text-base font-bold text-white truncate">{ride.name}</h3>
+                            </div>
+                            <p className="text-[10px] md:text-xs text-zinc-400 line-clamp-1 mb-1.5 md:mb-3">{ride.desc}</p>
+                            
+                            <div className="flex items-center justify-between border-t border-white/10 pt-1.5 md:pt-2.5">
+                              <span className="text-[10px] md:text-xs font-bold text-emerald-400 flex items-center gap-1">
+                                <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {ride.time}
+                              </span>
+                              {selectedOption?.id === ride.id && (
+                                <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-primary rounded-full animate-pulse" />
+                              )}
+                            </div>
+                          </div>
                        </motion.div>
                      ))}
                    </AnimatePresence>
@@ -765,11 +774,11 @@ export default function Rides() {
                         <h3 className="font-bold text-base md:text-lg">{option.name}</h3>
                         <span className="text-[10px] md:text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats || 4}</span>
                        </div>
-                      <p className="text-xs md:text-sm text-zinc-400 truncate">{option.desc}</p>
-                     </div>
-                     <div className="text-right">
-                      <p className="font-bold text-base md:text-lg text-primary">{getFareFixed(option)}</p>
-                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-400 ml-auto" />
+                       <p className="text-xs md:text-sm text-zinc-400 truncate">{option.desc}</p>
+                      </div>
+                      <div className="text-right flex items-center gap-2">
+                       <p className="font-bold text-base md:text-lg text-emerald-400">{getFareFixed(option)}</p>
+                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
                      </div>
                    </button>
                  ))}
