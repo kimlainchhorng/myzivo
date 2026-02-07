@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { 
   MapPin, 
   RefreshCw, 
@@ -20,7 +22,9 @@ import {
   Filter,
   Bike,
   Truck,
-  Zap
+  Zap,
+  Circle,
+  MapPinned
 } from "lucide-react";
 import { 
   DropdownMenu, 
@@ -30,6 +34,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { useOnlineDrivers, OnlineDriver } from "@/hooks/useOnlineDrivers";
+import { useActiveTrips, ActiveTrip } from "@/hooks/useActiveTrips";
 import { cn } from "@/lib/utils";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -40,18 +45,23 @@ interface AdminLiveDriverMapProps {
   onDriverSelect?: (driver: OnlineDriver) => void;
   onSendMessage?: (driver: OnlineDriver) => void;
   onSuspendDriver?: (driver: OnlineDriver) => void;
+  regionId?: string | null;
 }
 
-const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: AdminLiveDriverMapProps) => {
+const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver, regionId }: AdminLiveDriverMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const driverMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const tripMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<OnlineDriver | null>(null);
+  const [selectedTrip, setSelectedTrip] = useState<ActiveTrip | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState<string>("_all");
+  const [showActiveTrips, setShowActiveTrips] = useState(true);
   const [mapError, setMapError] = useState<string | null>(null);
   
   const { data: onlineDrivers, isLoading, refetch } = useOnlineDrivers();
+  const { data: activeTrips, isLoading: tripsLoading, refetch: refetchTrips } = useActiveTrips(regionId);
 
   // Filter drivers based on search and vehicle type
   const filteredDrivers = onlineDrivers?.filter(driver => {
@@ -101,13 +111,13 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
     };
   }, []);
 
-  // Update markers when drivers change
+  // Update driver markers when drivers change
   useEffect(() => {
     if (!map.current || !filteredDrivers) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    // Clear existing driver markers
+    driverMarkersRef.current.forEach(marker => marker.remove());
+    driverMarkersRef.current = [];
 
     // Add markers for each filtered driver
     filteredDrivers.forEach((driver) => {
@@ -124,12 +134,13 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
               <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
             </svg>
           </div>
-          <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white animate-pulse"></div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse"></div>
         </div>
       `;
 
       el.addEventListener("click", () => {
         setSelectedDriver(driver);
+        setSelectedTrip(null);
         onDriverSelect?.(driver);
       });
 
@@ -137,7 +148,7 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
         .setLngLat([driver.current_lng, driver.current_lat])
         .addTo(map.current!);
 
-      markersRef.current.push(marker);
+      driverMarkersRef.current.push(marker);
     });
 
     // Fit bounds to show all drivers
@@ -156,8 +167,77 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
     }
   }, [filteredDrivers, onDriverSelect]);
 
+  // Update trip markers when active trips change
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Clear existing trip markers
+    tripMarkersRef.current.forEach(marker => marker.remove());
+    tripMarkersRef.current = [];
+
+    if (!showActiveTrips || !activeTrips) return;
+
+    // Add pickup and dropoff markers for each active trip
+    activeTrips.forEach((trip) => {
+      // Pickup marker (green)
+      if (trip.pickup_lat && trip.pickup_lng) {
+        const pickupEl = document.createElement("div");
+        pickupEl.className = "pickup-marker";
+        pickupEl.innerHTML = `
+          <div class="relative cursor-pointer hover:scale-110 transition-transform">
+            <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg border-2 border-white">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white" stroke="none">
+                <circle cx="12" cy="12" r="4" />
+              </svg>
+            </div>
+            <div class="absolute -top-1 -left-1 w-10 h-10 rounded-full border-2 border-emerald-500 opacity-50 animate-ping"></div>
+          </div>
+        `;
+
+        pickupEl.addEventListener("click", () => {
+          setSelectedTrip(trip);
+          setSelectedDriver(null);
+        });
+
+        const pickupMarker = new mapboxgl.Marker(pickupEl)
+          .setLngLat([trip.pickup_lng, trip.pickup_lat])
+          .addTo(map.current!);
+
+        tripMarkersRef.current.push(pickupMarker);
+      }
+
+      // Dropoff marker (red)
+      if (trip.dropoff_lat && trip.dropoff_lng) {
+        const dropoffEl = document.createElement("div");
+        dropoffEl.className = "dropoff-marker";
+        dropoffEl.innerHTML = `
+          <div class="relative cursor-pointer hover:scale-110 transition-transform">
+            <div class="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center shadow-lg border-2 border-white">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </div>
+          </div>
+        `;
+
+        dropoffEl.addEventListener("click", () => {
+          setSelectedTrip(trip);
+          setSelectedDriver(null);
+        });
+
+        const dropoffMarker = new mapboxgl.Marker(dropoffEl)
+          .setLngLat([trip.dropoff_lng, trip.dropoff_lat])
+          .addTo(map.current!);
+
+        tripMarkersRef.current.push(dropoffMarker);
+      }
+    });
+  }, [activeTrips, showActiveTrips]);
+
   const handleRefresh = () => {
     refetch();
+    refetchTrips();
   };
 
   return (
@@ -165,26 +245,57 @@ const AdminLiveDriverMap = ({ onDriverSelect, onSendMessage, onSuspendDriver }: 
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-teal-500/10">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10">
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div>
               <CardTitle className="text-lg">Live Driver Tracking</CardTitle>
               <p className="text-sm text-muted-foreground">
                 {isLoading ? "Loading..." : `${onlineDrivers?.length || 0} drivers online`}
+                {activeTrips && activeTrips.length > 0 && ` • ${activeTrips.length} active trips`}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="gap-1.5 bg-green-500/10 text-green-500 border-green-500/20">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center gap-3">
+            {/* Show Active Trips Toggle */}
+            <div className="flex items-center gap-2">
+              <Switch 
+                id="show-trips" 
+                checked={showActiveTrips} 
+                onCheckedChange={setShowActiveTrips}
+                className="data-[state=checked]:bg-primary"
+              />
+              <Label htmlFor="show-trips" className="text-xs text-muted-foreground cursor-pointer">
+                Show Trips
+              </Label>
+            </div>
+            <Badge variant="outline" className="gap-1.5 bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               Live
             </Badge>
-            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading || tripsLoading}>
+              <RefreshCw className={cn("h-4 w-4", (isLoading || tripsLoading) && "animate-spin")} />
             </Button>
           </div>
         </div>
+
+        {/* Map Legend */}
+        {showActiveTrips && (
+          <div className="flex items-center gap-4 px-4 py-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-primary" />
+              <span>Driver</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span>Pickup</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-rose-500" />
+              <span>Dropoff</span>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex items-center gap-2 px-4 pb-3">

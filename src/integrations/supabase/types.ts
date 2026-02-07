@@ -4593,6 +4593,7 @@ export type Database = {
           home_city: string | null
           id: string
           is_online: boolean | null
+          is_suspended: boolean | null
           level: string | null
           license_number: string
           move_enabled: boolean | null
@@ -4632,6 +4633,7 @@ export type Database = {
           home_city?: string | null
           id?: string
           is_online?: boolean | null
+          is_suspended?: boolean | null
           level?: string | null
           license_number: string
           move_enabled?: boolean | null
@@ -4671,6 +4673,7 @@ export type Database = {
           home_city?: string | null
           id?: string
           is_online?: boolean | null
+          is_suspended?: boolean | null
           level?: string | null
           license_number?: string
           move_enabled?: boolean | null
