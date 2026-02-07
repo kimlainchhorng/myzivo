@@ -17,7 +17,8 @@ export interface MapMarker {
   position: { lat: number; lng: number };
   type?: "pickup" | "dropoff" | "driver" | "custom";
   title?: string;
-  icon?: string;
+  icon?: string;           // URL to custom SVG/PNG icon
+  iconSize?: number;       // Size in pixels (default: 36)
   label?: string;
 }
 
@@ -159,7 +160,15 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       // Create marker icon based on type
       let icon: google.maps.Symbol | google.maps.Icon | undefined;
       
-      if (marker.type === "pickup") {
+      // Use custom icon if provided (highest priority)
+      if (marker.icon) {
+        const size = marker.iconSize || 36;
+        icon = {
+          url: marker.icon,
+          scaledSize: new window.google.maps.Size(size, size),
+          anchor: new window.google.maps.Point(size / 2, size / 2),
+        };
+      } else if (marker.type === "pickup") {
         icon = {
           path: window.google.maps.SymbolPath.CIRCLE,
           fillColor: "#3b82f6",
