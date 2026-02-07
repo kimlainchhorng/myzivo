@@ -104,6 +104,11 @@ serve(async (req) => {
 
     // Get origin with fallback
     const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, "") || "https://myzivo.lovable.app";
+    
+    // Debug logging for origin resolution
+    console.log("[create-ride-checkout] Origin resolved:", origin);
+    console.log("[create-ride-checkout] Headers origin:", req.headers.get("origin"));
+    console.log("[create-ride-checkout] Headers referer:", req.headers.get("referer"));
 
     // Create Stripe Checkout session
     const session = await stripe.checkout.sessions.create({

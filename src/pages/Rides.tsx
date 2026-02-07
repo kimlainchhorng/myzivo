@@ -329,6 +329,8 @@ export default function Rides() {
      setIsSubmitting(true);
      try {
        const estimatedFare = calculateFare(estimatedDistance, estimatedDuration, selectedOption.multiplier || 1.0);
+       console.log("[Rides] Starting checkout...", { estimatedFare, selectedOption: selectedOption.id });
+       
        const { data, error } = await supabase.functions.invoke("create-ride-checkout", {
          body: {
            customer_name: contactInfo.name,
@@ -343,11 +345,27 @@ export default function Rides() {
            duration_minutes: estimatedDuration,
          },
        });
+       
+       console.log("[Rides] Checkout response:", { data, error });
+       
        if (error) throw error;
        if (!data?.url) throw new Error("No checkout URL returned");
+       
+       console.log("[Rides] Redirecting to:", data.url);
+       
+       // Try redirect - if it fails after 3 seconds, fall back to new tab
        window.location.href = data.url;
+       
+       setTimeout(() => {
+         // If still on this page after 3 seconds, try new tab
+         if (document.visibilityState === 'visible') {
+           console.log("[Rides] Redirect may have failed, trying new tab");
+           window.open(data.url, '_blank');
+         }
+       }, 3000);
+       
      } catch (error) {
-       console.error("Payment error:", error);
+       console.error("[Rides] Payment error:", error);
        toast.error("Failed to start payment. Please try again.");
        setStep("confirm");
        setIsSubmitting(false);
