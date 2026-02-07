@@ -1,130 +1,78 @@
 /**
  * GoogleMapProvider
  * 
- * Central Google Maps context provider that loads the Maps JavaScript API
- * and provides it to child components. Fetches API key from edge function.
+ * Central Google Maps context provider using @react-google-maps/api.
+ * Provides clean API loading with LoadScriptNext.
  */
 
-/// <reference types="@types/google.maps" />
-
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { ReactNode, ReactElement, useEffect, useState } from "react";
+import { LoadScriptNext } from "@react-google-maps/api";
 import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
-declare global {
-  interface Window {
-    google?: typeof google;
-  }
-}
-
-interface GoogleMapsContextType {
-  isLoaded: boolean;
-  loadError: string | null;
-  apiKey: string | null;
-}
-
-const GoogleMapsContext = createContext<GoogleMapsContextType>({
-  isLoaded: false,
-  loadError: null,
-  apiKey: null,
-});
-
-export const useGoogleMaps = () => useContext(GoogleMapsContext);
+const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
 
 interface GoogleMapProviderProps {
   children: ReactNode;
-  apiKey?: string;
 }
 
-// Store the loading promise to prevent multiple loads
-let loadingPromise: Promise<void> | null = null;
-let cachedApiKey: string | null = null;
-
-export function GoogleMapProvider({ children, apiKey: propApiKey }: GoogleMapProviderProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(propApiKey || cachedApiKey);
+export function GoogleMapProvider({ children }: GoogleMapProviderProps) {
+  const [apiKey, setApiKey] = useState<string | null>(
+    import.meta.env.VITE_GOOGLE_MAPS_API_KEY || null
+  );
+  const [loading, setLoading] = useState(!apiKey);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if already loaded
-    if (window.google?.maps) {
-      setIsLoaded(true);
-      return;
-    }
+    // If we already have a key from env, don't fetch
+    if (apiKey) return;
 
-    const loadGoogleMaps = async () => {
-      // Get API key from props, cache, environment, or edge function
-      let key = propApiKey || cachedApiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-      
-      // If no key yet, try to fetch from edge function
-      if (!key) {
-        try {
-          const { data, error } = await supabase.functions.invoke("maps-api-key");
-          if (error) {
-            console.error("[GoogleMapProvider] Edge function error:", error);
-          } else if (data?.ok && data?.apiKey) {
-            key = data.apiKey;
-            cachedApiKey = key;
-            setApiKey(key);
-          }
-        } catch (e) {
-          console.error("[GoogleMapProvider] Failed to fetch API key:", e);
-        }
-      }
-      
-      if (!key) {
-        setLoadError("Google Maps API key not configured");
-        return;
-      }
-
-      // Return existing promise if already loading
-      if (loadingPromise) {
-        await loadingPromise;
-        setIsLoaded(true);
-        return;
-      }
-
-      loadingPromise = new Promise<void>((resolve, reject) => {
-        // Create callback function
-        const callbackName = `googleMapsCallback_${Date.now()}`;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)[callbackName] = () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          delete (window as any)[callbackName];
-          resolve();
-        };
-
-        // Create script element
-        const script = document.createElement("script");
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places,geometry&callback=${callbackName}`;
-        script.async = true;
-        script.defer = true;
-        
-        script.onerror = () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          delete (window as any)[callbackName];
-          loadingPromise = null;
-          reject(new Error("Failed to load Google Maps"));
-        };
-
-        document.head.appendChild(script);
-      });
-
+    const fetchApiKey = async () => {
       try {
-        await loadingPromise;
-        setIsLoaded(true);
-      } catch (error) {
-        setLoadError(error instanceof Error ? error.message : "Failed to load Google Maps");
+        const { data, error: fnError } = await supabase.functions.invoke("maps-api-key");
+        if (fnError) {
+          console.error("[GoogleMapProvider] Edge function error:", fnError);
+          setError("Failed to load Google Maps configuration");
+        } else if (data?.ok && data?.apiKey) {
+          setApiKey(data.apiKey);
+        } else {
+          setError("Google Maps API key not configured");
+        }
+      } catch (e) {
+        console.error("[GoogleMapProvider] Failed to fetch API key:", e);
+        setError("Failed to load Google Maps");
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadGoogleMaps();
-  }, [propApiKey]);
+    fetchApiKey();
+  }, [apiKey]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[200px] bg-background/50">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error || !apiKey) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[200px] bg-background/50 text-muted-foreground text-sm">
+        {error || "Missing Google Maps API key"}
+      </div>
+    );
+  }
 
   return (
-    <GoogleMapsContext.Provider value={{ isLoaded, loadError, apiKey }}>
-      {children}
-    </GoogleMapsContext.Provider>
+    <LoadScriptNext googleMapsApiKey={apiKey} libraries={LIBRARIES}>
+      <>{children}</>
+    </LoadScriptNext>
   );
 }
+
+// Legacy exports for compatibility
+export const useGoogleMaps = () => ({ isLoaded: true, loadError: null, apiKey: null });
 
 export default GoogleMapProvider;
