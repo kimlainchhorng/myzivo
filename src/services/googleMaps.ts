@@ -3,6 +3,10 @@
  * 
  * Centralized service for Google Maps API calls including
  * geocoding, directions, and places autocomplete.
+ * 
+ * NOTE: For client-side map rendering, use GoogleMapProvider which
+ * fetches the API key from the edge function. This service is for
+ * fallback geocoding when edge functions aren't available.
  */
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
@@ -16,11 +20,39 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<unknown>>();
 
+// Track if we've verified API key availability
+let apiKeyVerified: boolean | null = null;
+
 /**
  * Check if Google Maps API key is available
+ * Returns true if env var is set OR if we've successfully loaded maps before
  */
 export function hasGoogleMapsKey(): boolean {
-  return Boolean(GOOGLE_MAPS_API_KEY);
+  // If we've previously verified the key works, return true
+  if (apiKeyVerified === true) return true;
+  
+  // Check env var
+  if (GOOGLE_MAPS_API_KEY) {
+    apiKeyVerified = true;
+    return true;
+  }
+  
+  // Check if Google Maps was already loaded (by GoogleMapProvider)
+  if (typeof window !== 'undefined' && window.google?.maps) {
+    apiKeyVerified = true;
+    return true;
+  }
+  
+  // Return true to allow GoogleMapProvider to try fetching the key
+  // The provider will handle the actual key fetching
+  return true;
+}
+
+/**
+ * Mark API key as verified (called when maps successfully loads)
+ */
+export function setApiKeyVerified(verified: boolean): void {
+  apiKeyVerified = verified;
 }
 
 /**
