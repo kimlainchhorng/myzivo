@@ -1,25 +1,21 @@
-import { useState, useRef } from "react";
-import { Send, MapPin, Crosshair, X } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Send, MapPin, Crosshair, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { useServerGeocode, ServerSuggestion } from "@/hooks/useServerGeocode";
+
+interface LocationCoords {
+  lat: number;
+  lng: number;
+}
 
 interface RideLocationCardProps {
   pickup: string;
   destination: string;
-  onPickupChange: (value: string) => void;
-  onDestinationChange: (value: string) => void;
+  onPickupChange: (value: string, coords?: LocationCoords) => void;
+  onDestinationChange: (value: string, coords?: LocationCoords) => void;
+  pickupCoords?: LocationCoords;
+  dropoffCoords?: LocationCoords;
 }
-
-const mockSuggestions = [
-  "109 Hickory Street, Denham Springs, LA",
-  "875 Florida Blvd, Baton Rouge, LA",
-  "6401 Bluebonnet Blvd, Baton Rouge, LA",
-  "660 Arlington Creek Centre, Baton Rouge, LA",
-  "1 Airport Rd, Baton Rouge, LA",
-  "3900 N I-10 Service Rd, Metairie, LA",
-  "10000 Perkins Rowe, Baton Rouge, LA",
-  "2142 O'Neal Lane, Baton Rouge, LA",
-];
 
 const RideLocationCard = ({
   pickup,
@@ -28,57 +24,111 @@ const RideLocationCard = ({
   onDestinationChange,
 }: RideLocationCardProps) => {
   const [activeField, setActiveField] = useState<"pickup" | "destination" | null>(null);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const pickupRef = useRef<HTMLInputElement>(null);
   const destinationRef = useRef<HTMLInputElement>(null);
+  
+  const {
+    suggestions,
+    isLoading,
+    fetchSuggestions,
+    getCoordinates,
+    clearSuggestions,
+  } = useServerGeocode();
 
-  const handleInputChange = (field: "pickup" | "destination", value: string) => {
+  // User's current location for proximity bias
+  const [userLocation, setUserLocation] = useState<LocationCoords | undefined>();
+
+  // Get user location on mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        () => {
+          // Fallback to Baton Rouge
+          setUserLocation({ lat: 30.4515, lng: -91.1871 });
+        }
+      );
+    }
+  }, []);
+
+  const handleInputChange = useCallback((field: "pickup" | "destination", value: string) => {
     if (field === "pickup") {
       onPickupChange(value);
     } else {
       onDestinationChange(value);
     }
 
-    if (value.length > 0) {
-      const filtered = mockSuggestions.filter((s) =>
-        s.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(filtered.slice(0, 6));
-    } else {
-      setFilteredSuggestions(mockSuggestions.slice(0, 6));
-    }
-  };
+    // Fetch suggestions from server
+    fetchSuggestions(value, userLocation);
+  }, [onPickupChange, onDestinationChange, fetchSuggestions, userLocation]);
 
-  const handleSuggestionClick = (suggestion: string) => {
+  const handleSuggestionClick = useCallback(async (suggestion: ServerSuggestion) => {
+    // Get coordinates for the selected place
+    const details = await getCoordinates(suggestion.place_id);
+    
+    const coords = details ? { lat: details.lat, lng: details.lng } : undefined;
+    
     if (activeField === "pickup") {
-      onPickupChange(suggestion);
+      onPickupChange(suggestion.description, coords);
     } else {
-      onDestinationChange(suggestion);
+      onDestinationChange(suggestion.description, coords);
     }
+    
     setActiveField(null);
-    setFilteredSuggestions([]);
-  };
+    clearSuggestions();
+  }, [activeField, onPickupChange, onDestinationChange, getCoordinates, clearSuggestions]);
 
-  const handleFocus = (field: "pickup" | "destination") => {
+  const handleFocus = useCallback((field: "pickup" | "destination") => {
     setActiveField(field);
-    setFilteredSuggestions(mockSuggestions.slice(0, 6));
-  };
+    const currentValue = field === "pickup" ? pickup : destination;
+    fetchSuggestions(currentValue || "", userLocation);
+  }, [pickup, destination, fetchSuggestions, userLocation]);
 
-  const handleClear = (field: "pickup" | "destination") => {
+  const handleClear = useCallback((field: "pickup" | "destination") => {
     if (field === "pickup") {
       onPickupChange("");
     } else {
       onDestinationChange("");
     }
-  };
+    clearSuggestions();
+  }, [onPickupChange, onDestinationChange, clearSuggestions]);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     // Delay to allow click on suggestion
     setTimeout(() => {
       setActiveField(null);
-      setFilteredSuggestions([]);
-    }, 200);
-  };
+      clearSuggestions();
+    }, 250);
+  }, [clearSuggestions]);
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        
+        // Set as current location with coordinates
+        if (activeField === "pickup" || !activeField) {
+          onPickupChange("Current Location", coords);
+        } else {
+          onDestinationChange("Current Location", coords);
+        }
+        clearSuggestions();
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+      }
+    );
+  }, [activeField, onPickupChange, onDestinationChange, clearSuggestions]);
 
   return (
     <div className="relative">
@@ -130,6 +180,7 @@ const RideLocationCard = ({
                   </button>
                 )}
                 <button
+                  onClick={handleUseCurrentLocation}
                   className="p-2 rounded-full hover:bg-white/10 transition-colors"
                   aria-label="Use current location"
                 >
@@ -168,6 +219,7 @@ const RideLocationCard = ({
                   </button>
                 )}
                 <button
+                  onClick={handleUseCurrentLocation}
                   className="p-2 rounded-full hover:bg-white/10 transition-colors"
                   aria-label="Use current location"
                 >
@@ -181,21 +233,34 @@ const RideLocationCard = ({
 
       {/* Suggestions Dropdown */}
       <AnimatePresence>
-        {activeField && filteredSuggestions.length > 0 && (
+        {activeField && suggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             className="absolute left-0 right-0 mt-2 bg-zinc-900/95 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden z-50"
           >
-            {filteredSuggestions.map((suggestion, index) => (
+            {isLoading && (
+              <div className="flex items-center justify-center py-3">
+                <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                <span className="ml-2 text-sm text-white/60">Searching...</span>
+              </div>
+            )}
+            {suggestions.map((suggestion, index) => (
               <button
-                key={index}
+                key={suggestion.place_id || index}
                 onClick={() => handleSuggestionClick(suggestion)}
                 className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors border-b border-white/5 last:border-b-0"
               >
                 <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <span className="text-sm text-white/90 truncate">{suggestion}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm text-white/90 font-medium block truncate">
+                    {suggestion.main_text}
+                  </span>
+                  <span className="text-xs text-white/50 block truncate">
+                    {suggestion.description}
+                  </span>
+                </div>
               </button>
             ))}
           </motion.div>
