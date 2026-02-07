@@ -1,68 +1,108 @@
 
-# Add Google Cloud Map ID Support
+
+# Add Custom SVG Marker Support
 
 ## Overview
-This update adds support for Google Cloud Map ID styling, which allows you to use custom map styles created in the Google Cloud Console. It also adds the `clickableIcons: false` option to prevent POI clicks from interfering with the ride experience.
+This update enhances the GoogleMap component to support custom SVG icon markers, allowing ZIVO-branded markers to be displayed on the map.
 
 ---
 
 ## Changes
 
-### 1. Add Map ID Prop to GoogleMap Component
+### 1. Update MapMarker Interface
 
-**File: `src/components/maps/GoogleMap.tsx`**
+**File: `src/components/maps/GoogleMap.tsx`** (lines 15-22)
 
-Add a new `mapId` prop that accepts either:
-- A string value passed directly
-- Falls back to `VITE_GOOGLE_MAP_ID` environment variable
+Extend the `MapMarker` interface to better support custom icons:
 
 ```typescript
-export interface GoogleMapProps {
-  // ... existing props
-  mapId?: string;  // Google Cloud Map ID for custom styling
+export interface MapMarker {
+  id: string;
+  position: { lat: number; lng: number };
+  type?: "pickup" | "dropoff" | "driver" | "custom";
+  title?: string;
+  icon?: string;           // URL to custom SVG/PNG icon
+  iconSize?: number;       // Size in pixels (default: 36)
+  label?: string;
 }
 ```
 
-### 2. Update Map Initialization
+### 2. Update Marker Creation Logic
 
-**File: `src/components/maps/GoogleMap.tsx`** (lines 108-122)
+**File: `src/components/maps/GoogleMap.tsx`** (lines 158-204)
 
-Update the Map constructor to use `mapId` when available:
+Update the marker creation to prioritize custom icons:
 
 ```typescript
-mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-  center,
-  zoom,
-  mapId: mapId || import.meta.env.VITE_GOOGLE_MAP_ID,  // Cloud-based styling
-  styles: !mapId ? (darkMode ? darkMapStyles : undefined) : undefined,  // Fallback to local styles
-  disableDefaultUI: !showControls,
-  clickableIcons: false,  // Prevent POI popups
-  // ... rest of options
+markers.forEach(marker => {
+  let icon: google.maps.Symbol | google.maps.Icon | undefined;
+  
+  // Use custom icon if provided
+  if (marker.icon) {
+    icon = {
+      url: marker.icon,
+      scaledSize: new window.google.maps.Size(
+        marker.iconSize || 36, 
+        marker.iconSize || 36
+      ),
+      anchor: new window.google.maps.Point(
+        (marker.iconSize || 36) / 2, 
+        (marker.iconSize || 36) / 2
+      ),
+    };
+  } else if (marker.type === "pickup") {
+    // ... existing pickup icon
+  } else if (marker.type === "dropoff") {
+    // ... existing dropoff icon
+  } else if (marker.type === "driver") {
+    // ... existing driver icon
+  }
+  
+  // ... rest of marker creation
 });
 ```
 
-**Note:** When `mapId` is set, the `styles` property is ignored by Google Maps API (cloud styling takes precedence).
+### 3. Create ZIVO Marker SVG
 
-### 3. Add Environment Variable
+**File: `public/zivo-marker.svg`**
 
-**File: `.env`**
+Create a branded marker icon (blue circle with ZIVO branding or custom design):
 
-Add the Map ID variable (you'll need to create a Map ID in Google Cloud Console):
-
-```env
-VITE_GOOGLE_MAP_ID=""
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <circle cx="18" cy="18" r="16" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
+  <circle cx="18" cy="18" r="6" fill="#ffffff"/>
+</svg>
 ```
 
 ---
 
-## How Map ID Works
+## Usage Examples
 
-| Scenario | Styling Used |
-|----------|-------------|
-| `mapId` prop provided | Cloud Map ID styling |
-| `VITE_GOOGLE_MAP_ID` set | Cloud Map ID styling |
-| Neither set + `darkMode=true` | Local dark mode styles |
-| Neither set + `darkMode=false` | Default Google Maps style |
+After implementation, you can use custom markers like this:
+
+```typescript
+// Custom ZIVO marker
+const markers: MapMarker[] = [
+  {
+    id: "user-location",
+    position: { lat: 30.4515, lng: -91.1871 },
+    icon: "/zivo-marker.svg",
+    iconSize: 36,
+    title: "Your Location",
+  },
+];
+
+// Or continue using type-based markers
+const markers: MapMarker[] = [
+  {
+    id: "pickup",
+    position: pickupCoords,
+    type: "pickup",  // Uses default blue circle
+    title: "Pickup",
+  },
+];
+```
 
 ---
 
@@ -70,23 +110,18 @@ VITE_GOOGLE_MAP_ID=""
 
 | File | Changes |
 |------|---------|
-| `src/components/maps/GoogleMap.tsx` | Add `mapId` prop, add `clickableIcons: false`, update initialization logic |
-| `.env` | Add `VITE_GOOGLE_MAP_ID` placeholder |
+| `src/components/maps/GoogleMap.tsx` | Add `iconSize` prop to interface, update marker creation to handle custom SVG URLs |
+| `public/zivo-marker.svg` | Create new branded marker icon |
 
 ---
 
-## Setup Instructions
+## Marker Priority Logic
 
-After implementation, to use cloud styling:
+| Scenario | Icon Used |
+|----------|-----------|
+| `marker.icon` provided | Custom SVG/PNG at specified URL |
+| `type: "pickup"` | Blue circle |
+| `type: "dropoff"` | Green circle |
+| `type: "driver"` | Amber pin with drop animation |
+| `type: "custom"` | Default Google marker |
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/google/maps-apis/studio/maps)
-2. Create a new Map ID with your desired style
-3. Copy the Map ID and add it to `.env` as `VITE_GOOGLE_MAP_ID="your-map-id"`
-
----
-
-## Benefits
-
-- **Cloud-based styling**: Edit map appearance in Google Cloud Console without code changes
-- **No POI interference**: `clickableIcons: false` prevents accidental business info popups
-- **Flexible fallback**: Works with or without Map ID configured
