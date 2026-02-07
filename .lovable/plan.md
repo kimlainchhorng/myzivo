@@ -1,92 +1,104 @@
 
 
-# Prepare ZIVO Ride Backend Connection (Local Mock Structure)
+# Prepare Real Dispatch Logic (Mock Backend)
 
 ## Overview
 
-This update prepares the ride booking flow for real backend integration by introducing a structured local mock service that mimics database behavior. The current UI remains unchanged while we improve state handling and add proper data structures.
+This update introduces a central ride state manager with localStorage persistence and improves timing behaviors across all ride flow pages. The current UI remains unchanged while we add proper state management and realistic timing.
 
 ---
 
 ## Current State
 
-| Component | Status |
-|-----------|--------|
-| `RideConfirmPage.tsx` | Already creates database records via `useCreateTrip` |
-| `RideSearchingPage.tsx` | Has realtime hooks but auto-navigates after 6s anyway |
-| `RideDriverPage.tsx` | Uses hardcoded mock driver data |
-| `RideTripPage.tsx` | Uses localStorage, no database connection |
-| `RideReceiptModal.tsx` | Mock fare breakdown, null safety added |
-
-The system already has partial database integration, but the flow doesn't properly use database responses for the UI.
+| Component | Current Behavior |
+|-----------|------------------|
+| State Management | Each page loads from localStorage independently |
+| Searching Timing | 6 seconds to find driver |
+| Driver Page | Hardcoded mock driver, ETA countdown exists |
+| Trip Page | Progress animation, no elapsed timer |
+| Receipt | Shows calculated fare, rating works |
+| Persistence | Partial - some pages read from localStorage |
 
 ---
 
-## What This Update Adds
+## Changes Summary
 
-### 1. Enhanced Ride Request Object
+### 1. Create Central Ride Store
 
-Create a unified `RideRequest` interface with all required fields:
+Create `src/stores/rideStore.ts` - a React Context-based store for ride state:
 
-```typescript
-interface RideRequest {
-  id: string;                    // uuid
-  pickup_text: string;
-  destination_text: string;
-  pickup_lat?: number;
-  pickup_lng?: number;
-  destination_lat?: number;
-  destination_lng?: number;
-  ride_type: string;
-  price: number;
-  distance_miles: number;
-  duration_min: number;
-  status: 'requested' | 'assigned' | 'arrived' | 'in_trip' | 'completed' | 'cancelled';
-  driver_id?: string;
-  created_at: number;
-  driver?: MockDriver;
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| rideId | string | UUID for the ride |
+| pickup | string | Pickup address |
+| destination | string | Destination address |
+| rideType | string | Ride category (economy, comfort, etc.) |
+| price | number | Fare amount |
+| distance | number | Trip distance in miles |
+| duration | number | Estimated duration in minutes |
+| status | string | Current ride status |
+| driverName | string | Assigned driver name |
+| driverCar | string | Driver's vehicle |
+| driverPlate | string | License plate |
+| driverRating | number | Driver rating |
+| eta | number | ETA in minutes |
+| tripStartTime | number | When trip started (for elapsed timer) |
+| createdAt | number | Timestamp when ride was created |
 
-### 2. Mock Backend Service
+Status values: `idle` | `searching` | `driver_found` | `driver_en_route` | `driver_arrived` | `in_trip` | `completed` | `cancelled`
 
-Create a new `src/services/mockRideService.ts`:
+### 2. Searching Screen Improvements
 
-- `createRideRequest(data)` - Creates ride object with UUID and timestamp
-- `getRide(id)` - Retrieves current ride state
-- `updateRideStatus(id, status)` - Updates ride status
-- `simulateDriverAssignment(id)` - Assigns mock driver after delay
-- `getActiveRide()` - Returns current active ride or null
+Update `/ride/searching`:
 
-### 3. Searching Screen Improvements
+- Initialize with `status = "searching"`
+- After **3 seconds** (changed from 6):
+  - Update `status = "driver_found"`
+  - Assign mock driver:
+    - Name: "Alex Johnson"
+    - Car: "Toyota Camry"
+    - Plate: "ZIVO123"
+    - Rating: 4.9
+    - ETA: 5 min
+- Auto-navigate to `/ride/driver`
 
-On `/ride/searching`:
-- Display searching animation (already exists)
-- After 6 seconds, call `simulateDriverAssignment(rideId)`
-- Update ride status to "assigned"
-- Navigate to `/ride/driver` with full ride data
+### 3. Driver Screen Improvements
 
-### 4. Driver Screen Improvements
+Update `/ride/driver`:
 
-On `/ride/driver`:
-- Display mock driver info:
-  - Name: "Marcus Johnson" 
-  - Vehicle: "Toyota Camry"
-  - Plate: "ABC 1234"
-  - Rating: 4.9 stars
-- ETA countdown (already exists)
-- Functional buttons: Call, Message, Cancel
-- Cancel updates ride status to "cancelled"
+- Read driver info from ride store (not hardcoded)
+- ETA countdown timer (5 min → 0)
+- When ETA reaches 0:
+  - Show message: "Driver has arrived"
+  - Update `status = "driver_arrived"`
+  - Enable START TRIP button (already implemented)
+
+### 4. Trip Screen Improvements
+
+Update `/ride/trip`:
+
+- Show trip elapsed timer (counting up from 0)
+- After **60 seconds**:
+  - Enable END TRIP button
+  - Before 60 seconds: show disabled button with countdown
+- Store `tripStartTime` when trip begins
 
 ### 5. Receipt Improvements
 
-After trip ends:
-- Show receipt with:
-  - Distance (from ride request)
-  - Time (from ride request)
-  - Price breakdown (already exists)
-  - Interactive rating stars (already exists)
-- "Done" clears ride state and returns to `/ride`
+Update receipt modal to display:
+
+- Trip time (elapsed time)
+- Distance (from ride store)
+- Fare (from ride store)
+- Rating stars (already works)
+- "Done" clears store and returns home
+
+### 6. LocalStorage Persistence
+
+The ride store auto-syncs to localStorage:
+- Any state change persists immediately
+- Page refresh loads persisted state
+- `clearRide()` removes all stored data
 
 ---
 
@@ -94,8 +106,8 @@ After trip ends:
 
 | File | Purpose |
 |------|---------|
-| `src/services/mockRideService.ts` | Mock backend service with localStorage persistence |
-| `src/types/ride.ts` | Unified ride types and interfaces |
+| `src/stores/rideStore.ts` | Central ride state context + provider |
+| `src/types/rideTypes.ts` | TypeScript interfaces for ride state |
 
 ---
 
@@ -103,143 +115,193 @@ After trip ends:
 
 | File | Changes |
 |------|---------|
-| `src/pages/ride/RideConfirmPage.tsx` | Use mock service instead of Supabase for now |
-| `src/pages/ride/RideSearchingPage.tsx` | Call mock driver assignment after 6s |
-| `src/pages/ride/RideDriverPage.tsx` | Load driver from ride state, show real data |
-| `src/pages/ride/RideTripPage.tsx` | Update ride status during trip |
-| `src/components/ride/RideReceiptModal.tsx` | Show distance/time from ride data |
-| `src/hooks/useRideTripState.ts` | Extend to use new RideRequest structure |
+| `src/App.tsx` | Wrap app with RideStoreProvider |
+| `src/pages/ride/RideConfirmPage.tsx` | Initialize ride in store on confirm |
+| `src/pages/ride/RideSearchingPage.tsx` | Use store, 3s timer, set driver |
+| `src/pages/ride/RideDriverPage.tsx` | Read driver from store, ETA countdown |
+| `src/pages/ride/RideTripPage.tsx` | Elapsed timer, 60s enable logic |
+| `src/components/ride/RideReceiptModal.tsx` | Show trip time and distance |
+| `src/hooks/useRideTripState.ts` | Refactor to use new store (or deprecate) |
 
 ---
 
-## Technical Implementation
+## Technical Details
 
-### Mock Ride Service Structure
-
-```typescript
-// src/services/mockRideService.ts
-
-const STORAGE_KEY = "zivo_active_ride_request";
-
-const mockDrivers = [
-  {
-    id: "driver_001",
-    name: "Marcus Johnson",
-    rating: 4.9,
-    trips: 2847,
-    car: "Toyota Camry",
-    plate: "ABC 1234",
-    avatar: "https://images.unsplash.com/...",
-  },
-  // Additional mock drivers for variety
-];
-
-export const createRideRequest = (data) => {
-  const request = {
-    id: crypto.randomUUID(),
-    ...data,
-    status: 'requested',
-    created_at: Date.now(),
-  };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(request));
-  return request;
-};
-
-export const simulateDriverAssignment = async (rideId: string) => {
-  // 6 second delay handled by caller
-  const ride = getRide(rideId);
-  if (ride) {
-    const driver = mockDrivers[0];
-    ride.status = 'assigned';
-    ride.driver_id = driver.id;
-    ride.driver = driver;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ride));
-  }
-  return ride;
-};
-```
-
-### Updated Searching Flow
+### Ride Store Implementation
 
 ```typescript
-// In RideSearchingPage.tsx
-useEffect(() => {
-  if (progress >= 100 && rideId) {
-    // Simulate driver assignment
-    const ride = simulateDriverAssignment(rideId);
-    if (ride) {
-      navigate("/ride/driver", { 
-        state: { 
-          ...state, 
-          rideId: ride.id,
-          driver: ride.driver 
-        } 
-      });
-    }
-  }
-}, [progress, rideId]);
-```
+// src/stores/rideStore.ts
 
-### Driver Page Uses Ride Data
-
-```typescript
-// In RideDriverPage.tsx
-// Instead of hardcoded mockDriver:
-const driver = state?.driver || getRide(rideId)?.driver || defaultMockDriver;
-```
-
-### Receipt Shows Trip Details
-
-```typescript
-// In RideReceiptModal.tsx
-// Add props for distance and duration
-interface RideReceiptModalProps {
-  ride: RideOption;
-  distanceMiles?: number;
-  durationMin?: number;
-  // ...existing props
+interface RideState {
+  rideId: string | null;
+  pickup: string;
+  destination: string;
+  rideType: string;
+  price: number;
+  distance: number;
+  duration: number;
+  status: RideStatus;
+  driverName: string | null;
+  driverCar: string | null;
+  driverPlate: string | null;
+  driverRating: number | null;
+  eta: number;
+  tripStartTime: number | null;
+  tripElapsed: number;
+  createdAt: number | null;
 }
 
-// Display actual trip data
+// Actions
+type RideAction =
+  | { type: 'CREATE_RIDE'; payload: CreateRidePayload }
+  | { type: 'SET_STATUS'; status: RideStatus }
+  | { type: 'ASSIGN_DRIVER'; driver: DriverInfo }
+  | { type: 'UPDATE_ETA'; eta: number }
+  | { type: 'START_TRIP' }
+  | { type: 'UPDATE_ELAPSED'; elapsed: number }
+  | { type: 'COMPLETE_RIDE' }
+  | { type: 'CANCEL_RIDE' }
+  | { type: 'CLEAR_RIDE' }
+  | { type: 'LOAD_FROM_STORAGE'; state: RideState };
+```
+
+### Searching Page Logic
+
+```typescript
+// Timer: 3 seconds to find driver
+useEffect(() => {
+  const timer = setTimeout(() => {
+    dispatch({
+      type: 'ASSIGN_DRIVER',
+      driver: {
+        name: 'Alex Johnson',
+        car: 'Toyota Camry',
+        plate: 'ZIVO123',
+        rating: 4.9,
+      }
+    });
+    dispatch({ type: 'SET_STATUS', status: 'driver_found' });
+    
+    // Brief delay then navigate
+    setTimeout(() => {
+      navigate('/ride/driver');
+    }, 500);
+  }, 3000);
+  
+  return () => clearTimeout(timer);
+}, []);
+```
+
+### Driver Page ETA Countdown
+
+```typescript
+// Countdown from 5 minutes (300 seconds) to 0
+useEffect(() => {
+  if (state.eta <= 0 || state.status === 'driver_arrived') return;
+  
+  const interval = setInterval(() => {
+    const newEta = Math.max(0, state.eta - 1);
+    dispatch({ type: 'UPDATE_ETA', eta: newEta });
+    
+    if (newEta === 0) {
+      dispatch({ type: 'SET_STATUS', status: 'driver_arrived' });
+      toast.success("Driver has arrived!");
+    }
+  }, 1000);
+  
+  return () => clearInterval(interval);
+}, [state.eta, state.status]);
+```
+
+### Trip Page Elapsed Timer
+
+```typescript
+// Count up from 0
+const [elapsed, setElapsed] = useState(0);
+const canEndTrip = elapsed >= 60;
+
+useEffect(() => {
+  if (state.status !== 'in_trip') return;
+  
+  const interval = setInterval(() => {
+    setElapsed(prev => prev + 1);
+  }, 1000);
+  
+  return () => clearInterval(interval);
+}, [state.status]);
+
+// Format elapsed time
+const formatTime = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+```
+
+### Receipt with Trip Data
+
+```typescript
+// In RideReceiptModal
 <div className="flex justify-between">
-  <span>Distance ({distanceMiles?.toFixed(1)} mi)</span>
-  <span>${distanceCost.toFixed(2)}</span>
+  <span className="text-white/60">Trip time</span>
+  <span className="text-white">{formatTime(tripElapsed)}</span>
+</div>
+<div className="flex justify-between">
+  <span className="text-white/60">Distance</span>
+  <span className="text-white">{distance.toFixed(1)} mi</span>
 </div>
 ```
 
 ---
 
-## Data Flow
+## State Flow Diagram
 
 ```text
-[User selects ride] 
+User taps "Pay & Request"
     ↓
-[Confirm Page] → createRideRequest() → status: 'requested'
+[RideConfirmPage] 
+    → dispatch(CREATE_RIDE) 
+    → status: 'searching'
+    → navigate to /ride/searching
     ↓
-[Searching Page] → 6s timer → simulateDriverAssignment() → status: 'assigned'
+[RideSearchingPage]
+    → 3 second timer
+    → dispatch(ASSIGN_DRIVER)
+    → status: 'driver_found'
+    → navigate to /ride/driver
     ↓
-[Driver Page] → Display driver info from ride.driver
+[RideDriverPage]
+    → status: 'driver_en_route'
+    → ETA countdown (5 min → 0)
+    → When ETA = 0: status: 'driver_arrived'
+    → User taps START TRIP
     ↓
-[Start Trip] → updateRideStatus('in_trip')
+[RideTripPage]
+    → status: 'in_trip'
+    → tripStartTime = Date.now()
+    → Elapsed timer counting up
+    → After 60s: END TRIP enabled
+    → User taps END TRIP
     ↓
-[Trip Page] → Progress animation → updateRideStatus('completed')
+[Receipt Modal]
+    → status: 'completed'
+    → Show trip time, distance, fare
+    → User rates + tips
+    → User taps DONE
     ↓
-[Receipt Modal] → Show distance/time/price → clearRide()
-    ↓
-[Home]
+dispatch(CLEAR_RIDE) → navigate to /ride
 ```
 
 ---
 
 ## No UI Changes
 
-All visual elements remain exactly as they are:
-- Same animations and transitions
-- Same card designs and layouts
-- Same colors and typography
-- Same button styles and interactions
+The visual design remains exactly the same:
+- Same cards, buttons, colors, animations
+- Same layout and typography
+- Same map views and components
 
-Only the underlying state management and data structures are improved.
+Only the underlying state management and timing logic changes.
 
 ---
 
@@ -247,11 +309,11 @@ Only the underlying state management and data structures are improved.
 
 After implementation:
 
-1. Book a ride from `/ride` → Verify ride object created with UUID
-2. Navigate through searching → Verify 6s timer and driver assignment
-3. View driver page → Verify driver info displays correctly
-4. Start and complete trip → Verify status updates
-5. View receipt → Verify distance/time shown correctly
-6. Click Done → Verify ride state cleared and returned home
-7. Refresh at any step → Verify state persistence from localStorage
+1. **Confirm Page**: Verify ride data saved to store on "Pay & Request"
+2. **Searching**: Verify 3-second timer (not 6), driver assigned correctly
+3. **Driver Page**: Verify ETA counts down from 5 min, "Driver arrived" shows at 0
+4. **Trip Page**: Verify elapsed timer counts up, END TRIP disabled for 60 seconds
+5. **Receipt**: Verify trip time and distance shown correctly
+6. **Refresh**: At any step, refresh page and verify state persists
+7. **Cancel**: Verify cancellation clears store and returns home
 
