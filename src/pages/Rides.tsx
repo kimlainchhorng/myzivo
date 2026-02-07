@@ -230,17 +230,21 @@ function RidesMapView({
           </div>
         </div>
       ) : (
-        // Google Map
-        <GoogleMap
-          className="w-full h-full"
-          center={center}
-          zoom={markers.length > 1 ? 12 : 15}
-          markers={markers}
-          route={route}
-          fitBounds={markers.length > 1}
-          showControls={false}
-          darkMode={false}
-        />
+        // Google Map with ZIVO dark theme
+        <>
+          <GoogleMap
+            className="w-full h-full"
+            center={center}
+            zoom={markers.length > 1 ? 12 : 15}
+            markers={markers}
+            route={route}
+            fitBounds={markers.length > 1}
+            showControls={false}
+            darkMode={true}
+          />
+          {/* Premium gradient overlay */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50" />
+        </>
       )}
       
       {/* Floating Pickup Card - Top Left */}

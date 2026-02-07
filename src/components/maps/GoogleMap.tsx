@@ -49,18 +49,18 @@ export interface GoogleMapRef {
   fitMarkerBounds: () => void;
 }
 
-// ZIVO Dark map theme - branded navy palette, removes "Google look"
+// ZIVO Dark map theme - premium Uber-style, removes "Google look"
 const zivoMapStyles: google.maps.MapTypeStyle[] = [
-  { elementType: "geometry", stylers: [{ color: "#0b1220" }] },
+  { elementType: "geometry", stylers: [{ color: "#0f172a" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#cbd5e1" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#0b1220" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#0f172a" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1f2a44" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0b1220" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#0f172a" }] },
   { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#94a3b8" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1b3d" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#7dd3fc" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#020617" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
 ];
 
 const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
@@ -111,7 +111,7 @@ const GoogleMap = forwardRef<GoogleMapRef, GoogleMapProps>(({
       mapId: resolvedMapId || undefined,
       styles: resolvedMapId ? undefined : (darkMode ? zivoMapStyles : undefined),
       disableDefaultUI: !showControls,
-      zoomControl: showControls,
+      zoomControl: false,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
