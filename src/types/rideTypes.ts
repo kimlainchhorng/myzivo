@@ -1,10 +1,9 @@
-// Ride status flow: idle → searching → driver_found → driver_en_route → driver_arrived → in_trip → completed
+// Ride status flow: idle → searching → assigned → arrived → in_trip → completed
 export type RideStatus = 
   | 'idle'
   | 'searching'
-  | 'driver_found'
-  | 'driver_en_route'
-  | 'driver_arrived'
+  | 'assigned'      // Driver accepted the ride
+  | 'arrived'       // Driver at pickup location
   | 'in_trip'
   | 'completed'
   | 'cancelled';
