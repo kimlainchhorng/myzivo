@@ -389,6 +389,7 @@ const DispatchReferrals = lazy(() => import("./pages/dispatch/DispatchReferrals"
 const DispatchAudit = lazy(() => import("./pages/dispatch/DispatchAudit"));
 const DispatchAuditDetail = lazy(() => import("./pages/dispatch/DispatchAuditDetail"));
 const DispatchAlerts = lazy(() => import("./pages/dispatch/DispatchAlerts"));
+const DispatchSLA = lazy(() => import("./pages/dispatch/DispatchSLA"));
 // Driver batch page
 const DriverBatchPage = lazy(() => import("./pages/driver/DriverBatchPage"));
 // Accept Invitation
@@ -1405,6 +1406,7 @@ const App = () => (
                   <Route path="audit" element={<DispatchAudit />} />
                   <Route path="audit/:id" element={<DispatchAuditDetail />} />
                   <Route path="alerts" element={<DispatchAlerts />} />
+                  <Route path="sla" element={<DispatchSLA />} />
                 </Route>
                 {/* Accept Team Invitation */}
                 <Route path="/accept-invite" element={<AcceptInvite />} />

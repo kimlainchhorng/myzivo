@@ -5499,6 +5499,7 @@ export type Database = {
       }
       eats_zones: {
         Row: {
+          at_risk_threshold_minutes: number | null
           city_name: string
           created_at: string
           delivery_fee_base: number
@@ -5506,6 +5507,9 @@ export type Database = {
           id: string
           is_active: boolean
           service_fee_percent: number
+          sla_delivery_buffer_minutes: number | null
+          sla_pickup_buffer_minutes: number | null
+          sla_prep_minutes: number | null
           small_order_fee: number
           small_order_threshold: number
           tax_rate: number
@@ -5513,6 +5517,7 @@ export type Database = {
           zone_code: string
         }
         Insert: {
+          at_risk_threshold_minutes?: number | null
           city_name: string
           created_at?: string
           delivery_fee_base?: number
@@ -5520,6 +5525,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           service_fee_percent?: number
+          sla_delivery_buffer_minutes?: number | null
+          sla_pickup_buffer_minutes?: number | null
+          sla_prep_minutes?: number | null
           small_order_fee?: number
           small_order_threshold?: number
           tax_rate?: number
@@ -5527,6 +5535,7 @@ export type Database = {
           zone_code: string
         }
         Update: {
+          at_risk_threshold_minutes?: number | null
           city_name?: string
           created_at?: string
           delivery_fee_base?: number
@@ -5534,6 +5543,9 @@ export type Database = {
           id?: string
           is_active?: boolean
           service_fee_percent?: number
+          sla_delivery_buffer_minutes?: number | null
+          sla_pickup_buffer_minutes?: number | null
+          sla_prep_minutes?: number | null
           small_order_fee?: number
           small_order_threshold?: number
           tax_rate?: number
@@ -7374,9 +7386,11 @@ export type Database = {
           admin_override_reason: string | null
           admin_price_override: number | null
           assigned_at: string | null
+          at_risk_reason: string | null
           base_fare: number | null
           batch_id: string | null
           branch_id: string | null
+          breached_reason: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
           cancelled_at: string | null
@@ -7454,6 +7468,12 @@ export type Database = {
           restaurant_id: string
           service_fee: number | null
           service_fee_cents: number | null
+          sla_at_risk_at: string | null
+          sla_breached_at: string | null
+          sla_deliver_by: string | null
+          sla_pickup_by: string | null
+          sla_prep_by: string | null
+          sla_status: string | null
           special_instructions: string | null
           square_location_id: string | null
           square_order_id: string | null
@@ -7478,9 +7498,11 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_at?: string | null
+          at_risk_reason?: string | null
           base_fare?: number | null
           batch_id?: string | null
           branch_id?: string | null
+          breached_reason?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -7558,6 +7580,12 @@ export type Database = {
           restaurant_id: string
           service_fee?: number | null
           service_fee_cents?: number | null
+          sla_at_risk_at?: string | null
+          sla_breached_at?: string | null
+          sla_deliver_by?: string | null
+          sla_pickup_by?: string | null
+          sla_prep_by?: string | null
+          sla_status?: string | null
           special_instructions?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
@@ -7582,9 +7610,11 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_at?: string | null
+          at_risk_reason?: string | null
           base_fare?: number | null
           batch_id?: string | null
           branch_id?: string | null
+          breached_reason?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -7662,6 +7692,12 @@ export type Database = {
           restaurant_id?: string
           service_fee?: number | null
           service_fee_cents?: number | null
+          sla_at_risk_at?: string | null
+          sla_breached_at?: string | null
+          sla_deliver_by?: string | null
+          sla_pickup_by?: string | null
+          sla_prep_by?: string | null
+          sla_status?: string | null
           special_instructions?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
@@ -12734,6 +12770,97 @@ export type Database = {
           },
         ]
       }
+      performance_adjustments: {
+        Row: {
+          amount_cents: number
+          applied_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          order_id: string | null
+          reason: string
+          status: string | null
+          tenant_id: string | null
+          type: string
+          wallet_transaction_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          applied_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          order_id?: string | null
+          reason: string
+          status?: string | null
+          tenant_id?: string | null
+          type: string
+          wallet_transaction_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          applied_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          order_id?: string | null
+          reason?: string
+          status?: string | null
+          tenant_id?: string | null
+          type?: string
+          wallet_transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_adjustments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_adjustments_wallet_transaction_id_fkey"
+            columns: ["wallet_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_metrics: {
         Row: {
           created_at: string | null
@@ -15107,6 +15234,65 @@ export type Database = {
           },
         ]
       }
+      restaurant_status_log: {
+        Row: {
+          action: string
+          actor_user_id: string | null
+          created_at: string | null
+          id: string
+          new_state: Json | null
+          previous_state: Json | null
+          restaurant_id: string
+        }
+        Insert: {
+          action: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+          restaurant_id: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_state?: Json | null
+          previous_state?: Json | null
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_status_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_status_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_status_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_status_log_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           capacity: number
@@ -15196,15 +15382,19 @@ export type Database = {
           avg_prep_time: number | null
           bank_connected: boolean | null
           busy_mode: boolean | null
+          busy_prep_time_bonus_minutes: number | null
           cancel_at_period_end: boolean | null
           cancel_rate: number | null
           city: string | null
+          closed_reason: string | null
           commission_rate: number | null
           cover_image_url: string | null
           created_at: string | null
           cuisine_type: string
           current_period_end: string | null
           delivery_fee_cents: number | null
+          delivery_mode: string | null
+          delivery_polygon: Json | null
           delivery_radius_miles: number | null
           description: string | null
           email: string
@@ -15220,6 +15410,7 @@ export type Database = {
           onboarding_step: number | null
           opening_hours: Json | null
           owner_id: string | null
+          pause_new_orders: boolean | null
           phone: string
           plan_code: string | null
           plan_updated_at: string | null
@@ -15250,15 +15441,19 @@ export type Database = {
           avg_prep_time?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
+          busy_prep_time_bonus_minutes?: number | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           city?: string | null
+          closed_reason?: string | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type: string
           current_period_end?: string | null
           delivery_fee_cents?: number | null
+          delivery_mode?: string | null
+          delivery_polygon?: Json | null
           delivery_radius_miles?: number | null
           description?: string | null
           email: string
@@ -15274,6 +15469,7 @@ export type Database = {
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
+          pause_new_orders?: boolean | null
           phone: string
           plan_code?: string | null
           plan_updated_at?: string | null
@@ -15304,15 +15500,19 @@ export type Database = {
           avg_prep_time?: number | null
           bank_connected?: boolean | null
           busy_mode?: boolean | null
+          busy_prep_time_bonus_minutes?: number | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           city?: string | null
+          closed_reason?: string | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type?: string
           current_period_end?: string | null
           delivery_fee_cents?: number | null
+          delivery_mode?: string | null
+          delivery_polygon?: Json | null
           delivery_radius_miles?: number | null
           description?: string | null
           email?: string
@@ -15328,6 +15528,7 @@ export type Database = {
           onboarding_step?: number | null
           opening_hours?: Json | null
           owner_id?: string | null
+          pause_new_orders?: boolean | null
           phone?: string
           plan_code?: string | null
           plan_updated_at?: string | null
@@ -16601,6 +16802,130 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      sla_metrics: {
+        Row: {
+          assign_seconds: number | null
+          created_at: string | null
+          delivery_seconds: number | null
+          distance_miles: number | null
+          driver_id: string | null
+          id: string
+          late_by_seconds: number | null
+          late_stage: string | null
+          merchant_id: string | null
+          notes: string | null
+          order_id: string | null
+          pickup_seconds: number | null
+          prep_seconds: number | null
+          sla_result: string
+          tenant_id: string | null
+          total_seconds: number | null
+          zone_code: string | null
+        }
+        Insert: {
+          assign_seconds?: number | null
+          created_at?: string | null
+          delivery_seconds?: number | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          id?: string
+          late_by_seconds?: number | null
+          late_stage?: string | null
+          merchant_id?: string | null
+          notes?: string | null
+          order_id?: string | null
+          pickup_seconds?: number | null
+          prep_seconds?: number | null
+          sla_result: string
+          tenant_id?: string | null
+          total_seconds?: number | null
+          zone_code?: string | null
+        }
+        Update: {
+          assign_seconds?: number | null
+          created_at?: string | null
+          delivery_seconds?: number | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          id?: string
+          late_by_seconds?: number | null
+          late_stage?: string | null
+          merchant_id?: string | null
+          notes?: string | null
+          order_id?: string | null
+          pickup_seconds?: number | null
+          prep_seconds?: number | null
+          sla_result?: string
+          tenant_id?: string | null
+          total_seconds?: number | null
+          zone_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sla_metrics_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sla_metrics_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       smart_sort_rules: {
         Row: {
@@ -24143,6 +24468,10 @@ export type Database = {
         }
         Returns: Json
       }
+      approve_performance_adjustment: {
+        Args: { p_adjustment_id: string; p_approve: boolean; p_notes?: string }
+        Returns: Json
+      }
       assign_batch_to_driver: {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
@@ -24247,6 +24576,14 @@ export type Database = {
         }
         Returns: Json
       }
+      evaluate_sla_status: {
+        Args: never
+        Returns: {
+          new_status: string
+          order_id: string
+          reason: string
+        }[]
+      }
       find_nearest_branch: {
         Args: { p_lat: number; p_lng: number; p_restaurant_id: string }
         Returns: string
@@ -24345,6 +24682,55 @@ export type Database = {
         }[]
       }
       get_owner_profile_id: { Args: { user_uuid: string }; Returns: string }
+      get_sla_by_driver: {
+        Args: {
+          p_date_from?: string
+          p_date_to?: string
+          p_limit?: number
+          p_tenant_id: string
+        }
+        Returns: {
+          avg_delivery_seconds: number
+          driver_id: string
+          driver_name: string
+          late_count: number
+          on_time_count: number
+          on_time_rate: number
+          total_orders: number
+        }[]
+      }
+      get_sla_by_merchant: {
+        Args: {
+          p_date_from?: string
+          p_date_to?: string
+          p_limit?: number
+          p_tenant_id: string
+        }
+        Returns: {
+          avg_prep_seconds: number
+          late_count: number
+          merchant_id: string
+          merchant_name: string
+          on_time_count: number
+          on_time_rate: number
+          total_orders: number
+        }[]
+      }
+      get_sla_by_zone: {
+        Args: { p_date_from?: string; p_date_to?: string; p_tenant_id: string }
+        Returns: {
+          avg_total_seconds: number
+          late_count: number
+          on_time_count: number
+          on_time_rate: number
+          total_orders: number
+          zone_code: string
+        }[]
+      }
+      get_sla_kpis: {
+        Args: { p_date_from?: string; p_date_to?: string; p_tenant_id: string }
+        Returns: Json
+      }
       get_user_security_summary: {
         Args: { p_user_id: string }
         Returns: {
@@ -24470,6 +24856,7 @@ export type Database = {
         Args: { p_referee_id: string; p_referral_code: string }
         Returns: Json
       }
+      record_sla_metrics: { Args: { p_order_id: string }; Returns: string }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: undefined
@@ -24490,6 +24877,7 @@ export type Database = {
         }
         Returns: number
       }
+      set_order_sla_targets: { Args: { p_order_id: string }; Returns: Json }
       start_batch: {
         Args: { p_batch_id: string; p_driver_id: string }
         Returns: Json
