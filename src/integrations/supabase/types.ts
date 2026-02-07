@@ -6576,6 +6576,7 @@ export type Database = {
           payment_status: string | null
           picked_up_at: string | null
           placed_at: string | null
+          platform_fee: number | null
           prepared_at: string | null
           quoted_delivery_fee: number | null
           quoted_service_fee: number | null
@@ -6594,6 +6595,7 @@ export type Database = {
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
           subtotal: number
+          surge_multiplier: number | null
           tax: number | null
           tip_amount: number | null
           total_amount: number
@@ -6625,6 +6627,7 @@ export type Database = {
           payment_status?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
+          platform_fee?: number | null
           prepared_at?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
@@ -6643,6 +6646,7 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal: number
+          surge_multiplier?: number | null
           tax?: number | null
           tip_amount?: number | null
           total_amount: number
@@ -6674,6 +6678,7 @@ export type Database = {
           payment_status?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
+          platform_fee?: number | null
           prepared_at?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
@@ -6692,6 +6697,7 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal?: number
+          surge_multiplier?: number | null
           tax?: number | null
           tip_amount?: number | null
           total_amount?: number
@@ -13053,6 +13059,75 @@ export type Database = {
         }
         Relationships: []
       }
+      rides: {
+        Row: {
+          created_at: string | null
+          dest_lat: number | null
+          dest_lng: number | null
+          dest_text: string | null
+          distance_miles: number | null
+          driver_id: string | null
+          duration_min: number | null
+          id: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_text: string | null
+          price: number | null
+          ride_type: string | null
+          rider_user_id: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dest_lat?: number | null
+          dest_lng?: number | null
+          dest_text?: string | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          duration_min?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_text?: string | null
+          price?: number | null
+          ride_type?: string | null
+          rider_user_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dest_lat?: number | null
+          dest_lng?: number | null
+          dest_text?: string | null
+          distance_miles?: number | null
+          driver_id?: string | null
+          duration_min?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_text?: string | null
+          price?: number | null
+          ride_type?: string | null
+          rider_user_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_terms: {
         Row: {
           content: string
@@ -13677,6 +13752,51 @@ export type Database = {
           status?: string
           updated_at?: string
           uptime_percent?: number | null
+        }
+        Relationships: []
+      }
+      service_pricing: {
+        Row: {
+          base_fare: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          minimum_fare: number
+          per_mile: number
+          per_minute: number
+          platform_fee_flat: number
+          platform_fee_percent: number
+          service_type: string
+          updated_at: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          base_fare?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number
+          per_mile?: number
+          per_minute?: number
+          platform_fee_flat?: number
+          platform_fee_percent?: number
+          service_type: string
+          updated_at?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          base_fare?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number
+          per_mile?: number
+          per_minute?: number
+          platform_fee_flat?: number
+          platform_fee_percent?: number
+          service_type?: string
+          updated_at?: string | null
+          vehicle_type?: string | null
         }
         Relationships: []
       }
@@ -15596,6 +15716,7 @@ export type Database = {
           customer_lng: number | null
           customer_name: string | null
           customer_phone: string | null
+          customer_total: number | null
           distance_km: number | null
           distance_miles: number | null
           driver_id: string | null
@@ -15613,6 +15734,7 @@ export type Database = {
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
+          platform_fee: number | null
           rating: number | null
           region_id: string | null
           ride_type: string | null
@@ -15622,6 +15744,7 @@ export type Database = {
           status: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
+          surge_multiplier: number | null
           updated_at: string | null
         }
         Insert: {
@@ -15637,6 +15760,7 @@ export type Database = {
           customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
+          customer_total?: number | null
           distance_km?: number | null
           distance_miles?: number | null
           driver_id?: string | null
@@ -15654,6 +15778,7 @@ export type Database = {
           pickup_address: string
           pickup_lat: number
           pickup_lng: number
+          platform_fee?: number | null
           rating?: number | null
           region_id?: string | null
           ride_type?: string | null
@@ -15663,6 +15788,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
+          surge_multiplier?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -15678,6 +15804,7 @@ export type Database = {
           customer_lng?: number | null
           customer_name?: string | null
           customer_phone?: string | null
+          customer_total?: number | null
           distance_km?: number | null
           distance_miles?: number | null
           driver_id?: string | null
@@ -15695,6 +15822,7 @@ export type Database = {
           pickup_address?: string
           pickup_lat?: number
           pickup_lng?: number
+          platform_fee?: number | null
           rating?: number | null
           region_id?: string | null
           ride_type?: string | null
@@ -15704,6 +15832,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["trip_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
+          surge_multiplier?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -19777,6 +19906,16 @@ export type Database = {
           subtotal: number
           total_amount: number
         }[]
+      }
+      calculate_quote: {
+        Args: {
+          p_distance_miles: number
+          p_duration_minutes: number
+          p_service_type: string
+          p_surge_multiplier?: number
+          p_vehicle_type?: string
+        }
+        Returns: Json
       }
       can_customer_view_driver: {
         Args: { _driver_id: string }

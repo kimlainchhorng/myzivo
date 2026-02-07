@@ -7,6 +7,8 @@ import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
 import { useRideStore } from "@/stores/rideStore";
+import { createRideInDb } from "@/lib/supabaseRide";
+import { toast } from "sonner";
 
 interface LocationState {
   ride: RideOption;
@@ -30,7 +32,8 @@ const RideConfirmPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | null;
-  const { createRide } = useRideStore();
+  const { createRide, setTripId } = useRideStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
 
@@ -58,25 +61,54 @@ const RideConfirmPage = () => {
     ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
     : ride.price;
 
-  const handleConfirm = () => {
-    // Create ride in the central store
-    createRide({
-      pickup,
-      destination,
-      rideType: ride.id,
-      rideName: ride.name,
-      rideImage: ride.image,
-      price: displayPrice,
-      distance: tripDetails?.distance || 0,
-      duration: tripDetails?.duration || 0,
-      paymentMethod: selectedPayment,
-      pickupCoords,
-      dropoffCoords,
-      routeCoordinates,
-    });
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    // Navigate to searching
-    navigate("/ride/searching");
+    try {
+      // Create ride in the central store first
+      createRide({
+        pickup,
+        destination,
+        rideType: ride.id,
+        rideName: ride.name,
+        rideImage: ride.image,
+        price: displayPrice,
+        distance: tripDetails?.distance || 0,
+        duration: tripDetails?.duration || 0,
+        paymentMethod: selectedPayment,
+        pickupCoords,
+        dropoffCoords,
+        routeCoordinates,
+      });
+
+      // Try to insert into database
+      const tripId = await createRideInDb({
+        pickup,
+        destination,
+        pickupCoords,
+        dropoffCoords,
+        rideType: ride.id,
+        price: displayPrice,
+        distance: tripDetails?.distance || 0,
+        duration: tripDetails?.duration || 0,
+      });
+
+      // If successful, store the tripId for realtime subscriptions
+      if (tripId) {
+        setTripId(tripId);
+        console.log("[RideConfirm] Trip created in database:", tripId);
+      } else {
+        console.warn("[RideConfirm] Database insert failed, running in demo mode");
+      }
+
+      // Navigate to searching
+      navigate("/ride/searching");
+    } catch (error) {
+      console.error("[RideConfirm] Error creating trip:", error);
+      toast.error("Failed to create ride. Please try again.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -221,9 +253,10 @@ const RideConfirmPage = () => {
           transition={{ delay: 0.2 }}
           whileTap={{ scale: 0.98 }}
           onClick={handleConfirm}
-          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2"
+          disabled={isSubmitting}
+          className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          PAY ${displayPrice.toFixed(2)} & REQUEST
+          {isSubmitting ? "REQUESTING..." : `PAY $${displayPrice.toFixed(2)} & REQUEST`}
         </motion.button>
       </div>
 

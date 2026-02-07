@@ -56,9 +56,13 @@ export interface CreateRideDbPayload {
 
 export const createRideInDb = async (payload: CreateRideDbPayload): Promise<string | null> => {
   try {
+    // Get current authenticated user if available
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data, error } = await supabase
       .from("trips")
       .insert({
+        rider_id: user?.id ?? null,
         pickup_address: payload.pickup,
         dropoff_address: payload.destination,
         pickup_lat: payload.pickupCoords?.lat,
@@ -81,6 +85,7 @@ export const createRideInDb = async (payload: CreateRideDbPayload): Promise<stri
       return null;
     }
 
+    console.log("[supabaseRide] Trip created with ID:", data?.id, "rider_id:", user?.id ?? "anonymous");
     return data?.id || null;
   } catch (err) {
     console.error("Failed to create ride in DB:", err);
