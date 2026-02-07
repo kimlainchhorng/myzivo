@@ -28,14 +28,30 @@ const RideSearchingPage = () => {
   // Try to get state from route or localStorage
   const [state, setState] = useState<LocationState | null>(routeState);
 
+  // Validate localStorage data structure
+  const validateRideState = (data: unknown): data is LocationState => {
+    if (!data || typeof data !== 'object') return false;
+    const d = data as Record<string, unknown>;
+    if (!d.ride || typeof d.ride !== 'object') return false;
+    const ride = d.ride as Record<string, unknown>;
+    return (
+      typeof ride.id === 'string' &&
+      typeof ride.name === 'string' &&
+      typeof ride.price === 'number' &&
+      !isNaN(ride.price)
+    );
+  };
+
   useEffect(() => {
     if (!routeState?.ride) {
       try {
         const stored = localStorage.getItem("zivo_active_ride");
         if (stored) {
           const parsed = JSON.parse(stored);
-          setState(parsed);
-          return;
+          if (validateRideState(parsed)) {
+            setState(parsed);
+            return;
+          }
         }
       } catch {}
       navigate("/ride");

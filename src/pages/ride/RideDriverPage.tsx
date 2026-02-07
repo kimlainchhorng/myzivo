@@ -59,6 +59,20 @@ const RideDriverPage = () => {
   // Calculate driver position based on progress
   const driverLocation = interpolateRoutePosition(driverRouteToPickup, driverProgress);
 
+  // Validate localStorage data structure
+  const validateRideState = (data: unknown): data is LocationState => {
+    if (!data || typeof data !== 'object') return false;
+    const d = data as Record<string, unknown>;
+    if (!d.ride || typeof d.ride !== 'object') return false;
+    const ride = d.ride as Record<string, unknown>;
+    return (
+      typeof ride.id === 'string' &&
+      typeof ride.name === 'string' &&
+      typeof ride.price === 'number' &&
+      !isNaN(ride.price)
+    );
+  };
+
   // Load from localStorage if route state is missing
   useEffect(() => {
     if (!routeState?.ride) {
@@ -66,8 +80,10 @@ const RideDriverPage = () => {
         const stored = localStorage.getItem("zivo_active_ride");
         if (stored) {
           const parsed = JSON.parse(stored);
-          setState(parsed);
-          return;
+          if (validateRideState(parsed)) {
+            setState(parsed);
+            return;
+          }
         }
       } catch {}
       navigate("/ride");

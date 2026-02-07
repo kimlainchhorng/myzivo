@@ -27,7 +27,9 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
   // Calculate mock fare breakdown that sums to ride.price
   const baseFare = 2.50;
   const serviceFee = 1.50;
-  const timeCost = ride.eta * 0.30;
+  // Null safety: fallback to estimated ETA based on price if eta is missing
+  const etaMinutes = ride.eta ?? Math.round(ride.price / 3) ?? 10;
+  const timeCost = etaMinutes * 0.30;
   const distanceCost = Math.max(0, ride.price - baseFare - serviceFee - timeCost);
   
   // Total with tip
@@ -79,7 +81,7 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
               <span className="text-white">${baseFare.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/60">Time ({ride.eta} min)</span>
+              <span className="text-white/60">Time ({etaMinutes} min)</span>
               <span className="text-white">${timeCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
