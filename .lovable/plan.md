@@ -1,10 +1,12 @@
 
+# Maps + Real Distance/Time + Live Driver Location Implementation
 
-# ZIVO Dispatch / Admin Panel Implementation Plan
+## Summary
 
-## Overview
-
-Build a comprehensive Dispatch/Admin web panel for managing drivers and food orders in real-time. This panel will reuse the existing Supabase database schema and integrate with the Driver and Merchant apps.
+Add comprehensive maps integration with real-time location tracking to enable:
+1. Automatic distance/duration calculation for accurate pricing
+2. Live driver location updates for dispatch visibility
+3. Real-time driver tracking for customer order tracking
 
 ---
 
@@ -12,386 +14,348 @@ Build a comprehensive Dispatch/Admin web panel for managing drivers and food ord
 
 | Component | Status |
 |-----------|--------|
-| Supabase Auth | ✅ Already implemented |
-| Admin role system | ✅ `user_roles` table with `app_role` enum (`admin`, `super_admin`, `operations`, `finance`, `support`) |
-| Admin login | ✅ `/admin/login` exists |
-| `AdminProtectedRoute` | ✅ Role-based route protection ready |
-| `food_orders` table | ✅ Full schema with driver assignment, status tracking |
-| `drivers` table | ✅ With `is_online`, `current_lat/lng`, `status`, etc. |
-| `driver_earnings` table | ✅ Tracks earnings per trip/order |
-| `restaurants` table | ✅ Available for merchant data |
-| Realtime components | ✅ `ActivityStream`, `LiveMapOverview` exist as patterns |
+| Map providers | Google Maps + Mapbox both configured |
+| Edge functions | `maps-autocomplete`, `maps-place-details`, `maps-route`, `update-driver-location` exist |
+| `trips` table | Has `pickup_lat/lng`, `dropoff_lat/lng`, `distance_miles`, `duration_minutes` |
+| `food_orders` table | Has `delivery_lat/lng`, `distance_miles` but missing `pickup_lat/lng` and `duration_minutes` |
+| `drivers` table | Has `current_lat/lng`, `updated_at` |
+| Live map | `LiveMapOverview` exists for admin with Mapbox |
+| Address autocomplete | `useServerGeocode` hook + edge functions exist |
+| Secrets | `GOOGLE_MAPS_API_KEY`, `MAPBOX_ACCESS_TOKEN` configured |
 
 ---
 
-## Architecture
+## Database Changes
 
-The dispatch panel will be added under `/dispatch` routes using the existing `AdminProtectedRoute` wrapper to gate by admin roles.
+### food_orders table updates
+
+Add missing columns for pickup location and route data:
+
+```sql
+ALTER TABLE public.food_orders 
+  ADD COLUMN IF NOT EXISTS pickup_lat numeric,
+  ADD COLUMN IF NOT EXISTS pickup_lng numeric,
+  ADD COLUMN IF NOT EXISTS duration_minutes integer DEFAULT 0;
+
+COMMENT ON COLUMN public.food_orders.pickup_lat IS 'Restaurant pickup latitude';
+COMMENT ON COLUMN public.food_orders.pickup_lng IS 'Restaurant pickup longitude';
+COMMENT ON COLUMN public.food_orders.duration_minutes IS 'Estimated delivery duration in minutes';
+```
+
+### drivers table updates
+
+Add `last_active_at` column for more accurate activity tracking:
+
+```sql
+ALTER TABLE public.drivers
+  ADD COLUMN IF NOT EXISTS last_active_at timestamptz DEFAULT now();
+
+COMMENT ON COLUMN public.drivers.last_active_at IS 'Last time driver sent location update';
+```
+
+---
+
+## RLS Security Policies
+
+### New RPC for customer tracking with driver location
+
+```sql
+-- RPC to get driver location for a specific order (customer tracking)
+CREATE OR REPLACE FUNCTION public.get_order_driver_location(p_order_id uuid)
+RETURNS TABLE(
+  driver_id uuid,
+  driver_name text,
+  driver_lat numeric,
+  driver_lng numeric,
+  last_updated timestamptz
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    d.id,
+    d.full_name,
+    d.current_lat,
+    d.current_lng,
+    d.updated_at
+  FROM food_orders fo
+  JOIN drivers d ON d.id = fo.driver_id
+  WHERE fo.id = p_order_id
+    AND fo.customer_id = auth.uid()
+    AND fo.status IN ('confirmed', 'ready_for_pickup', 'in_progress');
+END;
+$function$;
+```
+
+---
+
+## Implementation Details
+
+### A. Shared Address Autocomplete Component
+
+Create a reusable `AddressAutocomplete` component that wraps `useServerGeocode`:
+
+**File: `src/components/shared/AddressAutocomplete.tsx`**
 
 ```text
-/dispatch                    → Overview Dashboard
-/dispatch/orders             → Kanban Board (drag & drop)
-/dispatch/orders/:id         → Order Detail Page
-/dispatch/drivers            → Live Driver Management
-/dispatch/merchants          → Merchant List
-/dispatch/payouts            → Driver Earnings & CSV Export
-/dispatch/settings           → Placeholder
+- Uses existing useServerGeocode hook
+- Shows dropdown with suggestions
+- Returns selected place with coordinates
+- Fallback to manual input if API fails
+```
+
+### B. Dispatch Live Map Panel
+
+Add map to dispatch dashboard showing drivers + orders:
+
+**File: `src/components/dispatch/DispatchLiveMap.tsx`**
+
+```text
+- Uses GoogleMap component (with dark mode)
+- Subscribes to drivers table via Realtime
+- Shows online drivers as pins with popup (name, last_active, active order)
+- Shows selected order pickup/dropoff with route line
+- "Assign to selected order" action from driver popup
+- Toggle layers: drivers, orders, routes
+```
+
+**Integration points:**
+- Add to `DispatchDashboard.tsx` as collapsible panel
+- Add to `DispatchOrdersKanban.tsx` as side panel when order selected
+
+### C. Enhanced Driver Location Updates
+
+Modify existing `update-driver-location` edge function to also update `last_active_at`:
+
+**File: `supabase/functions/update-driver-location/index.ts`**
+
+```text
+Current: Updates current_lat, current_lng, updated_at
+Add: Update last_active_at to now()
+```
+
+### D. Driver Location Watcher Hook
+
+Create hook for driver app to broadcast location:
+
+**File: `src/hooks/useDriverLocationBroadcast.ts`**
+
+```text
+- Watches geolocation when driver is online
+- Sends updates to update-driver-location edge function every 10-20s
+- Also triggers on significant movement (>50m)
+- Handles permission errors gracefully
+- Exposes "Refresh location" trigger
+```
+
+### E. Customer Order Tracking Page
+
+Create customer tracking view with live driver map:
+
+**File: `src/pages/track/OrderTrackingPage.tsx`**
+
+```text
+- Route: /track/:orderId
+- Shows order status timeline
+- Map with pickup, dropoff, and driver pins
+- Real-time subscription to:
+  - Order status changes
+  - Driver location (via RPC get_order_driver_location)
+- Driver moving animation along route
+```
+
+### F. Calculate Route on Order Creation
+
+Update order creation flow to auto-calculate distance/duration:
+
+**File: Merchant order creation flow**
+
+```text
+When creating order:
+1. Use AddressAutocomplete for pickup (restaurant) and delivery
+2. Call maps-route edge function to get distance_miles, duration_minutes
+3. Store pickup_lat/lng, delivery_lat/lng, distance_miles, duration_minutes
+4. Use calculate-price RPC with real distance/duration
 ```
 
 ---
 
-## New Files to Create
+## File Changes Summary
 
-### Pages (6 files)
-
-| File Path | Description |
-|-----------|-------------|
-| `src/pages/dispatch/DispatchLayout.tsx` | Shared layout with sidebar navigation |
-| `src/pages/dispatch/DispatchDashboard.tsx` | KPIs + Attention panel + Quick actions |
-| `src/pages/dispatch/DispatchOrdersKanban.tsx` | Drag-drop kanban board |
-| `src/pages/dispatch/DispatchOrderDetail.tsx` | Full order info + events timeline |
-| `src/pages/dispatch/DispatchDrivers.tsx` | Live driver list with controls |
-| `src/pages/dispatch/DispatchMerchants.tsx` | Merchant list with stats |
-| `src/pages/dispatch/DispatchPayouts.tsx` | Earnings table with CSV export |
-| `src/pages/dispatch/DispatchSettings.tsx` | Placeholder settings page |
-
-### Components (7 files)
-
-| File Path | Description |
-|-----------|-------------|
-| `src/components/dispatch/DispatchSidebar.tsx` | Navigation sidebar for dispatch routes |
-| `src/components/dispatch/KanbanColumn.tsx` | Individual kanban column |
-| `src/components/dispatch/OrderCard.tsx` | Draggable order card |
-| `src/components/dispatch/AssignDriverModal.tsx` | Modal to assign driver to order |
-| `src/components/dispatch/OrderEventsTimeline.tsx` | Timeline of order status changes |
-| `src/components/dispatch/DriverDetailDrawer.tsx` | Slide-over with driver info + earnings |
-| `src/components/dispatch/RealtimeOrderToasts.tsx` | Toast notifications for realtime events |
-
-### Hooks (4 files)
-
-| File Path | Description |
-|-----------|-------------|
-| `src/hooks/useDispatchOrders.ts` | Fetch orders with realtime subscription |
-| `src/hooks/useDispatchDrivers.ts` | Fetch drivers with online status + realtime |
-| `src/hooks/useDispatchStats.ts` | KPI calculations for dashboard |
-| `src/hooks/useOrderMutations.ts` | Assign, unassign, update status mutations |
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/shared/AddressAutocomplete.tsx` | Create | Reusable address autocomplete with coords |
+| `src/components/dispatch/DispatchLiveMap.tsx` | Create | Live map for dispatch with drivers/orders |
+| `src/pages/dispatch/DispatchDashboard.tsx` | Modify | Add DispatchLiveMap panel |
+| `src/hooks/useDriverLocationBroadcast.ts` | Create | Hook for driver location updates |
+| `src/hooks/useDispatchDrivers.ts` | Modify | Add realtime subscription + last_active_at |
+| `src/pages/track/OrderTrackingPage.tsx` | Create | Customer order tracking with live driver |
+| `src/hooks/useOrderTracking.ts` | Create | Hook for order tracking + driver location |
+| `supabase/functions/update-driver-location/index.ts` | Modify | Add last_active_at update |
+| Database migration | Create | Add columns to food_orders, drivers |
+| RLS migration | Create | Add get_order_driver_location RPC |
 
 ---
 
-## Route Registration (App.tsx)
+## Detailed Component Specifications
 
-Add new routes wrapped with `AdminProtectedRoute`:
+### AddressAutocomplete Component
 
-```tsx
-// Dispatch Admin Panel
-<Route path="/dispatch" element={<AdminProtectedRoute allowedRoles={["admin", "operations"]}><DispatchLayout /></AdminProtectedRoute>}>
-  <Route index element={<DispatchDashboard />} />
-  <Route path="orders" element={<DispatchOrdersKanban />} />
-  <Route path="orders/:id" element={<DispatchOrderDetail />} />
-  <Route path="drivers" element={<DispatchDrivers />} />
-  <Route path="merchants" element={<DispatchMerchants />} />
-  <Route path="payouts" element={<DispatchPayouts />} />
-  <Route path="settings" element={<DispatchSettings />} />
-</Route>
-```
-
----
-
-## Feature Implementation Details
-
-### 1. Dashboard (`/dispatch`)
-
-**KPI Cards:**
-- New orders (status = `pending`, today)
-- Assigned orders (status = `confirmed`, today)
-- Picked up (status = `in_progress`, today)
-- Delivered (status = `completed`, today)
-- Online drivers (drivers with `is_online = true`)
-
-**Attention Panel:**
-- Orders unassigned > 5 minutes (query `created_at < now() - 5min AND driver_id IS NULL AND status = 'pending'`)
-- Online drivers with no active order (LEFT JOIN food_orders)
-
-**Quick Actions:**
-- "Auto-assign all new orders" button → loops unassigned orders, calls `find_nearest_drivers` function
-- "Create test order" button (dev/admin only) → uses existing `useCreateTestFoodOrder`
-
-### 2. Orders Kanban (`/dispatch/orders`)
-
-**Columns:**
-| Column | Filter |
-|--------|--------|
-| New | `status = 'pending' AND driver_id IS NULL` |
-| Assigned | `status = 'confirmed' AND driver_id IS NOT NULL` |
-| Picked Up | `status = 'in_progress'` |
-| Delivered | `status = 'completed'` |
-| Cancelled | `status = 'cancelled'` |
-
-**Drag & Drop Logic:**
-- **New → Assigned**: Open `AssignDriverModal` first, then update `driver_id` + `status`
-- **Assigned → Picked Up**: Confirm dialog, update status to `in_progress`, set `picked_up_at`
-- **Picked Up → Delivered**: Confirm dialog, update status to `completed`, set `delivered_at`, idempotent insert to `driver_earnings`
-- Backwards moves restricted or require confirmation
-
-**Card Content:**
-- Order ID (short 8 chars)
-- Restaurant name (from join)
-- Pickup address (restaurant address)
-- Dropoff address (`delivery_address`)
-- Driver payout (`driver_payout_cents`)
-- Created time
-- Assigned driver name
-
-**Filters & Search:**
-- By merchant (dropdown)
-- By driver (dropdown)
-- By status (tabs or dropdown)
-- By date range (date picker)
-- Text search on order ID
-
-### 3. Assign Driver Modal
-
-**UI:**
-- List drivers with `is_online = true` first
-- Show: name, vehicle type, last active time, current order (if any)
-- "Assign" button per driver
-
-**On Assign:**
-1. `UPDATE food_orders SET driver_id = :id, status = 'confirmed', assigned_at = now()`
-2. Insert event to `order_events` (new table or use existing pattern):
-   - `type = 'status_change'`
-   - `reason = 'dispatch_assign'`
-   - `metadata = { admin_id, driver_id }`
-
-**Unassign:**
-- Set `driver_id = NULL`
-- Revert status to `pending` (unless already picked up)
-- Insert event with `reason = 'dispatch_unassign'`
-
-### 4. Order Detail (`/dispatch/orders/:id`)
-
-**Sections:**
-- Full order info card (customer, restaurant, items, totals)
-- Status control (dropdown or buttons to force-change status)
-- Assignment panel (current driver + "Change Driver" button)
-- Events timeline (from order_events or derived from timestamp columns)
-- Add note form (creates order_event with `type = 'note'`)
-
-### 5. Live Drivers (`/dispatch/drivers`)
-
-**Table Columns:**
-| Column | Source |
-|--------|--------|
-| Name | `full_name` |
-| Status | `is_online` badge |
-| Last Active | `updated_at` or `last_active_at` |
-| Vehicle | `vehicle_type` |
-| Active Order | JOIN to food_orders where status IN (confirmed, in_progress) |
-
-**Actions:**
-- Toggle online/offline (admin override: `UPDATE drivers SET is_online = :bool`)
-- "Assign to order" quick action (dropdown of pending orders)
-- Click row → open `DriverDetailDrawer`
-
-**Driver Detail Drawer:**
-- Profile info
-- Recent completed orders (last 10)
-- Earnings summary (today/week/month from `driver_earnings`)
-
-### 6. Merchants (`/dispatch/merchants`)
-
-**Table:**
-- Restaurant name
-- Orders today count
-- Active orders count (pending + confirmed + in_progress)
-- Average prep time
-
-**Click Row:**
-- Filter orders kanban by this merchant
-
-### 7. Payouts (`/dispatch/payouts`)
-
-**Data Source:** `driver_earnings` table
-
-**Filters:**
-- By driver (dropdown)
-- Date range (start/end date pickers)
-
-**Summary Cards:**
-- Total today
-- Total this week
-- Total this month
-
-**Table Columns:**
-| Column | Source |
-|--------|--------|
-| Date | `created_at` |
-| Driver | JOIN drivers.full_name |
-| Type | `earning_type` |
-| Base | `base_amount` |
-| Tip | `tip_amount` |
-| Platform Fee | `platform_fee` |
-| Net | `net_amount` |
-
-**CSV Export:**
-- Client-side CSV generation using `Blob` (pattern exists in `AdminEatsModule`)
-- Filename: `dispatch-payouts-{date}.csv`
-
-### 8. Realtime Subscriptions
-
-**Orders Channel:**
-```ts
-supabase
-  .channel('dispatch-orders')
-  .on('postgres_changes', { 
-    event: '*', 
-    schema: 'public', 
-    table: 'food_orders' 
-  }, handleOrderChange)
-  .subscribe()
-```
-
-**Drivers Channel:**
-```ts
-supabase
-  .channel('dispatch-drivers')
-  .on('postgres_changes', { 
-    event: 'UPDATE', 
-    schema: 'public', 
-    table: 'drivers' 
-  }, handleDriverChange)
-  .subscribe()
-```
-
-**Toast Notifications:**
-- New order created → "🆕 New order from {restaurant}"
-- Order assigned → "✓ Order assigned to {driver}"
-- Order picked up → "📦 Order picked up"
-- Order delivered → "✅ Order delivered"
-- Driver online → "🟢 {driver} is now online"
-- Driver offline → "⚪ {driver} went offline"
-
-### 9. Data Integrity: Idempotent Earnings Insert
-
-When marking order as delivered, check before insert:
-
-```ts
-const { data: existing } = await supabase
-  .from('driver_earnings')
-  .select('id')
-  .eq('trip_id', orderId)
-  .single();
-
-if (!existing) {
-  await supabase.from('driver_earnings').insert({
-    driver_id: order.driver_id,
-    trip_id: orderId,
-    base_amount: order.driver_payout_cents / 100,
-    net_amount: order.driver_payout_cents / 100,
-    earning_type: 'delivery',
-    // ... other fields
-  });
+```typescript
+interface AddressAutocompleteProps {
+  placeholder?: string;
+  value?: string;
+  onSelect: (place: {
+    address: string;
+    lat: number;
+    lng: number;
+  }) => void;
+  proximity?: { lat: number; lng: number };
+  disabled?: boolean;
 }
 ```
 
----
+Features:
+- Debounced input (300ms)
+- Loading spinner during fetch
+- Error state with retry
+- Clear button
+- Keyboard navigation (arrow keys, enter)
+- Falls back to mock data if API unavailable
 
-## Database Considerations
+### DispatchLiveMap Component
 
-### Existing Tables Used
-- `food_orders` - Order data with status, driver assignment
-- `drivers` - Driver profiles with online status
-- `restaurants` - Merchant data
-- `driver_earnings` - Payout records
-- `user_roles` - Admin role checking
-
-### Optional: Order Events Table
-
-If order events tracking is needed beyond timestamp columns, we could create an `order_events` table:
-
-```sql
-CREATE TABLE order_events (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  order_id UUID REFERENCES food_orders(id) ON DELETE CASCADE,
-  event_type TEXT NOT NULL, -- 'status_change', 'note', 'assignment'
-  old_value TEXT,
-  new_value TEXT,
-  reason TEXT,
-  admin_id UUID REFERENCES auth.users(id),
-  metadata JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
+```typescript
+interface DispatchLiveMapProps {
+  selectedOrderId?: string;
+  onDriverClick?: (driverId: string) => void;
+  onAssignDriver?: (driverId: string, orderId: string) => void;
+  className?: string;
+}
 ```
 
-However, for MVP we can derive timeline from existing timestamp columns (`created_at`, `assigned_at`, `picked_up_at`, `delivered_at`, `cancelled_at`).
+Features:
+- GoogleMap with dark mode styling
+- Driver markers (green online, gray offline)
+- Order markers (blue pickup, red dropoff)
+- Route polyline for selected order
+- Real-time driver position updates (5s interval)
+- Driver popup with "Assign" button
+- Layer toggle controls
+- Stats overlay (X drivers online, Y active orders)
+
+### OrderTrackingPage
+
+Features:
+- Status timeline (Confirmed → Picked Up → Delivering → Delivered)
+- Estimated arrival time based on duration_minutes + current position
+- Map with:
+  - Restaurant pickup (blue pin)
+  - Customer dropoff (green pin)
+  - Driver position (car icon, animated)
+  - Route line
+- Real-time updates via Supabase Realtime
+- Driver info card (name, vehicle, rating)
+- Contact driver button
 
 ---
 
-## RLS Policies
+## Real-time Subscriptions
 
-Admins need read/write access to dispatch tables. The existing `is_admin(user_id)` and `has_role(user_id, 'admin')` functions should be used:
+### Dispatch Panel
 
-```sql
--- Example policy for admin order access
-CREATE POLICY "Admins can manage orders" ON food_orders
-FOR ALL USING (public.has_role(auth.uid(), 'admin') OR public.has_role(auth.uid(), 'operations'));
+```typescript
+// Subscribe to driver location changes
+supabase
+  .channel('dispatch-driver-locations')
+  .on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'drivers',
+    filter: 'is_online=eq.true'
+  }, handleDriverUpdate)
+  .subscribe()
 ```
 
-Existing RLS for merchants/drivers remains intact (they only see their own data).
+### Customer Tracking
+
+```typescript
+// Subscribe to order status changes
+supabase
+  .channel(`order-${orderId}`)
+  .on('postgres_changes', {
+    event: 'UPDATE',
+    schema: 'public',
+    table: 'food_orders',
+    filter: `id=eq.${orderId}`
+  }, handleOrderUpdate)
+  .subscribe()
+
+// Poll driver location every 5s via RPC
+useInterval(async () => {
+  const { data } = await supabase.rpc('get_order_driver_location', { p_order_id: orderId });
+  if (data?.[0]) setDriverLocation(data[0]);
+}, 5000)
+```
 
 ---
 
-## UI/UX Notes
+## Security Considerations
 
-- Use existing `shadcn/ui` components for consistency
-- Dark theme compatible (follows existing Tailwind patterns)
-- Mobile responsive sidebar collapses to hamburger menu
-- Kanban uses drag-drop library (we can use `@dnd-kit/core` or simple state-based approach)
-- Real-time updates animate in with subtle fade/highlight
+| Access Pattern | Control |
+|----------------|---------|
+| Drivers table location (dispatch) | Admin role check via existing RLS |
+| Driver location for customer | Only via RPC, only for assigned order, only active status |
+| Order details for customer | customer_id = auth.uid() RLS |
+| Location updates from driver | Auth required, driver verified, GPS spoof detection (existing) |
 
 ---
 
-## File Summary
+## Fallback Behavior
 
-| Category | Count |
-|----------|-------|
-| Page Components | 8 |
-| UI Components | 7 |
-| Custom Hooks | 4 |
-| Route Changes | 1 (App.tsx) |
-| Database Migrations | 0-1 (optional order_events) |
-
-**Total: ~20 new files**
+| Scenario | Fallback |
+|----------|----------|
+| Maps API key missing | Show static map image, manual distance input |
+| No GPS permission | Show error message, disable location features |
+| API rate limit | Queue requests, use cached data |
+| Driver location stale (>2 min) | Show "Last seen X min ago" badge |
 
 ---
 
 ## Implementation Order
 
-1. **Hooks & Data Layer**
-   - `useDispatchOrders`, `useDispatchDrivers`, `useDispatchStats`, `useOrderMutations`
+1. **Database migration** - Add columns to food_orders and drivers
+2. **RLS/RPC migration** - Add get_order_driver_location function
+3. **AddressAutocomplete component** - Reusable address input
+4. **DispatchLiveMap component** - Live map for dispatch panel
+5. **Update DispatchDashboard** - Integrate map panel
+6. **useDriverLocationBroadcast hook** - For driver app location updates
+7. **OrderTrackingPage** - Customer tracking view
+8. **useOrderTracking hook** - Order + driver location subscription
+9. **Route registration** - Add /track/:orderId route
 
-2. **Layout & Navigation**
-   - `DispatchLayout`, `DispatchSidebar`
+---
 
-3. **Dashboard**
-   - `DispatchDashboard` with KPIs and attention panel
+## Routes to Add
 
-4. **Kanban & Order Management**
-   - `KanbanColumn`, `OrderCard`, `DispatchOrdersKanban`
-   - `AssignDriverModal`
+```tsx
+<Route path="/track/:orderId" element={<OrderTrackingPage />} />
+```
 
-5. **Order Detail**
-   - `DispatchOrderDetail`, `OrderEventsTimeline`
+---
 
-6. **Driver Management**
-   - `DispatchDrivers`, `DriverDetailDrawer`
+## Testing Checklist
 
-7. **Supporting Pages**
-   - `DispatchMerchants`, `DispatchPayouts`, `DispatchSettings`
-
-8. **Realtime**
-   - Add subscriptions to hooks, `RealtimeOrderToasts`
-
-9. **Route Registration**
-   - Update `App.tsx` with new routes
-
+- [ ] Dispatch map shows online drivers with correct positions
+- [ ] Driver positions update in real-time when location changes
+- [ ] Order pickup/dropoff markers display correctly
+- [ ] Route line draws between pickup and dropoff
+- [ ] "Assign driver" from map popup works
+- [ ] Customer tracking page loads with order details
+- [ ] Driver marker moves as location updates
+- [ ] Status timeline updates in real-time
+- [ ] RPC blocks access for non-owner customers
+- [ ] Fallback UI shows when maps unavailable
