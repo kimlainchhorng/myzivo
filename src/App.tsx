@@ -70,6 +70,7 @@ const RideTripPage = lazy(() => import("./pages/ride/RideTripPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage"));
 const DriverTripsPage = lazy(() => import("./pages/driver/DriverTripsPage"));
+const DriverAccountPage = lazy(() => import("./pages/driver/DriverAccountPage"));
 
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
@@ -586,6 +587,7 @@ const App = () => (
                 <Route path="/driver" element={<DriverHomePage />} />
                 <Route path="/driver/login" element={<DriverLoginPage />} />
                 <Route path="/driver/trips" element={<DriverTripsPage />} />
+                <Route path="/driver/account" element={<DriverAccountPage />} />
                 
                 <Route path="/profile" element={<SetupRequiredRoute><Profile /></SetupRequiredRoute>} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
