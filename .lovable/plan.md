@@ -1,53 +1,46 @@
 
-# Rider Ride Status Notifications
+
+# Rider Trip History Page
 
 ## Summary
 
-Add real-time status change notifications with visual banners and sound/vibration feedback on key transitions. Banners display at the top of ride pages with status-specific messaging, while notification sounds and haptic feedback provide alerts for `assigned` and `arrived` events.
+Create a dedicated ride history page at `/rides/history` that shows past rides with pickup, destination, price, date, and status. Add a "Past Trips" quick-access button on the mobile home screen.
 
 ---
 
-## Current Behavior
+## Current State
 
-| Feature | Current | Issue |
-|---------|---------|-------|
-| Status updates | Toast notifications only | No persistent visual feedback |
-| Sound feedback | Driver/restaurant side only | Rider has no audio alerts |
-| Vibration | Available via `useNativeFeatures` | Not triggered on status changes |
-| Status banners | Only on `arrived` in DriverPage | Missing for other statuses |
+| Component | Status |
+|-----------|--------|
+| `useRiderTripHistory` hook | Already exists - fetches trips where `rider_id = user.id` and status is `completed` or `cancelled` |
+| `TripHistory` page | Exists at `/trips` - full-featured history page with stats, tabs, receipts |
+| `/rides/history` route | Does not exist |
+| "Past Trips" button on home | Does not exist |
 
 ---
 
 ## Implementation Approach
 
-### 1. Create `useRideStatusNotifications` Hook
+### Option A: Reuse Existing Page (Recommended)
 
-Central hook that:
-- Listens for status changes from `RideStore`
-- Plays sound via `useNotificationSound`
-- Triggers haptic feedback via `useNativeFeatures`
-- Manages notification banner state
+Since `TripHistory.tsx` already provides a complete ride history experience:
+1. Add an alias route `/rides/history` pointing to the existing `TripHistory` component
+2. Add "Past Trips" button to `AppHome.tsx`
 
-### 2. Create `RideStatusBanner` Component
+### Option B: Create New Simplified Page
 
-Animated banner component that shows status-specific messages:
-- `assigned` → "Driver is on the way"
-- `arrived` → "Driver has arrived"  
-- `in_trip` → "Trip started"
-- `completed` → "Trip completed"
+Create a new lightweight page with just the essential trip list (no stats, no tabs).
 
-### 3. Add Sound/Vibration Triggers
+---
 
-On `assigned` and `arrived`:
-- Play `statusUpdate` sound
-- Trigger haptic `notification(success)`
+## Recommended: Option A
 
-### 4. Integrate into Ride Pages
-
-Add banner component to:
-- `RideSearchingPage.tsx` (assigned)
-- `RideDriverPage.tsx` (arrived)
-- `RideTripPage.tsx` (in_trip, completed)
+This avoids code duplication since `TripHistory` already:
+- Fetches trips for the current user via `useRiderTripHistory`
+- Shows pickup/dropoff addresses
+- Displays price and date
+- Shows completed/cancelled status with tabs
+- Includes receipt viewing and "Book Again" functionality
 
 ---
 
@@ -55,317 +48,135 @@ Add banner component to:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useRideStatusNotifications.ts` | Create | Hook for status change detection + alerts |
-| `src/components/ride/RideStatusBanner.tsx` | Create | Animated status banner component |
-| `src/hooks/useRideRealtime.ts` | Modify | Add onStatusChangeWithNotify callback |
-| `src/pages/ride/RideSearchingPage.tsx` | Modify | Integrate banner + sound/haptic |
-| `src/pages/ride/RideDriverPage.tsx` | Modify | Integrate banner + sound/haptic |
-| `src/pages/ride/RideTripPage.tsx` | Modify | Integrate banner |
+| `src/App.tsx` | Modify | Add `/rides/history` route pointing to `TripHistory` |
+| `src/pages/app/AppHome.tsx` | Modify | Add "Past Trips" quick-access button |
 
 ---
 
 ## Technical Details
 
-### New Hook: `useRideStatusNotifications`
+### Route Addition (App.tsx)
+
+Add new route near existing ride routes:
 
 ```typescript
-import { useEffect, useRef, useCallback, useState } from "react";
-import { useRideStore } from "@/stores/rideStore";
-import { useNotificationSound } from "@/hooks/useNotificationSound";
-import { useNativeFeatures } from "@/hooks/useNativeFeatures";
-import { RideStatus } from "@/types/rideTypes";
-
-interface StatusNotification {
-  status: RideStatus;
-  message: string;
-  subMessage?: string;
-  type: "info" | "success" | "warning";
-}
-
-const STATUS_MESSAGES: Record<string, StatusNotification> = {
-  assigned: {
-    status: "assigned",
-    message: "Driver is on the way",
-    subMessage: "Your driver has accepted the ride",
-    type: "info",
-  },
-  arrived: {
-    status: "arrived",
-    message: "Driver has arrived",
-    subMessage: "Please meet your driver at the pickup location",
-    type: "success",
-  },
-  in_trip: {
-    status: "in_trip",
-    message: "Trip started",
-    subMessage: "Enjoy your ride",
-    type: "info",
-  },
-  completed: {
-    status: "completed",
-    message: "Trip completed",
-    subMessage: "Thank you for riding with ZIVO",
-    type: "success",
-  },
-};
-
-export const useRideStatusNotifications = () => {
-  const { state } = useRideStore();
-  const { playStatusUpdateSound } = useNotificationSound();
-  const { hapticNotification, isNative } = useNativeFeatures();
-  const prevStatusRef = useRef<RideStatus | null>(null);
-  const [activeNotification, setActiveNotification] = useState<StatusNotification | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
-
-  const triggerNotification = useCallback((status: RideStatus) => {
-    const notification = STATUS_MESSAGES[status];
-    if (!notification) return;
-
-    setActiveNotification(notification);
-    setShowBanner(true);
-
-    // Play sound for assigned and arrived
-    if (status === "assigned" || status === "arrived") {
-      playStatusUpdateSound();
-      hapticNotification("success");
-    }
-
-    // Auto-hide banner after 5 seconds (except for arrived which persists)
-    if (status !== "arrived") {
-      setTimeout(() => setShowBanner(false), 5000);
-    }
-  }, [playStatusUpdateSound, hapticNotification]);
-
-  // Monitor status changes
-  useEffect(() => {
-    if (prevStatusRef.current !== state.status && state.status !== "idle") {
-      triggerNotification(state.status);
-    }
-    prevStatusRef.current = state.status;
-  }, [state.status, triggerNotification]);
-
-  const dismissBanner = useCallback(() => {
-    setShowBanner(false);
-  }, []);
-
-  return {
-    activeNotification,
-    showBanner,
-    dismissBanner,
-  };
-};
+{/* ZIVO Ride - Premium Rider Flow */}
+<Route path="/ride" element={<RidePage />} />
+<Route path="/ride/confirm" element={<RideConfirmPage />} />
+<Route path="/ride/searching" element={<RideSearchingPage />} />
+<Route path="/ride/driver" element={<RideDriverPage />} />
+<Route path="/ride/trip" element={<RideTripPage />} />
+<Route path="/rides/history" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
 ```
 
-### New Component: `RideStatusBanner`
+### Home Screen Button (AppHome.tsx)
+
+Add a "Past Trips" button in the bottom action row, using the existing dark card style:
 
 ```typescript
-import { motion, AnimatePresence } from "framer-motion";
-import { Car, Check, Navigation, Clock, X } from "lucide-react";
-import { RideStatus } from "@/types/rideTypes";
-
-interface RideStatusBannerProps {
-  status: RideStatus;
-  message: string;
-  subMessage?: string;
-  isVisible: boolean;
-  onDismiss?: () => void;
-  persistent?: boolean;
-}
-
-const STATUS_ICONS: Record<string, React.ElementType> = {
-  assigned: Car,
-  arrived: Check,
-  in_trip: Navigation,
-  completed: Check,
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  assigned: "bg-primary",
-  arrived: "bg-green-500",
-  in_trip: "bg-blue-500",
-  completed: "bg-green-500",
-};
-
-const RideStatusBanner = ({
-  status,
-  message,
-  subMessage,
-  isVisible,
-  onDismiss,
-  persistent = false,
-}: RideStatusBannerProps) => {
-  const Icon = STATUS_ICONS[status] || Car;
-  const bgColor = STATUS_COLORS[status] || "bg-primary";
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          className={`fixed top-0 left-0 right-0 z-50 ${bgColor} text-white safe-top`}
-        >
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                <Icon className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-semibold">{message}</p>
-                {subMessage && (
-                  <p className="text-sm text-white/80">{subMessage}</p>
-                )}
-              </div>
-            </div>
-            {!persistent && onDismiss && (
-              <button
-                onClick={onDismiss}
-                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
-
-export default RideStatusBanner;
+// In the bottom row grid, add a Past Trips card
+<DarkCard
+  title="Past Trips"
+  subtitle="Ride History"
+  icon={Clock}
+  onNavigate={() => navigate("/rides/history")}
+  className="col-span-2 h-20"
+/>
 ```
 
-### Integration: `useRideRealtime.ts`
-
-Add sound/haptic triggers directly in the existing `handleStatusChange`:
+Alternative placement as a quick action row below the bento grid:
 
 ```typescript
-// At top of file
-import { useNotificationSound } from "@/hooks/useNotificationSound";
-import { useNativeFeatures } from "@/hooks/useNativeFeatures";
-
-// In hook
-const { playStatusUpdateSound } = useNotificationSound();
-const { hapticNotification } = useNativeFeatures();
-
-// In handleStatusChange callback
-const handleStatusChange = useCallback(
-  (newStatus: RideStatus, dbStatus: string) => {
-    console.log(`[Realtime] Status changed: ${dbStatus} → ${newStatus}`);
-    
-    // Update store with new status
-    setStatus(newStatus);
-    
-    // Play sound and haptic for key status changes
-    if (newStatus === "assigned" || newStatus === "arrived") {
-      playStatusUpdateSound();
-      hapticNotification("success");
-    }
-
-    // Handle navigation based on status
-    switch (newStatus) {
-      // ... existing switch cases
-    }
-  },
-  [navigate, setStatus, playStatusUpdateSound, hapticNotification]
-);
-```
-
-### Page Integrations
-
-**RideSearchingPage.tsx:**
-```typescript
-import RideStatusBanner from "@/components/ride/RideStatusBanner";
-import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
-
-// In component
-const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
-
-// In JSX
-{activeNotification && activeNotification.status === "assigned" && (
-  <RideStatusBanner
-    status={activeNotification.status}
-    message={activeNotification.message}
-    subMessage={activeNotification.subMessage}
-    isVisible={showBanner}
-    onDismiss={dismissBanner}
-  />
-)}
-```
-
-**RideDriverPage.tsx:**
-Already has the arrival banner - add sound/haptic trigger for `arrived` status.
-
-**RideTripPage.tsx:**
-```typescript
-// Add in_trip and completed banners
-{activeNotification && (
-  <RideStatusBanner
-    status={activeNotification.status}
-    message={activeNotification.message}
-    subMessage={activeNotification.subMessage}
-    isVisible={showBanner && ["in_trip", "completed"].includes(activeNotification.status)}
-    onDismiss={dismissBanner}
-  />
-)}
+{/* Quick Actions Row */}
+<div className="flex items-center gap-2 mt-4">
+  <motion.button
+    onClick={() => navigate("/rides/history")}
+    whileTap={{ scale: 0.97 }}
+    className="flex-1 bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
+  >
+    <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
+      <Clock className="w-4 h-4 text-primary" />
+    </div>
+    <div className="text-left">
+      <div className="text-sm font-semibold">Past Trips</div>
+      <div className="text-[10px] text-zinc-400">View ride history</div>
+    </div>
+    <ChevronRight className="w-4 h-4 text-zinc-400 ml-auto" />
+  </motion.button>
+</div>
 ```
 
 ---
 
-## Sound & Haptic Triggers
+## What Riders Will See
 
-| Status | Sound | Haptic | Duration |
-|--------|-------|--------|----------|
-| `assigned` | `statusUpdate` | `notification(success)` | Immediate |
-| `arrived` | `statusUpdate` | `notification(success)` | Immediate |
-| `in_trip` | None | None | - |
-| `completed` | None | None | - |
+### Trip History Page (`/rides/history`)
 
----
+The existing `TripHistory` component displays:
 
-## Banner Behavior
+1. **Stats Summary**: Trip count, total spent, miles traveled
+2. **Tab Navigation**: Completed / Cancelled trips
+3. **Trip Cards** with:
+   - Date and time
+   - Price (prominently displayed)
+   - Rating (if rated)
+   - Pickup address
+   - Dropoff address
+   - Distance and duration
+   - Driver name
+   - "Receipt" button (completed trips)
+   - "Book Again" button
 
-| Status | Position | Auto-hide | Dismissible |
-|--------|----------|-----------|-------------|
-| `assigned` | Fixed top | 5 seconds | Yes |
-| `arrived` | In card (existing) | No | No |
-| `in_trip` | Fixed top | 5 seconds | Yes |
-| `completed` | Fixed top | 5 seconds | Yes |
+4. **Empty State**: Friendly prompt to book first ride
+
+### Home Screen
+
+New "Past Trips" button provides quick access from the main app screen.
 
 ---
 
 ## Data Flow
 
 ```text
-Status change in DB (driver accepts/arrives)
-        │
-        ▼
-Supabase Realtime fires
-        │
-        ▼
-useRideRealtime receives update
-        │
-        ├───────────────────────────────────────┐
-        ▼                                       ▼
-Update RideStore status                 Trigger sound + haptic
-        │                               (assigned/arrived only)
-        ▼
-useRideStatusNotifications detects change
-        │
-        ▼
-Show RideStatusBanner with message
-        │
-        ▼
-Auto-hide after 5s (or persist for arrived)
+User taps "Past Trips"
+        |
+        v
+Navigate to /rides/history
+        |
+        v
+TripHistory component renders
+        |
+        v
+useAuth() gets current user.id
+        |
+        v
+useRiderTripHistory(user.id) fetches from Supabase:
+SELECT * FROM trips
+WHERE rider_id = user.id
+  AND status IN ('completed', 'cancelled')
+ORDER BY created_at DESC
+LIMIT 50
+        |
+        v
+Display trip list with all details
 ```
+
+---
+
+## UI Consistency
+
+- Uses existing `TripHistory` page design
+- Button styling matches `AppHome` bento grid aesthetic
+- Dark glassmorphic cards
+- Premium gradient accents
+- Touch-optimized with `active:scale-*` feedback
 
 ---
 
 ## No Changes To
 
-- Existing toast notifications (supplementary)
-- Map visualizations
-- Driver info card layout
-- Receipt modal
-- Progress bar styling
+- `useRiderTripHistory` hook (already fetches correct data)
+- `TripHistory` component internals
+- Database schema
+- RLS policies (already allow users to read their own trips)
+
