@@ -383,9 +383,9 @@ function RidesInner() {
     }
   }, [stops, clearStopSuggestions]);
 
-  // Add a new stop
+  // Add a new stop (max 1)
   const handleAddStop = () => {
-    if (stops.length < 3) {
+    if (stops.length < 1) {
       setStops([...stops, { address: "", coords: null }]);
     }
   };
@@ -804,7 +804,7 @@ function RidesInner() {
               </div>
               
               {/* Add Stop Button */}
-              {stops.length < 3 && (
+              {stops.length < 1 && (
                 <button
                   onClick={handleAddStop}
                   className="flex items-center gap-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
