@@ -1,49 +1,22 @@
 
-
-# Redirect to ZIVO Payments for Checkout
+# Rider Help & Support Center
 
 ## Summary
 
-Modify the ride confirmation flow to redirect users to an external ZIVO Payments app for checkout instead of processing payment inline. The ride is created in Supabase first, then the user is redirected to the payments app with the ride ID. After payment, the user returns to the searching page to continue the normal realtime flow.
+Add a rider-focused Help & Support center with FAQ viewing, issue reporting with ride selection, and ticket tracking. This leverages the existing `support_tickets` table infrastructure with a new `ride_id` column for ride-specific tickets.
 
 ---
 
-## Current Flow
+## Database Change Required
 
-```text
-User taps "Pay & Request"
-        │
-        ▼
-Create ride in Supabase (status='requested')
-        │
-        ▼
-Navigate to /ride/searching
-        │
-        ▼
-Realtime updates → Driver assigned → Navigate to /ride/driver
-```
+Add a `ride_id` column to the existing `support_tickets` table to link tickets to specific rides.
 
----
+```sql
+ALTER TABLE public.support_tickets 
+ADD COLUMN IF NOT EXISTS ride_id uuid REFERENCES public.trips(id);
 
-## New Flow
-
-```text
-User taps "Pay & Request"
-        │
-        ▼
-Create ride in Supabase (status='requested')
-        │
-        ▼
-Redirect to: ${VITE_PAYMENTS_APP_URL}/handoff?rideId=${tripId}
-        │
-        ▼
-(User completes payment on external payments app)
-        │
-        ▼
-Payments app redirects back to: /ride/searching?rideId=${tripId}
-        │
-        ▼
-RideSearchingPage reads rideId from URL, restores state, continues realtime flow
+-- Add index for performance
+CREATE INDEX IF NOT EXISTS idx_support_tickets_ride_id ON public.support_tickets(ride_id);
 ```
 
 ---
@@ -52,266 +25,287 @@ RideSearchingPage reads rideId from URL, restores state, continues realtime flow
 
 | File | Action | Description |
 |------|--------|-------------|
-| `.env` | Modify | Add VITE_PAYMENTS_APP_URL |
-| `src/pages/ride/RideConfirmPage.tsx` | Modify | Redirect to payments app after ride creation |
-| `src/pages/ride/RideSearchingPage.tsx` | Modify | Accept rideId from URL params and restore state |
-| `src/stores/rideStore.tsx` | Modify | Add method to restore state from tripId |
-| `src/lib/supabaseRide.ts` | Modify | Add function to fetch trip details by ID |
+| `src/pages/help/RiderHelpPage.tsx` | Create | Main help page with FAQs and Report Issue button |
+| `src/pages/help/NewTicketPage.tsx` | Create | Form to create support ticket with ride selection |
+| `src/pages/help/MyTicketsPage.tsx` | Create | List of user's support tickets |
+| `src/hooks/useRiderSupport.ts` | Create | Hook for rider-specific support operations |
+| `src/App.tsx` | Modify | Add new /help routes |
 
 ---
 
-## Technical Details
+## Page Details
 
-### 1. Environment Variable
+### 1. RiderHelpPage (`/help`)
 
-Add to `.env`:
+Features:
+- Rider-focused FAQ accordion with mock data
+- Categories: Payment, Driver, Rider, Safety, Lost Item
+- "Report an Issue" button linking to `/help/new`
+- Link to view existing tickets
 
-```env
-VITE_PAYMENTS_APP_URL="https://payments.zivo.com"
+```text
++------------------------------------------+
+|  < Back                    Help Center   |
++------------------------------------------+
+|                                          |
+|  [Search FAQs...]                        |
+|                                          |
+|  FREQUENTLY ASKED QUESTIONS              |
+|  +------------------------------------+  |
+|  | How are fares calculated?       v  |  |
+|  +------------------------------------+  |
+|  | Why was I charged extra?        v  |  |
+|  +------------------------------------+  |
+|  | How do I report a lost item?    v  |  |
+|  +------------------------------------+  |
+|                                          |
+|  +------------------------------------+  |
+|  |  [!] Report an Issue              |  |
+|  +------------------------------------+  |
+|                                          |
+|  View My Tickets (3)                     |
++------------------------------------------+
 ```
 
-### 2. RideConfirmPage Changes
+Mock FAQ data:
+```typescript
+const riderFAQs = [
+  { category: "Payment", q: "How are ride fares calculated?", a: "..." },
+  { category: "Payment", q: "Why was I charged a cancellation fee?", a: "..." },
+  { category: "Driver", q: "My driver cancelled, what do I do?", a: "..." },
+  { category: "Driver", q: "How do I rate my driver?", a: "..." },
+  { category: "Safety", q: "How do I report a safety concern?", a: "..." },
+  { category: "Lost Item", q: "I left something in the car", a: "..." },
+  { category: "Rider", q: "How do I update my phone number?", a: "..." },
+];
+```
 
-Update `handleConfirm` to redirect instead of navigate:
+### 2. NewTicketPage (`/help/new`)
+
+Form with fields:
+- Category dropdown (payment, driver, rider, safety, lost_item, other)
+- Subject (text input)
+- Message (textarea)
+- Optional ride selection (dropdown of recent rides)
+
+```text
++------------------------------------------+
+|  < Back               Report an Issue    |
++------------------------------------------+
+|                                          |
+|  Category *                              |
+|  [ Select category...            v ]     |
+|                                          |
+|  Subject *                               |
+|  [ Brief description of issue    ]       |
+|                                          |
+|  Message *                               |
+|  +------------------------------------+  |
+|  | Please describe your issue...     |  |
+|  |                                    |  |
+|  +------------------------------------+  |
+|                                          |
+|  Related Ride (optional)                 |
+|  [ Select a recent ride...       v ]     |
+|    - Today 2:30 PM - 123 Main St         |
+|    - Yesterday - 456 Oak Ave             |
+|                                          |
+|  +------------------------------------+  |
+|  |        Submit Request             |  |
+|  +------------------------------------+  |
++------------------------------------------+
+```
 
 ```typescript
-// Add at top of file
-const PAYMENTS_APP_URL = import.meta.env.VITE_PAYMENTS_APP_URL || "";
-
-// In handleConfirm, after successful ride creation:
-const handleConfirm = async () => {
-  // ... existing availability check code ...
+// Form submission
+const handleSubmit = async (data) => {
+  const ticketNumber = `ZR-${Date.now().toString().slice(-6)}`;
   
-  setIsSubmitting(true);
-
-  try {
-    // Increment promo code usage if applied
-    if (promoCode) {
-      await incrementPromoCodeUse(promoCode.id);
-    }
-
-    // Create ride in the central store first
-    createRide({
-      pickup,
-      destination,
-      rideType: ride.id,
-      rideName: ride.name,
-      rideImage: ride.image,
-      price: finalPrice,
-      distance: tripDetails?.distance || 0,
-      duration: tripDetails?.duration || 0,
-      paymentMethod: selectedPayment,
-      pickupCoords,
-      dropoffCoords,
-      routeCoordinates,
-    });
-
-    // Create ride in database
-    const result = await createRideInDb(/* existing params */);
-
-    if (result.tripId) {
-      setTripId(result.tripId);
-      
-      // Check if payments app URL is configured
-      if (PAYMENTS_APP_URL) {
-        // Redirect to external payments app
-        const returnUrl = `${window.location.origin}/ride/searching?rideId=${result.tripId}`;
-        const handoffUrl = `${PAYMENTS_APP_URL}/handoff?rideId=${result.tripId}&returnUrl=${encodeURIComponent(returnUrl)}`;
-        
-        // Store minimal state for restoration after redirect
-        localStorage.setItem('zivo_pending_ride', JSON.stringify({
-          tripId: result.tripId,
-          rideName: ride.name,
-          price: finalPrice,
-          pickup,
-          destination,
-        }));
-        
-        window.location.href = handoffUrl;
-        return;
-      }
-      
-      // Fallback: navigate directly (for testing without payments app)
-      navigate("/ride/searching");
-    } else if (result.error) {
-      // ... existing error handling ...
-    }
-  } catch (err) {
-    // ... existing error handling ...
-  }
+  await supabase.from('support_tickets').insert({
+    ticket_number: ticketNumber,
+    user_id: user.id,
+    category: data.category,
+    subject: data.subject,
+    description: data.message,
+    ride_id: data.rideId || null,
+    status: 'open',
+    priority: data.category === 'safety' ? 'urgent' : 'normal',
+  });
+  
+  toast.success('Ticket submitted successfully');
+  navigate('/help/tickets');
 };
 ```
 
-### 3. RideSearchingPage Changes
+### 3. MyTicketsPage (`/help/tickets`)
 
-Handle `rideId` query parameter for return from payments app:
+List of user's support tickets:
+- Subject and ticket number
+- Status badge (open, in_progress, resolved)
+- Created date
+- Link to ride if associated
 
-```typescript
-import { useSearchParams } from "react-router-dom";
-import { fetchTripById } from "@/lib/supabaseRide";
-
-const RideSearchingPage = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { state, setTripId, createRide } = useRideStore();
-  const [isRestoring, setIsRestoring] = useState(false);
-  
-  // ... existing state ...
-
-  // Restore state from URL param (returning from payments app)
-  useEffect(() => {
-    const rideIdFromUrl = searchParams.get("rideId");
-    
-    if (rideIdFromUrl && (!state.tripId || state.tripId !== rideIdFromUrl)) {
-      setIsRestoring(true);
-      
-      // Try to restore from localStorage first (faster)
-      const pendingRide = localStorage.getItem('zivo_pending_ride');
-      if (pendingRide) {
-        try {
-          const parsed = JSON.parse(pendingRide);
-          if (parsed.tripId === rideIdFromUrl) {
-            // Restore state from localStorage
-            createRide({
-              pickup: parsed.pickup,
-              destination: parsed.destination,
-              rideType: parsed.rideType || 'standard',
-              rideName: parsed.rideName,
-              rideImage: parsed.rideImage || '',
-              price: parsed.price,
-              distance: parsed.distance || 0,
-              duration: parsed.duration || 0,
-              paymentMethod: parsed.paymentMethod || 'card',
-            });
-            setTripId(rideIdFromUrl);
-            localStorage.removeItem('zivo_pending_ride');
-            setIsRestoring(false);
-            return;
-          }
-        } catch (e) {
-          console.warn("[RideSearching] Failed to parse pending ride:", e);
-        }
-      }
-      
-      // Fallback: fetch from database
-      fetchTripById(rideIdFromUrl).then((trip) => {
-        if (trip) {
-          createRide({
-            pickup: trip.pickup_address,
-            destination: trip.dropoff_address,
-            rideType: trip.ride_type || 'standard',
-            rideName: trip.ride_type || 'Standard',
-            rideImage: '',
-            price: trip.fare_amount || 0,
-            distance: (trip.distance_km || 0) / 1.60934,
-            duration: trip.duration_minutes || 0,
-            paymentMethod: 'card',
-          });
-          setTripId(rideIdFromUrl);
-        } else {
-          toast.error("Could not find ride details");
-          navigate("/ride");
-        }
-        setIsRestoring(false);
-      });
-    }
-  }, [searchParams, state.tripId]);
-
-  // ... rest of component ...
-  
-  // Show loading while restoring
-  if (isRestoring) {
-    return (
-      <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-white/60">Resuming your ride...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // ... existing render ...
-};
-```
-
-### 4. New Function in supabaseRide.ts
-
-Add function to fetch trip by ID:
-
-```typescript
-// Fetch a trip by ID (for restoring state after redirect)
-export const fetchTripById = async (tripId: string) => {
-  try {
-    const { data, error } = await supabase
-      .from("trips")
-      .select("*")
-      .eq("id", tripId)
-      .single();
-
-    if (error) {
-      console.error("[fetchTripById] Error:", error);
-      return null;
-    }
-
-    return data;
-  } catch (err) {
-    console.error("[fetchTripById] Exception:", err);
-    return null;
-  }
-};
+```text
++------------------------------------------+
+|  < Back                  My Tickets      |
++------------------------------------------+
+|                                          |
+|  [Active] [Resolved] [All]               |
+|                                          |
+|  +------------------------------------+  |
+|  | #ZR-123456                  OPEN  |  |
+|  | Driver was rude                    |  |
+|  | Category: Driver                   |  |
+|  | 2 hours ago                        |  |
+|  +------------------------------------+  |
+|                                          |
+|  +------------------------------------+  |
+|  | #ZR-123455             RESOLVED   |  |
+|  | Overcharged for ride               |  |
+|  | Category: Payment                  |  |
+|  | 2 days ago                         |  |
+|  +------------------------------------+  |
+|                                          |
+|  --- Empty State ---                     |
+|  No tickets yet. Need help?              |
+|  [Report an Issue]                       |
++------------------------------------------+
 ```
 
 ---
 
-## localStorage Keys Used
+## Hook: useRiderSupport.ts
 
-| Key | Purpose |
-|-----|---------|
-| `zivo_pending_ride` | Temporarily stores ride details during redirect to payments app |
-| `zivo_ride_store` | Existing - full ride state persistence |
+```typescript
+// Fetch user's recent rides for selection
+export function useRecentRides(limit = 10) {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['recent-rides', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('trips')
+        .select('id, pickup_address, dropoff_address, fare_amount, created_at, status')
+        .eq('rider_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      return data || [];
+    },
+    enabled: !!user,
+  });
+}
+
+// Fetch user's support tickets (filtered for ride-related)
+export function useRiderTickets() {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['rider-tickets', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+      return data || [];
+    },
+    enabled: !!user,
+  });
+}
+
+// Create a rider support ticket
+export function useCreateRiderTicket() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: {
+      category: string;
+      subject: string;
+      message: string;
+      rideId?: string;
+    }) => {
+      const ticketNumber = `ZR-${Date.now().toString().slice(-6)}`;
+      
+      const { error } = await supabase
+        .from('support_tickets')
+        .insert({
+          ticket_number: ticketNumber,
+          user_id: user?.id,
+          category: data.category,
+          subject: data.subject,
+          description: data.message,
+          ride_id: data.rideId || null,
+          status: 'open',
+          priority: data.category === 'safety' ? 'urgent' : 'normal',
+        });
+
+      if (error) throw error;
+      return { ticketNumber };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rider-tickets'] });
+      toast.success('Support ticket submitted');
+    },
+  });
+}
+```
 
 ---
 
-## Edge Cases
+## Route Updates in App.tsx
 
-| Scenario | Handling |
-|----------|----------|
-| User cancels on payments page | Payments app redirects with error param; show message |
-| Payments app URL not configured | Falls back to existing direct navigation flow |
-| localStorage cleared during redirect | Fetches trip from database as fallback |
-| User refreshes searching page | tripId in URL allows state restoration |
-| Payment already completed | Normal realtime flow continues; driver may already be assigned |
+```typescript
+// Lazy imports
+const RiderHelpPage = lazy(() => import("./pages/help/RiderHelpPage"));
+const NewTicketPage = lazy(() => import("./pages/help/NewTicketPage"));
+const MyTicketsPage = lazy(() => import("./pages/help/MyTicketsPage"));
 
----
-
-## Security Considerations
-
-- The `rideId` in URL is a UUID (not guessable)
-- State restoration validates trip exists in database
-- Payments app should verify the ride belongs to the authenticated user
-- `returnUrl` is included so payments app knows where to redirect back
+// Routes (protected, require authentication)
+<Route path="/help" element={<SetupRequiredRoute><RiderHelpPage /></SetupRequiredRoute>} />
+<Route path="/help/new" element={<SetupRequiredRoute><NewTicketPage /></SetupRequiredRoute>} />
+<Route path="/help/tickets" element={<SetupRequiredRoute><MyTicketsPage /></SetupRequiredRoute>} />
+```
 
 ---
 
-## No Changes To
+## Categories
 
-- Database schema (no new tables or columns)
-- Auto-dispatch logic (still triggers after ride creation)
-- Realtime subscription logic
-- Driver assignment flow
-- UI design (only behavior change)
+| Value | Label | Priority |
+|-------|-------|----------|
+| `payment` | Payment Issue | normal |
+| `driver` | Driver Issue | normal |
+| `rider` | Rider Account | normal |
+| `safety` | Safety Concern | urgent |
+| `lost_item` | Lost Item | high |
+| `other` | Other | normal |
 
 ---
 
-## Testing Notes
+## UI Components Used
 
-To test without the payments app configured:
-1. Leave `VITE_PAYMENTS_APP_URL` empty or unset
-2. Flow will work as before (direct navigation to searching page)
+- `Card`, `CardContent`, `CardHeader`
+- `Accordion`, `AccordionItem`, `AccordionTrigger`, `AccordionContent`
+- `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`
+- `Input`, `Textarea`, `Label`
+- `Button`, `Badge`
+- `toast` from sonner
 
-To simulate payments redirect:
-1. Set `VITE_PAYMENTS_APP_URL` to a test URL
-2. Complete ride creation
-3. Manually navigate to `/ride/searching?rideId={tripId}` to test restoration
+---
 
+## Loading & Empty States
+
+Each page includes:
+- Loading skeleton while fetching data
+- Empty state with helpful message and CTA
+- Error handling with toast notifications
+
+---
+
+## Mobile Responsive
+
+All pages follow existing mobile-first patterns:
+- Full-width cards on mobile
+- Touch-friendly tap targets (min 44px)
+- Bottom navigation integration via `MobileBottomNav`
