@@ -72,6 +72,11 @@ const RideSearchingPage = lazy(() => import("./pages/ride/RideSearchingPage"));
 const RideDriverPage = lazy(() => import("./pages/ride/RideDriverPage"));
 const RideTripPage = lazy(() => import("./pages/ride/RideTripPage"));
 
+// Rider Help & Support pages
+const RiderHelpPage = lazy(() => import("./pages/help/RiderHelpPage"));
+const NewTicketPage = lazy(() => import("./pages/help/NewTicketPage"));
+const MyTicketsPage = lazy(() => import("./pages/help/MyTicketsPage"));
+
 // Driver App pages
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage"));
@@ -593,6 +598,11 @@ const App = () => (
                 <Route path="/ride/trip" element={<RideTripPage />} />
                 <Route path="/rides/history" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
                 <Route path="/payment-methods" element={<SetupRequiredRoute><PaymentMethodsPage /></SetupRequiredRoute>} />
+                
+                {/* Rider Help & Support */}
+                <Route path="/help" element={<SetupRequiredRoute><RiderHelpPage /></SetupRequiredRoute>} />
+                <Route path="/help/new" element={<SetupRequiredRoute><NewTicketPage /></SetupRequiredRoute>} />
+                <Route path="/help/tickets" element={<SetupRequiredRoute><MyTicketsPage /></SetupRequiredRoute>} />
                 
                 {/* ZIVO Driver App Routes */}
                 <Route path="/driver" element={<DriverHomePage />} />
