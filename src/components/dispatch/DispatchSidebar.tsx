@@ -25,6 +25,7 @@ import {
   Tag,
   Gift,
   Timer,
+  ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,12 @@ const navItems: NavItem[] = [
     path: "/dispatch/sla",
     icon: Timer,
     permission: "analytics.view",
+  },
+  {
+    label: "Safety",
+    path: "/dispatch/safety",
+    icon: ShieldAlert,
+    permission: "safety.manage",
   },
   {
     label: "Disputes",
