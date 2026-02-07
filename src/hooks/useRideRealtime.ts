@@ -10,6 +10,8 @@ import {
   SupabaseErrorInfo,
 } from "@/lib/supabaseRide";
 import { RideStatus } from "@/types/rideTypes";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { useNativeFeatures } from "@/hooks/useNativeFeatures";
 
 interface UseRideRealtimeOptions {
   tripId: string | null;
@@ -42,6 +44,10 @@ export const useRideRealtime = ({
   const [connectionError, setConnectionError] = useState<SupabaseErrorInfo | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
 
+  // Sound and haptic hooks
+  const { playStatusUpdateSound } = useNotificationSound();
+  const { hapticNotification } = useNativeFeatures();
+
   const isConnected = isSupabaseConfigured();
   const isRealtime = isConnected && !!tripId;
 
@@ -52,6 +58,12 @@ export const useRideRealtime = ({
 
       // Update store with new status
       setStatus(newStatus);
+
+      // Play sound and haptic for key status changes
+      if (newStatus === "assigned" || newStatus === "arrived") {
+        playStatusUpdateSound();
+        hapticNotification("success");
+      }
 
       // Handle navigation based on status
       switch (newStatus) {
@@ -73,7 +85,7 @@ export const useRideRealtime = ({
           break;
       }
     },
-    [navigate, setStatus]
+    [navigate, setStatus, playStatusUpdateSound, hapticNotification]
   );
 
   // Handle driver assignment from realtime
