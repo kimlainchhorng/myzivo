@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
 import { useRideStore } from "@/stores/rideStore";
-import { createRideInDb } from "@/lib/supabaseRide";
+import { createRideInDb, SupabaseErrorInfo, categorizeError } from "@/lib/supabaseRide";
 import { toast } from "sonner";
 
 interface LocationState {
@@ -34,6 +34,8 @@ const RideConfirmPage = () => {
   const state = location.state as LocationState | null;
   const { createRide, setTripId } = useRideStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<SupabaseErrorInfo | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
 
@@ -64,6 +66,7 @@ const RideConfirmPage = () => {
   const handleConfirm = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
+    setError(null);
 
     try {
       // Create ride in the central store first
@@ -82,33 +85,70 @@ const RideConfirmPage = () => {
         routeCoordinates,
       });
 
-      // Try to insert into database
-      const tripId = await createRideInDb({
-        pickup,
-        destination,
-        pickupCoords,
-        dropoffCoords,
-        rideType: ride.id,
-        price: displayPrice,
-        distance: tripDetails?.distance || 0,
-        duration: tripDetails?.duration || 0,
-      });
+      // Try to insert into database with retry logic
+      const result = await createRideInDb(
+        {
+          pickup,
+          destination,
+          pickupCoords,
+          dropoffCoords,
+          rideType: ride.id,
+          price: displayPrice,
+          distance: tripDetails?.distance || 0,
+          duration: tripDetails?.duration || 0,
+        },
+        {
+          enableRetry: true,
+          maxAttempts: 3,
+          onRetry: (attempt, retryError) => {
+            console.log(`[RideConfirm] Retry attempt ${attempt}:`, retryError.message);
+          },
+        }
+      );
 
-      // If successful, store the tripId for realtime subscriptions
-      if (tripId) {
-        setTripId(tripId);
-        console.log("[RideConfirm] Trip created in database:", tripId);
-      } else {
-        console.warn("[RideConfirm] Database insert failed, running in demo mode");
+      if (result.tripId) {
+        // Success - store tripId and navigate
+        setTripId(result.tripId);
+        console.log("[RideConfirm] Trip created in database:", result.tripId, "attempts:", result.attempts);
+        navigate("/ride/searching");
+      } else if (result.error) {
+        // Failed after retries - show error UI
+        console.error("[RideConfirm] Failed to create trip:", result.error.message, "attempts:", result.attempts);
+        setError(result.error);
+        setRetryCount((prev) => prev + 1);
+
+        // Show toast based on error type
+        if (result.error.type === "network") {
+          toast.error("Connection failed", {
+            description: result.error.userMessage,
+          });
+        } else if (result.error.type === "auth") {
+          toast.error("Authentication required", {
+            description: result.error.userMessage,
+          });
+        } else {
+          toast.error(result.error.userMessage);
+        }
+
+        setIsSubmitting(false);
       }
-
-      // Navigate to searching
-      navigate("/ride/searching");
-    } catch (error) {
-      console.error("[RideConfirm] Error creating trip:", error);
-      toast.error("Failed to create ride. Please try again.");
+    } catch (err) {
+      // Unexpected error
+      console.error("[RideConfirm] Unexpected error:", err);
+      const errorInfo = categorizeError(err);
+      setError(errorInfo);
+      toast.error(errorInfo.userMessage);
       setIsSubmitting(false);
     }
+  };
+
+  // Continue in demo mode (bypass database)
+  const handleContinueDemo = () => {
+    setError(null);
+    toast.info("Continuing in demo mode", {
+      description: "Your ride won't be saved to the server",
+    });
+    navigate("/ride/searching");
   };
 
   return (
@@ -256,8 +296,66 @@ const RideConfirmPage = () => {
           disabled={isSubmitting}
           className="w-full py-4 rounded-2xl font-bold text-sm transition-all bg-primary text-primary-foreground hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "REQUESTING..." : `PAY $${displayPrice.toFixed(2)} & REQUEST`}
+          {isSubmitting ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              REQUESTING...
+            </>
+          ) : (
+            `PAY $${displayPrice.toFixed(2)} & REQUEST`
+          )}
         </motion.button>
+
+        {/* Error Panel */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 p-4 bg-destructive/10 border border-destructive/30 rounded-xl"
+          >
+            <div className="flex items-start gap-3">
+              {error.type === "network" ? (
+                <WifiOff className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className="text-sm text-destructive font-medium">
+                  {error.userMessage}
+                </p>
+                {retryCount > 1 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Failed {retryCount} times
+                  </p>
+                )}
+                <div className="flex gap-2 mt-3">
+                  {error.isRetryable && (
+                    <button
+                      onClick={handleConfirm}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-destructive text-white rounded-lg text-xs font-medium hover:bg-destructive/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          Retrying...
+                        </>
+                      ) : (
+                        "Try Again"
+                      )}
+                    </button>
+                  )}
+                  <button
+                    onClick={handleContinueDemo}
+                    className="px-4 py-2 bg-white/10 text-white/80 rounded-lg text-xs font-medium hover:bg-white/20 transition-colors"
+                  >
+                    Continue Offline
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
 
       {/* Bottom Nav */}

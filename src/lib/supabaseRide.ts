@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { RideStatus, DriverInfo } from "@/types/rideTypes";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import {
+  SupabaseErrorInfo,
+  categorizeError,
+  withRetry,
+  isOnline,
+} from "./supabaseErrors";
 
 // Check if Supabase is configured (client exists with valid URL)
 export const isSupabaseConfigured = (): boolean => {
@@ -11,6 +17,10 @@ export const isSupabaseConfigured = (): boolean => {
     return false;
   }
 };
+
+// Re-export error types for convenience
+export type { SupabaseErrorInfo } from "./supabaseErrors";
+export { categorizeError } from "./supabaseErrors";
 
 // Map database trip_status to frontend RideStatus
 export const mapDbStatusToFrontend = (dbStatus: string): RideStatus => {
@@ -54,8 +64,41 @@ export interface CreateRideDbPayload {
   customerPhone?: string;
 }
 
-export const createRideInDb = async (payload: CreateRideDbPayload): Promise<string | null> => {
-  try {
+// Result type for createRideInDb with full error info
+export interface CreateRideResult {
+  tripId: string | null;
+  error: SupabaseErrorInfo | null;
+  attempts: number;
+}
+
+// Options for createRideInDb
+export interface CreateRideOptions {
+  enableRetry?: boolean;
+  maxAttempts?: number;
+  onRetry?: (attempt: number, error: SupabaseErrorInfo) => void;
+}
+
+export const createRideInDb = async (
+  payload: CreateRideDbPayload,
+  options: CreateRideOptions = {}
+): Promise<CreateRideResult> => {
+  const { enableRetry = true, maxAttempts = 3, onRetry } = options;
+
+  // Check if we're online first
+  if (!isOnline()) {
+    return {
+      tripId: null,
+      error: {
+        type: "network",
+        message: "Device is offline",
+        userMessage: "No internet connection. Please check your network.",
+        isRetryable: true,
+      },
+      attempts: 0,
+    };
+  }
+
+  const operation = async (): Promise<string> => {
     // Get current authenticated user if available
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -81,15 +124,33 @@ export const createRideInDb = async (payload: CreateRideDbPayload): Promise<stri
       .single();
 
     if (error) {
-      console.error("Error creating ride in DB:", error);
-      return null;
+      throw error;
     }
 
-    console.log("[supabaseRide] Trip created with ID:", data?.id, "rider_id:", user?.id ?? "anonymous");
-    return data?.id || null;
+    if (!data?.id) {
+      throw new Error("No trip ID returned");
+    }
+
+    console.log("[supabaseRide] Trip created with ID:", data.id, "rider_id:", user?.id ?? "anonymous");
+    return data.id;
+  };
+
+  if (enableRetry) {
+    const result = await withRetry(operation, { maxAttempts, onRetry });
+    return {
+      tripId: result.data,
+      error: result.error,
+      attempts: result.attempts,
+    };
+  }
+
+  // Single attempt without retry
+  try {
+    const tripId = await operation();
+    return { tripId, error: null, attempts: 1 };
   } catch (err) {
     console.error("Failed to create ride in DB:", err);
-    return null;
+    return { tripId: null, error: categorizeError(err), attempts: 1 };
   }
 };
 
