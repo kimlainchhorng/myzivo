@@ -58,6 +58,11 @@ const SuppliersStatusPage = lazy(() => import("./pages/admin/travel/SuppliersSta
 const AdminJobsPage = lazy(() => import("./pages/admin/JobsPage"));
 const SettingsHub = lazy(() => import("./pages/admin/settings/SettingsHub"));
 const InviteManagement = lazy(() => import("./pages/admin/settings/InviteManagement"));
+// ZIVO Admin Dashboard - Rides Operations
+const RidesHubPage = lazy(() => import("./pages/admin/rides/RidesHubPage"));
+const DriversHubPage = lazy(() => import("./pages/admin/drivers/DriversHubPage"));
+const PayoutsHubPage = lazy(() => import("./pages/admin/payouts/PayoutsHubPage"));
+const AdminSetupPage = lazy(() => import("./pages/admin/SetupPage"));
 
 // Lazy load all other pages for faster initial load
 const Rides = lazy(() => import("./pages/Rides"));
@@ -1067,6 +1072,39 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AIInsightsDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* ZIVO Admin Dashboard - Rides Operations */}
+                <Route
+                  path="/admin/rides"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <RidesHubPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/drivers"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <DriversHubPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/payouts"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <PayoutsHubPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/setup"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <AdminSetupPage />
                     </ProtectedRoute>
                   }
                 />
