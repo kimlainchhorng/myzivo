@@ -1,326 +1,221 @@
 
-# ZIVO Anti-Fraud System (Supabase)
 
-## Overview
+# Rider ETA + Arrival Behavior Update
 
-Implement a comprehensive anti-fraud system with server-side rate limiting, GPS spoof detection, risk scoring, auto-blocks, and audit logging for admin review. This builds on the existing `security_events`, `fraud_assessments`, and `user_fraud_profiles` tables.
+## Summary
 
----
-
-## Current Infrastructure
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| `security_events` table | ✅ Exists | Logs security events with severity, IP, device fingerprint |
-| `fraud_assessments` table | ✅ Exists | Order-level fraud scoring with signals |
-| `user_fraud_profiles` table | ✅ Exists | Tracks lifetime risk, chargebacks, blocked status |
-| `rate-limiter` edge function | ✅ Exists | In-memory rate limiting for searches (not DB-backed) |
-| `assess-fraud` edge function | ✅ Exists | Order fraud scoring with 10+ signals |
-| `driver_location_history` | ✅ Exists | Missing GPS spoof detection fields |
-| User/driver limits tables | ❌ Missing | Need `user_limits` and `driver_limits` |
-| GPS spoof detection | ❌ Missing | Need edge function + table columns |
+Add real-time driver ETA calculation and arrival banner to the `/ride/driver` page. When the driver's status becomes `arrived`, show a prominent banner. Calculate and update ETA based on driver's real-time location and distance to pickup using 30 mph average speed.
 
 ---
 
-## Database Changes
+## Current Behavior
 
-### 1. New Tables
-
-**`risk_events`** - Consolidated abuse/risk events
-```sql
-CREATE TABLE risk_events (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id),
-  driver_id uuid REFERENCES drivers(id),
-  event_type text NOT NULL,
-  severity int NOT NULL DEFAULT 1,  -- 1=low, 5=critical
-  details jsonb DEFAULT '{}'::jsonb,
-  ip_address text,
-  user_agent text,
-  device_fingerprint text,
-  is_resolved boolean DEFAULT false,
-  resolved_at timestamptz,
-  resolved_by uuid,
-  created_at timestamptz DEFAULT now()
-);
-```
-
-**`user_limits`** - Customer rate limits (orders/cancels)
-```sql
-CREATE TABLE user_limits (
-  user_id uuid PRIMARY KEY REFERENCES auth.users(id),
-  orders_created_today int DEFAULT 0,
-  cancels_today int DEFAULT 0,
-  last_reset date DEFAULT current_date,
-  is_blocked boolean DEFAULT false,
-  blocked_until timestamptz,
-  block_reason text,
-  total_blocks int DEFAULT 0,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-```
-
-**`driver_limits`** - Driver rate limits (cancels/suspicious activity)
-```sql
-CREATE TABLE driver_limits (
-  driver_id uuid PRIMARY KEY REFERENCES drivers(id),
-  cancels_today int DEFAULT 0,
-  gps_flags_today int DEFAULT 0,
-  last_reset date DEFAULT current_date,
-  is_blocked boolean DEFAULT false,
-  blocked_until timestamptz,
-  block_reason text,
-  total_blocks int DEFAULT 0,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-```
-
-### 2. Alter `driver_location_history` for GPS Spoof Detection
-
-```sql
-ALTER TABLE driver_location_history
-ADD COLUMN prev_lat double precision,
-ADD COLUMN prev_lng double precision,
-ADD COLUMN prev_recorded_at timestamptz,
-ADD COLUMN is_suspicious boolean DEFAULT false,
-ADD COLUMN speed_mph double precision,
-ADD COLUMN distance_jump_miles double precision;
-```
-
-### 3. RLS Policies
-
-- `risk_events`: Admin-only SELECT, service-role INSERT
-- `user_limits`: Edge function controlled (no direct access)
-- `driver_limits`: Edge function controlled (no direct access)
+| Feature | Current | Issue |
+|---------|---------|-------|
+| Status subscription | ✅ Via `useRideRealtime` | Already handles `arrived` toast |
+| ETA display | Static countdown from 300s | Doesn't use real driver location |
+| Driver location tracking | Not subscribed on rider side | No real-time updates |
+| Arrival banner | Toast only | No persistent visual |
 
 ---
 
-## Edge Functions
+## Implementation Approach
 
-### 1. `check-rate-limit` (Enhanced)
+### 1. Extend DriverInfo to Include ID
 
-Handles customer order/cancel rate limiting with DB persistence.
+Add `id` to `DriverInfo` so we can subscribe to driver location updates.
 
-```
-Path: supabase/functions/check-rate-limit/index.ts
-```
+### 2. Modify useRideRealtime to Provide Driver ID
 
-**Flow:**
-```text
-Request → Auth check → Load/init user_limits row
-    → Reset daily counters if new day
-    → Check if blocked
-    → Increment action counter
-    → Check thresholds (30 orders/day, 8 cancels/day)
-    → If exceeded: block for 6 hours, log risk_event
-    → Return { ok, blocked, blocked_until }
-```
+Return the driver ID from the realtime hook so the page can subscribe to location updates.
 
-**Thresholds:**
-| Action | Daily Limit | Block Duration |
-|--------|-------------|----------------|
-| create_order | 30 | 6 hours |
-| cancel_order | 8 | 6 hours |
+### 3. Add Driver Location Subscription to RideDriverPage
 
-### 2. `check-driver-rate-limit` (New)
+Use the existing `useDriverLocationRealtime` hook to subscribe to driver's `current_lat`/`current_lng` updates.
 
-Handles driver-side cancel limits.
+### 4. Calculate ETA from Distance
 
-**Thresholds:**
-| Action | Daily Limit | Block Duration |
-|--------|-------------|----------------|
-| cancel_trip | 5 | 4 hours |
-| gps_suspicious | 10 | 24 hours (auto-suspend) |
+When driver location updates:
+- Calculate distance to pickup using Haversine formula
+- Assume 30 mph average speed
+- Update ETA in minutes
 
-### 3. `update-driver-location` (New)
+### 5. Add Arrival Banner
 
-GPS spoof detection with impossible speed/jump detection.
-
-```
-Path: supabase/functions/update-driver-location/index.ts
-```
-
-**Detection Rules:**
-| Rule | Threshold | Severity |
-|------|-----------|----------|
-| Speed > 120 mph | Flag suspicious | 3 |
-| Jump > 2 miles in < 10 seconds | Flag suspicious | 4 |
-| Accuracy > 100m repeatedly | Flag suspicious | 2 |
-
-**Flow:**
-```text
-Request { lat, lng, heading, speed, accuracy }
-    → Auth check → Get driver
-    → Load previous location
-    → Calculate distance (Haversine) and time delta
-    → Check speed: distance / time_hours > 120 mph?
-    → Check jump: distance > 2 miles && time < 10 seconds?
-    → Upsert location with prev_* fields and is_suspicious flag
-    → If suspicious: insert risk_event
-    → If gps_flags_today >= 5: auto-suspend driver
-    → Return { ok, suspicious }
-```
-
-### 4. `auto-suspend-driver` (New - optional cron or trigger)
-
-Runs on GPS suspicious events to auto-suspend repeat offenders.
-
-```sql
--- When gps_suspicious count >= 5 in 1 hour:
-UPDATE drivers SET is_suspended = true 
-WHERE id = driver_id;
-
-INSERT INTO risk_events (driver_id, event_type, severity, details)
-VALUES (driver_id, 'auto_suspended', 5, { reason: 'gps_spoof_repeat' });
-```
+When status becomes `arrived`, show a fixed banner at top of card (not a toast).
 
 ---
 
-## Client-Side Integration
-
-### 1. Update `useDriverApp.ts` Location Hook
-
-Replace direct DB update with edge function call:
-
-```typescript
-// Before (current)
-const success = await updateLocationWithRetry(driverId, lat, lng);
-
-// After (with GPS check)
-const result = await supabase.functions.invoke("update-driver-location", {
-  body: { lat, lng, heading, speed, accuracy }
-});
-
-if (result.data?.suspended) {
-  toast.error("Account suspended", { description: "Contact support." });
-  // Navigate to suspended screen
-}
-```
-
-### 2. Add Rate Limit Checks to Booking Flows
-
-**Before creating order:**
-```typescript
-const limitCheck = await supabase.functions.invoke("check-rate-limit", {
-  body: { action: "create_order" }
-});
-
-if (!limitCheck.data?.ok) {
-  toast.error("Booking limit reached", {
-    description: `Try again ${formatDistanceToNow(limitCheck.data?.blocked_until)}`
-  });
-  return;
-}
-```
-
-**Before canceling order:**
-```typescript
-const limitCheck = await supabase.functions.invoke("check-rate-limit", {
-  body: { action: "cancel_order" }
-});
-
-if (!limitCheck.data?.ok) {
-  toast.error("Cancellation limit reached", {
-    description: "Too many cancellations today."
-  });
-  return;
-}
-```
-
----
-
-## Admin Dashboard Components
-
-### 1. Risk Events Panel
-
-View and resolve risk events with filtering:
-- Filter by: event_type, severity, user/driver, date range
-- Actions: Resolve, Escalate, Block user/driver
-
-### 2. Suspended Accounts List
-
-View blocked users/drivers with:
-- Block reason and duration
-- Quick actions: Unblock, Extend block, Review history
-
-### 3. GPS Anomaly Map (optional)
-
-Visualize suspicious driver locations on a map.
-
----
-
-## File Changes Summary
+## File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| Migration SQL | Create | New tables + ALTER for location history |
-| `supabase/functions/check-rate-limit/index.ts` | Modify | DB-backed user limits |
-| `supabase/functions/check-driver-rate-limit/index.ts` | Create | Driver limit checking |
-| `supabase/functions/update-driver-location/index.ts` | Create | GPS spoof detection |
-| `supabase/config.toml` | Modify | Add new function configs |
-| `src/lib/supabaseDriverOperations.ts` | Modify | Call edge function for location |
-| `src/hooks/useDriverApp.ts` | Modify | Handle suspended state |
-| `src/lib/security/rateLimiter.ts` | Modify | Add order/cancel actions |
-| `src/components/admin/AdminRiskEvents.tsx` | Create | Risk events panel |
-| `src/components/admin/AdminSuspendedAccounts.tsx` | Create | Suspended accounts list |
+| `src/types/rideTypes.ts` | Modify | Add `id?: string` to `DriverInfo` interface |
+| `src/lib/supabaseRide.ts` | Modify | Return driver `id` in `fetchDriverInfo` |
+| `src/stores/rideStore.tsx` | Modify | Store driver ID in state |
+| `src/hooks/useRideRealtime.ts` | Modify | Return driver ID for location subscription |
+| `src/pages/ride/RideDriverPage.tsx` | Modify | Add location subscription, ETA calc, arrival banner |
 
 ---
 
 ## Technical Details
 
-### Haversine Distance Function (Edge Function)
+### DriverInfo Extension
+
 ```typescript
-function haversineMiles(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3958.7613; // Earth radius in miles
-  const toRad = (x: number) => (x * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 + 
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+// src/types/rideTypes.ts
+export interface DriverInfo {
+  id?: string;  // NEW: Driver ID for location tracking
+  name: string;
+  car: string;
+  plate: string;
+  rating: number;
+  avatar?: string;
+  trips?: number;
 }
 ```
 
-### Auto-Suspend Trigger (Database Function)
-```sql
-CREATE OR REPLACE FUNCTION check_gps_spoof_threshold()
-RETURNS trigger AS $$
-DECLARE
-  recent_flags INTEGER;
-BEGIN
-  IF NEW.event_type = 'gps_suspicious' THEN
-    SELECT COUNT(*) INTO recent_flags
-    FROM risk_events
-    WHERE driver_id = NEW.driver_id
-      AND event_type = 'gps_suspicious'
-      AND created_at > NOW() - INTERVAL '1 hour';
-    
-    IF recent_flags >= 5 THEN
-      UPDATE drivers SET is_suspended = true WHERE id = NEW.driver_id;
-      
-      INSERT INTO driver_limits (driver_id, is_blocked, blocked_until, block_reason)
-      VALUES (NEW.driver_id, true, NOW() + INTERVAL '24 hours', 'GPS spoof auto-suspend')
-      ON CONFLICT (driver_id) DO UPDATE SET
-        is_blocked = true,
-        blocked_until = NOW() + INTERVAL '24 hours',
-        block_reason = 'GPS spoof auto-suspend',
-        total_blocks = driver_limits.total_blocks + 1;
-    END IF;
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+### fetchDriverInfo Update
+
+```typescript
+// src/lib/supabaseRide.ts
+export const fetchDriverInfo = async (driverId: string): Promise<DriverInfo | null> => {
+  const { data, error } = await supabase
+    .from("drivers")
+    .select("id, full_name, rating, vehicle_model, vehicle_plate, avatar_url, total_trips")
+    .eq("id", driverId)
+    .single();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,  // NEW
+    name: data.full_name,
+    rating: data.rating || 4.8,
+    car: data.vehicle_model || "Vehicle",
+    plate: data.vehicle_plate,
+    avatar: data.avatar_url || undefined,
+    trips: data.total_trips || 0,
+  };
+};
+```
+
+### Haversine Distance Function (Client-Side)
+
+```typescript
+// Add to RideDriverPage or a utility file
+const haversineMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 3958.8; // Earth radius in miles
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + 
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+```
+
+### ETA Calculation Logic
+
+```typescript
+// In RideDriverPage
+const ASSUMED_SPEED_MPH = 30;
+
+// When driver location updates:
+const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
+  setRealTimeDriverLocation({ lat, lng });
+  
+  if (pickupLocation) {
+    const distanceMiles = haversineMiles(lat, lng, pickupLocation.lat, pickupLocation.lng);
+    const etaMinutes = Math.ceil((distanceMiles / ASSUMED_SPEED_MPH) * 60);
+    updateEta(Math.max(0, etaMinutes * 60)); // Convert to seconds for store
+  }
+}, [pickupLocation, updateEta]);
+
+// Subscribe to driver location
+useDriverLocationRealtime(driverId, handleDriverLocationUpdate);
+```
+
+### Arrival Banner Component
+
+```typescript
+// Inline in RideDriverPage (no new component per spec)
+{state.status === 'arrived' && (
+  <motion.div
+    initial={{ opacity: 0, y: -20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="bg-green-500 text-white text-center py-3 px-4 font-semibold text-lg"
+  >
+    🚗 Your driver has arrived
+  </motion.div>
+)}
 ```
 
 ---
 
-## Benefits
+## Data Flow
 
-1. **Order Spam Prevention** - Blocks excessive order creation (30/day limit)
-2. **Cancel Abuse Prevention** - Limits cancellations (8/day for users, 5/day for drivers)
-3. **GPS Spoof Detection** - Flags impossible movement patterns (>120 mph, >2 mile jumps)
-4. **Auto Blocks** - Temporary lockouts (6-24 hours) for abusers
-5. **Audit Trail** - All risk events logged for admin review with full context
-6. **Existing Integration** - Builds on current `security_events` and `fraud_assessments` tables
+```text
+Driver updates location (via edge function)
+        │
+        ▼
+Supabase `drivers` table updated
+        │
+        ▼
+Realtime subscription fires in useDriverLocationRealtime
+        │
+        ▼
+handleDriverLocationUpdate called with new lat/lng
+        │
+        ▼
+Calculate distance to pickup (Haversine)
+        │
+        ▼
+ETA = (distance_miles / 30 mph) * 60 minutes
+        │
+        ▼
+Update RideStore ETA → UI re-renders
+```
+
+---
+
+## UI Changes (Minimal)
+
+### Current ETA Display (Unchanged Layout)
+The existing ETA display component stays the same, just uses the new calculated value.
+
+### New Arrival Banner (Added)
+A simple green banner above the driver card when `status === 'arrived'`.
+
+```text
+┌─────────────────────────────────────┐
+│  🚗 Your driver has arrived         │  ← NEW banner (green bg)
+└─────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│  [Driver Card - existing layout]    │
+│  ...                                │
+└─────────────────────────────────────┘
+```
+
+---
+
+## Edge Cases
+
+| Scenario | Handling |
+|----------|----------|
+| Driver ID not available | Fall back to existing countdown logic |
+| Driver location null | Keep showing last calculated ETA |
+| Distance < 0.1 miles | Show "Arriving now" instead of "0 min" |
+| Demo mode (no realtime) | Continue using existing mock countdown |
+| Status already arrived on page load | Show banner immediately |
+
+---
+
+## No Changes To
+
+- DriverMapView component
+- Map visualization
+- Action buttons
+- Trip summary section
+- Bottom navigation
+
