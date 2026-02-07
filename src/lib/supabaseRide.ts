@@ -64,6 +64,8 @@ export interface CreateRideDbPayload {
   customerName?: string;
   customerPhone?: string;
   initialStatus?: "requested" | "requested_unpaid"; // NEW - allows creating unpaid rides
+  surgeMultiplier?: number;
+  surgeLevel?: string;
 }
 
 // Result type for createRideInDb with full error info
@@ -124,6 +126,9 @@ export const createRideInDb = async (
       status: initialStatus,
       customer_name: payload.customerName,
       customer_phone: payload.customerPhone,
+      // Surge pricing fields - saved to trips table
+      surge_multiplier: payload.surgeMultiplier || 1,
+      surged_fare: payload.price, // finalPrice already includes surge
     };
 
     const { data, error } = await supabase

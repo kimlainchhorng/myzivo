@@ -28,6 +28,7 @@ interface LocationState {
   pickupCoords?: { lat: number; lng: number };
   dropoffCoords?: { lat: number; lng: number };
   surgeMultiplier?: number;
+  surgeLevel?: "Low" | "Medium" | "High";
 }
 
 type PaymentMethod = "card" | "apple" | "cash";
@@ -96,7 +97,7 @@ const RideConfirmPage = () => {
     );
   }
 
-  const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords, surgeMultiplier = 1.0 } = state;
+  const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords, surgeMultiplier = 1.0, surgeLevel } = state;
   const surgeActive = surgeMultiplier > 1.0;
 
   // Calculate dynamic price with surge
@@ -200,6 +201,8 @@ const RideConfirmPage = () => {
           distance: tripDetails?.distance || 0,
           duration: tripDetails?.duration || 0,
           initialStatus: useUnpaidStatus ? "requested_unpaid" : "requested",
+          surgeMultiplier,
+          surgeLevel,
         },
         {
           enableRetry: true,

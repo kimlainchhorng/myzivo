@@ -33,7 +33,12 @@ const RidePage = () => {
   const [routePolyline, setRoutePolyline] = useState<string | null>(null);
 
   const { fetchRoute, isLoading: isRouteLoading } = useServerRoute();
-  const { multiplier: surgeMultiplier, isActive: surgeActive, label: surgeLabel, driverCount } = useSurgePricing();
+  const { multiplier: surgeMultiplier, isActive: surgeActive, label: surgeLabel, level: surgeLevel, refetch: refetchSurge } = useSurgePricing();
+
+  // Recompute surge when route changes
+  useEffect(() => {
+    refetchSurge();
+  }, [pickup, destination, refetchSurge]);
 
   // Handle pickup change with optional coordinates
   const handlePickupChange = useCallback((value: string, coords?: LocationCoords) => {
@@ -96,6 +101,7 @@ const RidePage = () => {
           dropoffCoords,
           routePolyline,
           surgeMultiplier,
+          surgeLevel,
         },
       });
     }
@@ -198,6 +204,7 @@ const RidePage = () => {
             onSelectRide={setSelectedRide}
             tripDetails={tripDetails}
             surgeMultiplier={surgeMultiplier}
+            surgeLevel={surgeLevel}
           />
 
           {/* Trip Info Pill */}
