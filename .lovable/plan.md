@@ -1,361 +1,649 @@
 
-# Surge Pricing Integration Plan
+# Franchise / Partner RBAC (Multi-tenant Roles + Permissions) Implementation Plan
 
 ## Overview
 
-Integrate dynamic surge pricing into ride quotes based on real-time demand (requested rides) vs supply (online drivers). This uses the same algorithm specified for Analytics, replacing the current simple driver-count-based surge with a proper demand/supply ratio calculation.
+Implement a complete multi-tenant RBAC system enabling franchises/partners to have their own teams with granular permissions. Each tenant (brand/franchise/partner) can manage their own staff with roles like Tenant Owner, Admin, Dispatcher, Support Agent, Finance, Merchant Manager, and Viewer.
 
 ---
 
-## Current State
+## Current State Analysis
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `useSurgePricing` hook | Exists | Currently uses only driver count (< 2 = 1.8x, < 3 = 1.5x) |
-| `useAvailableDrivers` hook | Exists | Fetches online, verified drivers with schedules |
-| `RidePage.tsx` | Uses surge | Passes `surgeMultiplier` to RideGrid and confirm page |
-| `RideCard.tsx` | Shows badge | Shows "High demand" badge when `surgeActive` |
-| `trips` table | Has columns | Already has `surge_multiplier`, `surged_fare` columns |
-| `createRideInDb` | Saves fare | Saves `fare_amount` but not surge details separately |
+| `tenants` table | Missing | Need to create multi-tenant foundation |
+| `tenant_id` on core tables | Missing | Need to add tenant scoping |
+| `user_roles` table | Exists | Global platform roles (admin, support, etc.) |
+| `app_role` enum | Exists | Has admin, super_admin, operations, finance, support, driver, merchant, customer |
+| `has_role()` RPC | Exists | Used for global role checks |
+| `is_admin()` RPC | Exists | Checks platform-level admin status |
+| Dispatch Team page | Missing | No team management UI |
+| Tenant-aware RLS | Missing | Need to implement |
 
 ---
 
-## Changes Required
+## Architecture
 
-### 1. Create `src/lib/surge.ts` (New File)
+```text
+Platform Level (ZIVO)
+├── super_admin - Full platform access
+├── admin - Platform administration
+├── operations - Platform operations
+├── finance - Platform finance
+└── support - Platform support
 
-Core surge calculation logic matching Analytics rules:
+Tenant Level (Franchise/Partner)
+├── tenants table - Brand/franchise entities
+│   └── tenant_memberships - User-to-tenant assignments with roles
+│       └── role_permissions - What each role can do per tenant
+│
+├── Tenant Roles:
+│   ├── owner - Full tenant control
+│   ├── admin - Manage team, settings
+│   ├── dispatcher - Order dispatch, driver assignment
+│   ├── support - Customer support, view orders
+│   ├── finance - Payouts, refunds, analytics
+│   ├── merchant_manager - Merchant onboarding, promotions
+│   └── viewer - Read-only analytics access
 
-```typescript
-export interface SurgeResult {
-  multiplier: number;
-  level: 'Low' | 'Medium' | 'High';
-  finalPrice: number;
-}
-
-export function calculateSurge({
-  requestedCount,
-  availableDrivers,
-  basePrice,
-}: {
-  requestedCount: number;
-  availableDrivers: number;
-  basePrice: number;
-}): SurgeResult {
-  let multiplier = 1.0;
-  let level: 'Low' | 'Medium' | 'High' = 'Low';
-
-  if (availableDrivers <= 0) {
-    multiplier = 2.0;
-    level = 'High';
-  } else {
-    const ratio = requestedCount / Math.max(1, availableDrivers);
-    
-    if (ratio >= 2.0) {
-      multiplier = 2.0;
-      level = 'High';
-    } else if (ratio >= 1.5) {
-      multiplier = 1.6;
-      level = 'High';
-    } else if (ratio >= 1.0) {
-      multiplier = 1.3;
-      level = 'Medium';
-    }
-  }
-
-  return {
-    multiplier,
-    level,
-    finalPrice: Math.round(basePrice * multiplier * 100) / 100,
-  };
-}
+└── Permissions (granular keys):
+    ├── tenant.manage_settings
+    ├── tenant.manage_users
+    ├── orders.dispatch
+    ├── orders.override_status
+    ├── payouts.manage
+    ├── refunds.manage
+    ├── analytics.view
+    ├── support.manage
+    ├── merchants.manage
+    ├── drivers.manage
+    ├── promotions.manage
+    └── zones.manage
 ```
 
 ---
 
-### 2. Create Demand Metrics Helper in `src/lib/surge.ts`
+## Database Changes
 
-Add helper to fetch live demand from Supabase:
+### 1. Create `tenants` Table
 
-```typescript
-export async function getDemandMetrics(
-  supabase: SupabaseClient,
-  windowMinutes: number = 5
-): Promise<{ requestedCount: number; availableDrivers: number }> {
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
-  const driverActiveThreshold = new Date(now.getTime() - 2 * 60 * 1000);
+```sql
+CREATE TABLE public.tenants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  logo_url TEXT,
+  primary_color TEXT DEFAULT '#6366f1',
+  region_id UUID REFERENCES regions(id),
+  is_active BOOLEAN DEFAULT true,
+  settings JSONB DEFAULT '{}',
+  owner_id UUID REFERENCES auth.users(id)
+);
 
-  // Count rides in 'requested' or 'accepted' status from last 5 min
-  const { count: requestedCount } = await supabase
-    .from('trips')
-    .select('*', { count: 'exact', head: true })
-    .in('status', ['requested', 'accepted', 'en_route'])
-    .gte('created_at', windowStart.toISOString());
+CREATE UNIQUE INDEX idx_tenants_slug ON tenants(slug);
+CREATE INDEX idx_tenants_owner ON tenants(owner_id);
+CREATE INDEX idx_tenants_region ON tenants(region_id);
+```
 
-  // Count online drivers active within 2 min
-  const { count: availableDrivers } = await supabase
-    .from('drivers')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_online', true)
-    .eq('status', 'verified')
-    .gte('updated_at', driverActiveThreshold.toISOString());
+### 2. Create `tenant_roles` Enum
 
-  return {
-    requestedCount: requestedCount || 0,
-    availableDrivers: availableDrivers || 0,
-  };
-}
+```sql
+CREATE TYPE public.tenant_role AS ENUM (
+  'owner',
+  'admin', 
+  'dispatcher',
+  'support',
+  'finance',
+  'merchant_manager',
+  'viewer'
+);
+```
+
+### 3. Create `tenant_memberships` Table
+
+```sql
+CREATE TABLE public.tenant_memberships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role tenant_role NOT NULL DEFAULT 'viewer',
+  is_active BOOLEAN DEFAULT true,
+  invited_by UUID REFERENCES auth.users(id),
+  invited_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ,
+  CONSTRAINT unique_tenant_user UNIQUE (tenant_id, user_id)
+);
+
+CREATE INDEX idx_tenant_memberships_tenant ON tenant_memberships(tenant_id, is_active);
+CREATE INDEX idx_tenant_memberships_user ON tenant_memberships(user_id, is_active);
+```
+
+### 4. Create `permissions` Table (Seed Data)
+
+```sql
+CREATE TABLE public.permissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  key TEXT UNIQUE NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Seed permission keys
+INSERT INTO permissions (key, description, category) VALUES
+  ('tenant.manage_settings', 'Manage tenant settings and branding', 'tenant'),
+  ('tenant.manage_users', 'Invite, edit, and remove team members', 'tenant'),
+  ('orders.dispatch', 'View and dispatch orders to drivers', 'orders'),
+  ('orders.override_status', 'Override order status manually', 'orders'),
+  ('orders.view', 'View orders (read-only)', 'orders'),
+  ('payouts.manage', 'Process and manage driver payouts', 'finance'),
+  ('refunds.manage', 'Process customer refunds', 'finance'),
+  ('analytics.view', 'View analytics and reports', 'analytics'),
+  ('support.manage', 'Handle support tickets and chat', 'support'),
+  ('merchants.manage', 'Onboard and manage merchants', 'merchants'),
+  ('drivers.manage', 'Manage drivers and assignments', 'drivers'),
+  ('promotions.manage', 'Create and manage promotions', 'marketing'),
+  ('zones.manage', 'Configure zones, surge, and pricing', 'operations');
+```
+
+### 5. Create `role_permissions` Table (Default Mappings)
+
+```sql
+CREATE TABLE public.role_permissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+  role tenant_role NOT NULL,
+  permission_key TEXT NOT NULL REFERENCES permissions(key) ON DELETE CASCADE,
+  CONSTRAINT unique_role_permission UNIQUE (tenant_id, role, permission_key)
+);
+
+CREATE INDEX idx_role_permissions_tenant ON role_permissions(tenant_id, role);
+```
+
+### 6. Create `tenant_invitations` Table
+
+```sql
+CREATE TABLE public.tenant_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  role tenant_role NOT NULL DEFAULT 'viewer',
+  token TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  invited_by UUID REFERENCES auth.users(id),
+  expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + INTERVAL '7 days'),
+  accepted_at TIMESTAMPTZ,
+  CONSTRAINT unique_pending_invite UNIQUE (tenant_id, email)
+);
+
+CREATE INDEX idx_tenant_invitations_token ON tenant_invitations(token) WHERE accepted_at IS NULL;
+CREATE INDEX idx_tenant_invitations_email ON tenant_invitations(email) WHERE accepted_at IS NULL;
+```
+
+### 7. Add `tenant_id` to Core Tables
+
+```sql
+-- Add tenant_id to core operational tables
+ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE trips ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE drivers ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE refund_requests ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE driver_payouts ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+ALTER TABLE promotions ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES tenants(id);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_food_orders_tenant ON food_orders(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_trips_tenant ON trips(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_drivers_tenant ON drivers(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_restaurants_tenant ON restaurants(tenant_id);
 ```
 
 ---
 
-### 3. Update `src/hooks/useSurgePricing.ts`
+## RPC Functions
 
-Replace the current simple logic with the new demand-based calculation:
+### 1. `get_my_tenant_permissions(p_tenant_id UUID)`
 
-**Key changes:**
-- Add new `useDemandMetrics` query that fetches every 15 seconds
-- Use the new `calculateSurge` function
-- Expose `level` for badge display and `multiplier` text
+Returns all permission keys for the current user within a specific tenant.
 
-```typescript
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { calculateSurge, getDemandMetrics } from "@/lib/surge";
+```sql
+CREATE OR REPLACE FUNCTION get_my_tenant_permissions(p_tenant_id UUID)
+RETURNS TEXT[] AS $$
+DECLARE
+  v_user_role tenant_role;
+  v_permissions TEXT[];
+BEGIN
+  -- Get user's role in this tenant
+  SELECT role INTO v_user_role
+  FROM tenant_memberships
+  WHERE tenant_id = p_tenant_id
+    AND user_id = auth.uid()
+    AND is_active = true;
 
-export interface SurgePricingInfo {
-  multiplier: number;
-  isActive: boolean;
-  label: string;
-  level: 'Low' | 'Medium' | 'High';
-  requestedCount: number;
-  availableDrivers: number;
-  isLoading: boolean;
-  refetch: () => void;
-}
+  IF v_user_role IS NULL THEN
+    RETURN ARRAY[]::TEXT[];
+  END IF;
 
-export function useSurgePricing(): SurgePricingInfo {
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['demand-metrics'],
-    queryFn: () => getDemandMetrics(supabase, 5),
-    refetchInterval: 15000, // Every 15 seconds
-    staleTime: 10000,
-  });
+  -- Owner has all permissions
+  IF v_user_role = 'owner' THEN
+    SELECT ARRAY_AGG(key) INTO v_permissions FROM permissions;
+    RETURN v_permissions;
+  END IF;
 
-  const requestedCount = data?.requestedCount || 0;
-  const availableDrivers = data?.availableDrivers || 0;
+  -- Get permissions for this role (tenant-specific or defaults)
+  SELECT ARRAY_AGG(rp.permission_key) INTO v_permissions
+  FROM role_permissions rp
+  WHERE (rp.tenant_id = p_tenant_id OR rp.tenant_id IS NULL)
+    AND rp.role = v_user_role;
 
-  const surgeResult = calculateSurge({
-    requestedCount,
-    availableDrivers,
-    basePrice: 1, // Base price applied elsewhere
-  });
+  RETURN COALESCE(v_permissions, ARRAY[]::TEXT[]);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path TO 'public';
+```
 
-  const labelMap = {
-    Low: '',
-    Medium: 'Moderate demand',
-    High: 'High demand',
-  };
+### 2. `has_tenant_permission(p_tenant_id UUID, p_permission TEXT)`
 
-  return {
-    multiplier: surgeResult.multiplier,
-    isActive: surgeResult.multiplier > 1.0,
-    label: labelMap[surgeResult.level],
-    level: surgeResult.level,
-    requestedCount,
-    availableDrivers,
-    isLoading,
-    refetch,
-  };
-}
+Checks if current user has a specific permission in a tenant.
+
+```sql
+CREATE OR REPLACE FUNCTION has_tenant_permission(
+  p_tenant_id UUID,
+  p_permission TEXT
+)
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN p_permission = ANY(get_my_tenant_permissions(p_tenant_id));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path TO 'public';
+```
+
+### 3. `get_my_tenants()`
+
+Returns all tenants the current user belongs to with their role.
+
+```sql
+CREATE OR REPLACE FUNCTION get_my_tenants()
+RETURNS TABLE (
+  tenant_id UUID,
+  tenant_name TEXT,
+  tenant_slug TEXT,
+  tenant_logo TEXT,
+  user_role tenant_role,
+  is_active BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    t.id,
+    t.name,
+    t.slug,
+    t.logo_url,
+    tm.role,
+    tm.is_active
+  FROM tenant_memberships tm
+  JOIN tenants t ON t.id = tm.tenant_id
+  WHERE tm.user_id = auth.uid()
+    AND tm.is_active = true
+    AND t.is_active = true;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE SET search_path TO 'public';
+```
+
+### 4. `accept_tenant_invitation(p_token TEXT)`
+
+Accepts an invitation and creates membership.
+
+```sql
+CREATE OR REPLACE FUNCTION accept_tenant_invitation(p_token TEXT)
+RETURNS JSONB AS $$
+DECLARE
+  v_invitation RECORD;
+  v_membership_id UUID;
+BEGIN
+  -- Find valid invitation
+  SELECT * INTO v_invitation
+  FROM tenant_invitations
+  WHERE token = p_token
+    AND accepted_at IS NULL
+    AND expires_at > now();
+
+  IF v_invitation IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Invalid or expired invitation');
+  END IF;
+
+  -- Create membership
+  INSERT INTO tenant_memberships (tenant_id, user_id, role, invited_by, invited_at, accepted_at)
+  VALUES (v_invitation.tenant_id, auth.uid(), v_invitation.role, v_invitation.invited_by, v_invitation.created_at, now())
+  ON CONFLICT (tenant_id, user_id) DO UPDATE SET
+    role = EXCLUDED.role,
+    is_active = true,
+    accepted_at = now()
+  RETURNING id INTO v_membership_id;
+
+  -- Mark invitation as accepted
+  UPDATE tenant_invitations SET accepted_at = now() WHERE id = v_invitation.id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'membership_id', v_membership_id,
+    'tenant_id', v_invitation.tenant_id
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
+
+### 5. `seed_default_role_permissions(p_tenant_id UUID)`
+
+Seeds default permissions for a new tenant.
+
+```sql
+CREATE OR REPLACE FUNCTION seed_default_role_permissions(p_tenant_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  -- Admin: all except payouts
+  INSERT INTO role_permissions (tenant_id, role, permission_key)
+  SELECT p_tenant_id, 'admin', key FROM permissions
+  WHERE key NOT IN ('payouts.manage', 'refunds.manage')
+  ON CONFLICT DO NOTHING;
+
+  -- Dispatcher
+  INSERT INTO role_permissions (tenant_id, role, permission_key) VALUES
+    (p_tenant_id, 'dispatcher', 'orders.dispatch'),
+    (p_tenant_id, 'dispatcher', 'orders.view'),
+    (p_tenant_id, 'dispatcher', 'drivers.manage')
+  ON CONFLICT DO NOTHING;
+
+  -- Support
+  INSERT INTO role_permissions (tenant_id, role, permission_key) VALUES
+    (p_tenant_id, 'support', 'support.manage'),
+    (p_tenant_id, 'support', 'orders.view'),
+    (p_tenant_id, 'support', 'refunds.manage')
+  ON CONFLICT DO NOTHING;
+
+  -- Finance
+  INSERT INTO role_permissions (tenant_id, role, permission_key) VALUES
+    (p_tenant_id, 'finance', 'analytics.view'),
+    (p_tenant_id, 'finance', 'payouts.manage'),
+    (p_tenant_id, 'finance', 'refunds.manage')
+  ON CONFLICT DO NOTHING;
+
+  -- Merchant Manager
+  INSERT INTO role_permissions (tenant_id, role, permission_key) VALUES
+    (p_tenant_id, 'merchant_manager', 'merchants.manage'),
+    (p_tenant_id, 'merchant_manager', 'promotions.manage'),
+    (p_tenant_id, 'merchant_manager', 'orders.view')
+  ON CONFLICT DO NOTHING;
+
+  -- Viewer
+  INSERT INTO role_permissions (tenant_id, role, permission_key) VALUES
+    (p_tenant_id, 'viewer', 'analytics.view'),
+    (p_tenant_id, 'viewer', 'orders.view')
+  ON CONFLICT DO NOTHING;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
 ```
 
 ---
 
-### 4. Update `RideCard.tsx` - Enhanced Badge Display
+## RLS Policies
 
-Update the surge badge to show:
-- Demand level text ("Low/Medium/High demand")
-- Multiplier when > 1.0 (e.g., "1.3x")
+### Tenants Table
 
-**Props changes:**
-```typescript
-interface RideCardProps {
-  ride: RideOption;
-  isSelected: boolean;
-  onSelect: () => void;
-  calculatedPrice?: number;
-  surgeActive?: boolean;
-  surgeMultiplier?: number;  // NEW
-  surgeLevel?: 'Low' | 'Medium' | 'High';  // NEW
-}
+```sql
+ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
+
+-- Platform admins can see all
+CREATE POLICY "Platform admins can manage tenants" ON tenants
+  FOR ALL TO authenticated
+  USING (public.is_admin(auth.uid()));
+
+-- Users can see tenants they belong to
+CREATE POLICY "Members can view their tenants" ON tenants
+  FOR SELECT TO authenticated
+  USING (id IN (SELECT tenant_id FROM tenant_memberships WHERE user_id = auth.uid() AND is_active = true));
+
+-- Tenant owners can update their tenant
+CREATE POLICY "Owners can update tenant" ON tenants
+  FOR UPDATE TO authenticated
+  USING (owner_id = auth.uid() OR public.has_tenant_permission(id, 'tenant.manage_settings'));
 ```
 
-**Badge update:**
-```tsx
-{surgeActive && (
-  <div className={cn(
-    "absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full",
-    surgeLevel === 'High' ? "bg-amber-500/90" : "bg-yellow-500/80"
-  )}>
-    <span className="text-[10px] font-bold text-white">
-      {surgeLevel} demand {surgeMultiplier && surgeMultiplier > 1 && `• ${surgeMultiplier}x`}
-    </span>
-  </div>
-)}
+### Tenant Memberships Table
+
+```sql
+ALTER TABLE tenant_memberships ENABLE ROW LEVEL SECURITY;
+
+-- Platform admins full access
+CREATE POLICY "Platform admins can manage memberships" ON tenant_memberships
+  FOR ALL TO authenticated
+  USING (public.is_admin(auth.uid()));
+
+-- Users can see their own memberships
+CREATE POLICY "Users can view own memberships" ON tenant_memberships
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+-- Tenant admins can manage memberships
+CREATE POLICY "Tenant admins can manage members" ON tenant_memberships
+  FOR ALL TO authenticated
+  USING (public.has_tenant_permission(tenant_id, 'tenant.manage_users'));
 ```
 
----
+### Food Orders (Example Tenant-Scoped Table)
 
-### 5. Update `RideGrid.tsx` - Pass Surge Level
+```sql
+-- Add tenant-aware policy
+CREATE POLICY "Tenant members can view orders" ON food_orders
+  FOR SELECT TO authenticated
+  USING (
+    -- Platform admins
+    public.is_admin(auth.uid())
+    -- Tenant members with order viewing permission
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'orders.view'))
+    -- Order owners
+    OR customer_id = auth.uid()
+    -- Assigned drivers
+    OR driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid())
+    -- Restaurant owners
+    OR public.is_restaurant_owner(restaurant_id)
+  );
 
-Pass the new `surgeLevel` and `surgeMultiplier` to each RideCard:
-
-```typescript
-interface RideGridProps {
-  rides: RideOption[];
-  selectedRideId: string | null;
-  onSelectRide: (ride: RideOption) => void;
-  tripDetails: TripDetails | null;
-  surgeMultiplier?: number;
-  surgeLevel?: 'Low' | 'Medium' | 'High';  // NEW
-}
-```
-
----
-
-### 6. Update `RidePage.tsx` - Surge Refresh and Level
-
-**Changes:**
-- Get `level` and `refetch` from `useSurgePricing`
-- Pass `surgeLevel` to RideGrid
-- Trigger `refetch` when pickup/destination changes
-
-```typescript
-const { 
-  multiplier: surgeMultiplier, 
-  isActive: surgeActive, 
-  label: surgeLabel, 
-  level: surgeLevel,
-  refetch: refetchSurge 
-} = useSurgePricing();
-
-// Recompute surge when route changes
-useEffect(() => {
-  refetchSurge();
-}, [pickup, destination, refetchSurge]);
+CREATE POLICY "Dispatchers can update orders" ON food_orders
+  FOR UPDATE TO authenticated
+  USING (
+    public.is_admin(auth.uid())
+    OR (tenant_id IS NOT NULL AND public.has_tenant_permission(tenant_id, 'orders.dispatch'))
+  );
 ```
 
 ---
 
-### 7. Update `RideConfirmPage.tsx` - Save Surge to DB
-
-When creating the ride, include surge data:
-
-**In `createRideInDb` call, add:**
-```typescript
-const result = await createRideInDb({
-  // ... existing fields
-  surgeMultiplier,  // Add this
-  surgedFare: finalPrice,  // Add this
-});
-```
-
----
-
-### 8. Update `src/lib/supabaseRide.ts` - Accept Surge Fields
-
-**Update `CreateRideDbPayload` interface:**
-```typescript
-export interface CreateRideDbPayload {
-  // ... existing fields
-  surgeMultiplier?: number;
-  surgedFare?: number;
-  surgeLevel?: string;
-}
-```
-
-**Update insert operation:**
-```typescript
-const insertData = {
-  // ... existing fields
-  surge_multiplier: payload.surgeMultiplier || 1,
-  surged_fare: payload.surgedFare || payload.price,
-};
-```
-
----
-
-## File Summary
+## File Changes Summary
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/lib/surge.ts` | **Create** | Core surge calculation + demand metrics fetcher |
-| `src/hooks/useSurgePricing.ts` | **Modify** | Use new demand-based calculation, 15s refresh |
-| `src/components/ride/RideCard.tsx` | **Modify** | Show level badge + multiplier text |
-| `src/components/ride/RideGrid.tsx` | **Modify** | Pass surgeLevel prop to cards |
-| `src/pages/ride/RidePage.tsx` | **Modify** | Pass surgeLevel, refetch on address change |
-| `src/pages/ride/RideConfirmPage.tsx` | **Modify** | Save surge_multiplier + surged_fare to DB |
-| `src/lib/supabaseRide.ts` | **Modify** | Accept and save surge fields |
+| `supabase/migrations/XXXXX.sql` | Create | All tables, RPCs, RLS policies |
+| `src/hooks/useTenantContext.ts` | Create | Current tenant state + permissions |
+| `src/hooks/useTenantMembers.ts` | Create | Team member CRUD operations |
+| `src/hooks/useTenantInvitations.ts` | Create | Invite management hooks |
+| `src/contexts/TenantContext.tsx` | Create | Tenant provider with current tenant |
+| `src/pages/dispatch/DispatchTeam.tsx` | Create | Team list with invite/role management |
+| `src/pages/dispatch/DispatchTeamInvite.tsx` | Create | Invite form page |
+| `src/pages/dispatch/DispatchRoles.tsx` | Create | Role permission matrix editor |
+| `src/pages/AcceptInvite.tsx` | Create | Accept invitation flow |
+| `src/components/dispatch/DispatchSidebar.tsx` | Modify | Add Team nav, permission-gate items |
+| `src/components/team/TeamMemberCard.tsx` | Create | Member display with actions |
+| `src/components/team/InviteMemberDialog.tsx` | Create | Invite modal |
+| `src/components/team/RolePermissionMatrix.tsx` | Create | Permissions grid editor |
+| `src/App.tsx` | Modify | Add team routes + invite accept |
 
 ---
 
-## UI Changes (Minimal)
+## Component Specifications
 
+### DispatchTeam Page
+
+**Route:** `/dispatch/team`
+
+**Features:**
+- List all team members with name, email, role, status
+- Search/filter by name or role
+- Actions per member (permission-gated):
+  - Change role (dropdown)
+  - Deactivate member
+  - Remove member
+- "Invite Member" button (opens dialog)
+- Pending invitations section
+
+**Layout:**
 ```text
-RideCard with surge:
-┌───────────────────────────────┐
-│ [High demand • 1.3x]  [$15.50]│  ← Badge shows level + multiplier
-│                               │
-│      [Vehicle Image]          │
-│                               │
-│ Economy                       │
-│ Reliable everyday rides       │
-│ ⏱ 4 min                       │
-└───────────────────────────────┘
++----------------------------------------------------------+
+|  Team                                    [+ Invite Member]|
++----------------------------------------------------------+
+|  [Search...]            [All Roles v]                     |
++----------------------------------------------------------+
+|  ACTIVE MEMBERS (5)                                       |
+|  +------------------------------------------------------+ |
+|  | [Avatar] John Smith              Owner    [Actions v]| |
+|  |          john@company.com        Since Dec 2025      | |
+|  +------------------------------------------------------+ |
+|  | [Avatar] Sarah Jones             Dispatcher [Actions]| |
+|  |          sarah@company.com       Since Jan 2026      | |
+|  +------------------------------------------------------+ |
+|                                                           |
+|  PENDING INVITATIONS (2)                                  |
+|  +------------------------------------------------------+ |
+|  | mike@company.com    Admin    Expires in 5 days [X]   | |
+|  +------------------------------------------------------+ |
++----------------------------------------------------------+
+```
+
+### InviteMemberDialog Component
+
+**Features:**
+- Email input
+- Role selector dropdown
+- "Send Invitation" button
+- Generates invite link option
+
+### DispatchRoles Page (Optional Advanced)
+
+**Route:** `/dispatch/roles`
+
+**Features:**
+- Permission matrix editor
+- Toggle permissions per role
+- Save changes
+
+---
+
+## Sidebar Permission Gating
+
+Update `DispatchSidebar.tsx` to show/hide items based on permissions:
+
+```typescript
+// Navigation items with required permissions
+const navItems = [
+  { label: "Dashboard", path: "/dispatch", permission: null }, // Always visible
+  { label: "Orders", path: "/dispatch/orders", permission: "orders.view" },
+  { label: "Batches", path: "/dispatch/batches", permission: "orders.dispatch" },
+  { label: "Drivers", path: "/dispatch/drivers", permission: "drivers.manage" },
+  { label: "Merchants", path: "/dispatch/merchants", permission: "merchants.manage" },
+  { label: "Payouts", path: "/dispatch/payouts", permission: "payouts.manage" },
+  { label: "Analytics", path: "/dispatch/analytics", permission: "analytics.view" },
+  { label: "Support", path: "/dispatch/support", permission: "support.manage" },
+  { label: "Zones", path: "/dispatch/zones", permission: "zones.manage" },
+  { label: "Team", path: "/dispatch/team", permission: "tenant.manage_users" },
+  { label: "Settings", path: "/dispatch/settings", permission: "tenant.manage_settings" },
+];
 ```
 
 ---
 
-## Database
+## Tenant Context Hook
 
-The `trips` table already has the required columns:
-- `surge_multiplier` (numeric) - stores the multiplier applied
-- `surged_fare` (numeric) - stores the final price after surge
-
-No migration needed.
+```typescript
+// src/hooks/useTenantContext.ts
+interface TenantContext {
+  currentTenant: Tenant | null;
+  tenants: Tenant[];
+  permissions: string[];
+  isLoading: boolean;
+  switchTenant: (tenantId: string) => void;
+  hasPermission: (key: string) => boolean;
+  isOwner: boolean;
+  isAdmin: boolean;
+}
+```
 
 ---
 
-## Technical Details
+## Accept Invitation Flow
 
-### Surge Rules (matching Analytics)
+**Route:** `/accept-invite?token=...`
 
-| Condition | Multiplier | Level |
-|-----------|------------|-------|
-| availableDrivers <= 0 | 2.0x | High |
-| ratio >= 2.0 | 2.0x | High |
-| ratio >= 1.5 | 1.6x | High |
-| ratio >= 1.0 | 1.3x | Medium |
-| ratio < 1.0 | 1.0x | Low |
+1. User clicks invite link in email
+2. If not logged in, redirect to login with return URL
+3. After login, call `accept_tenant_invitation(token)`
+4. Show success message
+5. Redirect to dispatch dashboard
 
-Where `ratio = requestedCount / max(1, availableDrivers)`
+---
 
-### Refresh Strategy
-- **Automatic**: Every 15 seconds via React Query `refetchInterval`
-- **On change**: When user changes pickup or destination
-- **Stale time**: 10 seconds (prevents excessive refetches)
+## Default Role Permissions Matrix
+
+| Permission | Owner | Admin | Dispatcher | Support | Finance | Merchant Mgr | Viewer |
+|------------|-------|-------|------------|---------|---------|--------------|--------|
+| tenant.manage_settings | Yes | Yes | - | - | - | - | - |
+| tenant.manage_users | Yes | Yes | - | - | - | - | - |
+| orders.dispatch | Yes | Yes | Yes | - | - | - | - |
+| orders.override_status | Yes | Yes | Yes | - | - | - | - |
+| orders.view | Yes | Yes | Yes | Yes | - | Yes | Yes |
+| payouts.manage | Yes | - | - | - | Yes | - | - |
+| refunds.manage | Yes | - | - | Yes | Yes | - | - |
+| analytics.view | Yes | Yes | - | - | Yes | - | Yes |
+| support.manage | Yes | Yes | - | Yes | - | - | - |
+| merchants.manage | Yes | Yes | - | - | - | Yes | - |
+| drivers.manage | Yes | Yes | Yes | - | - | - | - |
+| promotions.manage | Yes | Yes | - | - | - | Yes | - |
+| zones.manage | Yes | Yes | - | - | - | - | - |
+
+---
+
+## Implementation Order
+
+1. **Database migration** - Create all tables, enums, functions, RLS policies
+2. **TenantContext provider** - Core tenant state management
+3. **useTenantContext hook** - Permissions and tenant switching
+4. **useTenantMembers hook** - CRUD for team members
+5. **useTenantInvitations hook** - Invitation management
+6. **TeamMemberCard component** - Member display
+7. **InviteMemberDialog component** - Invite modal
+8. **DispatchTeam page** - Main team management
+9. **AcceptInvite page** - Invitation acceptance flow
+10. **Update DispatchSidebar** - Permission gating
+11. **Update App.tsx** - Add routes
+12. **DispatchRoles page** (optional) - Role permission editor
 
 ---
 
 ## Testing Checklist
 
-- [ ] Surge calculates correctly based on demand/supply ratio
-- [ ] Badge shows "Low/Medium/High demand" label
-- [ ] Multiplier text (1.3x, 1.6x, 2.0x) appears when active
-- [ ] Prices update every 15 seconds on quote screen
-- [ ] Prices recalculate when pickup/destination changes
-- [ ] Surge multiplier is saved to `trips.surge_multiplier`
-- [ ] Surged fare is saved to `trips.surged_fare`
-- [ ] Confirm page shows correct surged price
+- [ ] Create new tenant with owner
+- [ ] Invite user by email creates invitation
+- [ ] Invitation email link works
+- [ ] Accepting invitation creates membership
+- [ ] User sees only permitted nav items
+- [ ] Role change updates permissions immediately
+- [ ] Deactivating member removes access
+- [ ] Platform admins can access all tenants
+- [ ] Tenant-scoped data isolated correctly
+- [ ] RLS prevents cross-tenant data access
+- [ ] Owner cannot be removed or demoted
