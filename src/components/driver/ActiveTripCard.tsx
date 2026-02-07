@@ -11,6 +11,8 @@ interface ActiveTripCardProps {
   isUpdating?: boolean;
   updateError?: string | null;
   onRetryUpdate?: (tripId: string, status: string) => void;
+  isNearPickup?: boolean;
+  isNearDropoff?: boolean;
 }
 
 const statusConfig: Record<string, { 
@@ -45,7 +47,15 @@ const statusConfig: Record<string, {
   },
 };
 
-const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetryUpdate }: ActiveTripCardProps) => {
+const ActiveTripCard = ({ 
+  trip, 
+  onUpdateStatus, 
+  isUpdating, 
+  updateError, 
+  onRetryUpdate,
+  isNearPickup = false,
+  isNearDropoff = false,
+}: ActiveTripCardProps) => {
   const config = statusConfig[trip.status] || statusConfig.accepted;
   const formattedFare = trip.fare_amount ? `$${trip.fare_amount.toFixed(2)}` : "—";
 
@@ -65,12 +75,46 @@ const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetry
     onUpdateStatus(trip.id, "cancelled");
   };
 
+  // Show pickup arrival prompt
+  const showPickupPrompt = isNearPickup && trip.status !== "arrived" && trip.status !== "in_progress";
+  // Show dropoff arrival prompt  
+  const showDropoffPrompt = isNearDropoff && trip.status === "in_progress";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
       <Card className="bg-zinc-900/95 border-white/10 overflow-hidden">
+        {/* Proximity-based arrival prompts */}
+        {showPickupPrompt && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="bg-green-500 px-4 py-3 text-center"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <MapPin className="w-5 h-5 text-white" />
+              <span className="font-semibold text-white">📍 You're at the pickup location</span>
+            </div>
+            <p className="text-xs text-white/80 mt-1">Tap "I'VE ARRIVED" to notify the customer</p>
+          </motion.div>
+        )}
+
+        {showDropoffPrompt && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="bg-green-500 px-4 py-3 text-center"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <Navigation className="w-5 h-5 text-white" />
+              <span className="font-semibold text-white">🏁 You've reached the destination</span>
+            </div>
+            <p className="text-xs text-white/80 mt-1">Tap "COMPLETE TRIP" to finish</p>
+          </motion.div>
+        )}
+
         {/* Status banner */}
         <div className={`${config.color} px-4 py-2`}>
           <div className="flex items-center justify-between">
@@ -119,8 +163,10 @@ const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetry
           <div className="space-y-3">
             {/* Pickup */}
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <MapPin className="w-4 h-4 text-primary" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                showPickupPrompt ? "bg-green-500/30" : "bg-primary/20"
+              }`}>
+                <MapPin className={`w-4 h-4 ${showPickupPrompt ? "text-green-400" : "text-primary"}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-white/40 uppercase tracking-wide">Pickup</p>
@@ -133,8 +179,10 @@ const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetry
 
             {/* Dropoff */}
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Navigation className="w-4 h-4 text-green-400" />
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                showDropoffPrompt ? "bg-green-500/30" : "bg-green-500/20"
+              }`}>
+                <Navigation className={`w-4 h-4 ${showDropoffPrompt ? "text-green-300" : "text-green-400"}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-white/40 uppercase tracking-wide">Dropoff</p>
@@ -177,7 +225,7 @@ const ActiveTripCard = ({ trip, onUpdateStatus, isUpdating, updateError, onRetry
                 onClick={() => onUpdateStatus(trip.id, config.nextStatus)}
                 disabled={isUpdating}
                 className={`w-full h-14 text-lg font-bold ${
-                  config.nextStatus === "completed" 
+                  config.nextStatus === "completed" || showPickupPrompt || showDropoffPrompt
                     ? "bg-green-500 hover:bg-green-600" 
                     : "bg-primary hover:bg-primary/90"
                 }`}

@@ -8,6 +8,7 @@ import {
   updateTripStatusWithRetry,
   updateDriverStatusWithRetry,
 } from "@/lib/supabaseDriverOperations";
+import { isWithinArrivalThreshold } from "@/services/mapsApi";
 
 export type DriverAppStatus = "offline" | "online" | "busy";
 
@@ -161,10 +162,88 @@ export const useUpdateDriverLocation = () => {
   return { ...mutation, isSuspended };
 };
 
-// Hook for location tracking with GPS spoof detection
-export const useDriverLocationTracking = (driverId: string | undefined, isOnline: boolean) => {
+// Arrival detection threshold (0.10 miles = ~528 feet)
+const ARRIVAL_THRESHOLD_MILES = 0.10;
+
+export type ArrivalType = "pickup" | "dropoff";
+
+interface ArrivalState {
+  nearPickup: boolean;
+  nearDropoff: boolean;
+}
+
+// Hook for location tracking with GPS spoof detection and arrival detection
+export const useDriverLocationTracking = (
+  driverId: string | undefined, 
+  isOnline: boolean,
+  activeTrip?: TripRequest | null,
+  onArrivalDetected?: (type: ArrivalType) => void
+) => {
   const { mutate: updateLocation, isSuspended } = useUpdateDriverLocation();
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [arrivalState, setArrivalState] = useState<ArrivalState>({
+    nearPickup: false,
+    nearDropoff: false,
+  });
+  const arrivalNotifiedRef = useRef<{ pickup: boolean; dropoff: boolean }>({
+    pickup: false,
+    dropoff: false,
+  });
+
+  // Reset arrival notifications when trip changes
+  useEffect(() => {
+    arrivalNotifiedRef.current = { pickup: false, dropoff: false };
+    setArrivalState({ nearPickup: false, nearDropoff: false });
+  }, [activeTrip?.id]);
+
+  // Check proximity to pickup/dropoff
+  const checkArrivalProximity = useCallback((lat: number, lng: number) => {
+    if (!activeTrip) return;
+
+    const tripStatus = activeTrip.status;
+    
+    // Check proximity to pickup (before arrived status)
+    if (
+      (tripStatus === "accepted" || tripStatus === "en_route") &&
+      activeTrip.pickup_lat != null &&
+      activeTrip.pickup_lng != null
+    ) {
+      const nearPickup = isWithinArrivalThreshold(
+        lat, lng,
+        activeTrip.pickup_lat,
+        activeTrip.pickup_lng,
+        ARRIVAL_THRESHOLD_MILES
+      );
+
+      if (nearPickup && !arrivalNotifiedRef.current.pickup) {
+        console.log("[DriverLocation] Driver near pickup location");
+        arrivalNotifiedRef.current.pickup = true;
+        setArrivalState(prev => ({ ...prev, nearPickup: true }));
+        onArrivalDetected?.("pickup");
+      }
+    }
+
+    // Check proximity to dropoff (during in_progress)
+    if (
+      tripStatus === "in_progress" &&
+      activeTrip.dropoff_lat != null &&
+      activeTrip.dropoff_lng != null
+    ) {
+      const nearDropoff = isWithinArrivalThreshold(
+        lat, lng,
+        activeTrip.dropoff_lat,
+        activeTrip.dropoff_lng,
+        ARRIVAL_THRESHOLD_MILES
+      );
+
+      if (nearDropoff && !arrivalNotifiedRef.current.dropoff) {
+        console.log("[DriverLocation] Driver near dropoff location");
+        arrivalNotifiedRef.current.dropoff = true;
+        setArrivalState(prev => ({ ...prev, nearDropoff: true }));
+        onArrivalDetected?.("dropoff");
+      }
+    }
+  }, [activeTrip, onArrivalDetected]);
 
   // Simulated location for fallback
   const simulateLocation = useCallback((baseLat: number, baseLng: number) => {
@@ -174,7 +253,8 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
     const lng = baseLng + (Math.random() - 0.5) * 0.001;
     
     updateLocation({ driverId, lat, lng, heading: null, speed: null, accuracy: null });
-  }, [driverId, updateLocation]);
+    checkArrivalProximity(lat, lng);
+  }, [driverId, updateLocation, checkArrivalProximity]);
 
   useEffect(() => {
     if (!driverId || !isOnline || isSuspended) {
@@ -189,14 +269,20 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
     if (navigator.geolocation) {
       const id = navigator.geolocation.watchPosition(
         (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
           updateLocation({
             driverId,
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
+            lat,
+            lng,
             heading: position.coords.heading,
             speed: position.coords.speed,
             accuracy: position.coords.accuracy,
           });
+          
+          // Check arrival proximity
+          checkArrivalProximity(lat, lng);
         },
         (error) => {
           console.warn("Geolocation error, using simulation:", error);
@@ -226,9 +312,9 @@ export const useDriverLocationTracking = (driverId: string | undefined, isOnline
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [driverId, isOnline, isSuspended, updateLocation, simulateLocation, watchId]);
+  }, [driverId, isOnline, isSuspended, updateLocation, simulateLocation, checkArrivalProximity, watchId]);
 
-  return { isSuspended };
+  return { isSuspended, arrivalState };
 };
 
 // Hook to get available trip requests

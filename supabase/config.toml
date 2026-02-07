@@ -143,3 +143,12 @@ verify_jwt = false
 
 [functions.update-driver-location]
 verify_jwt = false
+
+[functions.maps-autocomplete]
+verify_jwt = false
+
+[functions.maps-place-details]
+verify_jwt = false
+
+[functions.maps-route]
+verify_jwt = false

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
 import RideAppBar from "@/components/ride/RideAppBar";
 import RideLocationCard from "@/components/ride/RideLocationCard";
 import RideSegmentTabs, { RideCategory } from "@/components/ride/RideSegmentTabs";
@@ -10,27 +10,77 @@ import RideStickyCTA from "@/components/ride/RideStickyCTA";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import { RideOption } from "@/components/ride/RideCard";
 import { rideOptions } from "@/components/ride/rideData";
+import { useServerRoute } from "@/hooks/useServerRoute";
 import { calculateMockTrip, type TripDetails } from "@/lib/tripCalculator";
 
 const CITY_BG = "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&h=1080&fit=crop";
+
+interface LocationCoords {
+  lat: number;
+  lng: number;
+}
 
 const RidePage = () => {
   const navigate = useNavigate();
   const [pickup, setPickup] = useState("109 Hickory Street, Denha…");
   const [destination, setDestination] = useState("");
+  const [pickupCoords, setPickupCoords] = useState<LocationCoords | undefined>();
+  const [dropoffCoords, setDropoffCoords] = useState<LocationCoords | undefined>();
   const [activeTab, setActiveTab] = useState<RideCategory>("economy");
   const [selectedRide, setSelectedRide] = useState<RideOption | null>(null);
   const [tripDetails, setTripDetails] = useState<TripDetails | null>(null);
+  const [routePolyline, setRoutePolyline] = useState<string | null>(null);
 
-  // Calculate trip details when both locations are filled
-  useEffect(() => {
-    if (pickup.trim() && destination.trim()) {
-      const trip = calculateMockTrip(pickup, destination);
-      setTripDetails(trip);
-    } else {
-      setTripDetails(null);
+  const { fetchRoute, isLoading: isRouteLoading } = useServerRoute();
+
+  // Handle pickup change with optional coordinates
+  const handlePickupChange = useCallback((value: string, coords?: LocationCoords) => {
+    setPickup(value);
+    if (coords) {
+      setPickupCoords(coords);
+    } else if (!value.trim()) {
+      setPickupCoords(undefined);
     }
-  }, [pickup, destination]);
+  }, []);
+
+  // Handle destination change with optional coordinates
+  const handleDestinationChange = useCallback((value: string, coords?: LocationCoords) => {
+    setDestination(value);
+    if (coords) {
+      setDropoffCoords(coords);
+    } else if (!value.trim()) {
+      setDropoffCoords(undefined);
+    }
+  }, []);
+
+  // Calculate route when both coordinates are available
+  useEffect(() => {
+    const calculateRoute = async () => {
+      if (pickupCoords && dropoffCoords) {
+        console.log("[RidePage] Calculating route with server API");
+        const route = await fetchRoute(pickupCoords, dropoffCoords, pickup, destination);
+        
+        if (route) {
+          setTripDetails({
+            distance: route.distance,
+            duration: route.duration,
+          });
+          setRoutePolyline(route.polyline);
+        }
+      } else if (pickup.trim() && destination.trim()) {
+        // Fallback to mock calculation if no coordinates
+        console.log("[RidePage] Using mock route calculation");
+        const trip = calculateMockTrip(pickup, destination);
+        setTripDetails(trip);
+        setRoutePolyline(null);
+      } else {
+        setTripDetails(null);
+        setRoutePolyline(null);
+      }
+    };
+
+    calculateRoute();
+  }, [pickupCoords, dropoffCoords, pickup, destination, fetchRoute]);
 
   const handleConfirm = () => {
     if (selectedRide) {
@@ -40,6 +90,9 @@ const RidePage = () => {
           pickup,
           destination,
           tripDetails,
+          pickupCoords,
+          dropoffCoords,
+          routePolyline,
         },
       });
     }
@@ -90,8 +143,10 @@ const RidePage = () => {
           <RideLocationCard
             pickup={pickup}
             destination={destination}
-            onPickupChange={setPickup}
-            onDestinationChange={setDestination}
+            onPickupChange={handlePickupChange}
+            onDestinationChange={handleDestinationChange}
+            pickupCoords={pickupCoords}
+            dropoffCoords={dropoffCoords}
           />
         </div>
 
@@ -125,17 +180,28 @@ const RidePage = () => {
           />
 
           {/* Trip Info Pill */}
-          {tripDetails && (
+          {(tripDetails || isRouteLoading) && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex justify-center mt-4"
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-full border border-white/10">
-                <MapPin className="w-3 h-3 text-primary" />
-                <span className="text-xs font-semibold tracking-wide text-white/80">
-                  {tripDetails.distance} miles • {tripDetails.duration} min estimated
-                </span>
+                {isRouteLoading ? (
+                  <>
+                    <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                    <span className="text-xs font-semibold tracking-wide text-white/80">
+                      Calculating route...
+                    </span>
+                  </>
+                ) : tripDetails ? (
+                  <>
+                    <MapPin className="w-3 h-3 text-primary" />
+                    <span className="text-xs font-semibold tracking-wide text-white/80">
+                      {tripDetails.distance} miles • {tripDetails.duration} min estimated
+                    </span>
+                  </>
+                ) : null}
               </div>
             </motion.div>
           )}
