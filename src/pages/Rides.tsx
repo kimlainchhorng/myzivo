@@ -50,7 +50,7 @@ interface RideOption {
 
 type CategoryKey = "Economy" | "Premium" | "Elite";
  
- // Premium categorized vehicle options
+ // Premium categorized vehicle options with clean 3D car images
  const rideCategories: Record<CategoryKey, RideOption[]> = {
    Economy: [
      {
@@ -59,8 +59,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Lowest price, longer wait.",
        price: "$18.50",
        time: "15 min",
+       eta: 15,
        icon: Clock,
-       image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
        multiplier: 0.75,
        seats: 4
      },
@@ -70,8 +71,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Reliable everyday rides.",
        price: "$24.50",
        time: "4 min",
+       eta: 4,
        icon: Navigation,
-       image: "https://images.unsplash.com/photo-1469285994282-454ceb49e63c?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367349/assets/d7/3d4b80-1a5f-4a8b-ac2b-bf6c0f048942/original/Uber_Pool.png",
        multiplier: 1.0,
        seats: 4
      },
@@ -81,8 +83,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "EVs & Hybrids.",
        price: "$25.00",
        time: "6 min",
+       eta: 6,
        icon: Leaf,
-       image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568070443/assets/82/6bf372-e1a3-424e-9834-c3fb1b13a0f5/original/Green.png",
        multiplier: 1.02,
        seats: 4
      },
@@ -92,8 +95,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Faster pickup.",
        price: "$32.00",
        time: "1 min",
+       eta: 1,
        icon: Zap,
-       image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367349/assets/d7/3d4b80-1a5f-4a8b-ac2b-bf6c0f048942/original/Uber_Pool.png",
        multiplier: 1.3,
        seats: 4
      }
@@ -105,8 +109,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Newer cars, more legroom.",
        price: "$38.00",
        time: "5 min",
+       eta: 5,
        icon: Star,
-       image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367538/assets/31/ad21b7-595c-42e8-ac53-53966b4a5fee/original/Comfort.png",
        multiplier: 1.55,
        seats: 4
      },
@@ -116,8 +121,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Premium leather sedans.",
        price: "$65.00",
        time: "8 min",
+       eta: 8,
        icon: Briefcase,
-       image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367310/assets/30/51e602-10bb-4e65-b122-e394ad1a9f5e/original/Black.png",
        multiplier: 2.65,
        seats: 4
      },
@@ -127,8 +133,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Luxury for 6.",
        price: "$85.00",
        time: "10 min",
+       eta: 10,
        icon: Shield,
-       image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367424/assets/7c/a22afb-c7e5-4a7a-8b00-4c3ffb51b3b0/original/Black-SUV.png",
        multiplier: 3.5,
        seats: 6
      },
@@ -138,8 +145,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Max luggage space.",
        price: "$90.00",
        time: "12 min",
+       eta: 12,
        icon: Anchor,
-       image: "https://images.unsplash.com/photo-1506015391300-4802dc74de2e?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
        multiplier: 3.7,
        seats: 6
      }
@@ -151,8 +159,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Rolls-Royce / Bentley.",
        price: "$250.00",
        time: "20 min",
+       eta: 20,
        icon: Crown,
-       image: "https://images.unsplash.com/photo-1553440637-d22ed8a02575?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1569012915/assets/4f/599c47-7f5c-4544-a5d2-926babc8e113/original/Lux.png",
        multiplier: 10.0,
        seats: 4
      },
@@ -162,8 +171,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Jet van for 12.",
        price: "$180.00",
        time: "45 min",
+       eta: 45,
        icon: Briefcase,
-       image: "https://images.unsplash.com/photo-1559416523-140ddc3d238c?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1568134115/assets/6d/354919-18b0-45d0-a151-501ab4c4b114/original/XL.png",
        multiplier: 7.3,
        seats: 12
      },
@@ -173,8 +183,9 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Armored transport.",
        price: "$500.00",
        time: "60 min",
+       eta: 60,
        icon: Shield,
-       image: "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367424/assets/7c/a22afb-c7e5-4a7a-8b00-4c3ffb51b3b0/original/Black-SUV.png",
        multiplier: 20.0,
        seats: 4
      },
@@ -184,12 +195,20 @@ type CategoryKey = "Economy" | "Premium" | "Elite";
        desc: "Luxury with pets.",
        price: "$75.00",
        time: "10 min",
+       eta: 10,
        icon: Dog,
-       image: "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&q=80&w=1000",
+       image: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1555367538/assets/31/ad21b7-595c-42e8-ac53-53966b4a5fee/original/Comfort.png",
        multiplier: 3.0,
        seats: 4
      }
    ]
+ };
+
+ // Helper to get pickup time string
+ const getPickupTime = (etaMinutes: number) => {
+   const now = new Date();
+   now.setMinutes(now.getMinutes() + etaMinutes);
+   return now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
  };
  
 // Real fare calculation using spec formula
@@ -656,59 +675,59 @@ export default function Rides() {
                    </div>
                  </div>
                 
-                 {/* Vehicle Grid - Premium 2x2 Layout - Compact for no-scroll mobile */}
+                 {/* Vehicle List - Uber-style horizontal cards */}
                  <motion.div 
                    layout
-                   className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-5 lg:grid-cols-4"
+                   className="space-y-2 md:space-y-3"
                  >
                    <AnimatePresence mode="popLayout">
-                     {rideCategories[activeTab].slice(0, 2).map((ride) => (
-                       <motion.div 
+                     {rideCategories[activeTab].map((ride) => (
+                       <motion.button 
                          key={ride.id}
                          layout
-                         initial={{ opacity: 0, scale: 0.9 }}
-                         animate={{ opacity: 1, scale: 1 }}
-                         exit={{ opacity: 0, scale: 0.9 }}
+                         initial={{ opacity: 0, y: 10 }}
+                         animate={{ opacity: 1, y: 0 }}
+                         exit={{ opacity: 0, y: -10 }}
                          onClick={() => setSelectedOption(ride)}
-                         className={`relative overflow-hidden rounded-xl md:rounded-3xl border cursor-pointer group transition-all duration-300 touch-manipulation active:scale-[0.98] ${
+                         className={`w-full flex items-center gap-3 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl border cursor-pointer transition-all duration-200 touch-manipulation active:scale-[0.98] ${
                            selectedOption?.id === ride.id 
-                             ? "bg-white/10 border-primary shadow-[0_0_40px_hsl(var(--primary)/0.25)] ring-2 ring-primary/50" 
-                             : "bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10"
+                             ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
+                             : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
                          }`}
                        >
-                         {/* Vehicle Image - Compact on mobile */}
-                         <div className="h-20 sm:h-28 md:h-36 overflow-hidden relative">
-                           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent z-10" />
+                         {/* Vehicle Image - Clean 3D render style */}
+                         <div className="w-16 h-12 md:w-24 md:h-16 rounded-lg bg-zinc-800/50 overflow-hidden flex-shrink-0 flex items-center justify-center">
                            <img 
                              src={ride.image} 
-                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                             className="w-full h-full object-contain" 
                              alt={ride.name} 
                            />
-                           
-                           {/* Price Badge - Top Right */}
-                           <div className="absolute top-2 right-2 md:top-3 md:right-3 z-20 bg-black/70 backdrop-blur-sm px-2 py-0.5 md:px-3 md:py-1.5 rounded-lg border border-white/20 font-bold text-xs md:text-base text-white">
-                             {getFareFixed(ride)}
-                           </div>
                          </div>
 
-                          {/* Details - Compact Layout */}
-                          <div className="p-2.5 md:p-4 relative z-20 bg-gradient-to-b from-zinc-900/50 to-zinc-900/90">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <Star className={`w-3 h-3 md:w-3.5 md:h-3.5 ${selectedOption?.id === ride.id ? "text-primary fill-primary" : "text-amber-400 fill-amber-400"}`} />
-                              <h3 className="text-xs md:text-base font-bold text-white truncate">{ride.name}</h3>
-                            </div>
-                            <p className="text-[10px] md:text-xs text-zinc-400 line-clamp-1 mb-1.5 md:mb-3">{ride.desc}</p>
-                            
-                            <div className="flex items-center justify-between border-t border-white/10 pt-1.5 md:pt-2.5">
-                              <span className="text-[10px] md:text-xs font-bold text-emerald-400 flex items-center gap-1">
-                                <Zap className="w-2.5 h-2.5 md:w-3 md:h-3" /> {ride.time}
-                              </span>
-                              {selectedOption?.id === ride.id && (
-                                <div className="w-2 h-2 md:w-2.5 md:h-2.5 bg-primary rounded-full animate-pulse" />
-                              )}
-                            </div>
-                          </div>
-                       </motion.div>
+                         {/* Middle - Info section */}
+                         <div className="flex-1 min-w-0 text-left">
+                           <div className="flex items-center gap-1.5 mb-0.5">
+                             <h3 className="text-sm md:text-base font-bold text-white">{ride.name}</h3>
+                             <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
+                               <Users className="w-3 h-3" />{ride.seats || 4}
+                             </span>
+                           </div>
+                           <p className="text-[10px] md:text-xs text-zinc-500 mb-0.5">
+                             {getPickupTime(ride.eta || 5)} · {ride.eta || 5} min
+                           </p>
+                           <p className="text-[10px] md:text-xs text-zinc-500 truncate">{ride.desc}</p>
+                         </div>
+
+                         {/* Right - Price */}
+                         <div className="flex items-center gap-1 flex-shrink-0">
+                           <span className="text-base md:text-lg font-bold text-white">
+                             {getFareFixed(ride)}
+                           </span>
+                           {selectedOption?.id === ride.id && (
+                             <div className="w-2 h-2 bg-primary rounded-full" />
+                           )}
+                         </div>
+                       </motion.button>
                      ))}
                    </AnimatePresence>
                  </motion.div>
@@ -763,24 +782,42 @@ export default function Rides() {
                  </div>
                </div>
               <h2 className="font-display font-bold text-xl md:text-2xl">Choose your ride</h2>
-              <div className="space-y-3 md:space-y-4">
+              <div className="space-y-2 md:space-y-3">
                  {rideCategories[activeTab].map((option) => (
-                 <button key={option.id} onClick={() => handleSelectOption(option)} className="w-full p-3 md:p-4 rounded-xl md:rounded-2xl rides-card-3d flex items-center gap-3 md:gap-4 text-left transition-all hover:border-primary/50 touch-manipulation active:scale-[0.98]">
-                   <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg md:rounded-xl overflow-hidden flex-shrink-0">
-                      <img src={option.image} alt={option.name} className="w-full h-full object-cover" />
-                    </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-base md:text-lg">{option.name}</h3>
-                        <span className="text-[10px] md:text-xs text-zinc-400 flex items-center gap-1"><Users className="w-3 h-3" />{option.seats || 4}</span>
-                       </div>
-                       <p className="text-xs md:text-sm text-zinc-400 truncate">{option.desc}</p>
-                      </div>
-                      <div className="text-right flex items-center gap-2">
-                       <p className="font-bold text-base md:text-lg text-emerald-400">{getFareFixed(option)}</p>
-                      <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
+                 <button 
+                   key={option.id} 
+                   onClick={() => handleSelectOption(option)} 
+                   className={`w-full flex items-center gap-3 md:gap-4 p-2.5 md:p-4 rounded-xl md:rounded-2xl border transition-all duration-200 touch-manipulation active:scale-[0.98] ${
+                     selectedOption?.id === option.id 
+                       ? "bg-zinc-800/80 border-primary shadow-lg ring-1 ring-primary/50" 
+                       : "bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
+                   }`}
+                 >
+                   {/* Vehicle Image */}
+                   <div className="w-16 h-12 md:w-20 md:h-14 rounded-lg bg-zinc-800/50 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                     <img src={option.image} alt={option.name} className="w-full h-full object-contain" />
+                   </div>
+                   
+                   {/* Info section */}
+                   <div className="flex-1 min-w-0 text-left">
+                     <div className="flex items-center gap-1.5">
+                       <h3 className="font-bold text-sm md:text-base text-white">{option.name}</h3>
+                       <span className="text-[10px] md:text-xs text-zinc-500 flex items-center gap-0.5">
+                         <Users className="w-3 h-3" />{option.seats || 4}
+                       </span>
                      </div>
-                   </button>
+                     <p className="text-[10px] md:text-xs text-zinc-500 mb-0.5">
+                       {getPickupTime(option.eta || 5)} · {option.eta || 5} min
+                     </p>
+                     <p className="text-[10px] md:text-xs text-zinc-500 truncate">{option.desc}</p>
+                   </div>
+                   
+                   {/* Price */}
+                   <div className="flex items-center gap-2 flex-shrink-0">
+                     <span className="font-bold text-base md:text-lg text-white">{getFareFixed(option)}</span>
+                     <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-zinc-500" />
+                   </div>
+                 </button>
                  ))}
                </div>
              </div>
