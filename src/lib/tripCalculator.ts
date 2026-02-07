@@ -77,15 +77,17 @@ export function calculateBasePrice(distance: number, duration: number): number {
 
 /**
  * Calculate price for a specific ride type
+ * @param surgeMultiplier - Optional surge pricing multiplier (default 1.0)
  */
 export function calculateRidePrice(
   rideId: string, 
   distance: number, 
-  duration: number
+  duration: number,
+  surgeMultiplier: number = 1.0
 ): number {
   const basePrice = calculateBasePrice(distance, duration);
-  const multiplier = RIDE_MULTIPLIERS[rideId] || 1.0;
-  return Math.round(basePrice * multiplier * 100) / 100;
+  const rideMultiplier = RIDE_MULTIPLIERS[rideId] || 1.0;
+  return Math.round(basePrice * rideMultiplier * surgeMultiplier * 100) / 100;
 }
 
 /**

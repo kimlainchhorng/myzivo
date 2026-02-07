@@ -12,9 +12,12 @@ interface RideGridProps {
   selectedRideId: string | null;
   onSelectRide: (ride: RideOption) => void;
   tripDetails: TripDetails | null;
+  surgeMultiplier?: number;
 }
 
-const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails }: RideGridProps) => {
+const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMultiplier = 1.0 }: RideGridProps) => {
+  const surgeActive = surgeMultiplier > 1.0;
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -24,7 +27,7 @@ const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails }: RideGrid
       <AnimatePresence mode="popLayout">
         {rides.map((ride, index) => {
           const calculatedPrice = tripDetails 
-            ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
+            ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
             : undefined;
           
           return (
@@ -40,6 +43,7 @@ const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails }: RideGrid
                 isSelected={selectedRideId === ride.id}
                 onSelect={() => onSelectRide(ride)}
                 calculatedPrice={calculatedPrice}
+                surgeActive={surgeActive}
               />
             </motion.div>
           );

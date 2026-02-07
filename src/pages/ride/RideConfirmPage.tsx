@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
@@ -21,6 +21,7 @@ interface LocationState {
   routeCoordinates?: [number, number][];
   pickupCoords?: { lat: number; lng: number };
   dropoffCoords?: { lat: number; lng: number };
+  surgeMultiplier?: number;
 }
 
 type PaymentMethod = "card" | "apple" | "cash";
@@ -66,11 +67,12 @@ const RideConfirmPage = () => {
     );
   }
 
-  const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords } = state;
+  const { ride, pickup, destination, tripDetails, routeCoordinates, pickupCoords, dropoffCoords, surgeMultiplier = 1.0 } = state;
+  const surgeActive = surgeMultiplier > 1.0;
 
-  // Calculate dynamic price
+  // Calculate dynamic price with surge
   const displayPrice = tripDetails
-    ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration)
+    ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
     : ride.price;
 
   const handleConfirm = async () => {
@@ -261,6 +263,16 @@ const RideConfirmPage = () => {
                   </span>
                 </div>
               </>
+            )}
+
+            {/* Surge Indicator */}
+            {surgeActive && (
+              <div className="flex items-center justify-center gap-2 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg mt-2">
+                <TrendingUp className="w-4 h-4 text-amber-500" />
+                <span className="text-sm text-amber-400">
+                  Prices are higher due to high demand ({surgeMultiplier}x)
+                </span>
+              </div>
             )}
 
             {/* Divider */}

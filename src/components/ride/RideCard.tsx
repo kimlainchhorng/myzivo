@@ -18,9 +18,10 @@ interface RideCardProps {
   isSelected: boolean;
   onSelect: () => void;
   calculatedPrice?: number;
+  surgeActive?: boolean;
 }
 
-const RideCard = ({ ride, isSelected, onSelect, calculatedPrice }: RideCardProps) => {
+const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive }: RideCardProps) => {
   const displayPrice = calculatedPrice ?? ride.price;
   
   return (
@@ -43,6 +44,13 @@ const RideCard = ({ ride, isSelected, onSelect, calculatedPrice }: RideCardProps
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        {/* Surge Badge */}
+        {surgeActive && (
+          <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm px-2 py-1 rounded-full">
+            <span className="text-[10px] font-bold text-white">High demand</span>
+          </div>
+        )}
         
         {/* Price Badge */}
         <div className="absolute top-2 right-2 bg-primary/90 backdrop-blur-sm px-2 py-1 rounded-full">
