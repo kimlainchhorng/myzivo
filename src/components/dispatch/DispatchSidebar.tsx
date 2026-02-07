@@ -20,6 +20,10 @@ import {
   Headphones,
   AlertTriangle,
   Package,
+  FileText,
+  AlertCircle,
+  Tag,
+  Gift,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -92,6 +96,30 @@ const navItems: NavItem[] = [
     path: "/dispatch/support",
     icon: Headphones,
     permission: "support.manage",
+  },
+  {
+    label: "Promotions",
+    path: "/dispatch/promotions",
+    icon: Tag,
+    permission: "promotions.manage",
+  },
+  {
+    label: "Referrals",
+    path: "/dispatch/referrals",
+    icon: Gift,
+    permission: "promotions.manage",
+  },
+  {
+    label: "Audit Log",
+    path: "/dispatch/audit",
+    icon: FileText,
+    permission: "audit.view",
+  },
+  {
+    label: "Alerts",
+    path: "/dispatch/alerts",
+    icon: AlertCircle,
+    permission: "alerts.manage",
   },
   {
     label: "Team",
