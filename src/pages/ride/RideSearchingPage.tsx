@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Car } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
+import ConnectionErrorBanner from "@/components/ride/ConnectionErrorBanner";
 import { cancelRideInDb } from "@/lib/supabaseRide";
 
 // Status messages with timing thresholds (based on progress %)
@@ -22,7 +23,7 @@ const RideSearchingPage = () => {
   const [progress, setProgress] = useState(0);
 
   // Subscribe to realtime updates if we have a tripId
-  const { isDemoMode, isRealtime } = useRideRealtime({
+  const { isDemoMode, isRealtime, connectionError, isReconnecting, reconnect } = useRideRealtime({
     tripId: state.tripId,
     enableMockFallback: false, // We handle mock in this component
   });
@@ -101,8 +102,19 @@ const RideSearchingPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-6">
-      {/* Demo Mode Banner */}
-      {isDemoMode && <DemoModeBanner />}
+      {/* Connection Error Banner */}
+      <AnimatePresence>
+        {connectionError && (
+          <ConnectionErrorBanner
+            error={connectionError}
+            onRetry={reconnect}
+            isRetrying={isReconnecting}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Demo Mode Banner (only show if no connection error) */}
+      {isDemoMode && !connectionError && <DemoModeBanner />}
       
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}

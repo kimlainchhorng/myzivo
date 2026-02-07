@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useRideStore } from "@/stores/rideStore";
@@ -7,6 +7,7 @@ import {
   subscribeToRide,
   fetchDriverInfo,
   RideUpdateCallbacks,
+  SupabaseErrorInfo,
 } from "@/lib/supabaseRide";
 import { RideStatus } from "@/types/rideTypes";
 
@@ -16,15 +17,30 @@ interface UseRideRealtimeOptions {
   mockDelayMs?: number;
 }
 
+interface UseRideRealtimeReturn {
+  isConnected: boolean;
+  isRealtime: boolean;
+  isDemoMode: boolean;
+  connectionError: SupabaseErrorInfo | null;
+  isReconnecting: boolean;
+  reconnect: () => void;
+}
+
 export const useRideRealtime = ({
   tripId,
   enableMockFallback = true,
   mockDelayMs = 5000,
-}: UseRideRealtimeOptions) => {
+}: UseRideRealtimeOptions): UseRideRealtimeReturn => {
   const navigate = useNavigate();
   const { state, assignDriver, setStatus } = useRideStore();
   const cleanupRef = useRef<(() => void) | null>(null);
   const mockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
+
+  // Connection state
+  const [connectionError, setConnectionError] = useState<SupabaseErrorInfo | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   const isConnected = isSupabaseConfigured();
   const isRealtime = isConnected && !!tripId;
@@ -73,6 +89,69 @@ export const useRideRealtime = ({
     [assignDriver]
   );
 
+  // Reconnection logic with exponential backoff
+  const reconnect = useCallback(async () => {
+    if (!tripId || isReconnecting) return;
+
+    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+      console.log("[Realtime] Max reconnection attempts reached");
+      setConnectionError({
+        type: "network",
+        message: "Max reconnection attempts",
+        userMessage: "Unable to reconnect. Tap to retry.",
+        isRetryable: true,
+      });
+      return;
+    }
+
+    setIsReconnecting(true);
+    reconnectAttemptsRef.current++;
+
+    // Exponential backoff
+    const delay = 1000 * Math.pow(2, reconnectAttemptsRef.current - 1);
+    console.log(`[Realtime] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+    
+    await new Promise((r) => setTimeout(r, delay));
+
+    // Cleanup previous subscription
+    if (cleanupRef.current) {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    }
+
+    // Create new subscription
+    const callbacks: RideUpdateCallbacks = {
+      onStatusChange: handleStatusChange,
+      onDriverAssigned: handleDriverAssigned,
+      onError: (error) => {
+        console.error("[Realtime] Subscription error:", error);
+        setConnectionError({
+          type: "network",
+          message: error.message,
+          userMessage: "Connection lost. Reconnecting...",
+          isRetryable: true,
+        });
+        // Try to reconnect automatically
+        reconnect();
+      },
+    };
+
+    cleanupRef.current = subscribeToRide(tripId, callbacks);
+    
+    // Clear error on successful reconnection
+    setConnectionError(null);
+    setIsReconnecting(false);
+    reconnectAttemptsRef.current = 0;
+    console.log("[Realtime] Reconnected successfully");
+  }, [tripId, isReconnecting, handleStatusChange, handleDriverAssigned]);
+
+  // Manual reset of reconnection attempts (for manual retry button)
+  const handleManualReconnect = useCallback(() => {
+    reconnectAttemptsRef.current = 0;
+    setConnectionError(null);
+    reconnect();
+  }, [reconnect]);
+
   // Subscribe to realtime updates
   useEffect(() => {
     if (!isRealtime) return;
@@ -84,11 +163,25 @@ export const useRideRealtime = ({
       onDriverAssigned: handleDriverAssigned,
       onError: (error) => {
         console.error("[Realtime] Error:", error);
-        toast.error("Connection error. Updates may be delayed.");
+        setConnectionError({
+          type: "network",
+          message: error.message,
+          userMessage: "Connection error. Updates may be delayed.",
+          isRetryable: true,
+        });
+        toast.error("Connection error", {
+          description: "Attempting to reconnect...",
+        });
+        // Attempt automatic reconnection
+        reconnect();
       },
     };
 
     cleanupRef.current = subscribeToRide(tripId, callbacks);
+
+    // Reset connection state on new subscription
+    setConnectionError(null);
+    reconnectAttemptsRef.current = 0;
 
     return () => {
       if (cleanupRef.current) {
@@ -97,7 +190,7 @@ export const useRideRealtime = ({
         cleanupRef.current = null;
       }
     };
-  }, [tripId, isRealtime, handleStatusChange, handleDriverAssigned]);
+  }, [tripId, isRealtime, handleStatusChange, handleDriverAssigned, reconnect]);
 
   // Mock fallback for demo mode (only on searching page)
   useEffect(() => {
@@ -123,6 +216,9 @@ export const useRideRealtime = ({
     isConnected,
     isRealtime,
     isDemoMode: !isConnected,
+    connectionError,
+    isReconnecting,
+    reconnect: handleManualReconnect,
   };
 };
 
