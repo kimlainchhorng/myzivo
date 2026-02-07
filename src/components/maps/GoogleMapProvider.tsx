@@ -2,12 +2,13 @@
  * GoogleMapProvider
  * 
  * Central Google Maps context provider that loads the Maps JavaScript API
- * and provides it to child components.
+ * and provides it to child components. Fetches API key from edge function.
  */
 
 /// <reference types="@types/google.maps" />
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 declare global {
   interface Window {
@@ -18,11 +19,13 @@ declare global {
 interface GoogleMapsContextType {
   isLoaded: boolean;
   loadError: string | null;
+  apiKey: string | null;
 }
 
 const GoogleMapsContext = createContext<GoogleMapsContextType>({
   isLoaded: false,
   loadError: null,
+  apiKey: null,
 });
 
 export const useGoogleMaps = () => useContext(GoogleMapsContext);
@@ -34,10 +37,12 @@ interface GoogleMapProviderProps {
 
 // Store the loading promise to prevent multiple loads
 let loadingPromise: Promise<void> | null = null;
+let cachedApiKey: string | null = null;
 
-export function GoogleMapProvider({ children, apiKey }: GoogleMapProviderProps) {
+export function GoogleMapProvider({ children, apiKey: propApiKey }: GoogleMapProviderProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(propApiKey || cachedApiKey);
 
   useEffect(() => {
     // Check if already loaded
@@ -47,8 +52,24 @@ export function GoogleMapProvider({ children, apiKey }: GoogleMapProviderProps) 
     }
 
     const loadGoogleMaps = async () => {
-      // Get API key from props or environment
-      const key = apiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      // Get API key from props, cache, environment, or edge function
+      let key = propApiKey || cachedApiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+      
+      // If no key yet, try to fetch from edge function
+      if (!key) {
+        try {
+          const { data, error } = await supabase.functions.invoke("maps-api-key");
+          if (error) {
+            console.error("[GoogleMapProvider] Edge function error:", error);
+          } else if (data?.ok && data?.apiKey) {
+            key = data.apiKey;
+            cachedApiKey = key;
+            setApiKey(key);
+          }
+        } catch (e) {
+          console.error("[GoogleMapProvider] Failed to fetch API key:", e);
+        }
+      }
       
       if (!key) {
         setLoadError("Google Maps API key not configured");
@@ -97,10 +118,10 @@ export function GoogleMapProvider({ children, apiKey }: GoogleMapProviderProps) 
     };
 
     loadGoogleMaps();
-  }, [apiKey]);
+  }, [propApiKey]);
 
   return (
-    <GoogleMapsContext.Provider value={{ isLoaded, loadError }}>
+    <GoogleMapsContext.Provider value={{ isLoaded, loadError, apiKey }}>
       {children}
     </GoogleMapsContext.Provider>
   );

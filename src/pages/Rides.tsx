@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
 import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
-import { hasGoogleMapsKey } from "@/services/googleMaps";
+
 import { useGoogleMapsRoute } from "@/hooks/useGoogleMapsRoute";
 import { useGoogleMapsGeocode } from "@/hooks/useGoogleMapsGeocode";
 import RideEmbeddedCheckout from "@/components/ride/RideEmbeddedCheckout";
@@ -158,14 +158,11 @@ function RidesMapView({
     color: "#1a1a1a",
   } : undefined;
 
-  // Check if API key exists
-  const hasApiKey = hasGoogleMapsKey();
+  // Show loading state while Maps is loading
+  const showLoading = !isLoaded && !loadError;
   
-  // Show loading state while Maps is loading (only if we have an API key)
-  const showLoading = hasApiKey && !isLoaded && !loadError;
-  
-  // Show fallback if no API key or if there's an error
-  const showFallback = !hasApiKey || loadError;
+  // Show fallback only if there's an actual error
+  const showFallback = !!loadError;
 
   return (
     <div className="relative w-full h-full bg-[#e5e3df]">
