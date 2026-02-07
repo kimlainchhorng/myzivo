@@ -1,9 +1,9 @@
 
-# Multi-Zone Dispatch + Surge + Driver Priority Queue Implementation Plan
+# Scheduled Orders + Batching + Route Optimization Implementation Plan
 
 ## Overview
 
-Scale dispatch operations with geographic zones, dynamic surge pricing based on supply/demand, and a fairness-based driver priority queue for auto-assignment. This builds on top of the existing `regions` infrastructure while adding zone-specific surge rules and intelligent driver scoring.
+Upgrade ZIVO to support logistics mode with scheduled orders, multi-stop batch deliveries, route optimization, and enhanced driver/customer experiences. This builds on existing `delivery_batches`, `batch_stops`, and `order_events` infrastructure.
 
 ---
 
@@ -11,214 +11,547 @@ Scale dispatch operations with geographic zones, dynamic surge pricing based on 
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| `regions` table | Exists | Has city, state, timezone, is_active, etc. |
-| `region_settings` table | Exists | Has `surge_enabled`, `max_surge_multiplier`, `dispatch_mode` |
-| `drivers.region_id` | Exists | Already links drivers to regions |
-| `food_orders.region_id` | Exists | Already links orders to regions |
-| `trips.region_id` | Exists | Already links trips to regions |
-| `restaurants.region_id` | Missing | Needs to be added |
-| `ride_zones` / `eats_zones` | Exists | Zone-based pricing but separate from dispatch regions |
-| `useSurgePricing` hook | Exists | Basic surge based on global driver count |
-| `useRegions` hook | Exists | Full CRUD for regions |
-| `auto-dispatch` edge function | Exists | Finds nearest driver globally, no zone filtering |
-| Dispatch sidebar | Missing zones | No zone/surge/queue management pages |
+| `delivery_batches` table | Exists | Has id, driver_id, status, total_distance_km, total_earnings, region_id |
+| `batch_stops` table | Exists | Has id, batch_id, food_order_id, trip_id, stop_order, stop_type, address, lat, lng, status, arrived_at, completed_at |
+| `order_events` table | Exists | Has id, order_id, trip_id, actor_id, type, data, created_at |
+| `food_orders` table | Exists | Comprehensive columns but missing scheduling fields |
+| `AdminDeliveryManagement.tsx` | Exists | Basic batch listing but no batch builder UI |
+| Driver batch workflow | Missing | No driver batch page |
+| Route optimization | Missing | No optimization logic |
+| Customer batch tracking | Missing | No multi-stop awareness |
 
 ---
 
 ## Architecture
 
 ```text
-                    ┌───────────────────────────────────────────┐
-                    │           Order Created                   │
-                    │    (pickup location provided)             │
-                    └──────────────────┬────────────────────────┘
-                                       │
-                                       ▼
-                    ┌───────────────────────────────────────────┐
-                    │     Determine zone_id from:              │
-                    │     1. Restaurant's region_id            │
-                    │     2. Nearest region by coordinates     │
-                    └──────────────────┬────────────────────────┘
-                                       │
-              ┌────────────────────────┴────────────────────────┐
-              ▼                                                 ▼
-┌──────────────────────────────┐              ┌─────────────────────────────────┐
-│   Surge Calculation          │              │   Auto-Dispatch v2              │
-│   get_zone_surge_multiplier  │              │   score_and_assign_driver       │
-│                              │              │                                 │
-│ • Count recent orders        │              │ Score factors:                  │
-│ • Count online drivers       │              │ • Distance to pickup            │
-│ • Apply surge rule thresholds│              │ • Driver rating                 │
-│ • Return multiplier          │              │ • Last assigned (fairness)      │
-└──────────────────┬───────────┘              │ • Online freshness              │
-                   │                          └───────────────┬─────────────────┘
-                   ▼                                          │
-┌──────────────────────────────┐                              ▼
-│   Pricing Calculation        │              ┌─────────────────────────────────┐
-│   Apply surge to subtotal    │              │   Update Driver Queue           │
-│   Store surge_multiplier     │              │   Track last_assigned_at        │
-│   on order                   │              │   Maintain fairness metrics     │
-└──────────────────────────────┘              └─────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    Customer Places Scheduled Order                       │
+│            (pickup window / deliver-by time specified)                   │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      food_orders (enhanced)                              │
+│                                                                          │
+│  New fields: is_scheduled, pickup_window_start/end, deliver_by,         │
+│  batch_id, stop_sequence, eta_pickup, eta_dropoff                        │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+            ┌────────────────────┴────────────────────┐
+            ▼                                         ▼
+┌──────────────────────────────┐      ┌───────────────────────────────────┐
+│   Manual Batch Creation      │      │   Auto-Batch Builder              │
+│   Dispatch selects orders    │      │   Groups by zone, time, merchant  │
+│   /dispatch/batches/new      │      │   auto_build_batches RPC          │
+└───────────────┬──────────────┘      └──────────────┬────────────────────┘
+                │                                     │
+                └──────────────────┬──────────────────┘
+                                   ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     delivery_batches (enhanced)                          │
+│                                                                          │
+│  New fields: planned_start, planned_end, total_duration_minutes, notes  │
+│  Status: draft → assigned → in_progress → completed                      │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         batch_stops (enhanced)                           │
+│                                                                          │
+│  New fields: kind (pickup/dropoff), eta, actual_time                     │
+│  Each order creates 2 stops: pickup from restaurant + dropoff to customer│
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      Route Optimization                                  │
+│                                                                          │
+│  v1: Nearest-neighbor heuristic (Haversine distance)                    │
+│  v2: Mapbox Optimization API / Google Directions (if configured)        │
+└────────────────────────────────┬────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Driver Batch View                                 │
+│                      /driver/batch                                       │
+│                                                                          │
+│  Shows ordered stops, navigation, status updates                        │
+│  Actions: Arrived, Picked Up, Delivered                                  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Database Changes
 
-### 1. Add `region_id` to `restaurants` Table
-
-```sql
-ALTER TABLE restaurants
-  ADD COLUMN IF NOT EXISTS region_id UUID REFERENCES regions(id);
-
-CREATE INDEX IF NOT EXISTS idx_restaurants_region ON restaurants(region_id);
-```
-
-### 2. Add Geographic Coordinates to `regions` Table
-
-```sql
-ALTER TABLE regions
-  ADD COLUMN IF NOT EXISTS center_lat NUMERIC,
-  ADD COLUMN IF NOT EXISTS center_lng NUMERIC,
-  ADD COLUMN IF NOT EXISTS polygon JSONB,
-  ADD COLUMN IF NOT EXISTS bbox JSONB;
-```
-
-### 3. Create `surge_rules` Table
-
-```sql
-CREATE TABLE public.surge_rules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
-  name TEXT NOT NULL DEFAULT 'Default Surge Rule',
-  is_active BOOLEAN DEFAULT true,
-  min_pending_orders INT DEFAULT 5,
-  max_online_drivers INT DEFAULT 3,
-  surge_multiplier NUMERIC DEFAULT 1.25,
-  max_multiplier NUMERIC DEFAULT 2.0,
-  starts_at TIME,
-  ends_at TIME,
-  day_of_week INT[],
-  priority INT DEFAULT 0,
-  CONSTRAINT valid_multiplier CHECK (surge_multiplier >= 1.0 AND surge_multiplier <= 5.0)
-);
-
-CREATE INDEX idx_surge_rules_region ON surge_rules(region_id, is_active);
-```
-
-### 4. Create `surge_overrides` Table (Manual Admin Override)
-
-```sql
-CREATE TABLE public.surge_overrides (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
-  forced_multiplier NUMERIC NOT NULL,
-  reason TEXT,
-  created_by UUID REFERENCES auth.users(id),
-  expires_at TIMESTAMPTZ,
-  is_active BOOLEAN DEFAULT true,
-  CONSTRAINT unique_active_override UNIQUE (region_id, is_active)
-);
-
-CREATE INDEX idx_surge_overrides_region ON surge_overrides(region_id, is_active);
-```
-
-### 5. Create `driver_queue` Table
-
-```sql
-CREATE TABLE public.driver_queue (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  region_id UUID NOT NULL REFERENCES regions(id) ON DELETE CASCADE,
-  driver_id UUID NOT NULL REFERENCES drivers(id) ON DELETE CASCADE,
-  score NUMERIC DEFAULT 0,
-  last_assigned_at TIMESTAMPTZ,
-  total_assigned_today INT DEFAULT 0,
-  is_active BOOLEAN DEFAULT true,
-  CONSTRAINT unique_driver_per_region UNIQUE (region_id, driver_id)
-);
-
-CREATE INDEX idx_driver_queue_region ON driver_queue(region_id, is_active, score DESC);
-CREATE INDEX idx_driver_queue_driver ON driver_queue(driver_id);
-```
-
-### 6. Add Surge Columns to Order Tables
+### 1. Add Scheduling Fields to `food_orders`
 
 ```sql
 ALTER TABLE food_orders
-  ADD COLUMN IF NOT EXISTS surge_multiplier NUMERIC DEFAULT 1,
-  ADD COLUMN IF NOT EXISTS surged_subtotal NUMERIC DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS is_scheduled BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS pickup_window_start TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS pickup_window_end TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS deliver_by TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS batch_id UUID REFERENCES delivery_batches(id),
+  ADD COLUMN IF NOT EXISTS stop_sequence INT,
+  ADD COLUMN IF NOT EXISTS eta_pickup TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS eta_dropoff TIMESTAMPTZ;
 
-ALTER TABLE trips
-  ADD COLUMN IF NOT EXISTS surge_multiplier NUMERIC DEFAULT 1,
-  ADD COLUMN IF NOT EXISTS surged_fare NUMERIC DEFAULT 0;
+CREATE INDEX IF NOT EXISTS idx_food_orders_batch ON food_orders(batch_id) WHERE batch_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_food_orders_scheduled ON food_orders(is_scheduled, deliver_by) WHERE is_scheduled = true;
 ```
 
-### 7. RLS Policies
+### 2. Enhance `delivery_batches` Table
 
 ```sql
--- surge_rules (admin only write)
-ALTER TABLE surge_rules ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can read surge rules" ON surge_rules FOR SELECT USING (true);
-CREATE POLICY "Admin can manage surge rules" ON surge_rules FOR ALL
-  USING (public.is_admin(auth.uid()));
+ALTER TABLE delivery_batches
+  ADD COLUMN IF NOT EXISTS planned_start TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS planned_end TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS total_duration_minutes NUMERIC DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS total_stops INT DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS optimization_source TEXT DEFAULT 'manual';
+```
 
--- surge_overrides (admin only)
-ALTER TABLE surge_overrides ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admin can manage surge overrides" ON surge_overrides FOR ALL
-  USING (public.is_admin(auth.uid()));
+### 3. Enhance `batch_stops` Table
 
--- driver_queue (admin write, drivers read own)
-ALTER TABLE driver_queue ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admin can manage driver queue" ON driver_queue FOR ALL
-  USING (public.is_admin(auth.uid()));
-CREATE POLICY "Drivers can read own queue entry" ON driver_queue FOR SELECT
+```sql
+ALTER TABLE batch_stops
+  ADD COLUMN IF NOT EXISTS kind TEXT DEFAULT 'dropoff',
+  ADD COLUMN IF NOT EXISTS eta TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS actual_time TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS customer_name TEXT,
+  ADD COLUMN IF NOT EXISTS customer_phone TEXT;
+
+-- Add constraint for kind
+ALTER TABLE batch_stops ADD CONSTRAINT valid_stop_kind 
+  CHECK (kind IN ('pickup', 'dropoff'));
+
+-- Unique constraint per order and kind in a batch
+CREATE UNIQUE INDEX IF NOT EXISTS idx_batch_stops_unique 
+  ON batch_stops(batch_id, food_order_id, kind) 
+  WHERE food_order_id IS NOT NULL;
+```
+
+### 4. RLS Policies for Batch Tables
+
+```sql
+-- delivery_batches
+ALTER TABLE delivery_batches ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admin can manage batches" ON delivery_batches;
+CREATE POLICY "Admin can manage batches" ON delivery_batches
+  FOR ALL TO authenticated USING (public.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Drivers can read assigned batches" ON delivery_batches;
+CREATE POLICY "Drivers can read assigned batches" ON delivery_batches
+  FOR SELECT TO authenticated
   USING (driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid()));
+
+DROP POLICY IF EXISTS "Drivers can update assigned batches" ON delivery_batches;
+CREATE POLICY "Drivers can update assigned batches" ON delivery_batches
+  FOR UPDATE TO authenticated
+  USING (driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid()));
+
+-- batch_stops
+ALTER TABLE batch_stops ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Admin can manage batch stops" ON batch_stops;
+CREATE POLICY "Admin can manage batch stops" ON batch_stops
+  FOR ALL TO authenticated USING (public.is_admin(auth.uid()));
+
+DROP POLICY IF EXISTS "Drivers can read assigned batch stops" ON batch_stops;
+CREATE POLICY "Drivers can read assigned batch stops" ON batch_stops
+  FOR SELECT TO authenticated
+  USING (batch_id IN (
+    SELECT id FROM delivery_batches 
+    WHERE driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid())
+  ));
+
+DROP POLICY IF EXISTS "Drivers can update assigned batch stops" ON batch_stops;
+CREATE POLICY "Drivers can update assigned batch stops" ON batch_stops
+  FOR UPDATE TO authenticated
+  USING (batch_id IN (
+    SELECT id FROM delivery_batches 
+    WHERE driver_id IN (SELECT id FROM drivers WHERE user_id = auth.uid())
+  ));
 ```
 
 ---
 
 ## Database Functions (RPCs)
 
-### 1. `get_zone_surge_multiplier(p_region_id uuid)`
+### 1. `create_batch_from_orders`
 
-Computes the current surge multiplier for a region:
-- Count pending/active orders in last 30 minutes
-- Count online drivers with recent activity (2 min)
-- Check if override exists (return override first)
-- Evaluate surge_rules against thresholds
-- Return highest applicable multiplier
+Creates a batch and generates pickup + dropoff stops for each order.
 
-### 2. `score_driver_for_assignment(p_driver_id uuid, p_pickup_lat numeric, p_pickup_lng numeric)`
+```sql
+CREATE OR REPLACE FUNCTION create_batch_from_orders(
+  p_order_ids UUID[],
+  p_region_id UUID DEFAULT NULL,
+  p_notes TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+  v_batch_id UUID;
+  v_order RECORD;
+  v_sequence INT := 1;
+BEGIN
+  -- Create the batch
+  INSERT INTO delivery_batches (region_id, status, notes)
+  VALUES (p_region_id, 'draft', p_notes)
+  RETURNING id INTO v_batch_id;
 
-Calculates driver priority score:
-- Distance score: 40 points max (closer = higher)
-- Rating score: 25 points max (higher rating = higher)
-- Fairness score: 25 points max (longer wait = higher)
-- Freshness score: 10 points max (recent ping = higher)
-- Returns composite score (0-100)
+  -- Add stops for each order
+  FOR v_order IN
+    SELECT fo.*, r.name as restaurant_name, r.address as restaurant_address, 
+           r.lat as restaurant_lat, r.lng as restaurant_lng
+    FROM food_orders fo
+    LEFT JOIN restaurants r ON r.id = fo.restaurant_id
+    WHERE fo.id = ANY(p_order_ids)
+    ORDER BY fo.deliver_by NULLS LAST, fo.created_at
+  LOOP
+    -- Pickup stop
+    INSERT INTO batch_stops (batch_id, food_order_id, stop_order, stop_type, kind, 
+                             address, lat, lng, status)
+    VALUES (v_batch_id, v_order.id, v_sequence, 'pickup', 'pickup',
+            v_order.restaurant_address, v_order.restaurant_lat, v_order.restaurant_lng, 'pending');
+    v_sequence := v_sequence + 1;
 
-### 3. `auto_assign_order_v2(p_order_id uuid, p_service_type text)`
+    -- Dropoff stop
+    INSERT INTO batch_stops (batch_id, food_order_id, stop_order, stop_type, kind,
+                             address, lat, lng, status, customer_name, customer_phone)
+    VALUES (v_batch_id, v_order.id, v_sequence, 'dropoff', 'dropoff',
+            v_order.delivery_address, v_order.delivery_lat, v_order.delivery_lng, 'pending',
+            v_order.customer_name, v_order.customer_phone);
+    v_sequence := v_sequence + 1;
 
-Enhanced auto-dispatch:
-- Get order's region_id and pickup coordinates
-- Find eligible drivers (same region, online, verified, recent activity)
-- Score all drivers using `score_driver_for_assignment`
-- Assign to highest scorer with atomic update
-- Update `driver_queue.last_assigned_at`
-- Log assignment event
-- Return assigned driver info
+    -- Update order with batch reference
+    UPDATE food_orders SET batch_id = v_batch_id, updated_at = now() WHERE id = v_order.id;
+  END LOOP;
 
-### 4. `update_driver_queue_on_assignment()` (Trigger)
+  -- Update batch stop count
+  UPDATE delivery_batches SET total_stops = v_sequence - 1 WHERE id = v_batch_id;
 
-Trigger on order assignment:
-- Updates `driver_queue.last_assigned_at`
-- Increments `total_assigned_today`
-- Resets counter at midnight
+  RETURN v_batch_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
+
+### 2. `optimize_batch_route`
+
+Optimizes stop order using nearest-neighbor heuristic.
+
+```sql
+CREATE OR REPLACE FUNCTION optimize_batch_route(
+  p_batch_id UUID,
+  p_start_lat NUMERIC DEFAULT NULL,
+  p_start_lng NUMERIC DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_stops RECORD[];
+  v_current_lat NUMERIC;
+  v_current_lng NUMERIC;
+  v_optimized_sequence INT := 1;
+  v_total_distance NUMERIC := 0;
+  v_closest_idx INT;
+  v_closest_dist NUMERIC;
+  v_dist NUMERIC;
+  v_stop RECORD;
+  v_remaining RECORD[];
+BEGIN
+  -- Get driver location if not provided
+  IF p_start_lat IS NULL THEN
+    SELECT d.current_lat, d.current_lng INTO p_start_lat, p_start_lng
+    FROM delivery_batches b
+    JOIN drivers d ON d.id = b.driver_id
+    WHERE b.id = p_batch_id;
+  END IF;
+
+  v_current_lat := COALESCE(p_start_lat, 29.7604); -- Default Houston
+  v_current_lng := COALESCE(p_start_lng, -95.3698);
+
+  -- Get all stops as array
+  SELECT ARRAY_AGG(bs.*) INTO v_remaining
+  FROM batch_stops bs
+  WHERE bs.batch_id = p_batch_id AND bs.status = 'pending';
+
+  -- Nearest neighbor algorithm
+  WHILE array_length(v_remaining, 1) > 0 LOOP
+    v_closest_idx := 1;
+    v_closest_dist := 99999;
+
+    FOR i IN 1..array_length(v_remaining, 1) LOOP
+      v_dist := haversine_miles(v_current_lat, v_current_lng, 
+                                v_remaining[i].lat, v_remaining[i].lng);
+      IF v_dist < v_closest_dist THEN
+        v_closest_dist := v_dist;
+        v_closest_idx := i;
+      END IF;
+    END LOOP;
+
+    v_stop := v_remaining[v_closest_idx];
+    v_total_distance := v_total_distance + v_closest_dist;
+
+    -- Update stop sequence
+    UPDATE batch_stops SET stop_order = v_optimized_sequence WHERE id = v_stop.id;
+    v_optimized_sequence := v_optimized_sequence + 1;
+
+    -- Move to this location
+    v_current_lat := v_stop.lat;
+    v_current_lng := v_stop.lng;
+
+    -- Remove from remaining
+    v_remaining := array_remove(v_remaining, v_stop);
+  END LOOP;
+
+  -- Update batch totals (estimate 2 min per mile + 5 min per stop)
+  UPDATE delivery_batches SET
+    total_distance_km = v_total_distance * 1.60934,
+    total_duration_minutes = (v_total_distance * 2) + (v_optimized_sequence * 5),
+    optimization_source = 'haversine'
+  WHERE id = p_batch_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'total_distance_miles', v_total_distance,
+    'estimated_duration_minutes', (v_total_distance * 2) + (v_optimized_sequence * 5)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
+
+### 3. `assign_batch_to_driver`
+
+Assigns a batch to a driver and notifies them.
+
+```sql
+CREATE OR REPLACE FUNCTION assign_batch_to_driver(
+  p_batch_id UUID,
+  p_driver_id UUID
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_batch RECORD;
+  v_order_ids UUID[];
+BEGIN
+  -- Validate batch is in draft status
+  SELECT * INTO v_batch FROM delivery_batches WHERE id = p_batch_id;
+  IF v_batch IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Batch not found');
+  END IF;
+  IF v_batch.status != 'draft' THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Batch already assigned');
+  END IF;
+
+  -- Assign driver to batch
+  UPDATE delivery_batches SET
+    driver_id = p_driver_id,
+    status = 'assigned',
+    started_at = now()
+  WHERE id = p_batch_id;
+
+  -- Update all orders in batch
+  UPDATE food_orders SET
+    driver_id = p_driver_id,
+    status = 'confirmed',
+    assigned_at = now(),
+    updated_at = now()
+  WHERE batch_id = p_batch_id;
+
+  -- Get order IDs for event logging
+  SELECT ARRAY_AGG(food_order_id) INTO v_order_ids
+  FROM batch_stops WHERE batch_id = p_batch_id AND food_order_id IS NOT NULL;
+
+  -- Log events
+  INSERT INTO order_events (order_id, type, data)
+  SELECT id, 'status_change', jsonb_build_object('status', 'confirmed', 'reason', 'batch_assigned', 'batch_id', p_batch_id)
+  FROM food_orders WHERE batch_id = p_batch_id;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'batch_id', p_batch_id,
+    'driver_id', p_driver_id,
+    'order_count', array_length(v_order_ids, 1)
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
+
+### 4. `update_batch_stop_status`
+
+Driver updates individual stop status.
+
+```sql
+CREATE OR REPLACE FUNCTION update_batch_stop_status(
+  p_stop_id UUID,
+  p_status TEXT,
+  p_driver_id UUID
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_stop RECORD;
+  v_batch RECORD;
+  v_order_status TEXT;
+  v_all_complete BOOLEAN;
+BEGIN
+  -- Validate stop and driver assignment
+  SELECT bs.*, db.driver_id as batch_driver_id, bs.food_order_id
+  INTO v_stop
+  FROM batch_stops bs
+  JOIN delivery_batches db ON db.id = bs.batch_id
+  WHERE bs.id = p_stop_id;
+
+  IF v_stop IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Stop not found');
+  END IF;
+  IF v_stop.batch_driver_id != p_driver_id THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Not authorized');
+  END IF;
+
+  -- Update stop
+  UPDATE batch_stops SET
+    status = p_status,
+    arrived_at = CASE WHEN p_status = 'arrived' THEN now() ELSE arrived_at END,
+    completed_at = CASE WHEN p_status = 'completed' THEN now() ELSE completed_at END,
+    actual_time = CASE WHEN p_status = 'completed' THEN now() ELSE actual_time END
+  WHERE id = p_stop_id;
+
+  -- Update order status based on stop type
+  IF v_stop.food_order_id IS NOT NULL THEN
+    IF v_stop.kind = 'pickup' AND p_status = 'completed' THEN
+      v_order_status := 'in_progress';
+    ELSIF v_stop.kind = 'dropoff' AND p_status = 'completed' THEN
+      v_order_status := 'completed';
+    END IF;
+
+    IF v_order_status IS NOT NULL THEN
+      UPDATE food_orders SET
+        status = v_order_status,
+        picked_up_at = CASE WHEN v_order_status = 'in_progress' THEN now() ELSE picked_up_at END,
+        delivered_at = CASE WHEN v_order_status = 'completed' THEN now() ELSE delivered_at END,
+        updated_at = now()
+      WHERE id = v_stop.food_order_id;
+
+      INSERT INTO order_events (order_id, type, data)
+      VALUES (v_stop.food_order_id, 'status_change', 
+              jsonb_build_object('status', v_order_status, 'reason', 'batch_stop_' || p_status));
+    END IF;
+  END IF;
+
+  -- Check if all stops complete -> complete batch
+  SELECT NOT EXISTS (
+    SELECT 1 FROM batch_stops WHERE batch_id = v_stop.batch_id AND status != 'completed'
+  ) INTO v_all_complete;
+
+  IF v_all_complete THEN
+    UPDATE delivery_batches SET status = 'completed', completed_at = now()
+    WHERE id = v_stop.batch_id;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'stop_id', p_stop_id,
+    'status', p_status,
+    'batch_completed', v_all_complete
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
+
+### 5. `auto_build_batches`
+
+Auto-groups eligible orders into batches.
+
+```sql
+CREATE OR REPLACE FUNCTION auto_build_batches(
+  p_region_id UUID,
+  p_window_minutes INT DEFAULT 60,
+  p_max_stops INT DEFAULT 8,
+  p_max_distance_miles NUMERIC DEFAULT 5
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_batches_created INT := 0;
+  v_orders_batched INT := 0;
+  v_order RECORD;
+  v_batch_id UUID;
+  v_current_orders UUID[];
+  v_current_center_lat NUMERIC;
+  v_current_center_lng NUMERIC;
+  v_dist NUMERIC;
+BEGIN
+  -- Find eligible scheduled orders
+  FOR v_order IN
+    SELECT fo.*, r.lat as restaurant_lat, r.lng as restaurant_lng
+    FROM food_orders fo
+    LEFT JOIN restaurants r ON r.id = fo.restaurant_id
+    WHERE fo.region_id = p_region_id
+      AND fo.batch_id IS NULL
+      AND fo.driver_id IS NULL
+      AND fo.status IN ('pending', 'confirmed')
+      AND (fo.deliver_by IS NULL OR fo.deliver_by > now())
+      AND (fo.deliver_by IS NULL OR fo.deliver_by < now() + (p_window_minutes || ' minutes')::INTERVAL)
+    ORDER BY fo.deliver_by NULLS LAST, fo.created_at
+  LOOP
+    -- Start new batch if needed
+    IF v_batch_id IS NULL OR array_length(v_current_orders, 1) >= p_max_stops / 2 THEN
+      -- Finalize previous batch
+      IF v_batch_id IS NOT NULL THEN
+        PERFORM optimize_batch_route(v_batch_id);
+        v_batches_created := v_batches_created + 1;
+      END IF;
+
+      -- Create new batch
+      v_batch_id := NULL;
+      v_current_orders := ARRAY[v_order.id];
+      v_current_center_lat := v_order.restaurant_lat;
+      v_current_center_lng := v_order.restaurant_lng;
+
+      SELECT create_batch_from_orders(v_current_orders, p_region_id) INTO v_batch_id;
+    ELSE
+      -- Check distance from current center
+      v_dist := haversine_miles(v_current_center_lat, v_current_center_lng,
+                                v_order.restaurant_lat, v_order.restaurant_lng);
+
+      IF v_dist <= p_max_distance_miles THEN
+        -- Add to current batch
+        v_current_orders := array_append(v_current_orders, v_order.id);
+
+        INSERT INTO batch_stops (batch_id, food_order_id, stop_order, stop_type, kind,
+                                 address, lat, lng, status)
+        VALUES (v_batch_id, v_order.id, (SELECT MAX(stop_order) + 1 FROM batch_stops WHERE batch_id = v_batch_id),
+                'pickup', 'pickup', v_order.restaurant_address, v_order.restaurant_lat, v_order.restaurant_lng, 'pending');
+
+        INSERT INTO batch_stops (batch_id, food_order_id, stop_order, stop_type, kind,
+                                 address, lat, lng, status, customer_name, customer_phone)
+        VALUES (v_batch_id, v_order.id, (SELECT MAX(stop_order) + 1 FROM batch_stops WHERE batch_id = v_batch_id),
+                'dropoff', 'dropoff', v_order.delivery_address, v_order.delivery_lat, v_order.delivery_lng, 'pending',
+                v_order.customer_name, v_order.customer_phone);
+
+        UPDATE food_orders SET batch_id = v_batch_id WHERE id = v_order.id;
+      END IF;
+    END IF;
+
+    v_orders_batched := v_orders_batched + 1;
+  END LOOP;
+
+  -- Finalize last batch
+  IF v_batch_id IS NOT NULL THEN
+    PERFORM optimize_batch_route(v_batch_id);
+    v_batches_created := v_batches_created + 1;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'batches_created', v_batches_created,
+    'orders_batched', v_orders_batched
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
+```
 
 ---
 
@@ -226,308 +559,146 @@ Trigger on order assignment:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/hooks/useZoneDispatch.ts` | Create | Zone-aware dispatch hooks |
-| `src/hooks/useZoneSurge.ts` | Create | Per-zone surge hooks with real-time |
-| `src/hooks/useDriverQueue.ts` | Create | Driver queue management hooks |
-| `src/pages/dispatch/DispatchZones.tsx` | Create | Zone list + management |
-| `src/pages/dispatch/DispatchZoneDetail.tsx` | Create | Zone detail with drivers/merchants |
-| `src/pages/dispatch/DispatchSurge.tsx` | Create | Surge rules + overrides management |
-| `src/pages/dispatch/DispatchQueue.tsx` | Create | Live driver queue visualization |
-| `src/components/dispatch/ZoneSurgeCard.tsx` | Create | Real-time surge indicator per zone |
-| `src/components/dispatch/DriverQueueList.tsx` | Create | Ranked driver list component |
-| `src/components/dispatch/ZoneMap.tsx` | Create | Map with zone boundaries (if mapbox available) |
-| `supabase/functions/auto-dispatch-v2/index.ts` | Create | Enhanced dispatch with scoring |
-| `src/components/dispatch/DispatchSidebar.tsx` | Modify | Add Zones, Surge, Queue nav items |
-| `src/App.tsx` | Modify | Add new dispatch routes |
-| Database migration | Create | All tables, functions, triggers, RLS |
+| `src/hooks/useBatches.ts` | Create | Batch CRUD + optimization hooks |
+| `src/hooks/useDriverBatch.ts` | Create | Driver batch management hooks |
+| `src/pages/dispatch/DispatchBatches.tsx` | Create | Batches list with filters |
+| `src/pages/dispatch/DispatchBatchNew.tsx` | Create | Batch builder UI |
+| `src/pages/dispatch/DispatchBatchDetail.tsx` | Create | Batch detail + optimize + assign |
+| `src/pages/driver/DriverBatchPage.tsx` | Create | Driver batch view with stops |
+| `src/components/batch/BatchStopsList.tsx` | Create | Draggable stops list |
+| `src/components/batch/BatchRouteMap.tsx` | Create | Map showing route |
+| `src/components/batch/BatchOrderSelector.tsx` | Create | Order selection for batch |
+| `src/components/dispatch/DispatchSidebar.tsx` | Modify | Add Batches nav item |
+| `src/hooks/useOrderTracking.ts` | Modify | Handle batched orders |
+| `src/App.tsx` | Modify | Add batch routes |
+| Database migration | Create | All columns, RPCs, RLS |
 
 ---
 
 ## Component Specifications
 
-### DispatchZones Page
+### DispatchBatches Page (List)
 
-**Route:** `/dispatch/zones`
+**Route:** `/dispatch/batches`
 
 **Features:**
-- List all regions with status badges
-- Show online drivers count per zone
-- Show pending orders count per zone
-- Current surge multiplier badge
-- Quick actions: Enable/Disable zone
-- Create new zone button
+- Filter tabs: All | Draft | Assigned | In Progress | Completed
+- Search by batch ID, driver name
+- Sort by created_at (newest first)
+- Status badges with colors
+- Driver assignment indicator
+- Stop count, distance, duration display
 
 **Layout:**
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│  Zones                                     [+ Create Zone]   │
+│  Batches                               [+ Create Batch]      │
+├──────────────────────────────────────────────────────────────┤
+│  [All] [Draft 5] [Assigned 3] [In Progress 2] [Completed]   │
 ├──────────────────────────────────────────────────────────────┤
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ Houston - Downtown              🟢 Active              │  │
-│  │ Drivers: 12 online • Orders: 5 pending • Surge: 1.0x  │  │
+│  │ Batch #abc123             🟡 Draft                     │  │
+│  │ 4 orders • 8 stops • ~12 miles • ~45 min              │  │
+│  │ [Optimize] [Assign Driver]                    [→]      │  │
 │  └────────────────────────────────────────────────────────┘  │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ Houston - Galleria              🟢 Active              │  │
-│  │ Drivers: 4 online • Orders: 8 pending • Surge: 1.5x   │  │
+│  │ Batch #def456             🔵 Assigned                  │  │
+│  │ 3 orders • 6 stops • ~8 miles • ~30 min               │  │
+│  │ Driver: John T.                               [→]      │  │
 │  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### DispatchZoneDetail Page
+### DispatchBatchNew Page (Builder)
 
-**Route:** `/dispatch/zones/:id`
+**Route:** `/dispatch/batches/new`
 
 **Sections:**
-1. **Zone Info Card** - Name, city, center coordinates, edit button
-2. **Statistics Cards** - Online drivers, pending orders, current surge, avg wait time
-3. **Merchants Table** - Restaurants assigned to this zone
-4. **Drivers Table** - Drivers in this zone (online/offline status)
-5. **Map** (optional) - Show zone boundary, driver pins, order pins
 
-### DispatchSurge Page
+1. **Zone Selection** - Choose region to filter orders
+2. **Order Selector** - Table of unbatched orders with:
+   - Checkbox selection
+   - Filters: scheduled only, pickup time range, merchant
+   - Sort by deliver_by time
+3. **Selected Orders Summary** - Shows selected count, estimated distance
+4. **Auto-Group Button** - Suggests groupings by merchant + time window
+5. **Create Batch Button** - Creates batch from selection
 
-**Route:** `/dispatch/surge`
+### DispatchBatchDetail Page
+
+**Route:** `/dispatch/batches/:id`
+
+**Sections:**
+
+1. **Header** - Batch ID, status badge, driver (if assigned)
+2. **Stats Cards** - Total stops, distance, estimated duration, orders
+3. **Route Map** - Map showing all stops in sequence with route line
+4. **Stops List** - Draggable list with:
+   - Sequence number
+   - Stop type icon (pickup/dropoff)
+   - Address
+   - Order info
+   - ETA
+5. **Actions Panel:**
+   - Optimize Route button
+   - Assign Driver dropdown + button
+   - Start Batch button (sets status to in_progress)
+   - Cancel Batch button
+
+### DriverBatchPage
+
+**Route:** `/driver/batch`
 
 **Features:**
-- Real-time surge multiplier cards per zone
-- Surge rules table with CRUD
-- Manual override section
-- Historical surge chart (last 24 hours)
+- Shows current assigned batch
+- Ordered stop list with:
+  - Sequence number
+  - Pickup/Dropoff icon
+  - Address with "Open in Maps" link
+  - Customer info (for dropoffs)
+  - Status badge
+- Action buttons per stop:
+  - "Arrived" - marks arrived_at
+  - "Picked Up" / "Delivered" - completes stop
+- Progress bar showing completed stops
+- Auto-complete batch when all stops done
 
 **Layout:**
 ```text
 ┌──────────────────────────────────────────────────────────────┐
-│  Surge Management                                            │
+│  Active Batch                    4/8 stops completed         │
+│  ████████░░░░░░░░                                            │
 ├──────────────────────────────────────────────────────────────┤
-│  CURRENT MULTIPLIERS                                         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐        │
-│  │Downtown  │ │ Galleria │ │ Midtown  │ │ Heights  │        │
-│  │  1.0x    │ │  1.5x ⚡ │ │  1.25x   │ │  1.0x    │        │
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘        │
-├──────────────────────────────────────────────────────────────┤
-│  SURGE RULES                              [+ Add Rule]       │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ Peak Hours (5-8pm) • 1.25x • Active                    │  │
-│  │ High Demand • 1.5x when orders > 10 & drivers < 5     │  │
+│  │ 5. 📍 Dropoff                              ● Next      │  │
+│  │ 123 Main St, Houston TX                                │  │
+│  │ Customer: Sarah J. • 555-1234                          │  │
+│  │ [Navigate 🗺️]        [Arrived] [Delivered]             │  │
 │  └────────────────────────────────────────────────────────┘  │
-├──────────────────────────────────────────────────────────────┤
-│  MANUAL OVERRIDE                                             │
-│  Zone: [Select ▼]  Multiplier: [1.5]  [Apply Override]      │
-└──────────────────────────────────────────────────────────────┘
-```
-
-### DispatchQueue Page
-
-**Route:** `/dispatch/queue`
-
-**Features:**
-- Select zone dropdown
-- Live ranked driver list with scores
-- Score breakdown (distance, rating, fairness)
-- Last assigned time
-- Current order status
-- "Rebuild Queue" button
-- Feature flag toggle for v2 dispatch
-
-**Layout:**
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  Driver Queue                      Zone: [Downtown ▼]        │
-│                                    [🔄 Rebuild] [v2 ✓]       │
-├──────────────────────────────────────────────────────────────┤
-│  Rank │ Driver        │ Score │ Rating │ Last Assigned      │
-│  ─────┼───────────────┼───────┼────────┼────────────────────│
-│  1    │ Maria G.      │ 87    │ 4.9 ⭐ │ 45 min ago         │
-│  2    │ John T.       │ 82    │ 4.8 ⭐ │ 30 min ago         │
-│  3    │ Alex P.       │ 75    │ 4.7 ⭐ │ 15 min ago         │
-│  4    │ Sarah M.      │ 68    │ 4.6 ⭐ │ 5 min ago          │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │ 6. 🏪 Pickup                               ○ Upcoming  │  │
+│  │ Bella Pizza, 456 Oak Ave                               │  │
+│  │ [Navigate 🗺️]                                          │  │
+│  └────────────────────────────────────────────────────────┘  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Edge Function: `auto-dispatch-v2`
+## Customer Tracking Updates
 
-Enhanced version of auto-dispatch with zone filtering and scoring:
-
-```typescript
-// Pseudocode
-async function autoDispatchV2(orderId: string, serviceType: 'eats' | 'rides') {
-  // 1. Get order with region_id and pickup coordinates
-  const order = await getOrder(orderId);
-  
-  // 2. Find eligible drivers in same region
-  const drivers = await getEligibleDrivers({
-    regionId: order.region_id,
-    isOnline: true,
-    lastActiveWithin: '2 minutes',
-    hasCoordinates: true
-  });
-  
-  // 3. Score each driver
-  const scoredDrivers = drivers.map(driver => ({
-    ...driver,
-    score: calculateScore(driver, order)
-  })).sort((a, b) => b.score - a.score);
-  
-  // 4. Assign to highest scorer (atomic)
-  const assigned = await assignDriver(orderId, scoredDrivers[0].id);
-  
-  // 5. Update driver queue
-  await updateDriverQueue(scoredDrivers[0].id, order.region_id);
-  
-  // 6. Send notification
-  await notifyDriver(scoredDrivers[0].id, order);
-  
-  return assigned;
-}
-```
-
----
-
-## Surge Calculation Logic
-
-```sql
-CREATE OR REPLACE FUNCTION get_zone_surge_multiplier(p_region_id UUID)
-RETURNS NUMERIC AS $$
-DECLARE
-  v_override NUMERIC;
-  v_pending_orders INT;
-  v_online_drivers INT;
-  v_rule RECORD;
-  v_multiplier NUMERIC := 1.0;
-  v_current_time TIME := CURRENT_TIME;
-  v_current_dow INT := EXTRACT(DOW FROM CURRENT_DATE);
-BEGIN
-  -- Check for active override first
-  SELECT forced_multiplier INTO v_override
-  FROM surge_overrides
-  WHERE region_id = p_region_id
-    AND is_active = true
-    AND (expires_at IS NULL OR expires_at > now());
-    
-  IF v_override IS NOT NULL THEN
-    RETURN v_override;
-  END IF;
-  
-  -- Count pending orders in last 30 minutes
-  SELECT COUNT(*) INTO v_pending_orders
-  FROM food_orders
-  WHERE region_id = p_region_id
-    AND status IN ('pending', 'confirmed', 'ready_for_pickup')
-    AND created_at > now() - INTERVAL '30 minutes';
-  
-  -- Count online drivers with recent activity
-  SELECT COUNT(*) INTO v_online_drivers
-  FROM drivers
-  WHERE region_id = p_region_id
-    AND is_online = true
-    AND last_active_at > now() - INTERVAL '2 minutes';
-  
-  -- Evaluate surge rules
-  FOR v_rule IN
-    SELECT * FROM surge_rules
-    WHERE region_id = p_region_id
-      AND is_active = true
-      AND (starts_at IS NULL OR v_current_time >= starts_at)
-      AND (ends_at IS NULL OR v_current_time <= ends_at)
-      AND (day_of_week IS NULL OR v_current_dow = ANY(day_of_week))
-    ORDER BY priority DESC
-  LOOP
-    IF v_pending_orders >= v_rule.min_pending_orders 
-       AND v_online_drivers <= v_rule.max_online_drivers THEN
-      v_multiplier := GREATEST(v_multiplier, v_rule.surge_multiplier);
-    END IF;
-  END LOOP;
-  
-  RETURN v_multiplier;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
----
-
-## Driver Scoring Algorithm
-
-```sql
-CREATE OR REPLACE FUNCTION score_driver_for_assignment(
-  p_driver_id UUID,
-  p_pickup_lat NUMERIC,
-  p_pickup_lng NUMERIC
-)
-RETURNS NUMERIC AS $$
-DECLARE
-  v_driver RECORD;
-  v_queue RECORD;
-  v_distance_km NUMERIC;
-  v_distance_score NUMERIC;
-  v_rating_score NUMERIC;
-  v_fairness_score NUMERIC;
-  v_freshness_score NUMERIC;
-  v_total_score NUMERIC;
-BEGIN
-  -- Get driver info
-  SELECT * INTO v_driver FROM drivers WHERE id = p_driver_id;
-  SELECT * INTO v_queue FROM driver_queue WHERE driver_id = p_driver_id;
-  
-  -- Distance score (40 points max, 0 at 10km+)
-  v_distance_km := haversine_miles(
-    p_pickup_lat, p_pickup_lng, 
-    v_driver.current_lat, v_driver.current_lng
-  ) * 1.60934; -- Convert to km
-  v_distance_score := GREATEST(0, 40 - (v_distance_km * 4));
-  
-  -- Rating score (25 points max)
-  v_rating_score := COALESCE(v_driver.rating, 4.0) * 5;
-  
-  -- Fairness score (25 points, more time since last assignment = higher)
-  v_fairness_score := LEAST(25, 
-    EXTRACT(EPOCH FROM (now() - COALESCE(v_queue.last_assigned_at, now() - INTERVAL '1 hour'))) / 144
-  );
-  
-  -- Freshness score (10 points, recent ping = higher)
-  v_freshness_score := CASE
-    WHEN v_driver.last_active_at > now() - INTERVAL '30 seconds' THEN 10
-    WHEN v_driver.last_active_at > now() - INTERVAL '1 minute' THEN 7
-    WHEN v_driver.last_active_at > now() - INTERVAL '2 minutes' THEN 4
-    ELSE 0
-  END;
-  
-  v_total_score := v_distance_score + v_rating_score + v_fairness_score + v_freshness_score;
-  
-  RETURN ROUND(v_total_score, 2);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-```
-
----
-
-## Real-time Subscriptions
+Modify `useOrderTracking.ts` to handle batched orders:
 
 ```typescript
-// Zone surge updates (poll every 30 seconds via RPC)
-const { data: multipliers } = useQuery({
-  queryKey: ['zone-surge', regionIds],
-  queryFn: () => Promise.all(regionIds.map(id => 
-    supabase.rpc('get_zone_surge_multiplier', { p_region_id: id })
-  )),
-  refetchInterval: 30000
-});
+// In OrderDetails interface, add:
+batch_id: string | null;
+batch_stop_sequence: number | null;
+batch_total_stops: number | null;
 
-// Driver queue changes
-supabase
-  .channel('driver-queue')
-  .on('postgres_changes', { event: '*', table: 'driver_queue' }, 
-    handleQueueChange)
-  .subscribe();
-
-// Zone driver online/offline
-supabase
-  .channel('zone-drivers')
-  .on('postgres_changes', { event: 'UPDATE', table: 'drivers', 
-    filter: `region_id=eq.${selectedZoneId}` }, 
-    handleDriverChange)
-  .subscribe();
+// In tracking UI:
+// If order.batch_id exists, show:
+// "Your driver has multiple deliveries. You are stop X of Y."
+// Display eta_dropoff as the ETA
 ```
 
 ---
@@ -538,69 +709,72 @@ Add to `DispatchSidebar.tsx`:
 
 ```typescript
 {
-  label: "Zones",
-  path: "/dispatch/zones",
-  icon: MapPin,
-},
-{
-  label: "Surge",
-  path: "/dispatch/surge",
-  icon: TrendingUp,
-},
-{
-  label: "Queue",
-  path: "/dispatch/queue",
-  icon: Users,
+  label: "Batches",
+  path: "/dispatch/batches",
+  icon: Package,
 },
 ```
 
-Position after "Drivers" section.
+Position after "Orders" in the navigation.
 
 ---
 
 ## Implementation Order
 
-1. **Database migration** - Add tables, columns, functions, indexes
-2. **useZoneDispatch hook** - Zone-aware data fetching
-3. **useZoneSurge hook** - Surge multiplier hooks
-4. **useDriverQueue hook** - Queue management hooks
-5. **ZoneSurgeCard component** - Real-time surge display
-6. **DispatchZones page** - Zone list
-7. **DispatchZoneDetail page** - Zone management
-8. **DispatchSurge page** - Surge rules UI
-9. **DriverQueueList component** - Ranked driver list
-10. **DispatchQueue page** - Queue visualization
-11. **auto-dispatch-v2 edge function** - Enhanced dispatch
-12. **Update sidebar + routes** - Navigation
-13. **Integration testing** - End-to-end verification
+1. **Database migration** - Add columns to food_orders, delivery_batches, batch_stops + RPCs + RLS
+2. **useBatches hook** - CRUD operations for batches
+3. **BatchStopsList component** - Draggable stop list with reordering
+4. **BatchOrderSelector component** - Order selection UI
+5. **DispatchBatches page** - Batch list
+6. **DispatchBatchNew page** - Batch builder
+7. **DispatchBatchDetail page** - Batch management
+8. **useDriverBatch hook** - Driver batch operations
+9. **DriverBatchPage** - Driver batch view
+10. **Update DispatchSidebar** - Add Batches nav
+11. **Update App.tsx** - Add routes
+12. **Update useOrderTracking** - Batch awareness
+13. **BatchRouteMap component** - Map visualization (if mapbox available)
 
 ---
 
-## Feature Flags
+## Route Optimization Options
 
-Add to `region_settings.config` or create `dispatch_settings` table:
+### v1 (Default - No External API)
+- Uses nearest-neighbor heuristic with Haversine distance
+- Implemented in `optimize_batch_route` RPC
+- Estimates: 2 min/mile + 5 min/stop
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `use_v2_dispatch` | `false` | Enable zone-aware scoring dispatch |
-| `surge_enabled` | `true` | Enable dynamic surge pricing |
-| `queue_fairness_enabled` | `true` | Include fairness in scoring |
-| `auto_zone_detection` | `true` | Auto-assign zone from coordinates |
+### v2 (With Mapbox - Future)
+- Call Mapbox Optimization API
+- Pass coordinates of all stops
+- Receive optimized sequence + durations
+- Store results in batch_stops
+
+```typescript
+// Edge function: optimize-batch-route
+const optimizeWithMapbox = async (stops: BatchStop[]) => {
+  const coords = stops.map(s => `${s.lng},${s.lat}`).join(';');
+  const response = await fetch(
+    `https://api.mapbox.com/optimized-trips/v1/mapbox/driving/${coords}?access_token=${MAPBOX_TOKEN}`
+  );
+  // Parse response and update stop sequence
+};
+```
 
 ---
 
 ## Testing Checklist
 
-- [ ] Restaurants can be assigned to zones
-- [ ] Drivers appear in correct zone when online
-- [ ] Orders are assigned to zone based on restaurant
-- [ ] Surge multiplier calculates correctly
-- [ ] Manual override supersedes rules
-- [ ] Override expires correctly
-- [ ] Driver scoring produces expected rankings
-- [ ] V2 dispatch assigns highest scorer
-- [ ] Fairness score increases over time
-- [ ] Queue updates in real-time
-- [ ] Zone statistics are accurate
+- [ ] Create batch from selected orders
+- [ ] Stops are generated correctly (pickup + dropoff per order)
+- [ ] Optimize route reorders stops
+- [ ] Assign driver to batch
+- [ ] Orders in batch update with driver_id
+- [ ] Driver sees batch in /driver/batch
+- [ ] Driver can mark stops as arrived/completed
+- [ ] Order status updates when stop completed
+- [ ] Batch auto-completes when all stops done
+- [ ] Customer tracking shows batch info
+- [ ] Auto-build batches groups correctly
 - [ ] RLS blocks unauthorized access
-- [ ] Notifications fire on surge changes
+- [ ] Real-time updates work for batch changes
