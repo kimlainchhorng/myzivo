@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import RideCard, { RideOption } from "./RideCard";
 import { calculateRidePrice } from "@/lib/tripCalculator";
+import { SurgeLevel } from "@/lib/surge";
 
 export interface TripDetails {
   distance: number;
@@ -13,9 +14,10 @@ interface RideGridProps {
   onSelectRide: (ride: RideOption) => void;
   tripDetails: TripDetails | null;
   surgeMultiplier?: number;
+  surgeLevel?: SurgeLevel;
 }
 
-const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMultiplier = 1.0 }: RideGridProps) => {
+const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMultiplier = 1.0, surgeLevel }: RideGridProps) => {
   const surgeActive = surgeMultiplier > 1.0;
   
   return (
@@ -44,6 +46,8 @@ const RideGrid = ({ rides, selectedRideId, onSelectRide, tripDetails, surgeMulti
                 onSelect={() => onSelectRide(ride)}
                 calculatedPrice={calculatedPrice}
                 surgeActive={surgeActive}
+                surgeMultiplier={surgeMultiplier}
+                surgeLevel={surgeLevel}
               />
             </motion.div>
           );

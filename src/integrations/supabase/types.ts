@@ -2594,6 +2594,112 @@ export type Database = {
           },
         ]
       }
+      cart_items: {
+        Row: {
+          cart_id: string
+          created_at: string | null
+          id: string
+          line_total_cents: number
+          modifiers: Json | null
+          name: string
+          quantity: number
+          square_item_id: string
+          square_variation_id: string
+          unit_price_cents: number
+          variation_name: string | null
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string | null
+          id?: string
+          line_total_cents: number
+          modifiers?: Json | null
+          name: string
+          quantity?: number
+          square_item_id: string
+          square_variation_id: string
+          unit_price_cents: number
+          variation_name?: string | null
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string | null
+          id?: string
+          line_total_cents?: number
+          modifiers?: Json | null
+          name?: string
+          quantity?: number
+          square_item_id?: string
+          square_variation_id?: string
+          unit_price_cents?: number
+          variation_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carts: {
+        Row: {
+          created_at: string | null
+          id: string
+          restaurant_id: string
+          session_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          restaurant_id: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          restaurant_id?: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "carts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "carts_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_messages: {
         Row: {
           created_at: string

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SurgeLevel } from "@/lib/surge";
 
 export interface RideOption {
   id: string;
@@ -19,9 +20,11 @@ interface RideCardProps {
   onSelect: () => void;
   calculatedPrice?: number;
   surgeActive?: boolean;
+  surgeMultiplier?: number;
+  surgeLevel?: SurgeLevel;
 }
 
-const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive }: RideCardProps) => {
+const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive, surgeMultiplier, surgeLevel }: RideCardProps) => {
   const displayPrice = calculatedPrice ?? ride.price;
   
   return (
@@ -45,10 +48,15 @@ const RideCard = ({ ride, isSelected, onSelect, calculatedPrice, surgeActive }: 
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         
-        {/* Surge Badge */}
-        {surgeActive && (
-          <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm px-2 py-1 rounded-full">
-            <span className="text-[10px] font-bold text-white">High demand</span>
+        {/* Surge Badge - Shows level and multiplier */}
+        {surgeActive && surgeLevel && surgeLevel !== "Low" && (
+          <div className={cn(
+            "absolute top-2 left-2 backdrop-blur-sm px-2 py-1 rounded-full",
+            surgeLevel === "High" ? "bg-amber-500/90" : "bg-yellow-500/80"
+          )}>
+            <span className="text-[10px] font-bold text-white">
+              {surgeLevel} demand{surgeMultiplier && surgeMultiplier > 1 ? ` • ${surgeMultiplier}x` : ""}
+            </span>
           </div>
         )}
         
