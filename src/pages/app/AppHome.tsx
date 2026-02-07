@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package, Clock
+  MapPin, Bell, Zap, LucideIcon, ChevronRight, Package, Clock, CreditCard
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -287,20 +287,35 @@ const AppHome = () => {
         </div>
 
         {/* Quick Actions Row */}
-        <motion.button
-          onClick={() => navigate("/rides/history")}
-          whileTap={{ scale: 0.97 }}
-          className="w-full bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
-        >
-          <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
-            <Clock className="w-4 h-4 text-primary" />
-          </div>
-          <div className="text-left">
-            <div className="text-sm font-semibold">Past Trips</div>
-            <div className="text-[10px] text-zinc-400">View ride history</div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-zinc-400 ml-auto" />
-        </motion.button>
+        <div className="grid grid-cols-2 gap-2">
+          <motion.button
+            onClick={() => navigate("/rides/history")}
+            whileTap={{ scale: 0.97 }}
+            className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
+          >
+            <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-4 h-4 text-primary" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-semibold">Past Trips</div>
+              <div className="text-[10px] text-zinc-400">Ride history</div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            onClick={() => navigate("/payment-methods")}
+            whileTap={{ scale: 0.97 }}
+            className="bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
+          >
+            <div className="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-semibold">Payment</div>
+              <div className="text-[10px] text-zinc-400">Manage cards</div>
+            </div>
+          </motion.button>
+        </div>
       </div>
 
       {/* 5. BOTTOM NAVIGATION */}

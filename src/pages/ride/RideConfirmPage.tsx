@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
@@ -9,6 +9,7 @@ import { TripDetails, calculateRidePrice } from "@/lib/tripCalculator";
 import { useRideStore } from "@/stores/rideStore";
 import { createRideInDb, SupabaseErrorInfo, categorizeError } from "@/lib/supabaseRide";
 import { toast } from "sonner";
+import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
 
 interface LocationState {
   ride: RideOption;
@@ -22,8 +23,8 @@ interface LocationState {
 
 type PaymentMethod = "card" | "apple" | "cash";
 
-const paymentMethods: { id: PaymentMethod; label: string; icon: typeof CreditCard; sublabel: string }[] = [
-  { id: "card", label: "Credit/Debit Card", icon: CreditCard, sublabel: "Visa •••• 4242" },
+// Fallback payment methods when no saved cards
+const fallbackPaymentMethods: { id: PaymentMethod; label: string; icon: typeof CreditCard; sublabel: string }[] = [
   { id: "apple", label: "Apple Pay", icon: Wallet, sublabel: "Fastest checkout" },
   { id: "cash", label: "Cash", icon: Banknote, sublabel: "Pay driver directly" },
 ];
@@ -36,8 +37,12 @@ const RideConfirmPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<SupabaseErrorInfo | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const { getDefault, methods } = useLocalPaymentMethods();
+  const defaultCard = getDefault();
 
-  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>("card");
+  const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(
+    defaultCard ? "card" : "apple"
+  );
 
   // Handle missing state
   if (!state?.ride) {
@@ -245,9 +250,50 @@ const RideConfirmPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h3 className="text-sm font-semibold mb-3">Payment Method</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold">Payment Method</h3>
+            <Link 
+              to="/payment-methods" 
+              className="text-xs text-primary hover:underline flex items-center gap-1"
+            >
+              Manage <ChevronRight className="w-3 h-3" />
+            </Link>
+          </div>
           <div className="space-y-2">
-            {paymentMethods.map((method) => {
+            {/* Saved Card (if exists) */}
+            {defaultCard && (
+              <button
+                onClick={() => setSelectedPayment("card")}
+                className={cn(
+                  "w-full flex items-center gap-3 p-3 rounded-xl border transition-all",
+                  selectedPayment === "card"
+                    ? "border-primary bg-primary/10"
+                    : "border-white/10 bg-white/5 hover:border-white/20"
+                )}
+              >
+                <div className={cn(
+                  "p-2 rounded-lg",
+                  selectedPayment === "card" ? "bg-primary/20" : "bg-white/10"
+                )}>
+                  <CreditCard className={cn(
+                    "w-5 h-5",
+                    selectedPayment === "card" ? "text-primary" : "text-white/60"
+                  )} />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="text-sm font-medium">{defaultCard.brand} •••• {defaultCard.last4}</p>
+                  <p className="text-xs text-white/50">Default card</p>
+                </div>
+                {selectedPayment === "card" && (
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+              </button>
+            )}
+
+            {/* Fallback payment options */}
+            {fallbackPaymentMethods.map((method) => {
               const Icon = method.icon;
               const isSelected = selectedPayment === method.id;
 
@@ -283,6 +329,20 @@ const RideConfirmPage = () => {
                 </button>
               );
             })}
+
+            {/* Add Card prompt if no saved cards */}
+            {!defaultCard && (
+              <Link
+                to="/payment-methods"
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-dashed border-white/20 text-zinc-400 hover:text-white hover:border-white/40 transition-colors"
+              >
+                <div className="p-2 rounded-lg bg-white/10">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-medium">Add a payment card</span>
+                <ChevronRight className="w-4 h-4 ml-auto" />
+              </Link>
+            )}
           </div>
         </motion.div>
 

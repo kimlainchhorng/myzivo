@@ -80,6 +80,7 @@ const EatsRestaurants = lazy(() => import("./pages/EatsRestaurants"));
 const EatsRestaurantMenu = lazy(() => import("./pages/EatsRestaurantMenu"));
 const EatsCheckout = lazy(() => import("./pages/EatsCheckout"));
 const TripHistory = lazy(() => import("./pages/TripHistory"));
+const PaymentMethodsPage = lazy(() => import("./pages/PaymentMethodsPage"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
@@ -585,6 +586,7 @@ const App = () => (
                 <Route path="/ride/driver" element={<RideDriverPage />} />
                 <Route path="/ride/trip" element={<RideTripPage />} />
                 <Route path="/rides/history" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
+                <Route path="/payment-methods" element={<SetupRequiredRoute><PaymentMethodsPage /></SetupRequiredRoute>} />
                 
                 {/* ZIVO Driver App Routes */}
                 <Route path="/driver" element={<DriverHomePage />} />
