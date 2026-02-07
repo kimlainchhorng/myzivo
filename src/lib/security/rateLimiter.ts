@@ -12,7 +12,9 @@ export type RateLimitAction =
   | 'cars_search' 
   | 'contact_form' 
   | 'admin_action' 
-  | 'login_attempt';
+  | 'login_attempt'
+  | 'create_order'
+  | 'cancel_order';
 
 interface RateLimitResult {
   allowed: boolean;
@@ -20,6 +22,8 @@ interface RateLimitResult {
   retryAfter?: number;
   message?: string;
   botScore?: number;
+  blocked?: boolean;
+  blocked_until?: string;
 }
 
 // Client-side rate limit tracking (fallback if edge function unavailable)
@@ -32,6 +36,8 @@ const CLIENT_LIMITS: Record<RateLimitAction, { windowMs: number; max: number }> 
   contact_form: { windowMs: 60000, max: 5 },
   admin_action: { windowMs: 60000, max: 20 },
   login_attempt: { windowMs: 900000, max: 10 },
+  create_order: { windowMs: 86400000, max: 30 }, // 30 orders per day
+  cancel_order: { windowMs: 86400000, max: 8 },  // 8 cancels per day
 };
 
 /**

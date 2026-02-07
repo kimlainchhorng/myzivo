@@ -4102,42 +4102,114 @@ export type Database = {
           },
         ]
       }
+      driver_limits: {
+        Row: {
+          block_reason: string | null
+          blocked_until: string | null
+          cancels_today: number | null
+          created_at: string | null
+          driver_id: string
+          gps_flags_today: number | null
+          is_blocked: boolean | null
+          last_reset: string | null
+          total_blocks: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          block_reason?: string | null
+          blocked_until?: string | null
+          cancels_today?: number | null
+          created_at?: string | null
+          driver_id: string
+          gps_flags_today?: number | null
+          is_blocked?: boolean | null
+          last_reset?: string | null
+          total_blocks?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          block_reason?: string | null
+          blocked_until?: string | null
+          cancels_today?: number | null
+          created_at?: string | null
+          driver_id?: string
+          gps_flags_today?: number | null
+          is_blocked?: boolean | null
+          last_reset?: string | null
+          total_blocks?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_limits_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_limits_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: true
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_location_history: {
         Row: {
           accuracy: number | null
           altitude: number | null
+          distance_jump_miles: number | null
           driver_id: string
           heading: number | null
           id: string
           is_online: boolean
+          is_suspicious: boolean | null
           lat: number
           lng: number
+          prev_lat: number | null
+          prev_lng: number | null
+          prev_recorded_at: string | null
           recorded_at: string
           speed: number | null
+          speed_mph: number | null
         }
         Insert: {
           accuracy?: number | null
           altitude?: number | null
+          distance_jump_miles?: number | null
           driver_id: string
           heading?: number | null
           id?: string
           is_online?: boolean
+          is_suspicious?: boolean | null
           lat: number
           lng: number
+          prev_lat?: number | null
+          prev_lng?: number | null
+          prev_recorded_at?: string | null
           recorded_at?: string
           speed?: number | null
+          speed_mph?: number | null
         }
         Update: {
           accuracy?: number | null
           altitude?: number | null
+          distance_jump_miles?: number | null
           driver_id?: string
           heading?: number | null
           id?: string
           is_online?: boolean
+          is_suspicious?: boolean | null
           lat?: number
           lng?: number
+          prev_lat?: number | null
+          prev_lng?: number | null
+          prev_recorded_at?: string | null
           recorded_at?: string
           speed?: number | null
+          speed_mph?: number | null
         }
         Relationships: [
           {
@@ -13236,6 +13308,69 @@ export type Database = {
           },
         ]
       }
+      risk_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          device_fingerprint: string | null
+          driver_id: string | null
+          event_type: string
+          id: string
+          ip_address: string | null
+          is_resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: number
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          device_fingerprint?: string | null
+          driver_id?: string | null
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          is_resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          device_fingerprint?: string | null
+          driver_id?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          is_resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: number
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_events_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_terms: {
         Row: {
           content: string
@@ -16352,6 +16487,45 @@ export type Database = {
           review_count?: number | null
           total_assessments?: number | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_limits: {
+        Row: {
+          block_reason: string | null
+          blocked_until: string | null
+          cancels_today: number | null
+          created_at: string | null
+          is_blocked: boolean | null
+          last_reset: string | null
+          orders_created_today: number | null
+          total_blocks: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          block_reason?: string | null
+          blocked_until?: string | null
+          cancels_today?: number | null
+          created_at?: string | null
+          is_blocked?: boolean | null
+          last_reset?: string | null
+          orders_created_today?: number | null
+          total_blocks?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          block_reason?: string | null
+          blocked_until?: string | null
+          cancels_today?: number | null
+          created_at?: string | null
+          is_blocked?: boolean | null
+          last_reset?: string | null
+          orders_created_today?: number | null
+          total_blocks?: number | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
