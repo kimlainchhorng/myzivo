@@ -1,14 +1,14 @@
 /**
  * Maps Components
  * 
- * Map integrations for ZIVO (Mapbox + Google Maps fallback)
+ * Map integrations for ZIVO (Google Maps primary, Mapbox legacy)
  */
 
-// Mapbox (primary)
-export { default as MapboxMap } from "./MapboxMap";
-export type { MapboxMapProps, MapMarker as MapboxMarker } from "./MapboxMap";
-
-// Google Maps (legacy fallback)
+// Google Maps (primary)
 export { GoogleMapProvider, useGoogleMaps } from "./GoogleMapProvider";
 export { default as GoogleMap } from "./GoogleMap";
 export type { GoogleMapProps, GoogleMapRef, MapMarker, MapRoute } from "./GoogleMap";
+
+// Mapbox (legacy fallback)
+export { default as MapboxMap } from "./MapboxMap";
+export type { MapboxMapProps, MapMarker as MapboxMarker } from "./MapboxMap";

@@ -1,12 +1,13 @@
 /**
  * RidesMapBackground Component
  * 
- * Displays a Mapbox map as a background for the Rides page with user location marker.
+ * Displays a Google Map as a background for the Rides page with user location marker.
  * Falls back to static image if Maps fails to load.
  */
 
-import MapboxMap from "@/components/maps/MapboxMap";
-import { hasMapboxToken } from "@/services/mapbox";
+import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
+import { hasGoogleMapsKey } from "@/services/googleMaps";
 
 interface RidesMapBackgroundProps {
   userLocation: { lat: number; lng: number } | null;
@@ -15,17 +16,18 @@ interface RidesMapBackgroundProps {
   routeCoordinates?: [number, number][];
 }
 
-const RidesMapBackground = ({ 
+const RidesMapBackgroundInner = ({ 
   userLocation,
   pickupCoords,
   dropoffCoords,
-  routeCoordinates 
 }: RidesMapBackgroundProps) => {
+  const { isLoaded, loadError } = useGoogleMaps();
+  
   // Default to Baton Rouge if no user location
   const center = userLocation || { lat: 30.4515, lng: -91.1871 };
   
   // Show static fallback if Maps not available
-  if (!hasMapboxToken()) {
+  if (!hasGoogleMapsKey() || loadError) {
     return (
       <>
         <img 
@@ -43,20 +45,20 @@ const RidesMapBackground = ({
   }
 
   // Build markers array
-  const markers = [];
+  const markers: MapMarker[] = [];
   
   if (pickupCoords) {
     markers.push({
       id: "pickup",
       position: pickupCoords,
-      type: "pickup" as const,
+      type: "pickup",
       title: "Pickup",
     });
   } else if (userLocation) {
     markers.push({
       id: "user-location",
       position: userLocation,
-      type: "pickup" as const,
+      type: "pickup",
       title: "Your Location",
     });
   }
@@ -65,20 +67,35 @@ const RidesMapBackground = ({
     markers.push({
       id: "dropoff",
       position: dropoffCoords,
-      type: "dropoff" as const,
+      type: "dropoff",
       title: "Destination",
     });
   }
 
+  const route: MapRoute | undefined = pickupCoords && dropoffCoords ? {
+    origin: pickupCoords,
+    destination: dropoffCoords,
+    color: "#3b82f6",
+  } : undefined;
+
   return (
-    <MapboxMap
+    <GoogleMap
       className="w-full h-full opacity-70"
       center={pickupCoords || center}
       zoom={markers.length > 1 ? 12 : 15}
       markers={markers}
-      routeCoordinates={routeCoordinates}
+      route={route}
       fitBounds={markers.length > 1}
+      showControls={false}
     />
+  );
+};
+
+const RidesMapBackground = (props: RidesMapBackgroundProps) => {
+  return (
+    <GoogleMapProvider>
+      <RidesMapBackgroundInner {...props} />
+    </GoogleMapProvider>
   );
 };
 

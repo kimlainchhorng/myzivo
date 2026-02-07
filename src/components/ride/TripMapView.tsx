@@ -1,13 +1,14 @@
 /**
  * TripMapView Component
  * 
- * Shows Mapbox map with route from pickup to destination during active trip.
+ * Shows Google Map with route from pickup to destination during active trip.
  * Falls back to static image if Maps fails to load.
  */
 
 import { motion } from "framer-motion";
-import MapboxMap from "@/components/maps/MapboxMap";
-import { hasMapboxToken } from "@/services/mapbox";
+import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
+import { hasGoogleMapsKey } from "@/services/googleMaps";
 
 interface TripMapViewProps {
   pickupLocation: { lat: number; lng: number };
@@ -17,15 +18,16 @@ interface TripMapViewProps {
   routeCoordinates?: [number, number][];
 }
 
-const TripMapView = ({ 
+const TripMapViewInner = ({ 
   pickupLocation, 
   destinationLocation, 
   carPosition, 
   isArrived,
-  routeCoordinates 
 }: TripMapViewProps) => {
+  const { isLoaded, loadError } = useGoogleMaps();
+
   // Show static fallback if Maps not available
-  if (!hasMapboxToken()) {
+  if (!hasGoogleMapsKey() || loadError) {
     return (
       <div className="relative h-[45vh] w-full">
         <img
@@ -53,39 +55,54 @@ const TripMapView = ({
     );
   }
 
-  const markers = [
+  const markers: MapMarker[] = [
     {
       id: "pickup",
       position: pickupLocation,
-      type: "pickup" as const,
+      type: "pickup",
       title: "Pickup",
     },
     {
       id: "destination",
       position: destinationLocation,
-      type: "dropoff" as const,
+      type: "dropoff",
       title: "Destination",
     },
     {
       id: "car",
       position: carPosition,
-      type: "driver" as const,
+      type: "driver",
       title: isArrived ? "Arrived" : "Your Ride",
     },
   ];
 
+  const route: MapRoute = {
+    origin: pickupLocation,
+    destination: destinationLocation,
+    color: "#3b82f6",
+  };
+
   return (
     <div className="relative h-[45vh] w-full">
-      <MapboxMap
+      <GoogleMap
         className="w-full h-full"
         center={destinationLocation}
         zoom={14}
         markers={markers}
-        routeCoordinates={routeCoordinates}
+        route={route}
         fitBounds={true}
+        showControls={false}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950 pointer-events-none" />
     </div>
+  );
+};
+
+const TripMapView = (props: TripMapViewProps) => {
+  return (
+    <GoogleMapProvider>
+      <TripMapViewInner {...props} />
+    </GoogleMapProvider>
   );
 };
 

@@ -1,12 +1,13 @@
 /**
  * DriverMapView Component
  * 
- * Shows Mapbox map with driver approaching pickup location.
+ * Shows Google Map with driver approaching pickup location.
  * Falls back to static image if Maps fails to load.
  */
 
-import MapboxMap from "@/components/maps/MapboxMap";
-import { hasMapboxToken } from "@/services/mapbox";
+import { GoogleMapProvider, useGoogleMaps } from "@/components/maps/GoogleMapProvider";
+import GoogleMap, { MapMarker, MapRoute } from "@/components/maps/GoogleMap";
+import { hasGoogleMapsKey } from "@/services/googleMaps";
 
 interface DriverMapViewProps {
   pickupLocation: { lat: number; lng: number };
@@ -15,14 +16,15 @@ interface DriverMapViewProps {
   routeCoordinates?: [number, number][];
 }
 
-const DriverMapView = ({ 
+const DriverMapViewInner = ({ 
   pickupLocation, 
   driverLocation, 
   hasArrived,
-  routeCoordinates 
 }: DriverMapViewProps) => {
+  const { isLoaded, loadError } = useGoogleMaps();
+
   // Show static fallback if Maps not available
-  if (!hasMapboxToken()) {
+  if (!hasGoogleMapsKey() || loadError) {
     return (
       <div className="relative h-[40vh] w-full">
         <img
@@ -35,33 +37,48 @@ const DriverMapView = ({
     );
   }
 
-  const markers = [
+  const markers: MapMarker[] = [
     {
       id: "pickup",
       position: pickupLocation,
-      type: "pickup" as const,
+      type: "pickup",
       title: "Pickup Location",
     },
     {
       id: "driver",
       position: driverLocation,
-      type: "driver" as const,
+      type: "driver",
       title: hasArrived ? "Driver Arrived" : "Driver En Route",
     },
   ];
 
+  const route: MapRoute | undefined = !hasArrived ? {
+    origin: driverLocation,
+    destination: pickupLocation,
+    color: "#3b82f6",
+  } : undefined;
+
   return (
     <div className="relative h-[40vh] w-full">
-      <MapboxMap
+      <GoogleMap
         className="w-full h-full"
         center={pickupLocation}
         zoom={15}
         markers={markers}
-        routeCoordinates={!hasArrived ? routeCoordinates : undefined}
+        route={route}
         fitBounds={true}
+        showControls={false}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-950 pointer-events-none" />
     </div>
+  );
+};
+
+const DriverMapView = (props: DriverMapViewProps) => {
+  return (
+    <GoogleMapProvider>
+      <DriverMapViewInner {...props} />
+    </GoogleMapProvider>
   );
 };
 
