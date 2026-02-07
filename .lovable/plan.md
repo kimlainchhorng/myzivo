@@ -1,94 +1,68 @@
 
-# Update Economy Rides Data
+# Add Google Cloud Map ID Support
 
 ## Overview
-This update will replace the current Economy ride options with your new set of 4 rides, each with its own colored badge indicator.
+This update adds support for Google Cloud Map ID styling, which allows you to use custom map styles created in the Google Cloud Console. It also adds the `clickableIcons: false` option to prevent POI clicks from interfering with the ride experience.
 
 ---
 
 ## Changes
 
-### 1. Update Economy Rides Data
+### 1. Add Map ID Prop to GoogleMap Component
 
-**File: `src/pages/Rides.tsx`** (lines 88-93)
+**File: `src/components/maps/GoogleMap.tsx`**
 
-Replace the current Economy rides with your new structure:
+Add a new `mapId` prop that accepts either:
+- A string value passed directly
+- Falls back to `VITE_GOOGLE_MAP_ID` environment variable
 
-| Ride | Badge Color | Badge Label | ETA | Price Multiplier |
-|------|-------------|-------------|-----|------------------|
-| Wait & Save | Blue | Save | 15 min | 0.75 |
-| Standard | Yellow | Standard | 4 min | 1.0 |
-| Green | Emerald | Eco | 6 min | 1.02 |
-| Priority | Orange | Fast | 1 min | 1.3 |
-
-### 2. Update Tag System
-
-**File: `src/pages/Rides.tsx`** (lines 62-82)
-
-Update the `TagPill` component and tag mapping to include the new badge styles:
-
-```text
-wait_save  → Blue dot   → "Save"
-standard   → Yellow dot → (no label, just standard indicator)
-green      → Emerald dot → "Eco"  
-priority   → Orange dot → "Fast"
+```typescript
+export interface GoogleMapProps {
+  // ... existing props
+  mapId?: string;  // Google Cloud Map ID for custom styling
+}
 ```
 
-### 3. Visual Badge Styling
+### 2. Update Map Initialization
 
-Each ride card will show:
-- A small colored dot indicator matching the badge color
-- A text label next to the name (Save, Eco, Fast)
-- Standard rides show the dot but no extra label
+**File: `src/components/maps/GoogleMap.tsx`** (lines 108-122)
+
+Update the Map constructor to use `mapId` when available:
+
+```typescript
+mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+  center,
+  zoom,
+  mapId: mapId || import.meta.env.VITE_GOOGLE_MAP_ID,  // Cloud-based styling
+  styles: !mapId ? (darkMode ? darkMapStyles : undefined) : undefined,  // Fallback to local styles
+  disableDefaultUI: !showControls,
+  clickableIcons: false,  // Prevent POI popups
+  // ... rest of options
+});
+```
+
+**Note:** When `mapId` is set, the `styles` property is ignored by Google Maps API (cloud styling takes precedence).
+
+### 3. Add Environment Variable
+
+**File: `.env`**
+
+Add the Map ID variable (you'll need to create a Map ID in Google Cloud Console):
+
+```env
+VITE_GOOGLE_MAP_ID=""
+```
 
 ---
 
-## Updated Data Structure
+## How Map ID Works
 
-```typescript
-Economy: [
-  { 
-    id: "wait_save", 
-    name: "Wait & Save", 
-    desc: "Lowest price, longer wait.", 
-    seats: 4, 
-    eta: 15, 
-    multiplier: 0.75, 
-    tag: "wait_save",
-    badge: { dotClass: "bg-blue-400", label: "Save" }
-  },
-  { 
-    id: "standard", 
-    name: "Standard", 
-    desc: "Reliable everyday rides.", 
-    seats: 4, 
-    eta: 4, 
-    multiplier: 1.0, 
-    tag: "standard",
-    badge: { dotClass: "bg-yellow-400", label: "Standard" }
-  },
-  { 
-    id: "green", 
-    name: "Green", 
-    desc: "EVs & Hybrids.", 
-    seats: 4, 
-    eta: 6, 
-    multiplier: 1.02, 
-    tag: "green",
-    badge: { dotClass: "bg-emerald-400", label: "Eco" }
-  },
-  { 
-    id: "priority", 
-    name: "Priority", 
-    desc: "Faster pickup.", 
-    seats: 4, 
-    eta: 1, 
-    multiplier: 1.3, 
-    tag: "priority",
-    badge: { dotClass: "bg-orange-400", label: "Fast" }
-  }
-]
-```
+| Scenario | Styling Used |
+|----------|-------------|
+| `mapId` prop provided | Cloud Map ID styling |
+| `VITE_GOOGLE_MAP_ID` set | Cloud Map ID styling |
+| Neither set + `darkMode=true` | Local dark mode styles |
+| Neither set + `darkMode=false` | Default Google Maps style |
 
 ---
 
@@ -96,14 +70,23 @@ Economy: [
 
 | File | Changes |
 |------|---------|
-| `src/pages/Rides.tsx` | Update Economy array with new 4 rides, update TagPill styling |
+| `src/components/maps/GoogleMap.tsx` | Add `mapId` prop, add `clickableIcons: false`, update initialization logic |
+| `.env` | Add `VITE_GOOGLE_MAP_ID` placeholder |
 
 ---
 
-## Result After Implementation
+## Setup Instructions
 
-The Economy tab will show 4 ride options:
-1. **Wait & Save** - Blue "Save" badge, 15 min ETA, lowest price
-2. **Standard** - Yellow indicator, 4 min ETA, base price
-3. **Green** - Emerald "Eco" badge, 6 min ETA, EVs & Hybrids
-4. **Priority** - Orange "Fast" badge, 1 min ETA, premium for speed
+After implementation, to use cloud styling:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/google/maps-apis/studio/maps)
+2. Create a new Map ID with your desired style
+3. Copy the Map ID and add it to `.env` as `VITE_GOOGLE_MAP_ID="your-map-id"`
+
+---
+
+## Benefits
+
+- **Cloud-based styling**: Edit map appearance in Google Cloud Console without code changes
+- **No POI interference**: `clickableIcons: false` prevents accidental business info popups
+- **Flexible fallback**: Works with or without Map ID configured
