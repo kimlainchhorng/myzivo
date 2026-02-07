@@ -1,120 +1,178 @@
 
-# Show Commission + Earnings on Receipt
+# Require Auth for Ride Requests
 
 ## Summary
 
-Add driver earnings and platform fee display to the ride receipt screen when a trip is completed. The values will be calculated using the existing 15%/85% commission split defined in `adminConfig.ts`, or use the `platform_fee` column if it's already stored on the trip record.
+Add authentication requirement before creating a ride request. When a user taps "Pay & Request" without being logged in, they'll be redirected to the login page. After successful login, they'll return to complete their ride request.
+
+---
+
+## Current State
+
+| Component | Status |
+|-----------|--------|
+| Auth system | Already implemented at `/login` with login/signup toggle |
+| `rider_id` field | Already set in `createRideInDb` (line 113) |
+| Ride routes | Not protected - allows anonymous access |
+
+The `createRideInDb` function already sets `rider_id: user?.id ?? null`, so rides can be created without auth (rider_id becomes null).
 
 ---
 
 ## Approach
 
-Since the database already has a `platform_fee` column on the `trips` table, we have two options:
+Add a pre-flight auth check in `RideConfirmPage.tsx` before creating the ride. If the user is not logged in, redirect to `/login` with a return path so they come back after authenticating.
 
-**Option A (Recommended)**: Calculate driver earnings and platform fee dynamically in the frontend using the fare amount and the defined commission rates (15%/85% split). This avoids database migrations and uses the existing config.
-
-**Option B**: Add `driver_earning_amount` column via migration. However, this adds complexity and the values can easily be derived from `fare_amount`.
-
-We'll go with **Option A** - calculate in the frontend using the ride price and commission rates.
+This approach:
+- Keeps existing UI unchanged
+- No new pages needed (uses existing `/login`)
+- Preserves ride details in location state for restoration
 
 ---
 
-## File Changes Summary
+## File Changes
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/ride/RideReceiptModal.tsx` | Modify | Add commission/earnings display, import rates from adminConfig |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Import `useAuth`, add auth check before `handleConfirm` |
 
 ---
 
 ## Implementation Details
 
-### RideReceiptModal.tsx Changes
+### RideConfirmPage.tsx Changes
 
-Import the commission rates:
-
+Add import:
 ```typescript
-import { PLATFORM_COMMISSION_RATE, DRIVER_SHARE_RATE } from "@/config/adminConfig";
+import { useAuth } from "@/contexts/AuthContext";
 ```
 
-Calculate the amounts from the total price:
-
+Add hook inside component:
 ```typescript
-// Calculate platform and driver amounts
-const platformFee = price * PLATFORM_COMMISSION_RATE; // 15%
-const driverEarnings = price * DRIVER_SHARE_RATE; // 85%
+const { user, isLoading: authLoading } = useAuth();
 ```
 
-Add display section after the "Total" row (inside the fare breakdown area):
+Modify `handleConfirm` function to check auth first:
 
 ```typescript
-{/* Commission Breakdown - only show for completed trips */}
-<div className="pt-3 mt-3 border-t border-white/10 space-y-2 text-sm">
-  <div className="flex justify-between">
-    <span className="text-white/60">Driver earned</span>
-    <span className="text-green-400">${driverEarnings.toFixed(2)}</span>
-  </div>
-  <div className="flex justify-between">
-    <span className="text-white/60">Platform fee</span>
-    <span className="text-white/40">${platformFee.toFixed(2)}</span>
-  </div>
-</div>
+const handleConfirm = async () => {
+  if (isSubmitting || isCheckingAvailability) return;
+  
+  // Auth gate: if not logged in, redirect to login with return path
+  if (!user) {
+    // Save current ride state to localStorage for restoration
+    const rideState = {
+      ride,
+      pickup,
+      destination,
+      tripDetails,
+      routeCoordinates,
+      pickupCoords,
+      dropoffCoords,
+      surgeMultiplier,
+      selectedPayment,
+      promoCode: promoCode?.code || null,
+    };
+    localStorage.setItem('zivo_pending_confirm', JSON.stringify(rideState));
+    
+    // Redirect to login with return path
+    navigate('/login', { 
+      state: { from: { pathname: '/ride/confirm' } },
+      replace: false 
+    });
+    return;
+  }
+  
+  // ... rest of existing handleConfirm logic
+};
+```
+
+Add effect to restore state after login return:
+
+```typescript
+useEffect(() => {
+  // Restore pending ride confirmation after login
+  const pending = localStorage.getItem('zivo_pending_confirm');
+  if (pending && user && !state?.ride) {
+    try {
+      const restored = JSON.parse(pending);
+      // Navigate back to confirm page with restored state
+      navigate('/ride/confirm', { 
+        state: restored,
+        replace: true 
+      });
+      localStorage.removeItem('zivo_pending_confirm');
+    } catch (e) {
+      console.warn('[RideConfirm] Failed to restore pending state:', e);
+      localStorage.removeItem('zivo_pending_confirm');
+    }
+  }
+}, [user]);
 ```
 
 ---
 
-## Visual Placement
-
-The commission breakdown will appear below the "Total" line in the fare breakdown section:
+## User Flow Diagram
 
 ```text
-┌─────────────────────────────────────┐
-│         ✓ Trip Complete!            │
-├─────────────────────────────────────┤
-│  Base fare               $2.50      │
-│  Time (5:30)             $1.65      │
-│  Distance (3.2 mi)       $4.85      │
-│  Service fee             $1.50      │
-│  ─────────────────────────────────  │
-│  Tip                     $3.00      │
-│  Total                  $13.50      │
-│  ─────────────────────────────────  │  ← NEW SECTION
-│  Driver earned          $11.48      │  ← green text
-│  Platform fee            $2.02      │  ← muted text
-├─────────────────────────────────────┤
-│  ⭐ ⭐ ⭐ ⭐ ⭐  Rate your driver  │
-│  [Feedback textarea...]             │
-│  [Submit Rating]                    │
-├─────────────────────────────────────┤
-│  Add a tip: [$1] [$3] [$5]          │
-├─────────────────────────────────────┤
-│           [  DONE  ]                │
-└─────────────────────────────────────┘
+User on /ride/confirm (not logged in)
+            │
+            ▼
+    Taps "Pay & Request"
+            │
+            ▼
+    ┌───────────────────┐
+    │  Check auth.user  │
+    └────────┬──────────┘
+             │
+    ┌────────┴────────┐
+    │   user = null   │
+    └────────┬────────┘
+             │
+             ▼
+    Save ride state to localStorage
+             │
+             ▼
+    Redirect to /login with from=/ride/confirm
+             │
+             ▼
+    ┌───────────────────┐
+    │   LOGIN PAGE      │
+    │  (existing UI)    │
+    └────────┬──────────┘
+             │
+    User logs in / signs up
+             │
+             ▼
+    Redirected back to /ride/confirm
+             │
+             ▼
+    Restore ride state from localStorage
+             │
+             ▼
+    Continue with ride creation
+             │
+             ▼
+    rider_id = auth.uid() ← RLS-ready!
 ```
 
 ---
 
-## Calculation Details
+## Technical Details
 
-Using the existing constants from `src/config/adminConfig.ts`:
+### Why localStorage?
 
-| Rate | Value | Calculation |
-|------|-------|-------------|
-| Platform Fee | 15% | `price × 0.15` |
-| Driver Earnings | 85% | `price × 0.85` |
+React Router's location state is lost on page reload and OAuth redirects. Storing to localStorage ensures the ride details survive:
+- Social login redirects (Google, Apple)
+- Page refreshes during auth flow
+- Browser back/forward navigation
 
-Example for a $20.00 ride:
-- Platform fee: $3.00
-- Driver earnings: $17.00
+### RLS Readiness
 
----
-
-## No Database Changes Required
-
-The calculation is performed client-side using:
-- `price` prop (already passed to the modal)
-- `PLATFORM_COMMISSION_RATE` (0.15) from adminConfig
-- `DRIVER_SHARE_RATE` (0.85) from adminConfig
+Once this change is implemented:
+- All rides will have `rider_id` set to the authenticated user's ID
+- Ready for RLS policies like: `USING (rider_id = auth.uid())`
+- Anonymous guest checkout can be added later with explicit `customer_name` flow
 
 ---
 
@@ -122,16 +180,16 @@ The calculation is performed client-side using:
 
 | Scenario | Handling |
 |----------|----------|
-| Price is 0 | Show $0.00 for both values |
-| Price includes tip | Tip is added separately and not included in commission calculation (tip goes 100% to driver) |
-| Decimal precision | Format to 2 decimal places with `.toFixed(2)` |
+| User already logged in | Proceeds directly to ride creation |
+| OAuth redirect (Google/Apple) | State restored from localStorage after callback |
+| User cancels login | They can navigate back; localStorage entry expires naturally |
+| Stale localStorage data | Clear on successful restoration or after 24h (optional) |
 
 ---
 
 ## No Changes To
 
-- Database schema
-- Receipt modal layout structure
-- Rating functionality
-- Tip selection
-- Other pages
+- Database schema (rider_id column already exists)
+- Login page UI (uses existing combined login/signup)
+- RideSearchingPage or other ride pages
+- Existing authentication flow
