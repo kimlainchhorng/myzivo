@@ -126,7 +126,8 @@ function RidesMapView({
   pickup,
   dropoff,
   onPickupClick,
-  onDropoffClick
+  onDropoffClick,
+  onLocateMe
 }: {
   userLocation: { lat: number; lng: number } | null;
   pickupCoords?: { lat: number; lng: number } | null;
@@ -135,21 +136,12 @@ function RidesMapView({
   dropoff: string;
   onPickupClick?: () => void;
   onDropoffClick?: () => void;
+  onLocateMe?: () => void;
 }) {
   const { isLoaded, loadError } = useGoogleMaps();
   const center = pickupCoords || userLocation || { lat: 30.4515, lng: -91.1871 };
   
-  if (!hasGoogleMapsKey() || loadError) {
-    return (
-      <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
-        <div className="text-center text-zinc-500">
-          <MapPin className="w-12 h-12 mx-auto mb-2 text-zinc-300" />
-          <p className="text-sm">Map loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Build markers
   const markers: MapMarker[] = [];
   if (pickupCoords) {
     markers.push({ id: "pickup", position: pickupCoords, type: "pickup", title: "Pickup" });
@@ -166,33 +158,74 @@ function RidesMapView({
     color: "#1a1a1a",
   } : undefined;
 
+  // Show loading or error state
+  const showFallback = !hasGoogleMapsKey() || loadError || !isLoaded;
+
   return (
-    <div className="relative w-full h-full">
-      <GoogleMap
-        className="w-full h-full"
-        center={center}
-        zoom={markers.length > 1 ? 12 : 15}
-        markers={markers}
-        route={route}
-        fitBounds={markers.length > 1}
-        showControls={false}
-        darkMode={false}
-      />
+    <div className="relative w-full h-full bg-[#e5e3df]">
+      {showFallback ? (
+        // Fallback: Static map-like background with pulsing location dot
+        <div className="w-full h-full relative overflow-hidden">
+          {/* Map-like grid pattern */}
+          <div className="absolute inset-0 opacity-30">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ccc" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          {/* Simulated roads */}
+          <div className="absolute inset-0">
+            <div className="absolute top-1/4 left-0 right-0 h-2 bg-white/60" />
+            <div className="absolute top-1/2 left-0 right-0 h-3 bg-white/80" />
+            <div className="absolute top-3/4 left-0 right-0 h-2 bg-white/60" />
+            <div className="absolute left-1/4 top-0 bottom-0 w-2 bg-white/60" />
+            <div className="absolute left-1/2 top-0 bottom-0 w-3 bg-white/80" />
+            <div className="absolute left-3/4 top-0 bottom-0 w-2 bg-white/60" />
+          </div>
+          
+          {/* Current location marker */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-blue-500/20 animate-ping absolute -inset-6" />
+              <div className="w-12 h-12 rounded-full bg-blue-500/30 absolute -inset-3" />
+              <div className="w-6 h-6 rounded-full bg-blue-500 border-4 border-white shadow-lg relative z-10" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <GoogleMap
+          className="w-full h-full"
+          center={center}
+          zoom={markers.length > 1 ? 12 : 15}
+          markers={markers}
+          route={route}
+          fitBounds={markers.length > 1}
+          showControls={false}
+          darkMode={false}
+        />
+      )}
       
       {/* Floating Location Chips */}
       <div className="absolute top-4 left-4 right-4 z-10 space-y-2">
         {pickup && (
           <button
             onClick={onPickupClick}
-            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2 text-left max-w-full touch-manipulation active:scale-[0.98] transition-transform"
+            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
           >
-            <div className="bg-zinc-900 text-white px-2 py-1 rounded text-[10px] font-bold leading-none flex-shrink-0">
-              <div>12-21</div>
+            <div className="bg-zinc-900 text-white px-2 py-1.5 rounded text-[10px] font-bold leading-none flex-shrink-0 text-center min-w-[36px]">
+              <div>5-10</div>
               <div className="text-[8px] font-medium text-zinc-400">MIN</div>
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-zinc-900 truncate">{pickup.split(',')[0]}</div>
-              <div className="text-xs text-zinc-500 truncate">{pickup.split(',').slice(1).join(',').trim()}</div>
+              {pickup.split(',').length > 1 && (
+                <div className="text-xs text-zinc-500 truncate">{pickup.split(',').slice(1, 2).join(',').trim()}</div>
+              )}
             </div>
             <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           </button>
@@ -201,14 +234,16 @@ function RidesMapView({
         {dropoff && (
           <button
             onClick={onDropoffClick}
-            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2 text-left max-w-full touch-manipulation active:scale-[0.98] transition-transform"
+            className="flex items-center gap-2 bg-white rounded-lg shadow-lg px-3 py-2.5 text-left max-w-[280px] touch-manipulation active:scale-[0.98] transition-transform"
           >
-            <div className="w-6 h-6 bg-black rounded flex items-center justify-center flex-shrink-0">
-              <div className="w-2 h-2 bg-white rounded-sm" />
+            <div className="w-8 h-8 bg-black rounded flex items-center justify-center flex-shrink-0">
+              <div className="w-2.5 h-2.5 bg-white rounded-sm" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-sm font-semibold text-zinc-900 truncate">{dropoff.split(',')[0]}</div>
-              <div className="text-xs text-zinc-500 truncate">{dropoff.split(',').slice(1).join(',').trim()}</div>
+              {dropoff.split(',').length > 1 && (
+                <div className="text-xs text-zinc-500 truncate">{dropoff.split(',').slice(1, 2).join(',').trim()}</div>
+              )}
             </div>
             <ChevronRight className="w-4 h-4 text-zinc-400 flex-shrink-0" />
           </button>
@@ -217,7 +252,10 @@ function RidesMapView({
 
       {/* Current location button */}
       <div className="absolute bottom-4 right-4 z-10">
-        <button className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform">
+        <button 
+          onClick={onLocateMe}
+          className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center touch-manipulation active:scale-95 transition-transform"
+        >
           <LocateFixed className="w-5 h-5 text-zinc-700" />
         </button>
       </div>
@@ -455,6 +493,7 @@ function RidesInner() {
           dropoffCoords={routeData?.dropoffCoords}
           pickup={pickup}
           dropoff={dropoff}
+          onLocateMe={handleUseCurrentLocation}
         />
       </div>
       
