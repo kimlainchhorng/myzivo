@@ -158,15 +158,20 @@ function RidesMapView({
     color: "#1a1a1a",
   } : undefined;
 
-  // Show loading or error state
-  const showFallback = !hasGoogleMapsKey() || loadError || !isLoaded;
+  // Check if API key exists
+  const hasApiKey = hasGoogleMapsKey();
+  
+  // Show loading state while Maps is loading (only if we have an API key)
+  const showLoading = hasApiKey && !isLoaded && !loadError;
+  
+  // Show fallback if no API key or if there's an error
+  const showFallback = !hasApiKey || loadError;
 
   return (
     <div className="relative w-full h-full bg-[#e5e3df]">
-      {showFallback ? (
-        // Fallback: Static map-like background with pulsing location dot
-        <div className="w-full h-full relative overflow-hidden">
-          {/* Map-like grid pattern */}
+      {showLoading ? (
+        // Loading state
+        <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
           <div className="absolute inset-0 opacity-30">
             <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
               <defs>
@@ -175,6 +180,25 @@ function RidesMapView({
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          <div className="flex flex-col items-center gap-2 z-10">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <span className="text-sm text-zinc-600">Loading map...</span>
+          </div>
+        </div>
+      ) : showFallback ? (
+        // Fallback: Static map-like background with pulsing location dot
+        <div className="w-full h-full relative overflow-hidden">
+          {/* Map-like grid pattern */}
+          <div className="absolute inset-0 opacity-30">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid-fallback" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ccc" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid-fallback)" />
             </svg>
           </div>
           
@@ -198,6 +222,7 @@ function RidesMapView({
           </div>
         </div>
       ) : (
+        // Google Map
         <GoogleMap
           className="w-full h-full"
           center={center}
