@@ -1,10 +1,9 @@
 
-
-# Rider Trip Progress Bar + Auto-Completion
+# Rider Ride Status Notifications
 
 ## Summary
 
-Add real-time trip progress calculation based on driver location to the `/ride/trip` page. Calculate progress as the ratio of distance traveled vs total trip distance, update as driver moves, and auto-complete the ride when driver is within 100 meters of the destination.
+Add real-time status change notifications with visual banners and sound/vibration feedback on key transitions. Banners display at the top of ride pages with status-specific messaging, while notification sounds and haptic feedback provide alerts for `assigned` and `arrived` events.
 
 ---
 
@@ -12,214 +11,361 @@ Add real-time trip progress calculation based on driver location to the `/ride/t
 
 | Feature | Current | Issue |
 |---------|---------|-------|
-| Trip progress | Based on elapsed time (120s simulation) | Not using real driver location |
-| Driver location tracking | Not subscribed on trip page | Missing real-time updates |
-| Auto-completion | Manual "END TRIP" button only | No proximity-based detection |
-| Progress display | Shows percentage from timer | Inaccurate to actual position |
+| Status updates | Toast notifications only | No persistent visual feedback |
+| Sound feedback | Driver/restaurant side only | Rider has no audio alerts |
+| Vibration | Available via `useNativeFeatures` | Not triggered on status changes |
+| Status banners | Only on `arrived` in DriverPage | Missing for other statuses |
 
 ---
 
 ## Implementation Approach
 
-### 1. Subscribe to Driver Location on Trip Page
+### 1. Create `useRideStatusNotifications` Hook
 
-Use existing `useDriverLocationRealtime` hook to track driver's `current_lat`/`current_lng` during the trip.
+Central hook that:
+- Listens for status changes from `RideStore`
+- Plays sound via `useNotificationSound`
+- Triggers haptic feedback via `useNativeFeatures`
+- Manages notification banner state
 
-### 2. Calculate Real Trip Progress
+### 2. Create `RideStatusBanner` Component
 
-When driver location updates:
-- Calculate `totalDistance` = haversine(pickup, destination)
-- Calculate `remainingDistance` = haversine(driver, destination)
-- Progress = `(1 - remainingDistance / totalDistance) * 100`
+Animated banner component that shows status-specific messages:
+- `assigned` → "Driver is on the way"
+- `arrived` → "Driver has arrived"  
+- `in_trip` → "Trip started"
+- `completed` → "Trip completed"
 
-### 3. Auto-Complete Trip at Arrival
+### 3. Add Sound/Vibration Triggers
 
-If `remainingDistance < 0.0621 miles` (100 meters):
-- Automatically trigger `handleEndTrip()`
-- Show receipt screen
+On `assigned` and `arrived`:
+- Play `statusUpdate` sound
+- Trigger haptic `notification(success)`
 
-### 4. Keep Existing UI
+### 4. Integrate into Ride Pages
 
-Only modify the progress calculation logic - keep the existing progress bar, ETA display, and layout unchanged.
+Add banner component to:
+- `RideSearchingPage.tsx` (assigned)
+- `RideDriverPage.tsx` (arrived)
+- `RideTripPage.tsx` (in_trip, completed)
 
 ---
 
-## File Changes
+## File Changes Summary
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/pages/ride/RideTripPage.tsx` | Modify | Add driver location subscription, real progress calc, auto-complete |
+| `src/hooks/useRideStatusNotifications.ts` | Create | Hook for status change detection + alerts |
+| `src/components/ride/RideStatusBanner.tsx` | Create | Animated status banner component |
+| `src/hooks/useRideRealtime.ts` | Modify | Add onStatusChangeWithNotify callback |
+| `src/pages/ride/RideSearchingPage.tsx` | Modify | Integrate banner + sound/haptic |
+| `src/pages/ride/RideDriverPage.tsx` | Modify | Integrate banner + sound/haptic |
+| `src/pages/ride/RideTripPage.tsx` | Modify | Integrate banner |
 
 ---
 
 ## Technical Details
 
-### Distance Calculation
-
-Uses the existing `haversineMiles` function from `src/services/mapsApi.ts`:
+### New Hook: `useRideStatusNotifications`
 
 ```typescript
-import { haversineMiles } from "@/services/mapsApi";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { useRideStore } from "@/stores/rideStore";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { useNativeFeatures } from "@/hooks/useNativeFeatures";
+import { RideStatus } from "@/types/rideTypes";
 
-// Total trip distance (pickup → destination)
-const totalDistance = haversineMiles(
-  pickupLocation.lat, pickupLocation.lng,
-  destinationLocation.lat, destinationLocation.lng
-);
-
-// Remaining distance (driver → destination)  
-const remainingDistance = haversineMiles(
-  driverLat, driverLng,
-  destinationLocation.lat, destinationLocation.lng
-);
-
-// Progress percentage (0 to 1)
-const progress = Math.max(0, Math.min(1, 1 - (remainingDistance / totalDistance)));
-```
-
-### Auto-Complete Threshold
-
-```typescript
-// 100 meters = 0.0621 miles
-const ARRIVAL_THRESHOLD_MILES = 0.0621;
-
-if (remainingDistance <= ARRIVAL_THRESHOLD_MILES && !hasAutoCompleted) {
-  setHasAutoCompleted(true);
-  handleEndTrip();
+interface StatusNotification {
+  status: RideStatus;
+  message: string;
+  subMessage?: string;
+  type: "info" | "success" | "warning";
 }
+
+const STATUS_MESSAGES: Record<string, StatusNotification> = {
+  assigned: {
+    status: "assigned",
+    message: "Driver is on the way",
+    subMessage: "Your driver has accepted the ride",
+    type: "info",
+  },
+  arrived: {
+    status: "arrived",
+    message: "Driver has arrived",
+    subMessage: "Please meet your driver at the pickup location",
+    type: "success",
+  },
+  in_trip: {
+    status: "in_trip",
+    message: "Trip started",
+    subMessage: "Enjoy your ride",
+    type: "info",
+  },
+  completed: {
+    status: "completed",
+    message: "Trip completed",
+    subMessage: "Thank you for riding with ZIVO",
+    type: "success",
+  },
+};
+
+export const useRideStatusNotifications = () => {
+  const { state } = useRideStore();
+  const { playStatusUpdateSound } = useNotificationSound();
+  const { hapticNotification, isNative } = useNativeFeatures();
+  const prevStatusRef = useRef<RideStatus | null>(null);
+  const [activeNotification, setActiveNotification] = useState<StatusNotification | null>(null);
+  const [showBanner, setShowBanner] = useState(false);
+
+  const triggerNotification = useCallback((status: RideStatus) => {
+    const notification = STATUS_MESSAGES[status];
+    if (!notification) return;
+
+    setActiveNotification(notification);
+    setShowBanner(true);
+
+    // Play sound for assigned and arrived
+    if (status === "assigned" || status === "arrived") {
+      playStatusUpdateSound();
+      hapticNotification("success");
+    }
+
+    // Auto-hide banner after 5 seconds (except for arrived which persists)
+    if (status !== "arrived") {
+      setTimeout(() => setShowBanner(false), 5000);
+    }
+  }, [playStatusUpdateSound, hapticNotification]);
+
+  // Monitor status changes
+  useEffect(() => {
+    if (prevStatusRef.current !== state.status && state.status !== "idle") {
+      triggerNotification(state.status);
+    }
+    prevStatusRef.current = state.status;
+  }, [state.status, triggerNotification]);
+
+  const dismissBanner = useCallback(() => {
+    setShowBanner(false);
+  }, []);
+
+  return {
+    activeNotification,
+    showBanner,
+    dismissBanner,
+  };
+};
 ```
 
-### Driver Location Handler
+### New Component: `RideStatusBanner`
 
 ```typescript
-const [driverLocation, setDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
-const [hasAutoCompleted, setHasAutoCompleted] = useState(false);
+import { motion, AnimatePresence } from "framer-motion";
+import { Car, Check, Navigation, Clock, X } from "lucide-react";
+import { RideStatus } from "@/types/rideTypes";
 
-const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
-  setDriverLocation({ lat, lng });
-  
-  // Calculate progress
-  const total = haversineMiles(
-    pickupLocation.lat, pickupLocation.lng,
-    destinationLocation.lat, destinationLocation.lng
-  );
-  
-  const remaining = haversineMiles(
-    lat, lng,
-    destinationLocation.lat, destinationLocation.lng
-  );
-  
-  const newProgress = Math.max(0, Math.min(1, 1 - (remaining / total)));
-  setTripProgress(newProgress);
-  
-  // Update car position for map
-  // (existing interpolation logic remains for smooth animation)
-  
-  // Auto-complete check
-  if (remaining <= ARRIVAL_THRESHOLD_MILES && !hasAutoCompleted) {
-    setHasAutoCompleted(true);
-    toast.success("You've arrived at your destination!");
-    handleEndTrip();
-  }
-}, [pickupLocation, destinationLocation, hasAutoCompleted, handleEndTrip]);
+interface RideStatusBannerProps {
+  status: RideStatus;
+  message: string;
+  subMessage?: string;
+  isVisible: boolean;
+  onDismiss?: () => void;
+  persistent?: boolean;
+}
 
-// Subscribe to driver location
-useDriverLocationRealtime(
-  isDemoMode ? undefined : state.driver?.id,
-  handleDriverLocationUpdate
+const STATUS_ICONS: Record<string, React.ElementType> = {
+  assigned: Car,
+  arrived: Check,
+  in_trip: Navigation,
+  completed: Check,
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  assigned: "bg-primary",
+  arrived: "bg-green-500",
+  in_trip: "bg-blue-500",
+  completed: "bg-green-500",
+};
+
+const RideStatusBanner = ({
+  status,
+  message,
+  subMessage,
+  isVisible,
+  onDismiss,
+  persistent = false,
+}: RideStatusBannerProps) => {
+  const Icon = STATUS_ICONS[status] || Car;
+  const bgColor = STATUS_COLORS[status] || "bg-primary";
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className={`fixed top-0 left-0 right-0 z-50 ${bgColor} text-white safe-top`}
+        >
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-semibold">{message}</p>
+                {subMessage && (
+                  <p className="text-sm text-white/80">{subMessage}</p>
+                )}
+              </div>
+            </div>
+            {!persistent && onDismiss && (
+              <button
+                onClick={onDismiss}
+                className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+export default RideStatusBanner;
+```
+
+### Integration: `useRideRealtime.ts`
+
+Add sound/haptic triggers directly in the existing `handleStatusChange`:
+
+```typescript
+// At top of file
+import { useNotificationSound } from "@/hooks/useNotificationSound";
+import { useNativeFeatures } from "@/hooks/useNativeFeatures";
+
+// In hook
+const { playStatusUpdateSound } = useNotificationSound();
+const { hapticNotification } = useNativeFeatures();
+
+// In handleStatusChange callback
+const handleStatusChange = useCallback(
+  (newStatus: RideStatus, dbStatus: string) => {
+    console.log(`[Realtime] Status changed: ${dbStatus} → ${newStatus}`);
+    
+    // Update store with new status
+    setStatus(newStatus);
+    
+    // Play sound and haptic for key status changes
+    if (newStatus === "assigned" || newStatus === "arrived") {
+      playStatusUpdateSound();
+      hapticNotification("success");
+    }
+
+    // Handle navigation based on status
+    switch (newStatus) {
+      // ... existing switch cases
+    }
+  },
+  [navigate, setStatus, playStatusUpdateSound, hapticNotification]
 );
 ```
+
+### Page Integrations
+
+**RideSearchingPage.tsx:**
+```typescript
+import RideStatusBanner from "@/components/ride/RideStatusBanner";
+import { useRideStatusNotifications } from "@/hooks/useRideStatusNotifications";
+
+// In component
+const { activeNotification, showBanner, dismissBanner } = useRideStatusNotifications();
+
+// In JSX
+{activeNotification && activeNotification.status === "assigned" && (
+  <RideStatusBanner
+    status={activeNotification.status}
+    message={activeNotification.message}
+    subMessage={activeNotification.subMessage}
+    isVisible={showBanner}
+    onDismiss={dismissBanner}
+  />
+)}
+```
+
+**RideDriverPage.tsx:**
+Already has the arrival banner - add sound/haptic trigger for `arrived` status.
+
+**RideTripPage.tsx:**
+```typescript
+// Add in_trip and completed banners
+{activeNotification && (
+  <RideStatusBanner
+    status={activeNotification.status}
+    message={activeNotification.message}
+    subMessage={activeNotification.subMessage}
+    isVisible={showBanner && ["in_trip", "completed"].includes(activeNotification.status)}
+    onDismiss={dismissBanner}
+  />
+)}
+```
+
+---
+
+## Sound & Haptic Triggers
+
+| Status | Sound | Haptic | Duration |
+|--------|-------|--------|----------|
+| `assigned` | `statusUpdate` | `notification(success)` | Immediate |
+| `arrived` | `statusUpdate` | `notification(success)` | Immediate |
+| `in_trip` | None | None | - |
+| `completed` | None | None | - |
+
+---
+
+## Banner Behavior
+
+| Status | Position | Auto-hide | Dismissible |
+|--------|----------|-----------|-------------|
+| `assigned` | Fixed top | 5 seconds | Yes |
+| `arrived` | In card (existing) | No | No |
+| `in_trip` | Fixed top | 5 seconds | Yes |
+| `completed` | Fixed top | 5 seconds | Yes |
 
 ---
 
 ## Data Flow
 
 ```text
-Driver updates location
+Status change in DB (driver accepts/arrives)
         │
         ▼
-Supabase `drivers` table updated
+Supabase Realtime fires
         │
         ▼
-useDriverLocationRealtime fires callback
-        │
-        ▼
-handleDriverLocationUpdate called with new lat/lng
+useRideRealtime receives update
         │
         ├───────────────────────────────────────┐
         ▼                                       ▼
-Calculate remaining distance            Update car position
-to destination (Haversine)              on map (existing logic)
+Update RideStore status                 Trigger sound + haptic
+        │                               (assigned/arrived only)
+        ▼
+useRideStatusNotifications detects change
         │
         ▼
-Progress = 1 - (remaining / total)
+Show RideStatusBanner with message
         │
-        ├─────────────────────────────┐
-        ▼                             ▼
-Update progress bar UI        Check if remaining < 100m
-                                      │
-                                      ▼
-                              Auto-complete trip
-                              + Show receipt
+        ▼
+Auto-hide after 5s (or persist for arrived)
 ```
-
----
-
-## Demo Mode Fallback
-
-When in demo mode (no real driver tracking):
-- Keep existing timer-based progress simulation
-- The 120-second simulated trip continues to work
-
-```typescript
-// Only use realtime if not in demo mode and driver ID exists
-useDriverLocationRealtime(
-  isDemoMode ? undefined : state.driver?.id,
-  handleDriverLocationUpdate
-);
-
-// Fallback to timer-based progress in demo mode
-useEffect(() => {
-  if (isDemoMode || !state.driver?.id) {
-    // Existing timer simulation
-    const simulatedDuration = 120;
-    const newProgress = Math.min(1, elapsed / simulatedDuration);
-    setTripProgress(newProgress);
-  }
-}, [isDemoMode, state.driver?.id, elapsed]);
-```
-
----
-
-## Edge Cases
-
-| Scenario | Handling |
-|----------|----------|
-| Driver ID not available | Fall back to timer-based progress |
-| Demo mode | Continue using elapsed time simulation |
-| totalDistance = 0 | Set progress to 0 (prevent division by zero) |
-| Driver overshoots destination | Cap progress at 100% |
-| Already auto-completed | Prevent duplicate completion via `hasAutoCompleted` flag |
-| Page reload during trip | Recalculate progress from current positions |
-
----
-
-## UI Changes (None)
-
-The existing progress bar and layout remain unchanged. Only the data source changes:
-
-**Before:** `progress = elapsed / 120` (time-based)  
-**After:** `progress = 1 - (remaining / total)` (distance-based)
 
 ---
 
 ## No Changes To
 
-- Progress bar styling
-- Trip status banner
-- ETA display logic
-- End trip button behavior
+- Existing toast notifications (supplementary)
+- Map visualizations
+- Driver info card layout
 - Receipt modal
-- Map visualization
-- Bottom navigation
-
+- Progress bar styling
