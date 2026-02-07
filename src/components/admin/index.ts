@@ -18,3 +18,6 @@ export { default as MissionControlSidebar } from './MissionControlSidebar';
 export { default as BookingLedger } from './BookingLedger';
 export { default as BookingDetailSlideOver } from './BookingDetailSlideOver';
 export { default as LedgerFilters } from './LedgerFilters';
+
+// Rides Dashboard
+export { default as AdminRidesDashboard } from './AdminRidesDashboard';

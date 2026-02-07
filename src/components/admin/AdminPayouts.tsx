@@ -481,17 +481,30 @@ const AdminPayouts = () => {
                             {new Date(payout.created_at).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedPayout(payout);
-                                setIsDetailOpen(true);
-                              }}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              {payout.status === "pending" && (
+                                <Button
+                                  size="sm"
+                                  className="h-7 px-2 bg-green-600 hover:bg-green-700 text-white gap-1"
+                                  onClick={() => updatePayoutMutation.mutate({ id: payout.id, status: "completed" })}
+                                  disabled={updatePayoutMutation.isPending}
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                  Mark Paid
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => {
+                                  setSelectedPayout(payout);
+                                  setIsDetailOpen(true);
+                                }}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
