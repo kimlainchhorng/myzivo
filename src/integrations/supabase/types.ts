@@ -9588,6 +9588,65 @@ export type Database = {
           },
         ]
       }
+      order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string | null
+          data: Json | null
+          id: string
+          order_id: string | null
+          trip_id: string | null
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          order_id?: string | null
+          trip_id?: string | null
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          order_id?: string | null
+          trip_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_events_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_offers: {
         Row: {
           created_at: string | null
@@ -22122,6 +22181,9 @@ export type Database = {
         | "operations"
         | "finance"
         | "support"
+        | "driver"
+        | "merchant"
+        | "customer"
       approval_status: "pending" | "approved" | "rejected"
       beta_launch_state: "not_ready" | "ready_for_beta" | "beta_live" | "paused"
       booking_status:
@@ -22424,6 +22486,9 @@ export const Constants = {
         "operations",
         "finance",
         "support",
+        "driver",
+        "merchant",
+        "customer",
       ],
       approval_status: ["pending", "approved", "rejected"],
       beta_launch_state: ["not_ready", "ready_for_beta", "beta_live", "paused"],

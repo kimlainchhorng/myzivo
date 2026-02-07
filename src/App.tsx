@@ -363,6 +363,16 @@ const ComplianceDashboard = lazy(() => import("./pages/admin/modules/compliance/
 const AutomationDashboard = lazy(() => import("./pages/admin/modules/automation/AutomationDashboard"));
 const ProductionLaunchDashboard = lazy(() => import("./pages/admin/modules/launch/ProductionLaunchDashboard"));
 
+// Dispatch Panel
+const DispatchLayout = lazy(() => import("./pages/dispatch/DispatchLayout"));
+const DispatchDashboard = lazy(() => import("./pages/dispatch/DispatchDashboard"));
+const DispatchOrdersKanban = lazy(() => import("./pages/dispatch/DispatchOrdersKanban"));
+const DispatchOrderDetail = lazy(() => import("./pages/dispatch/DispatchOrderDetail"));
+const DispatchDrivers = lazy(() => import("./pages/dispatch/DispatchDrivers"));
+const DispatchMerchants = lazy(() => import("./pages/dispatch/DispatchMerchants"));
+const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
+const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
+
 // Go-Live & Launch Runbook
 const GoLiveChecklist = lazy(() => import("./pages/admin/GoLiveChecklist"));
 const LaunchDayRunbook = lazy(() => import("./pages/admin/LaunchDayRunbook"));
@@ -1344,6 +1354,16 @@ const App = () => (
                 {/* Go-Live Checklist & Launch Runbook */}
                 <Route path="/admin/go-live" element={<ProtectedRoute requireAdmin><GoLiveChecklist /></ProtectedRoute>} />
                 <Route path="/admin/launch-runbook" element={<ProtectedRoute requireAdmin><LaunchDayRunbook /></ProtectedRoute>} />
+                {/* Dispatch Panel Routes */}
+                <Route path="/dispatch" element={<ProtectedRoute requireAdmin><DispatchLayout /></ProtectedRoute>}>
+                  <Route index element={<DispatchDashboard />} />
+                  <Route path="orders" element={<DispatchOrdersKanban />} />
+                  <Route path="orders/:id" element={<DispatchOrderDetail />} />
+                  <Route path="drivers" element={<DispatchDrivers />} />
+                  <Route path="merchants" element={<DispatchMerchants />} />
+                  <Route path="payouts" element={<DispatchPayouts />} />
+                  <Route path="settings" element={<DispatchSettings />} />
+                </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
