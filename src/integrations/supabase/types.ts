@@ -4465,6 +4465,39 @@ export type Database = {
           },
         ]
       }
+      driver_pay_rules: {
+        Row: {
+          base_pay_cents: number
+          created_at: string | null
+          id: string
+          is_active: boolean
+          min_pay_cents: number
+          per_mile_pay_cents: number
+          tip_to_driver_percent: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_pay_cents?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_pay_cents?: number
+          per_mile_pay_cents?: number
+          tip_to_driver_percent?: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_pay_cents?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_pay_cents?: number
+          per_mile_pay_cents?: number
+          tip_to_driver_percent?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       driver_payout_settings: {
         Row: {
           auto_weekly: boolean | null
@@ -4503,6 +4536,64 @@ export type Database = {
             columns: ["driver_id"]
             isOneToOne: true
             referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_queue: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          id: string
+          is_active: boolean | null
+          last_assigned_at: string | null
+          region_id: string
+          score: number | null
+          total_assigned_today: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          id?: string
+          is_active?: boolean | null
+          last_assigned_at?: string | null
+          region_id: string
+          score?: number | null
+          total_assigned_today?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          id?: string
+          is_active?: boolean | null
+          last_assigned_at?: string | null
+          region_id?: string
+          score?: number | null
+          total_assigned_today?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_queue_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_queue_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_queue_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
             referencedColumns: ["id"]
           },
         ]
@@ -6986,6 +7077,7 @@ export type Database = {
           admin_override_reason: string | null
           admin_price_override: number | null
           assigned_at: string | null
+          base_fare: number | null
           branch_id: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
@@ -7000,6 +7092,7 @@ export type Database = {
           delivery_address: string
           delivery_confirmed_by: string | null
           delivery_fee: number | null
+          delivery_fee_cents: number | null
           delivery_lat: number
           delivery_lng: number
           delivery_photo_url: string | null
@@ -7008,6 +7101,7 @@ export type Database = {
           dispute_id: string | null
           dispute_status: string | null
           distance_miles: number | null
+          driver_earnings_cents: number | null
           driver_id: string | null
           driver_payout_cents: number | null
           driver_response_status: string | null
@@ -7020,12 +7114,15 @@ export type Database = {
           paid_at: string | null
           payment_status: string | null
           payout_at: string | null
+          payout_driver: number | null
           payout_error: string | null
           payout_hold: boolean | null
           payout_hold_reason: string | null
           payout_idempotency_key: string | null
           payout_status: string | null
           payout_transfer_id: string | null
+          per_mile_rate: number | null
+          per_minute_rate: number | null
           picked_up_at: string | null
           pickup_by: string | null
           pickup_lat: number | null
@@ -7034,6 +7131,9 @@ export type Database = {
           platform_fee: number | null
           prep_minutes: number | null
           prepared_at: string | null
+          pricing_breakdown: Json | null
+          pricing_locked: boolean | null
+          pricing_version: string | null
           quoted_delivery_fee: number | null
           quoted_service_fee: number | null
           quoted_small_order_fee: number | null
@@ -7048,6 +7148,8 @@ export type Database = {
           refunded_at: string | null
           region_id: string | null
           restaurant_id: string
+          service_fee: number | null
+          service_fee_cents: number | null
           special_instructions: string | null
           square_location_id: string | null
           square_order_id: string | null
@@ -7055,7 +7157,9 @@ export type Database = {
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
           subtotal: number
+          surge_fee_cents: number | null
           surge_multiplier: number | null
+          surged_subtotal: number | null
           tax: number | null
           tip_amount: number | null
           total_amount: number
@@ -7068,6 +7172,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_at?: string | null
+          base_fare?: number | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -7082,6 +7187,7 @@ export type Database = {
           delivery_address: string
           delivery_confirmed_by?: string | null
           delivery_fee?: number | null
+          delivery_fee_cents?: number | null
           delivery_lat: number
           delivery_lng: number
           delivery_photo_url?: string | null
@@ -7090,6 +7196,7 @@ export type Database = {
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
+          driver_earnings_cents?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
           driver_response_status?: string | null
@@ -7102,12 +7209,15 @@ export type Database = {
           paid_at?: string | null
           payment_status?: string | null
           payout_at?: string | null
+          payout_driver?: number | null
           payout_error?: string | null
           payout_hold?: boolean | null
           payout_hold_reason?: string | null
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
+          per_mile_rate?: number | null
+          per_minute_rate?: number | null
           picked_up_at?: string | null
           pickup_by?: string | null
           pickup_lat?: number | null
@@ -7116,6 +7226,9 @@ export type Database = {
           platform_fee?: number | null
           prep_minutes?: number | null
           prepared_at?: string | null
+          pricing_breakdown?: Json | null
+          pricing_locked?: boolean | null
+          pricing_version?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
@@ -7130,6 +7243,8 @@ export type Database = {
           refunded_at?: string | null
           region_id?: string | null
           restaurant_id: string
+          service_fee?: number | null
+          service_fee_cents?: number | null
           special_instructions?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
@@ -7137,7 +7252,9 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal: number
+          surge_fee_cents?: number | null
           surge_multiplier?: number | null
+          surged_subtotal?: number | null
           tax?: number | null
           tip_amount?: number | null
           total_amount: number
@@ -7150,6 +7267,7 @@ export type Database = {
           admin_override_reason?: string | null
           admin_price_override?: number | null
           assigned_at?: string | null
+          base_fare?: number | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -7164,6 +7282,7 @@ export type Database = {
           delivery_address?: string
           delivery_confirmed_by?: string | null
           delivery_fee?: number | null
+          delivery_fee_cents?: number | null
           delivery_lat?: number
           delivery_lng?: number
           delivery_photo_url?: string | null
@@ -7172,6 +7291,7 @@ export type Database = {
           dispute_id?: string | null
           dispute_status?: string | null
           distance_miles?: number | null
+          driver_earnings_cents?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
           driver_response_status?: string | null
@@ -7184,12 +7304,15 @@ export type Database = {
           paid_at?: string | null
           payment_status?: string | null
           payout_at?: string | null
+          payout_driver?: number | null
           payout_error?: string | null
           payout_hold?: boolean | null
           payout_hold_reason?: string | null
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
+          per_mile_rate?: number | null
+          per_minute_rate?: number | null
           picked_up_at?: string | null
           pickup_by?: string | null
           pickup_lat?: number | null
@@ -7198,6 +7321,9 @@ export type Database = {
           platform_fee?: number | null
           prep_minutes?: number | null
           prepared_at?: string | null
+          pricing_breakdown?: Json | null
+          pricing_locked?: boolean | null
+          pricing_version?: string | null
           quoted_delivery_fee?: number | null
           quoted_service_fee?: number | null
           quoted_small_order_fee?: number | null
@@ -7212,6 +7338,8 @@ export type Database = {
           refunded_at?: string | null
           region_id?: string | null
           restaurant_id?: string
+          service_fee?: number | null
+          service_fee_cents?: number | null
           special_instructions?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
@@ -7219,7 +7347,9 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           subtotal?: number
+          surge_fee_cents?: number | null
           surge_multiplier?: number | null
+          surged_subtotal?: number | null
           tax?: number | null
           tip_amount?: number | null
           total_amount?: number
@@ -12251,6 +12381,51 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_pricing: {
+        Row: {
+          base_delivery_fee_cents: number
+          created_at: string | null
+          id: string
+          is_active: boolean
+          maximum_delivery_fee_cents: number
+          minimum_delivery_fee_cents: number
+          per_mile_fee_cents: number
+          service_fee_percent: number
+          surge_enabled: boolean
+          surge_multiplier: number
+          tax_percent: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_delivery_fee_cents?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          maximum_delivery_fee_cents?: number
+          minimum_delivery_fee_cents?: number
+          per_mile_fee_cents?: number
+          service_fee_percent?: number
+          surge_enabled?: boolean
+          surge_multiplier?: number
+          tax_percent?: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_delivery_fee_cents?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          maximum_delivery_fee_cents?: number
+          minimum_delivery_fee_cents?: number
+          per_mile_fee_cents?: number
+          service_fee_percent?: number
+          surge_enabled?: boolean
+          surge_multiplier?: number
+          tax_percent?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           description: string | null
@@ -12559,6 +12734,48 @@ export type Database = {
           surge_multiplier?: number
           updated_at?: string
           vehicle_type?: string
+        }
+        Relationships: []
+      }
+      pricing_config: {
+        Row: {
+          base_fare: number
+          created_at: string | null
+          driver_payout_percent: number
+          id: string
+          is_active: boolean | null
+          minimum_fare: number
+          per_mile_rate: number
+          per_minute_rate: number
+          service_fee_flat: number
+          service_fee_percent: number
+          updated_at: string | null
+        }
+        Insert: {
+          base_fare?: number
+          created_at?: string | null
+          driver_payout_percent?: number
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number
+          per_mile_rate?: number
+          per_minute_rate?: number
+          service_fee_flat?: number
+          service_fee_percent?: number
+          updated_at?: string | null
+        }
+        Update: {
+          base_fare?: number
+          created_at?: string | null
+          driver_payout_percent?: number
+          id?: string
+          is_active?: boolean | null
+          minimum_fare?: number
+          per_mile_rate?: number
+          per_minute_rate?: number
+          service_fee_flat?: number
+          service_fee_percent?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -13816,6 +14033,9 @@ export type Database = {
       }
       regions: {
         Row: {
+          bbox: Json | null
+          center_lat: number | null
+          center_lng: number | null
           city: string
           country: string | null
           created_at: string | null
@@ -13825,11 +14045,15 @@ export type Database = {
           id: string
           is_active: boolean | null
           name: string
+          polygon: Json | null
           state: string
           timezone: string | null
           updated_at: string | null
         }
         Insert: {
+          bbox?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
           city: string
           country?: string | null
           created_at?: string | null
@@ -13839,11 +14063,15 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name: string
+          polygon?: Json | null
           state: string
           timezone?: string | null
           updated_at?: string | null
         }
         Update: {
+          bbox?: Json | null
+          center_lat?: number | null
+          center_lng?: number | null
           city?: string
           country?: string | null
           created_at?: string | null
@@ -13853,6 +14081,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           name?: string
+          polygon?: Json | null
           state?: string
           timezone?: string | null
           updated_at?: string | null
@@ -14490,6 +14719,7 @@ export type Database = {
           address: string
           avg_prep_time: number | null
           bank_connected: boolean | null
+          busy_mode: boolean | null
           cancel_at_period_end: boolean | null
           cancel_rate: number | null
           commission_rate: number | null
@@ -14513,6 +14743,7 @@ export type Database = {
           plan_updated_at: string | null
           rating: number | null
           rating_count: number | null
+          region_id: string | null
           status: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id: string | null
           stripe_customer_id: string | null
@@ -14528,6 +14759,7 @@ export type Database = {
           address: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          busy_mode?: boolean | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           commission_rate?: number | null
@@ -14551,6 +14783,7 @@ export type Database = {
           plan_updated_at?: string | null
           rating?: number | null
           rating_count?: number | null
+          region_id?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -14566,6 +14799,7 @@ export type Database = {
           address?: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          busy_mode?: boolean | null
           cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           commission_rate?: number | null
@@ -14589,6 +14823,7 @@ export type Database = {
           plan_updated_at?: string | null
           rating?: number | null
           rating_count?: number | null
+          region_id?: string | null
           status?: Database["public"]["Enums"]["partner_status"] | null
           stripe_account_id?: string | null
           stripe_customer_id?: string | null
@@ -14600,7 +14835,15 @@ export type Database = {
           total_orders?: number | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restore_operations: {
         Row: {
@@ -14872,6 +15115,8 @@ export type Database = {
         Row: {
           actual_distance_miles: number | null
           actual_duration_min: number | null
+          bonus_amount: number | null
+          bonus_zone_id: string | null
           cancel_reason: string | null
           cancellation_fee: number | null
           cancelled_at: string | null
@@ -14903,6 +15148,8 @@ export type Database = {
         Insert: {
           actual_distance_miles?: number | null
           actual_duration_min?: number | null
+          bonus_amount?: number | null
+          bonus_zone_id?: string | null
           cancel_reason?: string | null
           cancellation_fee?: number | null
           cancelled_at?: string | null
@@ -14934,6 +15181,8 @@ export type Database = {
         Update: {
           actual_distance_miles?: number | null
           actual_duration_min?: number | null
+          bonus_amount?: number | null
+          bonus_zone_id?: string | null
           cancel_reason?: string | null
           cancellation_fee?: number | null
           cancelled_at?: string | null
@@ -14963,6 +15212,13 @@ export type Database = {
           trip_started_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "rides_bonus_zone_id_fkey"
+            columns: ["bonus_zone_id"]
+            isOneToOne: false
+            referencedRelation: "bonus_zones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rides_driver_id_fkey"
             columns: ["driver_id"]
@@ -16977,6 +17233,106 @@ export type Database = {
         }
         Relationships: []
       }
+      surge_overrides: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          forced_multiplier: number
+          id: string
+          is_active: boolean | null
+          reason: string | null
+          region_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          forced_multiplier: number
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          region_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          forced_multiplier?: number
+          id?: string
+          is_active?: boolean | null
+          reason?: string | null
+          region_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_overrides_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surge_rules: {
+        Row: {
+          created_at: string | null
+          day_of_week: number[] | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          max_multiplier: number | null
+          max_online_drivers: number | null
+          min_pending_orders: number | null
+          name: string
+          priority: number | null
+          region_id: string
+          starts_at: string | null
+          surge_multiplier: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week?: number[] | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_multiplier?: number | null
+          max_online_drivers?: number | null
+          min_pending_orders?: number | null
+          name?: string
+          priority?: number | null
+          region_id: string
+          starts_at?: string | null
+          surge_multiplier?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number[] | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_multiplier?: number | null
+          max_online_drivers?: number | null
+          min_pending_orders?: number | null
+          name?: string
+          priority?: number | null
+          region_id?: string
+          starts_at?: string | null
+          surge_multiplier?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_rules_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       surge_zones: {
         Row: {
           base_multiplier: number
@@ -18268,6 +18624,7 @@ export type Database = {
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
           surge_multiplier: number | null
+          surged_fare: number | null
           updated_at: string | null
         }
         Insert: {
@@ -18322,6 +18679,7 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           surge_multiplier?: number | null
+          surged_fare?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -18376,6 +18734,7 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
           surge_multiplier?: number | null
+          surged_fare?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -22834,7 +23193,20 @@ export type Database = {
       }
     }
     Functions: {
+      auto_assign_order: { Args: { p_order_id: string }; Returns: Json }
+      auto_assign_order_v2: {
+        Args: { p_order_id: string; p_service_type?: string }
+        Returns: Json
+      }
       calculate_clv_tier: { Args: { p_clv_score: number }; Returns: string }
+      calculate_order_price: {
+        Args: {
+          p_distance_miles: number
+          p_duration_minutes: number
+          p_tip?: number
+        }
+        Returns: Json
+      }
       calculate_p2p_booking_fees: {
         Args: {
           p_daily_rate: number
@@ -23001,6 +23373,11 @@ export type Database = {
           trusted_devices_count: number
         }[]
       }
+      get_zone_stats: { Args: { p_region_id: string }; Returns: Json }
+      get_zone_surge_multiplier: {
+        Args: { p_region_id: string }
+        Returns: number
+      }
       has_accepted_policy: {
         Args: { p_policy_type: string; p_user_id: string }
         Returns: boolean
@@ -23094,6 +23471,14 @@ export type Database = {
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
+      }
+      score_driver_for_assignment: {
+        Args: {
+          p_driver_id: string
+          p_pickup_lat: number
+          p_pickup_lng: number
+        }
+        Returns: number
       }
       submit_order_rating: {
         Args: {
