@@ -11,6 +11,7 @@ import {
   Users,
   Store,
   DollarSign,
+  BarChart3,
   Settings,
   LogOut,
   Menu,
@@ -45,6 +46,11 @@ const navItems = [
     label: "Payouts",
     path: "/dispatch/payouts",
     icon: DollarSign,
+  },
+  {
+    label: "Analytics",
+    path: "/dispatch/analytics",
+    icon: BarChart3,
   },
   {
     label: "Settings",
