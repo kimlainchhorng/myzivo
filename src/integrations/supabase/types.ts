@@ -13145,6 +13145,10 @@ export type Database = {
       }
       rides: {
         Row: {
+          cancel_reason: string | null
+          cancellation_fee: number | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           created_at: string | null
           dest_lat: number | null
           dest_lng: number | null
@@ -13153,15 +13157,23 @@ export type Database = {
           driver_id: string | null
           duration_min: number | null
           id: string
+          payment_status: string | null
           pickup_lat: number | null
           pickup_lng: number | null
           pickup_text: string | null
           price: number | null
+          refund_amount: number | null
+          refund_status: string | null
           ride_type: string | null
           rider_user_id: string | null
           status: string | null
+          stripe_payment_intent_id: string | null
         }
         Insert: {
+          cancel_reason?: string | null
+          cancellation_fee?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
@@ -13170,15 +13182,23 @@ export type Database = {
           driver_id?: string | null
           duration_min?: number | null
           id?: string
+          payment_status?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           pickup_text?: string | null
           price?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
           ride_type?: string | null
           rider_user_id?: string | null
           status?: string | null
+          stripe_payment_intent_id?: string | null
         }
         Update: {
+          cancel_reason?: string | null
+          cancellation_fee?: number | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
@@ -13187,13 +13207,17 @@ export type Database = {
           driver_id?: string | null
           duration_min?: number | null
           id?: string
+          payment_status?: string | null
           pickup_lat?: number | null
           pickup_lng?: number | null
           pickup_text?: string | null
           price?: number | null
+          refund_amount?: number | null
+          refund_status?: string | null
           ride_type?: string | null
           rider_user_id?: string | null
           status?: string | null
+          stripe_payment_intent_id?: string | null
         }
         Relationships: [
           {
