@@ -159,7 +159,7 @@ export const fetchDriverInfo = async (driverId: string): Promise<DriverInfo | nu
   try {
     const { data, error } = await supabase
       .from("drivers")
-      .select("full_name, rating, vehicle_model, vehicle_plate, avatar_url, total_trips")
+      .select("id, full_name, rating, vehicle_model, vehicle_plate, avatar_url, total_trips")
       .eq("id", driverId)
       .single();
 
@@ -169,6 +169,7 @@ export const fetchDriverInfo = async (driverId: string): Promise<DriverInfo | nu
     }
 
     return {
+      id: data.id,
       name: data.full_name,
       rating: data.rating || 4.8,
       car: data.vehicle_model || "Vehicle",

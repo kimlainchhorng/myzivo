@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Phone, MessageCircle, X, Star, Clock } from "lucide-react";
+import { Phone, MessageCircle, X, Star, Clock, Car } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import DriverMapView from "@/components/ride/DriverMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 import { useRideRealtime } from "@/hooks/useRideRealtime";
+import { useDriverLocationRealtime } from "@/hooks/useTripRealtime";
 import DemoModeBanner from "@/components/ride/DemoModeBanner";
 import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 
@@ -18,16 +19,60 @@ import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
 const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
 
+// Haversine formula to calculate distance in miles
+const haversineMiles = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 3958.8; // Earth radius in miles
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + 
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const ASSUMED_SPEED_MPH = 30;
+
 const RideDriverPage = () => {
   const navigate = useNavigate();
   const { state, updateEta, setStatus, startTrip, cancelRide } = useRideStore();
   const [isCancelling, setIsCancelling] = useState(false);
   const [isStartingTrip, setIsStartingTrip] = useState(false);
+  const [realTimeDriverLocation, setRealTimeDriverLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Subscribe to realtime updates
   const { isDemoMode } = useRideRealtime({
     tripId: state.tripId,
   });
+
+  // Get driver info from store or fallback
+  const driver = state.driver || DEFAULT_MOCK_DRIVER;
+  const driverId = driver.id;
+  
+  // Get coordinates from state or use defaults
+  const pickupLocation = state.pickupCoords || DEFAULT_PICKUP;
+  const routeCoordinates = state.routeCoordinates || [];
+
+  // Handle driver location updates from realtime subscription
+  const handleDriverLocationUpdate = useCallback((lat: number, lng: number) => {
+    setRealTimeDriverLocation({ lat, lng });
+    
+    // Calculate ETA based on distance to pickup
+    const distanceMiles = haversineMiles(lat, lng, pickupLocation.lat, pickupLocation.lng);
+    
+    // If very close (< 0.1 miles), set ETA to minimum
+    if (distanceMiles < 0.1) {
+      updateEta(30); // 30 seconds
+    } else {
+      const etaMinutes = Math.ceil((distanceMiles / ASSUMED_SPEED_MPH) * 60);
+      updateEta(Math.max(30, etaMinutes * 60)); // Convert to seconds, minimum 30 seconds
+    }
+  }, [pickupLocation, updateEta]);
+
+  // Subscribe to driver location updates (only if we have a driver ID and not in demo mode)
+  useDriverLocationRealtime(
+    isDemoMode ? undefined : driverId,
+    handleDriverLocationUpdate
+  );
 
   // Redirect if no active ride
   useEffect(() => {
@@ -36,13 +81,6 @@ const RideDriverPage = () => {
     }
   }, [state.status, state.rideId, navigate]);
 
-  // Get driver info from store or fallback
-  const driver = state.driver || DEFAULT_MOCK_DRIVER;
-  
-  // Get coordinates from state or use defaults
-  const pickupLocation = state.pickupCoords || DEFAULT_PICKUP;
-  const routeCoordinates = state.routeCoordinates || [];
-  
   // Calculate driver progress based on ETA (300 seconds = 0%, 0 seconds = 100%)
   const driverProgress = Math.min(1, 1 - (state.eta / 300));
   
@@ -51,11 +89,16 @@ const RideDriverPage = () => {
     ? routeCoordinates.slice(0, Math.ceil(routeCoordinates.length * 0.3)).reverse()
     : [[DEFAULT_DRIVER_START.lng, DEFAULT_DRIVER_START.lat], [pickupLocation.lng, pickupLocation.lat]];
 
-  // Calculate driver position based on progress
-  const driverLocation = interpolateRoutePosition(driverRouteToPickup, driverProgress);
+  // Calculate driver position - use realtime location if available, otherwise interpolate
+  const driverLocation = realTimeDriverLocation 
+    ? { lat: realTimeDriverLocation.lat, lng: realTimeDriverLocation.lng }
+    : interpolateRoutePosition(driverRouteToPickup, driverProgress);
 
-  // ETA countdown timer (from 300 seconds = 5 min)
+  // ETA countdown timer (fallback for demo mode or when no realtime updates)
   useEffect(() => {
+    // Skip countdown if we have realtime driver location (ETA is calculated from distance)
+    if (!isDemoMode && driverId && realTimeDriverLocation) return;
+    
     if (state.eta <= 0 || state.status === 'arrived') return;
 
     const interval = setInterval(() => {
@@ -69,11 +112,12 @@ const RideDriverPage = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state.eta, state.status, updateEta, setStatus]);
+  }, [state.eta, state.status, updateEta, setStatus, isDemoMode, driverId, realTimeDriverLocation]);
 
   // Format ETA for display
   const etaMinutes = Math.ceil(state.eta / 60);
   const hasArrived = state.status === 'arrived' || state.eta === 0;
+  const isArrivingSoon = state.eta > 0 && state.eta < 60; // Less than 1 minute
 
   const handleCall = () => {
     toast.info("Calling driver...", { duration: 2000 });
@@ -148,7 +192,19 @@ const RideDriverPage = () => {
         transition={{ delay: 0.2 }}
         className="relative -mt-6 px-4"
       >
-        <Card className="bg-zinc-900/95 backdrop-blur-xl border-white/10">
+        <Card className="bg-zinc-900/95 backdrop-blur-xl border-white/10 overflow-hidden">
+          {/* Arrival Banner */}
+          {hasArrived && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-green-500 text-white text-center py-3 px-4 font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <Car className="w-5 h-5" />
+              <span>Your driver has arrived</span>
+            </motion.div>
+          )}
+
           <CardContent className="p-4 space-y-4">
             {/* Driver Info Row */}
             <div className="flex items-center gap-4">
@@ -185,20 +241,22 @@ const RideDriverPage = () => {
             </div>
 
             {/* ETA Display */}
-            <motion.div
-              animate={hasArrived ? { scale: [1, 1.02, 1] } : {}}
-              transition={{ duration: 0.5, repeat: hasArrived ? Infinity : 0, repeatDelay: 1 }}
-              className={`flex items-center justify-center gap-3 py-4 rounded-xl border ${
-                hasArrived
-                  ? "bg-green-500/20 border-green-500/40"
-                  : "bg-primary/10 border-primary/20"
-              }`}
-            >
-              <Clock className={`w-5 h-5 ${hasArrived ? "text-green-400" : "text-primary"}`} />
-              <span className={`text-lg font-bold ${hasArrived ? "text-green-400" : "text-white"}`}>
-                {hasArrived ? "Driver has arrived!" : `Arriving in ${etaMinutes} min`}
-              </span>
-            </motion.div>
+            {!hasArrived && (
+              <motion.div
+                animate={isArrivingSoon ? { scale: [1, 1.02, 1] } : {}}
+                transition={{ duration: 0.5, repeat: isArrivingSoon ? Infinity : 0, repeatDelay: 1 }}
+                className={`flex items-center justify-center gap-3 py-4 rounded-xl border ${
+                  isArrivingSoon
+                    ? "bg-yellow-500/20 border-yellow-500/40"
+                    : "bg-primary/10 border-primary/20"
+                }`}
+              >
+                <Clock className={`w-5 h-5 ${isArrivingSoon ? "text-yellow-400" : "text-primary"}`} />
+                <span className={`text-lg font-bold ${isArrivingSoon ? "text-yellow-400" : "text-white"}`}>
+                  {isArrivingSoon ? "Arriving now" : `Arriving in ${etaMinutes} min`}
+                </span>
+              </motion.div>
+            )}
 
             {/* Action Buttons */}
             <div className="grid grid-cols-3 gap-3">
