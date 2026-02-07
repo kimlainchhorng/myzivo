@@ -1,10 +1,10 @@
 
 
-# Rider Trip History Page
+# Rider Payment Methods Screen (Mock)
 
 ## Summary
 
-Create a dedicated ride history page at `/rides/history` that shows past rides with pickup, destination, price, date, and status. Add a "Past Trips" quick-access button on the mobile home screen.
+Create a dedicated `/payment-methods` page for riders to manage their saved cards. This is a mock implementation storing payment methods in localStorage, preparing the UI and data structure for future real payment integration.
 
 ---
 
@@ -12,35 +12,38 @@ Create a dedicated ride history page at `/rides/history` that shows past rides w
 
 | Component | Status |
 |-----------|--------|
-| `useRiderTripHistory` hook | Already exists - fetches trips where `rider_id = user.id` and status is `completed` or `cancelled` |
-| `TripHistory` page | Exists at `/trips` - full-featured history page with stats, tabs, receipts |
-| `/rides/history` route | Does not exist |
-| "Past Trips" button on home | Does not exist |
+| `zivo_payment_methods` table | Exists in Supabase (for real integration later) |
+| `usePaymentMethods()` hook | Exists but queries Supabase |
+| `/payment-methods` route | Does not exist |
+| Add card form | Does not exist |
+| Mock localStorage storage | Does not exist |
 
 ---
 
 ## Implementation Approach
 
-### Option A: Reuse Existing Page (Recommended)
+### 1. Create Mock Payment Methods Hook
 
-Since `TripHistory.tsx` already provides a complete ride history experience:
-1. Add an alias route `/rides/history` pointing to the existing `TripHistory` component
-2. Add "Past Trips" button to `AppHome.tsx`
+New hook `useLocalPaymentMethods` that:
+- Stores cards in localStorage under `zivo_local_payment_methods`
+- Provides add, delete, and set default functions
+- Syncs with localStorage on changes
 
-### Option B: Create New Simplified Page
+### 2. Create `/payment-methods` Page
 
-Create a new lightweight page with just the essential trip list (no stats, no tabs).
+Full-screen mobile-first page with:
+- List of saved payment methods
+- Add card form (mock fields: card number, expiry, CVV, name)
+- Set default functionality
+- Delete card functionality
 
----
+### 3. Update Ride Confirm Page
 
-## Recommended: Option A
+Show the selected default payment method from localStorage with a link to manage cards.
 
-This avoids code duplication since `TripHistory` already:
-- Fetches trips for the current user via `useRiderTripHistory`
-- Shows pickup/dropoff addresses
-- Displays price and date
-- Shows completed/cancelled status with tabs
-- Includes receipt viewing and "Book Again" functionality
+### 4. Add Navigation Button
+
+Add "Manage Cards" link on ride confirmation screen.
 
 ---
 
@@ -48,135 +51,256 @@ This avoids code duplication since `TripHistory` already:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/App.tsx` | Modify | Add `/rides/history` route pointing to `TripHistory` |
-| `src/pages/app/AppHome.tsx` | Modify | Add "Past Trips" quick-access button |
+| `src/hooks/useLocalPaymentMethods.ts` | Create | Mock hook for localStorage-based payment methods |
+| `src/pages/PaymentMethodsPage.tsx` | Create | Payment methods management page |
+| `src/App.tsx` | Modify | Add `/payment-methods` route |
+| `src/pages/ride/RideConfirmPage.tsx` | Modify | Show selected payment method from local storage |
+| `src/pages/app/AppHome.tsx` | Modify | Add "Payment Methods" quick action |
 
 ---
 
 ## Technical Details
 
-### Route Addition (App.tsx)
-
-Add new route near existing ride routes:
+### New Hook: `useLocalPaymentMethods`
 
 ```typescript
-{/* ZIVO Ride - Premium Rider Flow */}
-<Route path="/ride" element={<RidePage />} />
-<Route path="/ride/confirm" element={<RideConfirmPage />} />
-<Route path="/ride/searching" element={<RideSearchingPage />} />
-<Route path="/ride/driver" element={<RideDriverPage />} />
-<Route path="/ride/trip" element={<RideTripPage />} />
-<Route path="/rides/history" element={<SetupRequiredRoute><TripHistory /></SetupRequiredRoute>} />
+const STORAGE_KEY = "zivo_local_payment_methods";
+
+interface LocalPaymentMethod {
+  id: string;
+  type: "card" | "wallet";
+  brand: string;        // "Visa", "Mastercard", etc.
+  last4: string;
+  expMonth: number;
+  expYear: number;
+  cardholderName: string;
+  isDefault: boolean;
+  createdAt: number;
+}
+
+export function useLocalPaymentMethods() {
+  const [methods, setMethods] = useState<LocalPaymentMethod[]>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  // Persist to localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(methods));
+  }, [methods]);
+
+  const addCard = (card: Omit<LocalPaymentMethod, "id" | "createdAt">) => {
+    // ...
+  };
+
+  const deleteCard = (id: string) => {
+    // ...
+  };
+
+  const setDefault = (id: string) => {
+    // ...
+  };
+
+  const getDefault = () => methods.find(m => m.isDefault) || methods[0];
+
+  return { methods, addCard, deleteCard, setDefault, getDefault };
+}
 ```
 
-### Home Screen Button (AppHome.tsx)
+### New Page: `PaymentMethodsPage.tsx`
 
-Add a "Past Trips" button in the bottom action row, using the existing dark card style:
-
-```typescript
-// In the bottom row grid, add a Past Trips card
-<DarkCard
-  title="Past Trips"
-  subtitle="Ride History"
-  icon={Clock}
-  onNavigate={() => navigate("/rides/history")}
-  className="col-span-2 h-20"
-/>
-```
-
-Alternative placement as a quick action row below the bento grid:
-
-```typescript
-{/* Quick Actions Row */}
-<div className="flex items-center gap-2 mt-4">
-  <motion.button
-    onClick={() => navigate("/rides/history")}
-    whileTap={{ scale: 0.97 }}
-    className="flex-1 bg-zinc-900/80 border border-white/10 rounded-2xl p-3 flex items-center gap-3 touch-manipulation"
-  >
-    <div className="w-8 h-8 bg-primary/20 rounded-xl flex items-center justify-center">
-      <Clock className="w-4 h-4 text-primary" />
-    </div>
-    <div className="text-left">
-      <div className="text-sm font-semibold">Past Trips</div>
-      <div className="text-[10px] text-zinc-400">View ride history</div>
-    </div>
-    <ChevronRight className="w-4 h-4 text-zinc-400 ml-auto" />
-  </motion.button>
-</div>
-```
-
----
-
-## What Riders Will See
-
-### Trip History Page (`/rides/history`)
-
-The existing `TripHistory` component displays:
-
-1. **Stats Summary**: Trip count, total spent, miles traveled
-2. **Tab Navigation**: Completed / Cancelled trips
-3. **Trip Cards** with:
-   - Date and time
-   - Price (prominently displayed)
-   - Rating (if rated)
-   - Pickup address
-   - Dropoff address
-   - Distance and duration
-   - Driver name
-   - "Receipt" button (completed trips)
-   - "Book Again" button
-
-4. **Empty State**: Friendly prompt to book first ride
-
-### Home Screen
-
-New "Past Trips" button provides quick access from the main app screen.
-
----
-
-## Data Flow
+Mobile-first design matching ZIVO's dark glassmorphic aesthetic:
 
 ```text
-User taps "Past Trips"
-        |
-        v
-Navigate to /rides/history
-        |
-        v
-TripHistory component renders
-        |
-        v
-useAuth() gets current user.id
-        |
-        v
-useRiderTripHistory(user.id) fetches from Supabase:
-SELECT * FROM trips
-WHERE rider_id = user.id
-  AND status IN ('completed', 'cancelled')
-ORDER BY created_at DESC
-LIMIT 50
-        |
-        v
-Display trip list with all details
+┌────────────────────────────────────────┐
+│  ← Payment Methods                      │
+├────────────────────────────────────────┤
+│                                        │
+│  ┌────────────────────────────────┐    │
+│  │ 💳 Visa •••• 4242    [Default] │    │
+│  │    Expires 12/25       ★  🗑   │    │
+│  └────────────────────────────────┘    │
+│                                        │
+│  ┌────────────────────────────────┐    │
+│  │ 💳 Mastercard •••• 8888        │    │
+│  │    Expires 06/26       ★  🗑   │    │
+│  └────────────────────────────────┘    │
+│                                        │
+│  ┌────────────────────────────────┐    │
+│  │     + Add New Card             │    │
+│  └────────────────────────────────┘    │
+│                                        │
+├────────────────────────────────────────┤
+│           ADD CARD FORM               │
+│  (Expandable when "Add" is tapped)    │
+│                                        │
+│  Card Number: [________________]       │
+│  Expiry:      [MM/YY]  CVV: [___]     │
+│  Name:        [________________]       │
+│                                        │
+│  [       ADD CARD       ]              │
+└────────────────────────────────────────┘
+```
+
+### Add Card Form Validation
+
+Mock validation (no real processing):
+- Card number: 16 digits with formatting (XXXX XXXX XXXX XXXX)
+- Expiry: MM/YY format, future date
+- CVV: 3-4 digits
+- Name: Required, non-empty
+
+Card brand detection:
+- Starts with 4 → Visa
+- Starts with 5 → Mastercard
+- Starts with 3 → Amex
+- Default → Unknown
+
+### Integration with Ride Confirm Page
+
+Update `RideConfirmPage.tsx` to:
+1. Import and use `useLocalPaymentMethods`
+2. Show default card from localStorage instead of hardcoded options
+3. Add "Manage" link to `/payment-methods`
+
+```typescript
+// In RideConfirmPage
+const { getDefault, methods } = useLocalPaymentMethods();
+const defaultCard = getDefault();
+
+// Display:
+{defaultCard ? (
+  <div className="flex items-center gap-3">
+    <CreditCard />
+    <span>{defaultCard.brand} •••• {defaultCard.last4}</span>
+    <Link to="/payment-methods">Manage</Link>
+  </div>
+) : (
+  <Link to="/payment-methods">Add payment method</Link>
+)}
 ```
 
 ---
 
-## UI Consistency
+## Data Structure
 
-- Uses existing `TripHistory` page design
-- Button styling matches `AppHome` bento grid aesthetic
-- Dark glassmorphic cards
-- Premium gradient accents
-- Touch-optimized with `active:scale-*` feedback
+```typescript
+interface LocalPaymentMethod {
+  id: string;           // UUID
+  type: "card";         // For now, only cards
+  brand: string;        // Visa, Mastercard, Amex, Discover
+  last4: string;        // Last 4 digits
+  expMonth: number;     // 1-12
+  expYear: number;      // Full year (2025)
+  cardholderName: string;
+  isDefault: boolean;
+  createdAt: number;    // Timestamp
+}
+```
+
+### localStorage Key
+
+```
+zivo_local_payment_methods
+```
+
+### Example Stored Data
+
+```json
+[
+  {
+    "id": "pm_abc123",
+    "type": "card",
+    "brand": "Visa",
+    "last4": "4242",
+    "expMonth": 12,
+    "expYear": 2025,
+    "cardholderName": "John Doe",
+    "isDefault": true,
+    "createdAt": 1707350400000
+  }
+]
+```
 
 ---
 
-## No Changes To
+## UI Components
 
-- `useRiderTripHistory` hook (already fetches correct data)
-- `TripHistory` component internals
-- Database schema
-- RLS policies (already allow users to read their own trips)
+### Card Form Fields
+
+| Field | Format | Validation |
+|-------|--------|------------|
+| Card Number | XXXX XXXX XXXX XXXX | 16 digits |
+| Expiry | MM/YY | Future date |
+| CVV | XXX or XXXX | 3-4 digits |
+| Name | Text | Required |
+
+### Card Display
+
+- Card icon based on brand
+- Masked number (•••• last4)
+- Expiry date
+- Default badge (if applicable)
+- Star button to set default
+- Trash button to delete
+
+---
+
+## Navigation Flow
+
+```text
+AppHome
+    │
+    └─→ "Payment Methods" button
+              │
+              ▼
+        /payment-methods
+              │
+    ┌─────────┴─────────┐
+    │                   │
+    ▼                   ▼
+View Cards        Add Card Form
+    │                   │
+    ▼                   ▼
+Set Default      Submit → Save
+Delete Card      to localStorage
+```
+
+From Ride Flow:
+
+```text
+/ride/confirm
+    │
+    └─→ "Manage" link
+              │
+              ▼
+        /payment-methods
+              │
+              ▼
+        Manage cards
+              │
+              ▼
+        Back to /ride/confirm
+              (shows updated default)
+```
+
+---
+
+## Security Notes
+
+This is a **mock implementation** - no real card data is processed:
+- Card numbers are stored in localStorage (not secure for real use)
+- No Stripe or payment gateway integration
+- UI only - prepares structure for future real implementation
+- Add clear "Demo Mode" indicator on the page
+
+---
+
+## Future Migration Path
+
+When ready for real payments:
+1. Replace `useLocalPaymentMethods` with `usePaymentMethods` from `useZivoWallet.ts`
+2. Add Stripe Elements for secure card entry
+3. Call edge function to create Stripe payment method
+4. Remove localStorage fallback
 
