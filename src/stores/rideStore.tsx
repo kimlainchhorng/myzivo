@@ -57,7 +57,7 @@ function rideReducer(state: RideState, action: RideAction): RideState {
       return {
         ...state,
         driver: action.driver,
-        status: 'driver_found',
+        status: 'assigned',
         eta: 300, // 5 minutes in seconds
       };
 

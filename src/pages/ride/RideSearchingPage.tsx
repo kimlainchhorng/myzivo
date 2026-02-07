@@ -7,9 +7,9 @@ import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
 
 // Status messages with timing thresholds (based on progress %)
 const statusMessages = [
-  { threshold: 0, text: "Contacting nearby drivers...", subtext: "Searching in your area" },
-  { threshold: 35, text: "Driver responding...", subtext: "Found a match nearby" },
-  { threshold: 80, text: "Driver confirmed!", subtext: "Preparing your ride" },
+  { threshold: 0, text: "Finding nearby drivers...", subtext: "Searching in your area" },
+  { threshold: 40, text: "Sending requests...", subtext: "Contacting available drivers" },
+  { threshold: 75, text: "Waiting for driver...", subtext: "Almost there!" },
 ];
 
 const RideSearchingPage = () => {
@@ -30,9 +30,9 @@ const RideSearchingPage = () => {
     return acc;
   }, statusMessages[0]);
 
-  // Progress animation - 0 to 100 over 3 seconds
+  // Progress animation - 0 to 100 over 5 seconds
   useEffect(() => {
-    const duration = 3000; // 3 seconds
+    const duration = 5000; // 5 seconds per user request
     const interval = 50;
     const increment = (100 * interval) / duration;
 
@@ -56,15 +56,14 @@ const RideSearchingPage = () => {
       // Assign the mock driver
       assignDriver(DEFAULT_MOCK_DRIVER);
       
-      // Brief delay then navigate
+      // Brief delay then navigate - status is already 'assigned' from assignDriver
       const timeout = setTimeout(() => {
-        setStatus('driver_en_route');
         navigate("/ride/driver");
       }, 500);
 
       return () => clearTimeout(timeout);
     }
-  }, [progress, state.status, assignDriver, setStatus, navigate]);
+  }, [progress, state.status, assignDriver, navigate]);
 
   const handleCancel = () => {
     cancelRide();

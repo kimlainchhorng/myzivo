@@ -46,14 +46,14 @@ const RideDriverPage = () => {
 
   // ETA countdown timer (from 300 seconds = 5 min)
   useEffect(() => {
-    if (state.eta <= 0 || state.status === 'driver_arrived') return;
+    if (state.eta <= 0 || state.status === 'arrived') return;
 
     const interval = setInterval(() => {
       const newEta = Math.max(0, state.eta - 1);
       updateEta(newEta);
 
       if (newEta === 0) {
-        setStatus('driver_arrived');
+        setStatus('arrived');
         toast.success("Driver has arrived!");
       }
     }, 1000);
@@ -63,7 +63,7 @@ const RideDriverPage = () => {
 
   // Format ETA for display
   const etaMinutes = Math.ceil(state.eta / 60);
-  const hasArrived = state.status === 'driver_arrived' || state.eta === 0;
+  const hasArrived = state.status === 'arrived' || state.eta === 0;
 
   const handleCall = () => {
     toast.info("Calling driver...", { duration: 2000 });
