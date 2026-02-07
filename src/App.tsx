@@ -70,7 +70,9 @@ const RideTripPage = lazy(() => import("./pages/ride/RideTripPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage"));
 const DriverTripsPage = lazy(() => import("./pages/driver/DriverTripsPage"));
-const DriverAccountPage = lazy(() => import("./pages/driver/DriverAccountPage"));
+const DriverAccountPage = lazy(
+  () => import("./pages/driver/DriverAccountPage")
+);
 
 const Move = lazy(() => import("./pages/Move"));
 const Eats = lazy(() => import("./pages/Eats"));
