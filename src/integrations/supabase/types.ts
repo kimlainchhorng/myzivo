@@ -6865,6 +6865,7 @@ export type Database = {
           customer_phone: string | null
           delivered_at: string | null
           delivery_address: string
+          delivery_confirmed_by: string | null
           delivery_fee: number | null
           delivery_lat: number
           delivery_lng: number
@@ -6874,6 +6875,7 @@ export type Database = {
           distance_miles: number | null
           driver_id: string | null
           driver_payout_cents: number | null
+          driver_response_status: string | null
           duration_minutes: number | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
@@ -6941,6 +6943,7 @@ export type Database = {
           customer_phone?: string | null
           delivered_at?: string | null
           delivery_address: string
+          delivery_confirmed_by?: string | null
           delivery_fee?: number | null
           delivery_lat: number
           delivery_lng: number
@@ -6950,6 +6953,7 @@ export type Database = {
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
+          driver_response_status?: string | null
           duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -7017,6 +7021,7 @@ export type Database = {
           customer_phone?: string | null
           delivered_at?: string | null
           delivery_address?: string
+          delivery_confirmed_by?: string | null
           delivery_fee?: number | null
           delivery_lat?: number
           delivery_lng?: number
@@ -7026,6 +7031,7 @@ export type Database = {
           distance_miles?: number | null
           driver_id?: string | null
           driver_payout_cents?: number | null
+          driver_response_status?: string | null
           duration_minutes?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
@@ -9771,6 +9777,54 @@ export type Database = {
           },
           {
             foreignKeyName: "order_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_status_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: string
+          created_at: string | null
+          from_status: string | null
+          id: string
+          note: string | null
+          order_id: string
+          to_status: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type: string
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          to_status: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_events_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "food_orders_masked"

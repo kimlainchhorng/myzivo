@@ -372,6 +372,7 @@ const DispatchDrivers = lazy(() => import("./pages/dispatch/DispatchDrivers"));
 const DispatchMerchants = lazy(() => import("./pages/dispatch/DispatchMerchants"));
 const DispatchPayouts = lazy(() => import("./pages/dispatch/DispatchPayouts"));
 const DispatchSettings = lazy(() => import("./pages/dispatch/DispatchSettings"));
+const DispatchAnalytics = lazy(() => import("./pages/dispatch/DispatchAnalytics"));
 
 // Order Tracking
 const OrderTrackingPage = lazy(() => import("./pages/track/OrderTrackingPage"));
@@ -1365,6 +1366,7 @@ const App = () => (
                   <Route path="drivers" element={<DispatchDrivers />} />
                   <Route path="merchants" element={<DispatchMerchants />} />
                   <Route path="payouts" element={<DispatchPayouts />} />
+                  <Route path="analytics" element={<DispatchAnalytics />} />
                   <Route path="settings" element={<DispatchSettings />} />
                 </Route>
                 {/* Order Tracking - Customer */}
