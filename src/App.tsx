@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { RealtimeSyncProvider } from "@/contexts/RealtimeSyncContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { RideStoreProvider } from "@/stores/rideStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import SetupRequiredRoute from "@/components/auth/SetupRequiredRoute";
 import CookieConsent from "./components/common/CookieConsent";
@@ -472,6 +473,7 @@ const App = () => (
           <CurrencyProvider>
           <UTMProvider>
           <RealtimeSyncProvider>
+          <RideStoreProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Eager loaded routes */}
@@ -1281,6 +1283,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+          </RideStoreProvider>
           </RealtimeSyncProvider>
           </UTMProvider>
           </CurrencyProvider>

@@ -1,49 +1,37 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navigation, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import RideBottomNav from "@/components/ride/RideBottomNav";
 import RideReceiptModal from "@/components/ride/RideReceiptModal";
-import { RideOption } from "@/components/ride/RideCard";
 import TripMapView from "@/components/ride/TripMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
-import { TripDetails } from "@/lib/tripCalculator";
-
-interface LocationState {
-  ride: RideOption;
-  pickup: string;
-  destination: string;
-  paymentMethod: string;
-  tripDetails?: TripDetails;
-  routeCoordinates?: [number, number][];
-  pickupCoords?: { lat: number; lng: number };
-  dropoffCoords?: { lat: number; lng: number };
-}
+import { useRideStore } from "@/stores/rideStore";
 
 // Default coordinates for Baton Rouge
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
 const DEFAULT_DESTINATION = { lat: 30.4315, lng: -91.1671 };
 
-type TripStatus = "on_the_way" | "arrived";
-
 const RideTripPage = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const routeState = location.state as LocationState | null;
-  
-  // Try to get state from route or localStorage
-  const [state, setState] = useState<LocationState | null>(routeState);
-  const [tripStatus, setTripStatus] = useState<TripStatus>("on_the_way");
-  const [tripProgress, setTripProgress] = useState(0);
+  const { state, updateElapsed, completeRide, clearRide } = useRideStore();
   const [showReceipt, setShowReceipt] = useState(false);
-  
+  const [tripProgress, setTripProgress] = useState(0);
+
+  // Redirect if no active ride
+  useEffect(() => {
+    if (state.status === 'idle' || !state.rideId) {
+      navigate("/ride");
+    }
+  }, [state.status, state.rideId, navigate]);
+
   // Get coordinates from state or use defaults
-  const pickupLocation = state?.pickupCoords || DEFAULT_PICKUP;
-  const destinationLocation = state?.dropoffCoords || DEFAULT_DESTINATION;
-  const routeCoordinates = state?.routeCoordinates || [];
-  const tripDuration = state?.tripDetails?.duration || 8;
+  const pickupLocation = state.pickupCoords || DEFAULT_PICKUP;
+  const destinationLocation = state.dropoffCoords || DEFAULT_DESTINATION;
+  const routeCoordinates = state.routeCoordinates || [];
+  const tripDuration = state.duration || 8;
 
   // Calculate car position based on progress
   const carPosition = routeCoordinates.length > 0
@@ -53,69 +41,56 @@ const RideTripPage = () => {
         lng: pickupLocation.lng + (destinationLocation.lng - pickupLocation.lng) * tripProgress,
       };
 
-  // Calculate remaining ETA
-  const etaMinutes = Math.max(0, Math.ceil(tripDuration * (1 - tripProgress)));
+  // Elapsed time counting up
+  const [elapsed, setElapsed] = useState(state.tripElapsed || 0);
+  const canEndTrip = elapsed >= 60; // Must wait 60 seconds before ending
 
-  // Validate localStorage data structure
-  const validateRideState = (data: unknown): data is LocationState => {
-    if (!data || typeof data !== 'object') return false;
-    const d = data as Record<string, unknown>;
-    if (!d.ride || typeof d.ride !== 'object') return false;
-    const ride = d.ride as Record<string, unknown>;
-    return (
-      typeof ride.id === 'string' &&
-      typeof ride.name === 'string' &&
-      typeof ride.price === 'number' &&
-      !isNaN(ride.price)
-    );
-  };
-
-  // Load from localStorage if route state is missing
+  // Elapsed timer
   useEffect(() => {
-    if (!routeState?.ride) {
-      try {
-        const stored = localStorage.getItem("zivo_active_ride");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (validateRideState(parsed)) {
-            setState(parsed);
-            return;
-          }
-        }
-      } catch {}
-      navigate("/ride");
-    }
-  }, [routeState, navigate]);
-
-  // Animate trip progress
-  useEffect(() => {
-    if (tripStatus === "arrived") return;
+    if (state.status !== 'in_trip') return;
 
     const interval = setInterval(() => {
-      setTripProgress((prev) => {
-        const newProgress = prev + 0.015; // Move ~1.5% per interval
-        if (newProgress >= 1) {
-          clearInterval(interval);
-          setTripStatus("arrived");
-          return 1;
-        }
-        return newProgress;
+      setElapsed(prev => {
+        const newElapsed = prev + 1;
+        updateElapsed(newElapsed);
+        return newElapsed;
       });
-    }, 200); // Update every 200ms for smooth animation
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [tripStatus]);
+  }, [state.status, updateElapsed]);
+
+  // Animate trip progress based on elapsed time
+  useEffect(() => {
+    // Simulate trip taking ~2 minutes (120 seconds)
+    const simulatedDuration = 120;
+    const newProgress = Math.min(1, elapsed / simulatedDuration);
+    setTripProgress(newProgress);
+  }, [elapsed]);
+
+  // Format elapsed time
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate remaining ETA
+  const etaMinutes = Math.max(0, Math.ceil(tripDuration * (1 - tripProgress)));
+  const isArrived = tripProgress >= 1;
 
   const handleEndTrip = () => {
+    completeRide();
     setShowReceipt(true);
   };
 
   const handleReceiptDone = () => {
     setShowReceipt(false);
+    clearRide();
     navigate("/ride");
   };
 
-  if (!state?.ride) {
+  if (state.status === 'idle' || !state.rideId) {
     return null;
   }
 
@@ -126,7 +101,7 @@ const RideTripPage = () => {
         pickupLocation={pickupLocation}
         destinationLocation={destinationLocation}
         carPosition={carPosition}
-        isArrived={tripStatus === "arrived"}
+        isArrived={isArrived}
         routeCoordinates={routeCoordinates}
       />
 
@@ -142,17 +117,17 @@ const RideTripPage = () => {
             {/* Status Banner */}
             <AnimatePresence mode="wait">
               <motion.div
-                key={tripStatus}
+                key={isArrived ? 'arrived' : 'on_way'}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
                 className={`flex items-center justify-center gap-3 py-4 rounded-xl border ${
-                  tripStatus === "arrived"
+                  isArrived
                     ? "bg-green-500/10 border-green-500/20"
                     : "bg-primary/10 border-primary/20"
                 }`}
               >
-                {tripStatus === "on_the_way" ? (
+                {!isArrived ? (
                   <>
                     <motion.div
                       animate={{ rotate: 360 }}
@@ -181,8 +156,17 @@ const RideTripPage = () => {
               </motion.div>
             </AnimatePresence>
 
+            {/* Trip Timer */}
+            <div className="flex items-center justify-center gap-2 py-2">
+              <Clock className="w-4 h-4 text-primary" />
+              <span className="text-lg font-mono font-bold text-white">
+                {formatTime(elapsed)}
+              </span>
+              <span className="text-sm text-white/60">elapsed</span>
+            </div>
+
             {/* Progress Bar */}
-            {tripStatus === "on_the_way" && (
+            {!isArrived && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-white/60">
                   <span>Trip Progress</span>
@@ -210,7 +194,7 @@ const RideTripPage = () => {
                 </div>
               </div>
 
-              {tripStatus === "on_the_way" && (
+              {!isArrived && (
                 <motion.div
                   animate={{ opacity: [0.5, 1, 0.5] }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -225,18 +209,19 @@ const RideTripPage = () => {
             {/* Trip Summary */}
             <div className="flex items-center justify-between py-3 px-4 bg-white/5 rounded-xl">
               <div>
-                <p className="text-sm text-white/60">{state.ride.name}</p>
+                <p className="text-sm text-white/60">{state.rideName}</p>
                 <p className="text-xs text-white/40">{state.paymentMethod}</p>
               </div>
-              <p className="font-bold text-primary text-lg">${state.ride.price.toFixed(2)}</p>
+              <p className="font-bold text-primary text-lg">${state.price.toFixed(2)}</p>
             </div>
 
             {/* End Trip Button */}
             <Button
               onClick={handleEndTrip}
-              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90"
+              disabled={!canEndTrip}
+              className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 disabled:opacity-50"
             >
-              END TRIP
+              {canEndTrip ? 'END TRIP' : `Wait ${60 - elapsed}s to end trip`}
             </Button>
           </CardContent>
         </Card>
@@ -246,7 +231,10 @@ const RideTripPage = () => {
       <RideReceiptModal
         isOpen={showReceipt}
         onClose={() => setShowReceipt(false)}
-        ride={state.ride}
+        tripElapsed={elapsed}
+        distance={state.distance}
+        price={state.price}
+        rideName={state.rideName}
         onDone={handleReceiptDone}
       />
 

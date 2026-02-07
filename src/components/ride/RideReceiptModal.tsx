@@ -8,32 +8,48 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { RideOption } from "@/components/ride/RideCard";
 import { cn } from "@/lib/utils";
 
 interface RideReceiptModalProps {
   isOpen: boolean;
   onClose: () => void;
-  ride: RideOption;
+  tripElapsed: number; // seconds
+  distance: number; // miles
+  price: number;
+  rideName: string;
   onDone: () => void;
 }
 
-const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalProps) => {
+const RideReceiptModal = ({ 
+  isOpen, 
+  onClose, 
+  tripElapsed,
+  distance,
+  price,
+  rideName,
+  onDone 
+}: RideReceiptModalProps) => {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [hasRated, setHasRated] = useState(false);
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
 
-  // Calculate mock fare breakdown that sums to ride.price
+  // Format elapsed time for display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate fare breakdown
   const baseFare = 2.50;
   const serviceFee = 1.50;
-  // Null safety: fallback to estimated ETA based on price if eta is missing
-  const etaMinutes = ride.eta ?? Math.round(ride.price / 3) ?? 10;
-  const timeCost = etaMinutes * 0.30;
-  const distanceCost = Math.max(0, ride.price - baseFare - serviceFee - timeCost);
+  const timeMinutes = Math.ceil(tripElapsed / 60);
+  const timeCost = timeMinutes * 0.30;
+  const distanceCost = Math.max(0, price - baseFare - serviceFee - timeCost);
   
   // Total with tip
-  const totalWithTip = ride.price + (selectedTip || 0);
+  const totalWithTip = price + (selectedTip || 0);
 
   const handleRate = (stars: number) => {
     setRating(stars);
@@ -41,11 +57,6 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
   };
 
   const handleDone = () => {
-    // Clear localStorage trip state
-    try {
-      localStorage.removeItem("zivo_active_ride");
-    } catch {}
-    
     onDone();
     // Reset state for next use
     setRating(0);
@@ -81,11 +92,11 @@ const RideReceiptModal = ({ isOpen, onClose, ride, onDone }: RideReceiptModalPro
               <span className="text-white">${baseFare.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/60">Time ({etaMinutes} min)</span>
+              <span className="text-white/60">Time ({formatTime(tripElapsed)})</span>
               <span className="text-white">${timeCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/60">Distance</span>
+              <span className="text-white/60">Distance ({distance.toFixed(1)} mi)</span>
               <span className="text-white">${distanceCost.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">

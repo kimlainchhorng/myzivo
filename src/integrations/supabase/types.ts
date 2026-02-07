@@ -4042,6 +4042,7 @@ export type Database = {
       driver_location_history: {
         Row: {
           accuracy: number | null
+          altitude: number | null
           driver_id: string
           heading: number | null
           id: string
@@ -4053,6 +4054,7 @@ export type Database = {
         }
         Insert: {
           accuracy?: number | null
+          altitude?: number | null
           driver_id: string
           heading?: number | null
           id?: string
@@ -4064,6 +4066,7 @@ export type Database = {
         }
         Update: {
           accuracy?: number | null
+          altitude?: number | null
           driver_id?: string
           heading?: number | null
           id?: string
