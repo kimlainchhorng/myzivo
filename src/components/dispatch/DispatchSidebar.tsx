@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Headphones,
+  AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,11 @@ const navItems = [
     label: "Analytics",
     path: "/dispatch/analytics",
     icon: BarChart3,
+  },
+  {
+    label: "Disputes",
+    path: "/dispatch/disputes",
+    icon: AlertTriangle,
   },
   {
     label: "Quality",

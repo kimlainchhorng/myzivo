@@ -1,12 +1,13 @@
 /**
  * Dispatch Order Detail Page
  */
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle, XCircle, Clock, AlertTriangle, Shield, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,6 +80,38 @@ const DispatchOrderDetail = () => {
           <Badge>{order?.status}</Badge>
         </div>
       </div>
+
+      {/* Dispute Banner */}
+      {order?.dispute_id && (
+        <Card className="border-amber-500/50 bg-amber-500/5">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-amber-500/10">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="font-medium flex items-center gap-2">
+                  Dispute Open
+                  {order?.payout_hold && (
+                    <Badge variant="outline" className="gap-1 bg-amber-500/10 text-amber-600 border-amber-500/20">
+                      <Shield className="h-3 w-3" />
+                      Payout Held
+                    </Badge>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Status: {order?.dispute_status || "open"}
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/dispatch/disputes/${order.dispute_id}`}>
+                View Dispute <ExternalLink className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
