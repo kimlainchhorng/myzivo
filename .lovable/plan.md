@@ -1,9 +1,10 @@
 
-# Real Mapbox Integration for ZIVO Ride Flow
+
+# Google Maps Integration for ZIVO Ride Flow
 
 ## Overview
 
-This plan adds **real Mapbox maps** with **real geocoding**, **real routing (distance/duration)**, and **real dynamic pricing** throughout the ride booking flow. All changes maintain the existing UI design.
+Replace the current Mapbox implementation with Google Maps JavaScript API for geocoding, routing, and map display. This maintains the existing UI design while switching the underlying map provider.
 
 ---
 
@@ -11,85 +12,116 @@ This plan adds **real Mapbox maps** with **real geocoding**, **real routing (dis
 
 | Feature | Current Implementation |
 |---------|------------------------|
-| Maps | Google Maps (requires `VITE_GOOGLE_MAPS_API_KEY`) |
-| Geocoding | Mapbox reverse geocoding only (for current location) |
-| Address Search | Mock Louisiana suggestions (hardcoded list) |
-| Route/Distance | Mock hash-based calculation (2-12 miles) |
-| Pricing | Formula-based but using mock distance/duration |
-| Driver Movement | Time-based intervals, not route-based |
+| Maps | Mapbox GL JS via `MapboxMap.tsx` |
+| Geocoding | Mapbox Geocoding API via `src/services/mapbox.ts` |
+| Routing | Mapbox Directions API |
+| Pricing | Real formula with Mapbox distance/duration data |
+| API Key | `VITE_MAPBOX_ACCESS_TOKEN` |
 
-**Mapbox Token**: Already configured as `VITE_MAPBOX_ACCESS_TOKEN` (verified in secrets)
+**Existing Google Maps components**: `GoogleMap.tsx` and `GoogleMapProvider.tsx` already exist in the codebase but are not currently used.
+
+**API Key**: `VITE_GOOGLE_MAPS_API_KEY` is already configured as a secret.
 
 ---
 
 ## Implementation Plan
 
-### Phase 1: Mapbox Service Layer
+### Phase 1: Create Google Maps Service Layer
 
-Create `src/services/mapbox.ts` - a centralized service for all Mapbox API calls:
+Create `src/services/googleMaps.ts` to mirror the Mapbox service:
 
 | Function | Purpose |
 |----------|---------|
-| `geocodeAddress(query)` | Convert address string → lat/lng |
-| `reverseGeocode(lat, lng)` | Convert coordinates → address |
-| `getRoute(origin, dest)` | Get distance (meters), duration (seconds), geometry |
-| `getAddressSuggestions(query)` | Autocomplete suggestions via Places API |
+| `hasGoogleMapsKey()` | Check if API key is available |
+| `geocodeAddress(query)` | Convert address string to lat/lng |
+| `reverseGeocode(lat, lng)` | Convert coordinates to address |
+| `getRoute(origin, dest)` | Get distance, duration, and route polyline |
+| `getAddressSuggestions(query)` | Autocomplete via Places API |
+| `interpolateRoutePosition(coords, progress)` | Calculate position along route |
+| `decodePolyline(encoded)` | Decode Google's encoded polyline format |
 
 All functions will:
-- Check for `VITE_MAPBOX_ACCESS_TOKEN` availability
-- Return graceful fallbacks if token missing
-- Cache results to prevent duplicate API calls
+- Use `VITE_GOOGLE_MAPS_API_KEY` from environment
+- Cache results in memory and localStorage (30-minute TTL)
+- Return graceful fallbacks if API fails
 
 ---
 
-### Phase 2: Mapbox Map Components
+### Phase 2: Create Google Maps Hooks
 
-Create reusable Mapbox-powered map components:
+**New File**: `src/hooks/useGoogleMapsRoute.ts`
+- Fetches route data between two addresses
+- Returns distance (miles), duration (minutes), and route coordinates
+- Falls back to mock calculation if API fails
 
-**New File**: `src/components/maps/MapboxMap.tsx`
-- Wrapper around mapbox-gl
-- Dark mode styling matching ZIVO theme
-- Marker support (pickup, dropoff, driver types)
-- Route polyline rendering
-- Graceful fallback message: "Map key not set"
-
-**New File**: `src/components/maps/MapboxMapProvider.tsx`
-- Context provider for shared map state
-- Token availability check
+**New File**: `src/hooks/useGoogleMapsGeocode.ts`
+- Provides debounced address autocomplete
+- Uses Google Places API for suggestions
+- Falls back to mock Louisiana addresses if API fails
 
 ---
 
-### Phase 3: Real Geocoding & Routing on Rides Page
+### Phase 3: Update Map View Components
 
-Update `src/pages/Rides.tsx`:
+**Update `src/components/ride/DriverMapView.tsx`**:
+- Replace Mapbox with GoogleMap component
+- Use `GoogleMapProvider` wrapper
+- Check for Google Maps API availability
+- Pass route as origin/destination for Directions rendering
 
-1. **Replace mock address suggestions** with Mapbox Places API
-   - Debounced search (300ms) to reduce API calls
-   - Cache recent searches
+**Update `src/components/ride/TripMapView.tsx`**:
+- Replace Mapbox with GoogleMap component
+- Show pickup, destination, and moving car markers
+- Display route polyline
 
-2. **Add geocoding when addresses are selected**
-   - Store lat/lng for pickup and destination
-   - New state: `pickupCoords`, `dropoffCoords`
-
-3. **Fetch real route when both locations set**
-   - Call Mapbox Directions API
-   - Extract: `distance` (meters → miles), `duration` (seconds → minutes)
-   - Store route geometry for map display
-   - Update `estimatedDistance` and `estimatedDuration` with real values
-
-4. **Update pricing with real distance/duration**
-   - Use existing `calculateFare()` function
-   - Feed in real values instead of mock values
-   - All ride card prices update dynamically
+**Update `src/components/ride/RidesMapBackground.tsx`**:
+- Switch to GoogleMap for background
+- Show pickup/dropoff markers when set
+- Display route preview
 
 ---
 
-### Phase 4: Real Pricing Formula
+### Phase 4: Update Rides Page
 
-Update `src/lib/tripCalculator.ts` to add new multipliers matching your spec:
+**Update `src/pages/Rides.tsx`**:
+- Replace `useMapboxRoute` with `useGoogleMapsRoute`
+- Replace `useMapboxGeocode` with `useGoogleMapsGeocode`
+- Import `GoogleMapProvider` and wrap map background
+- Real pricing calculation unchanged (already uses correct formula)
+
+---
+
+### Phase 5: Update Ride Flow Pages
+
+**Update `src/pages/ride/RideDriverPage.tsx`**:
+- Replace `interpolateRoutePosition` from mapbox.ts with Google version
+- Wrap in `GoogleMapProvider` if needed
+- Driver marker moves along Google route coordinates
+
+**Update `src/pages/ride/RideTripPage.tsx`**:
+- Replace Mapbox interpolation with Google Maps version
+- Car marker follows actual route polyline
+- Progress bar based on route completion
+
+---
+
+## Technical Details
+
+### Google Directions API Response Format
+
+Google returns encoded polylines that need decoding:
 
 ```text
-Pricing Formula:
+overview_polyline: { points: "a~l~Fjk~uOwHJy@P..." }
+legs[0].distance.value: 12345  // meters
+legs[0].duration.value: 900    // seconds
+```
+
+The service will decode polylines to `[{lat, lng}]` coordinate arrays.
+
+### Pricing Formula (Unchanged)
+
+```text
 fare = (baseFare + miles × perMile + minutes × perMin) × multiplier
 
 Constants:
@@ -97,53 +129,11 @@ Constants:
 - perMile = $1.25
 - perMin = $0.20
 
-Multipliers:
-- Economy (wait_save, standard, green, priority): 0.75 - 1.30
-- Premium (comfort, black, black_suv, xxl): 1.55 - 3.70
-- Elite (lux, sprinter, secure, pet): 3.0 - 20.0
+Multipliers (from tripCalculator.ts):
+- Economy: 0.75 - 1.30
+- Premium: 1.55 - 3.70
+- Elite: 3.0 - 20.0
 ```
-
-The existing `calculateFare()` function in `Rides.tsx` already uses a compatible formula - we'll ensure it matches your spec exactly.
-
----
-
-### Phase 5: Driver Movement on Real Route
-
-**Update `/ride/driver` (RideDriverPage.tsx)**:
-
-1. Receive route geometry from previous page via state
-2. Create driver marker that follows the actual route polyline
-3. Interpolate driver position every 1 second along route coordinates
-4. When driver reaches pickup point (within threshold):
-   - Show "Driver has arrived!"
-   - Enable "START TRIP" button
-
-**Update `/ride/trip` (RideTripPage.tsx)**:
-
-1. Receive full route geometry
-2. Move driver marker from pickup → destination along polyline
-3. Calculate progress percentage based on route completion
-4. Update ETA dynamically based on remaining route distance
-5. When complete, enable "END TRIP"
-
----
-
-### Phase 6: Map Components Integration
-
-**Update `src/components/ride/DriverMapView.tsx`**:
-- Replace Google Maps with Mapbox
-- Accept route geometry prop
-- Animate driver along actual route
-
-**Update `src/components/ride/TripMapView.tsx`**:
-- Replace Google Maps with Mapbox
-- Show full pickup → destination route
-- Animate car marker along route
-
-**Update `src/components/ride/RidesMapBackground.tsx`**:
-- Switch to Mapbox for background
-- Show pickup/dropoff markers when set
-- Display route preview
 
 ---
 
@@ -151,11 +141,9 @@ The existing `calculateFare()` function in `Rides.tsx` already uses a compatible
 
 | File | Purpose |
 |------|---------|
-| `src/services/mapbox.ts` | Centralized Mapbox API service |
-| `src/components/maps/MapboxMap.tsx` | Reusable Mapbox component |
-| `src/components/maps/MapboxMapProvider.tsx` | Context for map state |
-| `src/hooks/useMapboxRoute.ts` | Hook for fetching routes with caching |
-| `src/hooks/useMapboxGeocode.ts` | Hook for geocoding with caching |
+| `src/services/googleMaps.ts` | Centralized Google Maps API service |
+| `src/hooks/useGoogleMapsRoute.ts` | Route fetching hook |
+| `src/hooks/useGoogleMapsGeocode.ts` | Address autocomplete hook |
 
 ---
 
@@ -163,28 +151,44 @@ The existing `calculateFare()` function in `Rides.tsx` already uses a compatible
 
 | File | Changes |
 |------|---------|
-| `src/pages/Rides.tsx` | Add geocoding, routing, real pricing display |
-| `src/pages/ride/RideDriverPage.tsx` | Receive route data, animate driver on real path |
-| `src/pages/ride/RideTripPage.tsx` | Animate trip progress on real route |
-| `src/components/ride/DriverMapView.tsx` | Switch to Mapbox, add route animation |
-| `src/components/ride/TripMapView.tsx` | Switch to Mapbox, add route animation |
-| `src/components/ride/RidesMapBackground.tsx` | Switch to Mapbox background |
-| `src/lib/tripCalculator.ts` | Ensure pricing formula matches spec |
-| `src/components/maps/index.ts` | Export new Mapbox components |
+| `src/pages/Rides.tsx` | Switch to Google Maps hooks, wrap map in provider |
+| `src/pages/ride/RideDriverPage.tsx` | Use Google route interpolation |
+| `src/pages/ride/RideTripPage.tsx` | Use Google route interpolation |
+| `src/components/ride/DriverMapView.tsx` | Use GoogleMap component |
+| `src/components/ride/TripMapView.tsx` | Use GoogleMap component |
+| `src/components/ride/RidesMapBackground.tsx` | Use GoogleMap component |
 
 ---
 
 ## Graceful Fallbacks
 
-If Mapbox API fails or token is missing:
+If Google Maps API fails or key is missing:
 
 | Feature | Fallback Behavior |
 |---------|-------------------|
-| Map display | Static placeholder image with message "Map key not set" |
-| Address suggestions | Existing mock Louisiana addresses |
-| Geocoding | Use mock Baton Rouge coordinates |
-| Route/Distance | Use mock hash-based calculation |
-| Driver movement | Time-based animation (current behavior) |
+| Map display | Static placeholder image with "Map key not set" message |
+| Address suggestions | Mock Louisiana addresses (hardcoded list) |
+| Geocoding | Mock Baton Rouge coordinates |
+| Route/Distance | Mock hash-based calculation (existing in tripCalculator.ts) |
+| Driver movement | Time-based animation |
+
+---
+
+## Driver & Trip Animation
+
+**Driver Page (`/ride/driver`)**:
+1. Receive route coordinates from confirm page
+2. Create mock driver start position (offset from pickup)
+3. Move driver marker along route every 200ms
+4. When driver reaches pickup (progress >= 1):
+   - Show "Driver has arrived!"
+   - Enable "START TRIP" button
+
+**Trip Page (`/ride/trip`)**:
+1. Move car marker from pickup → destination along route
+2. Calculate progress: `(traveled / total) × 100%`
+3. Update ETA based on remaining distance
+4. When complete, enable "END TRIP"
 
 ---
 
@@ -192,61 +196,28 @@ If Mapbox API fails or token is missing:
 
 ```text
 [/ride]
-   User enters pickup → Geocode → pickupCoords
-   User enters destination → Geocode → dropoffCoords
-   Both set → Fetch route → { distance, duration, geometry }
+   User enters pickup → Google Geocoding → pickupCoords
+   User enters destination → Google Geocoding → dropoffCoords
+   Both set → Google Directions → { distance, duration, routeCoords }
    Update all ride card prices with real fare
               ↓
 [/ride/confirm]
    Display real distance/duration/price
-   Save route geometry to localStorage
+   Save route coordinates to localStorage
               ↓
 [/ride/searching]
    (unchanged - animated search)
               ↓
 [/ride/driver]
-   Load route geometry
-   Driver marker follows route polyline → pickup
+   Load route coordinates
+   Driver marker follows route → pickup
    Arrival triggers "Driver has arrived!"
               ↓
 [/ride/trip]
-   Driver marker follows route polyline → destination
-   Progress % = (traveled distance / total distance)
+   Car marker follows route → destination
+   Progress % = (traveled / total)
    Arrival enables "END TRIP"
 ```
-
----
-
-## API Usage Estimates
-
-Per ride booking session:
-- 2 geocode requests (pickup + destination)
-- 1 directions request
-- ~5-10 autocomplete requests
-
-All within Mapbox free tier (100,000 requests/month).
-
----
-
-## Technical Details
-
-### Route Geometry Interpolation
-
-Driver position will be calculated by:
-1. Storing route as array of coordinates from Mapbox
-2. Using elapsed time to calculate expected progress
-3. Finding the coordinate at that progress point
-4. Smoothly animating marker between points (requestAnimationFrame)
-
-### Caching Strategy
-
-```text
-Cache key: `zivo_geo_${address_hash}`
-Cache key: `zivo_route_${origin_hash}_${dest_hash}`
-TTL: 30 minutes (localStorage)
-```
-
-This prevents redundant API calls when user navigates back/forward.
 
 ---
 
@@ -254,10 +225,11 @@ This prevents redundant API calls when user navigates back/forward.
 
 | Enhancement | Implementation |
 |-------------|----------------|
-| Real maps | Mapbox GL JS with dark styling |
-| Real geocoding | Mapbox Geocoding API (forward + reverse) |
-| Real autocomplete | Mapbox Places API |
-| Real routes | Mapbox Directions API |
+| Real maps | Google Maps JavaScript API with dark styling |
+| Real geocoding | Google Geocoding API |
+| Real autocomplete | Google Places API |
+| Real routes | Google Directions API |
 | Real pricing | Distance × $1.25 + Duration × $0.20 + $2 base |
 | Driver animation | Follow actual route polyline |
-| Token missing | Graceful fallback to mock/static content |
+| API key missing | Graceful fallback to mock/static content |
+
