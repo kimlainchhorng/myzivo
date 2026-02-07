@@ -1,12 +1,10 @@
 
-# Maps + Real Distance/Time + Live Driver Location Implementation
+
+# Notifications System Implementation Plan
 
 ## Summary
 
-Add comprehensive maps integration with real-time location tracking to enable:
-1. Automatic distance/duration calculation for accurate pricing
-2. Live driver location updates for dispatch visibility
-3. Real-time driver tracking for customer order tracking
+Build a comprehensive notifications system that automatically notifies Merchants, Drivers, and Customers when order status changes occur. This includes SMS/email for external notifications and in-app notifications with real-time toasts.
 
 ---
 
@@ -14,172 +12,342 @@ Add comprehensive maps integration with real-time location tracking to enable:
 
 | Component | Status |
 |-----------|--------|
-| Map providers | Google Maps + Mapbox both configured |
-| Edge functions | `maps-autocomplete`, `maps-place-details`, `maps-route`, `update-driver-location` exist |
-| `trips` table | Has `pickup_lat/lng`, `dropoff_lat/lng`, `distance_miles`, `duration_minutes` |
-| `food_orders` table | Has `delivery_lat/lng`, `distance_miles` but missing `pickup_lat/lng` and `duration_minutes` |
-| `drivers` table | Has `current_lat/lng`, `updated_at` |
-| Live map | `LiveMapOverview` exists for admin with Mapbox |
-| Address autocomplete | `useServerGeocode` hook + edge functions exist |
-| Secrets | `GOOGLE_MAPS_API_KEY`, `MAPBOX_ACCESS_TOKEN` configured |
+| `notifications` table | Exists with full schema (user_id, channel, status, body, title, etc.) |
+| `notification_templates` table | Exists with order-related templates |
+| `notification_preferences` table | Exists for user opt-in/out |
+| `driver_notifications` table | Exists for driver-specific in-app notifications |
+| `send-notification` edge function | Exists with email support via Resend |
+| `notifications-api` edge function | Exists for listing/marking read |
+| `NotificationBell` component | Exists with real-time subscriptions |
+| `useNotifications` hook | Exists with real-time updates |
+| SMS (Twilio) integration | Not yet implemented |
+| Order status change triggers | Not yet implemented |
+| Secrets | `RESEND_API_KEY` configured; Twilio not configured |
+
+---
+
+## Architecture Overview
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                    Order Status Change                       │
+│            (INSERT/UPDATE on food_orders)                    │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Database Trigger Function                          │
+│        notify_on_order_status_change()                       │
+│                                                              │
+│  • Detects: order_created, assigned, picked_up,             │
+│             delivered, cancelled                             │
+│  • Inserts notifications for: Merchant, Driver, Customer     │
+│  • Idempotent: unique constraint prevents duplicates         │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│              notifications table                             │
+│                                                              │
+│  channel: in_app  →  Immediate (RLS + realtime)             │
+│  channel: email   →  Queued → process-order-notifications   │
+│  channel: sms     →  Queued → process-order-notifications   │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────────────┐
+│          Edge Function: process-order-notifications          │
+│                                                              │
+│  • Runs via admin button or scheduled                       │
+│  • Fetches queued SMS/email notifications                   │
+│  • Sends via Twilio (SMS) or Resend (email)                │
+│  • Updates status to sent/failed                            │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## Database Changes
 
-### food_orders table updates
-
-Add missing columns for pickup location and route data:
+### 1. Add tracking_code to food_orders
 
 ```sql
-ALTER TABLE public.food_orders 
-  ADD COLUMN IF NOT EXISTS pickup_lat numeric,
-  ADD COLUMN IF NOT EXISTS pickup_lng numeric,
-  ADD COLUMN IF NOT EXISTS duration_minutes integer DEFAULT 0;
+ALTER TABLE public.food_orders
+  ADD COLUMN IF NOT EXISTS tracking_code TEXT UNIQUE;
 
-COMMENT ON COLUMN public.food_orders.pickup_lat IS 'Restaurant pickup latitude';
-COMMENT ON COLUMN public.food_orders.pickup_lng IS 'Restaurant pickup longitude';
-COMMENT ON COLUMN public.food_orders.duration_minutes IS 'Estimated delivery duration in minutes';
-```
-
-### drivers table updates
-
-Add `last_active_at` column for more accurate activity tracking:
-
-```sql
-ALTER TABLE public.drivers
-  ADD COLUMN IF NOT EXISTS last_active_at timestamptz DEFAULT now();
-
-COMMENT ON COLUMN public.drivers.last_active_at IS 'Last time driver sent location update';
-```
-
----
-
-## RLS Security Policies
-
-### New RPC for customer tracking with driver location
-
-```sql
--- RPC to get driver location for a specific order (customer tracking)
-CREATE OR REPLACE FUNCTION public.get_order_driver_location(p_order_id uuid)
-RETURNS TABLE(
-  driver_id uuid,
-  driver_name text,
-  driver_lat numeric,
-  driver_lng numeric,
-  last_updated timestamptz
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
+-- Generate tracking codes for new orders
+CREATE OR REPLACE FUNCTION generate_order_tracking_code()
+RETURNS TRIGGER AS $$
 BEGIN
-  RETURN QUERY
-  SELECT 
-    d.id,
-    d.full_name,
-    d.current_lat,
-    d.current_lng,
-    d.updated_at
-  FROM food_orders fo
-  JOIN drivers d ON d.id = fo.driver_id
-  WHERE fo.id = p_order_id
-    AND fo.customer_id = auth.uid()
-    AND fo.status IN ('confirmed', 'ready_for_pickup', 'in_progress');
+  IF NEW.tracking_code IS NULL THEN
+    NEW.tracking_code := 'ZV' || UPPER(SUBSTRING(md5(NEW.id::text) FROM 1 FOR 8));
+  END IF;
+  RETURN NEW;
 END;
-$function$;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_order_tracking_code
+  BEFORE INSERT ON public.food_orders
+  FOR EACH ROW
+  EXECUTE FUNCTION generate_order_tracking_code();
+```
+
+### 2. Add event_type column to notifications
+
+```sql
+ALTER TABLE public.notifications
+  ADD COLUMN IF NOT EXISTS event_type TEXT,
+  ADD COLUMN IF NOT EXISTS to_value TEXT;
+
+-- Unique constraint to prevent duplicate notifications
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_idempotent
+  ON public.notifications (order_id, event_type, channel, COALESCE(user_id::text, ''), COALESCE(to_value, ''))
+  WHERE order_id IS NOT NULL AND event_type IS NOT NULL;
+```
+
+### 3. Create order status notification trigger
+
+```sql
+CREATE OR REPLACE FUNCTION notify_on_order_status_change()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_event_type TEXT;
+  v_merchant_user_id UUID;
+  v_driver_user_id UUID;
+  v_customer_user_id UUID;
+  v_customer_phone TEXT;
+  v_customer_email TEXT;
+  v_tracking_code TEXT;
+  v_base_url TEXT := 'https://hizivo.com';
+  v_title TEXT;
+  v_body TEXT;
+  v_action_url TEXT;
+BEGIN
+  -- Determine event type
+  IF TG_OP = 'INSERT' THEN
+    v_event_type := 'order_created';
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- Check if driver assigned
+    IF OLD.driver_id IS NULL AND NEW.driver_id IS NOT NULL THEN
+      v_event_type := 'order_assigned';
+    -- Check status changes
+    ELSIF OLD.status IS DISTINCT FROM NEW.status THEN
+      CASE NEW.status
+        WHEN 'in_progress' THEN v_event_type := 'order_picked_up';
+        WHEN 'completed' THEN v_event_type := 'order_delivered';
+        WHEN 'cancelled' THEN v_event_type := 'order_cancelled';
+        ELSE v_event_type := NULL;
+      END CASE;
+    END IF;
+  END IF;
+
+  -- Exit if no event
+  IF v_event_type IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Gather recipient info
+  SELECT owner_id INTO v_merchant_user_id FROM restaurants WHERE id = NEW.restaurant_id;
+  SELECT user_id INTO v_driver_user_id FROM drivers WHERE id = NEW.driver_id;
+  v_customer_user_id := NEW.customer_id;
+  v_customer_phone := NEW.customer_phone;
+  v_customer_email := NEW.customer_email;
+  v_tracking_code := NEW.tracking_code;
+
+  -- Set message content per event
+  CASE v_event_type
+    WHEN 'order_created' THEN
+      v_title := 'New Order Received';
+      v_body := 'A new order has been placed. Order #' || LEFT(NEW.id::text, 8);
+    WHEN 'order_assigned' THEN
+      v_title := 'Driver Assigned';
+      v_body := 'A driver has been assigned to your order. Track: ' || v_base_url || '/track/' || v_tracking_code;
+    WHEN 'order_picked_up' THEN
+      v_title := 'Order Picked Up';
+      v_body := 'Your order is on the way! Track: ' || v_base_url || '/track/' || v_tracking_code;
+    WHEN 'order_delivered' THEN
+      v_title := 'Order Delivered';
+      v_body := 'Your order has been delivered. Thanks for using ZIVO!';
+    WHEN 'order_cancelled' THEN
+      v_title := 'Order Cancelled';
+      v_body := 'Order #' || LEFT(NEW.id::text, 8) || ' has been cancelled.';
+  END CASE;
+
+  -- Insert merchant notification (in_app)
+  IF v_merchant_user_id IS NOT NULL AND v_event_type IN ('order_created', 'order_cancelled') THEN
+    INSERT INTO notifications (user_id, order_id, channel, category, template, title, body, action_url, event_type, status)
+    VALUES (v_merchant_user_id, NEW.id, 'in_app', 'operational', 'order_status', v_title, v_body, 
+            '/merchant/orders/' || NEW.id, v_event_type, 'sent')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  -- Insert driver notification (in_app)
+  IF v_driver_user_id IS NOT NULL AND v_event_type IN ('order_assigned', 'order_cancelled') THEN
+    INSERT INTO notifications (user_id, order_id, channel, category, template, title, body, action_url, event_type, status)
+    VALUES (v_driver_user_id, NEW.id, 'in_app', 'operational', 'order_status', v_title, v_body,
+            '/driver/orders/' || NEW.id, v_event_type, 'sent')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  -- Insert customer in_app notification
+  IF v_customer_user_id IS NOT NULL THEN
+    INSERT INTO notifications (user_id, order_id, channel, category, template, title, body, action_url, event_type, status)
+    VALUES (v_customer_user_id, NEW.id, 'in_app', 'transactional', 'order_status', v_title, v_body,
+            '/track/' || v_tracking_code, v_event_type, 'sent')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  -- Insert customer SMS (queued for edge function processing)
+  IF v_customer_phone IS NOT NULL AND v_customer_phone != '' THEN
+    INSERT INTO notifications (user_id, order_id, channel, category, template, title, body, to_value, event_type, status)
+    VALUES (v_customer_user_id, NEW.id, 'sms', 'transactional', 'order_status', v_title, v_body,
+            v_customer_phone, v_event_type, 'queued')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  -- Insert customer email (queued for edge function processing)
+  IF v_customer_email IS NOT NULL AND v_customer_email != '' THEN
+    INSERT INTO notifications (user_id, order_id, channel, category, template, title, body, to_value, action_url, event_type, status)
+    VALUES (v_customer_user_id, NEW.id, 'email', 'transactional', 'order_status', v_title, v_body,
+            v_customer_email, '/track/' || v_tracking_code, v_event_type, 'queued')
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER trigger_notify_order_status
+  AFTER INSERT OR UPDATE ON public.food_orders
+  FOR EACH ROW
+  EXECUTE FUNCTION notify_on_order_status_change();
 ```
 
 ---
 
-## Implementation Details
+## Edge Functions
 
-### A. Shared Address Autocomplete Component
+### 1. process-order-notifications
 
-Create a reusable `AddressAutocomplete` component that wraps `useServerGeocode`:
+New edge function to process queued SMS/email notifications:
 
-**File: `src/components/shared/AddressAutocomplete.tsx`**
+```typescript
+// supabase/functions/process-order-notifications/index.ts
 
-```text
-- Uses existing useServerGeocode hook
-- Shows dropdown with suggestions
-- Returns selected place with coordinates
-- Fallback to manual input if API fails
+// Fetches queued notifications (status = 'queued')
+// For SMS: calls Twilio API
+// For email: calls existing send-notification or Resend directly
+// Updates status to 'sent' or 'failed'
+// Limit 20 per invocation to avoid timeouts
 ```
 
-### B. Dispatch Live Map Panel
+**Key features:**
+- Idempotent: checks status before processing
+- Rate limited: 20 notifications per run
+- Fallback: if Twilio not configured, skip SMS (log warning)
+- Error handling: marks failed with error message
 
-Add map to dispatch dashboard showing drivers + orders:
+### 2. Update send-notification
 
-**File: `src/components/dispatch/DispatchLiveMap.tsx`**
+Enhance existing function to support SMS via Twilio:
 
-```text
-- Uses GoogleMap component (with dark mode)
-- Subscribes to drivers table via Realtime
-- Shows online drivers as pins with popup (name, last_active, active order)
-- Shows selected order pickup/dropoff with route line
-- "Assign to selected order" action from driver popup
-- Toggle layers: drivers, orders, routes
+```typescript
+// Add Twilio SMS sending
+const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+const TWILIO_FROM_NUMBER = Deno.env.get("TWILIO_FROM_NUMBER");
+
+async function sendSms(to: string, body: string) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) {
+    throw new Error("Twilio not configured");
+  }
+  
+  const response = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": "Basic " + btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`),
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        To: to,
+        From: TWILIO_FROM_NUMBER,
+        Body: body
+      })
+    }
+  );
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "SMS send failed");
+  }
+  
+  return response.json();
+}
 ```
 
-**Integration points:**
-- Add to `DispatchDashboard.tsx` as collapsible panel
-- Add to `DispatchOrdersKanban.tsx` as side panel when order selected
+---
 
-### C. Enhanced Driver Location Updates
+## UI Components
 
-Modify existing `update-driver-location` edge function to also update `last_active_at`:
+### 1. MerchantNotificationBell
 
-**File: `supabase/functions/update-driver-location/index.ts`**
+New component for merchant dashboard:
 
-```text
-Current: Updates current_lat, current_lng, updated_at
-Add: Update last_active_at to now()
+| File | Description |
+|------|-------------|
+| `src/components/merchant/MerchantNotificationBell.tsx` | Bell icon with dropdown for merchant notifications |
+
+Uses existing `useNotifications` hook - notifications are already scoped to user_id.
+
+### 2. DriverNotificationBell
+
+New component for driver app:
+
+| File | Description |
+|------|-------------|
+| `src/components/driver/DriverNotificationBell.tsx` | Bell icon for driver notifications |
+
+Can reuse `NotificationBell` or query `driver_notifications` table.
+
+### 3. OrderNotificationToasts
+
+Enhanced realtime toasts for order changes:
+
+| File | Description |
+|------|-------------|
+| `src/components/notifications/OrderNotificationToasts.tsx` | Subscribe to notifications table for real-time toasts |
+
+```typescript
+// Subscribe to new notifications for current user
+supabase
+  .channel('user-notifications')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'notifications',
+    filter: `user_id=eq.${userId}`
+  }, (payload) => {
+    const notif = payload.new;
+    if (notif.channel === 'in_app') {
+      toast.info(notif.title, { description: notif.body });
+    }
+  })
+  .subscribe();
 ```
 
-### D. Driver Location Watcher Hook
+### 4. Admin Process Notifications Button
 
-Create hook for driver app to broadcast location:
+Add to dispatch settings or dashboard:
 
-**File: `src/hooks/useDriverLocationBroadcast.ts`**
-
-```text
-- Watches geolocation when driver is online
-- Sends updates to update-driver-location edge function every 10-20s
-- Also triggers on significant movement (>50m)
-- Handles permission errors gracefully
-- Exposes "Refresh location" trigger
+```tsx
+<Button onClick={processQueuedNotifications}>
+  Process Queued Notifications
+</Button>
 ```
 
-### E. Customer Order Tracking Page
-
-Create customer tracking view with live driver map:
-
-**File: `src/pages/track/OrderTrackingPage.tsx`**
-
-```text
-- Route: /track/:orderId
-- Shows order status timeline
-- Map with pickup, dropoff, and driver pins
-- Real-time subscription to:
-  - Order status changes
-  - Driver location (via RPC get_order_driver_location)
-- Driver moving animation along route
-```
-
-### F. Calculate Route on Order Creation
-
-Update order creation flow to auto-calculate distance/duration:
-
-**File: Merchant order creation flow**
-
-```text
-When creating order:
-1. Use AddressAutocomplete for pickup (restaurant) and delivery
-2. Call maps-route edge function to get distance_miles, duration_minutes
-3. Store pickup_lat/lng, delivery_lat/lng, distance_miles, duration_minutes
-4. Use calculate-price RPC with real distance/duration
-```
+Calls `process-order-notifications` edge function.
 
 ---
 
@@ -187,175 +355,94 @@ When creating order:
 
 | File | Action | Description |
 |------|--------|-------------|
-| `src/components/shared/AddressAutocomplete.tsx` | Create | Reusable address autocomplete with coords |
-| `src/components/dispatch/DispatchLiveMap.tsx` | Create | Live map for dispatch with drivers/orders |
-| `src/pages/dispatch/DispatchDashboard.tsx` | Modify | Add DispatchLiveMap panel |
-| `src/hooks/useDriverLocationBroadcast.ts` | Create | Hook for driver location updates |
-| `src/hooks/useDispatchDrivers.ts` | Modify | Add realtime subscription + last_active_at |
-| `src/pages/track/OrderTrackingPage.tsx` | Create | Customer order tracking with live driver |
-| `src/hooks/useOrderTracking.ts` | Create | Hook for order tracking + driver location |
-| `supabase/functions/update-driver-location/index.ts` | Modify | Add last_active_at update |
-| Database migration | Create | Add columns to food_orders, drivers |
-| RLS migration | Create | Add get_order_driver_location RPC |
+| `supabase/functions/process-order-notifications/index.ts` | Create | Process queued SMS/email notifications |
+| `supabase/functions/send-notification/index.ts` | Modify | Add Twilio SMS support |
+| `src/components/merchant/MerchantNotificationBell.tsx` | Create | Merchant notification bell |
+| `src/components/driver/DriverNotificationBell.tsx` | Create | Driver notification bell |
+| `src/components/notifications/OrderNotificationToasts.tsx` | Create | Real-time toast component |
+| `src/pages/dispatch/DispatchSettings.tsx` | Modify | Add "Process Notifications" button |
+| `src/pages/merchant/MerchantDashboard.tsx` | Modify | Add MerchantNotificationBell |
+| `src/pages/driver/DriverDashboard.tsx` | Modify | Add DriverNotificationBell |
+| Database migration | Create | Add tracking_code, event_type, unique constraint, trigger |
 
 ---
 
-## Detailed Component Specifications
+## Message Templates
 
-### AddressAutocomplete Component
-
-```typescript
-interface AddressAutocompleteProps {
-  placeholder?: string;
-  value?: string;
-  onSelect: (place: {
-    address: string;
-    lat: number;
-    lng: number;
-  }) => void;
-  proximity?: { lat: number; lng: number };
-  disabled?: boolean;
-}
-```
-
-Features:
-- Debounced input (300ms)
-- Loading spinner during fetch
-- Error state with retry
-- Clear button
-- Keyboard navigation (arrow keys, enter)
-- Falls back to mock data if API unavailable
-
-### DispatchLiveMap Component
-
-```typescript
-interface DispatchLiveMapProps {
-  selectedOrderId?: string;
-  onDriverClick?: (driverId: string) => void;
-  onAssignDriver?: (driverId: string, orderId: string) => void;
-  className?: string;
-}
-```
-
-Features:
-- GoogleMap with dark mode styling
-- Driver markers (green online, gray offline)
-- Order markers (blue pickup, red dropoff)
-- Route polyline for selected order
-- Real-time driver position updates (5s interval)
-- Driver popup with "Assign" button
-- Layer toggle controls
-- Stats overlay (X drivers online, Y active orders)
-
-### OrderTrackingPage
-
-Features:
-- Status timeline (Confirmed → Picked Up → Delivering → Delivered)
-- Estimated arrival time based on duration_minutes + current position
-- Map with:
-  - Restaurant pickup (blue pin)
-  - Customer dropoff (green pin)
-  - Driver position (car icon, animated)
-  - Route line
-- Real-time updates via Supabase Realtime
-- Driver info card (name, vehicle, rating)
-- Contact driver button
+| Event | Merchant | Driver | Customer SMS | Customer Email |
+|-------|----------|--------|--------------|----------------|
+| order_created | "New order received" | - | - | - |
+| order_assigned | - | "New delivery assigned" | "Driver assigned. Track: {url}" | ✓ |
+| order_picked_up | - | - | "Order on the way. Track: {url}" | ✓ |
+| order_delivered | - | - | "Order delivered. Thanks!" | ✓ |
+| order_cancelled | "Order cancelled" | "Delivery cancelled" | "Order cancelled" | ✓ |
 
 ---
 
-## Real-time Subscriptions
+## Environment Variables Required
 
-### Dispatch Panel
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `RESEND_API_KEY` | ✅ Already set | Email sending via Resend |
+| `TWILIO_ACCOUNT_SID` | Optional | Twilio account ID for SMS |
+| `TWILIO_AUTH_TOKEN` | Optional | Twilio auth token |
+| `TWILIO_FROM_NUMBER` | Optional | Twilio sender number |
+| `APP_BASE_URL` | Optional | Default: https://hizivo.com |
 
-```typescript
-// Subscribe to driver location changes
-supabase
-  .channel('dispatch-driver-locations')
-  .on('postgres_changes', {
-    event: 'UPDATE',
-    schema: 'public',
-    table: 'drivers',
-    filter: 'is_online=eq.true'
-  }, handleDriverUpdate)
-  .subscribe()
-```
-
-### Customer Tracking
-
-```typescript
-// Subscribe to order status changes
-supabase
-  .channel(`order-${orderId}`)
-  .on('postgres_changes', {
-    event: 'UPDATE',
-    schema: 'public',
-    table: 'food_orders',
-    filter: `id=eq.${orderId}`
-  }, handleOrderUpdate)
-  .subscribe()
-
-// Poll driver location every 5s via RPC
-useInterval(async () => {
-  const { data } = await supabase.rpc('get_order_driver_location', { p_order_id: orderId });
-  if (data?.[0]) setDriverLocation(data[0]);
-}, 5000)
-```
+**Note:** SMS will be skipped if Twilio not configured (email fallback only).
 
 ---
 
 ## Security Considerations
 
-| Access Pattern | Control |
-|----------------|---------|
-| Drivers table location (dispatch) | Admin role check via existing RLS |
-| Driver location for customer | Only via RPC, only for assigned order, only active status |
-| Order details for customer | customer_id = auth.uid() RLS |
-| Location updates from driver | Auth required, driver verified, GPS spoof detection (existing) |
+| Access | Control |
+|--------|---------|
+| User's own notifications | RLS: `user_id = auth.uid()` |
+| Admin view all | RLS: role check for admin/operations/support |
+| Insert notifications | Trigger function with SECURITY DEFINER |
+| SMS/Email sending | Edge function with service role key |
+| Customer tracking | Only via `/track/:code` (no auth required) |
 
 ---
 
-## Fallback Behavior
+## Idempotency
 
-| Scenario | Fallback |
-|----------|----------|
-| Maps API key missing | Show static map image, manual distance input |
-| No GPS permission | Show error message, disable location features |
-| API rate limit | Queue requests, use cached data |
-| Driver location stale (>2 min) | Show "Last seen X min ago" badge |
+The unique constraint ensures no duplicate notifications:
 
----
-
-## Implementation Order
-
-1. **Database migration** - Add columns to food_orders and drivers
-2. **RLS/RPC migration** - Add get_order_driver_location function
-3. **AddressAutocomplete component** - Reusable address input
-4. **DispatchLiveMap component** - Live map for dispatch panel
-5. **Update DispatchDashboard** - Integrate map panel
-6. **useDriverLocationBroadcast hook** - For driver app location updates
-7. **OrderTrackingPage** - Customer tracking view
-8. **useOrderTracking hook** - Order + driver location subscription
-9. **Route registration** - Add /track/:orderId route
-
----
-
-## Routes to Add
-
-```tsx
-<Route path="/track/:orderId" element={<OrderTrackingPage />} />
+```sql
+UNIQUE (order_id, event_type, channel, user_id, to_value)
 ```
+
+This prevents:
+- Multiple notifications for same status change
+- Re-triggering on page refreshes or retries
+- Duplicate SMS/emails if edge function runs multiple times
 
 ---
 
 ## Testing Checklist
 
-- [ ] Dispatch map shows online drivers with correct positions
-- [ ] Driver positions update in real-time when location changes
-- [ ] Order pickup/dropoff markers display correctly
-- [ ] Route line draws between pickup and dropoff
-- [ ] "Assign driver" from map popup works
-- [ ] Customer tracking page loads with order details
-- [ ] Driver marker moves as location updates
-- [ ] Status timeline updates in real-time
-- [ ] RPC blocks access for non-owner customers
-- [ ] Fallback UI shows when maps unavailable
+- [ ] Order creation triggers merchant in-app notification
+- [ ] Driver assignment triggers driver + customer notifications
+- [ ] Pickup triggers customer SMS/email + in-app
+- [ ] Delivery triggers customer notifications
+- [ ] Cancellation triggers all parties
+- [ ] No duplicates on rapid status changes
+- [ ] Real-time toasts appear in merchant/driver dashboards
+- [ ] NotificationBell shows unread count
+- [ ] Mark as read works
+- [ ] SMS skipped gracefully if Twilio not configured
+- [ ] Email sends successfully via Resend
+
+---
+
+## Implementation Order
+
+1. **Database migration** - Add columns, constraints, trigger function
+2. **process-order-notifications** - New edge function for SMS/email
+3. **Update send-notification** - Add Twilio SMS support
+4. **Notification components** - MerchantNotificationBell, DriverNotificationBell
+5. **OrderNotificationToasts** - Real-time toast component
+6. **Dashboard integrations** - Add bells to merchant/driver pages
+7. **Admin controls** - Add process button to dispatch settings
+
