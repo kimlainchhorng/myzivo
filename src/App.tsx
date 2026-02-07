@@ -51,6 +51,7 @@ const LegalControlDashboard = lazy(() => import("./pages/admin/LegalControlDashb
 // Master Admin Control Center
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const MasterDashboard = lazy(() => import("./pages/admin/MasterDashboard"));
+const DriverDetail = lazy(() => import("./pages/admin/drivers/DriverDetail"));
 const TravelBookingsPage = lazy(() => import("./pages/admin/travel/TravelBookingsPage"));
 const TravelRefundsPage = lazy(() => import("./pages/admin/travel/TravelRefundsPage"));
 const SuppliersStatusPage = lazy(() => import("./pages/admin/travel/SuppliersStatusPage"));
@@ -1066,6 +1067,15 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <AIInsightsDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Driver Detail Page */}
+                <Route
+                  path="/admin/drivers/:id"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <DriverDetail />
                     </ProtectedRoute>
                   }
                 />
