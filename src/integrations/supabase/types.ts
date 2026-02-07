@@ -6920,6 +6920,7 @@ export type Database = {
           tax: number | null
           tip_amount: number | null
           total_amount: number
+          tracking_code: string | null
           updated_at: string | null
           zone_code: string | null
         }
@@ -6995,6 +6996,7 @@ export type Database = {
           tax?: number | null
           tip_amount?: number | null
           total_amount: number
+          tracking_code?: string | null
           updated_at?: string | null
           zone_code?: string | null
         }
@@ -7070,6 +7072,7 @@ export type Database = {
           tax?: number | null
           tip_amount?: number | null
           total_amount?: number
+          tracking_code?: string | null
           updated_at?: string | null
           zone_code?: string | null
         }
@@ -9369,6 +9372,7 @@ export type Database = {
           channel: Database["public"]["Enums"]["notification_channel"]
           created_at: string
           error_message: string | null
+          event_type: string | null
           id: string
           is_read: boolean | null
           metadata: Json | null
@@ -9379,6 +9383,7 @@ export type Database = {
           status: Database["public"]["Enums"]["notification_status"]
           template: string
           title: string
+          to_value: string | null
           updated_at: string
           user_id: string | null
         }
@@ -9389,6 +9394,7 @@ export type Database = {
           channel?: Database["public"]["Enums"]["notification_channel"]
           created_at?: string
           error_message?: string | null
+          event_type?: string | null
           id?: string
           is_read?: boolean | null
           metadata?: Json | null
@@ -9399,6 +9405,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["notification_status"]
           template: string
           title: string
+          to_value?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -9409,6 +9416,7 @@ export type Database = {
           channel?: Database["public"]["Enums"]["notification_channel"]
           created_at?: string
           error_message?: string | null
+          event_type?: string | null
           id?: string
           is_read?: boolean | null
           metadata?: Json | null
@@ -9419,6 +9427,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["notification_status"]
           template?: string
           title?: string
+          to_value?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -11572,6 +11581,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payout_notifications: {
+        Row: {
+          created_at: string | null
+          driver_id: string | null
+          id: string
+          message: string | null
+          payout_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          message?: string | null
+          payout_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string | null
+          id?: string
+          message?: string | null
+          payout_id?: string | null
+        }
+        Relationships: []
       }
       payouts: {
         Row: {

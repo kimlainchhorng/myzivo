@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import DriverOnlineToggle from "@/components/driver/DriverOnlineToggle";
+import DriverNotificationBell from "@/components/driver/DriverNotificationBell";
 import { 
   useDriverProfile, 
   useUpdateDriverStatus,
@@ -96,6 +97,7 @@ const DriverHomePage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <DriverNotificationBell />
             <Button
               variant="ghost"
               size="icon"

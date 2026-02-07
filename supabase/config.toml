@@ -152,3 +152,6 @@ verify_jwt = false
 
 [functions.maps-route]
 verify_jwt = false
+
+[functions.process-order-notifications]
+verify_jwt = false

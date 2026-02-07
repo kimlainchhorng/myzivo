@@ -21,6 +21,7 @@ import RestaurantMenu from "@/components/restaurant/RestaurantMenu";
 import RestaurantAnalytics from "@/components/restaurant/RestaurantAnalytics";
 import RestaurantSettings from "@/components/restaurant/RestaurantSettings";
 import AdminFloatingButton from "@/components/admin/AdminFloatingButton";
+import MerchantNotificationBell from "@/components/merchant/MerchantNotificationBell";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import AccessDenied from "@/components/auth/AccessDenied";
 import CrossAppNavigation from "@/components/CrossAppNavigation";
@@ -202,6 +203,7 @@ const RestaurantDashboard = () => {
           </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
+          <MerchantNotificationBell />
           <NotificationCenter />
           <CrossAppNavigation currentApp="restaurant" />
           <Sheet>
