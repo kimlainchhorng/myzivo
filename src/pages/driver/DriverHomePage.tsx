@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2 } from "lucide-react";
+import { Car, MapPin, Star, Clock, DollarSign, ChevronRight, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -95,14 +95,24 @@ const DriverHomePage = () => {
               <p className="text-xs text-white/40">Ready to earn</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-white/60 hover:text-white"
-          >
-            Logout
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/driver/account")}
+              className="text-white/60 hover:text-white"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="text-white/60 hover:text-white"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
       </motion.div>
 

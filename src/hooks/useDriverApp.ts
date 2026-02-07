@@ -195,7 +195,7 @@ export const useAvailableTripRequests = (enabled: boolean = true) => {
   });
 };
 
-// Hook to accept a trip
+// Hook to accept a trip with better race condition handling
 export const useAcceptTrip = () => {
   const queryClient = useQueryClient();
 
@@ -210,11 +210,17 @@ export const useAcceptTrip = () => {
         })
         .eq("id", tripId)
         .eq("status", "requested") // Only accept if still requested
-        .select()
-        .single();
+        .is("driver_id", null)     // Extra safety: only if no driver assigned
+        .select();
 
       if (error) throw error;
-      return data;
+      
+      // No rows updated means trip was already taken by another driver
+      if (!data || data.length === 0) {
+        throw new Error("TRIP_ALREADY_TAKEN");
+      }
+
+      return data[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["available-trip-requests"] });
@@ -222,7 +228,11 @@ export const useAcceptTrip = () => {
       toast.success("Trip accepted!");
     },
     onError: (error) => {
-      toast.error("Failed to accept trip: " + error.message);
+      if (error.message === "TRIP_ALREADY_TAKEN") {
+        toast.error("This ride was already accepted by another driver");
+      } else {
+        toast.error("Failed to accept trip: " + error.message);
+      }
     },
   });
 };
