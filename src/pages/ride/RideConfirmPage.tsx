@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp } from "lucide-react";
+import { ArrowLeft, MapPin, Send, Clock, CreditCard, Wallet, Banknote, Check, Navigation, AlertCircle, RefreshCw, WifiOff, ChevronRight, TrendingUp, Tag, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RideOption } from "@/components/ride/RideCard";
 import RideBottomNav from "@/components/ride/RideBottomNav";
@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
 import { useAvailableDriversCount } from "@/hooks/useAvailableDrivers";
 import { NoDriversAvailable } from "@/components/ride/NoDriversAvailable";
+import { usePromoCode } from "@/hooks/usePromoCode";
+import { incrementPromoCodeUse } from "@/lib/promoCodeService";
 
 interface LocationState {
   ride: RideOption;
@@ -45,6 +47,7 @@ const RideConfirmPage = () => {
   const { getDefault, methods } = useLocalPaymentMethods();
   const defaultCard = getDefault();
   const { refetch: checkAvailableDrivers } = useAvailableDriversCount();
+  const [promoInput, setPromoInput] = useState("");
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>(
     defaultCard ? "card" : "apple"
@@ -71,9 +74,20 @@ const RideConfirmPage = () => {
   const surgeActive = surgeMultiplier > 1.0;
 
   // Calculate dynamic price with surge
-  const displayPrice = tripDetails
+  const baseDisplayPrice = tripDetails
     ? calculateRidePrice(ride.id, tripDetails.distance, tripDetails.duration, surgeMultiplier)
     : ride.price;
+
+  // Promo code hook
+  const {
+    promoCode,
+    isValidating,
+    error: promoError,
+    discountAmount,
+    finalPrice,
+    applyPromoCode,
+    removePromoCode,
+  } = usePromoCode(baseDisplayPrice);
 
   const handleConfirm = async () => {
     if (isSubmitting || isCheckingAvailability) return;
@@ -98,6 +112,11 @@ const RideConfirmPage = () => {
     setIsSubmitting(true);
 
     try {
+      // Increment promo code usage if applied
+      if (promoCode) {
+        await incrementPromoCodeUse(promoCode.id);
+      }
+
       // Create ride in the central store first
       createRide({
         pickup,
@@ -105,7 +124,7 @@ const RideConfirmPage = () => {
         rideType: ride.id,
         rideName: ride.name,
         rideImage: ride.image,
-        price: displayPrice,
+        price: finalPrice,
         distance: tripDetails?.distance || 0,
         duration: tripDetails?.duration || 0,
         paymentMethod: selectedPayment,
@@ -122,7 +141,7 @@ const RideConfirmPage = () => {
           pickupCoords,
           dropoffCoords,
           rideType: ride.id,
-          price: displayPrice,
+          price: finalPrice,
           distance: tripDetails?.distance || 0,
           duration: tripDetails?.duration || 0,
         },
@@ -284,10 +303,27 @@ const RideConfirmPage = () => {
                 <Clock className="w-4 h-4" />
                 <span className="text-sm">{ride.eta} min away</span>
               </div>
-              <div className="text-2xl font-bold text-primary">
-                ${displayPrice.toFixed(2)}
+              <div className="text-right">
+                {promoCode && discountAmount > 0 && (
+                  <p className="text-sm text-white/40 line-through">
+                    ${baseDisplayPrice.toFixed(2)}
+                  </p>
+                )}
+                <p className="text-2xl font-bold text-primary">
+                  ${finalPrice.toFixed(2)}
+                </p>
               </div>
             </div>
+
+            {/* Promo Discount Indicator */}
+            {promoCode && discountAmount > 0 && (
+              <div className="flex items-center justify-center gap-2 py-2 bg-green-500/10 border border-green-500/30 rounded-lg mt-2">
+                <Tag className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-green-400">
+                  Promo {promoCode.code}: -${discountAmount.toFixed(2)} off
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -393,6 +429,63 @@ const RideConfirmPage = () => {
           </div>
         </motion.div>
 
+        {/* Promo Code Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Tag className="w-4 h-4 text-primary" />
+            Promo Code
+          </h3>
+          
+          {promoCode ? (
+            <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30 rounded-xl">
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-green-400" />
+                <span className="font-mono font-bold text-green-400">{promoCode.code}</span>
+                <span className="text-sm text-green-400/80">
+                  -{promoCode.discount_type === 'percent' 
+                    ? `${promoCode.discount_value}%` 
+                    : `$${promoCode.discount_value}`}
+                </span>
+              </div>
+              <button
+                onClick={removePromoCode}
+                className="p-1 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={promoInput}
+                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                placeholder="Enter code"
+                className="flex-1 h-11 px-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/40 focus:border-primary/50 focus:outline-none"
+              />
+              <button
+                onClick={() => applyPromoCode(promoInput)}
+                disabled={isValidating || !promoInput.trim()}
+                className="px-4 h-11 bg-primary/20 border border-primary/30 rounded-xl text-primary font-semibold hover:bg-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isValidating ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Apply"
+                )}
+              </button>
+            </div>
+          )}
+          
+          {promoError && (
+            <p className="text-xs text-destructive mt-2">{promoError}</p>
+          )}
+        </motion.div>
+
         {/* No Drivers Available Message */}
         <AnimatePresence>
           {showNoDrivers && (
@@ -426,7 +519,7 @@ const RideConfirmPage = () => {
                 REQUESTING...
               </>
             ) : (
-              `PAY $${displayPrice.toFixed(2)} & REQUEST`
+              `PAY $${finalPrice.toFixed(2)} & REQUEST`
             )}
           </motion.button>
         )}
