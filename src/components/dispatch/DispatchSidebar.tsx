@@ -24,6 +24,7 @@ import {
   AlertCircle,
   Tag,
   Gift,
+  Timer,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,12 @@ const navItems: NavItem[] = [
     label: "Analytics",
     path: "/dispatch/analytics",
     icon: BarChart3,
+    permission: "analytics.view",
+  },
+  {
+    label: "SLA",
+    path: "/dispatch/sla",
+    icon: Timer,
     permission: "analytics.view",
   },
   {
