@@ -1,13 +1,16 @@
 /**
  * Ride Checkout Form
  * Embedded Stripe Elements payment form with "Secure Vault" aesthetic
+ * Includes Apple Pay / Google Pay support via Payment Request Button
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PaymentElement,
+  PaymentRequestButtonElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
+import type { PaymentRequest } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { Loader2, Shield, Lock, CreditCard, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +36,65 @@ export default function RideCheckoutForm({
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
+  const [canMakePayment, setCanMakePayment] = useState(false);
+
+  // Set up Apple Pay / Google Pay
+  useEffect(() => {
+    if (!stripe) return;
+
+    const pr = stripe.paymentRequest({
+      country: "US",
+      currency: "usd",
+      total: {
+        label: `ZIVO Ride - ${rideName}`,
+        amount: Math.round(amount * 100), // cents
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+    });
+
+    // Check if Apple Pay or Google Pay is available
+    pr.canMakePayment().then((result) => {
+      if (result) {
+        setPaymentRequest(pr);
+        setCanMakePayment(true);
+      }
+    });
+
+    // Handle payment method from Apple Pay / Google Pay
+    pr.on("paymentmethod", async (ev) => {
+      if (!elements) {
+        ev.complete("fail");
+        return;
+      }
+
+      setIsProcessing(true);
+      
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          payment_method: ev.paymentMethod.id,
+          return_url: `${window.location.origin}/rides/success`,
+        },
+        redirect: "if_required",
+      });
+
+      if (error) {
+        ev.complete("fail");
+        setErrorMessage(error.message || "Payment failed");
+        toast.error(error.message || "Payment failed");
+        setIsProcessing(false);
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
+        ev.complete("success");
+        toast.success("Payment successful!");
+        onSuccess(paymentIntent.id);
+      } else {
+        ev.complete("fail");
+        setIsProcessing(false);
+      }
+    });
+  }, [stripe, elements, amount, rideName, onSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +188,32 @@ export default function RideCheckoutForm({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Apple Pay / Google Pay Button */}
+          {canMakePayment && paymentRequest && (
+            <div className="space-y-3">
+              <PaymentRequestButtonElement
+                options={{
+                  paymentRequest,
+                  style: {
+                    paymentRequestButton: {
+                      type: "default",
+                      theme: "dark",
+                      height: "48px",
+                    },
+                  },
+                }}
+              />
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-3 bg-zinc-900 text-zinc-500">or pay with card</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stripe Payment Element */}
           <div className="rounded-xl overflow-hidden">
             <PaymentElement 
