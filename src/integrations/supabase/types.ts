@@ -6801,6 +6801,7 @@ export type Database = {
           accepted_at: string | null
           admin_override_reason: string | null
           admin_price_override: number | null
+          assigned_at: string | null
           branch_id: string | null
           cancellation_fee: number | null
           cancellation_reason: string | null
@@ -6824,8 +6825,10 @@ export type Database = {
           driver_payout_cents: number | null
           estimated_delivery_time: number | null
           estimated_prep_time: number | null
+          eta_minutes: number | null
           id: string
           items: Json
+          paid_at: string | null
           payment_status: string | null
           payout_at: string | null
           payout_error: string | null
@@ -6853,6 +6856,8 @@ export type Database = {
           region_id: string | null
           restaurant_id: string
           special_instructions: string | null
+          square_location_id: string | null
+          square_order_id: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
           stripe_checkout_session_id: string | null
           stripe_payment_id: string | null
@@ -6868,6 +6873,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          assigned_at?: string | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -6891,8 +6897,10 @@ export type Database = {
           driver_payout_cents?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
+          eta_minutes?: number | null
           id?: string
           items: Json
+          paid_at?: string | null
           payment_status?: string | null
           payout_at?: string | null
           payout_error?: string | null
@@ -6920,6 +6928,8 @@ export type Database = {
           region_id?: string | null
           restaurant_id: string
           special_instructions?: string | null
+          square_location_id?: string | null
+          square_order_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
@@ -6935,6 +6945,7 @@ export type Database = {
           accepted_at?: string | null
           admin_override_reason?: string | null
           admin_price_override?: number | null
+          assigned_at?: string | null
           branch_id?: string | null
           cancellation_fee?: number | null
           cancellation_reason?: string | null
@@ -6958,8 +6969,10 @@ export type Database = {
           driver_payout_cents?: number | null
           estimated_delivery_time?: number | null
           estimated_prep_time?: number | null
+          eta_minutes?: number | null
           id?: string
           items?: Json
+          paid_at?: string | null
           payment_status?: string | null
           payout_at?: string | null
           payout_error?: string | null
@@ -6987,6 +7000,8 @@ export type Database = {
           region_id?: string | null
           restaurant_id?: string
           special_instructions?: string | null
+          square_location_id?: string | null
+          square_order_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           stripe_checkout_session_id?: string | null
           stripe_payment_id?: string | null
@@ -13729,11 +13744,13 @@ export type Database = {
           address: string
           avg_prep_time: number | null
           bank_connected: boolean | null
+          cancel_at_period_end: boolean | null
           cancel_rate: number | null
           commission_rate: number | null
           cover_image_url: string | null
           created_at: string | null
           cuisine_type: string
+          current_period_end: string | null
           description: string | null
           email: string
           hours: Json | null
@@ -13765,11 +13782,13 @@ export type Database = {
           address: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type: string
+          current_period_end?: string | null
           description?: string | null
           email: string
           hours?: Json | null
@@ -13801,11 +13820,13 @@ export type Database = {
           address?: string
           avg_prep_time?: number | null
           bank_connected?: boolean | null
+          cancel_at_period_end?: boolean | null
           cancel_rate?: number | null
           commission_rate?: number | null
           cover_image_url?: string | null
           created_at?: string | null
           cuisine_type?: string
+          current_period_end?: string | null
           description?: string | null
           email?: string
           hours?: Json | null
@@ -14103,11 +14124,14 @@ export type Database = {
       }
       rides: {
         Row: {
+          actual_distance_miles: number | null
+          actual_duration_min: number | null
           cancel_reason: string | null
           cancellation_fee: number | null
           cancelled_at: string | null
           cancelled_by: string | null
           commission_amount: number | null
+          completed_at: string | null
           created_at: string | null
           dest_lat: number | null
           dest_lng: number | null
@@ -14128,13 +14152,17 @@ export type Database = {
           rider_user_id: string | null
           status: string | null
           stripe_payment_intent_id: string | null
+          trip_started_at: string | null
         }
         Insert: {
+          actual_distance_miles?: number | null
+          actual_duration_min?: number | null
           cancel_reason?: string | null
           cancellation_fee?: number | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           commission_amount?: number | null
+          completed_at?: string | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
@@ -14155,13 +14183,17 @@ export type Database = {
           rider_user_id?: string | null
           status?: string | null
           stripe_payment_intent_id?: string | null
+          trip_started_at?: string | null
         }
         Update: {
+          actual_distance_miles?: number | null
+          actual_duration_min?: number | null
           cancel_reason?: string | null
           cancellation_fee?: number | null
           cancelled_at?: string | null
           cancelled_by?: string | null
           commission_amount?: number | null
+          completed_at?: string | null
           created_at?: string | null
           dest_lat?: number | null
           dest_lng?: number | null
@@ -14182,6 +14214,7 @@ export type Database = {
           rider_user_id?: string | null
           status?: string | null
           stripe_payment_intent_id?: string | null
+          trip_started_at?: string | null
         }
         Relationships: [
           {
