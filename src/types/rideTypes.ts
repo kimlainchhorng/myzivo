@@ -19,6 +19,7 @@ export interface DriverInfo {
 
 export interface RideState {
   rideId: string | null;
+  tripId: string | null; // Database trip ID for realtime sync
   pickup: string;
   destination: string;
   rideType: string;
@@ -56,6 +57,7 @@ export interface CreateRidePayload {
 
 export type RideAction =
   | { type: 'CREATE_RIDE'; payload: CreateRidePayload }
+  | { type: 'SET_TRIP_ID'; tripId: string }
   | { type: 'SET_STATUS'; status: RideStatus }
   | { type: 'ASSIGN_DRIVER'; driver: DriverInfo }
   | { type: 'UPDATE_ETA'; eta: number }

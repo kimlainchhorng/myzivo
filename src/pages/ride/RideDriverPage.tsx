@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import DriverMapView from "@/components/ride/DriverMapView";
 import { interpolateRoutePosition } from "@/services/googleMaps";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
+import { useRideRealtime } from "@/hooks/useRideRealtime";
+import DemoModeBanner from "@/components/ride/DemoModeBanner";
+import { cancelRideInDb, updateRideStatusInDb } from "@/lib/supabaseRide";
 
 // Default coordinates for Baton Rouge
 const DEFAULT_PICKUP = { lat: 30.4515, lng: -91.1871 };
@@ -18,6 +21,11 @@ const DEFAULT_DRIVER_START = { lat: 30.4615, lng: -91.1971 };
 const RideDriverPage = () => {
   const navigate = useNavigate();
   const { state, updateEta, setStatus, startTrip, cancelRide } = useRideStore();
+
+  // Subscribe to realtime updates
+  const { isDemoMode } = useRideRealtime({
+    tripId: state.tripId,
+  });
 
   // Redirect if no active ride
   useEffect(() => {
@@ -73,13 +81,19 @@ const RideDriverPage = () => {
     toast.info("Opening chat...", { duration: 2000 });
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
+    if (state.tripId) {
+      await cancelRideInDb(state.tripId);
+    }
     cancelRide();
     toast.error("Ride cancelled");
     navigate("/ride");
   };
 
-  const handleStartTrip = () => {
+  const handleStartTrip = async () => {
+    if (state.tripId) {
+      await updateRideStatusInDb(state.tripId, "in_trip");
+    }
     startTrip();
     navigate("/ride/trip");
   };
@@ -90,6 +104,9 @@ const RideDriverPage = () => {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white pb-24">
+      {/* Demo Mode Banner */}
+      {isDemoMode && <DemoModeBanner />}
+
       {/* Mapbox Map Background */}
       <DriverMapView 
         pickupLocation={pickupLocation} 

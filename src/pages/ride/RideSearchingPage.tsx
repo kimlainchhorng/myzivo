@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Car } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
 import { useRideStore, DEFAULT_MOCK_DRIVER } from "@/stores/rideStore";
+import { useRideRealtime } from "@/hooks/useRideRealtime";
+import DemoModeBanner from "@/components/ride/DemoModeBanner";
+import { cancelRideInDb } from "@/lib/supabaseRide";
 
 // Status messages with timing thresholds (based on progress %)
 const statusMessages = [
@@ -16,6 +20,12 @@ const RideSearchingPage = () => {
   const navigate = useNavigate();
   const { state, assignDriver, cancelRide, setStatus } = useRideStore();
   const [progress, setProgress] = useState(0);
+
+  // Subscribe to realtime updates if we have a tripId
+  const { isDemoMode, isRealtime } = useRideRealtime({
+    tripId: state.tripId,
+    enableMockFallback: false, // We handle mock in this component
+  });
 
   // Redirect if no active ride
   useEffect(() => {
@@ -50,8 +60,11 @@ const RideSearchingPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // When progress completes, assign driver and navigate
+  // When progress completes in demo mode, assign mock driver and navigate
   useEffect(() => {
+    // Only run mock simulation if NOT using realtime
+    if (isRealtime) return;
+    
     if (progress >= 100 && state.status === 'searching') {
       // Assign the mock driver
       assignDriver(DEFAULT_MOCK_DRIVER);
@@ -63,10 +76,22 @@ const RideSearchingPage = () => {
 
       return () => clearTimeout(timeout);
     }
-  }, [progress, state.status, assignDriver, navigate]);
+  }, [progress, state.status, assignDriver, navigate, isRealtime]);
 
-  const handleCancel = () => {
+  // If realtime status changes to assigned, navigate (handled by hook but also here for safety)
+  useEffect(() => {
+    if (state.status === 'assigned' && state.driver) {
+      navigate("/ride/driver");
+    }
+  }, [state.status, state.driver, navigate]);
+
+  const handleCancel = async () => {
+    // Cancel in database if we have a tripId
+    if (state.tripId) {
+      await cancelRideInDb(state.tripId);
+    }
     cancelRide();
+    toast.error("Ride cancelled");
     navigate("/ride");
   };
 
@@ -76,6 +101,9 @@ const RideSearchingPage = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-zinc-950 flex items-center justify-center p-6">
+      {/* Demo Mode Banner */}
+      {isDemoMode && <DemoModeBanner />}
+      
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
